@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>FUN - FU Navigation based on OpenStreetMap</title>
+
+<link type="text/css" href="mapsforge.css" rel="stylesheet" />
+
+<!-- bring in the OpenLayers javascript library
+         (here we bring it from the remote site, but you could
+         easily serve up this javascript yourself) -->
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+
+<!-- bring in the OpenStreetMap OpenLayers layers.
+         Using this hosted file will make sure we are kept up
+         to date with any necessary changes -->
+<script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+
+<!-- import for Overlays -->
+<script src="js/GPXmod.js"></script>
+<script src="js/mapsforge.js"></script>
+<script src="js/Textmod.js"></script>
+
+</head>
+
+<!-- body.onload is called once the page is loaded (call the 'init' function) -->
+<body onload="init();">
+
+<!-- define a DIV into which the map will appear. -->
+<div id="map"></div>
+
+<div id="leftDiv">
+	
+	<a href="javascript:info()">Routing-Info</a>
+	
+	<form name="search">
+		<label for="start">Start:</label>
+		<input name="start" type="text" size="22" value="Brandenburger Tor"/>
+		<input type="hidden" name="startlon" value="52.516471" />
+		<input type="hidden" name="startlat" value="13.377655" />
+
+		<label for="stop">Halt:</label>
+		<input name="stop" type="text" size="22" />
+		<input type="hidden" name="stoplon" value="" />
+		<input type="hidden" name="stoplat" value="" />
+
+		<label for="end">Ziel:</label>
+		<input name="end" type="text" size="22" value="Arnimallee 3, Berlin" />
+		<input type="hidden" name="endlon" value="13.29751" />
+		<input type="hidden" name="endlat" value="52.45579" />
+
+		<input type="button" value="Start-/Zielpunkt suchen" class="mfbutton"
+			onclick="getStartEndPoints(this.form.start.value, this.form.stop.value, this.form.end.value);" />
+		<input type="button" value="Route berechnen" class="mfbutton"
+			onclick="getroute(this.form.start.value, this.form.stop.value, this.form.end.value, this.form.startlon.value, this.form.startlat.value, this.form.stoplon.value, this.form.stoplat.value, this.form.endlon.value, this.form.endlat.value);" />
+		<input type="button" value="Neue Anfrage" class="mfbutton"
+				onclick="newRequest();" />
+	</form>
+	
+	<span id="resultAreaStart" /></span> 
+	<span id="resultAreaEnd" /></span> 
+	<span id="resultAreaStop" /></span>
+	<span id="resultAreaInfo" /></span>
+</div>
+
+
+</body>
+
+</html>
