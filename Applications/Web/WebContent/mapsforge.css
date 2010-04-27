@@ -19,17 +19,17 @@ body {
   border: 1px solid black;
 }
 
-label {
+#leftDiv label {
   display: inline-block;
   width: 30px;
 }
 
-input {
+#leftDiv input {
   display: inline-block;
   width: 165px;
   margin: 5px 0;
 }
 
-.mfbutton {
+#leftDiv .mfbutton {
   margin-left: 34px;
 }
