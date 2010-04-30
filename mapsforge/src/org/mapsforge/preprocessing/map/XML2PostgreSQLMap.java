@@ -136,8 +136,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	
 	private final String SQL_UPDATE_WAY_TILE = "UPDATE waystotiles SET tilebitmask = ? WHERE wayid = ? and tilex = ? and tiley = ?"; 
 	
-	private final String SQL_INSERT_POIS_TILES = "INSERT INTO pois_to_tiles (poiid,tilex,tiley,copy) VALUES (?,?,?,?)";
-	
 	private final String SQL_SELECT_WAY_WITH_TAGS = "SELECT * FROM ways WHERE id = ?";
 	
 	private final String SQL_WAY_NODE_DIFF = "INSERT INTO waynodesdiff (wayid,waynodesequence,difflat,difflon) VALUES (?,?,?,?)";
