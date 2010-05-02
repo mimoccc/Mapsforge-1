@@ -18,24 +18,13 @@ package org.mapsforge.applications.android.simplemapviewer;
 
 import org.mapsforge.android.map.MapActivity;
 import org.mapsforge.android.map.MapView;
-
 import android.os.Bundle;
-import android.view.KeyEvent;
 
 /**
  * A simple application which demonstrates how to use the MapView.
  */
 public class SimpleMapViewer extends MapActivity {
 	private MapView mapView;
-
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			finish();
-			return true;
-		}
-		return super.onKeyDown(keyCode, event);
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
