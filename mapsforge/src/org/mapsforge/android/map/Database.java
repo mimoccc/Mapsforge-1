@@ -64,8 +64,6 @@ class Database {
 	private int[] innerWay;
 	private int[][] innerWays;
 	private RandomAccessFile inputFile;
-	private GeoPoint mapBoundary1;
-	private GeoPoint mapBoundary2;
 	private MapGenerator mapGenerator;
 	private int matrixBlocks;
 	private int matrixHeight;
@@ -83,6 +81,7 @@ class Database {
 	private HashSet<Integer> ways;
 	private short waysOnZoomLevel;
 	private byte zoomLevel;
+	private Rect mapBoundary;
 
 	/**
 	 * Construct a new database object to read binary OpenStreetMap files.
@@ -390,14 +389,10 @@ class Database {
 			this.stopCurrentQuery = false;
 
 			// calculate the blocks which need to be read during this query
-			this.fromRow = (this.mapBoundary1.getLatitudeE6() - this.geoRectangle.top)
-					/ this.blockSize;
-			this.toRow = (this.mapBoundary1.getLatitudeE6() - this.geoRectangle.bottom)
-					/ this.blockSize;
-			this.fromColumn = (this.geoRectangle.left - this.mapBoundary1.getLongitudeE6())
-					/ this.blockSize;
-			this.toColumn = (this.geoRectangle.right - this.mapBoundary1.getLongitudeE6())
-					/ this.blockSize;
+			this.fromRow = (this.mapBoundary.top - this.geoRectangle.top) / this.blockSize;
+			this.toRow = (this.mapBoundary.top - this.geoRectangle.bottom) / this.blockSize;
+			this.fromColumn = (this.geoRectangle.left - this.mapBoundary.left) / this.blockSize;
+			this.toColumn = (this.geoRectangle.right - this.mapBoundary.left) / this.blockSize;
 
 			// check that all values are within the block matrix
 			if (this.fromRow < 0) {
@@ -447,12 +442,13 @@ class Database {
 		}
 	}
 
-	GeoPoint getMapBoundary1() {
-		return this.mapBoundary1;
-	}
-
-	GeoPoint getMapBoundary2() {
-		return this.mapBoundary2;
+	/**
+	 * Returns the area coordinates of the current map file.
+	 * 
+	 * @return the area coordinates in microdegrees.
+	 */
+	Rect getMapBoundary() {
+		return this.mapBoundary;
 	}
 
 	/**
@@ -475,10 +471,9 @@ class Database {
 			this.firstBlockPointer = 28;
 
 			// read the map boundaries and store them
-			this.mapBoundary1 = new GeoPoint(Deserializer.toInt(this.readBuffer, 4),
-					Deserializer.toInt(this.readBuffer, 0));
-			this.mapBoundary2 = new GeoPoint(Deserializer.toInt(this.readBuffer, 12),
-					Deserializer.toInt(this.readBuffer, 8));
+			this.mapBoundary = new Rect(Deserializer.toInt(this.readBuffer, 0), Deserializer
+					.toInt(this.readBuffer, 4), Deserializer.toInt(this.readBuffer, 8),
+					Deserializer.toInt(this.readBuffer, 12));
 
 			// read the matrix width and height
 			this.matrixWidth = Deserializer.toInt(this.readBuffer, 16);

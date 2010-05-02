@@ -94,6 +94,7 @@ public class MapView extends ViewGroup {
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
+	private boolean showMapScale;
 	private boolean showZoomControls;
 	private Bitmap swapMapViewBitmap;
 	private Bitmap tileBitmap;
@@ -130,6 +131,24 @@ public class MapView extends ViewGroup {
 		return new GeoPoint(this.latitude, this.longitude);
 	}
 
+	/**
+	 * Returns the currently used map file.
+	 * 
+	 * @return the map file.
+	 */
+	public String getMapFile() {
+		return this.mapFile;
+	}
+
+	/**
+	 * Returns the center coordinates of the current map file as a GeoPoint object.
+	 * 
+	 * @return the center coordinates of the map file.
+	 */
+	public GeoPoint getMapFileCenter() {
+		return this.database.getMapBoundary().getCenter();
+	}
+
 	public int getMaxZoomLevel() {
 		return ZOOM_MAX;
 	}
@@ -138,7 +157,17 @@ public class MapView extends ViewGroup {
 		return this.zoomLevel;
 	}
 
+	/**
+	 * Convenience method to get isValidMapFile() on the current map file.
+	 * 
+	 * @return true if the MapView currently has a valid map file, false otherwise.
+	 */
+	public boolean hasValidMapFile() {
+		return isValidMapFile(this.mapFile);
+	}
+
 	public boolean isValidMapFile(String file) {
+		// TODO: implement this
 		return file != null;
 	}
 
@@ -173,7 +202,6 @@ public class MapView extends ViewGroup {
 					.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
 					this.zoomLevel);
 			handleTiles();
-			showZoomControls();
 			return true;
 		} else if (event.getAction() == MotionEvent.ACTION_UP
 				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
@@ -184,33 +212,54 @@ public class MapView extends ViewGroup {
 		return false;
 	}
 
+	/**
+	 * Controls the visibility of the zoom controls.
+	 * 
+	 * @param showZoomControls
+	 *            true if the zoom controls should be visible, false otherwise.
+	 */
 	public void setBuiltInZoomControls(boolean showZoomControls) {
 		this.showZoomControls = showZoomControls;
 	}
 
 	public void setCacheSize(int cacheSize) {
+		// TODO: implement this
 		this.cacheSize = cacheSize;
 	}
 
-	public void setMapFile(String mapFile) {
+	public void setMapFile(String newMapFile) {
+		if (newMapFile == null) {
+			// no map file is given
+			return;
+		} else if (this.mapFile != null && this.mapFile.equals(newMapFile)) {
+			// same map file as before
+			return;
+		}
+
 		stopMapGenerator();
 		this.database.closeFile();
-		if (this.database.setFile(mapFile)) {
-			this.mapFile = mapFile;
-			centerMapToMapFile();
+		if (this.database.setFile(newMapFile)) {
+			this.mapFile = newMapFile;
+			setCenter(this.database.getMapBoundary().getCenter());
 			handleTiles();
 		} else {
 			this.mapFile = null;
 		}
 	}
 
-	private void centerMapToMapFile() {
-		double latitude1 = this.database.getMapBoundary1().getLatitude();
-		double latitude2 = this.database.getMapBoundary2().getLatitude();
-		double longitude1 = this.database.getMapBoundary1().getLongitude();
-		double longitude2 = this.database.getMapBoundary2().getLongitude();
-		this.latitude = (latitude1 + latitude2) / 2;
-		this.longitude = (longitude1 + longitude2) / 2;
+	/**
+	 * Controls the visibility of the map scale.
+	 * 
+	 * @param showMapScale
+	 *            true if the map scale should be visible, false otherwise.
+	 */
+	public void setMapScale(boolean showMapScale) {
+		this.showMapScale = showMapScale;
+		if (showMapScale) {
+			renderMapScale();
+		}
+		// invalidate the MapView
+		invalidate();
 	}
 
 	private byte getValidZoomLevel(byte zoom) {
@@ -229,8 +278,6 @@ public class MapView extends ViewGroup {
 		} else if (this.getWidth() == 0) {
 			return;
 		}
-
-		renderMapScale();
 
 		// calculate the XY position of the MapView
 		this.mapViewPixelX = MercatorProjection.longitudeToPixelX(this.longitude,
@@ -264,6 +311,9 @@ public class MapView extends ViewGroup {
 			}
 		}
 
+		if (this.showMapScale) {
+			renderMapScale();
+		}
 		// invalidate the MapView
 		invalidate();
 
@@ -363,9 +413,6 @@ public class MapView extends ViewGroup {
 		this.showZoomControls = DEFAULT_BUILD_IN_ZOOM_CONTROLS;
 		this.cacheSize = DEFAULT_FILE_CACHE_SIZE;
 
-		// register the MapView in the MapActivity
-		this.mapActivity.setMapView(this);
-
 		// get the map generator from the MapActivity
 		this.mapGenerator = this.mapActivity.getMapGenerator();
 
@@ -384,6 +431,9 @@ public class MapView extends ViewGroup {
 		this.mapGenerator.setDatabase(this.database);
 		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
 		this.mapGenerator.setOsmView(this);
+
+		// register the MapView in the MapActivity
+		this.mapActivity.setMapView(this);
 	}
 
 	private void setupZoomControls() {
@@ -396,14 +446,12 @@ public class MapView extends ViewGroup {
 			@Override
 			public void onClick(View v) {
 				zoomIn();
-				hideZoomControlsDelayed();
 			}
 		});
 		this.zoomControls.setOnZoomOutClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				zoomOut();
-				hideZoomControlsDelayed();
 			}
 		});
 
@@ -490,7 +538,10 @@ public class MapView extends ViewGroup {
 	protected final void onDraw(Canvas canvas) {
 		// draw the map and the map scale
 		canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-		canvas.drawBitmap(this.mapScaleBitmap, 5, getHeight() - MAP_SCALE_HEIGHT - 5, null);
+
+		if (this.showMapScale) {
+			canvas.drawBitmap(this.mapScaleBitmap, 5, getHeight() - MAP_SCALE_HEIGHT - 5, null);
+		}
 
 		if (DRAW_FPS_COUNTER) {
 			// do the FPS calculation
@@ -552,19 +603,13 @@ public class MapView extends ViewGroup {
 		handleTiles();
 	}
 
-	double getLatitude() {
-		return this.latitude;
-	}
-
-	double getLongitude() {
-		return this.longitude;
-	}
-
 	boolean hasValidCenter() {
 		if (Double.isNaN(this.latitude) || this.latitude > 90 || this.latitude < -90) {
 			return false;
 		} else if (Double.isNaN(this.longitude) || this.longitude > 180
 				|| this.longitude < -180) {
+			return false;
+		} else if (!this.database.getMapBoundary().contains(getMapCenter())) {
 			return false;
 		}
 		return true;
@@ -621,25 +666,36 @@ public class MapView extends ViewGroup {
 	}
 
 	void setCenter(GeoPoint point) {
-		setCenterAndZoom(point.getLatitude(), point.getLongitude(), this.zoomLevel);
+		if (hasValidCenter()) {
+			// add the movement to the transformation matrix
+			this.matrix.postTranslate((float) (MercatorProjection.longitudeToPixelX(
+					this.longitude, this.zoomLevel) - MercatorProjection.longitudeToPixelX(
+					point.getLongitude(), this.zoomLevel)), (float) (MercatorProjection
+					.latitudeToPixelY(this.latitude, this.zoomLevel) - MercatorProjection
+					.latitudeToPixelY(point.getLatitude(), this.zoomLevel)));
+		}
+		setCenterAndZoom(point, this.zoomLevel);
 	}
 
-	void setCenterAndZoom(double latitude, double longitude, byte zoom) {
-		if (latitude <= this.database.getMapBoundary1().getLatitude()
-				&& latitude >= this.database.getMapBoundary2().getLatitude()
-				&& longitude >= this.database.getMapBoundary1().getLongitude()
-				&& longitude <= this.database.getMapBoundary2().getLongitude()) {
-			this.latitude = latitude;
-			this.longitude = longitude;
+	void setCenterAndZoom(GeoPoint point, byte zoom) {
+		if (this.database.getMapBoundary().contains(point)) {
+			this.latitude = point.getLatitude();
+			this.longitude = point.getLongitude();
 			this.zoomLevel = getValidZoomLevel(zoom);
-			// check if a zoom button should be disabled
-			if (this.zoomLevel == ZOOM_MAX) {
-				this.zoomControls.setIsZoomInEnabled(false);
-			}
-			if (this.zoomLevel == ZOOM_MIN) {
-				this.zoomControls.setIsZoomOutEnabled(false);
-			}
+			// enable or disable the zoom buttons if necessary
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 			handleTiles();
+		}
+	}
+
+	void setMapFileFromPreferences(String newMapFile) {
+		if (newMapFile == null) {
+			this.mapFile = null;
+		} else if (this.database.setFile(newMapFile)) {
+			this.mapFile = newMapFile;
+		} else {
+			this.mapFile = null;
 		}
 	}
 
@@ -665,13 +721,9 @@ public class MapView extends ViewGroup {
 
 	byte setZoom(byte zoomLevel) {
 		this.zoomLevel = getValidZoomLevel(zoomLevel);
-		// check if a zoom button should be disabled
-		if (this.zoomLevel == ZOOM_MAX) {
-			this.zoomControls.setIsZoomInEnabled(false);
-		}
-		if (this.zoomLevel == ZOOM_MIN) {
-			this.zoomControls.setIsZoomOutEnabled(false);
-		}
+		// enable or disable the zoom buttons if necessary
+		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 		handleTiles();
 		return this.zoomLevel;
 	}
@@ -679,10 +731,10 @@ public class MapView extends ViewGroup {
 	boolean zoomIn() {
 		if (this.zoomLevel < ZOOM_MAX) {
 			++this.zoomLevel;
-			if (this.zoomLevel == ZOOM_MAX) {
-				this.zoomControls.setIsZoomInEnabled(false);
-			}
-			this.zoomControls.setIsZoomOutEnabled(true);
+			// enable or disable the zoom buttons if necessary
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+			hideZoomControlsDelayed();
 			this.matrix.postScale(2, 2, getWidth() >> 1, getHeight() >> 1);
 			handleTiles();
 			return true;
@@ -693,10 +745,10 @@ public class MapView extends ViewGroup {
 	boolean zoomOut() {
 		if (this.zoomLevel > ZOOM_MIN) {
 			--this.zoomLevel;
-			if (this.zoomLevel == ZOOM_MIN) {
-				this.zoomControls.setIsZoomOutEnabled(false);
-			}
-			this.zoomControls.setIsZoomInEnabled(true);
+			// enable or disable the zoom buttons if necessary
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+			hideZoomControlsDelayed();
 			this.matrix.postScale(0.5f, 0.5f, getWidth() >> 1, getHeight() >> 1);
 			handleTiles();
 			return true;

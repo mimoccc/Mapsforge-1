@@ -31,4 +31,26 @@ class Rect {
 		this.right = right;
 		this.bottom = bottom;
 	}
+
+	/**
+	 * Returns true, if the given GeoPoint is inside this rectangle, false otherwise.
+	 * 
+	 * @param geoPoint
+	 *            the GeoPoint to be checked.
+	 * @return true if the GeoPoint is inside, false otherwise.
+	 */
+	boolean contains(GeoPoint geoPoint) {
+		return (geoPoint.getLatitudeE6() <= this.top && geoPoint.getLatitudeE6() >= this.bottom
+				&& geoPoint.getLongitudeE6() >= this.left && geoPoint.getLongitudeE6() <= this.right);
+	}
+
+	/**
+	 * Returns the center coordinates of this rectangle as a GeoPoint object.
+	 * 
+	 * @return the center coordinates of this rectangle.
+	 */
+	GeoPoint getCenter() {
+		return new GeoPoint((int) ((this.top + this.bottom) >> 1),
+				(int) ((this.left + this.right) >> 1));
+	}
 }

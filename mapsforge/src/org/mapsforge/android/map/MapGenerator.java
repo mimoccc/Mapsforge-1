@@ -276,7 +276,7 @@ class MapGenerator implements Runnable {
 				.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE, Bitmap.Config.RGB_565);
 		this.canvas = new Canvas(this.bitmap);
 
-		// create the map symbols
+		// create the map org.mapsforge.android.map.symbols
 		this.mapSymbols = new MapSymbols();
 
 		initializePaints();
@@ -395,7 +395,7 @@ class MapGenerator implements Runnable {
 				break;
 			}
 
-			// draw symbols
+			// draw org.mapsforge.android.map.symbols
 			for (this.arrayListIndex = this.symbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 				this.symbolContainer = this.symbols.get(this.arrayListIndex);
 				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
@@ -437,7 +437,7 @@ class MapGenerator implements Runnable {
 			this.bitmap = null;
 		}
 
-		// free the bitmap memory of the map symbols
+		// free the bitmap memory of the map org.mapsforge.android.map.symbols
 		if (this.mapSymbols != null) {
 			this.mapSymbols.recycle();
 			this.mapSymbols = null;
@@ -1472,48 +1472,48 @@ class MapGenerator implements Runnable {
 	private void setPaintParameters(byte zoomLevel) {
 		float paintScaleFactor;
 		switch (zoomLevel) {
-		case 25:
-			paintScaleFactor = 2048;
-			break;
-		case 24:
-			paintScaleFactor = 1024;
-			break;
-		case 23:
-			paintScaleFactor = 512;
-			break;
-		case 22:
-			paintScaleFactor = 256;
-			break;
-		case 21:
-			paintScaleFactor = 128;
-			break;
-		case 20:
-			paintScaleFactor = 64;
-			break;
-		case 19:
-			paintScaleFactor = 32;
-			break;
-		case 18:
-			paintScaleFactor = 16;
-			break;
-		case 17:
-			paintScaleFactor = 8;
-			break;
-		case 16:
-			paintScaleFactor = 6;
-			break;
-		case 15:
-			paintScaleFactor = 4;
-			break;
-		case 14:
-			paintScaleFactor = 2;
-			break;
-		case 13:
-			paintScaleFactor = 1.5f;
-			break;
-		default:
-			paintScaleFactor = 1;
-			break;
+			case 25:
+				paintScaleFactor = 2048;
+				break;
+			case 24:
+				paintScaleFactor = 1024;
+				break;
+			case 23:
+				paintScaleFactor = 512;
+				break;
+			case 22:
+				paintScaleFactor = 256;
+				break;
+			case 21:
+				paintScaleFactor = 128;
+				break;
+			case 20:
+				paintScaleFactor = 64;
+				break;
+			case 19:
+				paintScaleFactor = 32;
+				break;
+			case 18:
+				paintScaleFactor = 16;
+				break;
+			case 17:
+				paintScaleFactor = 8;
+				break;
+			case 16:
+				paintScaleFactor = 6;
+				break;
+			case 15:
+				paintScaleFactor = 4;
+				break;
+			case 14:
+				paintScaleFactor = 2;
+				break;
+			case 13:
+				paintScaleFactor = 1.5f;
+				break;
+			default:
+				paintScaleFactor = 1;
+				break;
 		}
 
 		PAINT_HIGHWAY_MOTORWAY1.setStrokeWidth(2.9f * paintScaleFactor);
