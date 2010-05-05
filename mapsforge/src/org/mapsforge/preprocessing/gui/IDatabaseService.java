@@ -27,26 +27,37 @@ public interface IDatabaseService {
 	 *            the transport object that should add to the database
 	 * @throws Exception
 	 */
-	public void addTransport(Transport transport) throws Exception;
-
+	public void addTransport(Transport transport);
+	
 	/**
-	 * @param transportID
-	 * @return transport
-	 * @throws Exception
-	 * 
+	 * Update an existing transport object in the database.
+	 *  
+	 * @param transport 
 	 */
-	public Transport getTransport(int transportID) throws Exception;
+	public void updateTransport(Transport transport); 
+	
+	/**
+	 * Delete the transport object with the given name of the database;
+	 * 
+	 * @param name
+	 */
+	public void deleteTransport(String name);
+	
+	/**
+	 * @param transportName 
+	 * @return transport
+	 */
+	public Transport getTransport(String transportName);
 
 	/**
 	 * Get all transport objects of the database.
 	 * 
 	 * @return a list of transport objects
-	 * @throws Exception
 	 */
-	public ArrayList<Transport> getAllTransports() throws Exception;
+	public ArrayList<Transport> getAllTransports();
 
-	public void addProfil(Profil profil) throws Exception;
+	public void addProfil(Profil profil);
 
-	public ArrayList<Profil> getAllProfilsOfTransport(Transport transport) throws Exception;
+	public ArrayList<Profil> getAllProfilsOfTransport(Transport transport);
 
 }

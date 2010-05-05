@@ -24,8 +24,16 @@ public class Profil {
 	private Transport transport;
 	private String heuristic;
 
+	public Profil(String name, String url, Transport transport, String heuristic) {
+		//this.setPid(pid);
+		this.name = name;
+		this.url = url;
+		this.transport = transport;
+		this.heuristic = heuristic;
+	}
+	
 	public Profil(int pid, String name, String url, Transport transport, String heuristic) {
-		this.setPid(pid);
+		this.pid = pid;
 		this.name = name;
 		this.url = url;
 		this.transport = transport;

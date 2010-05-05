@@ -22,20 +22,20 @@ import java.util.List;
 public class Transport {
 
 	int id;
-	String Name;
+	String name;
 	int maxSpeed;
 	List<Tag> useableWays;
 
 	public Transport(String name, int speed, List<Tag> ways) {
-		this.id = -1;
-		this.Name = name;
+		//this.id = -1;
+		this.name = name;
 		this.maxSpeed = speed;
 		this.useableWays = ways;
 	}
 
 	public Transport(int id, String name, int speed, List<Tag> ways) {
 		this.id = id;
-		this.Name = name;
+		this.name = name;
 		this.maxSpeed = speed;
 		this.useableWays = ways;
 	}
@@ -45,7 +45,7 @@ public class Transport {
 	 * @return the name
 	 */
 	public String getName() {
-		return Name;
+		return name;
 	}
 
 	/**
@@ -61,7 +61,12 @@ public class Transport {
 	public int getMaxSpeed() {
 		return maxSpeed;
 	}
-
+	/*
+	public String getMaxSpeedToString() {
+		Integer speed = maxSpeed;
+		return speed.toString();
+	}
+*/
 	/**
 	 * @return the useableWays
 	 */
@@ -72,12 +77,12 @@ public class Transport {
 	public String getUseableWaysSerialized() {
 		// TODO Auto-generated method stub
 		String result = "";
+		if (useableWays == null)
+			return result;
 		Iterator<Tag> it = useableWays.iterator();
 		while (it.hasNext()) {
-			result.concat(it.next().toString() + ";");
-
+			result+=(it.next().toString() + ";");
 		}
-
 		return result;
 	}
 
@@ -96,6 +101,12 @@ public class Transport {
 	 */
 	public void setUseableWays(List<Tag> useableWays) {
 		this.useableWays = useableWays;
+	}
+	
+	@Override
+	public String toString() {
+		return name;
+		
 	}
 
 }

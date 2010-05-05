@@ -17,13 +17,15 @@
 package org.mapsforge.preprocessing.gui;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
+//import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.regex.PatternSyntaxException;
 
 public class DatabaseService implements IDatabaseService {
 
@@ -46,61 +48,120 @@ public class DatabaseService implements IDatabaseService {
 	}
 
 	@Override
-	public void addTransport(Transport transport) throws Exception {
+	public void addTransport(Transport transport) {
 
-		String sql;
-		sql = "INSERT INTO transports (tid, transportname, maxspeed, usableways) VALUES (?, ?, ?, ?);";
-		PreparedStatement pstmt = con.prepareStatement(sql);
-
-		// pstmt.setInt(1,0);
-		pstmt.setString(2, transport.getName());
-		pstmt.setInt(3, transport.getMaxSpeed());
-		pstmt.setString(4, transport.getUseableWaysSerialized());
-		pstmt.addBatch();
-		pstmt.executeBatch();
-		pstmt.close();
+		String sql = "INSERT INTO transports (transportname, maxspeed, useableways) VALUES (?, ?, ?);";
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, transport.getName());
+			pstmt.setInt(2, transport.getMaxSpeed());
+			pstmt.setString(3, transport.getUseableWaysSerialized());
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (SQLException e) {
+			throw new IllegalArgumentException("Es existiert bereits ein Transportmittel mit dem angegeben Namen.");
+		}
+		
+		
+	}
+	
+	@Override
+	public void updateTransport(Transport transport){
+		
+		String sql = "UPDATE Transports SET transportname = ?, maxspeed = ?, useableways = ? WHERE transportname = ? ;";
+		int update = 0;
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, transport.getName());
+			pstmt.setInt(2, transport.getMaxSpeed());
+			pstmt.setString(3, transport.getUseableWaysSerialized());
+			pstmt.setString(4, transport.getName());
+			update = pstmt.executeUpdate();
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		// no update, because this transport, doesn't exists
+		if (update == 0) throw new NoSuchElementException("Kein Transportmittel " +
+				"mit dem Namen: "+transport.getName()+" enthalten.");
+		
 	}
 
 	@Override
-	public Transport getTransport(int transportID) throws Exception {
-		String sql;
-		sql = "SELECT * FROM transports WHERE tid=" + transportID + ";";
-		PreparedStatement stmt = con.prepareStatement(sql);
-		ResultSet rs = stmt.executeQuery(sql);
-		if (!rs.next())
-			throw new Exception("There is no transport object in the database with the id "
-					+ transportID);
-		int tid = rs.getInt("tid");
-		String transportname = rs.getString("transportname");
-		int speed = rs.getInt("maxspeed");
-		String ways = rs.getString("useableways");
-
-		if (rs.next())
-			throw new Exception(
-					"There are more then one transport objects in the database with the id "
-							+ transportID);
-
-		return new Transport(tid, transportname, speed, deserialized(ways));
+	public void deleteTransport(String name) {
+		String sql = "DELETE FROM transports WHERE transportname = '"+name+"';";
+		Statement stmt;
+		int delete = 0;
+		try {
+			stmt = con.createStatement();
+			delete = stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if(delete == 0)
+		{
+			throw new NoSuchElementException("Kein Transportmittel " +
+					"mit dem Namen: "+name+" enthalten.");
+		}
 	}
 
 	@Override
-	public ArrayList<Transport> getAllTransports() throws Exception {
-		String sql;
-		sql = "SELECT * FROM(tid, transportname, maxspeed, usableways) VALUES (?, ?, ?, ?);";
-		PreparedStatement stmt = con.prepareStatement(sql);
-		ResultSet rs = stmt.executeQuery(sql);
-		ArrayList<Transport> transports = new ArrayList<Transport>();
-		int id;
-		String name;
-		int speed;
-		String ways;
-		while (rs.next()) {
-			id = rs.getInt("tid");
-			name = rs.getString("transportname");
-			speed = rs.getInt("maxspeed");
+	public Transport getTransport(String transportName) {
+		String sql = "SELECT * FROM transports WHERE transportname="
+			+ transportName + ";";
+		
+		ResultSet rs = null;
+		String transportname = null;
+		int speed = 0;
+		String ways = null;
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			rs = pstmt.executeQuery(sql);
+			if (!rs.next()) 
+			{
+				throw new NoSuchElementException("There is no transport " +
+						"object in the database with the name "+ transportName);
+			}
+			
+			transportname = rs.getString("transportname");
+			speed= rs.getInt("maxspeed");
 			ways = rs.getString("useableways");
+			if (rs.next()) 
+			{
+				throw new NoSuchElementException("There are more then one transport objects in the database with the name "
+						+ transportName);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return new Transport(transportname, speed, deserialized(ways));
+	}
 
-			transports.add(new Transport(id, name, speed, deserialized(ways)));
+	@Override
+	public ArrayList<Transport> getAllTransports(){
+		
+		String sql = "SELECT * FROM transports;";
+		Statement stmt;
+		ResultSet rs = null;
+		ArrayList<Transport> transports = new ArrayList<Transport>();
+		try {
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(sql);
+			
+			String name;
+			int speed;
+			String ways;
+			while (rs.next()) {
+				name = rs.getString("transportname");
+				speed = rs.getInt("maxspeed");
+				ways = rs.getString("useableways");
+				
+				transports.add(new Transport(name, speed, deserialized(ways)));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 
 		return transports;
@@ -109,95 +170,119 @@ public class DatabaseService implements IDatabaseService {
 	private List<Tag> deserialized(String ways) {
 		ArrayList<Tag> tags = new ArrayList<Tag>();
 
-		String[] pairs = ways.split(";");
-		for (String pair : pairs) {
-			tags.add(new Tag(pair.split("=")[0], pair.split("=")[1]));
+		if(ways.length() != 0)
+		{
+			String[] pairs = null;
+			try {
+				pairs = ways.split(";");
+			} catch (PatternSyntaxException e)
+			{
+					e.printStackTrace();
+			}
+			if (pairs != null)
+			{
+				for (String pair : pairs) {
+					tags.add(new Tag(pair.split("=")[0], pair.split("=")[1]));
+				}
+			}
 		}
-
+		
 		return tags;
 	}
 
 	@Override
-	public void addProfil(Profil profil) throws Exception {
-		String sql;
-		sql = "INSERT INTO profil (pid, profilname, url, tid, heuristic) VALUES (?, ?, ?, ?, ?);";
-		PreparedStatement stmt = con.prepareStatement(sql);
-
-		// stmt.setInt(1, 0);
-		stmt.setString(2, profil.getName());
-		stmt.setString(3, profil.getUrl());
-		stmt.setInt(4, profil.getTransport().getId());
-		stmt.setString(5, profil.getHeuristic());
-		stmt.addBatch();
-		stmt.executeBatch();
-		stmt.close();
+	public void addProfil(Profil profil) {
+		String sql = "INSERT INTO profil (profilname, url, tid, heuristic) VALUES ( ?, ?, ?, ?);";
+		PreparedStatement pstmt;
+		try {
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, profil.getName());
+			pstmt.setString(2, profil.getUrl());
+			pstmt.setString(3, profil.getTransport().getName());
+			pstmt.setString(4, profil.getHeuristic());
+			pstmt.executeBatch();
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public ArrayList<Profil> getAllProfilsOfTransport(Transport transport) throws Exception {
-		String sql;
-		sql = "SELECT * FROM profil WHERE tid=" + transport.getId() + ";";
-		PreparedStatement stmt = con.prepareStatement(sql);
-		ResultSet rs = stmt.executeQuery(sql);
+	public ArrayList<Profil> getAllProfilsOfTransport(Transport transport){
+		String sql = "SELECT * FROM profil WHERE transportname = ?;";
+		PreparedStatement pstmt;
+		ResultSet rs = null;
 		ArrayList<Profil> profiles = new ArrayList<Profil>();
-		int pid, tid;
-		String profilname, url, heuristic;
-		Transport trans;
-		while (rs.next()) {
-			pid = rs.getInt("pid");
-			profilname = rs.getString("profilname");
-			url = rs.getString("url");
-			tid = rs.getInt("tid");
-			heuristic = rs.getString("heuristic");
+		try {
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, transport.getName());
+			rs = pstmt.executeQuery(sql);
+			String transportname, profilname, url, heuristic;
+			Transport trans;
+			while (rs.next()) {
+				profilname = rs.getString("profilname");
+				url = rs.getString("url");
+				transportname = rs.getString("transportname");
+				heuristic = rs.getString("heuristic");
 
-			trans = getTransport(tid);
+				trans = getTransport(transportname);
 
-			profiles.add(new Profil(pid, profilname, url, trans, heuristic));
+				profiles.add(new Profil(profilname, url, trans, heuristic));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 
-		// test
-
-		// TODO Auto-generated method stub
+		// TODO die methode stimmt nicht, überleg nochmal was hier gemacht werden sollte!!!!!!!!!!!!!!!!!!!!!!!!
 		return null;
 	}
 
-	private void listTables() throws Exception {
-		DatabaseMetaData md = con.getMetaData();
-		ResultSet rs = md.getTables(null, null, "%", null);
-		while (rs.next()) {
-			System.out.println(rs.getString(3));
-		}
-	}
+//	private void listTables(){
+//		DatabaseMetaData md;
+//		ResultSet rs = null;
+//		try {
+//			md = con.getMetaData();
+//			rs = md.getTables(null, null, "%", null);
+//			while (rs.next()) {
+//					System.out.println(rs.getString(3));
+//			}
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//	}
 
-	private void getSchema() throws Exception {
-		DatabaseMetaData dbmd = con.getMetaData();
-
-		String[] types = { "TABLE" };
-		ResultSet resultSet = dbmd.getTables(null, null, "%", types);
-
-		while (resultSet.next()) {
-			String tableName = resultSet.getString(3);
-
-			String tableCatalog = resultSet.getString(1);
-			String tableSchema = resultSet.getString(2);
-
-			System.out.println("tableCatalog:" + tableCatalog + "; tableSchema:" + tableSchema
-					+ "; tableName:" + tableName);
-		}
-	}
+//	private void getSchema(){
+//		DatabaseMetaData dbmd;
+//		try {
+//			dbmd = con.getMetaData();
+//			String[] types = { "TABLE" };
+//			ResultSet resultSet = dbmd.getTables(null, null, "%", types);
+//
+//			while (resultSet.next()) {
+//				String tableName = resultSet.getString(3);
+//
+//				String tableCatalog = resultSet.getString(1);
+//				String tableSchema = resultSet.getString(2);
+//
+//				System.out.println("tableCatalog:" + tableCatalog + "; tableSchema:" + tableSchema
+//						+ "; tableName:" + tableName);
+//			}
+//			
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	private void createTables() {
 		String trans, profil;
-		trans = "CREATE TABLE Transports (TID INTEGER PRIMARY KEY, Transportname VARCHAR(30), Maxspeed INTEGER, Useableways STRING);";
-		profil = "CREATE TABLE Profil (PID INTEGER PRIMARY KEY, Profilename VARCHAR(30), Url VARCHAR(55), TID INTEGER, Heuristic VARCHAR(55));";
+		trans = "CREATE TABLE Transports (Transportname VARCHAR(30) PRIMARY KEY, Maxspeed INTEGER, Useableways STRING);";
+		profil = "CREATE TABLE Profil (Profilename VARCHAR(30) PRIMARY KEY, Url VARCHAR(55), TName VARCHAR(30), Heuristic VARCHAR(30));";
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate(trans);
 			stmt.executeUpdate(profil);
 			stmt.close();
-			// con.commit();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -212,7 +297,6 @@ public class DatabaseService implements IDatabaseService {
 			stmt.executeUpdate(profil);
 			stmt.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -224,16 +308,38 @@ public class DatabaseService implements IDatabaseService {
 		try {
 			dbs.dropTables();
 			dbs.createTables();
-			dbs.listTables();
-			dbs.getSchema();
+			//dbs.listTables();
+			//dbs.getSchema();
+			Tag tag1 = new Tag("highway","motorway");
+			Tag tag2 = new Tag("highway","track");
+			Tag tag3 = new Tag("highway","primary");
+			List<Tag> list1 = new ArrayList<Tag>();
+			list1.add(tag1);
+			list1.add(tag3);
+			
+			List<Tag> list2 = new ArrayList<Tag>();
+			list2.add(tag2);
+			list2.add(tag3);
+			
+			List<Tag> list3 = new ArrayList<Tag>();
+			list3.add(tag2);
+			
+			dbs.addTransport(new Transport("Auto", 20, list1));
+			dbs.addTransport(new Transport("Fahrrad", 10, list2));
+			dbs.addTransport(new Transport("Fahrrad1", 10, list3));
+			//dbs.deleteTransport("Motorrad");
+//			ArrayList<Transport> testlist =  dbs.getAllTransports();
+//			for (Transport t : testlist) {
+//				 System.out.println(t.getId()+": "+t.getName());
+//				 System.out.println(t.getUseableWaysSerialized());
+//			}
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
 				dbs.getCon().close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
