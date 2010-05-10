@@ -29,6 +29,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -66,12 +67,11 @@ public class MapView extends ViewGroup {
 	private short frame_counter;
 	private ImageBitmapCache imageBitmapCache;
 	private ImageFileCache imageFileCache;
-	private double latitude;
-	private double longitude;
 	private final MapActivity mapActivity;
 	private MapController mapController;
 	private String mapFile;
 	private MapGenerator mapGenerator;
+	private MapMover mapMover;
 	private float mapMoveX;
 	private float mapMoveY;
 	private int mapScale;
@@ -89,7 +89,6 @@ public class MapView extends ViewGroup {
 	private long mapViewTileX2;
 	private long mapViewTileY1;
 	private long mapViewTileY2;
-	private Matrix matrix;
 	private double meterPerPixel;
 	private float previousPositionX;
 	private float previousPositionY;
@@ -101,9 +100,12 @@ public class MapView extends ViewGroup {
 	private ByteBuffer tileBuffer;
 	private long tileX;
 	private long tileY;
+	private ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
-	private byte zoomLevel;
-	ZoomControls zoomControls;
+	double latitude;
+	double longitude;
+	Matrix matrix;
+	byte zoomLevel;
 
 	public MapView(Context context) {
 		super(context);
@@ -172,6 +174,36 @@ public class MapView extends ViewGroup {
 	}
 
 	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+			this.mapMover.moveLeft();
+			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+			this.mapMover.moveRight();
+			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+			this.mapMover.moveUp();
+			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+			this.mapMover.moveDown();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+			this.mapMover.stopHorizontalMove();
+			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+			this.mapMover.stopVerticalMove();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (!isClickable()) {
 			return false;
@@ -191,17 +223,19 @@ public class MapView extends ViewGroup {
 			this.previousPositionX = event.getX();
 			this.previousPositionY = event.getY();
 
-			// add the movement to the transformation matrix
-			this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
+			synchronized (this) {
+				// add the movement to the transformation matrix
+				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
 
-			// calculate the new position of the map center
-			this.latitude = MercatorProjection.pixelYToLatitude((MercatorProjection
-					.latitudeToPixelY(this.latitude, this.zoomLevel) - this.mapMoveY),
-					this.zoomLevel);
-			this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
-					.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
-					this.zoomLevel);
-			handleTiles();
+				// calculate the new position of the map center
+				this.latitude = MercatorProjection.pixelYToLatitude((MercatorProjection
+						.latitudeToPixelY(this.latitude, this.zoomLevel) - this.mapMoveY),
+						this.zoomLevel);
+				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
+						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
+						this.zoomLevel);
+			}
+			handleTiles(true);
 			return true;
 		} else if (event.getAction() == MotionEvent.ACTION_UP
 				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
@@ -241,7 +275,7 @@ public class MapView extends ViewGroup {
 		if (this.database.setFile(newMapFile)) {
 			this.mapFile = newMapFile;
 			setCenter(this.database.getMapBoundary().getCenter());
-			handleTiles();
+			handleTiles(true);
 		} else {
 			this.mapFile = null;
 		}
@@ -270,55 +304,6 @@ public class MapView extends ViewGroup {
 		} else {
 			return zoom;
 		}
-	}
-
-	private void handleTiles() {
-		if (this.mapFile == null) {
-			return;
-		} else if (this.getWidth() == 0) {
-			return;
-		}
-
-		// calculate the XY position of the MapView
-		this.mapViewPixelX = MercatorProjection.longitudeToPixelX(this.longitude,
-				this.zoomLevel)
-				- (getWidth() >> 1);
-		this.mapViewPixelY = MercatorProjection.latitudeToPixelY(this.latitude, this.zoomLevel)
-				- (getHeight() >> 1);
-
-		this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX);
-		this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY);
-		this.mapViewTileX2 = MercatorProjection.pixelXToTileX(this.mapViewPixelX + getWidth());
-		this.mapViewTileY2 = MercatorProjection.pixelYToTileY(this.mapViewPixelY + getHeight());
-
-		// go through all tiles that intersect the screen rectangle
-		for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
-			for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
-				this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
-				if (this.imageBitmapCache.containsKey(this.currentTile)) {
-					// bitmap cache hit
-					putTileOnBitmap(this.currentTile, this.imageBitmapCache
-							.get(this.currentTile), false);
-				} else if (this.imageFileCache.containsKey(this.currentTile)) {
-					// file cache hit
-					this.imageFileCache.get(this.currentTile, this.tileBuffer);
-					this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-					putTileOnBitmap(this.currentTile, this.tileBitmap, true);
-				} else {
-					// cache miss
-					this.mapGenerator.addJob(this.currentTile);
-				}
-			}
-		}
-
-		if (this.showMapScale) {
-			renderMapScale();
-		}
-		// invalidate the MapView
-		invalidate();
-
-		// notify the map generator to process the job list
-		this.mapGenerator.requestSchedule();
 	}
 
 	private void renderMapScale() {
@@ -432,6 +417,9 @@ public class MapView extends ViewGroup {
 		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
 		this.mapGenerator.setOsmView(this);
 
+		this.mapMover = new MapMover(this);
+		this.mapMover.start();
+
 		// register the MapView in the MapActivity
 		this.mapActivity.setMapView(this);
 	}
@@ -488,6 +476,12 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected void onDetachedFromWindow() {
+		// interrupt the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.interrupt();
+			this.mapMover = null;
+		}
+
 		// free the mapViewBitmap1 memory
 		if (this.mapViewBitmap1 != null) {
 			this.mapViewBitmap1.recycle();
@@ -536,11 +530,14 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected final void onDraw(Canvas canvas) {
-		// draw the map and the map scale
-		canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+		synchronized (this) {
+			// draw the map and the map scale
+			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 
-		if (this.showMapScale) {
-			canvas.drawBitmap(this.mapScaleBitmap, 5, getHeight() - MAP_SCALE_HEIGHT - 5, null);
+			if (this.showMapScale) {
+				canvas.drawBitmap(this.mapScaleBitmap, 5, getHeight() - MAP_SCALE_HEIGHT - 5,
+						null);
+			}
 		}
 
 		if (DRAW_FPS_COUNTER) {
@@ -600,7 +597,66 @@ public class MapView extends ViewGroup {
 		// create the mapViewCanvas
 		this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 		this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
-		handleTiles();
+		handleTiles(true);
+	}
+
+	void handleTiles(boolean calledByUiThread) {
+		if (this.mapFile == null) {
+			return;
+		} else if (this.getWidth() == 0) {
+			return;
+		}
+
+		synchronized (this) {
+			// calculate the XY position of the MapView
+			this.mapViewPixelX = MercatorProjection.longitudeToPixelX(this.longitude,
+					this.zoomLevel)
+					- (getWidth() >> 1);
+			this.mapViewPixelY = MercatorProjection.latitudeToPixelY(this.latitude,
+					this.zoomLevel)
+					- (getHeight() >> 1);
+
+			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX);
+			this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY);
+			this.mapViewTileX2 = MercatorProjection.pixelXToTileX(this.mapViewPixelX
+					+ getWidth());
+			this.mapViewTileY2 = MercatorProjection.pixelYToTileY(this.mapViewPixelY
+					+ getHeight());
+
+			// go through all tiles that intersect the screen rectangle
+			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
+				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
+					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
+					if (this.imageBitmapCache.containsKey(this.currentTile)) {
+						// bitmap cache hit
+						putTileOnBitmap(this.currentTile, this.imageBitmapCache
+								.get(this.currentTile), false);
+					} else if (this.imageFileCache.containsKey(this.currentTile)) {
+						// file cache hit
+						this.imageFileCache.get(this.currentTile, this.tileBuffer);
+						this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+						putTileOnBitmap(this.currentTile, this.tileBitmap, true);
+					} else {
+						// cache miss
+						this.mapGenerator.addJob(this.currentTile);
+					}
+				}
+			}
+		}
+
+		if (this.showMapScale) {
+			renderMapScale();
+		}
+
+		// invalidate the MapView
+		if (calledByUiThread) {
+			invalidate();
+		} else {
+			postInvalidate();
+		}
+
+		// notify the map generator to process the job list
+		this.mapGenerator.requestSchedule();
 	}
 
 	boolean hasValidCenter() {
@@ -626,53 +682,57 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	synchronized void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
-		// check if the tile and the current MapView rectangle intersect
-		if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
-				|| this.mapViewPixelX + getWidth() < tile.pixelX) {
-			// no intersection in x direction
-			return;
-		} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
-				|| this.mapViewPixelY + getHeight() < tile.pixelY) {
-			// no intersection in y direction
-			return;
+	void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
+		synchronized (this) {
+			// check if the tile and the current MapView rectangle intersect
+			if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
+					|| this.mapViewPixelX + getWidth() < tile.pixelX) {
+				// no intersection in x direction
+				return;
+			} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
+					|| this.mapViewPixelY + getHeight() < tile.pixelY) {
+				// no intersection in y direction
+				return;
+			}
+
+			// check if the bitmap should go to the image bitmap cache
+			if (putToBitmapCache) {
+				this.imageBitmapCache.put(tile, bitmap);
+			}
+
+			if (!this.matrix.isIdentity()) {
+				// change the current MapViewBitmap
+				this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+				this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
+
+				// draw the previous MapViewBitmap on the mapViewBitmap
+				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+
+				// swap the two MapViewBitmaps
+				this.swapMapViewBitmap = this.mapViewBitmap1;
+				this.mapViewBitmap1 = this.mapViewBitmap2;
+				this.mapViewBitmap2 = this.swapMapViewBitmap;
+
+				// reset the matrix
+				this.matrix.reset();
+			}
+
+			// draw the tile bitmap at the correct position
+			this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
+					(float) (tile.pixelY - this.mapViewPixelY), null);
 		}
-
-		// check if the bitmap should go to the image bitmap cache
-		if (putToBitmapCache) {
-			this.imageBitmapCache.put(tile, bitmap);
-		}
-
-		if (!this.matrix.isIdentity()) {
-			// change the current MapViewBitmap
-			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
-			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
-
-			// draw the previous MapViewBitmap on the mapViewBitmap
-			this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-
-			// swap the two MapViewBitmaps
-			this.swapMapViewBitmap = this.mapViewBitmap1;
-			this.mapViewBitmap1 = this.mapViewBitmap2;
-			this.mapViewBitmap2 = this.swapMapViewBitmap;
-
-			// reset the matrix
-			this.matrix.reset();
-		}
-
-		// draw the tile bitmap at the correct position
-		this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
-				(float) (tile.pixelY - this.mapViewPixelY), null);
 	}
 
 	void setCenter(GeoPoint point) {
 		if (hasValidCenter()) {
-			// add the movement to the transformation matrix
-			this.matrix.postTranslate((float) (MercatorProjection.longitudeToPixelX(
-					this.longitude, this.zoomLevel) - MercatorProjection.longitudeToPixelX(
-					point.getLongitude(), this.zoomLevel)), (float) (MercatorProjection
-					.latitudeToPixelY(this.latitude, this.zoomLevel) - MercatorProjection
-					.latitudeToPixelY(point.getLatitude(), this.zoomLevel)));
+			synchronized (this) {
+				// add the movement to the transformation matrix
+				this.matrix.postTranslate((float) (MercatorProjection.longitudeToPixelX(
+						this.longitude, this.zoomLevel) - MercatorProjection.longitudeToPixelX(
+						point.getLongitude(), this.zoomLevel)), (float) (MercatorProjection
+						.latitudeToPixelY(this.latitude, this.zoomLevel) - MercatorProjection
+						.latitudeToPixelY(point.getLatitude(), this.zoomLevel)));
+			}
 		}
 		setCenterAndZoom(point, this.zoomLevel);
 	}
@@ -685,7 +745,7 @@ public class MapView extends ViewGroup {
 			// enable or disable the zoom buttons if necessary
 			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-			handleTiles();
+			handleTiles(true);
 		}
 	}
 
@@ -724,7 +784,7 @@ public class MapView extends ViewGroup {
 		// enable or disable the zoom buttons if necessary
 		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
 		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-		handleTiles();
+		handleTiles(true);
 		return this.zoomLevel;
 	}
 
@@ -735,8 +795,10 @@ public class MapView extends ViewGroup {
 			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 			hideZoomControlsDelayed();
-			this.matrix.postScale(2, 2, getWidth() >> 1, getHeight() >> 1);
-			handleTiles();
+			synchronized (this) {
+				this.matrix.postScale(2, 2, getWidth() >> 1, getHeight() >> 1);
+			}
+			handleTiles(true);
 			return true;
 		}
 		return false;
@@ -749,8 +811,10 @@ public class MapView extends ViewGroup {
 			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 			hideZoomControlsDelayed();
-			this.matrix.postScale(0.5f, 0.5f, getWidth() >> 1, getHeight() >> 1);
-			handleTiles();
+			synchronized (this) {
+				this.matrix.postScale(0.5f, 0.5f, getWidth() >> 1, getHeight() >> 1);
+			}
+			handleTiles(true);
 			return true;
 		}
 		return false;

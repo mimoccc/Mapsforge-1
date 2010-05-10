@@ -21,6 +21,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 
+/**
+ * Abstract class which must be extended in order to use a MapView.
+ */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
 	private MapGenerator mapGenerator;

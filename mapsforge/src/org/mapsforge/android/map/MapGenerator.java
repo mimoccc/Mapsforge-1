@@ -1657,7 +1657,7 @@ class MapGenerator implements Runnable {
 
 	synchronized void addJob(Tile tile) {
 		if (!this.jobQueue1.contains(tile)) {
-			this.jobQueue1.offer(this.mapView.setTilePriority(tile));
+			this.jobQueue1.offer(tile);
 		}
 	}
 

@@ -29,6 +29,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 		Logger.d("onKey called / MapController");
+		
 		return false;
 	}
 

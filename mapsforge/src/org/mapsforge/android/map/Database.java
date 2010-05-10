@@ -64,6 +64,7 @@ class Database {
 	private int[] innerWay;
 	private int[][] innerWays;
 	private RandomAccessFile inputFile;
+	private Rect mapBoundary;
 	private MapGenerator mapGenerator;
 	private int matrixBlocks;
 	private int matrixHeight;
@@ -81,7 +82,6 @@ class Database {
 	private HashSet<Integer> ways;
 	private short waysOnZoomLevel;
 	private byte zoomLevel;
-	private Rect mapBoundary;
 
 	/**
 	 * Construct a new database object to read binary OpenStreetMap files.
