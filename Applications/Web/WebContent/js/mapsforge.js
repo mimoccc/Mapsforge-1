@@ -2,12 +2,13 @@
 
 //var lat = 52.45579; // Koordinaten vom FB Inf
 //var lon = 13.29751;
+var leftDivWidth;
 
 var resizeMapWindow = function resizeMap() {
 	windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 	windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 	document.getElementById("map").style.height = windowHeight - 10; // 10 because body padding
-	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth)
+	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth);
 	document.getElementById("map").style.width = windowWidth - leftDivWidth;
 }
 
@@ -22,15 +23,34 @@ var zoom = 11;
 
 var routelayer;
 var marker;
+var menupopup;
 
 /**
  * Base URL of the Web Service.
  */
-var host = "http://wasser.mi.fu-berlin.de:8080/axis2/services/OSMService/";
-// var host = "http://wasser.mi.fu-berlin.de:8080/axis2/services1/OSMService/";
-// var host = "http://localhost:8080/axis2/services/OSMService/";
+var host = "/axis2/services/OSMService/";
 
 var map; // complex object of type OpenLayers.Map
+
+function mf_contextmenu(e) {
+  
+	clickX = e.pageX - leftDivWidth + 10; // 10 because of padding
+	clickY = e.pageY - 5; // 5 also because of padding
+	clickLatLonMapProj = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY));
+	//console.log(clickLatLonMapProj);
+  clickLatLonWSG84Proj = clickLatLonMapProj.clone().transform(map.getProjectionObject(), new OpenLayers.Projection("EPSG:4326"));
+  menuhtml = '<div id="popupmenu"><a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'start\')">Set Start</a><br>'
+           + '<a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'stop\')">Set Via</a><br>'
+           + '<a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'end\')">Set End</a></div>';
+  
+  menupopup = new OpenLayers.Popup("menu",
+                               clickLatLonMapProj,
+                               new OpenLayers.Size(80,60),
+                               menuhtml,
+                               false);
+  map.addPopup(menupopup, true);
+};
+
 
 /**
  * Initialization of the OpenStreetMap map.
@@ -53,7 +73,12 @@ function init() {
 		projection : new OpenLayers.Projection("EPSG:900913"),
 		displayProjection : new OpenLayers.Projection("EPSG:4326")
 	});
-
+	
+	map.div.oncontextmenu = function cm(e) {
+		mf_contextmenu(e);
+		return false;
+	};
+	
 	layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
 	map.addLayer(layerMapnik);
 	layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender("Osmarender");
@@ -71,58 +96,53 @@ function init() {
 /**
  * Hands over the parameters to a HTTP GET request function to call the
  * corresponding WebService for calculating the route.
- * 
- * @param start
- *            textual description for start point from the text field
- * @param start
- *            textual description for intermediate stop point from the text
- *            field
- * @param end
- *            textual description for end point from the text field
- * @param slon
- *            longitude of the start point coordinate
- * @param slat
- *            latitude of the start point coordinate
- * @param stoplon
- *            longitude of the intermediate stop point coordinate
- * @param stoplat
- *            latitude of the intermediate stop point coordinate
- * @param elon
- *            longitude of the end point coordinate
- * @param elat
- *            latitude of the end point coordinate
  */
-function getroute(start, stop, end, slon, slat, stoplon, stoplat, elon, elat) {
+function getroute() {
 
+	clearMap();
 	document.getElementById("resultAreaInfo").innerHTML = "";
 	document.getElementById("resultAreaStart").innerHTML = "";
 	document.getElementById("resultAreaStop").innerHTML = "";
 	document.getElementById("resultAreaEnd").innerHTML = "";
+	
+	route = {
+    start : {
+    	lon : document.search.startlon.value,
+    	lat : document.search.startlat.value,
+    	text : document.search.start.value
+    },
+    via : {
+    	lon : document.search.stoplon.value,
+    	lat : document.search.stoplat.value,
+    	text : document.search.stop.value
+    },
+  	end : {
+    	lon : document.search.endlon.value,
+    	lat : document.search.endlat.value,
+    	text : document.search.end.value
+    }
+  }
 
-	clearMap();
+  // origin:
+  route.markup = "<h3>Route:</h3><b>Von:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker-green.png\">" + route.start.text;
+  route.requestString = host + "getRoute?points=" + route.start.lon + "," + route.start.lat + ";";
+  // via (if applicable):
+  if (route.via.text != "" && route.via.lon != "" && route.via.lat != "") {
+  	route.markup += "<br/><b>&Uuml;ber:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker-gold.png\">" + route.via.text;
+  	route.requestString += route.via.lon + "," + route.via.lat + ";";
+  }
+  // destination:
+  route.markup += "<br/><b>Nach:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker.png\">" + route.end.text;
+  route.requestString += route.end.lon + "," + route.end.lat;
 
-	if (stop == "" || stoplon == "" || stoplat == "") {
-		route = "<h3>Route:</h3><b>Von:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker-green.png\">"
-				+ start
-				+ "<br/><b>Nach:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker.png\">"
-				+ end;
-		routelayer = new OpenLayers.Layer.GPX(start + " -> " + end, host
-				+ "getRoute?points=" + slon + "," + slat + ";" + elon + ","
-				+ elat, "#FF0000");
-		map.addLayer(routelayer);
-	} else {
-		route = "<h3>Route:</h3><b>Von:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker-green.png\">"
-				+ start
-				+ "<br/><b>Nach:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker.png\">"
-				+ end
-				+ "<br/><b>&Uuml;ber:</b><br/><img src=\"http://www.openlayers.org/dev/img/marker-gold.png\">"
-				+ stop;
-		routelayer = new OpenLayers.Layer.GPX(start + " -> " + end, host
-				+ "getRoute?points=" + slon + "," + slat + ";" + stoplon + ","
-				+ stoplat + ";" + elon + "," + elat, "#FF0000");
-		map.addLayer(routelayer);
+  // find and show route
+  if (route.start.lon != "" && route.start.lat != "" && route.end.lon != "" && route.end.lat != "" ) {
+    // route
+    route.layer = new OpenLayers.Layer.GPX(route.start.text + " -> " + route.end.text, route.requestString, "#FF0000");
+    map.addLayer(route.layer);
+
+  	document.getElementById("resultAreaInfo").innerHTML = route.markup;
 	}
-	document.getElementById("resultAreaInfo").innerHTML = route;
 }
 
 /**
@@ -315,7 +335,7 @@ function getpois(ajaxRequest, status) {
 
 	// http://www.openlayers.org/dev/img/marker-blue.png -> Blau
 	// http://www.openlayers.org/dev/img/marker-gold.png -> Gelb
-	// http://www.openlayers.org/dev/img/marker-green.png -> GrÃ¼n
+	// http://www.openlayers.org/dev/img/marker-green.png -> Grün
 	// http://www.openlayers.org/dev/img/marker.png -> Rot
 
 	var loc = pois_text + points;
@@ -377,6 +397,7 @@ function setValues(lon, lat, desc, status) {
 	for ( var i = 0, len = map.popups.length; i < len; i++) {
 		map.removePopup(map.popups[i]);
 	}
+	getroute();
 }
 
 /**

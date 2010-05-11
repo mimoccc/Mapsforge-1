@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>FUN - FU Navigation based on OpenStreetMap</title>
+<title>FU Navigation based on OpenStreetMap</title>
 
 <link type="text/css" href="mapsforge.css" rel="stylesheet" />
 
@@ -34,8 +34,8 @@
 	<form name="search">
 		<label for="start">Start:</label>
 		<input name="start" type="text" size="22" value="Brandenburger Tor"/>
-		<input type="hidden" name="startlon" value="52.516471" />
-		<input type="hidden" name="startlat" value="13.377655" />
+		<input type="hidden" name="startlon" value="13377655" />
+		<input type="hidden" name="startlat" value="52516471" />
 
 		<label for="stop">Halt:</label>
 		<input name="stop" type="text" size="22" />
@@ -44,15 +44,13 @@
 
 		<label for="end">Ziel:</label>
 		<input name="end" type="text" size="22" value="Arnimallee 3, Berlin" />
-		<input type="hidden" name="endlon" value="13.29751" />
-		<input type="hidden" name="endlat" value="52.45579" />
+		<input type="hidden" name="endlon" value="13297510" />
+		<input type="hidden" name="endlat" value="52455790" />
 
 		<input type="button" value="Start-/Zielpunkt suchen" class="mfbutton"
 			onclick="getStartEndPoints(this.form.start.value, this.form.stop.value, this.form.end.value);" />
-		<input type="button" value="Route berechnen" class="mfbutton"
-			onclick="getroute(this.form.start.value, this.form.stop.value, this.form.end.value, this.form.startlon.value, this.form.startlat.value, this.form.stoplon.value, this.form.stoplat.value, this.form.endlon.value, this.form.endlat.value);" />
-		<input type="button" value="Neue Anfrage" class="mfbutton"
-				onclick="newRequest();" />
+		<input type="button" value="Route berechnen" class="mfbutton" onclick="getroute();" />
+		<input type="button" value="Neue Anfrage" class="mfbutton" onclick="newRequest();" />
 	</form>
 	
 	<span id="resultAreaStart" /></span> 

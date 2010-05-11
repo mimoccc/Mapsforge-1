@@ -33,3 +33,24 @@ body {
 #leftDiv .mfbutton {
   margin-left: 34px;
 }
+
+#menu_contentDiv {
+  padding: 0px;
+  font-family: sans-serif;
+  color: blue;
+}
+
+#menu a:hover {
+  text-decoration: underline;
+}
+
+#menu_GroupDiv {
+  border-top: 1px solid #444;
+  border-left: 1px solid #444;
+  border-right: 1px solid #444;
+}
+
+#popupmenu {
+  border-bottom: 1px solid #444;
+  padding-bottom: 1px;
+}
