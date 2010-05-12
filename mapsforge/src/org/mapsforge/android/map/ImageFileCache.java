@@ -119,10 +119,6 @@ class ImageFileCache {
 				file.deleteOnExit();
 			}
 		}
-		this.map.clear();
-		this.fileInputStream = null;
-		this.fileOutputStream = null;
-		this.imageFile = null;
 	}
 
 	synchronized void get(Tile tile, ByteBuffer buffer) {

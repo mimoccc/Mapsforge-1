@@ -23,31 +23,30 @@ import android.os.SystemClock;
  * separate thread to avoid blocking the UI thread.
  */
 class MapMover extends Thread {
-	private final MapView mapView;
-	private final float MOVE_SPEED = 0.3f;
+	private MapView mapView;
+	private final float MOVE_SPEED = 0.25f;
 	private long moveTimeCurrent;
 	private long moveTimeElapsed;
 	private long moveTimePrevious;
 	private float moveX;
 	private float moveY;
 
-	MapMover(MapView mapView) {
-		this.mapView = mapView;
-	}
-
 	@Override
 	public void run() {
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isInterrupted()) {
 			synchronized (this) {
-				while (!Thread.currentThread().isInterrupted() && this.moveX == 0
-						&& this.moveY == 0) {
+				while (!isInterrupted() && this.moveX == 0 && this.moveY == 0) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
 						// restore the interrupted status
-						Thread.currentThread().interrupt();
+						interrupt();
 					}
 				}
+			}
+
+			if (isInterrupted()) {
+				break;
 			}
 
 			// calculate the time difference to previous call
@@ -76,9 +75,12 @@ class MapMover extends Thread {
 			try {
 				sleep(20);
 			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
+				interrupt();
 			}
 		}
+
+		// set the pointer to null to avoid memory leaks
+		this.mapView = null;
 	}
 
 	void moveDown() {
@@ -135,6 +137,10 @@ class MapMover extends Thread {
 				this.notify();
 			}
 		}
+	}
+
+	void setMapView(MapView mapView) {
+		this.mapView = mapView;
 	}
 
 	void stopHorizontalMove() {

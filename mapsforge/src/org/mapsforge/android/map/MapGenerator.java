@@ -32,9 +32,9 @@ import android.graphics.Typeface;
 import android.graphics.Paint.Align;
 
 /**
- * The map generator reads map data from a database and renders map images.
+ * The MapGenerator reads map data from a database and renders map images.
  */
-class MapGenerator implements Runnable {
+class MapGenerator extends Thread {
 	private static final short BITMAP_AMENITY = 32;
 	private static final short BITMAP_BUILDING = 2;
 	private static final short BITMAP_HIGHWAY = 1;
@@ -286,7 +286,7 @@ class MapGenerator implements Runnable {
 
 	@Override
 	public void run() {
-		Thread.currentThread().setName(THREAD_NAME);
+		setName(THREAD_NAME);
 
 		// set up data structures
 		this.ways = new ArrayList<ArrayList<ArrayList<PathContainer>>>(LAYERS);
@@ -305,7 +305,7 @@ class MapGenerator implements Runnable {
 		this.coastlineEnds = new TreeMap<GeoPoint, int[]>();
 		this.coastlineStarts = new TreeMap<GeoPoint, int[]>();
 
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!isInterrupted()) {
 			// reset data structures
 			for (byte i = LAYERS - 1; i >= 0; --i) {
 				this.innerWayList = this.ways.get(i);
@@ -321,19 +321,19 @@ class MapGenerator implements Runnable {
 			this.coastlineEnds.clear();
 
 			synchronized (this) {
-				while (!Thread.currentThread().isInterrupted() && this.jobQueue1.isEmpty()) {
+				while (!isInterrupted() && this.jobQueue1.isEmpty()) {
 					try {
 						this.ready = true;
 						wait();
 					} catch (InterruptedException e) {
 						// restore the interrupted status
-						Thread.currentThread().interrupt();
+						interrupt();
 					}
 				}
 			}
 			this.ready = false;
 
-			if (Thread.currentThread().isInterrupted()) {
+			if (isInterrupted()) {
 				break;
 			}
 
@@ -360,7 +360,7 @@ class MapGenerator implements Runnable {
 			this.database.executeQuery(this.currentTile,
 					this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
 
-			if (Thread.currentThread().isInterrupted()) {
+			if (isInterrupted()) {
 				break;
 			}
 
@@ -380,7 +380,7 @@ class MapGenerator implements Runnable {
 				}
 			}
 
-			if (Thread.currentThread().isInterrupted()) {
+			if (isInterrupted()) {
 				break;
 			}
 
@@ -391,11 +391,11 @@ class MapGenerator implements Runnable {
 						this.pathTextContainer.path, 0, 3, this.pathTextContainer.paint);
 			}
 
-			if (Thread.currentThread().isInterrupted()) {
+			if (isInterrupted()) {
 				break;
 			}
 
-			// draw org.mapsforge.android.map.symbols
+			// draw map symbols
 			for (this.arrayListIndex = this.symbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 				this.symbolContainer = this.symbols.get(this.arrayListIndex);
 				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
@@ -419,7 +419,7 @@ class MapGenerator implements Runnable {
 						PAINT_INFO_BLACK_13);
 			}
 
-			if (Thread.currentThread().isInterrupted()) {
+			if (isInterrupted()) {
 				break;
 			}
 
@@ -1164,7 +1164,7 @@ class MapGenerator implements Runnable {
 			int longitudeX;
 			int latitudeX;
 
-			while (!Thread.currentThread().isInterrupted() && coastlinePartsIterator.hasNext()) {
+			while (!isInterrupted() && coastlinePartsIterator.hasNext()) {
 				currentPart = coastlinePartsIterator.next();
 				currentPartLength = currentPart.length;
 				if (currentPart[0] == currentPart[currentPartLength - 2]
@@ -3274,7 +3274,7 @@ class MapGenerator implements Runnable {
 		this.imageFileCache = imageFileCache;
 	}
 
-	void setOsmView(MapView mapView) {
+	void setMapView(MapView mapView) {
 		this.mapView = mapView;
 	}
 }

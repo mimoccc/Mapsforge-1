@@ -74,7 +74,6 @@ class ImageBitmapCache {
 		for (Bitmap bitmap : this.bitmapPool) {
 			bitmap.recycle();
 		}
-		this.map.clear();
 	}
 
 	synchronized Bitmap get(Tile tile) {

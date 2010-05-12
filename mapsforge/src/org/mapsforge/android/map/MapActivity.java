@@ -27,38 +27,57 @@ import android.os.Bundle;
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
 	private MapGenerator mapGenerator;
-	private Thread mapGeneratorThread;
 	private MapView mapView;
+	private MapMover mapMover;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// create the map generator thread
+
+		// create and start the MapGenerator thread
 		this.mapGenerator = new MapGenerator();
-		this.mapGeneratorThread = new Thread(this.mapGenerator);
-		this.mapGeneratorThread.start();
+		this.mapGenerator.start();
+
+		// create and start the MapMover thread
+		this.mapMover = new MapMover();
+		this.mapMover.start();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		// stop the map generator thread
-		if (this.mapGeneratorThread != null) {
-			this.mapGeneratorThread.interrupt();
+
+		// stop the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.interrupt();
 			try {
-				this.mapGeneratorThread.join();
+				this.mapMover.join();
 			} catch (InterruptedException e) {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
 			}
-			this.mapGeneratorThread = null;
+			this.mapMover = null;
 		}
+
+		// stop the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.interrupt();
+			try {
+				this.mapGenerator.join();
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+			this.mapGenerator = null;
+		}
+
 		this.mapView = null;
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+
 		if (this.mapView == null) {
 			return;
 		}
@@ -77,6 +96,10 @@ public abstract class MapActivity extends Activity {
 
 	final MapGenerator getMapGenerator() {
 		return this.mapGenerator;
+	}
+
+	final MapMover getMapMover() {
+		return this.mapMover;
 	}
 
 	/**

@@ -354,17 +354,60 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setup() {
-		setBackgroundColor(MAP_VIEW_BACKGROUND);
-		setWillNotDraw(false);
-		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
-		setupZoomControls();
-		addView(this.zoomControls, new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
 		this.latitude = Double.NaN;
 		this.longitude = Double.NaN;
 		this.zoomLevel = DEFAULT_ZOOM_LEVEL;
 
+		setBackgroundColor(MAP_VIEW_BACKGROUND);
+		setWillNotDraw(false);
+		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+
+		setupZoomControls();
+		setupMapScale();
+
+		// create the paint for drawing the FPS text
+		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		this.fpsPaint.setTextSize(20);
+
+		// create the transformation matrix
+		this.matrix = new Matrix();
+		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
+				Bitmap.Config.RGB_565);
+		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
+				* Tile.TILE_BYTES_PER_PIXEL);
+
+		// set default values
+		this.showZoomControls = DEFAULT_BUILD_IN_ZOOM_CONTROLS;
+		this.cacheSize = DEFAULT_FILE_CACHE_SIZE;
+
+		// create the image bitmap cache
+		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
+
+		// create the image file cache
+		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
+				this.cacheSize);
+
+		// create the MapController for this MapView
+		this.mapController = new MapController(this);
+
+		// create the database
+		this.database = new Database();
+
+		// get the MapGenerator from the MapActivity
+		this.mapGenerator = this.mapActivity.getMapGenerator();
+		this.mapGenerator.setDatabase(this.database);
+		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
+		this.mapGenerator.setMapView(this);
+
+		// get the MapMover from the MapActivity
+		this.mapMover = this.mapActivity.getMapMover();
+		this.mapMover.setMapView(this);
+
+		// register the MapView in the MapActivity
+		this.mapActivity.setMapView(this);
+	}
+
+	private void setupMapScale() {
 		// create the bitmap for the map scale and the canvas to draw on it
 		this.mapScaleBitmap = Bitmap.createBitmap(MAP_SCALE_WIDTH, MAP_SCALE_HEIGHT,
 				Bitmap.Config.ARGB_4444);
@@ -382,46 +425,6 @@ public class MapView extends ViewGroup {
 		PAINT_MAP_SCALE_TEXT.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_MAP_SCALE_TEXT.setTextSize(14);
 		PAINT_MAP_SCALE_TEXT.setColor(Color.BLACK);
-
-		// create the paint for drawing the FPS text
-		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		this.fpsPaint.setTextSize(20);
-
-		// create the transformation matrix
-		this.matrix = new Matrix();
-		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
-				Bitmap.Config.RGB_565);
-		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
-				* Tile.TILE_BYTES_PER_PIXEL);
-
-		// set default values
-		this.showZoomControls = DEFAULT_BUILD_IN_ZOOM_CONTROLS;
-		this.cacheSize = DEFAULT_FILE_CACHE_SIZE;
-
-		// get the map generator from the MapActivity
-		this.mapGenerator = this.mapActivity.getMapGenerator();
-
-		// create the image bitmap cache
-		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
-
-		// create the image file cache
-		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
-				this.cacheSize);
-
-		// create the MapController for this MapView
-		this.mapController = new MapController(this);
-
-		// create the database
-		this.database = new Database();
-		this.mapGenerator.setDatabase(this.database);
-		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
-		this.mapGenerator.setOsmView(this);
-
-		this.mapMover = new MapMover(this);
-		this.mapMover.start();
-
-		// register the MapView in the MapActivity
-		this.mapActivity.setMapView(this);
 	}
 
 	private void setupZoomControls() {
@@ -450,6 +453,9 @@ public class MapView extends ViewGroup {
 				MapView.this.zoomControls.hide();
 			}
 		};
+
+		addView(this.zoomControls, new ViewGroup.LayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 	}
 
 	private void showZoomControls() {
@@ -476,12 +482,6 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected void onDetachedFromWindow() {
-		// interrupt the MapMover thread
-		if (this.mapMover != null) {
-			this.mapMover.interrupt();
-			this.mapMover = null;
-		}
-
 		// free the mapViewBitmap1 memory
 		if (this.mapViewBitmap1 != null) {
 			this.mapViewBitmap1.recycle();
@@ -521,7 +521,7 @@ public class MapView extends ViewGroup {
 			this.imageFileCache = null;
 		}
 
-		// stop the database execution and close the map file
+		// close the map file
 		if (this.database != null) {
 			this.database.closeFile();
 			this.database = null;
