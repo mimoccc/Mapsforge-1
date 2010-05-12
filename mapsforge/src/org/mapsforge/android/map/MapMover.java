@@ -23,8 +23,8 @@ import android.os.SystemClock;
  * separate thread to avoid blocking the UI thread.
  */
 class MapMover extends Thread {
+	private static final float MOVE_SPEED = 0.25f;
 	private MapView mapView;
-	private final float MOVE_SPEED = 0.25f;
 	private long moveTimeCurrent;
 	private long moveTimeElapsed;
 	private long moveTimePrevious;

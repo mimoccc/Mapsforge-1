@@ -100,7 +100,7 @@ public class MapView extends ViewGroup {
 	private ByteBuffer tileBuffer;
 	private long tileX;
 	private long tileY;
-	private ZoomControls zoomControls;
+	ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	double latitude;
 	double longitude;
