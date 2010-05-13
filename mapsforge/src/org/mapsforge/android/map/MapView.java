@@ -148,6 +148,9 @@ public class MapView extends ViewGroup {
 	 * @return the center coordinates of the map file.
 	 */
 	public GeoPoint getMapFileCenter() {
+		if (this.database == null || this.database.getMapBoundary() == null) {
+			return null;
+		}
 		return this.database.getMapBoundary().getCenter();
 	}
 
@@ -665,7 +668,8 @@ public class MapView extends ViewGroup {
 		} else if (Double.isNaN(this.longitude) || this.longitude > 180
 				|| this.longitude < -180) {
 			return false;
-		} else if (!this.database.getMapBoundary().contains(getMapCenter())) {
+		} else if (this.database == null || this.database.getMapBoundary() == null
+				|| !this.database.getMapBoundary().contains(getMapCenter())) {
 			return false;
 		}
 		return true;
@@ -738,7 +742,8 @@ public class MapView extends ViewGroup {
 	}
 
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
-		if (this.database.getMapBoundary().contains(point)) {
+		if (this.database != null && this.database.getMapBoundary() != null
+				&& this.database.getMapBoundary().contains(point)) {
 			this.latitude = point.getLatitude();
 			this.longitude = point.getLongitude();
 			this.zoomLevel = getValidZoomLevel(zoom);
