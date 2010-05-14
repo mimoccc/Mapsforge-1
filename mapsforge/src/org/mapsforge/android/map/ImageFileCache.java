@@ -32,22 +32,27 @@ import android.graphics.Bitmap;
 class ImageFileCache {
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
-	private final int capacity;
+	private int capacity;
 	private FileInputStream fileInputStream;
 	private FileOutputStream fileOutputStream;
 	private File imageFile;
-	private final LinkedHashMap<Tile, File> map;
+	private LinkedHashMap<Tile, File> map;
 	private final String tempDir;
 
 	/**
-	 * Constructs a cache with a fixes size and LRU policy.
+	 * Constructs an image file cache with a fixes size and LRU policy.
 	 * 
 	 * @param tempDir
-	 *            the temporary directory to use for cached images.
+	 *            the temporary directory to use for cached files.
 	 * @param capacity
 	 *            the maximum number of entries in the cache.
+	 * @throws IllegalArgumentException
+	 *             if the capacity is negative.
 	 */
 	ImageFileCache(String tempDir, int capacity) {
+		if (capacity < 0) {
+			throw new IllegalArgumentException();
+		}
 		this.tempDir = tempDir;
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);
@@ -56,33 +61,21 @@ class ImageFileCache {
 	}
 
 	/**
-	 * Constructs a new cache from an old cache with a fixes size and LRU policy. The entries
-	 * from the old cache are copied into the new cache and the old cache is cleared.
+	 * Adjusts the capacity of the cache.
 	 * 
-	 * @param tempDir
-	 *            the temporary directory to use for cached images.
 	 * @param capacity
-	 *            the maximum number of entries in the cache.
-	 * @param oldImageFileCache
-	 *            the old image cache.
+	 *            the new capacity of the cache.
 	 */
-	ImageFileCache(String tempDir, int capacity, ImageFileCache oldImageFileCache) {
-		this.tempDir = tempDir;
+	synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
-		this.map = createMap(this.capacity);
-		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
-				* Tile.TILE_BYTES_PER_PIXEL);
-		if (this.capacity >= oldImageFileCache.capacity) {
-			// put all entries from the old cache in the new one
-			this.map.putAll(oldImageFileCache.map);
-		} else {
-			// put all entries from the old cache in the new one. The
-			// replacement policy will only keep the last files.
-			for (Map.Entry<Tile, File> entry : oldImageFileCache.map.entrySet()) {
-				this.map.put(entry.getKey(), entry.getValue());
-			}
+		// make a new map with the new capacity and put all entries from the old map in the new
+		// one. The replacement policy will keep the right files in the new map if the new map
+		// has a smaller capacity than the old map.
+		LinkedHashMap<Tile, File> newMap = createMap(this.capacity);
+		for (Map.Entry<Tile, File> entry : this.map.entrySet()) {
+			newMap.put(entry.getKey(), entry.getValue());
 		}
-		oldImageFileCache.map.clear();
+		this.map = newMap;
 	}
 
 	private LinkedHashMap<Tile, File> createMap(final int initialCapacity) {
@@ -93,8 +86,7 @@ class ImageFileCache {
 			@Override
 			public boolean removeEldestEntry(Map.Entry<Tile, File> eldest) {
 				if (size() > initialCapacity) {
-					// remove the entry from the cache and delete the cached
-					// file
+					// remove the entry from the cache and delete the cached file
 					this.remove(eldest.getKey());
 					if (!eldest.getValue().delete()) {
 						eldest.getValue().deleteOnExit();

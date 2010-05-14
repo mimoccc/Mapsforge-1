@@ -31,7 +31,18 @@ class ImageBitmapCache {
 	private Bitmap tempBitmap;
 	final LinkedList<Bitmap> bitmapPool;
 
+	/**
+	 * Constructs an image bitmap cache with a fixes size and LRU policy.
+	 * 
+	 * @param capacity
+	 *            the maximum number of entries in the cache.
+	 * @throws IllegalArgumentException
+	 *             if the capacity is negative.
+	 */
 	ImageBitmapCache(int capacity) {
+		if (capacity < 0) {
+			throw new IllegalArgumentException();
+		}
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);
 		this.bitmapPool = new LinkedList<Bitmap>();

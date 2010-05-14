@@ -41,7 +41,6 @@ public class MapView extends ViewGroup {
 	private static final boolean DEFAULT_BUILD_IN_ZOOM_CONTROLS = false;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
 	private static final byte DEFAULT_ZOOM_LEVEL = 15;
-	private static final boolean DRAW_FPS_COUNTER = !false;
 	private static final short MAP_SCALE_HEIGHT = 35;
 	private static final int[] MAP_SCALE_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
@@ -58,7 +57,6 @@ public class MapView extends ViewGroup {
 	private static final byte ZOOM_MIN = 0;
 	private String abbr_kilometer = " km";
 	private String abbr_meter = " m";
-	private int cacheSize;
 	private Tile currentTile;
 	private long currentTime;
 	private Database database;
@@ -93,6 +91,7 @@ public class MapView extends ViewGroup {
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
+	private boolean showFpsCounter;
 	private boolean showMapScale;
 	private boolean showZoomControls;
 	private Bitmap swapMapViewBitmap;
@@ -100,29 +99,47 @@ public class MapView extends ViewGroup {
 	private ByteBuffer tileBuffer;
 	private long tileX;
 	private long tileY;
-	ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	double latitude;
 	double longitude;
 	Matrix matrix;
+	ZoomControls zoomControls;
 	byte zoomLevel;
 
+	/**
+	 * Constructs a new MapView.
+	 * 
+	 * @param context
+	 *            the enclosing MapActivity object.
+	 * @throws IllegalArgumentException
+	 *             if the context object is not an instance of {@link MapActivity}.
+	 */
 	public MapView(Context context) {
 		super(context);
 		if (!(context instanceof MapActivity)) {
 			throw new IllegalArgumentException();
 		}
 		this.mapActivity = (MapActivity) context;
-		setup();
+		mapViewSetup();
 	}
 
+	/**
+	 * Constructs a new MapView.
+	 * 
+	 * @param context
+	 *            the enclosing MapActivity object.
+	 * @param attrs
+	 *            A set of attributes (currently ignored).
+	 * @throws IllegalArgumentException
+	 *             if the context object is not an instance of {@link MapActivity}.
+	 */
 	public MapView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		if (!(context instanceof MapActivity)) {
 			throw new IllegalArgumentException();
 		}
 		this.mapActivity = (MapActivity) context;
-		setup();
+		mapViewSetup();
 	}
 
 	public MapController getController() {
@@ -154,10 +171,20 @@ public class MapView extends ViewGroup {
 		return this.database.getMapBoundary().getCenter();
 	}
 
+	/**
+	 * Returns the maximum zoom level of the map.
+	 * 
+	 * @return the maximum zoom level.
+	 */
 	public int getMaxZoomLevel() {
 		return ZOOM_MAX;
 	}
 
+	/**
+	 * Returns the current zoom level of the map.
+	 * 
+	 * @return the current zoom level.
+	 */
 	public int getZoomLevel() {
 		return this.zoomLevel;
 	}
@@ -259,9 +286,32 @@ public class MapView extends ViewGroup {
 		this.showZoomControls = showZoomControls;
 	}
 
-	public void setCacheSize(int cacheSize) {
-		// TODO: implement this
-		this.cacheSize = cacheSize;
+	/**
+	 * Set the new size of the file cache. If the cache already contains more items than the new
+	 * capacity allows, items are discarded based on the normal file cache policy.
+	 * 
+	 * @param newCacheSize
+	 *            the new capacity of the file cache.
+	 * @throws IllegalArgumentException
+	 *             if the new capacity is negative.
+	 */
+	public void setFileCacheSize(int newCacheSize) {
+		if (newCacheSize < 0) {
+			throw new IllegalArgumentException();
+		}
+		this.imageFileCache.setCapacity(newCacheSize);
+	}
+
+	/**
+	 * Controls the visibility of the frame rate.
+	 * 
+	 * @param showFpsCounter
+	 *            true if the map frame rate should be visible, false otherwise.
+	 */
+	public void setFpsCounter(boolean showFpsCounter) {
+		this.showFpsCounter = showFpsCounter;
+		// invalidate the MapView
+		invalidate();
 	}
 
 	public void setMapFile(String newMapFile) {
@@ -309,6 +359,59 @@ public class MapView extends ViewGroup {
 		}
 	}
 
+	private void mapViewSetup() {
+		this.latitude = Double.NaN;
+		this.longitude = Double.NaN;
+		this.zoomLevel = DEFAULT_ZOOM_LEVEL;
+
+		setBackgroundColor(MAP_VIEW_BACKGROUND);
+		setWillNotDraw(false);
+		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+
+		setupZoomControls();
+		setupMapScale();
+
+		// create the paint for drawing the FPS text
+		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		this.fpsPaint.setTextSize(20);
+
+		// create the transformation matrix
+		this.matrix = new Matrix();
+		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
+				Bitmap.Config.RGB_565);
+		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
+				* Tile.TILE_BYTES_PER_PIXEL);
+
+		// set default values
+		this.showZoomControls = DEFAULT_BUILD_IN_ZOOM_CONTROLS;
+
+		// create the image bitmap cache
+		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
+
+		// create the image file cache
+		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
+				DEFAULT_FILE_CACHE_SIZE);
+
+		// create the MapController for this MapView
+		this.mapController = new MapController(this);
+
+		// create the database
+		this.database = new Database();
+
+		// get the MapGenerator from the MapActivity
+		this.mapGenerator = this.mapActivity.getMapGenerator();
+		this.mapGenerator.setDatabase(this.database);
+		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
+		this.mapGenerator.setMapView(this);
+
+		// get the MapMover from the MapActivity
+		this.mapMover = this.mapActivity.getMapMover();
+		this.mapMover.setMapView(this);
+
+		// register the MapView in the MapActivity
+		this.mapActivity.setMapView(this);
+	}
+
 	private void renderMapScale() {
 		// check if recalculating and drawing of the map scale is necessary
 		if (this.zoomLevel == this.mapScalePreviousZoomLevel
@@ -354,60 +457,6 @@ public class MapView extends ViewGroup {
 			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.abbr_kilometer, 10, 15,
 					PAINT_MAP_SCALE_TEXT);
 		}
-	}
-
-	private void setup() {
-		this.latitude = Double.NaN;
-		this.longitude = Double.NaN;
-		this.zoomLevel = DEFAULT_ZOOM_LEVEL;
-
-		setBackgroundColor(MAP_VIEW_BACKGROUND);
-		setWillNotDraw(false);
-		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
-
-		setupZoomControls();
-		setupMapScale();
-
-		// create the paint for drawing the FPS text
-		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		this.fpsPaint.setTextSize(20);
-
-		// create the transformation matrix
-		this.matrix = new Matrix();
-		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
-				Bitmap.Config.RGB_565);
-		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
-				* Tile.TILE_BYTES_PER_PIXEL);
-
-		// set default values
-		this.showZoomControls = DEFAULT_BUILD_IN_ZOOM_CONTROLS;
-		this.cacheSize = DEFAULT_FILE_CACHE_SIZE;
-
-		// create the image bitmap cache
-		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
-
-		// create the image file cache
-		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
-				this.cacheSize);
-
-		// create the MapController for this MapView
-		this.mapController = new MapController(this);
-
-		// create the database
-		this.database = new Database();
-
-		// get the MapGenerator from the MapActivity
-		this.mapGenerator = this.mapActivity.getMapGenerator();
-		this.mapGenerator.setDatabase(this.database);
-		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
-		this.mapGenerator.setMapView(this);
-
-		// get the MapMover from the MapActivity
-		this.mapMover = this.mapActivity.getMapMover();
-		this.mapMover.setMapView(this);
-
-		// register the MapView in the MapActivity
-		this.mapActivity.setMapView(this);
 	}
 
 	private void setupMapScale() {
@@ -543,7 +592,7 @@ public class MapView extends ViewGroup {
 			}
 		}
 
-		if (DRAW_FPS_COUNTER) {
+		if (this.showFpsCounter) {
 			// do the FPS calculation
 			this.currentTime = SystemClock.uptimeMillis();
 			if (this.currentTime - this.previousTime > 1000) {
