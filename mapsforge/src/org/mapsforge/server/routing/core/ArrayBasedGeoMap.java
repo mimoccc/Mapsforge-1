@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -46,16 +47,13 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 
 	public static final class Builder {
 		private Date date;
+		private String name;
+		private TIntArrayList srcList = new TIntArrayList();
 		private TIntArrayList dstList = new TIntArrayList();
 		private TIntArrayList latList = new TIntArrayList();
 		private TIntArrayList lonList = new TIntArrayList();
-		private String name;
-		private TIntArrayList srcList = new TIntArrayList();
-
 		private TIntArrayList vertexLatList = new TIntArrayList();
-
 		private TIntArrayList vertexLonList = new TIntArrayList();
-
 		private TIntObjectHashMap<TIntObjectHashMap<int[][]>> wayImNodes = new TIntObjectHashMap<TIntObjectHashMap<int[][]>>();
 
 		/**
@@ -89,10 +87,17 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 			if (this.name == null || this.date == null)
 				throw new IllegalStateException();
 			// TODO: assert other values
-			return new ArrayBasedGeoMap(this.name, this.date, this.latList.toNativeArray(),
-					this.lonList.toNativeArray(), this.srcList.toNativeArray(), this.dstList
-							.toNativeArray(), this.vertexLatList.toNativeArray(),
-					this.vertexLonList.toNativeArray(), this.wayImNodes);
+			return new ArrayBasedGeoMap(
+					this.name, 
+					this.date, 
+					this.latList.toNativeArray(),
+					this.lonList.toNativeArray(), 
+					this.srcList.toNativeArray(), 
+					this.dstList.toNativeArray(), 
+					this.vertexLatList.toNativeArray(),
+					this.vertexLonList.toNativeArray(), 
+					this.wayImNodes
+				);
 		}
 
 		public void putWayImNodes(int srcId, int dstId, TIntArrayList[] edgeNodesList) {
@@ -112,12 +117,10 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 				this.wayImNodes.put(srcId, nodesMap);
 			}
 			/** now add way in forward direction */
-			this.wayImNodes.get(srcId).put(
-					dstId,
-					new int[][] { edgeNodesList[0].toNativeArray(),
-							edgeNodesList[1].toNativeArray() });
-			for (int i = 0; i < edgeNodesList[0].size(); i++)
+			this.wayImNodes.get(srcId).put(dstId, new int[][] { edgeNodesList[0].toNativeArray(), edgeNodesList[1].toNativeArray() });
+			for (int i = 0; i < edgeNodesList[0].size(); i++) {
 				addWayPoint(srcId, dstId, edgeNodesList[0].get(i), edgeNodesList[1].get(i));
+			}
 		}
 
 		public void setDate(Date date) {
@@ -433,8 +436,10 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 					stmt.setFetchSize(nVertices);
 					/** retrieve the edges all at once */
 					rs = stmt.executeQuery();
-					TIntArrayList[] edgeNodesList = new TIntArrayList[] { new TIntArrayList(),
-							new TIntArrayList() };
+					TIntArrayList[] edgeNodesList = new TIntArrayList[] {
+							new TIntArrayList(),
+							new TIntArrayList() 
+						};
 					int recentSrcId = -1;
 					int recentDstId = -1;
 					while (rs.next()) {
@@ -747,8 +752,9 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 		if (imNodesMap != null) {
 			int[][] imNodes = imNodesMap.get(dstId);
 			if (imNodes != null)
-				for (int n = 0; n < imNodes[0].length; n++)
+				for (int n = 0; n < imNodes[0].length; n++) {
 					res.add(Node.newNode(imNodes[0][n], imNodes[1][n]));
+				}
 		}
 		/** change list direction if constructed backwards */
 		if (backwards)
@@ -762,9 +768,10 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 
 	@Override
 	public Node vertexNode(int vtxId) {
-		// TODO: get attributes map
-		Point p = this.getVertexPoint(vtxId);
-		return Node.newNode(p.getLat(), p.getLon());
+		// TODO: insert meaningful attributes!
+		HashMap<String, String> attributes = new HashMap<String, String>();
+		attributes.put("node-id", Integer.toString(vtxId));
+		return Node.newNode(this.pointMap.vtxLats[vtxId], this.pointMap.vtxLons[vtxId], attributes);
 	}
 
 	@Override
