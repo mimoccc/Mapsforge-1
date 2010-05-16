@@ -56,8 +56,7 @@ class ImageFileCache {
 		this.tempDir = tempDir;
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);
-		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
-				* Tile.TILE_BYTES_PER_PIXEL);
+		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
 	/**

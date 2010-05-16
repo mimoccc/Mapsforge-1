@@ -51,8 +51,7 @@ class ImageBitmapCache {
 			this.bitmapPool.add(Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 					Bitmap.Config.RGB_565));
 		}
-		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE * Tile.TILE_SIZE
-				* Tile.TILE_BYTES_PER_PIXEL);
+		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
 	private LinkedHashMap<Tile, Bitmap> createMap(final int initialCapacity) {

@@ -17,8 +17,20 @@
 package org.mapsforge.android.map;
 
 class Tile implements Comparable<Tile> {
+	/**
+	 * Amount of bytes per pixel of a map tile.
+	 */
 	static final byte TILE_BYTES_PER_PIXEL = 2;
+
+	/**
+	 * The width and height of a map tile in pixel.
+	 */
 	static final short TILE_SIZE = 256;
+
+	/**
+	 * The size of a single map tile in bytes.
+	 */
+	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
 	private final int hashCode;
 	final long pixelX;
 	final long pixelY;
