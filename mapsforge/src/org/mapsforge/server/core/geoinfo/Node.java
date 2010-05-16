@@ -17,34 +17,25 @@
 package org.mapsforge.server.core.geoinfo;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Node extends AbstractPoint {
 
-	public static enum Attribute {
-		COST_TO_DESTINATION, //
-		DISTANCE_TO_DESTINATION, //
+	public static Node newNode(int latitude, int longitude, Map<String, String> map) {
+		HashMap<String, String> hMap = new HashMap<String, String>();
+		hMap.putAll(map);
+		return new Node(latitude, longitude, hMap);
 	}
 
-	public static Node newNode(int latitude, int longitude, Map<Attribute, String> map) {
-		EnumMap<Attribute, String> eMap = new EnumMap<Attribute, String>(Attribute.class);
-		eMap.putAll(map);
-		return new Node(latitude, longitude, eMap);
-	}
-
-	protected final Map<Attribute, String> attributes;
+	protected final HashMap<String, String> attributes;
 
 	/** lazy hashCode initialization */
 	protected volatile int hashCode;
 
-	protected Node(int lat, int lon, EnumMap<Attribute, String> eMap) {
+	protected Node(int lat, int lon, HashMap<String, String> hMap) {
 		super(lat, lon);
-
-		/**
-		 * make attributes unmodifiable at this point ensures faster access at "getAttributes()"
-		 */
-		this.attributes = Collections.unmodifiableMap(eMap);
+		this.attributes = hMap;
 	}
 
 	@Override
@@ -57,8 +48,8 @@ public class Node extends AbstractPoint {
 		return this.lat == n.lat && this.lon == n.lon && this.attributes.equals(n.attributes);
 	}
 
-	public Map<Attribute, String> getAttributes() {
-		/** attributes already unmodifiable, so just returning suffices */
+	public HashMap<String, String> getAttributes() {
+		//this.attributes.put("Node.java Key", "Node.java Value");
 		return this.attributes;
 	}
 
@@ -78,7 +69,7 @@ public class Node extends AbstractPoint {
 		return newNode(lat, lon, EMPTY_ATTRIBUTE_MAP);
 	}
 
-	public static final Map<Attribute, String> EMPTY_ATTRIBUTE_MAP = Collections.emptyMap();
+	public static final Map<String, String> EMPTY_ATTRIBUTE_MAP = Collections.emptyMap();
 
 	public static Node getNode(IPoint point) {
 		if (!(point instanceof Node))

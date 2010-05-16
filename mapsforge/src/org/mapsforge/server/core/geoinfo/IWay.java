@@ -17,15 +17,11 @@
 package org.mapsforge.server.core.geoinfo;
 
 import java.util.List;
-import java.util.Map;
+import java.util.HashMap;
 
 public interface IWay {
 
-	public static enum Attribute {
-		COST, DURATION, LENGTH, NUMBER_OF_POINTS,
-	}
-
-	Map<Attribute, String> getAttributes();
+	HashMap<String, String> getAttributes();
 
 	List<Node> intermediateNodes();
 
