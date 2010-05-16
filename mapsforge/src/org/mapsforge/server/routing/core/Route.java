@@ -19,7 +19,7 @@ package org.mapsforge.server.routing.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +54,12 @@ public final class Route extends MetaWay {
 			}
 
 			@Override
-			public Map<Attribute, String> getAttributes() {
+			public HashMap<String, String> getAttributes() {
 				// TODO read attributes from GeoMap / RoutingGraph
-				return Collections.emptyMap();
+				//return Collections.emptyMap();
+				HashMap<String, String> wayAttributes = new HashMap<String, String>();
+				wayAttributes.put("Key Route.java : Streetname in Section ", "asdasd");
+				return wayAttributes;
 			}
 
 			@Override
@@ -87,8 +90,7 @@ public final class Route extends MetaWay {
 
 			/** make a defensive copy of the vertices array */
 			this.vertices = Arrays.copyOf(vertices, vertices.length);
-			LOGGER.fine("new Section (" + src + "," + Arrays.toString(vertices) + "," + dst
-					+ ")");
+			LOGGER.fine("new Section (" + src + "," + Arrays.toString(vertices) + "," + dst + ")");
 		}
 
 		public Route route() {
@@ -159,9 +161,7 @@ public final class Route extends MetaWay {
 								 * if the second vertex is not the point itself (otherwise skip
 								 * edge)
 								 */
-								res
-										.add(newWay(lastVtxId, vdsPost[0].vtxId,
-												this.destinationWp));
+								res.add(newWay(lastVtxId, vdsPost[0].vtxId,	this.destinationWp));
 						} else if (vdsPost[0].distance != 0)
 							/**
 							 * if the first vertex is not the point itself (otherwise skip edge)
@@ -195,8 +195,11 @@ public final class Route extends MetaWay {
 		private Way newWay(int srcId, int dstId) {
 			if (srcId == dstId)
 				throw new IllegalArgumentException(Issue.ASSERTION_ERR.msg());
-			return new Way(Route.this.geoMap.vertexNode(srcId), Route.this.geoMap
-					.intermediateNodes(srcId, dstId), Route.this.geoMap.vertexNode(dstId));
+			return new Way(
+					Route.this.geoMap.vertexNode(srcId), 
+					Route.this.geoMap.intermediateNodes(srcId, dstId), 
+					Route.this.geoMap.vertexNode(dstId)
+				);
 		}
 
 		/**
@@ -377,7 +380,7 @@ public final class Route extends MetaWay {
 
 abstract class MetaWay implements IWay {
 
-	private volatile EnumMap<Attribute, String> attributes;
+	private volatile HashMap<String, String> attributes;
 
 	@Override
 	public final Node destination() {
@@ -390,13 +393,13 @@ abstract class MetaWay implements IWay {
 	}
 
 	@Override
-	public final EnumMap<Attribute, String> getAttributes() {
-		EnumMap<Attribute, String> res = this.attributes;
+	public final HashMap<String, String> getAttributes() {
+		HashMap<String, String> res = this.attributes;
 		if (res == null) {
-			res = new EnumMap<Attribute, String>(Attribute.class);
+			res = new HashMap<String, String>();
 			for (IWay w : subTraces()) {
-				Map<Attribute, String> wAtts = w.getAttributes();
-				for (Attribute key : wAtts.keySet()) {
+				HashMap<String, String> wAtts = w.getAttributes();
+				for (String key : wAtts.keySet()) {
 					String val = res.get(key);
 					if (val != null)
 						res.put(key, Integer.parseInt(val) + wAtts.get(key));

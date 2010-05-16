@@ -42,7 +42,7 @@ import org.mapsforge.server.core.geoinfo.Point;
 // TODO: IDEE: feasibility check in Router-klasse: danach komponenten in datei
 //schreiben und mit hashs versehen, diese hashs sind in den jeweiligen anderen
 //Komponenten in einer Liste (nicht in hash-berechnung enthalten) von hashs der
-//fï¿½r valide erklï¿½rten anderen komponenten enthalten. 
+//für valide erklärten anderen komponenten enthalten. 
 public abstract class Router {
 
 	public static enum Message {
@@ -71,8 +71,7 @@ public abstract class Router {
 
 			return c.newInstance(vehicle, routingGraph, geoMap, propConf);
 		} catch (Exception exc) {
-			throw new ComponentInitializationException(Issue.R__CONSTRUCTOR_PROBLEM_EXC.msg(),
-					exc);
+			throw new ComponentInitializationException(Issue.R__CONSTRUCTOR_PROBLEM_EXC.msg(), exc);
 		}
 	}
 
@@ -253,8 +252,7 @@ public abstract class Router {
 			Class<?> typeUnchecked = Class.forName(pptyConf.get(Property.RG__TYPE));
 			rgType = typeUnchecked.asSubclass(IRoutingGraph.class);
 		} catch (Exception exc) {
-			throw new ComponentInitializationException(Issue.RG__ROUTINGGRAPH_INSTANTIATION
-					.msg());
+			throw new ComponentInitializationException(Issue.RG__ROUTINGGRAPH_INSTANTIATION.msg());
 		}
 
 		/** get the data input if defined to be used */
@@ -265,8 +263,7 @@ public abstract class Router {
 			try {
 				in = new DataInputStream(new FileInputStream(inFilename));
 			} catch (FileNotFoundException exc) {
-				throw new ComponentInitializationException(Issue.RG__DATAINPUT_NOT_CONFGD_PRPLY
-						.msg(), exc);
+				throw new ComponentInitializationException(Issue.RG__DATAINPUT_NOT_CONFGD_PRPLY.msg(), exc);
 			}
 		}
 
@@ -278,8 +275,7 @@ public abstract class Router {
 			try {
 				out = new DataOutputStream(new FileOutputStream(outFilename));
 			} catch (FileNotFoundException exc) {
-				throw new ComponentInitializationException(
-						Issue.RG__DATAOUTPUT_NOT_CONFGD_PRPLY.msg(), exc);
+				throw new ComponentInitializationException(Issue.RG__DATAOUTPUT_NOT_CONFGD_PRPLY.msg(), exc);
 			}
 		}
 
@@ -292,8 +288,7 @@ public abstract class Router {
 					DataOutput.class, IVehicle.class).invoke(null, pptyConf, conHlr, in, out,
 					vehicle);
 		} catch (Exception exc) {
-			throw new ComponentInitializationException(Issue.RG__VALUEOF_NOT_APPLICABLE.msg(),
-					exc);
+			throw new ComponentInitializationException(Issue.RG__VALUEOF_NOT_APPLICABLE.msg(), exc);
 		}
 
 		return routingGraph;
@@ -344,12 +339,10 @@ public abstract class Router {
 			wayPoints.add(wayPoint);
 
 			// DEBUG ONLY:
-			LOGGER.info(String.format(Messages.getString(Message.POINT_TO_WAYPOINT), point,
-					wayPoint));
+			LOGGER.info(String.format(Messages.getString(Message.POINT_TO_WAYPOINT), point, wayPoint));
 		}
 		// DEBUG ONLY:
-		LOGGER.info(String.format(Messages.getString(Message.POINTS_TO_WAYPOINTS), timer
-				+ System.currentTimeMillis()));
+		LOGGER.info(String.format(Messages.getString(Message.POINTS_TO_WAYPOINTS), timer + System.currentTimeMillis()));
 
 		/** compute the Route */
 		Route route = new Route(getGeoMap(), getRoutingGraph());
