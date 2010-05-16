@@ -39,9 +39,13 @@ function mf_contextmenu(e) {
 	clickLatLonMapProj = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY));
 	//console.log(clickLatLonMapProj);
   clickLatLonWSG84Proj = clickLatLonMapProj.clone().transform(map.getProjectionObject(), new OpenLayers.Projection("EPSG:4326"));
-  menuhtml = '<div id="popupmenu"><a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'start\')">Set Start</a><br>'
-           + '<a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'stop\')">Set Via</a><br>'
-           + '<a onclick="setValues(' + Math.round(clickLatLonWSG84Proj.lon*1000000) + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000) + ',\'' + clickLatLonWSG84Proj.lat + ', ' + clickLatLonWSG84Proj.lon + '\', \'end\')">Set End</a></div>';
+  newValues = Math.round(clickLatLonWSG84Proj.lon*1000000)
+              + ',' + Math.round(clickLatLonWSG84Proj.lat*1000000)
+              + ',\'' + clickLatLonWSG84Proj.lat
+              + ', ' + clickLatLonWSG84Proj.lon+ '\',';
+  menuhtml = '<div id="popupmenu"><a onclick="setValues(' + newValues + '\'start\')">Set Start</a><br>'
+           + '<a onclick="setValues(' + newValues + '\'stop\')">Set Via</a><br>'
+           + '<a onclick="setValues(' + newValues + '\'end\')">Set End</a></div>';
   
   menupopup = new OpenLayers.Popup("menu",
                                clickLatLonMapProj,
