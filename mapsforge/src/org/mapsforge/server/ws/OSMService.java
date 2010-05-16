@@ -20,7 +20,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.mapsforge.server.core.geoinfo.BoundingBox;
@@ -45,8 +48,10 @@ public class OSMService implements IWebService {
 			 * Initialization of the routing graph
 			 */
 			Properties props = new Properties();
-			props.load(new FileInputStream(getPropFile()));
-
+			//props.load(new FileInputStream(getPropFile()));
+			//props.load(new FileInputStream("C:/uni/workspace/mapsforge/res/conf/routingGraph.properties"));
+			props.load(new FileInputStream("C:/uni/workspace/mapsforge/src/org/mapsforge/server/routing/core/defaults.properties"));
+			
 			router = Router.newInstance(props);
 		} catch (Exception exc) {
 			router = null;
@@ -57,18 +62,6 @@ public class OSMService implements IWebService {
 
 	private static Router router;
 	private boolean devmode = false; // Set to true to create mock services
-
-	private static String getPropFile() throws FileNotFoundException, IOException {
-		// /opt/tomcat6/conf/osm/global.properties auf wasser.mi.fu-...
-
-		Properties props = new Properties();
-		String propFileName = null;
-
-		props.load(new FileInputStream("/opt/tomcat6/conf/osm/global.properties"));
-		propFileName = props.getProperty("routingGraph.properties");
-
-		return propFileName;
-	}
 
 	private static void handleException(Throwable t) {
 		do {
@@ -85,16 +78,10 @@ public class OSMService implements IWebService {
 	 */
 	public Features getFeatures() {
 		Features f = new Features();
-		if (devmode) {
-			f.setDescription("Berechnung einer Route in Berlin"); // description
-			f.setTransportType("Auto"); // transport type
-			f.setAlgorithm("A*"); // routing algorithm
-		} else {
-			f.setDescription("Berechnung einer Route in Berlin"); // description
-			f.setTransportType(router.getVehicle().name()); // transport
-			// type
-			f.setAlgorithm(router.getAlgorithmName()); // routing algorithm
-		}
+		f.setDescription("Berechnung einer Route in Berlin"); // description
+		f.setTransportType(router.getVehicle().name()); // transport
+		// type
+		f.setAlgorithm(router.getAlgorithmName()); // routing algorithm
 		return f;
 	}
 
@@ -158,34 +145,17 @@ public class OSMService implements IWebService {
 
 		}
 		Node[] result = null;
-		if (devmode) {
-			Node[] p = new Node[10];
-			p[0] = new Node(13.2969681, 52.4568067);
-			p[1] = new Node(13.2944749, 52.4557233);
-			p[2] = new Node(13.2906384, 52.4580225);
-			p[3] = new Node(13.3044602, 52.4587301);
-			p[4] = new Node(13.2974333, 52.4577959);
-			p[5] = new Node(13.2985155, 52.4535404);
-			p[6] = new Node(13.2958723, 52.4510186);
-			p[7] = new Node(13.2867763, 52.4525322);
-			p[8] = new Node(13.2979435, 52.4559984);
-			p[9] = new Node(13.2926711, 52.4621264);
 
-			result = new Node[max];
-			for (int i = 0; i < max; i++)
-				result[i] = p[i];
-		} else {
-			Iterable<Point> points1 = router.getGeoMap().getWayPoints(
-					Point.newInstance(coordinates[0][1], coordinates[0][0]), max,
-					BoundingBox.WHOLE_WORLD);
-			ArrayList<Node> nodes = new ArrayList<Node>();
-			for (IPoint p : points1) {
-				nodes.add(new Node(p.getLon(), p.getLat()));
-			}
-			result = new Node[nodes.size()];
-			for (int i = 0; i < nodes.size(); i++) {
-				result[i] = nodes.get(i);
-			}
+		Iterable<Point> points1 = router.getGeoMap().getWayPoints(
+				Point.newInstance(coordinates[0][1], coordinates[0][0]), max,
+				BoundingBox.WHOLE_WORLD);
+		ArrayList<Node> nodes = new ArrayList<Node>();
+		for (IPoint p : points1) {
+			nodes.add(new Node(p.getLon(), p.getLat()));
+		}
+		result = new Node[nodes.size()];
+		for (int i = 0; i < nodes.size(); i++) {
+			result[i] = nodes.get(i);
 		}
 		return result;
 	}
@@ -220,43 +190,26 @@ public class OSMService implements IWebService {
 			coordinates[i][0] = Integer.valueOf(s[0]);
 			coordinates[i][1] = Integer.valueOf(s[1]);
 		}
-		// System.out.println("lon: " + coordinates[0][0] + " lat: " +
-		// coordinates[0][1] + " -> lon: " +
-		// coordinates[coordinates.length-1][0] + " lat: " +
-		// coordinates[coordinates.length-1][1]);
 		Node[] route = null;
-		if (devmode) {
-			route = new Node[11];
-			route[0] = new Node(13.2987555, 52.4577899);
-			route[1] = new Node(13.2986312, 52.457564);
-			route[2] = new Node(13.2983602, 52.4574172);
-			route[3] = new Node(13.2982862, 52.4573871);
-			route[4] = new Node(13.297754, 52.4571561);
-			route[5] = new Node(13.2975143, 52.4570509);
-			route[6] = new Node(13.2969681, 52.4568067);
-			route[7] = new Node(13.2958627, 52.4563265);
-			route[8] = new Node(13.2956988, 52.4562528);
-			route[9] = new Node(13.2944749, 52.4557233);
-			route[10] = new Node(13.2918805, 52.4546849);
-		} else {
-
-			ArrayList<Point> pp = new ArrayList<Point>();
-
-			for (int i = 0; i < (coordinates.length); i++) {
-				Point point = Point.newInstance(Integer.valueOf(coordinates[i][1]), Integer
-						.valueOf(coordinates[i][0]));
-				pp.add(point);
-			}
-			Route iroute = router.route(pp);
-			List<org.mapsforge.server.core.geoinfo.Node> nodes = iroute.intermediateNodes();
-			ArrayList<Node> p = new ArrayList<Node>();
-			for (IPoint n : nodes)
-				p.add(new Node(n.getLon(), n.getLat()));
-
-			route = new Node[p.size()];
-			for (int i = 0; i < p.size(); i++) {
-				route[i] = p.get(i);
-			}
+		ArrayList<Point> pp = new ArrayList<Point>();
+		for (int i = 0; i < (coordinates.length); i++) {
+			Point point = Point.newInstance(
+					Integer.valueOf(coordinates[i][1]), 
+					Integer.valueOf(coordinates[i][0])
+				);
+			pp.add(point);
+		}
+		Route iroute = router.route(pp);
+		ArrayList<Node> p = new ArrayList<Node>();
+		p.add(new Node(iroute.source().getLon(), iroute.source().getLat(), iroute.source().getAttributes()));
+		List<org.mapsforge.server.core.geoinfo.Node> nodes = iroute.intermediateNodes();
+		for (org.mapsforge.server.core.geoinfo.Node n : nodes) {
+			p.add(new Node(n.getLon(), n.getLat(), n.getAttributes()));
+		}
+		p.add(new Node(iroute.destination().getLon(), iroute.destination().getLat(), iroute.destination().getAttributes()));
+		route = new Node[p.size()];
+		for (int i = 0; i < p.size(); i++) {
+			route[i] = p.get(i);
 		}
 		return route;
 	}
