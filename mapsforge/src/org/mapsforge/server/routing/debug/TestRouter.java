@@ -56,15 +56,12 @@ public class TestRouter {
 		// .valueOf(coords[1])));
 		// }
 		if (points.size() < 2) {
-			System.err
-					.println("minimum 2 Points must be specified to route.\nusing predefined points."); //$NON-NLS-1$
+			System.err.println("minimum 2 Points must be specified to route.\nusing predefined points."); //$NON-NLS-1$
 			points = Arrays.asList( //
-					Point.newInstance(52.5367, 13.4040),//
-					// Point.newInstance(52.4145, 13.10925),//
-					// Point.newInstance(52.36799, 13.6886),//
-					Point.newInstance(52.62352, 13.4737));//
-			// Point.newInstance(52.62075, 13.2217),//
-			// Point.newInstance(52.534287, 13.44422));
+					 Point.newInstance(52.487, 13.480),  // Insel der Jugend
+					 Point.newInstance(52.487, 13.425),  // Hermannplatz
+					 Point.newInstance(52.527, 13.412),  // Volksbuehne
+					 Point.newInstance(52.456, 13.297)); // inf.fu-berlin.de
 		}
 		Route route = router.route(points);
 
