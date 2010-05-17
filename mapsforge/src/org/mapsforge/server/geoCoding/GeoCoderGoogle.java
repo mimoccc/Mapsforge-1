@@ -45,9 +45,9 @@ import javax.xml.stream.events.XMLEvent;
 public class GeoCoderGoogle implements IGeoCoder {
 
 	@Override
-	public List<Node> search(String placeName, int max) {
+	public List<GeoCoderNode> search(String placeName, int max) {
 		String search = placeName;
-		List<Node> orte = new ArrayList<Node>();
+		List<GeoCoderNode> orte = new ArrayList<GeoCoderNode>();
 
 		final String region = "DE";
 
@@ -99,7 +99,7 @@ public class GeoCoderGoogle implements IGeoCoder {
 						y = (int) (Double.valueOf(coord[0]) * 1000000);
 						x = (int) (Double.valueOf(coord[1]) * 1000000);
 					} else if (endElementName.equalsIgnoreCase("placemark")) {
-						orte.add(new Node(x, y, attribute));
+						orte.add(new GeoCoderNode(x, y, attribute));
 						max--;
 					} else
 						attribute.put(endElementName, temp);

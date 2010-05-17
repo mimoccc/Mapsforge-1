@@ -29,6 +29,16 @@ public class Node extends AbstractPoint {
 	}
 
 	protected final HashMap<String, String> attributes;
+	
+	/* have your id ready, you just might need it (This is the internal_id which can be mapped to the OSM id)*/
+	protected int id;
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	/** lazy hashCode initialization */
 	protected volatile int hashCode;

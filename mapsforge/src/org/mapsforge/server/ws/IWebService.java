@@ -16,7 +16,8 @@
  */
 package org.mapsforge.server.ws;
 
-import org.mapsforge.server.geoCoding.Node;
+import org.mapsforge.server.geoCoding.GeoCoderNode;
+import org.mapsforge.server.core.geoinfo.Node;
 
 /**
  * Implementations of this interface provides the core methods of the WebService to calculate
@@ -45,7 +46,7 @@ public interface IWebService {
 	 *            the maximal number of returned points
 	 * @return a array of points
 	 */
-	public abstract Node[] getGeoLocation(String searchString, short wanted, short max);
+	public abstract GeoCoderNode[] getGeoLocation(String searchString, short wanted, short max);
 
 	/**
 	 * Finds the next points to a given coordinate.
@@ -58,7 +59,7 @@ public interface IWebService {
 	 *            the maximal number of returned points
 	 * @return a array of points
 	 */
-	public abstract Node[] getNextPoints(String points, short wanted, short max);
+	public abstract GeoCoderNode[] getNextPoints(String points, short wanted, short max);
 
 	/**
 	 * Calculates a route for the given point coordinates.

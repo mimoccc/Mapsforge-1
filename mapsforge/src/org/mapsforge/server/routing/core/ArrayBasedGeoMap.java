@@ -768,10 +768,12 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 
 	@Override
 	public Node vertexNode(int vtxId) {
-		// TODO: insert meaningful attributes!
-		HashMap<String, String> attributes = new HashMap<String, String>();
-		attributes.put("node-id", Integer.toString(vtxId));
-		return Node.newNode(this.pointMap.vtxLats[vtxId], this.pointMap.vtxLons[vtxId], attributes);
+		// TODO: Eike, insert meaningful attributes!
+		//HashMap<String, String> attributes = new HashMap<String, String>();
+		//attributes.put("node-id", Integer.toString(vtxId));
+		Node returnNode = Node.newNode(this.pointMap.vtxLats[vtxId], this.pointMap.vtxLons[vtxId]);
+		returnNode.setId(vtxId);
+		return returnNode;
 	}
 
 	@Override

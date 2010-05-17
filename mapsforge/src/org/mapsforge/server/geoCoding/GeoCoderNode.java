@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.mapsforge.server.core.geoinfo.IPoint;
+import org.mapsforge.server.core.geoinfo.Node;
 
 /**
  * This implementation of IPoint is used in the webservice and for GeoCoding.
@@ -29,7 +30,7 @@ import org.mapsforge.server.core.geoinfo.IPoint;
  * @author bogumil & kuehn
  * @see org.mapsforge.server.core.geoinfo.IPoint
  */
-public class Node implements IPoint {
+public class GeoCoderNode implements IPoint {
 
 	int x; // longitude
 	int y; // latitude
@@ -48,7 +49,7 @@ public class Node implements IPoint {
 	 * @param y
 	 *            latitude
 	 */
-	public Node(int x, int y) {
+	public GeoCoderNode(int x, int y) {
 		this.x = x;
 		this.y = y;
 	}
@@ -61,15 +62,22 @@ public class Node implements IPoint {
 	 * @param y
 	 *            latitude
 	 */
-	public Node(double x, double y) {
+	public GeoCoderNode(double x, double y) {
 		this.x = (int) (x * 1000000);
 		this.y = (int) (y * 1000000);
 	}
 
-	public Node(double x, double y, Map<String, String> attribute) {
+	public GeoCoderNode(double x, double y, Map<String, String> attribute) {
 		this.x = (int) (x * 1000000);
 		this.y = (int) (y * 1000000);
 		this.attribute = attribute;
+	}
+
+	public GeoCoderNode(Node n) {
+		this.x = n.getLon();
+		this.y = n.getLat();
+		this.attribute = n.getAttributes();
+		this.attribute.put("id", Integer.toString(n.getId()));
 	}
 
 	/**
@@ -82,7 +90,7 @@ public class Node implements IPoint {
 	 * @param attribute
 	 *            attributes of this node
 	 */
-	public Node(int x, int y, Map<String, String> attribute) {
+	public GeoCoderNode(int x, int y, Map<String, String> attribute) {
 		this.x = x;
 		this.y = y;
 		this.attribute = attribute;

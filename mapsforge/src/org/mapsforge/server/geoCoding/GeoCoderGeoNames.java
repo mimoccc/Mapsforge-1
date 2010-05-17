@@ -40,9 +40,9 @@ import javax.xml.stream.events.XMLEvent;
 public class GeoCoderGeoNames implements IGeoCoder {
 
 	@Override
-	public List<Node> search(String request, int max) {
+	public List<GeoCoderNode> search(String request, int max) {
 		String search = request;
-		List<Node> orte = new ArrayList<Node>();
+		List<GeoCoderNode> orte = new ArrayList<GeoCoderNode>();
 
 		try {
 			search = "q=" + URLEncoder.encode(search.trim(), "UTF-8");
@@ -88,7 +88,7 @@ public class GeoCoderGeoNames implements IGeoCoder {
 					else if (endElementName.equalsIgnoreCase("lng")) {
 						x = Double.valueOf(temp);
 					} else if (endElementName.equalsIgnoreCase("geoname")) {
-						orte.add(new Node(x, y, attribute));
+						orte.add(new GeoCoderNode(x, y, attribute));
 						max--;
 					} else
 						attribute.put(endElementName, temp);

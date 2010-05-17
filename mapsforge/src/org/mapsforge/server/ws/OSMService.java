@@ -17,27 +17,24 @@
 package org.mapsforge.server.ws;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.mapsforge.server.core.geoinfo.BoundingBox;
 import org.mapsforge.server.core.geoinfo.IPoint;
 import org.mapsforge.server.core.geoinfo.Point;
+import org.mapsforge.server.core.geoinfo.Node;
 import org.mapsforge.server.geoCoding.GeoCoderGoogle;
-import org.mapsforge.server.geoCoding.Node;
+import org.mapsforge.server.geoCoding.GeoCoderNode;
 import org.mapsforge.server.routing.core.Route;
 import org.mapsforge.server.routing.core.Router;
 
 /**
  * This class represents the WebService and the methods which are available.
  * 
- * @author kuehnf
+ * @author kuehnf, eikesend
  * 
  */
 public class OSMService implements IWebService {
@@ -48,8 +45,6 @@ public class OSMService implements IWebService {
 			 * Initialization of the routing graph
 			 */
 			Properties props = new Properties();
-			//props.load(new FileInputStream(getPropFile()));
-			//props.load(new FileInputStream("C:/uni/workspace/mapsforge/res/conf/routingGraph.properties"));
 			props.load(new FileInputStream("C:/uni/workspace/mapsforge/src/org/mapsforge/server/routing/core/defaults.properties"));
 			
 			router = Router.newInstance(props);
@@ -61,7 +56,6 @@ public class OSMService implements IWebService {
 	}
 
 	private static Router router;
-	private boolean devmode = false; // Set to true to create mock services
 
 	private static void handleException(Throwable t) {
 		do {
@@ -96,16 +90,16 @@ public class OSMService implements IWebService {
 	 *            the maximal number of returned points
 	 * @return a array of points
 	 */
-	public Node[] getGeoLocation(String searchString, short wanted, short max) {
-		Node[] p = null;
+	public GeoCoderNode[] getGeoLocation(String searchString, short wanted, short max) {
+		GeoCoderNode[] p = null;
 		if (wanted > 0) {
 			// TODO if wanted is set
-			List<Node> lp = new GeoCoderGoogle().search(searchString, max);
-			p = new Node[lp.size()];
+			List<GeoCoderNode> lp = new GeoCoderGoogle().search(searchString, max);
+			p = new GeoCoderNode[lp.size()];
 			lp.toArray(p);
 		} else {
-			List<Node> lp = new GeoCoderGoogle().search(searchString, max);
-			p = new Node[lp.size()];
+			List<GeoCoderNode> lp = new GeoCoderGoogle().search(searchString, max);
+			p = new GeoCoderNode[lp.size()];
 			lp.toArray(p);
 		}
 		return p;
@@ -125,7 +119,7 @@ public class OSMService implements IWebService {
 	 *            the maximal number of returned points
 	 * @return a array of points
 	 */
-	public Node[] getNextPoints(String points, short wanted, short max) {
+	public GeoCoderNode[] getNextPoints(String points, short wanted, short max) {
 		String[] input = points.split(";");
 		int[][] coordinates = new int[input.length][2];
 		for (int i = 0; i < input.length; i++) {
@@ -144,16 +138,16 @@ public class OSMService implements IWebService {
 		} else {
 
 		}
-		Node[] result = null;
+		GeoCoderNode[] result = null;
 
 		Iterable<Point> points1 = router.getGeoMap().getWayPoints(
 				Point.newInstance(coordinates[0][1], coordinates[0][0]), max,
 				BoundingBox.WHOLE_WORLD);
-		ArrayList<Node> nodes = new ArrayList<Node>();
+		ArrayList<GeoCoderNode> nodes = new ArrayList<GeoCoderNode>();
 		for (IPoint p : points1) {
-			nodes.add(new Node(p.getLon(), p.getLat()));
+			nodes.add(new GeoCoderNode(p.getLon(), p.getLat()));
 		}
-		result = new Node[nodes.size()];
+		result = new GeoCoderNode[nodes.size()];
 		for (int i = 0; i < nodes.size(); i++) {
 			result[i] = nodes.get(i);
 		}
@@ -201,12 +195,12 @@ public class OSMService implements IWebService {
 		}
 		Route iroute = router.route(pp);
 		ArrayList<Node> p = new ArrayList<Node>();
-		p.add(new Node(iroute.source().getLon(), iroute.source().getLat(), iroute.source().getAttributes()));
-		List<org.mapsforge.server.core.geoinfo.Node> nodes = iroute.intermediateNodes();
-		for (org.mapsforge.server.core.geoinfo.Node n : nodes) {
-			p.add(new Node(n.getLon(), n.getLat(), n.getAttributes()));
+		p.add(iroute.source());
+		List<Node> nodes = iroute.intermediateNodes();
+		for (Node n : nodes) {
+			p.add(n);
 		}
-		p.add(new Node(iroute.destination().getLon(), iroute.destination().getLat(), iroute.destination().getAttributes()));
+		p.add(iroute.destination());
 		route = new Node[p.size()];
 		for (int i = 0; i < p.size(); i++) {
 			route[i] = p.get(i);

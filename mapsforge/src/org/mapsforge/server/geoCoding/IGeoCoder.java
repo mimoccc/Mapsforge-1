@@ -37,5 +37,5 @@ public interface IGeoCoder {
 	 *            maximal number of results
 	 * @return List of Points, with 0 <= length(List) <= max.
 	 */
-	public List<Node> search(String request, int max);
+	public List<GeoCoderNode> search(String request, int max);
 }
