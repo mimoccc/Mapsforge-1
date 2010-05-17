@@ -140,12 +140,10 @@ OpenLayers.Layer.GPX.prototype = OpenLayers.Class
 					 *            xmlNode
 					 */
 					parseFeature : function(xmlNode, j, length) {
-						if (xmlNode.childNodes[2].childNodes[0].nodeValue
-								&& xmlNode.childNodes[3].childNodes[0].nodeValue) {
-							var point = this
-									.setToMercator(
-											((xmlNode.childNodes[3].childNodes[0].nodeValue) / 1000000),
-											((xmlNode.childNodes[2].childNodes[0].nodeValue) / 1000000));
+			            node_lon = xmlNode.childNodes[0].childNodes[0].nodeValue;
+			            node_lat = xmlNode.childNodes[1].childNodes[0].nodeValue;
+			            if (node_lat && node_lon) {
+							var point = this.setToMercator((node_lat / 1000000), (node_lon / 1000000));
 /*
  * Preparation for adding a marker at start and end point
  */
