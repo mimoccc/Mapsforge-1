@@ -36,8 +36,12 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import android.util.Log;
-
+/**
+ * This class is a IRouteController implementation, it use only XML to communicate with the
+ * webservice.
+ * 
+ * @author bogumil
+ */
 public class XMLRouteController implements IRouteController {
 
 	/* The URL of the webservice */
@@ -53,6 +57,7 @@ public class XMLRouteController implements IRouteController {
 	private boolean isCanceled;
 
 	/**
+	 * Constructs a XMLRoutecontroller with given url.
 	 * 
 	 * @param url
 	 *            The URL for the webservice.
@@ -96,7 +101,7 @@ public class XMLRouteController implements IRouteController {
 
 			@Override
 			public void endElement(String namespaceURI, String localName, String qName) {
-				String element = localName;
+				String element = qName.split(":")[1]; // für Android: localName;
 				if (element.equals("lon")) {
 					lon = Integer.valueOf(charsNew);
 				} else if (element.equals("lat")) {
@@ -259,21 +264,19 @@ public class XMLRouteController implements IRouteController {
 				}
 				charsOld = charsNew;
 				charsNew = new String(text);
-				Log.d("osm", charsNew);
 			}
 
 			@Override
 			public void startElement(String uri, String localName, String qName,
 					Attributes attributes) throws SAXException {
-				Log.d("osm", "startLocalname:" + localName);
-				Log.d("osm", "startQname:" + qName);
 			}
 
 			@Override
 			public void endElement(String namespaceURI, String localName, String qName) {
-				String element = localName;
-				Log.d("osm", "localname:" + localName);
-				Log.d("osm", "qname:" + qName);
+				String element = qName.split(":")[1]; // localName;
+
+				System.out.println(qName.split(":")[1]);
+
 				if (element.equals("lon")) {
 					lon = Integer.parseInt(charsNew);
 				} else if (element.equals("lat")) {
@@ -305,7 +308,8 @@ public class XMLRouteController implements IRouteController {
 	}
 
 	/**
-	 *TODO
+	 * This class represent a job for parsing. It is used for parsing the answers from the
+	 * server.
 	 * 
 	 * @author bogus
 	 * 
@@ -320,13 +324,13 @@ public class XMLRouteController implements IRouteController {
 		}
 
 		void parse() {
+			InputStream in = null;
 			try {
 
 				URL url = new URL(urlString);
 				SAXParser saxParser = factory.newSAXParser();
 
-				InputStream in = url.openStream();
-				Log.d("osm", "InputStream from " + url.toString() + " open");
+				in = url.openStream();
 				if (!isCanceled)
 					saxParser.parse(in, handler);
 
@@ -348,10 +352,15 @@ public class XMLRouteController implements IRouteController {
 				}
 
 				routeHandler.onError(ControllerError.NO_SERVER, "Maybe the url is wrong");
-			} // TODO no network
+			} finally {
+				if (in != null)
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+			}
 
+			// TODO no network
 		}
-
 	}
-
 }

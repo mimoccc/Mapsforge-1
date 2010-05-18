@@ -22,7 +22,7 @@ import java.util.List;
  * Implementations of this interface allows communication between server and client via a
  * webservice.
  * 
- * @author kuehnf & bogus
+ * @author kuehnf & bogumil
  * 
  */
 public interface IRouteController extends Runnable {

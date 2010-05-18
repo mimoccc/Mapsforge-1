@@ -16,6 +16,9 @@
  */
 package org.mapsforge.android.routecontroller;
 
-public abstract class RouteController implements IRouteController {
-
+public enum Request {
+	FEATURES,
+	GEOCODE,
+	ROUTE,
+	POINTS;
 }
