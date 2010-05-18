@@ -38,8 +38,10 @@ import java.util.concurrent.BlockingQueue;
  * This class is a IRouteController implementation, it use only JSON to communicate with the
  * webservice.
  * 
- * This class will work only in the emulator (and the phone), see http://daverog.wordpress.com/2009/12/14/why-android-isnt-ready-for-tdd-and-how-i-tried-anyway/ .
- * For source of the JSON-Andoid-things see http://blog.marvinware.com/2008/11/secret-source.html.
+ * This class will work only in the emulator (and the phone), see
+ * http://daverog.wordpress.com/2009
+ * /12/14/why-android-isnt-ready-for-tdd-and-how-i-tried-anyway/ . For source of the
+ * JSON-Andoid-things see http://blog.marvinware.com/2008/11/secret-source.html.
  * 
  * @author bogumil
  */
@@ -223,7 +225,6 @@ public class JSONRouteController implements IRouteController {
 
 				in = url.openStream();
 				String page = new Scanner(in).useDelimiter("\\Z").next();
-				System.out.println("Laenge der Antwort: " + page.length() + " Zeichen");
 				JSONObject response = new JSONObject(page);
 
 				switch (requestType) {
@@ -265,7 +266,7 @@ public class JSONRouteController implements IRouteController {
 			} catch (IOException e) {
 				routeHandler.onError(ControllerError.NO_SERVER, "Maybe the url is wrong");
 			} catch (JSONException e) {
-				routeHandler.onError(ControllerError.BAD_RESPONSE, "Answer can not be parse");
+				routeHandler.onError(ControllerError.BAD_RESPONSE, "Answer cannot be parsed");
 			} finally {
 				if (in != null)
 					try {

@@ -77,8 +77,6 @@ public class XMLRouteController implements IRouteController {
 		url.append("&max=").append(max);
 		url.append("&wanted=").append(wanted);
 
-		System.out.println(url.toString());
-
 		DefaultHandler handler = new DefaultHandler() {
 			final List<Point> points = new ArrayList<Point>(max);
 
@@ -337,7 +335,7 @@ public class XMLRouteController implements IRouteController {
 			} catch (ConnectException e) {
 				routeHandler.onError(ControllerError.NO_SERVER, "Server not found");
 			} catch (SAXException e) {
-				routeHandler.onError(ControllerError.BAD_RESPONSE, "Answer can not be parse");
+				routeHandler.onError(ControllerError.BAD_RESPONSE, "Answer cannot be parsed");
 			} catch (ParserConfigurationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -345,12 +343,6 @@ public class XMLRouteController implements IRouteController {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				StackTraceElement[] stackTraces = e.getStackTrace();
-
-				for (int i = 0; i < stackTraces.length; i++) {
-					System.out.println(stackTraces[i].toString());
-				}
-
 				routeHandler.onError(ControllerError.NO_SERVER, "Maybe the url is wrong");
 			} finally {
 				if (in != null)
