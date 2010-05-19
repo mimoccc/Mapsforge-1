@@ -294,8 +294,8 @@ public class MapView extends ViewGroup {
 		}
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
 			// calculate the map move
-			this.mapMoveX = event.getX() * 30;
-			this.mapMoveY = event.getY() * 30;
+			this.mapMoveX = event.getX() * 40;
+			this.mapMoveY = event.getY() * 40;
 
 			synchronized (this) {
 				// add the movement to the transformation matrix
