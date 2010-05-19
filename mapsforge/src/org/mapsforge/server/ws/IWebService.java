@@ -49,19 +49,6 @@ public interface IWebService {
 	public abstract GeoCoderNode[] getGeoLocation(String searchString, short wanted, short max);
 
 	/**
-	 * Finds the next points to a given coordinate.
-	 * 
-	 * @param points
-	 *            the point coordinates encoded as a string
-	 * @param wanted
-	 *            the approximate number of returned points
-	 * @param max
-	 *            the maximal number of returned points
-	 * @return a array of points
-	 */
-	public abstract GeoCoderNode[] getNextPoints(String points, short wanted, short max);
-
-	/**
 	 * Calculates a route for the given point coordinates.
 	 * 
 	 * @param points

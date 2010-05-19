@@ -224,7 +224,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 	}
 
 	@Override
-	public List<Node> intermediateNodes(int srcId, int dstId) {
+	public List<Node> getNoneVertexNodes(int srcId, int dstId) {
 		// TODO:fix
 		return Collections.emptyList();
 	}

@@ -197,7 +197,7 @@ public final class Route extends MetaWay {
 				throw new IllegalArgumentException(Issue.ASSERTION_ERR.msg());
 			return new Way(
 					Route.this.geoMap.vertexNode(srcId), 
-					Route.this.geoMap.intermediateNodes(srcId, dstId), 
+					Route.this.geoMap.getNoneVertexNodes(srcId, dstId), 
 					Route.this.geoMap.vertexNode(dstId)
 				);
 		}
@@ -216,7 +216,7 @@ public final class Route extends MetaWay {
 				throw new IllegalArgumentException(Issue.ASSERTION_ERR.msg());
 
 			/** retrieve intermediate Nodes from the GeoMap component */
-			List<Node> nList = Route.this.geoMap.intermediateNodes(srcId, dstId);
+			List<Node> nList = Route.this.geoMap.getNoneVertexNodes(srcId, dstId);
 
 			/** if the edge is restricted to points */
 			int stop = -1;
@@ -251,7 +251,7 @@ public final class Route extends MetaWay {
 				throw new IllegalArgumentException(Issue.ASSERTION_ERR.msg());
 
 			/** retrieve intermediate Nodes from the GeoMap component */
-			List<Node> nList = Route.this.geoMap.intermediateNodes(srcId, dstId);
+			List<Node> nList = Route.this.geoMap.getNoneVertexNodes(srcId, dstId);
 
 			/** if the edge is restricted to points */
 			int start = -1;
@@ -310,7 +310,7 @@ public final class Route extends MetaWay {
 				throw new IllegalStateException();
 
 			/** retrieve intermediate Nodes from the GeoMap component */
-			List<Node> nList = new LinkedList<Node>(Route.this.geoMap.intermediateNodes(srcId,
+			List<Node> nList = new LinkedList<Node>(Route.this.geoMap.getNoneVertexNodes(srcId,
 					dstId));
 			nList.add(0, Route.this.geoMap.vertexNode(srcId));
 			nList.add(Route.this.geoMap.vertexNode(dstId));

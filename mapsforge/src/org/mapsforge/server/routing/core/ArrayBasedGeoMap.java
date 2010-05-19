@@ -734,7 +734,7 @@ public final class ArrayBasedGeoMap implements IGeoMap, Serializable {
 	}
 
 	@Override
-	public List<Node> intermediateNodes(int srcId, int dstId) {
+	public List<Node> getNoneVertexNodes(int srcId, int dstId) {
 		// TODO : replace HashMap structure by better implementation
 
 		/** determine way's direction */

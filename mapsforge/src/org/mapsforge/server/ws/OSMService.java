@@ -24,15 +24,31 @@ import java.util.Properties;
 
 import org.mapsforge.server.core.geoinfo.BoundingBox;
 import org.mapsforge.server.core.geoinfo.IPoint;
+import org.mapsforge.server.core.geoinfo.IWay;
 import org.mapsforge.server.core.geoinfo.Point;
 import org.mapsforge.server.core.geoinfo.Node;
 import org.mapsforge.server.geoCoding.GeoCoderGoogle;
 import org.mapsforge.server.geoCoding.GeoCoderNode;
 import org.mapsforge.server.routing.core.Route;
 import org.mapsforge.server.routing.core.Router;
+import org.mapsforge.server.routing.core.Route.Section;
 
 /**
  * This class represents the WebService and the methods which are available.
+ * Use the Axis2 Service Archiver to generate the appropriate .aar File
+ * 
+ * Configure Axis to provide json output as follows (taken from http://www.marcusschiesser.de/?p=130):
+ * 
+ * For json support install dynamicresponse into webapps\axis2\WEB-INF\modules from
+ * http://dist.wso2.org/maven2/org/wso2/dynamicresponse/wso2dynamic-response/1.5/wso2dynamic-response-1.5.mar
+ * 
+ * also you need to enable it by adding this line to webapps\axis\WEB-INF\conf\axis2.conf
+ * <module ref="DynamicResponseHandler"/>
+ * 
+ * finally replace webapps\axis2\WEB-INF\lib\jettisonXXX.jar with
+ * http://www.marcusschiesser.de/wp-content/uploads/2009/01/jettison-11-snapshot.jar
+ * 
+ * HTTP requests can the be appended by the query param response=application/json
  * 
  * @author kuehnf, eikesend
  * 
@@ -106,48 +122,24 @@ public class OSMService implements IWebService {
 	}
 
 	/**
-	 * Finds the next points to a given coordinate.
+	 * Calculates a route for the given point coordinates.
 	 * 
 	 * @param points
 	 *            points separated by semicolon and coordinates separated by comma (first
 	 *            longitude, second latitude); e.g.
 	 *            <code>points=lon1,lat1;lon2,lat2;lon3,lat3</code>. Longitude and Latitude are
 	 *            given as Integer with a conversion factor of 10e6.
-	 * @param wanted
-	 *            the approximate number of returned points
-	 * @param max
-	 *            the maximal number of returned points
-	 * @return a array of points
+	 * @return a array of points representing a route
 	 */
-	public GeoCoderNode[] getNextPoints(String points, short wanted, short max) {
-		String[] input = points.split(";");
-		int[][] coordinates = new int[input.length][2];
-		for (int i = 0; i < input.length; i++) {
-			// coords[0] = longitude
-			// coords[1] = latitude
-			String[] s = input[i].split(",");
-			coordinates[i][0] = Integer.valueOf(s[0]);
-			coordinates[i][1] = Integer.valueOf(s[1]);
-		}
-
-		/*
-		 * coordinates[0][0] longitude of first point coordinates[0][1] latitude of first point
-		 */
-		if (wanted > 0) {
-			// TODO if wanted is set
-		} else {
-
-		}
-		GeoCoderNode[] result = null;
-
-		Iterable<Point> points1 = router.getGeoMap().getWayPoints(
-				Point.newInstance(coordinates[0][1], coordinates[0][0]), max,
-				BoundingBox.WHOLE_WORLD);
-		ArrayList<GeoCoderNode> nodes = new ArrayList<GeoCoderNode>();
-		for (IPoint p : points1) {
-			nodes.add(new GeoCoderNode(p.getLon(), p.getLat()));
-		}
-		result = new GeoCoderNode[nodes.size()];
+	public Node[] getRoute(String points) {
+		// Hand this list to the router by requesting a route
+		Route route = router.route(parseInputString(points));
+		// prepare the result for output
+		ArrayList<Node> nodes = new ArrayList<Node>();
+		nodes.add(route.source());
+		nodes.addAll(route.intermediateNodes());
+		nodes.add(route.destination());
+		Node[] result = new Node[nodes.size()];
 		for (int i = 0; i < nodes.size(); i++) {
 			result[i] = nodes.get(i);
 		}
@@ -164,47 +156,44 @@ public class OSMService implements IWebService {
 	 *            given as Integer with a conversion factor of 10e6.
 	 * @return a array of points representing a route
 	 */
-	public Node[] getRoute(String points) {
-
-		String[] input = points.split(";");
-		/*
-		 * coordinates[0][0] longitude of start point coordinates[0][1] latitude of start point
-		 * 
-		 * coordinates[X][0] longitude of intermediate stop coordinates[X][1] latitude of
-		 * intermediate stop
-		 * 
-		 * coordinates[coordinates.length-1][0] longitude of end point
-		 * coordinates[coordinates.length-1][1] latitude of end point
-		 */
-		int[][] coordinates = new int[input.length][2];
-		for (int i = 0; i < input.length; i++) {
-			// coords[0] = longitude
-			// coords[1] = latitude
-			String[] s = input[i].split(",");
-			coordinates[i][0] = Integer.valueOf(s[0]);
-			coordinates[i][1] = Integer.valueOf(s[1]);
+	public Node[] getSubRoutes(String points) {
+		// Hand this list to the router by requesting a route
+		Route route = router.route(parseInputString(points));
+		// prepare the result for output
+		
+		List<Section> subRoutes = route.sections();
+		ArrayList<Node> resultList= new ArrayList();
+		for (Section subRoute : subRoutes) {
+			Node n = subRoute.source();
+			n.getAttributes().put("source", "true");
+			resultList.add(n);
+			resultList.addAll(subRoute.intermediateNodes());
+			n = subRoute.destination();
+			n.getAttributes().put("destination", "true");
+			resultList.add(n);
 		}
-		Node[] route = null;
+		Node[] results = new Node[resultList.size()];
+		for (int i = 0; i < results.length; i++) 
+			results[i] = resultList.get(i);
+		return results;
+	}
+	
+	/**
+	 * Turn a String of coordinates into a List of Points
+	 * 
+	 * @param points is a serialized String of Coordinates, see getRoute 
+	 * @return ArrayList of Points representing these Coordinates
+	 */
+	private ArrayList<Point> parseInputString(String points) {
+		String[] alternatingCoordinates = points.split("[;,]");
 		ArrayList<Point> pp = new ArrayList<Point>();
-		for (int i = 0; i < (coordinates.length); i++) {
+		for (int i = 0; i < alternatingCoordinates.length; i += 2) {
 			Point point = Point.newInstance(
-					Integer.valueOf(coordinates[i][1]), 
-					Integer.valueOf(coordinates[i][0])
+					Integer.valueOf(alternatingCoordinates[i+1]),
+					Integer.valueOf(alternatingCoordinates[i])
 				);
 			pp.add(point);
 		}
-		Route iroute = router.route(pp);
-		ArrayList<Node> p = new ArrayList<Node>();
-		p.add(iroute.source());
-		List<Node> nodes = iroute.intermediateNodes();
-		for (Node n : nodes) {
-			p.add(n);
-		}
-		p.add(iroute.destination());
-		route = new Node[p.size()];
-		for (int i = 0; i < p.size(); i++) {
-			route[i] = p.get(i);
-		}
-		return route;
+		return pp;
 	}
 }

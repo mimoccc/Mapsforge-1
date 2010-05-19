@@ -131,7 +131,7 @@ public interface IGeoMap {
 	 *            the ID of the vertex traveling to (on the edge).
 	 * @return all points desired.
 	 */
-	List<Node> intermediateNodes(int srcId, int dstId);
+	List<Node> getNoneVertexNodes(int srcId, int dstId);
 
 	/**
 	 * Locates a vertex of the routing graph with geographical coordinates.

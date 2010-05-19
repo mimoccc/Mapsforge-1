@@ -16,9 +16,12 @@
  */
 package org.mapsforge.server.core.geoinfo;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.mapsforge.server.geoCoding.OSMEntry;
 
 public class Node extends AbstractPoint {
 
@@ -38,6 +41,22 @@ public class Node extends AbstractPoint {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	/**
+	 * Return all entries from the attributes Map in a ArrayList. This method is necessary for
+	 * the xml conversion with axis2.
+	 * 
+	 * @return Arraylist with MapEntry.
+	 */
+	public ArrayList<OSMEntry> getWSAttributes() {
+		if (attributes == null) {
+			return null;
+		}
+		ArrayList<OSMEntry> attr = new ArrayList<OSMEntry>();
+		for (Map.Entry<String, String> entry : getAttributes().entrySet()) {
+			attr.add(new OSMEntry(entry.getKey(), entry.getValue()));
+		}
+		return attr;
 	}
 
 	/** lazy hashCode initialization */

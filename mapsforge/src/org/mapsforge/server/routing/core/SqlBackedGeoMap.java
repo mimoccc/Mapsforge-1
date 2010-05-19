@@ -343,7 +343,7 @@ public final class SqlBackedGeoMap implements IGeoMap {
 	}
 
 	@Override
-	public List<Node> intermediateNodes(int srcId, int dstId) {
+	public List<Node> getNoneVertexNodes(int srcId, int dstId) {
 		try {
 			return (List<Node>) this.conHlr.handle(this.callbacks
 					.get(SqlCommand.GET_INTERMEDIATE_NODES_FOR_WAY), srcId, dstId);

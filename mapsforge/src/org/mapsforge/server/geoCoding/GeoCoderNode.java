@@ -73,13 +73,6 @@ public class GeoCoderNode implements IPoint {
 		this.attribute = attribute;
 	}
 
-	public GeoCoderNode(Node n) {
-		this.x = n.getLon();
-		this.y = n.getLat();
-		this.attribute = n.getAttributes();
-		this.attribute.put("id", Integer.toString(n.getId()));
-	}
-
 	/**
 	 * Constructs an Node with specified parameters.
 	 * 
