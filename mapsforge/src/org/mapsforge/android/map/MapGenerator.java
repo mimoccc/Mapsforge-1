@@ -2682,6 +2682,7 @@ class MapGenerator extends Thread {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.BUILDING$APARTMENTS]
+					|| wayTagIds[TagIdsWays.BUILDING$GOVERNMENT]
 					|| wayTagIds[TagIdsWays.BUILDING$GYM]
 					|| wayTagIds[TagIdsWays.BUILDING$SPORTS]
 					|| wayTagIds[TagIdsWays.BUILDING$TRAIN_STATION]

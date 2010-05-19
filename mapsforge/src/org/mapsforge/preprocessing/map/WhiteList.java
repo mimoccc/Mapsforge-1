@@ -128,6 +128,7 @@ class WhiteList {
 		tagWhitelist.put("bridge=yes", Byte.valueOf(Byte.MAX_VALUE));
 
 		tagWhitelist.put("building=apartments", Byte.valueOf((byte) 16));
+		tagWhitelist.put("building=government", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=gym", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=roof", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=sports", Byte.valueOf((byte) 16));

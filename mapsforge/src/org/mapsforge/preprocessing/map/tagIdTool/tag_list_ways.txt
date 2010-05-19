@@ -33,6 +33,7 @@ boundary=administrative
 bridge=yes
 
 building=apartments
+building=government
 building=gym
 building=roof
 building=sports
