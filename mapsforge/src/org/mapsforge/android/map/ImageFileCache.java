@@ -133,7 +133,7 @@ class ImageFileCache {
 				this.bitmapBuffer.rewind();
 				this.imageFile = new File(this.tempDir, tile.x + "_" + tile.y + "."
 						+ tile.zoomLevel);
-				this.fileOutputStream = new FileOutputStream(this.imageFile);
+				this.fileOutputStream = new FileOutputStream(this.imageFile, false);
 				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
 						.array().length);
 				this.fileOutputStream.close();
