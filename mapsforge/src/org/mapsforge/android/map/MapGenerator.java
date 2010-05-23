@@ -249,6 +249,7 @@ class MapGenerator extends Thread {
 	private PathContainer pathContainer;
 	private int pathLengthInPixel;
 	private PathTextContainer pathTextContainer;
+	private boolean pause;
 	private PointContainer pointContainer;
 	private float previousX;
 	private float previousY;
@@ -321,7 +322,7 @@ class MapGenerator extends Thread {
 			this.coastlineEnds.clear();
 
 			synchronized (this) {
-				while (!isInterrupted() && this.jobQueue1.isEmpty()) {
+				while (!isInterrupted() && (this.jobQueue1.isEmpty() || this.pause)) {
 					try {
 						this.ready = true;
 						wait();
@@ -345,90 +346,97 @@ class MapGenerator extends Thread {
 				this.currentTile = this.jobQueue1.poll();
 			}
 
-			// check if the current job can be skipped
-			if (this.imageBitmapCache.containsKey(this.currentTile)
-					|| this.imageFileCache.containsKey(this.currentTile)) {
-				continue;
-			}
+			// check if the current job can be skipped or must be processed
+			if (!this.imageBitmapCache.containsKey(this.currentTile)
+					&& !this.imageFileCache.containsKey(this.currentTile)) {
 
-			// check if the paint parameters need to be set again
-			if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
-				setPaintParameters(this.currentTile.zoomLevel);
-				this.lastTileZoomLevel = this.currentTile.zoomLevel;
-			}
+				// check if the paint parameters need to be set again
+				if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
+					setPaintParameters(this.currentTile.zoomLevel);
+					this.lastTileZoomLevel = this.currentTile.zoomLevel;
+				}
 
-			this.database.executeQuery(this.currentTile,
-					this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
+				this.database.executeQuery(this.currentTile,
+						this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
 
-			if (isInterrupted()) {
-				break;
-			}
+				if (isInterrupted()) {
+					break;
+				}
 
-			renderCoastlines();
+				renderCoastlines();
 
-			this.bitmap.eraseColor(TILE_BACKGROUND);
+				this.bitmap.eraseColor(TILE_BACKGROUND);
 
-			// draw ways
-			for (byte i = 0; i < LAYERS; ++i) {
-				this.innerWayList = this.ways.get(i);
-				for (byte j = 0; j < LayerIds.LEVELS_PER_LAYER; ++j) {
-					this.wayList = this.innerWayList.get(j);
-					for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-						this.pathContainer = this.wayList.get(this.arrayListIndex);
-						this.canvas.drawPath(this.pathContainer.path, this.pathContainer.paint);
+				// draw ways
+				for (byte i = 0; i < LAYERS; ++i) {
+					this.innerWayList = this.ways.get(i);
+					for (byte j = 0; j < LayerIds.LEVELS_PER_LAYER; ++j) {
+						this.wayList = this.innerWayList.get(j);
+						for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+							this.pathContainer = this.wayList.get(this.arrayListIndex);
+							this.canvas.drawPath(this.pathContainer.path,
+									this.pathContainer.paint);
+						}
 					}
 				}
+
+				if (isInterrupted()) {
+					break;
+				}
+
+				// draw way names
+				for (this.arrayListIndex = this.wayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					this.pathTextContainer = this.wayNames.get(this.arrayListIndex);
+					this.canvas.drawTextOnPath(this.pathTextContainer.text,
+							this.pathTextContainer.path, 0, 3, this.pathTextContainer.paint);
+				}
+
+				if (isInterrupted()) {
+					break;
+				}
+
+				// draw map symbols
+				for (this.arrayListIndex = this.symbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					this.symbolContainer = this.symbols.get(this.arrayListIndex);
+					this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
+							this.symbolContainer.y, null);
+
+				}
+
+				// draw nodes
+				for (this.arrayListIndex = this.nodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					this.pointContainer = this.nodes.get(this.arrayListIndex);
+					this.canvas.drawText(this.pointContainer.text, this.pointContainer.x,
+							this.pointContainer.y, this.pointContainer.paint);
+				}
+
+				if (DRAW_TILE_FRAMES) {
+					// draw tile frames
+					this.canvas.drawLines(new float[] { 0, 0, 0, this.canvas.getHeight(), 0,
+							this.canvas.getHeight(), this.canvas.getWidth(),
+							this.canvas.getHeight(), this.canvas.getWidth(),
+							this.canvas.getHeight(), this.canvas.getWidth(), 0 },
+							PAINT_INFO_BLACK_13);
+				}
+
+				if (isInterrupted()) {
+					break;
+				}
+
+				this.mapView.putTileOnBitmap(this.currentTile, this.bitmap, true);
+				this.mapView.postInvalidate();
+				Thread.yield();
+
+				// put the image in the cache
+				this.imageFileCache.put(this.currentTile, this.bitmap);
 			}
 
-			if (isInterrupted()) {
-				break;
+			synchronized (this) {
+				// if the job queue is empty, ask the MapView for more jobs
+				if (!isInterrupted() && this.jobQueue1.isEmpty()) {
+					this.mapView.requestMoreJobs();
+				}
 			}
-
-			// draw way names
-			for (this.arrayListIndex = this.wayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-				this.pathTextContainer = this.wayNames.get(this.arrayListIndex);
-				this.canvas.drawTextOnPath(this.pathTextContainer.text,
-						this.pathTextContainer.path, 0, 3, this.pathTextContainer.paint);
-			}
-
-			if (isInterrupted()) {
-				break;
-			}
-
-			// draw map symbols
-			for (this.arrayListIndex = this.symbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-				this.symbolContainer = this.symbols.get(this.arrayListIndex);
-				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
-						this.symbolContainer.y, null);
-
-			}
-
-			// draw nodes
-			for (this.arrayListIndex = this.nodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-				this.pointContainer = this.nodes.get(this.arrayListIndex);
-				this.canvas.drawText(this.pointContainer.text, this.pointContainer.x,
-						this.pointContainer.y, this.pointContainer.paint);
-			}
-
-			if (DRAW_TILE_FRAMES) {
-				// draw tile frames
-				this.canvas.drawLines(new float[] { 0, 0, 0, this.canvas.getHeight(), 0,
-						this.canvas.getHeight(), this.canvas.getWidth(),
-						this.canvas.getHeight(), this.canvas.getWidth(),
-						this.canvas.getHeight(), this.canvas.getWidth(), 0 },
-						PAINT_INFO_BLACK_13);
-			}
-
-			if (isInterrupted()) {
-				break;
-			}
-
-			this.mapView.putTileOnBitmap(this.currentTile, this.bitmap, true);
-			this.mapView.postInvalidate();
-			Thread.yield();
-
-			// put the image in the cache
-			this.imageFileCache.put(this.currentTile, this.bitmap);
 		}
 
 		// free the bitmap memory
@@ -1655,18 +1663,39 @@ class MapGenerator extends Thread {
 		PAINT_NATURAL_COASTLINE_OUTLINE.setStrokeWidth(1 * paintScaleFactor);
 	}
 
+	/**
+	 * Adds the given tile to the job queue.
+	 * 
+	 * @param tile
+	 *            the tile to be added to the job queue.
+	 */
 	synchronized void addJob(Tile tile) {
 		if (!this.jobQueue1.contains(tile)) {
 			this.jobQueue1.offer(tile);
 		}
 	}
 
+	/**
+	 * Clears the job queue.
+	 */
 	synchronized void clearJobs() {
 		this.jobQueue1.clear();
 	}
 
+	/**
+	 * Returns the status of the MapGenerator.
+	 * 
+	 * @return true, if the MapGenerator is not working, false otherwise.
+	 */
 	boolean isReady() {
 		return this.ready;
+	}
+
+	/**
+	 * Request that the MapGenerator should stop working.
+	 */
+	synchronized void pause() {
+		this.pause = true;
 	}
 
 	/**
@@ -3259,6 +3288,9 @@ class MapGenerator extends Thread {
 
 	}
 
+	/**
+	 * Request a scheduling of all tiles that are currently in the job queue.
+	 */
 	synchronized void requestSchedule() {
 		this.scheduleNeeded = true;
 		if (!this.jobQueue1.isEmpty()) {
@@ -3277,5 +3309,15 @@ class MapGenerator extends Thread {
 
 	void setMapView(MapView mapView) {
 		this.mapView = mapView;
+	}
+
+	/**
+	 * Request that the MapGenerator should continue working.
+	 */
+	synchronized void unpause() {
+		this.pause = false;
+		if (!this.jobQueue1.isEmpty()) {
+			this.notify();
+		}
 	}
 }

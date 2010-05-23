@@ -52,6 +52,7 @@ public class MapView extends ViewGroup {
 	private static final Paint PAINT_MAP_SCALE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MAP_SCALE_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MAP_SCALE_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final float TRACKBALL_MOVE_SPEED = 40;
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
 	private static final byte ZOOM_MAX = 23;
@@ -60,15 +61,28 @@ public class MapView extends ViewGroup {
 	/**
 	 * Returns the size of a single map tile in bytes.
 	 * 
-	 * @return the tile size
+	 * @return the tile size.
 	 */
 	public static int getTileSizeInBytes() {
 		return Tile.TILE_SIZE_IN_BYTES;
 	}
 
+	/**
+	 * Checks whether a file is a valid map file.
+	 * 
+	 * @param file
+	 *            path to the file that should be tested.
+	 * @return true, if the file is a valid map file, false otherwise.
+	 */
+	public static boolean isValidMapFile(String file) {
+		// TODO: implement this
+		return file != null;
+	}
+
 	private Tile currentTile;
 	private long currentTime;
 	private Database database;
+	private int fileCacheSize;
 	private int fps;
 	private Paint fpsPaint;
 	private short frame_counter;
@@ -97,6 +111,7 @@ public class MapView extends ViewGroup {
 	private long mapViewTileY1;
 	private long mapViewTileY2;
 	private double meterPerPixel;
+	private int numberOfTiles;
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
@@ -114,6 +129,7 @@ public class MapView extends ViewGroup {
 	double latitude;
 	double longitude;
 	Matrix matrix;
+	float moveSpeedFactor;
 	ZoomControls zoomControls;
 	byte zoomLevel;
 
@@ -157,6 +173,11 @@ public class MapView extends ViewGroup {
 		return this.mapController;
 	}
 
+	/**
+	 * Returns the current center of the map as a GeoPoint.
+	 * 
+	 * @return the current center of the map.
+	 */
 	public GeoPoint getMapCenter() {
 		return new GeoPoint(this.latitude, this.longitude);
 	}
@@ -207,11 +228,6 @@ public class MapView extends ViewGroup {
 	 */
 	public boolean hasValidMapFile() {
 		return isValidMapFile(this.mapFile);
-	}
-
-	public boolean isValidMapFile(String file) {
-		// TODO: implement this
-		return file != null;
 	}
 
 	@Override
@@ -294,8 +310,8 @@ public class MapView extends ViewGroup {
 		}
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
 			// calculate the map move
-			this.mapMoveX = event.getX() * 40;
-			this.mapMoveY = event.getY() * 40;
+			this.mapMoveX = event.getX() * (TRACKBALL_MOVE_SPEED * this.moveSpeedFactor);
+			this.mapMoveY = event.getY() * (TRACKBALL_MOVE_SPEED * this.moveSpeedFactor);
 
 			synchronized (this) {
 				// add the movement to the transformation matrix
@@ -317,7 +333,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Controls the visibility of the zoom controls.
+	 * Sets the visibility of the zoom controls.
 	 * 
 	 * @param showZoomControls
 	 *            true if the zoom controls should be visible, false otherwise.
@@ -327,8 +343,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Set the new size of the file cache. If the cache already contains more items than the new
-	 * capacity allows, items are discarded based on the normal file cache policy.
+	 * Sets the new size of the file cache. If the cache already contains more items than the
+	 * new capacity allows, items are discarded based on the normal file cache policy.
 	 * 
 	 * @param newCacheSize
 	 *            the new capacity of the file cache.
@@ -339,11 +355,12 @@ public class MapView extends ViewGroup {
 		if (newCacheSize < 0) {
 			throw new IllegalArgumentException();
 		}
-		this.imageFileCache.setCapacity(newCacheSize);
+		this.fileCacheSize = newCacheSize;
+		this.imageFileCache.setCapacity(this.fileCacheSize);
 	}
 
 	/**
-	 * Controls the visibility of the frame rate.
+	 * Sets the visibility of the frame rate.
 	 * 
 	 * @param showFpsCounter
 	 *            true if the map frame rate should be visible, false otherwise.
@@ -354,6 +371,12 @@ public class MapView extends ViewGroup {
 		invalidate();
 	}
 
+	/**
+	 * Sets the map file for this MapView.
+	 * 
+	 * @param newMapFile
+	 *            the path to the new map file.
+	 */
 	public void setMapFile(String newMapFile) {
 		if (newMapFile == null) {
 			// no map file is given
@@ -363,11 +386,27 @@ public class MapView extends ViewGroup {
 			return;
 		}
 
-		stopMapGenerator();
+		this.mapMover.pause();
+		this.mapMover.stopMove();
+
+		this.mapGenerator.pause();
+		this.mapGenerator.clearJobs();
+
+		waitForReadyMapMover();
+		waitForReadyMapGenerator();
+
+		this.mapGenerator.unpause();
+		this.mapMover.unpause();
+
 		this.database.closeFile();
 		if (this.database.setFile(newMapFile)) {
 			this.mapFile = newMapFile;
-			setCenter(this.database.getMapBoundary().getCenter());
+			synchronized (this) {
+				// clear the MapView bitmaps
+				this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
+				this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+				setCenter(this.database.getMapBoundary().getCenter());
+			}
 			handleTiles(true);
 		} else {
 			this.mapFile = null;
@@ -375,7 +414,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Controls the visibility of the map scale.
+	 * Sets the visibility of the map scale.
 	 * 
 	 * @param showMapScale
 	 *            true if the map scale should be visible, false otherwise.
@@ -390,7 +429,22 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Set an internal text variable to a certain string.
+	 * Sets the move speed of the map.
+	 * 
+	 * @param moveSpeedFactor
+	 *            the factor by which the move speed of the map will be multiplied.
+	 * @throws IllegalArgumentException
+	 *             if the new moveSpeedFactor is negative.
+	 */
+	public void setMoveSpeed(float moveSpeedFactor) {
+		if (moveSpeedFactor < 0) {
+			throw new IllegalArgumentException();
+		}
+		this.moveSpeedFactor = moveSpeedFactor;
+	}
+
+	/**
+	 * Sets an internal text variable to an arbitrary string.
 	 * 
 	 * @param name
 	 *            the name of the text variable to set.
@@ -517,8 +571,9 @@ public class MapView extends ViewGroup {
 		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
 
 		// create the image file cache
+		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
 		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
-				DEFAULT_FILE_CACHE_SIZE);
+				this.fileCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -580,15 +635,24 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private void stopMapGenerator() {
-		this.mapGenerator.clearJobs();
+	private void waitForReadyMapGenerator() {
 		while (!this.mapGenerator.isReady()) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
-				Logger.e(e);
+			}
+		}
+	}
+
+	private void waitForReadyMapMover() {
+		while (!this.mapMover.isReady()) {
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
 			}
 		}
 	}
@@ -693,6 +757,10 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected synchronized void onSizeChanged(int w, int h, int oldw, int oldh) {
+		// calculate how many tiles are needed to fill the view completely
+		this.numberOfTiles = ((getWidth() / Tile.TILE_SIZE) + 1)
+				* ((getHeight() / Tile.TILE_SIZE) + 1);
+
 		// check if the previous map view bitmaps must be recycled
 		if (this.mapViewBitmap1 != null) {
 			this.mapViewBitmap1.recycle();
@@ -768,7 +836,7 @@ public class MapView extends ViewGroup {
 			postInvalidate();
 		}
 
-		// notify the map generator to process the job list
+		// notify the MapGenerator to process the job list
 		this.mapGenerator.requestSchedule();
 	}
 
@@ -835,6 +903,56 @@ public class MapView extends ViewGroup {
 			this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
 					(float) (tile.pixelY - this.mapViewPixelY), null);
 		}
+	}
+
+	/**
+	 * This method is called by the MapGenerator when its job queue is empty.
+	 */
+	void requestMoreJobs() {
+		if (this.mapFile == null) {
+			return;
+		} else if (this.getWidth() == 0) {
+			return;
+		} else if (this.fileCacheSize < this.numberOfTiles * 3) {
+			// the capacity of the file cache is to small, skip preprocessing
+			return;
+		}
+
+		synchronized (this) {
+			// tiles below and above the visible area
+			for (this.tileX = this.mapViewTileX2 + 1; this.tileX >= this.mapViewTileX1 - 1; --this.tileX) {
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
+				if (!this.imageFileCache.containsKey(this.currentTile)) {
+					// cache miss
+					this.mapGenerator.addJob(this.currentTile);
+				}
+
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
+				if (!this.imageFileCache.containsKey(this.currentTile)) {
+					// cache miss
+					this.mapGenerator.addJob(this.currentTile);
+				}
+			}
+
+			// tiles left and right from the visible area
+			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
+				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
+				if (!this.imageFileCache.containsKey(this.currentTile)) {
+					// cache miss
+					this.mapGenerator.addJob(this.currentTile);
+				}
+
+				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
+				if (!this.imageFileCache.containsKey(this.currentTile)) {
+					// cache miss
+					this.mapGenerator.addJob(this.currentTile);
+				}
+			}
+
+		}
+
+		// notify the MapGenerator to process the job list
+		this.mapGenerator.requestSchedule();
 	}
 
 	void setCenter(GeoPoint point) {

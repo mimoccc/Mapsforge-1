@@ -19,7 +19,6 @@ package org.mapsforge.android.map;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.os.Bundle;
 
 /**
  * Abstract class which must be extended in order to use a MapView.
@@ -27,21 +26,8 @@ import android.os.Bundle;
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
 	private MapGenerator mapGenerator;
-	private MapView mapView;
 	private MapMover mapMover;
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		// create and start the MapGenerator thread
-		this.mapGenerator = new MapGenerator();
-		this.mapGenerator.start();
-
-		// create and start the MapMover thread
-		this.mapMover = new MapMover();
-		this.mapMover.start();
-	}
+	private MapView mapView;
 
 	@Override
 	protected void onDestroy() {
@@ -78,27 +64,61 @@ public abstract class MapActivity extends Activity {
 	protected void onPause() {
 		super.onPause();
 
-		if (this.mapView == null) {
-			return;
+		// pause the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.pause();
 		}
-		Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
-		editor.clear();
-		if (this.mapView.hasValidMapFile() && this.mapView.hasValidCenter()) {
-			// save the current map file, map position and zoom level
-			editor.putString("mapFile", this.mapView.getMapFile());
-			GeoPoint mapCenter = this.mapView.getMapCenter();
-			editor.putInt("latitude", mapCenter.getLatitudeE6());
-			editor.putInt("longitude", mapCenter.getLongitudeE6());
-			editor.putInt("zoomLevel", this.mapView.getZoomLevel());
+
+		// pause the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.pause();
 		}
-		editor.commit();
+
+		if (this.mapView != null) {
+			Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
+			editor.clear();
+			if (this.mapView.hasValidMapFile() && this.mapView.hasValidCenter()) {
+				// save the current map file, map position and zoom level
+				editor.putString("mapFile", this.mapView.getMapFile());
+				GeoPoint mapCenter = this.mapView.getMapCenter();
+				editor.putInt("latitude", mapCenter.getLatitudeE6());
+				editor.putInt("longitude", mapCenter.getLongitudeE6());
+				editor.putInt("zoomLevel", this.mapView.getZoomLevel());
+			}
+			editor.commit();
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		// unpause the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.unpause();
+		}
+
+		// unpause the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.unpause();
+		}
 	}
 
 	final MapGenerator getMapGenerator() {
+		if (this.mapGenerator == null) {
+			// create and start the MapGenerator thread
+			this.mapGenerator = new MapGenerator();
+			this.mapGenerator.start();
+		}
 		return this.mapGenerator;
 	}
 
 	final MapMover getMapMover() {
+		if (this.mapMover == null) {
+			// create and start the MapMover thread
+			this.mapMover = new MapMover();
+			this.mapMover.start();
+		}
 		return this.mapMover;
 	}
 

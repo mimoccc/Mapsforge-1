@@ -24,19 +24,24 @@ import android.os.SystemClock;
  */
 class MapMover extends Thread {
 	private static final float MOVE_SPEED = 0.2f;
+	private static final String THREAD_NAME = "MapMover";
 	private MapView mapView;
 	private long moveTimeCurrent;
 	private long moveTimeElapsed;
 	private long moveTimePrevious;
 	private float moveX;
 	private float moveY;
+	private boolean pause;
+	private boolean ready;
 
 	@Override
 	public void run() {
+		setName(THREAD_NAME);
 		while (!isInterrupted()) {
 			synchronized (this) {
-				while (!isInterrupted() && this.moveX == 0 && this.moveY == 0) {
+				while (!isInterrupted() && ((this.moveX == 0 && this.moveY == 0) || this.pause)) {
 					try {
+						this.ready = true;
 						wait();
 					} catch (InterruptedException e) {
 						// restore the interrupted status
@@ -44,6 +49,7 @@ class MapMover extends Thread {
 					}
 				}
 			}
+			this.ready = false;
 
 			if (isInterrupted()) {
 				break;
@@ -75,6 +81,7 @@ class MapMover extends Thread {
 			try {
 				sleep(20);
 			} catch (InterruptedException e) {
+				// restore the interrupted status
 				interrupt();
 			}
 		}
@@ -83,13 +90,22 @@ class MapMover extends Thread {
 		this.mapView = null;
 	}
 
+	/**
+	 * Returns the status of the MapMover.
+	 * 
+	 * @return true, if the MapMover is not working, false otherwise.
+	 */
+	boolean isReady() {
+		return this.ready;
+	}
+
 	void moveDown() {
 		if (this.moveY > 0) {
 			// stop moving the map vertically
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = -MOVE_SPEED;
+			this.moveY = -MOVE_SPEED * this.mapView.moveSpeedFactor;
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -103,7 +119,7 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = MOVE_SPEED;
+			this.moveX = MOVE_SPEED * this.mapView.moveSpeedFactor;
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -117,7 +133,7 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = -MOVE_SPEED;
+			this.moveX = -MOVE_SPEED * this.mapView.moveSpeedFactor;
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -131,7 +147,7 @@ class MapMover extends Thread {
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = MOVE_SPEED;
+			this.moveY = MOVE_SPEED * this.mapView.moveSpeedFactor;
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -139,17 +155,45 @@ class MapMover extends Thread {
 		}
 	}
 
+	/**
+	 * Request that the MapMover should stop working.
+	 */
+	synchronized void pause() {
+		this.pause = true;
+	}
+
 	void setMapView(MapView mapView) {
 		this.mapView = mapView;
 	}
 
+	/**
+	 * Stop moving the map horizontally.
+	 */
 	void stopHorizontalMove() {
-		// stop moving the map horizontally
 		this.moveX = 0;
 	}
 
-	void stopVerticalMove() {
-		// stop moving the map vertically
+	/**
+	 * Stop moving the map in any direction.
+	 */
+	void stopMove() {
+		this.moveX = 0;
 		this.moveY = 0;
+	}
+
+	/**
+	 * Stop moving the map vertically.
+	 */
+	void stopVerticalMove() {
+		this.moveY = 0;
+	}
+
+	/**
+	 * Request that the MapMover should continue working.
+	 */
+	synchronized void unpause() {
+		this.pause = false;
+		this.moveTimePrevious = SystemClock.uptimeMillis();
+		this.notify();
 	}
 }

@@ -32,8 +32,8 @@ final class TagIdsPOIs {
 	static final byte AMENITY$CAFE = 5;
 	static final byte AMENITY$CINEMA = 6;
 	static final byte AMENITY$FAST_FOOD = 7;
-	static final byte AMENITY$FOUNTAIN = 8;
 	static final byte AMENITY$FIRE_STATION = 9;
+	static final byte AMENITY$FOUNTAIN = 8;
 	static final byte AMENITY$FUEL = 10;
 	static final byte AMENITY$HOSPITAL = 11;
 	static final byte AMENITY$LIBRARY = 12;

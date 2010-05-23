@@ -59,24 +59,6 @@ class ImageFileCache {
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
-	/**
-	 * Adjusts the capacity of the cache.
-	 * 
-	 * @param capacity
-	 *            the new capacity of the cache.
-	 */
-	synchronized void setCapacity(int capacity) {
-		this.capacity = capacity;
-		// make a new map with the new capacity and put all entries from the old map in the new
-		// one. The replacement policy will keep the right files in the new map if the new map
-		// has a smaller capacity than the old map.
-		LinkedHashMap<Tile, File> newMap = createMap(this.capacity);
-		for (Map.Entry<Tile, File> entry : this.map.entrySet()) {
-			newMap.put(entry.getKey(), entry.getValue());
-		}
-		this.map = newMap;
-	}
-
 	private LinkedHashMap<Tile, File> createMap(final int initialCapacity) {
 		return new LinkedHashMap<Tile, File>((int) (initialCapacity / LOAD_FACTOR) + 2,
 				LOAD_FACTOR, true) {
@@ -142,5 +124,23 @@ class ImageFileCache {
 				Logger.e(e);
 			}
 		}
+	}
+
+	/**
+	 * Adjusts the capacity of the cache.
+	 * 
+	 * @param capacity
+	 *            the new capacity of the cache.
+	 */
+	synchronized void setCapacity(int capacity) {
+		this.capacity = capacity;
+		// make a new map with the new capacity and put all entries from the old map in the new
+		// one. The replacement policy will keep the right files in the new map if the new map
+		// has a smaller capacity than the old map.
+		LinkedHashMap<Tile, File> newMap = createMap(this.capacity);
+		for (Map.Entry<Tile, File> entry : this.map.entrySet()) {
+			newMap.put(entry.getKey(), entry.getValue());
+		}
+		this.map = newMap;
 	}
 }
