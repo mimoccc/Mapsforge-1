@@ -868,45 +868,43 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
-		synchronized (this) {
-			// check if the tile and the current MapView rectangle intersect
-			if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
-					|| this.mapViewPixelX + getWidth() < tile.pixelX) {
-				// no intersection in x direction
-				return;
-			} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
-					|| this.mapViewPixelY + getHeight() < tile.pixelY) {
-				// no intersection in y direction
-				return;
-			}
-
-			// check if the bitmap should go to the image bitmap cache
-			if (putToBitmapCache) {
-				this.imageBitmapCache.put(tile, bitmap);
-			}
-
-			if (!this.matrix.isIdentity()) {
-				// change the current MapViewBitmap
-				this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
-				this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
-
-				// draw the previous MapViewBitmap on the mapViewBitmap
-				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-
-				// swap the two MapViewBitmaps
-				this.swapMapViewBitmap = this.mapViewBitmap1;
-				this.mapViewBitmap1 = this.mapViewBitmap2;
-				this.mapViewBitmap2 = this.swapMapViewBitmap;
-
-				// reset the matrix
-				this.matrix.reset();
-			}
-
-			// draw the tile bitmap at the correct position
-			this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
-					(float) (tile.pixelY - this.mapViewPixelY), null);
+	synchronized void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
+		// check if the tile and the current MapView rectangle intersect
+		if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
+				|| this.mapViewPixelX + getWidth() < tile.pixelX) {
+			// no intersection in x direction
+			return;
+		} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
+				|| this.mapViewPixelY + getHeight() < tile.pixelY) {
+			// no intersection in y direction
+			return;
 		}
+
+		// check if the bitmap should go to the image bitmap cache
+		if (putToBitmapCache) {
+			this.imageBitmapCache.put(tile, bitmap);
+		}
+
+		if (!this.matrix.isIdentity()) {
+			// change the current MapViewBitmap
+			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
+
+			// draw the previous MapViewBitmap on the mapViewBitmap
+			this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+
+			// swap the two MapViewBitmaps
+			this.swapMapViewBitmap = this.mapViewBitmap1;
+			this.mapViewBitmap1 = this.mapViewBitmap2;
+			this.mapViewBitmap2 = this.swapMapViewBitmap;
+
+			// reset the matrix
+			this.matrix.reset();
+		}
+
+		// draw the tile bitmap at the correct position
+		this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
+				(float) (tile.pixelY - this.mapViewPixelY), null);
 	}
 
 	/**

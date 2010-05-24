@@ -431,11 +431,9 @@ class MapGenerator extends Thread {
 				this.imageFileCache.put(this.currentTile, this.bitmap);
 			}
 
-			synchronized (this) {
-				// if the job queue is empty, ask the MapView for more jobs
-				if (!isInterrupted() && this.jobQueue1.isEmpty()) {
-					this.mapView.requestMoreJobs();
-				}
+			// if the job queue is empty, ask the MapView for more jobs
+			if (!isInterrupted() && this.jobQueue1.isEmpty()) {
+				this.mapView.requestMoreJobs();
 			}
 		}
 
