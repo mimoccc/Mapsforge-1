@@ -403,8 +403,12 @@ public class MapView extends ViewGroup {
 			this.mapFile = newMapFile;
 			synchronized (this) {
 				// clear the MapView bitmaps
-				this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
-				this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+				if (this.mapViewBitmap1 != null) {
+					this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
+				}
+				if (this.mapViewBitmap2 != null) {
+					this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+				}
 				setCenter(this.database.getMapBoundary().getCenter());
 			}
 			handleTiles(true);
