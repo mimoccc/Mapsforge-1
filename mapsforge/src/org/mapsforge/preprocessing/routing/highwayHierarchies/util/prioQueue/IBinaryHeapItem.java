@@ -19,6 +19,7 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue;
 /**
  * @author Frank Viernau
  * @param <K>
+ *            the heap key.
  */
 public interface IBinaryHeapItem<K extends Comparable<K>> {
 
@@ -28,6 +29,7 @@ public interface IBinaryHeapItem<K extends Comparable<K>> {
 	 * Must only be used by the heap while element is enqueued.
 	 * 
 	 * @param idx
+	 *            position within the array based heap.
 	 */
 	public void setHeapIndex(int idx);
 
@@ -35,6 +37,7 @@ public interface IBinaryHeapItem<K extends Comparable<K>> {
 	 * Must only be used by the heap while element is enqueued.
 	 * 
 	 * @param key
+	 *            key of the heap item.
 	 */
 	public void setHeapKey(K key);
 

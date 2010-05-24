@@ -21,9 +21,11 @@ import java.util.ArrayList;
 /**
  * @author Frank Viernau
  * @param <I>
+ *            Class holding heap data.
  * @param <K>
+ *            heap key, used for comparing heap items.
  * 
- *            Slow implementation of a Binarz heap like presented bz Cormen et. al.
+ *            Slow implementation of a Binary heap like presented by Cormen et. al.
  */
 public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>> {
 
