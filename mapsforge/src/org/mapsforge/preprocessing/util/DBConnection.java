@@ -38,18 +38,18 @@ public class DBConnection {
 
 	public DBConnection(String hostName, String dbName, String username, String password,
 			int port) throws SQLException {
-		this.conn = getJdbcConnection(hostName, port, dbName, username, password);
+		this.conn = getJdbcConnectionPg(hostName, port, dbName, username, password);
 		conn.setAutoCommit(false);
-	}
-
-	private Connection getJdbcConnection(String hostName, int port, String dbName,
-			String username, String password) throws SQLException {
-		String url = "jdbc:postgresql://" + hostName + "/" + dbName;
-		return DriverManager.getConnection(url, username, password);
 	}
 
 	public Connection getConnection() {
 		return conn;
+	}
+
+	public static Connection getJdbcConnectionPg(String hostName, int port, String dbName,
+			String username, String password) throws SQLException {
+		String url = "jdbc:postgresql://" + hostName + "/" + dbName;
+		return DriverManager.getConnection(url, username, password);
 	}
 
 	/* temp stuff */
@@ -62,4 +62,5 @@ public class DBConnection {
 		return new DBConnection("localhost", "germany", "postgres", "admin", 5432)
 				.getConnection();
 	}
+
 }
