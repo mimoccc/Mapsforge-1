@@ -43,6 +43,11 @@ public class GeoCoordinate {
 		this.longitude = new Longitude(lon);
 	}
 
+	public GeoCoordinate(int lat, int lon) throws IllegalArgumentException {
+		this.latitude = new Latitude(itod(lat));
+		this.longitude = new Longitude(itod(lon));
+	}
+
 	public GeoCoordinate(GeoCoordinate other) {
 		this.latitude = new Latitude(other.getLatitude().getDegree());
 		this.longitude = new Longitude(other.getLongitude().getDegree());
