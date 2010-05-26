@@ -25,6 +25,9 @@ public class GeoCoordinate {
 	public static final double EARTH_RADIUS = 6378137d;
 	public static final double DEG_RAD_FACTOR = 57.29578d;
 
+	private static final double FAC_DOUBLE_TO_INT = 1E7;
+	private static final double FAC_INT_TO_DOUBLE = 1 / 1E7;
+
 	private Latitude latitude;
 	private Longitude longitude;
 
@@ -118,7 +121,19 @@ public class GeoCoordinate {
 		return 2 * Math.asin(Math.sqrt(ir1 + ir2 * ir3)) * EARTH_RADIUS;
 	}
 
-	public static double distanceMeters(double lon1, double lat1, double lon2, double lat2) {
+	public static int dtoi(double d) {
+		return (int) Math.rint(d * FAC_DOUBLE_TO_INT);
+	}
+
+	public static double itod(int i) {
+		return FAC_INT_TO_DOUBLE * i;
+	}
+
+	public static double sphericalDistance(int lon1, int lat1, int lon2, int lat2) {
+		return sphericalDistance(itod(lon1), itod(lat1), itod(lon2), itod(lat2));
+	}
+
+	public static double sphericalDistance(double lon1, double lat1, double lon2, double lat2) {
 		double dLat = Math.toRadians(lat2 - lat1);
 		double dLon = Math.toRadians(lon2 - lon1);
 		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1))
