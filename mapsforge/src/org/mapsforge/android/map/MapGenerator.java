@@ -21,45 +21,38 @@ import java.util.PriorityQueue;
 import android.graphics.Bitmap;
 
 /**
- * The MapGenerator reads map data from a database and renders map images.
+ * A MapGenerator provides map images. This abstract base class handles all thread specific
+ * actions and provides the job queue for tiles, which need to be processed.
  */
 abstract class MapGenerator extends Thread {
-	static final boolean DRAW_TILE_FRAMES = false;
-	boolean scheduleNeeded;
-	PriorityQueue<Tile> tempQueue;
-	ImageBitmapCache imageBitmapCache;
-	ImageFileCache imageFileCache;
-	PriorityQueue<Tile> jobQueue1;
-	PriorityQueue<Tile> jobQueue2;
-	MapView mapView;
-	boolean pause;
-	boolean ready;
-	Tile currentTile;
-	Bitmap bitmap;
-
-	abstract String getThreadName();
-
-	abstract void prepareMapGeneration();
-
-	abstract void doMapGeneration();
-
-	abstract void setup();
+	private Tile currentTile;
+	private Bitmap currentTileBitmap;
+	private ImageBitmapCache imageBitmapCache;
+	private ImageFileCache imageFileCache;
+	private PriorityQueue<Tile> jobQueue1;
+	private PriorityQueue<Tile> jobQueue2;
+	private MapView mapView;
+	private boolean pause;
+	private boolean ready;
+	private boolean scheduleNeeded;
+	private PriorityQueue<Tile> tempQueue;
 
 	@Override
-	public void run() {
+	final public void run() {
 		setName(getThreadName());
 
-		// create the bitmap
-		this.bitmap = Bitmap
-				.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE, Bitmap.Config.RGB_565);
-
+		// set up the two job queues
 		this.jobQueue1 = new PriorityQueue<Tile>(64);
 		this.jobQueue2 = new PriorityQueue<Tile>(64);
 
-		setup();
+		// create the currentTileBitmap for the tile content
+		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
+				Bitmap.Config.RGB_565);
+		setup(this.currentTileBitmap);
 
 		while (!isInterrupted()) {
 			prepareMapGeneration();
+
 			synchronized (this) {
 				while (!isInterrupted() && (this.jobQueue1.isEmpty() || this.pause)) {
 					try {
@@ -71,12 +64,14 @@ abstract class MapGenerator extends Thread {
 					}
 				}
 			}
+
 			this.ready = false;
 
 			if (isInterrupted()) {
 				break;
 			}
 
+			// get the next tile from the job queue that needs to be processed
 			synchronized (this) {
 				if (this.scheduleNeeded) {
 					schedule();
@@ -88,19 +83,19 @@ abstract class MapGenerator extends Thread {
 			// check if the current job can be skipped or must be processed
 			if (!this.imageBitmapCache.containsKey(this.currentTile)
 					&& !this.imageFileCache.containsKey(this.currentTile)) {
-				doMapGeneration();
+				doMapGeneration(currentTile);
 
 				if (isInterrupted()) {
 					break;
 				}
 
-				this.mapView.putTileOnBitmap(this.currentTile, this.bitmap, true);
+				// copy the tile to the MapView
+				this.mapView.putTileOnBitmap(this.currentTile, this.currentTileBitmap, true);
 				this.mapView.postInvalidate();
 				Thread.yield();
 
-				// put the image in the cache
-				this.imageFileCache.put(this.currentTile, this.bitmap);
-
+				// put the tile image in the cache
+				this.imageFileCache.put(this.currentTile, this.currentTileBitmap);
 			}
 
 			// if the job queue is empty, ask the MapView for more jobs
@@ -111,10 +106,10 @@ abstract class MapGenerator extends Thread {
 
 		cleanup();
 
-		// free the bitmap memory
-		if (this.bitmap != null) {
-			this.bitmap.recycle();
-			this.bitmap = null;
+		// free the currentTileBitmap memory
+		if (this.currentTileBitmap != null) {
+			this.currentTileBitmap.recycle();
+			this.currentTileBitmap = null;
 		}
 
 		// set some fields to null to avoid memory leaks
@@ -123,7 +118,18 @@ abstract class MapGenerator extends Thread {
 		this.imageFileCache = null;
 	}
 
-	abstract void cleanup();
+	/**
+	 * Schedules all tiles in the job queue.
+	 */
+	private void schedule() {
+		while (!this.jobQueue1.isEmpty()) {
+			this.jobQueue2.offer(this.mapView.setTilePriority(this.jobQueue1.poll()));
+		}
+		// swap the two job queues
+		this.tempQueue = this.jobQueue1;
+		this.jobQueue1 = this.jobQueue2;
+		this.jobQueue2 = this.tempQueue;
+	}
 
 	/**
 	 * Adds the given tile to the job queue.
@@ -138,11 +144,32 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
+	 * This method will by called at the end of the run method when the thread was interrupted.
+	 * It can be used to clean up objects and to close any open connections.
+	 */
+	abstract void cleanup();
+
+	/**
 	 * Clears the job queue.
 	 */
 	final synchronized void clearJobs() {
 		this.jobQueue1.clear();
 	}
+
+	/**
+	 * This method will by called when a map tile is needed.
+	 * 
+	 * @param tile
+	 *            the tile that is needed.
+	 */
+	abstract void doMapGeneration(Tile tile);
+
+	/**
+	 * Returns the name of the MapGenerator. It will be used as the name for the thread.
+	 * 
+	 * @return the name of the MapGenerator.
+	 */
+	abstract String getThreadName();
 
 	/**
 	 * Returns the status of the MapGenerator.
@@ -154,11 +181,17 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * Request that the MapGenerator should stop working.
+	 * Request the MapGenerator to stop working.
 	 */
 	final synchronized void pause() {
 		this.pause = true;
 	}
+
+	/**
+	 * This method is called each time before a tile needs to be processed. It can be used to
+	 * clear any data structures that will be needed when the next map tile will be processed.
+	 */
+	abstract void prepareMapGeneration();
 
 	/**
 	 * Request a scheduling of all tiles that are currently in the job queue.
@@ -170,30 +203,40 @@ abstract class MapGenerator extends Thread {
 		}
 	}
 
-	final void schedule() {
-		// long t1 = SystemClock.currentThreadTimeMillis();
-		while (!this.jobQueue1.isEmpty()) {
-			this.jobQueue2.offer(this.mapView.setTilePriority(this.jobQueue1.poll()));
-		}
-		this.tempQueue = this.jobQueue1;
-		this.jobQueue1 = this.jobQueue2;
-		this.jobQueue2 = this.tempQueue;
-		// long t2 = SystemClock.currentThreadTimeMillis();
-		// Logger.d("scheduled " + this.jobQueue1.size() + " jobs: " + (t2 -
-		// t1));
-	}
-
+	/**
+	 * Sets the image caches that the MapGenerator should use.
+	 * 
+	 * @param imageBitmapCache
+	 *            the ImageBitmapCache.
+	 * @param imageFileCache
+	 *            the ImageFileCache.
+	 */
 	final void setImageCaches(ImageBitmapCache imageBitmapCache, ImageFileCache imageFileCache) {
 		this.imageBitmapCache = imageBitmapCache;
 		this.imageFileCache = imageFileCache;
 	}
 
+	/**
+	 * Sets the MapView for the MapGenerator.
+	 * 
+	 * @param mapView
+	 *            the MapView.
+	 */
 	final void setMapView(MapView mapView) {
 		this.mapView = mapView;
 	}
 
 	/**
-	 * Request that the MapGenerator should continue working.
+	 * This method is called only once before any map tile is requested. It can be used to set
+	 * up data structures or connections that will be needed.
+	 * 
+	 * @param bitmap
+	 *            the bitmap on which all future tiles need to be copied.
+	 */
+	abstract void setup(Bitmap bitmap);
+
+	/**
+	 * Request the MapGenerator to continue working.
 	 */
 	final synchronized void unpause() {
 		this.pause = false;

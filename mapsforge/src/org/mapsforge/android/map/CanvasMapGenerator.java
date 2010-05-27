@@ -16,29 +16,40 @@
  */
 package org.mapsforge.android.map;
 
+import java.util.ArrayList;
+
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+/**
+ * A map renderer which uses a Canvas for drawing.
+ */
 class CanvasMapGenerator extends DatabaseMapGenerator {
 	private static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final String THREAD_NAME = "CanvasMapGenerator";
-
+	private int arrayListIndex;
 	private Canvas canvas;
+	private ArrayList<ArrayList<PathContainer>> innerWayList;
+	private PathContainer pathContainer;
+	private PathTextContainer pathTextContainer;
+	private PointContainer pointContainer;
+	private SymbolContainer symbolContainer;
+	private ArrayList<PathContainer> wayList;
 
 	@Override
-	void drawMapSymbols() {
-		for (this.arrayListIndex = this.symbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.symbolContainer = this.symbols.get(this.arrayListIndex);
+	void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols) {
+		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+			this.symbolContainer = drawSymbols.get(this.arrayListIndex);
 			this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
 					this.symbolContainer.y, null);
-
 		}
 	}
 
 	@Override
-	void drawNodes() {
-		for (this.arrayListIndex = this.nodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.pointContainer = this.nodes.get(this.arrayListIndex);
+	void drawNodes(ArrayList<PointContainer> drawNodes) {
+		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+			this.pointContainer = drawNodes.get(this.arrayListIndex);
 			this.canvas.drawText(this.pointContainer.text, this.pointContainer.x,
 					this.pointContainer.y, this.pointContainer.paint);
 		}
@@ -53,19 +64,20 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWayNames() {
-		for (this.arrayListIndex = this.wayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.pathTextContainer = this.wayNames.get(this.arrayListIndex);
+	void drawWayNames(ArrayList<PathTextContainer> drawWayNames) {
+		for (this.arrayListIndex = drawWayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+			this.pathTextContainer = drawWayNames.get(this.arrayListIndex);
 			this.canvas.drawTextOnPath(this.pathTextContainer.text,
 					this.pathTextContainer.path, 0, 3, this.pathTextContainer.paint);
 		}
 	}
 
 	@Override
-	void drawWays() {
-		for (byte i = 0; i < LAYERS; ++i) {
-			this.innerWayList = this.ways.get(i);
-			for (byte j = 0; j < LayerIds.LEVELS_PER_LAYER; ++j) {
+	void drawWays(ArrayList<ArrayList<ArrayList<PathContainer>>> drawWays, byte layers,
+			byte levelsPerLayer) {
+		for (byte i = 0; i < layers; ++i) {
+			this.innerWayList = drawWays.get(i);
+			for (byte j = 0; j < levelsPerLayer; ++j) {
 				this.wayList = this.innerWayList.get(j);
 				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 					this.pathContainer = this.wayList.get(this.arrayListIndex);
@@ -86,7 +98,7 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void renderSetup() {
-		this.canvas = new Canvas(this.bitmap);
+	void setupRenderer(Bitmap bitmap) {
+		this.canvas = new Canvas(bitmap);
 	}
 }

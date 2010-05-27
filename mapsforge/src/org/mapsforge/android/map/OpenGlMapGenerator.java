@@ -16,21 +16,23 @@
  */
 package org.mapsforge.android.map;
 
+import java.util.ArrayList;
+
+import android.graphics.Bitmap;
+
+/**
+ * A map renderer which uses a OpenGL for drawing.
+ */
 class OpenGlMapGenerator extends DatabaseMapGenerator {
 	private static final String THREAD_NAME = "OpenGlMapGenerator";
 
 	@Override
-	void doMapGeneration() {
+	void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	void drawMapSymbols() {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	void drawNodes() {
+	void drawNodes(ArrayList<PointContainer> drawNodes) {
 		// TODO Auto-generated method stub
 	}
 
@@ -40,12 +42,13 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWayNames() {
+	void drawWayNames(ArrayList<PathTextContainer> drawWayNames) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	void drawWays() {
+	void drawWays(ArrayList<ArrayList<ArrayList<PathContainer>>> drawWays, byte layers,
+			byte levelsPerLayer) {
 		// TODO Auto-generated method stub
 	}
 
@@ -60,7 +63,7 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void renderSetup() {
+	void setupRenderer(Bitmap bitmap) {
 		// TODO Auto-generated method stub
 	}
 }

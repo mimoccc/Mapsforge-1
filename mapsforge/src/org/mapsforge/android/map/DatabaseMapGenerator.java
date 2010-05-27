@@ -29,6 +29,9 @@ import android.graphics.Path;
 import android.graphics.Typeface;
 import android.graphics.Paint.Align;
 
+/**
+ * A MapGenerator that reads map data from a database and renders them.
+ */
 abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_AMENITY = 32;
 	private static final short BITMAP_BUILDING = 2;
@@ -38,7 +41,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_NATURAL = 64;
 	private static final short BITMAP_RAILWAY = 4;
 	private static final short BITMAP_WATERWAY = 128;
-	static final byte LAYERS = 11;
+	private static final boolean DRAW_TILE_FRAMES = false;
+	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_AREA_SYMBOLS = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -207,20 +211,17 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_WATERWAY_RIVER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVERBANK_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
-
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
-
 	private float[] areaNamePositions;
-	int arrayListIndex;
 	private int bboxLatitude1;
 	private int bboxLatitude2;
 	private int bboxLongitude1;
 	private int bboxLongitude2;
-
 	private TreeMap<GeoPoint, int[]> coastlineEnds;
 	private TreeMap<GeoPoint, int[]> coastlineStarts;
 	private float currentNodeX;
 	private float currentNodeY;
+	private Tile currentTile;
 	private float currentX;
 	private float currentY;
 	private Database database;
@@ -228,29 +229,362 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private float distanceY;
 	private Path innerPath;
 	private int innerWayLength;
-	ArrayList<ArrayList<PathContainer>> innerWayList;
+	private ArrayList<ArrayList<PathContainer>> innerWayList;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<PathContainer>> layer;
 	private MapSymbols mapSymbols;
-	ArrayList<PointContainer> nodes;
+	private ArrayList<PointContainer> nodes;
 	private Path path;
-	PathContainer pathContainer;
 	private int pathLengthInPixel;
-	PathTextContainer pathTextContainer;
-	PointContainer pointContainer;
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
 	private HashSet<String> renderedWayNames;
 	private byte skipSegments;
-	SymbolContainer symbolContainer;
-	ArrayList<SymbolContainer> symbols;
-	ArrayList<PathContainer> wayList;
+	private ArrayList<SymbolContainer> symbols;
+	private Bitmap tileBitmap;
 	private Path wayNamePath;
 	private boolean wayNameRendered;
+	private ArrayList<PathTextContainer> wayNames;
 	private float wayNameWidth;
-	ArrayList<ArrayList<ArrayList<PathContainer>>> ways;
-	ArrayList<PathTextContainer> wayNames;
+	private ArrayList<ArrayList<ArrayList<PathContainer>>> ways;
+
+	/**
+	 * Draws the name of an area if the zoomLevel level is high enough.
+	 */
+	private void addAreaName(String currentWayName, int currentWayNodes,
+			int[] currentWayNodesSequence, byte mode, byte nameOffset) {
+		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES && currentWayName != null) {
+			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
+					currentWayNodesSequence);
+			// choose correct text paint
+			if (mode == MODE_AREA_NAME_BLUE) {
+				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10));
+				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_WHITE_STROKE_10));
+			} else if (mode == MODE_AREA_NAME_BLACK) {
+				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
+			} else if (mode == MODE_AREA_NAME_RED) {
+				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
+			} else {
+				Logger.d("unknown render mode: " + mode);
+			}
+		}
+	}
+
+	/**
+	 * Draws the symbol of an area if the zoomLevel level is high enough.
+	 */
+	private void addAreaSymbol(int currentWayNodes, int[] currentWayNodesSequence,
+			Bitmap symbolBitmap) {
+		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_SYMBOLS) {
+			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
+					currentWayNodesSequence);
+			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
+					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
+					- (symbolBitmap.getHeight() >> 1))));
+		}
+	}
+
+	// TODO: implement a better algorithm, this one produces bad results
+	private void addCoastlines() {
+		if (this.coastlineStarts.size() > 0) {
+			Iterator<int[]> coastlinePartsIterator = this.coastlineStarts.values().iterator();
+			int[] currentPart;
+			int currentPartLength;
+			boolean isClosedPolygon;
+			Path pathCoast;
+			Path pathLand;
+			Path pathWater;
+
+			int longitude1;
+			int longitude2;
+			int latitude1;
+			int latitude2;
+			int longitudeX;
+			int latitudeX;
+
+			while (!isInterrupted() && coastlinePartsIterator.hasNext()) {
+				currentPart = coastlinePartsIterator.next();
+				currentPartLength = currentPart.length;
+				if (currentPart[0] == currentPart[currentPartLength - 2]
+						&& currentPart[1] == currentPart[currentPartLength - 1]) {
+					isClosedPolygon = true;
+				} else {
+					isClosedPolygon = false;
+				}
+
+				pathCoast = new Path();
+				pathCoast.moveTo(scaleLongitude(currentPart[0]), scaleLatitude(currentPart[1]));
+				for (int i = 2; i < currentPartLength; i += 2) {
+					pathCoast.lineTo(scaleLongitude(currentPart[i]),
+							scaleLatitude(currentPart[i + 1]));
+				}
+				pathLand = new Path(pathCoast);
+				if (isClosedPolygon) {
+					longitude1 = currentPart[0];
+					longitude2 = currentPart[0];
+					latitude1 = currentPart[1];
+					latitude2 = currentPart[1];
+					for (int i = 2; i < currentPartLength; i += 2) {
+						if (currentPart[i] < longitude1) {
+							longitude1 = currentPart[i];
+						} else if (currentPart[i] > longitude2) {
+							longitude2 = currentPart[i];
+						}
+						if (currentPart[i + 1] > latitude1) {
+							latitude1 = currentPart[i + 1];
+						} else if (currentPart[i + 1] < latitude2) {
+							latitude2 = currentPart[i + 1];
+						}
+					}
+					pathWater = new Path();
+					pathWater.moveTo(scaleLongitude(longitude1), scaleLatitude(latitude1));
+					pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitude1));
+					pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitude2));
+					pathWater.lineTo(scaleLongitude(longitude1), scaleLatitude(latitude2));
+					pathWater.close();
+					this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
+							new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
+					this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
+							new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
+				} else {
+					pathWater = new Path(pathCoast);
+					longitude1 = currentPart[0];
+					latitude1 = currentPart[1];
+					longitude2 = currentPart[currentPartLength - 2];
+					latitude2 = currentPart[currentPartLength - 1];
+
+					if (longitude1 < longitude2) {
+						if (latitude1 > latitude2) {
+							longitudeX = longitude2;
+							latitudeX = latitude1;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] > longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] > latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude2));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitude1),
+									scaleLatitude(latitudeX));
+
+							longitudeX = longitude1;
+							latitudeX = latitude2;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] < longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] < latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+
+							pathWater.lineTo(scaleLongitude(longitude2),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude1));
+						} else {
+							longitudeX = longitude1;
+							latitudeX = latitude2;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] < longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] > latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+							pathLand.lineTo(scaleLongitude(longitude2),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude1));
+
+							longitudeX = longitude2;
+							latitudeX = latitude1;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] > longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] < latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude2));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitude1),
+									scaleLatitude(latitudeX));
+						}
+					} else {
+						if (latitude1 > latitude2) {
+							longitudeX = longitude1;
+							latitudeX = latitude2;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] > longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] < latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+							pathLand.lineTo(scaleLongitude(longitude2),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude1));
+
+							longitudeX = longitude2;
+							latitudeX = latitude1;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] < longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] > latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude2));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitude1),
+									scaleLatitude(latitudeX));
+						} else {
+							longitudeX = longitude2;
+							latitudeX = latitude1;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] < longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] < latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude2));
+							pathLand.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathLand.lineTo(scaleLongitude(longitude1),
+									scaleLatitude(latitudeX));
+
+							longitudeX = longitude1;
+							latitudeX = latitude2;
+							for (int i = 2; i < currentPartLength; i += 2) {
+								if (currentPart[i] > longitudeX) {
+									longitudeX = currentPart[i];
+								}
+								if (currentPart[i + 1] > latitudeX) {
+									latitudeX = currentPart[i + 1];
+								}
+							}
+
+							pathWater.lineTo(scaleLongitude(longitude2),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitudeX));
+							pathWater.lineTo(scaleLongitude(longitudeX),
+									scaleLatitude(latitude1));
+						}
+					}
+					pathLand.close();
+					pathWater.close();
+					this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
+							new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
+					this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
+							new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
+					this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add(
+							new PathContainer(pathCoast, PAINT_NATURAL_COASTLINE_OUTLINE));
+				}
+			}
+		}
+	}
+
+	private void addPOISymbol(float x, float y, Bitmap symbolBitmap) {
+		this.symbols.add((new SymbolContainer(symbolBitmap, x - (symbolBitmap.getWidth() >> 1),
+				y - (symbolBitmap.getHeight() >> 1))));
+	}
+
+	private void addWayName(String wayName, short wayNodes, int[] wayNodesSequence) {
+		// calculate the approximate way name length plus some margin of safety
+		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 10;
+
+		this.previousX = scaleLongitude(wayNodesSequence[0]);
+		this.previousY = scaleLatitude(wayNodesSequence[1]);
+
+		// flag if the current way name has been rendered at least once
+		this.wayNameRendered = false;
+		this.skipSegments = 0;
+
+		// find way segments long enough to draw the way name on them
+		for (short i = 2; i < wayNodes; i += 2) {
+			this.currentX = scaleLongitude(wayNodesSequence[i]);
+			this.currentY = scaleLatitude(wayNodesSequence[i + 1]);
+			if (this.skipSegments > 0) {
+				--this.skipSegments;
+			} else {
+				// check the length of the current segment by calculating the
+				// Euclidian distance of the segment way points
+				this.distanceX = this.currentX - this.previousX;
+				this.distanceY = this.currentY - this.previousY;
+				this.pathLengthInPixel = SquareRoot
+						.sqrt((int) (this.distanceX * this.distanceX + this.distanceY
+								* this.distanceY));
+
+				if (this.pathLengthInPixel > this.wayNameWidth) {
+					this.wayNamePath = new Path();
+					// check to prevent inverted way names
+					if (this.previousX <= this.currentX) {
+						this.wayNamePath.moveTo(this.previousX, this.previousY);
+						this.wayNamePath.lineTo(this.currentX, this.currentY);
+					} else {
+						this.wayNamePath.moveTo(this.currentX, this.currentY);
+						this.wayNamePath.lineTo(this.previousX, this.previousY);
+					}
+					this.wayNames.add(new PathTextContainer(this.wayNamePath,
+							PAINT_NAME_BLACK_10, wayName));
+					this.wayNameRendered = true;
+					this.skipSegments = 3;
+				}
+			}
+			this.previousX = this.currentX;
+			this.previousY = this.currentY;
+		}
+
+		// if no segment is long enough, test if the name can be drawn on the
+		// whole way which may lead to collisions with other way names
+		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
+				&& getWayLengthInPixel(wayNodes, wayNodesSequence) > this.wayNameWidth) {
+			// check to prevent inverted way names
+			if (wayNodesSequence[0] > wayNodesSequence[wayNodes - 2]) {
+				this.path.rewind();
+				this.path.moveTo(scaleLongitude(wayNodesSequence[wayNodes - 2]),
+						scaleLatitude(wayNodesSequence[wayNodes - 1]));
+				for (short i = (short) (wayNodes - 4); i >= 0; i -= 2) {
+					this.path.lineTo(scaleLongitude(wayNodesSequence[i]),
+							scaleLatitude(wayNodesSequence[i + 1]));
+				}
+			}
+			this.wayNames.add(new PathTextContainer(this.path, PAINT_NAME_BLACK_10, wayName));
+			this.renderedWayNames.add(wayName);
+		}
+	}
 
 	private float[] calculateCenterOfBoundingBox(int currentWayNodes,
 			int[] currentWayNodesSequence) {
@@ -910,353 +1244,32 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	/**
-	 * Draws the name of an area if the zoomLevel level is high enough.
+	 * Converts a latitude value into an Y coordinate on the current tile.
+	 * 
+	 * @param latitude
+	 *            the latitude value.
+	 * @return the Y coordinate on the current tile.
 	 */
-	private void renderAreaName(String currentWayName, int currentWayNodes,
-			int[] currentWayNodesSequence, byte mode, byte nameOffset) {
-		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES && currentWayName != null) {
-			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
-					currentWayNodesSequence);
-			// choose correct text paint
-			if (mode == MODE_AREA_NAME_BLUE) {
-				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_WHITE_STROKE_10));
-			} else if (mode == MODE_AREA_NAME_BLACK) {
-				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
-			} else if (mode == MODE_AREA_NAME_RED) {
-				this.nodes.add(new PointContainer(currentWayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
-			} else {
-				Logger.d("unknown render mode: " + mode);
-			}
-		}
-	}
-
-	/**
-	 * Draws the symbol of an area if the zoomLevel level is high enough.
-	 */
-	private void renderAreaSymbol(int currentWayNodes, int[] currentWayNodesSequence,
-			Bitmap symbolBitmap) {
-		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_SYMBOLS) {
-			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
-					currentWayNodesSequence);
-			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
-					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
-					- (symbolBitmap.getHeight() >> 1))));
-		}
-	}
-
-	private void renderCoastlines() {
-		if (this.coastlineStarts.size() > 0) {
-			Iterator<int[]> coastlinePartsIterator = this.coastlineStarts.values().iterator();
-			int[] currentPart;
-			int currentPartLength;
-			boolean isClosedPolygon;
-			Path pathCoast;
-			Path pathLand;
-			Path pathWater;
-
-			int longitude1;
-			int longitude2;
-			int latitude1;
-			int latitude2;
-			int longitudeX;
-			int latitudeX;
-
-			while (!isInterrupted() && coastlinePartsIterator.hasNext()) {
-				currentPart = coastlinePartsIterator.next();
-				currentPartLength = currentPart.length;
-				if (currentPart[0] == currentPart[currentPartLength - 2]
-						&& currentPart[1] == currentPart[currentPartLength - 1]) {
-					isClosedPolygon = true;
-				} else {
-					isClosedPolygon = false;
-				}
-
-				pathCoast = new Path();
-				pathCoast.moveTo(scaleLongitude(currentPart[0]), scaleLatitude(currentPart[1]));
-				for (int i = 2; i < currentPartLength; i += 2) {
-					pathCoast.lineTo(scaleLongitude(currentPart[i]),
-							scaleLatitude(currentPart[i + 1]));
-				}
-				pathLand = new Path(pathCoast);
-				if (isClosedPolygon) {
-					longitude1 = currentPart[0];
-					longitude2 = currentPart[0];
-					latitude1 = currentPart[1];
-					latitude2 = currentPart[1];
-					for (int i = 2; i < currentPartLength; i += 2) {
-						if (currentPart[i] < longitude1) {
-							longitude1 = currentPart[i];
-						} else if (currentPart[i] > longitude2) {
-							longitude2 = currentPart[i];
-						}
-						if (currentPart[i + 1] > latitude1) {
-							latitude1 = currentPart[i + 1];
-						} else if (currentPart[i + 1] < latitude2) {
-							latitude2 = currentPart[i + 1];
-						}
-					}
-					pathWater = new Path();
-					pathWater.moveTo(scaleLongitude(longitude1), scaleLatitude(latitude1));
-					pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitude1));
-					pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitude2));
-					pathWater.lineTo(scaleLongitude(longitude1), scaleLatitude(latitude2));
-					pathWater.close();
-					this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
-							new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
-					this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
-							new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
-				} else {
-					pathWater = new Path(pathCoast);
-					longitude1 = currentPart[0];
-					latitude1 = currentPart[1];
-					longitude2 = currentPart[currentPartLength - 2];
-					latitude2 = currentPart[currentPartLength - 1];
-
-					if (longitude1 < longitude2) {
-						if (latitude1 > latitude2) {
-							longitudeX = longitude2;
-							latitudeX = latitude1;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] > longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] > latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude2));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitude1),
-									scaleLatitude(latitudeX));
-
-							longitudeX = longitude1;
-							latitudeX = latitude2;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] < longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] < latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-
-							pathWater.lineTo(scaleLongitude(longitude2),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude1));
-						} else {
-							longitudeX = longitude1;
-							latitudeX = latitude2;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] < longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] > latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-							pathLand.lineTo(scaleLongitude(longitude2),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude1));
-
-							longitudeX = longitude2;
-							latitudeX = latitude1;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] > longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] < latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude2));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitude1),
-									scaleLatitude(latitudeX));
-						}
-					} else {
-						if (latitude1 > latitude2) {
-							longitudeX = longitude1;
-							latitudeX = latitude2;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] > longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] < latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-							pathLand.lineTo(scaleLongitude(longitude2),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude1));
-
-							longitudeX = longitude2;
-							latitudeX = latitude1;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] < longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] > latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude2));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitude1),
-									scaleLatitude(latitudeX));
-						} else {
-							longitudeX = longitude2;
-							latitudeX = latitude1;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] < longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] < latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude2));
-							pathLand.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathLand.lineTo(scaleLongitude(longitude1),
-									scaleLatitude(latitudeX));
-
-							longitudeX = longitude1;
-							latitudeX = latitude2;
-							for (int i = 2; i < currentPartLength; i += 2) {
-								if (currentPart[i] > longitudeX) {
-									longitudeX = currentPart[i];
-								}
-								if (currentPart[i + 1] > latitudeX) {
-									latitudeX = currentPart[i + 1];
-								}
-							}
-
-							pathWater.lineTo(scaleLongitude(longitude2),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitudeX));
-							pathWater.lineTo(scaleLongitude(longitudeX),
-									scaleLatitude(latitude1));
-						}
-					}
-					pathLand.close();
-					pathWater.close();
-					this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
-							new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
-					this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
-							new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
-					this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add(
-							new PathContainer(pathCoast, PAINT_NATURAL_COASTLINE_OUTLINE));
-				}
-			}
-		}
-	}
-
-	private void renderHighwayName(String wayName, short wayNodes, int[] wayNodesSequence) {
-		// calculate the approximate way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 10;
-
-		this.previousX = scaleLongitude(wayNodesSequence[0]);
-		this.previousY = scaleLatitude(wayNodesSequence[1]);
-
-		// flag if the current way name has been rendered at least once
-		this.wayNameRendered = false;
-		this.skipSegments = 0;
-
-		// find way segments long enough to draw the way name on them
-		for (short i = 2; i < wayNodes; i += 2) {
-			this.currentX = scaleLongitude(wayNodesSequence[i]);
-			this.currentY = scaleLatitude(wayNodesSequence[i + 1]);
-			if (this.skipSegments > 0) {
-				--this.skipSegments;
-			} else {
-				// check the length of the current segment by calculating the
-				// Euclidian distance of the segment way points
-				this.distanceX = this.currentX - this.previousX;
-				this.distanceY = this.currentY - this.previousY;
-				this.pathLengthInPixel = SquareRoot
-						.sqrt((int) (this.distanceX * this.distanceX + this.distanceY
-								* this.distanceY));
-
-				if (this.pathLengthInPixel > this.wayNameWidth) {
-					this.wayNamePath = new Path();
-					// check to prevent inverted way names
-					if (this.previousX <= this.currentX) {
-						this.wayNamePath.moveTo(this.previousX, this.previousY);
-						this.wayNamePath.lineTo(this.currentX, this.currentY);
-					} else {
-						this.wayNamePath.moveTo(this.currentX, this.currentY);
-						this.wayNamePath.lineTo(this.previousX, this.previousY);
-					}
-					this.wayNames.add(new PathTextContainer(this.wayNamePath,
-							PAINT_NAME_BLACK_10, wayName));
-					this.wayNameRendered = true;
-					this.skipSegments = 3;
-				}
-			}
-			this.previousX = this.currentX;
-			this.previousY = this.currentY;
-		}
-
-		// if no segment is long enough, test if the name can be drawn on the
-		// whole way which may lead to collisions with other way names
-		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
-				&& getWayLengthInPixel(wayNodes, wayNodesSequence) > this.wayNameWidth) {
-			// check to prevent inverted way names
-			if (wayNodesSequence[0] > wayNodesSequence[wayNodes - 2]) {
-				this.path.rewind();
-				this.path.moveTo(scaleLongitude(wayNodesSequence[wayNodes - 2]),
-						scaleLatitude(wayNodesSequence[wayNodes - 1]));
-				for (short i = (short) (wayNodes - 4); i >= 0; i -= 2) {
-					this.path.lineTo(scaleLongitude(wayNodesSequence[i]),
-							scaleLatitude(wayNodesSequence[i + 1]));
-				}
-			}
-			this.wayNames.add(new PathTextContainer(this.path, PAINT_NAME_BLACK_10, wayName));
-			this.renderedWayNames.add(wayName);
-		}
-	}
-
-	private void renderPOISymbol(float x, float y, Bitmap symbolBitmap) {
-		this.symbols.add((new SymbolContainer(symbolBitmap, x - (symbolBitmap.getWidth() >> 1),
-				y - (symbolBitmap.getHeight() >> 1))));
-	}
-
 	private float scaleLatitude(int latitude) {
 		return (float) (MercatorProjection.latitudeToPixelY(latitude / (double) 1000000,
 				this.currentTile.zoomLevel) - this.currentTile.pixelY);
 	}
 
+	/**
+	 * Converts a longitude value into an X coordinate on the current tile.
+	 * 
+	 * @param longitude
+	 *            the longitude value.
+	 * @return the X coordinate on the current tile.
+	 */
 	private float scaleLongitude(int longitude) {
 		return (float) (MercatorProjection.longitudeToPixelX(longitude / (double) 1000000,
 				this.currentTile.zoomLevel) - this.currentTile.pixelX);
 	}
 
 	/**
-	 * Sets the stroke width of all paints depending on the current zoomLevel level.
+	 * Sets the stroke width and dash path effects of all paints depending on the current
+	 * zoomLevel level.
 	 */
 	private void setPaintParameters(byte zoomLevel) {
 		float paintScaleFactor;
@@ -1446,48 +1459,48 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	@Override
 	final void cleanup() {
-		// free the bitmap memory of the map org.mapsforge.android.map.symbols
+		// free the tileBitmap memory of the map symbols
 		if (this.mapSymbols != null) {
 			this.mapSymbols.recycle();
 			this.mapSymbols = null;
 		}
+		this.currentTile = null;
+		this.tileBitmap = null;
 		this.database = null;
 	}
 
 	@Override
-	void doMapGeneration() {
+	final void doMapGeneration(Tile tile) {
+		this.currentTile = tile;
 		// check if the paint parameters need to be set again
-		if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
-			setPaintParameters(this.currentTile.zoomLevel);
-			this.lastTileZoomLevel = this.currentTile.zoomLevel;
+		if (tile.zoomLevel != lastTileZoomLevel) {
+			setPaintParameters(tile.zoomLevel);
+			this.lastTileZoomLevel = tile.zoomLevel;
 		}
 
-		this.database.executeQuery(this.currentTile,
-				this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
-
+		this.database.executeQuery(tile, tile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
 		if (isInterrupted()) {
 			return;
 		}
+		addCoastlines();
 
-		renderCoastlines();
+		// erase the tileBitmap with the default color
+		this.tileBitmap.eraseColor(TILE_BACKGROUND);
 
-		this.bitmap.eraseColor(TILE_BACKGROUND);
-
-		drawWays();
-
+		// draw all map objects
+		drawWays(this.ways, LAYERS, LayerIds.LEVELS_PER_LAYER);
 		if (isInterrupted()) {
 			return;
 		}
-
-		drawWayNames();
-
+		drawWayNames(this.wayNames);
 		if (isInterrupted()) {
 			return;
 		}
-
-		drawMapSymbols();
-
-		drawNodes();
+		drawMapSymbols(this.symbols);
+		if (isInterrupted()) {
+			return;
+		}
+		drawNodes(this.nodes);
 
 		if (DRAW_TILE_FRAMES) {
 			// draw tile frames
@@ -1497,21 +1510,56 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		finishMapGeneration();
 	}
 
-	abstract void finishMapGeneration();
+	/**
+	 * This method is called when the map symbols should be rendered.
+	 * 
+	 * @param drawSymbols
+	 *            the symbols to be rendered.
+	 */
+	abstract void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols);
 
-	abstract void drawMapSymbols();
+	/**
+	 * This method is called when the nodes should be rendered.
+	 * 
+	 * @param drawNodes
+	 *            the nodes to be rendered.
+	 */
+	abstract void drawNodes(ArrayList<PointContainer> drawNodes);
 
-	abstract void drawNodes();
-
+	/**
+	 * This method is called when the tile frame should be rendered.
+	 */
 	abstract void drawTileFrame();
 
-	abstract void drawWayNames();
+	/**
+	 * This method is called when the way names should be rendered.
+	 * 
+	 * @param drawWayNames
+	 *            the way names to be rendered.
+	 */
+	abstract void drawWayNames(ArrayList<PathTextContainer> drawWayNames);
 
-	abstract void drawWays();
+	/**
+	 * This method is called when the ways should be rendered.
+	 * 
+	 * @param drawWays
+	 *            the ways to be rendered.
+	 * @param layers
+	 *            the number of layers.
+	 * @param levelsPerLayer
+	 *            the amount of levels per layer.
+	 */
+	abstract void drawWays(ArrayList<ArrayList<ArrayList<PathContainer>>> drawWays,
+			byte layers, byte levelsPerLayer);
+
+	/**
+	 * This method is called after all map objects have been rendered.
+	 */
+	abstract void finishMapGeneration();
 
 	@Override
 	final void prepareMapGeneration() {
-		// reset data structures
+		// clear all data structures for the map objects
 		for (byte i = LAYERS - 1; i >= 0; --i) {
 			this.innerWayList = this.ways.get(i);
 			for (byte j = LayerIds.LEVELS_PER_LAYER - 1; j >= 0; --j) {
@@ -1530,15 +1578,15 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * Renders a single POI.
 	 * 
 	 * @param nodeLayer
-	 *            the layer of the node
+	 *            the layer of the node.
 	 * @param latitude
-	 *            the latitude of the node
+	 *            the latitude of the node.
 	 * @param longitude
-	 *            the longitude of the node
+	 *            the longitude of the node.
 	 * @param nodeName
-	 *            the name of the node
+	 *            the name of the node.
 	 * @param nodeTagIds
-	 *            the tag id array of the node
+	 *            the tag id array of the node.
 	 */
 	final void renderPointOfInterest(byte nodeLayer, int latitude, int longitude,
 			String nodeName, boolean[] nodeTagIds) {
@@ -1547,7 +1595,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* aeroway */
 		if (nodeTagIds[TagIdsPOIs.AEROWAY$HELIPAD]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.helipad);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.helipad);
 		}
 
 		/* amenity */
@@ -1558,7 +1606,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pub);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pub);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$CINEMA]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1566,7 +1614,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cinema);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cinema);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$THEATRE]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1574,7 +1622,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.theatre);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.theatre);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FIRE_STATION]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1582,7 +1630,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.firebrigade);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.firebrigade);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$SHELTER]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1590,7 +1638,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 20, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.shelter);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.shelter);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$SCHOOL]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1598,7 +1646,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.school);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.school);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$UNIVERSITY]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1606,7 +1654,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.university);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.university);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$PLACE_OF_WORSHIP]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1614,7 +1662,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.church);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.church);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$ATM]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1622,7 +1670,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.atm);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.atm);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$LIBRARY]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1630,7 +1678,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.library);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.library);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FAST_FOOD]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1638,7 +1686,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fastfood);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fastfood);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$PARKING]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1646,7 +1694,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.parking);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.parking);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$HOSPITAL]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1654,7 +1702,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hospital);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hospital);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$RESTAURANT]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1662,7 +1710,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.restaurant);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.restaurant);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$BANK]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1670,7 +1718,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bank);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bank);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$CAFE]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1678,7 +1726,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cafe);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cafe);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FUEL]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1686,7 +1734,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.petrolStation);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.petrolStation);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$BUS_STATION]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1694,24 +1742,23 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus_sta);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus_sta);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$POST_BOX]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postbox);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postbox);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$POST_OFFICE]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postoffice);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postoffice);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$PHARMACY]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pharmacy);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pharmacy);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FOUNTAIN]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fountain);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fountain);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$RECYCLING]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.recycling);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.recycling);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$TELEPHONE]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.telephone);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.telephone);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$TOILETS]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.toilets);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.toilets);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$BICYCLE_RENTAL]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY,
-					this.mapSymbols.bicycle_rental);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bicycle_rental);
 		}
 
 		/* barrier */
@@ -1724,10 +1771,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* highway */
 		else if (nodeTagIds[TagIdsPOIs.HIGHWAY$BUS_STOP]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus);
 		} else if (nodeTagIds[TagIdsPOIs.HIGHWAY$TRAFFIC_SIGNALS]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY,
-					this.mapSymbols.traffic_signal);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.traffic_signal);
 		}
 
 		/* historic */
@@ -1749,12 +1795,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* leisure */
 		else if (nodeTagIds[TagIdsPOIs.LEISURE$PLAYGROUND]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.playground);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.playground);
 		}
 
 		/* man_made */
 		else if (nodeTagIds[TagIdsPOIs.MAN_MADE$WINDMILL]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.windmill);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.windmill);
 		}
 
 		/* natural */
@@ -1763,7 +1809,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_BLACK_12));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
 		}
 
 		/* place */
@@ -1787,8 +1833,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* railway */
 		else if (nodeTagIds[TagIdsPOIs.RAILWAY$LEVEL_CROSSING]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY,
-					this.mapSymbols.railway_crossing);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.railway_crossing);
 		} else if (nodeTagIds[TagIdsPOIs.RAILWAY$STATION]) {
 			if (nodeTagIds[TagIdsPOIs.STATION$LIGHT_RAIL]
 					|| nodeTagIds[TagIdsPOIs.STATION$SUBWAY]) {
@@ -1844,7 +1889,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bakery);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bakery);
 		} else if (nodeTagIds[TagIdsPOIs.SHOP$ORGANIC]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1860,12 +1905,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.supermarket);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.supermarket);
 		}
 
 		/* tourism */
 		else if (nodeTagIds[TagIdsPOIs.TOURISM$INFORMATION]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.information);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.information);
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$MUSEUM]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1880,7 +1925,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hostel);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hostel);
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$HOTEL]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1888,7 +1933,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
 						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
 			}
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hotel);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hotel);
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$ATTRACTION]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointContainer(nodeName, this.currentNodeX,
@@ -1897,7 +1942,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						this.currentNodeY, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$VIEWPOINT]) {
-			renderPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
 		}
 
 		/* unknown */
@@ -1907,27 +1952,25 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 	}
 
-	abstract void renderSetup();
-
 	/**
 	 * Renders a single way.
 	 * 
 	 * @param wayLayer
-	 *            the layer of the way
+	 *            the layer of the way.
 	 * @param wayNumberOfRealTags
-	 *            the number of real tags
+	 *            the number of real tags.
 	 * @param wayName
-	 *            the name of the way
+	 *            the name of the way.
 	 * @param wayTagIds
-	 *            the tag id array of the way
+	 *            the tag id array of the way.
 	 * @param wayTagBitmap
-	 *            the way tag bitmap
+	 *            the way tag tileBitmap.
 	 * @param wayNodes
-	 *            the number of node positions
+	 *            the number of node positions.
 	 * @param wayNodesSequence
-	 *            the node positions
+	 *            the node positions.
 	 * @param innerWays
-	 *            the inner nodes if this way is a multipolygon
+	 *            the inner nodes if this way is a multipolygon.
 	 */
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName,
 			boolean[] wayTagIds, byte wayTagBitmap, short wayNodes, int[] wayNodesSequence,
@@ -1976,7 +2019,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY1).add(
@@ -1984,7 +2027,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_MOTORWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2002,7 +2045,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK1).add(
@@ -2010,7 +2053,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_MOTORWAY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2028,7 +2071,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK1).add(
@@ -2036,7 +2079,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_TRUNK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2054,7 +2097,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK1).add(
@@ -2062,7 +2105,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_TRUNK_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2080,7 +2123,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY1).add(
@@ -2088,7 +2131,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_PRIMARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2106,7 +2149,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK1).add(
@@ -2114,7 +2157,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_PRIMARY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2132,7 +2175,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY1).add(
@@ -2140,7 +2183,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_SECONDARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2158,7 +2201,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY1).add(
@@ -2166,7 +2209,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_TERTIARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2184,7 +2227,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED1).add(
@@ -2192,7 +2235,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_UNCLASSIFIED2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2210,7 +2253,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$ROAD1).add(
@@ -2218,7 +2261,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_ROAD2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2236,7 +2279,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL1).add(
@@ -2244,7 +2287,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_RESIDENTIAL2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2262,7 +2305,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET1).add(
@@ -2270,7 +2313,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_LIVING_STREET2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2283,7 +2326,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new PathContainer(this.path, PAINT_HIGHWAY_SERVICE_AREA_OUTLINE));
 					this.layer.get(LayerIds.HIGHWAY$SERVICE_AREA$YES).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_SERVICE_AREA_FILL));
-					renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
+					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
 							(byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SERVICE1);
@@ -2295,7 +2338,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE1).add(
@@ -2303,7 +2346,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_SERVICE2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2321,7 +2364,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRACK1).add(
@@ -2329,7 +2372,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_TRACK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2344,7 +2387,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 											PAINT_HIGHWAY_PEDESTRIAN_AREA_OUTLINE));
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN_AREA$YES).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_PEDESTRIAN_AREA_FILL));
-					renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
+					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
 							(byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN1);
@@ -2356,7 +2399,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN1).add(
@@ -2364,7 +2407,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_PEDESTRIAN2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2382,7 +2425,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PATH1).add(
@@ -2390,7 +2433,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_PATH2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2408,7 +2451,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY1).add(
@@ -2416,7 +2459,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_CYCLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2429,7 +2472,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new PathContainer(this.path, PAINT_HIGHWAY_FOOTWAY_AREA_OUTLINE));
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY_AREA$YES).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_FOOTWAY_AREA_FILL));
-					renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
+					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
 							(byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY1);
@@ -2441,7 +2484,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY1).add(
@@ -2449,7 +2492,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_FOOTWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2467,7 +2510,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY1).add(
@@ -2475,7 +2518,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_BRIDLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2493,7 +2536,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new PathContainer(this.path, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$STEPS1).add(
@@ -2501,7 +2544,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_STEPS2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2515,13 +2558,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new PathContainer(this.path, paint1Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new PathContainer(this.path, PAINT_HIGHWAY_CONSTRUCTION));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						renderHighwayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes, wayNodesSequence);
 					}
 				}
 				if (this.remainingTags == 1) {
@@ -2547,8 +2590,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.BUILDING$TRAIN_STATION]
 					|| wayTagIds[TagIdsWays.BUILDING$UNIVERSITY]
 					|| wayTagIds[TagIdsWays.BUILDING$YES]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.BUILDING$YES).add(
 						new PathContainer(this.path, PAINT_BUILDING_YES_OUTLINE));
 				this.layer.get(LayerIds.BUILDING$YES).add(
@@ -2630,8 +2672,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LANDUSE$CEMETERY]
 					|| wayTagIds[TagIdsWays.LANDUSE$FARM]
 					|| wayTagIds[TagIdsWays.LANDUSE$RECREATION_GROUND]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 						new PathContainer(this.path, PAINT_LANDUSE_CEMETERY_FILL));
 				if (this.remainingTags == 1) {
@@ -2648,8 +2689,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.LANDUSE$BROWNFIELD]
 					|| wayTagIds[TagIdsWays.LANDUSE$INDUSTRIAL]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$INDUSTRIAL).add(
 						new PathContainer(this.path, PAINT_LANDUSE_INDUSTRIAL_FILL));
 				if (this.remainingTags == 1) {
@@ -2657,8 +2697,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.LANDUSE$COMMERCIAL]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new PathContainer(this.path, PAINT_LANDUSE_COMMERCIAL_FILL));
 				if (this.remainingTags == 1) {
@@ -2722,8 +2761,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$PARK]
 					|| wayTagIds[TagIdsWays.LEISURE$PITCH]
 					|| wayTagIds[TagIdsWays.LEISURE$PLAYGROUND]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$COMMON).add(
 						new PathContainer(this.path, PAINT_LEISURE_COMMON_FILL));
 				this.layer.get(LayerIds.LEISURE$COMMON).add(
@@ -2736,8 +2774,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$STADIUM]
 					|| wayTagIds[TagIdsWays.LEISURE$TRACK]
 					|| wayTagIds[TagIdsWays.LEISURE$WATER_PARK]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$STADIUM).add(
 						new PathContainer(this.path, PAINT_LEISURE_STADIUM_FILL));
 				this.layer.get(LayerIds.LEISURE$STADIUM).add(
@@ -2753,8 +2790,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		if ((wayTagBitmap & BITMAP_AMENITY) != 0) {
 			if (wayTagIds[TagIdsWays.AMENITY$COLLEGE] || wayTagIds[TagIdsWays.AMENITY$SCHOOL]
 					|| wayTagIds[TagIdsWays.AMENITY$UNIVERSITY]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.AMENITY$SCHOOL).add(
 						new PathContainer(this.path, PAINT_AMENITY_SCHOOL_FILL));
 				this.layer.get(LayerIds.AMENITY$SCHOOL).add(
@@ -2771,9 +2807,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$HOSPITAL]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 18);
-				renderAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.hospital);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.hospital);
 				this.layer.get(LayerIds.AMENITY$HOSPITAL).add(
 						new PathContainer(this.path, PAINT_AMENITY_HOSPITAL_FILL));
 				if (this.remainingTags == 1) {
@@ -2781,9 +2816,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$PARKING]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 18);
-				renderAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.parking);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.parking);
 				this.layer.get(LayerIds.AMENITY$PARKING).add(
 						new PathContainer(this.path, PAINT_AMENITY_PARKING_FILL));
 				this.layer.get(LayerIds.AMENITY$PARKING).add(
@@ -2793,7 +2827,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$FOUNTAIN]) {
-				renderAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.fountain);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.fountain);
 				--this.remainingTags;
 			}
 		}
@@ -2801,8 +2835,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* natural */
 		if ((wayTagBitmap & BITMAP_NATURAL) != 0) {
 			if (wayTagIds[TagIdsWays.NATURAL$BEACH]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$BEACH).add(
 						new PathContainer(this.path, PAINT_NATURAL_BEACH_FILL));
 				if (this.remainingTags == 1) {
@@ -2832,8 +2865,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.NATURAL$WATER]) {
-				renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-						(byte) 0);
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WATER).add(
 						new PathContainer(this.path, PAINT_NATURAL_WATER_FILL));
 				if (this.remainingTags == 1) {
@@ -3059,7 +3091,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* tourism */
 		if (wayTagIds[TagIdsWays.TOURISM$ATTRACTION]) {
-			renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_RED, (byte) 0);
+			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_RED, (byte) 0);
 			this.layer.get(LayerIds.TOURISM$ATTRACTION).add(
 					new PathContainer(this.path, PAINT_TOURISM_ATTRACTION_FILL));
 			if (this.remainingTags == 1) {
@@ -3106,30 +3138,38 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* historic */
 		if (wayTagIds[TagIdsWays.HISTORIC$RUINS]) {
-			renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 			--this.remainingTags;
 		}
 
 		/* place */
 		if (wayTagIds[TagIdsWays.PLACE$LOCALITY]) {
-			renderAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLACK, (byte) 0);
+			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLACK, (byte) 0);
 			--this.remainingTags;
 		}
 
 	}
 
+	/**
+	 * Sets the database that should be used.
+	 * 
+	 * @param database
+	 *            the database.
+	 */
 	final void setDatabase(Database database) {
 		this.database = database;
 	}
 
 	@Override
-	void setup() {
+	final void setup(Bitmap bitmap) {
+		this.tileBitmap = bitmap;
+
 		// create the MapSymbols
 		this.mapSymbols = new MapSymbols();
 
 		initializePaints();
 
-		// set up data structures
+		// set up all data structures for the map objects
 		this.ways = new ArrayList<ArrayList<ArrayList<PathContainer>>>(LAYERS);
 		for (byte i = LAYERS - 1; i >= 0; --i) {
 			this.innerWayList = new ArrayList<ArrayList<PathContainer>>(
@@ -3146,6 +3186,15 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.coastlineEnds = new TreeMap<GeoPoint, int[]>();
 		this.coastlineStarts = new TreeMap<GeoPoint, int[]>();
 
-		renderSetup();
+		setupRenderer(this.tileBitmap);
 	}
+
+	/**
+	 * This method is called once during the setup process. It can be used to set up internal
+	 * data structures that the renderer needs.
+	 * 
+	 * @param bitmap
+	 *            the bitmap on which all future tiles need to be copied.
+	 */
+	abstract void setupRenderer(Bitmap bitmap);
 }
