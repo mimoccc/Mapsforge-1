@@ -27,12 +27,14 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
+import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.GeoCoordinateKDTree;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.InRamCoordinateIndex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.CarthesianPoint;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
+import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.highwayHierarchies.HHAlgorithm;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouter;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterFactory;
@@ -55,14 +57,14 @@ public class HHRenderer extends JFrame {
 	private final BufferedCanvas canvas;
 	private final Projection proj;
 	private final HHStaticGraph graph;
-	private final InRamCoordinateIndex coordinateIndex;
+	private final GeoCoordinateKDTree coordinateIndex;
 
 	private double metersPerPixel;
 	private double minX, maxX, minY, maxY;
 	private Color bgColor = Color.WHITE;
 
 	public HHRenderer(int width, int height, HHStaticGraph graph,
-			InRamCoordinateIndex coordinateIndex, double metersPerPixel) {
+			GeoCoordinateKDTree coordinateIndex, double metersPerPixel) {
 		super();
 		this.width = width;
 		this.height = height;
@@ -79,20 +81,25 @@ public class HHRenderer extends JFrame {
 
 		proj = InRamCoordinateIndex.DEFAULT_PROJECTION_GERMANY;
 
-		CarthesianPoint cMax = polarToCarthesian(coordinateIndex.getMaxCoordinate(), proj);
-		CarthesianPoint cMin = polarToCarthesian(coordinateIndex.getMinCoordinate(), proj);
+		CarthesianPoint cMax = polarToCarthesian(new GeoCoordinate(coordinateIndex
+				.getMaxLatitude(), coordinateIndex.getMaxLongitude()), proj);
+		CarthesianPoint cMin = polarToCarthesian(new GeoCoordinate(coordinateIndex
+				.getMinLatitude(), coordinateIndex.getMinLongitude()), proj);
 		CarthesianPoint c = new CarthesianPoint((cMax.x + cMin.x) / 2, (cMax.y + cMin.y) / 2);
 
-		setCenter(
-		// carthesianToPolar(c, proj)
-		new PolarCoordinate(13d, 52d));
+		double cLon = (GeoCoordinate.itod(coordinateIndex.getMaxLongitude()) + GeoCoordinate
+				.itod(coordinateIndex.getMinLongitude())) / 2;
+		double cLat = (GeoCoordinate.itod(coordinateIndex.getMaxLatitude()) + GeoCoordinate
+				.itod(coordinateIndex.getMinLatitude())) / 2;
+
+		setCenter(new GeoCoordinate(cLat, cLon));
 		setVisible(true);
 		clear();
 		drawGraph();
 		update();
 	}
 
-	public void setCenter(PolarCoordinate center) {
+	public void setCenter(GeoCoordinate center) {
 		System.out.println("center : " + center);
 		CarthesianPoint center_ = polarToCarthesian(center, proj);
 		minX = center_.x - (metersPerPixel * (width / 2) * FAC);
@@ -101,7 +108,7 @@ public class HHRenderer extends JFrame {
 		maxY = center_.y + (metersPerPixel * (height / 2) * FAC);
 	}
 
-	public void drawLine(PolarCoordinate c1, PolarCoordinate c2, Color c, int width) {
+	public void drawLine(GeoCoordinate c1, GeoCoordinate c2, Color c, int width) {
 		CarthesianPoint c1_ = polarToScreen(c1);
 		CarthesianPoint c2_ = polarToScreen(c2);
 		canvas.drawLine(c1_.x, c1_.y, c2_.x, c2_.y, c, width);
@@ -127,7 +134,7 @@ public class HHRenderer extends JFrame {
 	}
 
 	public void drawVertex(int id, Color c) {
-		CarthesianPoint c_ = polarToScreen(coordinateIndex.getPolarCoordinate(id));
+		CarthesianPoint c_ = polarToScreen(coordinateIndex.getCoordinate(id));
 		canvas.drawCircle(c_.x, c_.y, c, 4);
 
 	}
@@ -139,11 +146,11 @@ public class HHRenderer extends JFrame {
 	}
 
 	private void drawEdge(HHStaticEdge e, Color c, int width) {
-		drawLine(coordinateIndex.getPolarCoordinate(e.getSource().getId()), coordinateIndex
-				.getPolarCoordinate(e.getTarget().getId()), c, width);
+		drawLine(coordinateIndex.getCoordinate(e.getSource().getId()), coordinateIndex
+				.getCoordinate(e.getTarget().getId()), c, width);
 	}
 
-	public CarthesianPoint polarToScreen(PolarCoordinate pc) {
+	public CarthesianPoint polarToScreen(GeoCoordinate pc) {
 		CarthesianPoint c = polarToCarthesian(pc, proj);
 		c.x = (int) Math.rint(((c.x - minX) / (maxX - minX)) * width);
 		c.y = (int) Math.rint(((c.y - minY) / (maxY - minY)) * height);
@@ -157,12 +164,11 @@ public class HHRenderer extends JFrame {
 		return carthesianToPolar(c, proj);
 	}
 
-	private CarthesianPoint polarToCarthesian(PolarCoordinate c, Projection proj) {
-		double[] tmp = new double[] { c.getLongitudeDouble(), c.getLatitudeDouble() };
+	private CarthesianPoint polarToCarthesian(GeoCoordinate c, Projection proj) {
+		double[] tmp = new double[] { GeoCoordinate.itod(c.getLongitudeInt()),
+				GeoCoordinate.itod(c.getLatitudeInt()) };
 		proj.transform(tmp, 0, tmp, 0, 1);
-		return new CarthesianPoint((int) Math.rint(tmp[0] * FAC), (int) Math.rint(tmp[1] * FAC)
-
-		);
+		return new CarthesianPoint((int) Math.rint(tmp[0] * FAC), (int) Math.rint(tmp[1] * FAC));
 	}
 
 	private PolarCoordinate carthesianToPolar(CarthesianPoint c, Projection proj) {
@@ -184,21 +190,18 @@ public class HHRenderer extends JFrame {
 		// HHEdgeReverser reverser = new HHEdgeReverser(graph);
 		HHRouter router = HHRouterFactory.getHHRouterInstance();
 
-		Random rnd = new Random(12);
-		System.out.println("a");
-		HHRenderer renderer = new HHRenderer(3200, 2400, router.routingGraph.graph,
-				router.routingGraph.coordinateIndex, 1700);
-		System.out.println("b");
+		Random rnd = new Random(1122);
+		HHRenderer renderer = new HHRenderer(1920, 1200, router.routingGraph.graph,
+				router.routingGraph.vertexIndex, 26);
 		HHAlgorithm algo = new HHAlgorithm();
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 1; i++) {
 
-			int s = rnd.nextInt(router.routingGraph.coordinateIndex
-					.getNearestNeighborIdx(new PolarCoordinate(11, 50)));
-			int t = rnd.nextInt(router.routingGraph.coordinateIndex
-					.getNearestNeighborIdx(new PolarCoordinate(32, 52)));
-			System.out.println(router.routingGraph.coordinateIndex.getPolarCoordinate(s) + " "
-					+ router.routingGraph.coordinateIndex.getPolarCoordinate(t));
+			int s = rnd.nextInt(router.routingGraph.getNVertices());
+			int t = rnd.nextInt(router.routingGraph.getNVertices());
+			System.out.println("s = " + s + " t = " + t);
+			System.out.println(router.routingGraph.vertexIndex.getCoordinate(s) + " "
+					+ router.routingGraph.vertexIndex.getCoordinate(t));
 
 			LinkedList<HHStaticEdge> searchSpace = new LinkedList<HHStaticEdge>();
 			LinkedList<HHStaticEdge> fwd = new LinkedList<HHStaticEdge>();
@@ -215,6 +218,7 @@ public class HHRenderer extends JFrame {
 
 				router.routingGraph.edgeExpander.expandShortestPath(fwd, sp);
 				router.routingGraph.edgeExpander.expandShortestPath(bwd, expandedBwd);
+				System.out.println("fwd" + fwd.size() + "bwd " + bwd.size());
 				router.routingGraph.edgeReverser.reverseEdges(expandedBwd, sp);
 				System.out.println("numEdges on shortestPath=" + sp.size());
 				renderer.drawPathEdges(searchSpace_, Color.BLUE, 2);
@@ -222,6 +226,26 @@ public class HHRenderer extends JFrame {
 				renderer.drawVertex(s, Color.GREEN);
 				renderer.drawVertex(t, Color.GREEN);
 				renderer.update();
+				for (int j = 1; j < sp.size(); j++) {
+					HHStaticEdge e = sp.get(j - 1);
+					HHStaticEdge e_ = sp.get(j);
+					if (e.getTarget().getId() != e_.getSource().getId()) {
+						System.out.println("error " + j);
+						System.out.println(e.getSource().getId() + " -> "
+								+ e.getTarget().getId());
+						System.out.println(e_.getSource().getId() + " -> "
+								+ e_.getTarget().getId());
+
+					}
+				}
+				System.out.println("path : ");
+				int j = 0;
+				for (HHStaticEdge e : sp) {
+					System.out.println("[" + (j++) + "]" + e.getSource().getId() + " -> "
+							+ e.getTarget().getId());
+
+				}
+
 			} else {
 				System.out.println("no route found");
 			}

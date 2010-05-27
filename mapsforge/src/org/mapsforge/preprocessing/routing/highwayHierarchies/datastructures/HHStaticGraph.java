@@ -317,6 +317,12 @@ public class HHStaticGraph implements Serializable {
 			}
 			return lvl - 1;
 		}
+
+		@Override
+		public String toString() {
+			return sourceId + " -> " + getTarget().getId();
+		}
+
 	}
 
 	// public static void main(String[] args) throws SQLException, IOException,

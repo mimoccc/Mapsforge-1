@@ -21,7 +21,6 @@ import java.io.DataOutput;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
@@ -31,12 +30,12 @@ import java.util.List;
 
 import org.mapsforge.core.conf.IVehicle;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.GeoCoordinateKDTree;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHEdgeExpanderRecursive;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHEdgeReverser;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.InRamCoordinateIndex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
+import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.core.geoinfo.BoundingBox;
 import org.mapsforge.server.core.geoinfo.Node;
 import org.mapsforge.server.core.geoinfo.Point;
@@ -64,7 +63,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 
 	public final HHStaticGraph graph;
 	public final DistanceTable distanceTable;
-	public final InRamCoordinateIndex coordinateIndex;
+	public final GeoCoordinateKDTree vertexIndex;
 	public final HHEdgeExpanderRecursive edgeExpander;
 	public final HHEdgeReverser edgeReverser;
 	private final BoundingBox bbox;
@@ -94,30 +93,28 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 	}
 
 	public HHCompleteRoutingGraph(HHStaticGraph graph, DistanceTable distanceTable,
-			InRamCoordinateIndex coordinateIndex, HHEdgeExpanderRecursive edgeExpander,
+			GeoCoordinateKDTree vertexIndex, HHEdgeExpanderRecursive edgeExpander,
 			HHEdgeReverser edgeReverser) {
 		this.graph = graph;
 		this.distanceTable = distanceTable;
-		this.coordinateIndex = coordinateIndex;
+		this.vertexIndex = vertexIndex;
 		this.edgeExpander = edgeExpander;
 		this.edgeReverser = edgeReverser;
-		bbox = BoundingBox.getInstance(coordinateIndex.getMinCoordinate().getLatitudeInt(),
-				coordinateIndex.getMinCoordinate().getLongitudeInt(), coordinateIndex
-						.getMaxCoordinate().getLatitudeInt(), coordinateIndex
-						.getMaxCoordinate().getLongitudeInt());
+		this.bbox = BoundingBox
+				.getInstance(vertexIndex.getMinLatitude(), vertexIndex.getMinLongitude(),
+						vertexIndex.getMaxLatitude(), vertexIndex.getMaxLongitude());
 	}
 
 	public static HHCompleteRoutingGraph importGraphFromDb(Connection conn) throws SQLException {
 
 		HHStaticGraph graph = HHStaticGraph.getFromHHDb(conn);
 		DistanceTable distanceTable = DistanceTable.getFromHHDb(conn);
-		InRamCoordinateIndex coordinateIndex = InRamCoordinateIndex.getFromHHDb(conn,
-				InRamCoordinateIndex.DEFAULT_PROJECTION_GERMANY);
+		GeoCoordinateKDTree vertexIndex = GeoCoordinateKDTree.buildHHVertexIndex(conn);
 		HHEdgeExpanderRecursive edgeExpander = HHEdgeExpanderRecursive.createIndex(graph,
 				HHEdgeExpanderRecursive.getEMinLvl(conn));
 		HHEdgeReverser edgeReverser = new HHEdgeReverser(graph);
 		HHCompleteRoutingGraph routingGraph = new HHCompleteRoutingGraph(graph, distanceTable,
-				coordinateIndex, edgeExpander, edgeReverser);
+				vertexIndex, edgeExpander, edgeReverser);
 
 		return routingGraph;
 	}
@@ -131,8 +128,8 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 				FILE_NAME_EDGE_EXPANDER));
 		HHEdgeReverser edgeReverser = Serializer.deserialize(getFile(inDir,
 				FILE_NAME_EDGE_REVERSER));
-		InRamCoordinateIndex coordinateIndex = InRamCoordinateIndex
-				.readFrom(new FileInputStream(getFile(inDir, FILE_NAME_COORDINATE_INDEX)));
+		GeoCoordinateKDTree coordinateIndex = Serializer.deserialize(new FileInputStream(
+				getFile(inDir, FILE_NAME_COORDINATE_INDEX)));
 		return new HHCompleteRoutingGraph(graph, distanceTable, coordinateIndex, edgeExpander,
 				edgeReverser);
 	}
@@ -146,10 +143,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 		Serializer.serialize(getFile(outDir, FILE_NAME_DISTANCE_TABLE), graph.distanceTable);
 		Serializer.serialize(getFile(outDir, FILE_NAME_EDGE_EXPANDER), graph.edgeExpander);
 		Serializer.serialize(getFile(outDir, FILE_NAME_EDGE_REVERSER), graph.edgeReverser);
-		FileOutputStream oStream = new FileOutputStream(getFile(outDir,
-				FILE_NAME_COORDINATE_INDEX));
-		graph.coordinateIndex.writeTo(oStream);
-		oStream.close();
+		Serializer.serialize(getFile(outDir, FILE_NAME_COORDINATE_INDEX), graph.vertexIndex);
 	}
 
 	public static File getFile(File directory, String fileName) {
@@ -182,9 +176,8 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 	public VertexDistance[] getAdjacentVertices(Point wayPoint) throws IllegalArgumentException {
 		// TODO no way-points detected !!
 		// TODO distance zero is wrong !!
-		return new VertexDistance[] { new VertexDistance(
-				coordinateIndex.getNearestNeighborIdx(new PolarCoordinate(wayPoint.getLon(),
-						wayPoint.getLat())), 0) };
+		return new VertexDistance[] { new VertexDistance(vertexIndex.getNearestNeighborId(
+				wayPoint.getLon(), wayPoint.getLat()), 0) };
 	}
 
 	@Override
@@ -204,15 +197,15 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 
 	@Override
 	public Point getVertexPoint(int vtxId) {
-		PolarCoordinate pc = coordinateIndex.getPolarCoordinate(vtxId);
-		return Point.newInstance(pc.getLatitudeInt(), pc.getLongitudeInt());
+		GeoCoordinate c = vertexIndex.getCoordinate(vtxId);
+		return Point.newInstance(c.getLatitudeInt(), c.getLongitudeInt());
 	}
 
 	@Override
 	public Point getWayPoint(Point arbitraryPosition) {
-		int id = coordinateIndex.getNearestNeighborIdx(new PolarCoordinate(arbitraryPosition
-				.getLon(), arbitraryPosition.getLat()));
-		PolarCoordinate c = coordinateIndex.getPolarCoordinate(id);
+		int id = vertexIndex.getNearestNeighborId(arbitraryPosition.getLon(), arbitraryPosition
+				.getLat());
+		GeoCoordinate c = vertexIndex.getCoordinate(id);
 		return Point.newInstance(c.getLatitudeInt(), c.getLongitudeInt());
 	}
 
@@ -231,7 +224,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 
 	@Override
 	public Node vertexNode(int vtxId) {
-		PolarCoordinate pc = coordinateIndex.getPolarCoordinate(vtxId);
-		return Node.newNode(pc.getLatitudeInt(), pc.getLongitudeInt());
+		GeoCoordinate c = vertexIndex.getCoordinate(vtxId);
+		return Node.newNode(c.getLatitudeInt(), c.getLongitudeInt());
 	}
 }

@@ -84,13 +84,16 @@ public class HHEdgeReverser implements Serializable {
 	 * @param buff
 	 */
 	public void reverseEdges(LinkedList<HHStaticEdge> edges, LinkedList<HHStaticEdge> buff) {
+		System.out.println("reverseEdges : " + edges.size());
 		for (Iterator<HHStaticEdge> iter = edges.descendingIterator(); iter.hasNext();) {
 			HHStaticEdge e = iter.next();
 			int hopIdx = hopIndices.get(e.getId());
 			if (hopIdx == ESCAPE_VALUE) {
 				hopIdx = map.get(e.getId());
 			}
-			buff.addLast(e.getTarget().getAdjacentEdge(hopIdx));
+			HHStaticEdge e_ = e.getTarget().getAdjacentEdge(hopIdx);
+			System.out.println(e + "::" + e_);
+			buff.addLast(e_);
 		}
 	}
 

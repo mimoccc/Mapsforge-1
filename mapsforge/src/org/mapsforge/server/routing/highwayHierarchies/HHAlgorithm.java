@@ -90,17 +90,21 @@ public class HHAlgorithm {
 			LinkedList<HHStaticEdge> buffSearchSpace) {
 		if (dt != null) {
 			if (graph.getGraphPropterties().downgradedEdges) {
+				System.out.println("case 1:");
 				return shortestPathDtYesDowngradedYes(graph, sourceId, targetId, dt, buffFwd,
 						buffBwd, buffSearchSpace);
 			}
+			System.out.println("case 2:");
 			return shortestPathDtYesDowngradedNo(graph, sourceId, targetId, dt, buffFwd,
 					buffBwd, buffSearchSpace);
 
 		}
 		if (graph.getGraphPropterties().downgradedEdges) {
+			System.out.println("case 3:");
 			return shortestPathDtNoDowngradedYes(graph, sourceId, targetId, buffFwd, buffBwd,
 					buffSearchSpace);
 		}
+		System.out.println("case 4:");
 		return shortestPathDtNoDowngradedNo(graph, sourceId, targetId, buffFwd, buffBwd,
 				buffSearchSpace);
 
@@ -228,7 +232,7 @@ public class HHAlgorithm {
 			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
 					buffFwd);
 			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
+					buffBwd);
 		}
 		return Math.min(d, d_);
 	}
@@ -363,7 +367,7 @@ public class HHAlgorithm {
 			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
 					buffFwd);
 			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
+					buffBwd);
 		}
 		return Math.min(d, d_);
 	}
@@ -476,7 +480,7 @@ public class HHAlgorithm {
 			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
 					buffFwd);
 			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
+					buffBwd);
 		}
 		return d;
 	}
@@ -594,7 +598,7 @@ public class HHAlgorithm {
 			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
 					buffFwd);
 			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
+					buffBwd);
 		}
 
 		return d;

@@ -24,6 +24,7 @@ import java.util.Random;
 import org.mapsforge.core.conf.IVehicle;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
+import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.core.geoinfo.Point;
 import org.mapsforge.server.routing.core.IGeoMap;
 import org.mapsforge.server.routing.core.IRoutingGraph;
@@ -57,8 +58,8 @@ public class HHRouter extends Router {
 	 * @return entry point in routing graph.
 	 */
 	public int getNearestVertexId(double lon, double lat) {
-		return routingGraph.coordinateIndex
-				.getNearestNeighborIdx(new PolarCoordinate(lon, lat));
+		return routingGraph.vertexIndex.getNearestNeighborId(GeoCoordinate.dtoi(lon),
+				GeoCoordinate.dtoi(lat));
 	}
 
 	/**
@@ -66,7 +67,8 @@ public class HHRouter extends Router {
 	 * @return coordinate of vertex.
 	 */
 	public PolarCoordinate getCoordinate(int vertexId) {
-		return routingGraph.coordinateIndex.getPolarCoordinate(vertexId);
+		GeoCoordinate c = routingGraph.vertexIndex.getCoordinate(vertexId);
+		return new PolarCoordinate(c.getLongitudeInt(), c.getLatitudeInt());
 	}
 
 	/**
@@ -103,11 +105,11 @@ public class HHRouter extends Router {
 
 	@Override
 	protected synchronized int[] route(Point source, Point destination) {
-		int srcID = routingGraph.coordinateIndex.getNearestNeighborIdx(new PolarCoordinate(
-				source.getLon(), source.getLat()));
+		int srcID = routingGraph.vertexIndex.getNearestNeighborId(source.getLon(), source
+				.getLat());
 
-		int dstID = routingGraph.coordinateIndex.getNearestNeighborIdx(new PolarCoordinate(
-				destination.getLon(), destination.getLat()));
+		int dstID = routingGraph.vertexIndex.getNearestNeighborId(destination.getLon(),
+				destination.getLat());
 
 		// TODO: route berechnen
 

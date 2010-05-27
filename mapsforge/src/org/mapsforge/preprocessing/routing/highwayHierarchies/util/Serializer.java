@@ -46,7 +46,8 @@ public class Serializer {
 	public static <S extends Serializable> S deserialize(InputStream iStream)
 			throws IOException, ClassNotFoundException {
 		ObjectInputStream in = new ObjectInputStream(iStream);
-		S s = (S) in.readObject();
+		S readObject = (S) in.readObject();
+		S s = readObject;
 		return s;
 	}
 

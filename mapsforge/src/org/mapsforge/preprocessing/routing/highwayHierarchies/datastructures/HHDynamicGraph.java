@@ -756,7 +756,6 @@ public class HHDynamicGraph implements Serializable {
 				return e;
 			}
 			return new HHDynamicEdge[0];
-
 		}
 
 		public int getInDegree(int lvl) {

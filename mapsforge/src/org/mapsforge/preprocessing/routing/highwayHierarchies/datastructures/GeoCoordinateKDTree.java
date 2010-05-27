@@ -18,12 +18,16 @@
 package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Random;
 
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
@@ -36,7 +40,11 @@ public class GeoCoordinateKDTree implements Serializable {
 	private final int[][] coords;
 	private final int[] ind;
 	private final Random rnd;
-	private final GeoCoordinate coordMin, coordMax;
+
+	int minLon = Integer.MAX_VALUE;
+	int maxLon = Integer.MIN_VALUE;
+	int minLat = Integer.MAX_VALUE;
+	int maxLat = Integer.MIN_VALUE;
 
 	public GeoCoordinateKDTree(int[] lon, int[] lat) {
 		coords = new int[][] { lon, lat };
@@ -48,36 +56,37 @@ public class GeoCoordinateKDTree implements Serializable {
 		construct(0, lon.length - 1, START_DIM);
 
 		// compute bounding rectangle
-		int _minLon = Integer.MAX_VALUE;
-		int _maxLon = Integer.MIN_VALUE;
-		int _minLat = Integer.MAX_VALUE;
-		int _maxLat = Integer.MIN_VALUE;
-
 		for (int i = 0; i < coords[0].length; i++) {
-			_minLon = Math.min(_minLon, coords[0][i]);
-			_maxLon = Math.max(_maxLon, coords[0][i]);
-			_minLat = Math.min(_minLat, coords[1][i]);
-			_maxLat = Math.max(_maxLat, coords[1][i]);
+			minLon = Math.min(minLon, coords[0][i]);
+			maxLon = Math.max(maxLon, coords[0][i]);
+			minLat = Math.min(minLat, coords[1][i]);
+			maxLat = Math.max(maxLat, coords[1][i]);
 		}
-		this.coordMin = new GeoCoordinate(_minLon, _minLat);
-		this.coordMax = new GeoCoordinate(_maxLon, _maxLat);
 	}
 
-	public GeoCoordinate maxCoordinate() {
-		return coordMax;
+	public int getMinLongitude() {
+		return minLon;
 	}
 
-	public GeoCoordinate minCoordinate() {
-		return coordMin;
+	public int getMaxLongitude() {
+		return maxLon;
 	}
 
-	public int nearestNeighborIdx(int lon, int lat) {
+	public int getMinLatitude() {
+		return minLat;
+	}
+
+	public int getMaxLatitude() {
+		return maxLat;
+	}
+
+	public int getNearestNeighborId(int lon, int lat) {
 		return ind[nearestNeighbor(new int[] { lon, lat }, 0, coords[0].length - 1, START_DIM,
 				null)];
 	}
 
 	public GeoCoordinate getCoordinate(int idx) {
-		return new GeoCoordinate(coords[0][idx], coords[1][idx]);
+		return new GeoCoordinate(coords[1][idx], coords[0][idx]);
 	}
 
 	public int size() {
@@ -179,6 +188,21 @@ public class GeoCoordinateKDTree implements Serializable {
 		ind[j] = tmp;
 	}
 
+	public static GeoCoordinateKDTree buildHHVertexIndex(Connection conn) throws SQLException {
+		HHDbReader reader = new HHDbReader(conn);
+		int[] lon = new int[reader.numVertices()];
+		int[] lat = new int[reader.numVertices()];
+
+		for (Iterator<HHVertex> iter = reader.getVertices(); iter.hasNext();) {
+			HHVertex v = iter.next();
+			lon[v.id] = PolarCoordinate.double2Int(v.longitude);
+			lat[v.id] = PolarCoordinate.double2Int(v.latitude);
+		}
+
+		GeoCoordinateKDTree index = new GeoCoordinateKDTree(lon, lat);
+		return index;
+	}
+
 	public static void main(String[] args) throws SQLException {
 
 		System.out.println("read coords from db");
@@ -201,13 +225,13 @@ public class GeoCoordinateKDTree implements Serializable {
 		long startTime = System.currentTimeMillis();
 		for (int j = 0; j < 1000; j++) {
 			int idx = rnd.nextInt(lon.length);
-			int nn = tree.nearestNeighborIdx(lon[idx], lat[idx]);
+			int nn = tree.getNearestNeighborId(lon[idx], lat[idx]);
 			System.out.println(idx + " " + nn);
 		}
 		long time = System.currentTimeMillis() - startTime;
 		System.out.println(time + "ms");
 
-		System.out.println(tree.nearestNeighborIdx(GeoCoordinate.dtoi(13.468122), GeoCoordinate
-				.dtoi(52.505740)));
+		System.out.println(tree.getNearestNeighborId(GeoCoordinate.dtoi(13.468122),
+				GeoCoordinate.dtoi(52.505740)));
 	}
 }

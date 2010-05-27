@@ -144,6 +144,15 @@ public final class HHComputation {
 		writer.flush();
 
 		// write edges
+		// level 0 edges : (fetch waypoints from routing graph)
+		System.out.println("mapping edges");
+		int count = 0;
+		for (Iterator<E> iter = rgDao.getEdges().iterator(); iter.hasNext();) {
+			E e = iter.next();
+			int id = 0;
+			graph.getEdge(id);
+		}
+
 		for (int i = 0; i < graph.numEdgeEntries(); i++) {
 			HHDynamicEdge e = graph.getEdge(i);
 			writer.writeEdge(e.getSource().getId(), e.getTarget().getId(), e.getWeight(), e
@@ -389,31 +398,22 @@ public final class HHComputation {
 		for (int i = 0; i < originalIds.length; i++) {
 			originalIds[i] = i;
 		}
-
-		int lvlOffset = 0;
-		for (int lvl = -1; lvl <= graph.numLevels(); lvl++) {
-			int i = lvlOffset;
-			while (i < graph.numVertices(0) && getCoreLevel(graph.getVertex(i)) == lvl)
-				i++;
-
-			for (int j = graph.numVertices(0) - 1; j > i; j--) {
-				if (getCoreLevel(graph.getVertex(j)) == lvl) {
-					graph.swapVertexIds(graph.getVertex(i), graph.getVertex(j));
-					int tmp = originalIds[i];
-					originalIds[i] = originalIds[j];
-					originalIds[j] = tmp;
-					while (i < graph.numVertices(0) && getCoreLevel(graph.getVertex(i)) == lvl)
-						i++;
-				}
-			}
-			lvlOffset = i;
-		}
-		int[] orgIdToId = new int[graph.numVertices(0)];
-		for (int i = 0; i < orgIdToId.length; i++) {
-			orgIdToId[originalIds[i]] = i;
-		}
-
-		return orgIdToId;
+		return originalIds;
+		/*
+		 * int lvlOffset = 0; for (int lvl = -1; lvl <= graph.numLevels(); lvl++) { int i =
+		 * lvlOffset; while (i < graph.numVertices(0) && getCoreLevel(graph.getVertex(i)) ==
+		 * lvl) i++;
+		 * 
+		 * for (int j = graph.numVertices(0) - 1; j > i; j--) { if
+		 * (getCoreLevel(graph.getVertex(j)) == lvl) { graph.swapVertexIds(graph.getVertex(i),
+		 * graph.getVertex(j)); int tmp = originalIds[i]; originalIds[i] = originalIds[j];
+		 * originalIds[j] = tmp; while (i < graph.numVertices(0) &&
+		 * getCoreLevel(graph.getVertex(i)) == lvl) i++; } } lvlOffset = i; } int[] orgIdToId =
+		 * new int[graph.numVertices(0)]; for (int i = 0; i < orgIdToId.length; i++) {
+		 * orgIdToId[originalIds[i]] = i; }
+		 * 
+		 * return orgIdToId;
+		 */
 	}
 
 	private static int getCoreLevel(HHDynamicVertex v) {

@@ -53,6 +53,14 @@ public class GeoCoordinate {
 		this.longitude = new Longitude(other.getLongitude().getDegree());
 	}
 
+	public int getLatitudeInt() {
+		return dtoi(latitude.getDegree());
+	}
+
+	public int getLongitudeInt() {
+		return dtoi(longitude.getDegree());
+	}
+
 	public Latitude getLatitude() {
 		return this.latitude;
 	}
