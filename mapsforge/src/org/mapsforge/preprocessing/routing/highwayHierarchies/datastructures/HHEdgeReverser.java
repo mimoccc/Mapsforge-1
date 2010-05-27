@@ -92,7 +92,6 @@ public class HHEdgeReverser implements Serializable {
 				hopIdx = map.get(e.getId());
 			}
 			HHStaticEdge e_ = e.getTarget().getAdjacentEdge(hopIdx);
-			System.out.println(e + "::" + e_);
 			buff.addLast(e_);
 		}
 	}
