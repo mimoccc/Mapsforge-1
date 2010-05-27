@@ -19,15 +19,16 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.sql;
 import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Date;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
+import org.mapsforge.preprocessing.util.DBConnection;
 
 /**
  * @author Frank Viernau
@@ -39,10 +40,12 @@ public class HHDbReader {
 	private static final String SQL_COUNT_VERTICES = "SELECT COUNT(*) AS count FROM hh_vertex_lvl WHERE lvl = 0;";
 	private static final String SQL_COUNT_LVL_VERTICES = "SELECT COUNT(*) AS count FROM hh_vertex_lvl;";
 	private static final String SQL_COUNT_EDGES = "SELECT COUNT(*) AS count FROM hh_edge;";
+	private static final String SQL_COUNT_EDGES_LVL = "SELECT COUNT(*) AS count FROM hh_edge WHERE min_lvl <= ? AND max_lvl >= ?;";
 	private static final String SQL_COUNT_LEVELS = "SELECT MAX(lvl) + 1 AS count FROM hh_vertex_lvl;";
 	public static final String SQL_SELECT_VERTICES = "SELECT id, longitude AS lon, latitude AS lat FROM hh_vertex ORDER BY id;";
 	private static final String SQL_SELECT_VERTEX_LVLS = "SELECT * FROM hh_vertex_lvl ORDER BY id, lvl;";
 	private static final String SQL_SELECT_EDGES = "SELECT * FROM hh_edge ORDER BY source_id, max_lvl, min_lvl, weight;";
+	private static final String SQL_SELECT_EDGES_LVL = "SELECT * FROM hh_edge  WHERE min_lvl <= ? AND max_lvl >= ? ORDER BY source_id, weight;";
 	private static final String SQL_SELECT_LEVEL_STATS = "SELECT * FROM hh_lvl_stats ORDER BY lvl;";
 	private static final String SQL_SELECT_GRAPH_PROPERTIES = "SELECT * FROM hh_graph_properties;";
 
@@ -83,6 +86,22 @@ public class HHDbReader {
 		return numEdges;
 	}
 
+	public int numEdges(int lvl) throws SQLException {
+		PreparedStatement pstmt = conn.prepareStatement(SQL_COUNT_EDGES_LVL);
+		pstmt.setInt(1, lvl);
+		pstmt.setInt(2, lvl);
+		ResultSet rs = pstmt.executeQuery();
+
+		int count;
+		if (rs.next()) {
+			count = rs.getInt("count");
+		} else {
+			count = 0;
+		}
+		return count;
+
+	}
+
 	public int numLevels() {
 		return numLevels;
 	}
@@ -96,7 +115,9 @@ public class HHDbReader {
 			TIntIntHashMap map = new TIntIntHashMap();
 
 			String selectRows = "SELECT row_idx, vertex_id, distances FROM hh_distance_table_row;";
-			rs = getStreamedResult(selectRows);
+			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+					selectRows);
+			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				int rowIdx = rs.getInt("row_idx");
 				int vertexId = rs.getInt("vertex_id");
@@ -139,8 +160,11 @@ public class HHDbReader {
 
 	public Iterator<HHVertex> getVertices() {
 		try {
+			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
+					conn, SQL_SELECT_VERTICES, FETCH_SIZE);
+			final ResultSet rs = pstmt.executeQuery();
+
 			return new Iterator<HHVertex>() {
-				private final ResultSet rs = getStreamedResult(SQL_SELECT_VERTICES);
 
 				@Override
 				public boolean hasNext() {
@@ -181,10 +205,12 @@ public class HHDbReader {
 	}
 
 	public Iterator<HHVertexLvl> getVertexLvls() {
-
 		try {
+			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
+					conn, SQL_SELECT_VERTEX_LVLS, FETCH_SIZE);
+			final ResultSet rs = pstmt.executeQuery();
+
 			return new Iterator<HHVertexLvl>() {
-				private final ResultSet rs = getStreamedResult(SQL_SELECT_VERTEX_LVLS);
 
 				@Override
 				public boolean hasNext() {
@@ -226,8 +252,33 @@ public class HHDbReader {
 
 	public Iterator<HHEdge> getEdges() {
 		try {
+			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+					SQL_SELECT_EDGES, FETCH_SIZE);
+			return getEdges(pstmt);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public Iterator<HHEdge> getEdges(int lvl) {
+		try {
+			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+					SQL_SELECT_EDGES_LVL, FETCH_SIZE);
+			pstmt.setInt(1, lvl);
+			pstmt.setInt(2, lvl);
+			return getEdges(pstmt);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private Iterator<HHEdge> getEdges(final PreparedStatement stmt) {
+		try {
 			return new Iterator<HHEdge>() {
-				private final ResultSet rs = getStreamedResult(SQL_SELECT_EDGES);
+				private final ResultSet rs = stmt.executeQuery();
 
 				@Override
 				public boolean hasNext() {
@@ -267,13 +318,6 @@ public class HHDbReader {
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	private ResultSet getStreamedResult(String sql) throws SQLException {
-		Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-				ResultSet.CONCUR_READ_ONLY);
-		stmt.setFetchSize(FETCH_SIZE);
-		return stmt.executeQuery(sql);
 	}
 
 	public class HHEdge {

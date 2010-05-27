@@ -19,10 +19,15 @@ package org.mapsforge.preprocessing.util;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public class DBConnection {
+
+	public final static int DEFAULT_FETCH_SIZE = 1000;
 
 	private Connection conn;
 
@@ -52,15 +57,29 @@ public class DBConnection {
 		return DriverManager.getConnection(url, username, password);
 	}
 
-	/* temp stuff */
-	public static Connection getBerlinDbConn() throws SQLException {
-		return new DBConnection("localhost", "berlin", "postgres", "admin", 5432)
-				.getConnection();
+	public static PreparedStatement getResultStreamingPreparedStatemet(Connection conn,
+			String sql) throws SQLException {
+		return getResultStreamingPreparedStatemet(conn, sql, DEFAULT_FETCH_SIZE);
 	}
 
-	public static Connection getGermanyDbConn() throws SQLException {
-		return new DBConnection("localhost", "germany", "postgres", "admin", 5432)
-				.getConnection();
+	public static PreparedStatement getResultStreamingPreparedStatemet(Connection conn,
+			String sql, int fetchSize) throws SQLException {
+		PreparedStatement pstmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY);
+		pstmt.setFetchSize(fetchSize);
+		return pstmt;
+	}
+
+	public static Statement getResultStreamingStatemet(Connection conn) throws SQLException {
+		return getResultStreamingStatemet(conn, DEFAULT_FETCH_SIZE);
+	}
+
+	public static Statement getResultStreamingStatemet(Connection conn, int fetchSize)
+			throws SQLException {
+		Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY);
+		stmt.setFetchSize(fetchSize);
+		return stmt;
 	}
 
 }
