@@ -25,7 +25,7 @@ import android.content.SharedPreferences.Editor;
  */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
-	private MapGenerator mapGenerator;
+	private CanvasMapGenerator mapGenerator;
 	private MapMover mapMover;
 	private MapView mapView;
 
@@ -104,10 +104,10 @@ public abstract class MapActivity extends Activity {
 		}
 	}
 
-	final MapGenerator getMapGenerator() {
+	final CanvasMapGenerator getMapGenerator() {
 		if (this.mapGenerator == null) {
 			// create and start the MapGenerator thread
-			this.mapGenerator = new MapGenerator();
+			this.mapGenerator = new CanvasMapGenerator();
 			this.mapGenerator.start();
 		}
 		return this.mapGenerator;

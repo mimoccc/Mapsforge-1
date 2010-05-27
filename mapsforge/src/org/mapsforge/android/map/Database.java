@@ -65,7 +65,7 @@ class Database {
 	private int[][] innerWays;
 	private RandomAccessFile inputFile;
 	private Rect mapBoundary;
-	private MapGenerator mapGenerator;
+	private DatabaseMapGenerator mapGenerator;
 	private int matrixBlocks;
 	private int matrixHeight;
 	private int matrixWidth;
@@ -375,7 +375,8 @@ class Database {
 	 * @param queryMapGenerator
 	 *            the MapGenerator object for rendering all map elements
 	 */
-	void executeQuery(Tile tile, boolean queryReadWayNames, MapGenerator queryMapGenerator) {
+	void executeQuery(Tile tile, boolean queryReadWayNames,
+			DatabaseMapGenerator queryMapGenerator) {
 		try {
 			this.geoRectangle = tile.getBoundingBox();
 			if (tile.zoomLevel > DATABASE_ZOOM_MAX) {

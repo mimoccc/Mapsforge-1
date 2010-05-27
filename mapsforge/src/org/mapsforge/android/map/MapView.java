@@ -91,7 +91,7 @@ public class MapView extends ViewGroup {
 	private final MapActivity mapActivity;
 	private MapController mapController;
 	private String mapFile;
-	private MapGenerator mapGenerator;
+	private CanvasMapGenerator mapGenerator;
 	private MapMover mapMover;
 	private float mapMoveX;
 	private float mapMoveY;
