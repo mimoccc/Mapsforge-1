@@ -16,6 +16,10 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg;
 
+import gnu.trove.function.TIntFunction;
+import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.procedure.TIntProcedure;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,10 +41,6 @@ import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.xml.sax.SAXException;
-
-import gnu.trove.function.TIntFunction;
-import gnu.trove.map.hash.TLongIntHashMap;
-import gnu.trove.procedure.TIntProcedure;
 
 /**
  * @author Frank Viernau
@@ -171,8 +171,8 @@ public class RgExtractor {
 								boolean oneway;
 								double distanceMeters = 0d;
 								for (int k = 1; k < lon.length; k++) {
-									distanceMeters += GeoCoordinate.distanceMeters(lon[k - 1],
-											lat[k - 1], lon[k], lat[k]);
+									distanceMeters += GeoCoordinate.sphericalDistance(
+											lon[k - 1], lat[k - 1], lon[k], lat[k]);
 								}
 								if (way.isOneway() == -1) {
 									sourceId = idMapping.get(way.getNodeRefs().get(end));

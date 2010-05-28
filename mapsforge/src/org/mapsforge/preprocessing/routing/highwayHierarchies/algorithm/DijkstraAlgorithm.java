@@ -31,7 +31,6 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 public final class DijkstraAlgorithm {
 
@@ -631,31 +630,31 @@ public final class DijkstraAlgorithm {
 		// System.out.println(DijkstraAlgorithm.shortestDistance(s, t, false, true, 0));
 		// System.out.println(DijkstraAlgorithm.shortestDistance(s, t, true, true, 0));
 
-		HHDbReader reader = new HHDbReader(DBConnection.getBerlinDbConn());
-		HHStaticGraph g = HHStaticGraph.getFromHHDb(DBConnection.getBerlinDbConn());
-		int[] x = getEMinLvl(reader);
-		// int[] x = new int[reader.numEdges()];
-		int max = 0;
-		for (int i = 0; i < g.numVertices(); i++) {
-			HHStaticVertex v = g.getVertex(i);
-			for (HHStaticEdge e : v.getAdjacentEdges(0)) {
-				boolean fwd = e.getDirection(HHStaticGraph.FWD);
-				boolean bwd = e.getDirection(HHStaticGraph.BWD);
-				if (fwd && bwd) {
-					bwd = false;
-				}
-				HHStaticVertex tmp = e.getSource();
-				LinkedList<Integer> list = shortestPathHopIndices(e.getSource(), e.getTarget(),
-						fwd, bwd, Math.max(0, x[e.getId()] - 1), x);
-				max = Math.max(list.size(), max);
-				for (int k : list) {
-					tmp = tmp.getAdjacentEdge(k).getTarget();
-				}
-				if (tmp.getId() != e.getTarget().getId())
-					System.out.println("error");
-			}
-		}
-		System.out.println(max);
+		// HHDbReader reader = new HHDbReader(DBConnection.getBerlinDbConn());
+		// HHStaticGraph g = HHStaticGraph.getFromHHDb(DBConnection.getBerlinDbConn());
+		// int[] x = getEMinLvl(reader);
+		// // int[] x = new int[reader.numEdges()];
+		// int max = 0;
+		// for (int i = 0; i < g.numVertices(); i++) {
+		// HHStaticVertex v = g.getVertex(i);
+		// for (HHStaticEdge e : v.getAdjacentEdges(0)) {
+		// boolean fwd = e.getDirection(HHStaticGraph.FWD);
+		// boolean bwd = e.getDirection(HHStaticGraph.BWD);
+		// if (fwd && bwd) {
+		// bwd = false;
+		// }
+		// HHStaticVertex tmp = e.getSource();
+		// LinkedList<Integer> list = shortestPathHopIndices(e.getSource(), e.getTarget(),
+		// fwd, bwd, Math.max(0, x[e.getId()] - 1), x);
+		// max = Math.max(list.size(), max);
+		// for (int k : list) {
+		// tmp = tmp.getAdjacentEdge(k).getTarget();
+		// }
+		// if (tmp.getId() != e.getTarget().getId())
+		// System.out.println("error");
+		// }
+		// }
+		// System.out.println(max);
 	}
 
 	private static int[] getEMinLvl(HHDbReader reader) {
