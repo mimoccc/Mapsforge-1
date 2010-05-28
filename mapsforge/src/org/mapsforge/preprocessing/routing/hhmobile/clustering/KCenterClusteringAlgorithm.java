@@ -209,7 +209,7 @@ public class KCenterClusteringAlgorithm {
 	private Cluster chooseClusterForRemoval(DirectedWeightedStaticArrayGraph graph,
 			KCenterClustering clustering, int heuristik) {
 		switch (heuristik) {
-			case HEURISTIC_MIN_RADIUS: {
+			case HEURISTIC_MIN_RADIUS:
 				return getMinCluster(clustering, new Comparator<Cluster>() {
 
 					@Override
@@ -217,9 +217,7 @@ public class KCenterClusteringAlgorithm {
 						return c1.getRadius() - c2.getRadius();
 					}
 				});
-
-			}
-			case HEURISTIC_MIN_SIZE: {
+			case HEURISTIC_MIN_SIZE:
 				return getMinCluster(clustering, new Comparator<Cluster>() {
 
 					@Override
@@ -227,10 +225,8 @@ public class KCenterClusteringAlgorithm {
 						return c1.size() - c2.size();
 					}
 				});
-			}
-			default: {
+			default:
 				return chooseClusterForRemoval(graph, clustering, HEURISTIC_DEFAULT);
-			}
 		}
 	}
 
