@@ -18,18 +18,15 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 
 import gnu.trove.set.hash.THashSet;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Random;
 
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering.Cluster;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.StaticGraph.Edge;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.DirectedWeightedStaticArrayGraph.Edge;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering.Cluster;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 public class KCenterClusteringAlgorithm {
 
@@ -38,12 +35,13 @@ public class KCenterClusteringAlgorithm {
 
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MIN_SIZE;
 
-	public Clustering computeClustering(StaticGraph graph, int k, int heuristic) {
+	public KCenterClustering computeClustering(DirectedWeightedStaticArrayGraph graph, int k,
+			int heuristic) {
 		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(2)));
 		System.out.println("computing k-center clustering (k = " + k + ", k' = " + k_ + ")");
 
 		System.out.println("randomly choosing k' centers");
-		Clustering clustering = chooseRandomCenters(graph, k_);
+		KCenterClustering clustering = chooseRandomCenters(graph, k_);
 
 		System.out.println("expanding the clusters from their centers");
 		expandClusters(graph, clustering);
@@ -53,8 +51,8 @@ public class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	private Clustering chooseRandomCenters(StaticGraph graph, int k_) {
-		Clustering clustering = new Clustering(graph.numVertices());
+	private KCenterClustering chooseRandomCenters(DirectedWeightedStaticArrayGraph graph, int k_) {
+		KCenterClustering clustering = new KCenterClustering(graph.numVertices());
 
 		Random rnd = new Random(1);
 		int[] potentialIds = graph.getConnectedVertices();
@@ -69,7 +67,8 @@ public class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	private void expandClusters(StaticGraph graph, Clustering clustering) {
+	private void expandClusters(DirectedWeightedStaticArrayGraph graph,
+			KCenterClustering clustering) {
 		// map vertex id to heap item of enqueued vertex
 		HashMap<Integer, HeapItem> enqueuedVertices = new HashMap<Integer, HeapItem>();
 
@@ -120,8 +119,8 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private void sampleDown(StaticGraph graph, Clustering clustering, int k, int k_,
-			int heuristik) {
+	private void sampleDown(DirectedWeightedStaticArrayGraph graph,
+			KCenterClustering clustering, int k, int k_, int heuristik) {
 		while (k_ > k) {
 			Cluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
 			removeClusterAndRearrange(graph, clustering, cluster);
@@ -129,8 +128,8 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private void removeClusterAndRearrange(StaticGraph graph, Clustering clustering,
-			Cluster cluster) {
+	private void removeClusterAndRearrange(DirectedWeightedStaticArrayGraph graph,
+			KCenterClustering clustering, Cluster cluster) {
 		// remove the cluster
 		Cluster[] adjClusters = getAdjacentClusters(graph, clustering, cluster);
 		int clusterSize = cluster.size();
@@ -191,8 +190,8 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private Cluster[] getAdjacentClusters(StaticGraph graph, Clustering clustering,
-			Cluster cluster) {
+	private Cluster[] getAdjacentClusters(DirectedWeightedStaticArrayGraph graph,
+			KCenterClustering clustering, Cluster cluster) {
 		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : cluster.getVertices()) {
 			for (Edge e : graph.getOutboundEdges(graph.getVertex(v))) {
@@ -207,8 +206,8 @@ public class KCenterClusteringAlgorithm {
 		return adjClusters;
 	}
 
-	private Cluster chooseClusterForRemoval(StaticGraph graph, Clustering clustering,
-			int heuristik) {
+	private Cluster chooseClusterForRemoval(DirectedWeightedStaticArrayGraph graph,
+			KCenterClustering clustering, int heuristik) {
 		switch (heuristik) {
 			case HEURISTIC_MIN_RADIUS: {
 				return getMinCluster(clustering, new Comparator<Cluster>() {
@@ -235,7 +234,7 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private Cluster getMinCluster(Clustering clustering, Comparator<Cluster> comp) {
+	private Cluster getMinCluster(KCenterClustering clustering, Comparator<Cluster> comp) {
 		Cluster min = clustering.getClusters().iterator().next();
 		for (Cluster c : clustering.getClusters()) {
 			if (comp.compare(c, min) < 0) {
@@ -277,21 +276,5 @@ public class KCenterClusteringAlgorithm {
 		public void setHeapKey(Integer key) {
 			this.distance = key;
 		}
-	}
-
-	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm");
-		StaticGraph graph = StaticGraph.buildHHGraph(conn, 0);
-		KCenterClusteringAlgorithm algo = new KCenterClusteringAlgorithm();
-		int k = (int) Math.rint(graph.numConnectedVertices() / 100);
-		Clustering clustering = algo.computeClustering(graph, k, HEURISTIC_MIN_SIZE);
-
-		int sum = 0;
-		for (Cluster c : clustering.getClusters()) {
-			sum += c.size();
-		}
-		System.out.println("assigned clusters to " + sum + " / " + graph.numVertices()
-				+ " vertices");
 	}
 }

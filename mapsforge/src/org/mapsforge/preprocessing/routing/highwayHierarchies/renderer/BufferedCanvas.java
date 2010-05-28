@@ -55,8 +55,8 @@ public class BufferedCanvas extends JComponent {
 	}
 
 	public void drawCircle(int x, int y, Color c, int radius) {
+		c = new Color(c.getRed(), c.getGreen(), c.getBlue(), 180);
 		g.setColor(c);
-
 		g.fillArc(x - radius, h - y - radius, (radius * 2) + 1, (radius * 2) + 1, 0, 360);
 	}
 
