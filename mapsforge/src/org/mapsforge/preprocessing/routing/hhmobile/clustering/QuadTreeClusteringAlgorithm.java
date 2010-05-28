@@ -68,7 +68,6 @@ public class QuadTreeClusteringAlgorithm {
 			int splitLon = splitCoord.getLongitudeInt();
 			int splitLat = splitCoord.getLatitudeInt();
 			SortableVertices s = new SortableVertices(vertexId, lon, lat);
-			System.out.println("split @ " + splitCoord);
 
 			// 1st quadrant
 			int j = l - 1;
