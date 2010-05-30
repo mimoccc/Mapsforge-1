@@ -158,6 +158,28 @@ public class RouterFactory {
 				}
 			}
 		}
+		IEdge[] es = router.getNearestEdges(new GeoCoordinate(52.508058, 13.462372));
+		IEdge[] et = router.getNearestEdges(new GeoCoordinate(52.533388, 13.348131));
+
+		System.out.println((es[0] == null) + " " + (et[0] == null));
+
+		IEdge[] sp = router.getShortestPath(es[0].getSource().getId(), et[0].getTarget()
+				.getId());
+
+		if (sp != null) {
+			LinkedList<GeoCoordinate> coords = new LinkedList<GeoCoordinate>();
+			for (IEdge e : sp) {
+				for (GeoCoordinate c : e.getWaypoints()) {
+					coords.add(c);
+				}
+				coords.add(e.getTarget().getCoordinate());
+				System.out.println(e.getName());
+			}
+			for (int j = 1; j < coords.size(); j++) {
+				renderer.drawLine(coords.get(j - 1), coords.get(j), Color.RED, 1);
+			}
+		}
+
 		renderer.update();
 		System.out.println("ready");
 

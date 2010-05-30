@@ -180,7 +180,7 @@ public class RouterImpl implements IRouter {
 			}
 		}
 		HHEdge[] arr = new HHEdge[edges.size()];
-		edges.toArray();
+		edges.toArray(arr);
 		return arr;
 	}
 
