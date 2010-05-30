@@ -22,14 +22,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
 /**
  * Maps vertex id|s to table rows / cols and hold distances in an array.
@@ -55,6 +58,15 @@ public class DistanceTable implements Serializable {
 				distances[i][j] = Integer.MAX_VALUE;
 			}
 		}
+	}
+
+	public void serialize(OutputStream oStream) throws IOException {
+		Serializer.serialize(oStream, this);
+	}
+
+	public static DistanceTable deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
+		return Serializer.deserialize(iStream);
 	}
 
 	public void serialize(File f) throws IOException {
@@ -102,6 +114,9 @@ public class DistanceTable implements Serializable {
 	}
 
 	public int get(int vId1, int vId2) {
+		if (!map.containsKey(vId1) || !map.containsKey(vId2)) {
+			return Integer.MAX_VALUE;
+		}
 		return distances[map.get(vId1)][map.get(vId2)];
 	}
 
