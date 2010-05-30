@@ -127,9 +127,9 @@ public class QuadTreeClusteringAlgorithm {
 			case HEURISTIC_CENTER:
 				return getCenterCoordinate(lon, lat, l, r);
 			case HEURISTIC_MEDIAN:
-				return getAverageCoordinate(lon, lat, l, r);
-			case HEURISTIC_AVERAGE:
 				return getMedianCoordinate(vertexId, lon, lat, l, r);
+			case HEURISTIC_AVERAGE:
+				return getAverageCoordinate(lon, lat, l, r);
 			default:
 				return getSplitCoordinate(vertexId, lon, lat, l, r, HEURISTIC_DEFAULT);
 		}
@@ -171,7 +171,7 @@ public class QuadTreeClusteringAlgorithm {
 
 	private GeoCoordinate getMedianCoordinate(int[] vertexId, int lon[], int lat[], int l, int r) {
 		SortableVertices s = new SortableVertices(vertexId, lon, lat);
-		int medianIdx = l + ((l - r) / 2);
+		int medianIdx = l + ((r - l) / 2);
 
 		s.setSortByLon();
 		quicksort.sort(s, l, r);

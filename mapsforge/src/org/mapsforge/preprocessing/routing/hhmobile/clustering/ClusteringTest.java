@@ -28,9 +28,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.DirectedWeightedStaticArrayGraph.Edge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.renderer.HHRenderer;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.HHRenderer;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouter;
@@ -76,12 +76,23 @@ public class ClusteringTest {
 		// quad
 		QuadTreeClusteringAlgorithm quadAlgorithm = new QuadTreeClusteringAlgorithm();
 		QuadTreeClustering quadClustering = quadAlgorithm.computeClustering(graph, lon, lat,
-				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 400);
+				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
 
 		HHRenderer renderer2 = new HHRenderer(1920, 1200, router.routingGraph.graph,
 				router.routingGraph.vertexIndex, 26);
 		drawClustering(renderer2, getClusterColors(graph, quadClustering));
 		renderer2.update();
+
+		// dijkstra based
+		DijkstraBasedClusteringAlgorithm dbAlgorithm = new DijkstraBasedClusteringAlgorithm();
+		QuadTreeClustering dbClustering = dbAlgorithm.computeClustering(graph,
+				avgVerticesPerCluster);
+
+		HHRenderer renderer3 = new HHRenderer(1920, 1200, router.routingGraph.graph,
+				router.routingGraph.vertexIndex, 26);
+		drawClustering(renderer3, getClusterColors(graph, dbClustering));
+		renderer3.update();
+
 	}
 
 	public static void drawClustering(HHRenderer renderer, HashMap<ICluster, Color> colors) {

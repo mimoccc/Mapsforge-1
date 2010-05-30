@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.server.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -31,7 +31,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
 /**

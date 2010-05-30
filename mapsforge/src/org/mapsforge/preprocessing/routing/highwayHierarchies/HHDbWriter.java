@@ -14,16 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.sql;
+package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
+import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
 /**
  * @author Frank Viernau
@@ -32,16 +31,10 @@ public class HHDbWriter {
 
 	private static final int BATCH_SIZE = 10000;
 
-	private final static String SQL_INSERT_VERTEX = "INSERT INTO hh_vertex (id, longitude, latitude) "
-			+ "VALUES ( " + "?, " + "?, " + "? " + ");";
-	private static final String SQL_INSERT_VERTEX_LVL = "INSERT INTO hh_vertex_lvl (" + "id, "
-			+ "lvl, " + "neighborhood " + ") VALUES (" + "?, " + "?, " + "? " + ");";
-	private static final String SQL_INSERT_EDGE = "INSERT INTO hh_edge (" + "source_id, "
-			+ "target_id, " + "weight, " + "min_lvl, " + "max_lvl, " + "fwd, " + "bwd, "
-			+ "shortcut " + ") VALUES (" + "?, " + "?, " + "?, " + "?, " + "?, " + "?, "
-			+ "?, " + "? " + ");";
-	private static final String SQL_INSERT_DISTANCE_TABLE_ROW = "INSERT INTO hh_distance_table_row (row_idx, vertex_id, distances) "
-			+ "VALUES (?, ?, ? :: integer[]);";
+	private final static String SQL_INSERT_VERTEX = "INSERT INTO hh_vertex (id, longitude, latitude) VALUES (?,?,?);";
+	private static final String SQL_INSERT_VERTEX_LVL = "INSERT INTO hh_vertex_lvl (id, lvl, neighborhood) VALUES (?,?,?);";
+	private static final String SQL_INSERT_EDGE = "INSERT INTO hh_edge (id, source_id, target_id, weight, min_lvl, max_lvl, fwd, bwd, shortcut) VALUES (?,?,?,?,?,?,?,?,?);";
+	private static final String SQL_INSERT_DISTANCE_TABLE_ROW = "INSERT INTO hh_distance_table_row (row_idx, vertex_id, distances) VALUES (?, ?, ? :: integer[]);";
 
 	private final Connection conn;
 	private final PreparedStatement pstmtInsertVertex, pstmtInsertVertexLvl, pstmtInsertEdge,
@@ -84,16 +77,18 @@ public class HHDbWriter {
 		conn.createStatement().executeUpdate(sql);
 	}
 
-	public void writeEdge(int sourceId, int targetId, int weight, int minLvl, int maxLvl,
-			boolean isForward, boolean isBackward, boolean isShortcut) throws SQLException {
-		pstmtInsertEdge.setInt(1, sourceId);
-		pstmtInsertEdge.setInt(2, targetId);
-		pstmtInsertEdge.setInt(3, weight);
-		pstmtInsertEdge.setInt(4, minLvl);
-		pstmtInsertEdge.setInt(5, maxLvl);
-		pstmtInsertEdge.setBoolean(6, isForward);
-		pstmtInsertEdge.setBoolean(7, isBackward);
-		pstmtInsertEdge.setBoolean(8, isShortcut);
+	public void writeEdge(int id, int sourceId, int targetId, int weight, int minLvl,
+			int maxLvl, boolean isForward, boolean isBackward, boolean isShortcut)
+			throws SQLException {
+		pstmtInsertEdge.setInt(1, id);
+		pstmtInsertEdge.setInt(2, sourceId);
+		pstmtInsertEdge.setInt(3, targetId);
+		pstmtInsertEdge.setInt(4, weight);
+		pstmtInsertEdge.setInt(5, minLvl);
+		pstmtInsertEdge.setInt(6, maxLvl);
+		pstmtInsertEdge.setBoolean(7, isForward);
+		pstmtInsertEdge.setBoolean(8, isBackward);
+		pstmtInsertEdge.setBoolean(9, isShortcut);
 		pstmtInsertEdge.addBatch();
 		if ((++insertEdgeCount) % BATCH_SIZE == 0) {
 			pstmtInsertEdge.executeBatch();

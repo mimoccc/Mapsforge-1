@@ -21,12 +21,10 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * @author Frank Viernau
@@ -83,6 +81,7 @@ public class HHAlgorithm {
 	 * @param buffBwd
 	 *            must be empty.
 	 * @param buffSearchSpace
+	 *            all relaxed edges.
 	 * @return sum of edge costs along shortest path.
 	 */
 	public int shortestPath(HHStaticGraph graph, int sourceId, int targetId, DistanceTable dt,
@@ -90,21 +89,17 @@ public class HHAlgorithm {
 			LinkedList<HHStaticEdge> buffSearchSpace) {
 		if (dt != null) {
 			if (graph.getGraphPropterties().downgradedEdges) {
-				System.out.println("case 1:");
 				return shortestPathDtYesDowngradedYes(graph, sourceId, targetId, dt, buffFwd,
 						buffBwd, buffSearchSpace);
 			}
-			System.out.println("case 2:");
 			return shortestPathDtYesDowngradedNo(graph, sourceId, targetId, dt, buffFwd,
 					buffBwd, buffSearchSpace);
 
 		}
 		if (graph.getGraphPropterties().downgradedEdges) {
-			System.out.println("case 3:");
 			return shortestPathDtNoDowngradedYes(graph, sourceId, targetId, buffFwd, buffBwd,
 					buffSearchSpace);
 		}
-		System.out.println("case 4:");
 		return shortestPathDtNoDowngradedNo(graph, sourceId, targetId, buffFwd, buffBwd,
 				buffSearchSpace);
 
@@ -616,6 +611,7 @@ public class HHAlgorithm {
 		int distance = dt.get(s.getId(), t.getId());
 		int lvl = graph.numLevels() - 1;
 		HHStaticVertex s_ = s;
+
 		while (s_.getId() != t.getId()) {
 			for (HHStaticEdge e : s.getAdjacentEdges(lvl)) {
 				s_ = e.getTarget();
@@ -819,47 +815,4 @@ public class HHAlgorithm {
 		}
 	}
 
-	// public static void main(String[] args) throws SQLException, IOException,
-	// ClassNotFoundException {
-	// DistanceTable dt = DistanceTable.getFromSerialization(new File("dt"));
-	// System.out.println(dt);
-	// HHStaticGraph graph = HHStaticGraph.getFromSerialization(new File("graph"));
-	// System.out.println(graph);
-
-	// Connection conn = DbConnection.getGermanyDbConn();
-	// HHStaticGraph graph = HHStaticGraph.getFromHHDb(conn);
-	// graph.serialize(new File("graph"));
-	// DistanceTable dt = DistanceTable.getFromHHDb(conn);
-	// dt.serialize(new File("dt"));
-	// int[] eMinLvl = getEMinLvlFromHHDb(conn);
-	// HHEdgeExpanderRecursive edgeExpander = HHEdgeExpanderRecursive.createIndex(graph,
-	// eMinLvl);
-	// HHAlgorithm algo = new HHAlgorithm();
-	// Random rnd = new Random();
-	// long time = System.currentTimeMillis();
-	// for(int i=0;i<10000;i++) {
-	// int s = rnd.nextInt(graph.numVertices());
-	// int t = rnd.nextInt(graph.numVertices());
-	// int d1 = algo.shortestPath(graph, s, t, dt, new LinkedList<HHStaticEdge>(), new
-	// LinkedList<HHStaticEdge>());
-	// LinkedList<HHStaticEdge> edges = algo.shortestPathDtYesDowngradedYes(graph, s, t, dt, new
-	// LinkedList<HHStaticEdge>());
-	// if(edges != null)System.out.println(d1 + " " + edges.size());
-	// int d1 = algo.shortestDistanceDtNoDowngradedYes(graph, s, t);
-	// int d2 = algo.dijkstra(graph.getVertex(s), graph.getVertex(t), 0);
-	// System.out.println(d1 + " " + d2);
-	// if(d1 != d2)System.out.println("error");
-	// }
-	// System.out.println((System.currentTimeMillis() - time) + "ms");
-	// }
-	//	
-	// private static int[] getEMinLvlFromHHDb(Connection conn) throws SQLException{
-	// HHDbReader reader = new HHDbReader(conn);
-	// int i = 0;
-	// int[] eMinLvl = new int[reader.numEdges()];
-	// for(Iterator<HHEdge> iter = reader.getEdges();iter.hasNext();) {
-	// eMinLvl[i++] = iter.next().minLvl;
-	// }
-	// return eMinLvl;
-	// }
 }

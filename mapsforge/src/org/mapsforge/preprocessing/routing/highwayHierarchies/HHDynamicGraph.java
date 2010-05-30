@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import gnu.trove.stack.array.TIntArrayStack;
 
@@ -100,6 +100,13 @@ public class HHDynamicGraph implements Serializable {
 		freeEdgeSlots = new TIntArrayStack();
 	}
 
+	/**
+	 * @param <V>
+	 * @param <E>
+	 * @param dao
+	 * @param wFunc
+	 * @return
+	 */
 	public static <V extends IRgVertex, E extends IRgEdge> HHDynamicGraph importRoutingGraph(
 			IRgDAO<V, E> dao, IRgWeightFunction<E> wFunc) {
 

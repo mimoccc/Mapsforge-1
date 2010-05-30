@@ -14,24 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.server.routing.highwayHierarchies;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHVertexLvl;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
 
 /**
@@ -51,14 +54,11 @@ public class HHStaticGraph implements Serializable {
 
 	private static final long serialVersionUID = 5052572584967363425L;
 
-	private final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, eTarget, eWeight;
+	private final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, eSource, eTarget, eWeight;
 	private final BitArray[] eDirection;
 	private final BitArray eShortcut;
 	private final int numVertices, numLvlVertices, numEdges;
 	private final HHGraphProperties graphProperties;
-
-	public final PrimitivAccessLayer primitiveAccessLayer;
-	public final LowLevelAccessLayer lowLevelAccessLayer;
 
 	private HHStaticGraph(int numVertices, int numLvlVertices, int numEdges,
 			HHGraphProperties metaData) {
@@ -72,12 +72,11 @@ public class HHStaticGraph implements Serializable {
 		vLvlVNh = new int[numLvlVertices];
 		vLvlFirstEdge = new int[numLvlVertices + 1];
 		vLvlFirstEdge[numLvlVertices] = numEdges;
+		eSource = new int[numEdges];
 		eTarget = new int[numEdges];
 		eWeight = new int[numEdges];
 		eDirection = new BitArray[] { new BitArray(numEdges), new BitArray(numEdges) };
 		eShortcut = new BitArray(numEdges);
-		this.primitiveAccessLayer = new PrimitivAccessLayer();
-		this.lowLevelAccessLayer = new LowLevelAccessLayer();
 	}
 
 	public static HHStaticGraph getFromHHDb(Connection conn) throws SQLException {
@@ -100,11 +99,12 @@ public class HHStaticGraph implements Serializable {
 		offset = 0;
 		for (Iterator<HHEdge> iter = reader.getEdges(); iter.hasNext();) {
 			HHEdge e = iter.next();
+			g.eSource[offset] = e.sourceId;
 			g.eTarget[offset] = e.targetId;
 			g.eWeight[offset] = e.weight;
 			g.eDirection[FWD].set(offset, e.fwd);
 			g.eDirection[BWD].set(offset, e.bwd);
-			g.eShortcut.set(offset, e.minLvl > 0);
+			g.eShortcut.set(offset, e.shortcut);
 			for (int i = 0; i <= e.maxLvl; i++) {
 				if (g.vLvlFirstEdge[g.vFirstLvlVertex[e.sourceId] + i] == -1) {
 					g.vLvlFirstEdge[g.vFirstLvlVertex[e.sourceId] + i] = offset;
@@ -115,75 +115,13 @@ public class HHStaticGraph implements Serializable {
 		return g;
 	}
 
-	public class LowLevelAccessLayer implements Serializable {
-
-		private static final long serialVersionUID = 1872462475856880498L;
-
-		public final int[] vFirstLvlVertex = HHStaticGraph.this.vFirstLvlVertex;
-		public final int[] vLvlVNh = HHStaticGraph.this.vLvlVNh;
-		public final int[] vLvlFirstEdge = HHStaticGraph.this.vLvlFirstEdge;
-		public final int[] eTarget = HHStaticGraph.this.eTarget;
-		public final int[] eWeight = HHStaticGraph.this.eWeight;
-		public final BitArray[] eDirection = HHStaticGraph.this.eDirection;
-		public final BitArray eShortcut = HHStaticGraph.this.eShortcut;
-		public final int numVertices = HHStaticGraph.this.numVertices;
-		public final int numLvlVertices = HHStaticGraph.this.numLvlVertices;
-		public final int numEdges = HHStaticGraph.this.numEdges;
+	public void serialize(OutputStream oStream) throws IOException {
+		Serializer.serialize(oStream, this);
 	}
 
-	public class PrimitivAccessLayer implements Serializable {
-
-		private static final long serialVersionUID = 1105544622411938920L;
-
-		public int vGetLevel(int vertexId) {
-			return (vFirstLvlVertex[vertexId + 1] - vFirstLvlVertex[vertexId]) - 1;
-		}
-
-		public int vGetNeighborhood(int vertexId, int lvl) {
-			return vLvlVNh[vFirstLvlVertex[vertexId] + lvl];
-		}
-
-		public int vGetHopIdxFirstAdjacentEdges(int vertexId, int minLvl) {
-			return vLvlFirstEdge[vFirstLvlVertex[vertexId] + minLvl]
-					- vLvlFirstEdge[vFirstLvlVertex[vertexId]];
-		}
-
-		public int vGetHopIdxLastAdjacentEdge(int vertexId) {
-			return vLvlFirstEdge[vFirstLvlVertex[vertexId + 1]] - 1
-					- vLvlFirstEdge[vFirstLvlVertex[vertexId]];
-		}
-
-		public int vGetAdjacentEdge(int vertexId, int hopIdx) {
-			return vLvlFirstEdge[vFirstLvlVertex[vertexId]] + hopIdx;
-		}
-
-		public int eGetTarget(int edgeId) {
-			return eTarget[edgeId];
-		}
-
-		public int eGetWeight(int edgeId) {
-			return eWeight[edgeId];
-		}
-
-		public boolean eHasDirection(int edgeId, int direction) {
-			return eDirection[direction].get(edgeId);
-		}
-
-		public boolean eIsShortcut(int edgeId) {
-			return eShortcut.get(edgeId);
-		}
-
-		public boolean eIsLvlGEQ(int sourceId, int edgeId, int lvl) {
-			return vLvlFirstEdge[vFirstLvlVertex[sourceId] + lvl] <= edgeId;
-		}
-
-		public int eGetLvl(int sourceId, int edgeId) {
-			int lvl = 0;
-			while (vLvlFirstEdge[vFirstLvlVertex[sourceId] + lvl] <= edgeId) {
-				lvl++;
-			}
-			return lvl - 1;
-		}
+	public static HHStaticGraph deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
+		return Serializer.deserialize(iStream);
 	}
 
 	public void serialize(File f) throws IOException {
@@ -206,6 +144,10 @@ public class HHStaticGraph implements Serializable {
 
 	public HHStaticVertex getVertex(int id) {
 		return new HHStaticVertex(id);
+	}
+
+	public HHStaticEdge getEdge(int id) {
+		return new HHStaticEdge(id);
 	}
 
 	public int numVertices() {
@@ -250,13 +192,32 @@ public class HHStaticGraph implements Serializable {
 			int endIdx = vLvlFirstEdge[vFirstLvlVertex[id + 1]];
 			HHStaticEdge[] e = new HHStaticEdge[Math.max(endIdx - startIdx, 0)];
 			for (int i = startIdx; i < endIdx; i++) {
-				e[i - startIdx] = new HHStaticEdge(i, id);
+				e[i - startIdx] = new HHStaticEdge(i);
 			}
 			return e;
 		}
 
 		public HHStaticEdge getAdjacentEdge(int hopIdx) {
-			return new HHStaticEdge(vLvlFirstEdge[vFirstLvlVertex[id]] + hopIdx, id);
+			return new HHStaticEdge(vLvlFirstEdge[vFirstLvlVertex[id]] + hopIdx);
+		}
+
+		public HHStaticEdge[] getAdjacentLevel0Edges() {
+			int startIdx = vLvlFirstEdge[vFirstLvlVertex[id]];
+			int endIdx = vLvlFirstEdge[vFirstLvlVertex[id + 1]];
+			int n = 0;
+			for (int i = startIdx; i < endIdx; i++) {
+				if (!eShortcut.get(i) && eDirection[FWD].get(i)) {
+					n++;
+				}
+			}
+			HHStaticEdge[] e = new HHStaticEdge[Math.max(n, 0)];
+			int j = 0;
+			for (int i = startIdx; i < endIdx; i++) {
+				if (!eShortcut.get(i) && eDirection[FWD].get(i)) {
+					e[j++] = new HHStaticEdge(i);
+				}
+			}
+			return e;
 		}
 
 		public int numAdjacentEdges() {
@@ -274,11 +235,10 @@ public class HHStaticGraph implements Serializable {
 
 	public class HHStaticEdge {
 
-		private final int id, sourceId;
+		private final int id;
 
-		public HHStaticEdge(int id, int sourceId) {
+		public HHStaticEdge(int id) {
 			this.id = id;
-			this.sourceId = sourceId;
 		}
 
 		public int getId() {
@@ -286,7 +246,7 @@ public class HHStaticGraph implements Serializable {
 		}
 
 		public HHStaticVertex getSource() {
-			return new HHStaticVertex(sourceId);
+			return new HHStaticVertex(eSource[id]);
 		}
 
 		public HHStaticVertex getTarget() {
@@ -302,7 +262,7 @@ public class HHStaticGraph implements Serializable {
 		}
 
 		public boolean isLvlGEQ(int lvl) {
-			return vLvlFirstEdge[vFirstLvlVertex[sourceId] + lvl] <= id;
+			return vLvlFirstEdge[vFirstLvlVertex[eSource[id]] + lvl] <= id;
 		}
 
 		public boolean isShortcut() {
@@ -312,7 +272,7 @@ public class HHStaticGraph implements Serializable {
 		public int getLvl() {
 			// no use in query algorithm, slow
 			int lvl = 0;
-			while (vLvlFirstEdge[vFirstLvlVertex[sourceId] + lvl] <= id) {
+			while (vLvlFirstEdge[vFirstLvlVertex[eSource[id]] + lvl] <= id) {
 				lvl++;
 			}
 			return lvl - 1;
@@ -320,7 +280,7 @@ public class HHStaticGraph implements Serializable {
 
 		@Override
 		public String toString() {
-			return sourceId + " -> " + getTarget().getId();
+			return eSource[id] + " -> " + getTarget().getId();
 		}
 
 	}

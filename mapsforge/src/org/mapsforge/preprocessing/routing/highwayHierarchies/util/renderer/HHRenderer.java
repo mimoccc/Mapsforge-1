@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.renderer;
+package org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,17 +27,17 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.GeoCoordinateKDTree;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.InRamCoordinateIndex;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.CarthesianPoint;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.server.routing.highwayHierarchies.GeoCoordinateKDTree;
 import org.mapsforge.server.routing.highwayHierarchies.HHAlgorithm;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouter;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterFactory;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 import com.jhlabs.map.proj.Projection;
 

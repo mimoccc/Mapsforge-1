@@ -14,26 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.server.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntLongHashMap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.algorithm.DijkstraAlgorithm;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticVertex;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.DijkstraAlgorithm;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArray;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArrayGrowable;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedFourBitArray;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedFourBitArrayGrowable;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * Maps shortcuts to low level edges by a multi leveled index.
@@ -60,9 +64,23 @@ public class HHEdgeExpanderRecursive implements Serializable {
 		this.edgeMap = edgeMap;
 	}
 
+	public void serialize(OutputStream oStream) throws IOException {
+		Serializer.serialize(oStream, this);
+	}
+
+	public static HHEdgeExpanderRecursive deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
+		return Serializer.deserialize(iStream);
+	}
+
 	public void expandShortestPath(LinkedList<HHStaticEdge> edges, LinkedList<HHStaticEdge> buff) {
 		for (HHStaticEdge e : edges) {
 			expandEdge(e, buff);
+		}
+		for (HHStaticEdge e : buff) {
+			if (e.isShortcut()) {
+				System.out.println("error in expander");
+			}
 		}
 	}
 

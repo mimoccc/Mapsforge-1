@@ -24,8 +24,8 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.CarthesianPoint;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;

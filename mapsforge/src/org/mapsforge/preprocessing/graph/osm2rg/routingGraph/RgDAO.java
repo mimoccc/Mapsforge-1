@@ -34,35 +34,35 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 	private static final int FETCH_SIZE = 1000;
 
 	private static final String SQL_COUNT_VERTICES = "SELECT COUNT(*) AS count FROM rg_vertex;";
-
 	private static final String SQL_COUNT_EDGES = "SELECT COUNT(*) AS count FROM rg_edge;";
-
-	private static final String SQL_SELECT_VERTICES = "SELECT " + "id, " + "osm_node_id, "
-			+ "lon, " + "lat " + "FROM rg_vertex ORDER BY id;";
-
-	private static final String SQL_SELECT_EDGES = "SELECT " + "id, " + "osm_way_id, "
-			+ "source_id, " + "target_id, " + "length_meters, " + "longitudes, "
-			+ "latitudes, " + "name, " + "hwy_lvl, " + "undirected, " + "urban "
-			+ "FROM rg_edge ";
-
+	private static final String SQL_COUNT_WAYPOINTS = "SELECT sum(array_length(longitudes, 1) - 2) AS count FROM rg_edge;";
 	private static final String SQL_SELECT_HIGHWAY_LEVELS = "SELECT id, name FROM rg_hwy_lvl;";
+	private static final String SQL_SELECT_VERTICES = "SELECT id, osm_node_id, lon, lat FROM rg_vertex ORDER BY id;";
+	private static final String SQL_SELECT_EDGES = "SELECT id, osm_way_id, source_id, target_id, length_meters, longitudes, latitudes, name, hwy_lvl, undirected, urban FROM rg_edge ORDER BY id;";
 
 	private final Connection conn;
 	private final HashMap<Integer, EHighwayLevel> hwyLvlInt2E;
-	private final int numVertices, numEdges;
+	private final int numVertices, numEdges, numWaypoints;
 
 	public RgDAO(Connection conn) throws SQLException {
 		this.conn = conn;
 		this.hwyLvlInt2E = new HashMap<Integer, EHighwayLevel>();
 		conn.setAutoCommit(false);
 		ResultSet rs;
+
 		rs = conn.createStatement().executeQuery(SQL_COUNT_VERTICES);
 		rs.next();
 		numVertices = rs.getInt("count");
 		rs.close();
+
 		rs = conn.createStatement().executeQuery(SQL_COUNT_EDGES);
 		rs.next();
 		numEdges = rs.getInt("count");
+		rs.close();
+
+		rs = conn.createStatement().executeQuery(SQL_COUNT_WAYPOINTS);
+		rs.next();
+		numWaypoints = rs.getInt("count");
 		rs.close();
 
 		rs = conn.createStatement().executeQuery(SQL_SELECT_HIGHWAY_LEVELS);
@@ -81,6 +81,10 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 	@Override
 	public int getNumVertices() {
 		return numVertices;
+	}
+
+	public int getNumWaypoints() {
+		return numWaypoints;
 	}
 
 	@Override

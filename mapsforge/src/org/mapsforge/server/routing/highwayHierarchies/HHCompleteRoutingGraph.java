@@ -29,11 +29,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.mapsforge.core.conf.IVehicle;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.GeoCoordinateKDTree;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHEdgeExpanderRecursive;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHEdgeReverser;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.core.geoinfo.BoundingBox;
@@ -176,7 +171,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 	public VertexDistance[] getAdjacentVertices(Point wayPoint) throws IllegalArgumentException {
 		// TODO no way-points detected !!
 		// TODO distance zero is wrong !!
-		return new VertexDistance[] { new VertexDistance(vertexIndex.getNearestNeighborId(
+		return new VertexDistance[] { new VertexDistance(vertexIndex.getNearestNeighborIdx(
 				wayPoint.getLon(), wayPoint.getLat()), 0) };
 	}
 
@@ -203,7 +198,7 @@ public class HHCompleteRoutingGraph implements IRoutingGraph, IGeoMap {
 
 	@Override
 	public Point getWayPoint(Point arbitraryPosition) {
-		int id = vertexIndex.getNearestNeighborId(arbitraryPosition.getLon(), arbitraryPosition
+		int id = vertexIndex.getNearestNeighborIdx(arbitraryPosition.getLon(), arbitraryPosition
 				.getLat());
 		GeoCoordinate c = vertexIndex.getCoordinate(id);
 		return Point.newInstance(c.getLatitudeInt(), c.getLongitudeInt());

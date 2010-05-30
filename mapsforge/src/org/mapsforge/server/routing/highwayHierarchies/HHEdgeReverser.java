@@ -14,17 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.server.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedFourBitArray;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * Hash index for finding reverse edges. This is usefull for all bidirected dijkstra
@@ -66,10 +70,22 @@ public class HHEdgeReverser implements Serializable {
 		}
 	}
 
+	public void serialize(OutputStream oStream) throws IOException {
+		Serializer.serialize(oStream, this);
+	}
+
+	public static HHEdgeReverser deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
+		return Serializer.deserialize(iStream);
+	}
+
 	private int getHopIdx(HHStaticVertex s, HHStaticVertex t) {
 		for (int hopIdx = 0; hopIdx < s.numAdjacentEdges(); hopIdx++) {
 			HHStaticEdge e = s.getAdjacentEdge(hopIdx);
-			if (e.getTarget().getId() == t.getId()) {
+			if (e.getTarget().getId() == t.getId() && !e.isShortcut()) {
+				if (e.isShortcut()) {
+					System.out.println("error in edge reverser");
+				}
 				return hopIdx;
 			}
 		}
@@ -84,7 +100,6 @@ public class HHEdgeReverser implements Serializable {
 	 * @param buff
 	 */
 	public void reverseEdges(LinkedList<HHStaticEdge> edges, LinkedList<HHStaticEdge> buff) {
-		System.out.println("reverseEdges : " + edges.size());
 		for (Iterator<HHStaticEdge> iter = edges.descendingIterator(); iter.hasNext();) {
 			HHStaticEdge e = iter.next();
 			int hopIdx = hopIndices.get(e.getId());

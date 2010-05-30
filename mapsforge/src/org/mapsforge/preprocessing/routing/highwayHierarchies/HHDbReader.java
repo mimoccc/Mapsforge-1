@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.sql;
+package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -25,10 +25,9 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
 import org.mapsforge.preprocessing.util.DBConnection;
+import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
 /**
  * @author Frank Viernau
@@ -298,10 +297,11 @@ public class HHDbReader {
 				public HHEdge next() {
 					try {
 						if (rs.next()) {
-							return new HHEdge(rs.getInt("source_id"), rs.getInt("target_id"),
-									rs.getInt("weight"), rs.getInt("min_lvl"), rs
-											.getInt("max_lvl"), rs.getBoolean("fwd"), rs
-											.getBoolean("bwd"), rs.getBoolean("shortcut"));
+							return new HHEdge(rs.getInt("id"), rs.getInt("source_id"), rs
+									.getInt("target_id"), rs.getInt("weight"), rs
+									.getInt("min_lvl"), rs.getInt("max_lvl"), rs
+									.getBoolean("fwd"), rs.getBoolean("bwd"), rs
+									.getBoolean("shortcut"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
@@ -322,11 +322,12 @@ public class HHDbReader {
 
 	public class HHEdge {
 
-		public final int sourceId, targetId, weight, minLvl, maxLvl;
+		public final int id, sourceId, targetId, weight, minLvl, maxLvl;
 		public final boolean fwd, bwd, shortcut;
 
-		public HHEdge(int sourceId, int targetId, int weight, int minLvl, int maxLvl,
+		public HHEdge(int id, int sourceId, int targetId, int weight, int minLvl, int maxLvl,
 				boolean fwd, boolean bwd, boolean shortcut) {
+			this.id = id;
 			this.sourceId = sourceId;
 			this.targetId = targetId;
 			this.weight = weight;

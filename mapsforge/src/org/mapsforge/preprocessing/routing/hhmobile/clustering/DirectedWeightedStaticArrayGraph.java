@@ -20,8 +20,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.util.DBConnection;
 
 public class DirectedWeightedStaticArrayGraph {

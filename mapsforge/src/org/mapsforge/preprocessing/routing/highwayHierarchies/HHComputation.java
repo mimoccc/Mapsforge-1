@@ -23,6 +23,7 @@ import gnu.trove.stack.array.TIntArrayStack;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,18 +43,13 @@ import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
 import org.mapsforge.preprocessing.model.impl.DEHighwayLevel2Speed;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicEdge;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.computationThreads.ThreadedDistanceTableComputation;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.computationThreads.ThreadedHighwayNetworkComputation;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.computationThreads.ThreadedNeighborhoodComputation;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHDynamicGraph;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHDynamicGraph.HHDynamicEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHDynamicGraph.HHDynamicVertex;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbWriter;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArraySynchronized;
 import org.mapsforge.preprocessing.util.DBConnection;
-import org.mapsforge.server.routing.highwayHierarchies.HHCompleteRoutingGraph;
+import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
+import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 
 //select x.c as degree, count(*) * 100.0 / (select count(*) from hh_vertex where lvl = 0) as count from (select source_id, count(*) as c from hh_edge group by source_id order by c) as x group by x.c order by degree;
 
@@ -144,20 +140,11 @@ public final class HHComputation {
 		writer.flush();
 
 		// write edges
-		// level 0 edges : (fetch waypoints from routing graph)
-		System.out.println("mapping edges");
-		int count = 0;
-		for (Iterator<E> iter = rgDao.getEdges().iterator(); iter.hasNext();) {
-			E e = iter.next();
-			int id = 0;
-			graph.getEdge(id);
-		}
-
 		for (int i = 0; i < graph.numEdgeEntries(); i++) {
 			HHDynamicEdge e = graph.getEdge(i);
-			writer.writeEdge(e.getSource().getId(), e.getTarget().getId(), e.getWeight(), e
-					.getMinLevel(), e.getMaxLevel(), e.isForward(), e.isBackward(), e
-					.isShortcut());
+			writer.writeEdge(e.getId(), e.getSource().getId(), e.getTarget().getId(), e
+					.getWeight(), e.getMinLevel(), e.getMaxLevel(), e.isForward(), e
+					.isBackward(), e.isShortcut());
 		}
 		writer.flush();
 
@@ -341,11 +328,18 @@ public final class HHComputation {
 					for (Iterator<HHDynamicVertex> iter = graph.getVertices(lvl); iter
 							.hasNext();) {
 						HHDynamicVertex v = iter.next();
-						for (HHDynamicEdge e : v.getOutboundEdges(lvl)) {
+						for (HHDynamicEdge e : v.getOutboundEdges(lvl)) {// TODO: check this,
+							// may down grade
+							// also top level
+							// edges?
 							if (e.getSource().getNeighborhood(lvl) != INFINITY_1
 									&& e.getTarget().getNeighborhood(lvl) == INFINITY_1) {
 								graph.addEdge(e, lvl - 1);
 								graph.removeEdge(e, lvl);
+								// remember : down grade from level 1 to level 0 never down
+								// grades
+								// shortcuts, since shortcuts of level 1 cannot leave the
+								// core, they are always completely within the core!!!
 							}
 						}
 					}
@@ -628,14 +622,21 @@ public final class HHComputation {
 
 				doPreprocessing(rgDao, wFunc, h, hopLimit, c, vertexThreshold, downgradeEdges,
 						numThreads, outputDb);
+
 				// and write result to db
 
 				// from db to java classes
-				File outDir = new File(props.getProperty("output.directory"));
 				System.out.println("creating java data structures ");
-				HHCompleteRoutingGraph rg = HHCompleteRoutingGraph.importGraphFromDb(inputDb);
-				System.out.println("writing serialization");
-				HHCompleteRoutingGraph.exportGraphToDirectory(outDir, rg);
+				System.out.println(" fetch from database");
+				RouterImpl router = RouterImpl.getFromDb(outputDb);
+				String file = props.getProperty("output.file");
+				File f = new File(file);
+				File dir = new File(f.getAbsolutePath().substring(0,
+						f.getAbsolutePath().lastIndexOf(File.separatorChar))
+						+ File.separatorChar);
+				dir.mkdirs();
+				System.out.println(" writing serialization");
+				router.serialize(new FileOutputStream(f));
 				System.out.println("finished.");
 
 			} catch (NumberFormatException e) {

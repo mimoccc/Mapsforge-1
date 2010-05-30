@@ -15,8 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *  
  */
-package org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures;
+package org.mapsforge.server.routing.highwayHierarchies;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,8 +28,9 @@ import java.util.Random;
 
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.sql.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
@@ -41,10 +45,10 @@ public class GeoCoordinateKDTree implements Serializable {
 	private final int[] ind;
 	private final Random rnd;
 
-	int minLon = Integer.MAX_VALUE;
-	int maxLon = Integer.MIN_VALUE;
-	int minLat = Integer.MAX_VALUE;
-	int maxLat = Integer.MIN_VALUE;
+	private int minLon = Integer.MAX_VALUE;
+	private int maxLon = Integer.MIN_VALUE;
+	private int minLat = Integer.MAX_VALUE;
+	private int maxLat = Integer.MIN_VALUE;
 
 	public GeoCoordinateKDTree(int[] lon, int[] lat) {
 		coords = new int[][] { lon, lat };
@@ -64,6 +68,15 @@ public class GeoCoordinateKDTree implements Serializable {
 		}
 	}
 
+	public void serialize(OutputStream oStream) throws IOException {
+		Serializer.serialize(oStream, this);
+	}
+
+	public static GeoCoordinateKDTree deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
+		return Serializer.deserialize(iStream);
+	}
+
 	public int getMinLongitude() {
 		return minLon;
 	}
@@ -80,7 +93,7 @@ public class GeoCoordinateKDTree implements Serializable {
 		return maxLat;
 	}
 
-	public int getNearestNeighborId(int lon, int lat) {
+	public int getNearestNeighborIdx(int lon, int lat) {
 		return ind[nearestNeighbor(new int[] { lon, lat }, 0, coords[0].length - 1, START_DIM,
 				null)];
 	}
@@ -225,13 +238,13 @@ public class GeoCoordinateKDTree implements Serializable {
 		long startTime = System.currentTimeMillis();
 		for (int j = 0; j < 1000; j++) {
 			int idx = rnd.nextInt(lon.length);
-			int nn = tree.getNearestNeighborId(lon[idx], lat[idx]);
+			int nn = tree.getNearestNeighborIdx(lon[idx], lat[idx]);
 			System.out.println(idx + " " + nn);
 		}
 		long time = System.currentTimeMillis() - startTime;
 		System.out.println(time + "ms");
 
-		System.out.println(tree.getNearestNeighborId(GeoCoordinate.dtoi(13.468122),
+		System.out.println(tree.getNearestNeighborIdx(GeoCoordinate.dtoi(13.468122),
 				GeoCoordinate.dtoi(52.505740)));
 	}
 }

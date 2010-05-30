@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.Random;
 
 import org.mapsforge.core.conf.IVehicle;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.core.geoinfo.Point;
@@ -30,6 +29,7 @@ import org.mapsforge.server.routing.core.IGeoMap;
 import org.mapsforge.server.routing.core.IRoutingGraph;
 import org.mapsforge.server.routing.core.PropertyConfiguration;
 import org.mapsforge.server.routing.core.Router;
+import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 
 /**
  * @author Frank Viernau This will implements the OsmNavigation projects Interfaces for routing.
@@ -58,7 +58,7 @@ public class HHRouter extends Router {
 	 * @return entry point in routing graph.
 	 */
 	public int getNearestVertexId(double lon, double lat) {
-		return routingGraph.vertexIndex.getNearestNeighborId(GeoCoordinate.dtoi(lon),
+		return routingGraph.vertexIndex.getNearestNeighborIdx(GeoCoordinate.dtoi(lon),
 				GeoCoordinate.dtoi(lat));
 	}
 
@@ -105,10 +105,10 @@ public class HHRouter extends Router {
 
 	@Override
 	protected synchronized int[] route(Point source, Point destination) {
-		int srcID = routingGraph.vertexIndex.getNearestNeighborId(source.getLon(), source
+		int srcID = routingGraph.vertexIndex.getNearestNeighborIdx(source.getLon(), source
 				.getLat());
 
-		int dstID = routingGraph.vertexIndex.getNearestNeighborId(destination.getLon(),
+		int dstID = routingGraph.vertexIndex.getNearestNeighborIdx(destination.getLon(),
 				destination.getLat());
 
 		// TODO: route berechnen
