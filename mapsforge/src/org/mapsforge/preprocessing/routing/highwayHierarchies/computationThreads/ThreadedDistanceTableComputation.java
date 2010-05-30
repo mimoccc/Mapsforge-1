@@ -19,6 +19,7 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.computationThread
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.algorithm.DijkstraAlgorithm;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.algorithm.DijkstraAlgorithm.DijkstraTreeVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.DistanceTable;
@@ -47,7 +48,7 @@ public class ThreadedDistanceTableComputation extends ComputationThread {
 		LinkedList<Integer> coreVertices = new LinkedList<Integer>();
 		for (Iterator<HHDynamicVertex> iter = graph.getVertices(lvl); iter.hasNext();) {
 			HHDynamicVertex v = iter.next();
-			if (v.getNeighborhood(lvl) != Integer.MAX_VALUE) {
+			if (v.getNeighborhood(lvl) != HHComputation.INFINITY_1) {
 				coreVertices.add(v.getId());
 			}
 		}
@@ -68,11 +69,11 @@ public class ThreadedDistanceTableComputation extends ComputationThread {
 	public void run() {
 		while (iter.hasNext()) {
 			HHDynamicVertex v = iter.next();
-			if (v != null && v.getNeighborhood(lvl) != Integer.MAX_VALUE) {
+			if (v != null && v.getNeighborhood(lvl) != HHComputation.INFINITY_1) {
 				LinkedList<DijkstraTreeVertex> spTree = DijkstraAlgorithm.shortestPathTree(v,
 						true, false, lvl);
 				for (DijkstraTreeVertex dtv : spTree) {
-					if (dtv.vertex.getNeighborhood(lvl) != Integer.MAX_VALUE) {
+					if (dtv.vertex.getNeighborhood(lvl) != HHComputation.INFINITY_1) {
 						table.set(v.getId(), dtv.vertex.getId(), dtv.distance);
 					}
 				}
