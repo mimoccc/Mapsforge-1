@@ -28,6 +28,7 @@ CREATE TABLE hh_vertex_lvl
 
 CREATE TABLE hh_edge
 (
+	id integer NOT NULL,
   	source_id integer NOT NULL,
   	target_id integer NOT NULL,
   	weight integer NOT NULL,
@@ -36,12 +37,14 @@ CREATE TABLE hh_edge
   	fwd boolean NOT NULL,
   	bwd boolean NOT NULL,
   	shortcut boolean NOT NULL,
+  	CONSTRAINT pk PRIMARY KEY (id),
   	CONSTRAINT fk1 FOREIGN KEY (source_id) REFERENCES hh_vertex (id) INITIALLY DEFERRED DEFERRABLE,
   	CONSTRAINT fk2 FOREIGN KEY (target_id) REFERENCES hh_vertex (id) INITIALLY DEFERRED DEFERRABLE,
-	CONSTRAINT chk1 CHECK (weight >= 0),
+  	CONSTRAINT chk1 CHECK (weight >= 0),
 	CONSTRAINT chk2 CHECK (min_lvl >= 0),
 	CONSTRAINT chk3 CHECK (max_lvl >= min_lvl)
 );
+
 CREATE TABLE hh_graph_properties
 (
 	creation_date timestamp NOT NULL,
