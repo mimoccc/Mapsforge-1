@@ -22,7 +22,7 @@ public interface IVertex {
 
 	public int getId();
 
-	public int getOutboundDegree();
+	public IEdge[] getOutboundEdges();
 
 	public GeoCoordinate getCoordinate();
 
