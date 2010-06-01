@@ -33,9 +33,6 @@ import org.mapsforge.preprocessing.util.DBConnection;
 
 public class EdgeMapper implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 7749333198499552855L;
 
 	private final int[] hhEdgeIdToRgEdgeId;
