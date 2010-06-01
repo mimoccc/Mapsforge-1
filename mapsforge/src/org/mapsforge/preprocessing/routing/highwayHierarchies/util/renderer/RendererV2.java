@@ -178,6 +178,7 @@ public class RendererV2 {
 
 	private class RendererFrame extends JFrame {
 
+		private static final long serialVersionUID = -7699248454662433016L;
 		private Point lastDragPoint = null;
 		private RendererFrame lock = this;
 
@@ -202,6 +203,7 @@ public class RendererV2 {
 			});
 
 			addMouseListener(new MouseAdapter() {
+				@Override
 				public void mouseReleased(MouseEvent e) {
 					synchronized (lock) {
 						lastDragPoint = null;
@@ -240,5 +242,6 @@ public class RendererV2 {
 	public static void main(String[] args) {
 		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
 				Color.BLACK);
+		System.out.println("rendering center coord : " + renderer.center);
 	}
 }
