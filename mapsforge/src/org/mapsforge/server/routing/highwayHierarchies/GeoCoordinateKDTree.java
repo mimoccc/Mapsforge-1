@@ -17,6 +17,8 @@
  */
 package org.mapsforge.server.routing.highwayHierarchies;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,10 +47,10 @@ public class GeoCoordinateKDTree implements Serializable {
 	private final int[] ind;
 	private final Random rnd;
 
-	private int minLon = Integer.MAX_VALUE;
-	private int maxLon = Integer.MIN_VALUE;
-	private int minLat = Integer.MAX_VALUE;
-	private int maxLat = Integer.MIN_VALUE;
+	private int minLongitude = Integer.MAX_VALUE;
+	private int maxLongitude = Integer.MIN_VALUE;
+	private int minLatitude = Integer.MAX_VALUE;
+	private int maxLatitude = Integer.MIN_VALUE;
 
 	public GeoCoordinateKDTree(int[] lon, int[] lat) {
 		coords = new int[][] { lon, lat };
@@ -61,10 +63,10 @@ public class GeoCoordinateKDTree implements Serializable {
 
 		// compute bounding rectangle
 		for (int i = 0; i < coords[0].length; i++) {
-			minLon = Math.min(minLon, coords[0][i]);
-			maxLon = Math.max(maxLon, coords[0][i]);
-			minLat = Math.min(minLat, coords[1][i]);
-			maxLat = Math.max(maxLat, coords[1][i]);
+			minLongitude = Math.min(minLongitude, coords[0][i]);
+			maxLongitude = Math.max(maxLongitude, coords[0][i]);
+			minLatitude = Math.min(minLatitude, coords[1][i]);
+			maxLatitude = Math.max(maxLatitude, coords[1][i]);
 		}
 	}
 
@@ -78,24 +80,31 @@ public class GeoCoordinateKDTree implements Serializable {
 	}
 
 	public int getMinLongitude() {
-		return minLon;
+		return minLongitude;
 	}
 
 	public int getMaxLongitude() {
-		return maxLon;
+		return maxLongitude;
 	}
 
 	public int getMinLatitude() {
-		return minLat;
+		return minLatitude;
 	}
 
 	public int getMaxLatitude() {
-		return maxLat;
+		return maxLatitude;
 	}
 
 	public int getNearestNeighborIdx(int lon, int lat) {
 		return ind[nearestNeighbor(new int[] { lon, lat }, 0, coords[0].length - 1, START_DIM,
 				null)];
+	}
+
+	public TIntArrayList getIndicesByBoundingBox(int minLon, int minLat, int maxLon, int maxLat) {
+		TIntArrayList buff = new TIntArrayList();
+		getIndicesByBoundingBox(new int[] { minLon, minLat }, new int[] { maxLon, maxLat }, 0,
+				coords[0].length - 1, START_DIM, buff);
+		return buff;
 	}
 
 	public GeoCoordinate getCoordinate(int idx) {
@@ -104,6 +113,30 @@ public class GeoCoordinateKDTree implements Serializable {
 
 	public int size() {
 		return ind.length;
+	}
+
+	private void getIndicesByBoundingBox(int[] minCoord, int[] maxCoord, int p, int r, int dim,
+			TIntArrayList buff) {
+		if (p > r) {
+			return;
+		}
+		// c is index of split axis or the coordinate compared in current recursion step
+		int c = (p + r) / 2;
+
+		boolean left = coords[dim][ind[c]] >= minCoord[dim];
+		boolean right = coords[dim][ind[c]] <= maxCoord[dim];
+
+		if (left && right && coords[(dim + 1) % 2][ind[c]] >= minCoord[(dim + 1) % 2]
+				&& coords[(dim + 1) % 2][ind[c]] <= maxCoord[(dim + 1) % 2]) {
+			buff.add(ind[c]);
+		}
+
+		if (left) {
+			getIndicesByBoundingBox(minCoord, maxCoord, p, c - 1, (dim + 1) % 2, buff);
+		}
+		if (right) {
+			getIndicesByBoundingBox(minCoord, maxCoord, c + 1, r, (dim + 1) % 2, buff);
+		}
 	}
 
 	private int nearestNeighbor(int[] coord, int p, int r, int dim, Integer best) {
@@ -219,8 +252,8 @@ public class GeoCoordinateKDTree implements Serializable {
 	public static void main(String[] args) throws SQLException {
 
 		System.out.println("read coords from db");
-		RgDAO rg = new RgDAO(DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm"));
+		RgDAO rg = new RgDAO(DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
+				"postgres", "admin"));
 		int n = rg.getNumVertices();
 		int[] lon = new int[n];
 		int[] lat = new int[n];

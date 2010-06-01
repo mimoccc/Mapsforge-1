@@ -16,6 +16,9 @@
  */
 package org.mapsforge.server.routing.highwayHierarchies;
 
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -132,7 +135,7 @@ public class RouterImpl implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getNearestEdges(GeoCoordinate coord) {
+	public HHEdge[] getNearestEdges(GeoCoordinate coord) {
 		int rgEdgeId = edgeIndex
 				.getNearestEdge(coord.getLongitudeInt(), coord.getLatitudeInt());
 		EdgeMapping[] mapping = mapper.mapFromRgEdgeId(rgEdgeId);
@@ -147,7 +150,7 @@ public class RouterImpl implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getShortestPath(int sourceId, int targetId) {
+	public HHEdge[] getShortestPath(int sourceId, int targetId) {
 		LinkedList<HHStaticEdge> searchSpace = new LinkedList<HHStaticEdge>();
 		LinkedList<HHStaticEdge> fwd = new LinkedList<HHStaticEdge>();
 		LinkedList<HHStaticEdge> bwd = new LinkedList<HHStaticEdge>();
@@ -182,6 +185,57 @@ public class RouterImpl implements IRouter {
 		HHEdge[] arr = new HHEdge[edges.size()];
 		edges.toArray(arr);
 		return arr;
+	}
+
+	@Override
+	public Iterator<HHVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
+			int maxLat) {
+		final TIntArrayList ids = vertexIndex.getIndicesByBoundingBox(minLon, minLat, maxLon,
+				maxLat);
+		return new Iterator<HHVertex>() {
+
+			private TIntIterator iter = ids.iterator();
+
+			@Override
+			public boolean hasNext() {
+				return iter.hasNext();
+			}
+
+			@Override
+			public HHVertex next() {
+				if (iter.hasNext()) {
+					return new HHVertex(routingGraph.getVertex(iter.next()));
+				}
+				return null;
+
+			}
+
+			@Override
+			public void remove() {
+
+			}
+		};
+
+	}
+
+	@Override
+	public int getMaxLatitude() {
+		return Math.max(vertexIndex.getMaxLatitude(), edgeIndex.getMaxLatitude());
+	}
+
+	@Override
+	public int getMaxLongitude() {
+		return Math.max(vertexIndex.getMaxLongitude(), edgeIndex.getMaxLongitude());
+	}
+
+	@Override
+	public int getMinLatitude() {
+		return Math.min(vertexIndex.getMinLatitude(), edgeIndex.getMinLatitude());
+	}
+
+	@Override
+	public int getMinLongitude() {
+		return Math.min(vertexIndex.getMinLongitude(), edgeIndex.getMinLongitude());
 	}
 
 	private class HHEdge implements IEdge {
@@ -295,4 +349,5 @@ public class RouterImpl implements IRouter {
 		}
 
 	}
+
 }

@@ -114,6 +114,18 @@ public class HHRenderer extends JFrame {
 		canvas.drawLine(c1_.x, c1_.y, c2_.x, c2_.y, c, width);
 	}
 
+	public void drawLine(GeoCoordinate c1, GeoCoordinate c2, Color c) {
+		CarthesianPoint c1_ = polarToScreen(c1);
+		CarthesianPoint c2_ = polarToScreen(c2);
+		canvas.drawLine(c1_.x, c1_.y, c2_.x, c2_.y, c);
+	}
+
+	public void drawLine(int s, int t, Color c) {
+		CarthesianPoint c1_ = polarToScreen(coordinateIndex.getCoordinate(s));
+		CarthesianPoint c2_ = polarToScreen(coordinateIndex.getCoordinate(t));
+		canvas.drawLine(c1_.x, c1_.y, c2_.x, c2_.y, c);
+	}
+
 	public void clear() {
 		canvas.clear(bgColor);
 	}
@@ -137,6 +149,10 @@ public class HHRenderer extends JFrame {
 		CarthesianPoint c_ = polarToScreen(coordinateIndex.getCoordinate(id));
 		canvas.drawCircle(c_.x, c_.y, c, 4);
 
+	}
+
+	public void drawVertexAsPixel(int id, Color c) {
+		drawLine(coordinateIndex.getCoordinate(id), coordinateIndex.getCoordinate(id), c);
 	}
 
 	public void drawPathEdges(LinkedList<HHStaticEdge> edges, Color c, int width) {

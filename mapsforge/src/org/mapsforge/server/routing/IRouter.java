@@ -16,28 +16,29 @@
  */
 package org.mapsforge.server.routing;
 
+import java.util.Iterator;
+
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public interface IRouter {
 
 	public IEdge[] getShortestPath(int sourceId, int targetId);
 
-	/**
-	 * Indexed search on vertice's coordinates.
-	 * 
-	 * @param coord
-	 * @return
-	 */
 	public IVertex getNearestVertex(GeoCoordinate coord);
 
-	/**
-	 * Indexed search only for edges having intermediate waypoints.
-	 * 
-	 * @param coord
-	 * @return
-	 */
+	public Iterator<? extends IVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
+			int maxLat);
+
 	public IEdge[] getNearestEdges(GeoCoordinate coord);
 
 	public String getAlgorithmName();
+
+	public int getMinLongitude();
+
+	public int getMaxLongitude();
+
+	public int getMinLatitude();
+
+	public int getMaxLatitude();
 
 }

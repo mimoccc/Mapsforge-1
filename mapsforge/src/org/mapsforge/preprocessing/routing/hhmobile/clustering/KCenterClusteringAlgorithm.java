@@ -122,6 +122,7 @@ public class KCenterClusteringAlgorithm {
 	private void sampleDown(DirectedWeightedStaticArrayGraph graph,
 			KCenterClustering clustering, int k, int k_, int heuristik) {
 		while (k_ > k) {
+			System.out.println(k_);
 			Cluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
 			removeClusterAndRearrange(graph, clustering, cluster);
 			k_--;

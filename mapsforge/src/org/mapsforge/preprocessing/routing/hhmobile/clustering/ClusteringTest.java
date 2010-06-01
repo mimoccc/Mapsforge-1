@@ -43,8 +43,8 @@ public class ClusteringTest {
 
 		// get data from db
 
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm");
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "germany",
+				"postgres", "admin");
 		DirectedWeightedStaticArrayGraph graph = DirectedWeightedStaticArrayGraph.buildHHGraph(
 				conn, 0);
 
@@ -59,18 +59,18 @@ public class ClusteringTest {
 			lat[v.id] = GeoCoordinate.dtoi(v.latitude);
 		}
 
-		HHRouter router = HHRouterFactory.getHHRouterInstance();
-
 		// k-center
-		int avgVerticesPerCluster = 100;
+		int avgVerticesPerCluster = 1000;
 		KCenterClusteringAlgorithm kCenterAlgorithm = new KCenterClusteringAlgorithm();
 		int k = (int) Math.rint(graph.numConnectedVertices() / avgVerticesPerCluster);
 		KCenterClustering kCenterClustering = kCenterAlgorithm.computeClustering(graph, k,
 				KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 
+		HHRouter router = HHRouterFactory.getHHRouterInstance();
 		HHRenderer renderer1 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 26);
-		drawClustering(renderer1, getClusterColors(graph, kCenterClustering));
+				router.routingGraph.vertexIndex, 600);
+		drawClustering(renderer1, graph, kCenterClustering, getClusterColors(graph,
+				kCenterClustering));
 		renderer1.update();
 
 		// quad
@@ -79,8 +79,9 @@ public class ClusteringTest {
 				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
 
 		HHRenderer renderer2 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 26);
-		drawClustering(renderer2, getClusterColors(graph, quadClustering));
+				router.routingGraph.vertexIndex, 600);
+		drawClustering(renderer2, graph, quadClustering,
+				getClusterColors(graph, quadClustering));
 		renderer2.update();
 
 		// dijkstra based
@@ -89,16 +90,23 @@ public class ClusteringTest {
 				avgVerticesPerCluster);
 
 		HHRenderer renderer3 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 26);
-		drawClustering(renderer3, getClusterColors(graph, dbClustering));
+				router.routingGraph.vertexIndex, 600);
+		drawClustering(renderer3, graph, dbClustering, getClusterColors(graph, dbClustering));
 		renderer3.update();
 
 	}
 
-	public static void drawClustering(HHRenderer renderer, HashMap<ICluster, Color> colors) {
+	public static void drawClustering(HHRenderer renderer,
+			DirectedWeightedStaticArrayGraph graph, IClustering clustering,
+			HashMap<ICluster, Color> colors) {
 		for (ICluster c : colors.keySet()) {
 			for (int v : c.getVertices()) {
-				renderer.drawVertex(v, colors.get(c));
+				for (Edge e : graph.getOutboundEdges(graph.getVertex(v))) {
+					int s = e.getSourceId();
+					int t = e.getTargetId();
+					if (clustering.getCluster(s) == clustering.getCluster(t))
+						renderer.drawLine(s, t, colors.get(c));
+				}
 			}
 		}
 	}
@@ -126,7 +134,7 @@ public class ClusteringTest {
 	}
 
 	private static Color[] colors_avail = { Color.GREEN, Color.BLUE, Color.RED, Color.YELLOW,
-			Color.MAGENTA, Color.CYAN, Color.black, Color.ORANGE, Color.PINK, Color.MAGENTA };
+			Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK, Color.MAGENTA };
 
 	public static ICluster[] getAdjClusters(DirectedWeightedStaticArrayGraph graph,
 			IClustering clustering, ICluster cluster) {
