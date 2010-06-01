@@ -20,9 +20,9 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.swing.JFrame;
@@ -44,6 +44,7 @@ public class RendererV2 {
 
 	private final Projection proj;
 	private final IRouter router;
+	private final HashMap<IEdge[], Color> routes;
 
 	private int zoomLevel;
 	private GeoCoordinate center;
@@ -62,6 +63,7 @@ public class RendererV2 {
 		this.bgColor = bgColor;
 		this.fgColor = fgColor;
 
+		this.routes = new HashMap<IEdge[], Color>();
 		this.canvas = new BufferedCanvas(width, height);
 		canvas.clear(bgColor);
 
@@ -70,6 +72,23 @@ public class RendererV2 {
 						.getMaxLongitude() + router.getMinLongitude()) / 2), 3);
 
 		new RendererFrame();
+	}
+
+	public void addRoute(IEdge[] route, Color c) {
+		if (route != null && c != null) {
+			synchronized (routes) {
+				routes.put(route, c);
+				drawRoutes();
+				update();
+			}
+		}
+	}
+
+	public void clearRoutes() {
+		synchronized (routes) {
+			routes.clear();
+			update();
+		}
 	}
 
 	private static double[] getZoomLevels(int n) {
@@ -81,16 +100,33 @@ public class RendererV2 {
 		return tmp;
 	}
 
-	private synchronized void zoomOut() {
+	public synchronized boolean zoomOut() {
 		if (zoomLevel < zoomLevels.length - 1) {
 			setRenderParam(center, zoomLevel + 1);
+			return true;
 		}
+		return false;
 	}
 
-	private synchronized void zoomInt() {
+	public synchronized boolean zoomIn() {
 		if (zoomLevel > 0) {
 			setRenderParam(center, zoomLevel - 1);
+			return true;
 		}
+		return false;
+	}
+
+	private void drawRenderContent() {
+		drawGraph();
+		drawRoutes();
+	}
+
+	private void update() {
+		canvas.update();
+	}
+
+	private void clear() {
+		canvas.clear(bgColor);
 	}
 
 	private void drawGraph() {
@@ -106,6 +142,25 @@ public class RendererV2 {
 				canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, fgColor);
 			}
 		}
+	}
+
+	private void drawRoute(IEdge[] route, Color c) {
+		for (IEdge e : route) {
+			ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate());
+			ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate());
+			canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, 2);
+		}
+	}
+
+	private void drawRoutes() {
+		for (IEdge[] route : routes.keySet()) {
+			Color c = routes.get(route);
+			drawRoute(route, c);
+		}
+	}
+
+	private ScreenCoordinate geoToScreen(GeoCoordinate c) {
+		return geoToScreen(c.getLongitudeInt(), c.getLatitudeInt());
 	}
 
 	private ScreenCoordinate geoToScreen(int lon, int lat) {
@@ -162,7 +217,7 @@ public class RendererV2 {
 
 		// update screen
 		canvas.clear(bgColor);
-		drawGraph();
+		drawRenderContent();
 		canvas.update();
 	}
 
@@ -179,63 +234,108 @@ public class RendererV2 {
 	private class RendererFrame extends JFrame {
 
 		private static final long serialVersionUID = -7699248454662433016L;
-		private Point lastDragPoint = null;
-		private RendererFrame lock = this;
+
+		private MyMouseAdapter mouseAdapter;
 
 		public RendererFrame() {
 			super("Graph Renderer v0.1a");
+			mouseAdapter = new MyMouseAdapter();
+			canvas.addMouseListener(mouseAdapter);
+			canvas.addMouseMotionListener(mouseAdapter);
+			canvas.addMouseWheelListener(mouseAdapter);
+
 			getContentPane().add(canvas);
 			pack();
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			setResizable(false);
 			setVisible(true);
+		}
 
-			addMouseWheelListener(new MouseWheelListener() {
+		private class MyMouseAdapter extends MouseAdapter {
 
-				@Override
-				public void mouseWheelMoved(MouseWheelEvent e) {
-					if (e.getUnitsToScroll() > 0) {
-						zoomInt();
+			private Point lastDragPoint;
+			private final MyMouseAdapter lock;
+			private GeoCoordinate source;
+			private final DecimalFormat df;
+
+			public MyMouseAdapter() {
+				super();
+				this.df = new DecimalFormat("#.#####");
+				df.setMinimumFractionDigits(5);
+				df.setMaximumFractionDigits(5);
+				lastDragPoint = null;
+				lock = this;
+				source = null;
+			}
+
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				synchronized (lock) {
+					if (e.getUnitsToScroll() < 0) {
+						zoomIn();
 					} else {
 						zoomOut();
 					}
 				}
-			});
+			}
 
-			addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseReleased(MouseEvent e) {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				synchronized (lock) {
+					if (lastDragPoint != null) {
+						int dx = lastDragPoint.x - e.getPoint().x;
+						int dy = e.getPoint().y - lastDragPoint.y;
+						GeoCoordinate coord = screenToGeo((int) (screenW / 2) + dx,
+								(int) (screenH / 2) + dy);
+						setRenderParam(coord, zoomLevel);
+						lastDragPoint = e.getPoint();
+						lastDragPoint = e.getPoint();
+					}
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
 					synchronized (lock) {
 						lastDragPoint = null;
 					}
 				}
-			});
+			}
 
-			addMouseMotionListener(new MouseMotionListener() {
-
-				@Override
-				public void mouseMoved(MouseEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void mouseDragged(MouseEvent e) {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
 					synchronized (lock) {
-						if (lastDragPoint == null) {
-							lastDragPoint = e.getPoint();
-						} else {
-							int dx = lastDragPoint.x - e.getPoint().x;
-							int dy = e.getPoint().y - lastDragPoint.y;
-							GeoCoordinate coord = screenToGeo((int) (screenW / 2) + dx,
-									(int) (screenH / 2) + dy);
-							setRenderParam(coord, zoomLevel);
-							lastDragPoint = e.getPoint();
-						}
+						lastDragPoint = e.getPoint();
 					}
 				}
-			});
+			}
 
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					Point p = e.getPoint();
+					if (source == null) {
+						source = screenToGeo(p.x, (int) screenH - p.y);
+					} else {
+						GeoCoordinate target = screenToGeo(p.x, (int) screenH - p.y);
+						IVertex s = router.getNearestVertex(source);
+						IVertex t = router.getNearestVertex(target);
+						IEdge[] route = router.getShortestPath(s.getId(), t.getId());
+						addRoute(route, Color.BLUE);
+						source = null;
+					}
+				}
+			}
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				Point p = e.getPoint();
+				GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
+				canvas.setToolTipText("(" + df.format(c.getLatitude().getDegree()) + ","
+						+ df.format(c.getLongitude().getDegree()) + ")");
+			}
 		}
 	}
 
