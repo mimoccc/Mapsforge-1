@@ -44,7 +44,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final boolean DRAW_TILE_FRAMES = false;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
-	private static final byte MIN_ZOOM_LEVEL_AREA_SYMBOLS = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
 	private static final byte MODE_AREA_NAME_BLACK = 0;
 	private static final byte MODE_AREA_NAME_BLUE = 1;
@@ -133,16 +132,20 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_HIGHWAY_TRUNK_LINK2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_TRUNK1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_TRUNK2 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_HIGHWAY_TUNNEL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_HIGHWAY_TUNNEL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_TUNNEL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_UNCLASSIFIED1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_UNCLASSIFIED2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HISTORIC_CIRCLE_INNER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HISTORIC_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_INFO_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LANDUSE_ALLOTMENTS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LANDUSE_ALLOTMENTS_OUTLINE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_BASIN_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_CEMETERY_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_COMMERCIAL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LANDUSE_COMMERCIAL_OUTLINE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_CONSTRUCTION_FILL = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_FOREST_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -187,14 +190,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_RAILWAY_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_LIGHT_RAIL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_LIGHT_RAIL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_RAILWAY_RAIL_TUNNEL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_RAILWAY_RAIL_TUNNEL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_RAILWAY_RAIL_TUNNEL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_RAIL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_RAIL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_STATION_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_STATION_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_RAILWAY_SUBWAY_TUNNEL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_RAILWAY_SUBWAY_TUNNEL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_RAILWAY_SUBWAY_TUNNEL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_SUBWAY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_SUBWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_TRAM1 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -212,6 +213,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_WATERWAY_RIVERBANK_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
+	private static final byte ZOOM_MAX = 21;
 	private float[] areaNamePositions;
 	private int bboxLatitude1;
 	private int bboxLatitude2;
@@ -279,8 +281,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * Draws the symbol of an area if the zoomLevel level is high enough.
 	 */
 	private void addAreaSymbol(int currentWayNodes, int[] currentWayNodesSequence,
-			Bitmap symbolBitmap) {
-		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_SYMBOLS) {
+			Bitmap symbolBitmap, byte zoomLevel) {
+		if (this.currentTile.zoomLevel >= zoomLevel) {
 			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
 					currentWayNodesSequence);
 			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
@@ -523,7 +525,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	private void addWayName(String wayName, short wayNodes, int[] wayNodesSequence) {
 		// calculate the approximate way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 10;
+		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 5;
 
 		this.previousX = scaleLongitude(wayNodesSequence[0]);
 		this.previousY = scaleLatitude(wayNodesSequence[1]);
@@ -539,8 +541,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			if (this.skipSegments > 0) {
 				--this.skipSegments;
 			} else {
-				// check the length of the current segment by calculating the
-				// Euclidian distance of the segment way points
+				/*
+				 * check the length of the current segment by calculating the Euclidian distance
+				 * of the segment way points
+				 */
 				this.distanceX = this.currentX - this.previousX;
 				this.distanceY = this.currentY - this.previousY;
 				this.pathLengthInPixel = SquareRoot
@@ -567,8 +571,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.previousY = this.currentY;
 		}
 
-		// if no segment is long enough, test if the name can be drawn on the
-		// whole way which may lead to collisions with other way names
+		/*
+		 * if no segment is long enough, test if the name can be drawn on the whole way which
+		 * may lead to collisions with other way names
+		 */
 		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
 				&& getWayLengthInPixel(wayNodes, wayNodesSequence) > this.wayNameWidth) {
 			// check to prevent inverted way names
@@ -702,8 +708,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_AMENITY_SCHOOL_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_AMENITY_SCHOOL_OUTLINE.setColor(Color.rgb(233, 221, 115));
 
-		PAINT_BARRIER_BOLLARD.setStyle(Paint.Style.STROKE);
-		PAINT_BARRIER_BOLLARD.setColor(Color.rgb(113, 112, 111));
+		PAINT_BARRIER_BOLLARD.setStyle(Paint.Style.FILL);
+		PAINT_BARRIER_BOLLARD.setColor(Color.rgb(111, 111, 111));
 		PAINT_BARRIER_WALL.setStyle(Paint.Style.STROKE);
 		PAINT_BARRIER_WALL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_BARRIER_WALL.setStrokeCap(Paint.Cap.ROUND);
@@ -927,14 +933,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_HIGHWAY_TRUNK_LINK2.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_TRUNK_LINK2.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_HIGHWAY_TRUNK_LINK2.setColor(Color.rgb(127, 201, 127));
-		PAINT_HIGHWAY_TUNNEL1.setStyle(Paint.Style.STROKE);
-		PAINT_HIGHWAY_TUNNEL1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_HIGHWAY_TUNNEL1.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_HIGHWAY_TUNNEL1.setColor(Color.rgb(112, 112, 112));
-		PAINT_HIGHWAY_TUNNEL2.setStyle(Paint.Style.STROKE);
-		PAINT_HIGHWAY_TUNNEL2.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_HIGHWAY_TUNNEL2.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_HIGHWAY_TUNNEL2.setColor(Color.rgb(248, 248, 248));
+		PAINT_HIGHWAY_TUNNEL.setStyle(Paint.Style.STROKE);
+		PAINT_HIGHWAY_TUNNEL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_HIGHWAY_TUNNEL.setStrokeCap(Paint.Cap.BUTT);
+		PAINT_HIGHWAY_TUNNEL.setColor(Color.argb(150, 131, 131, 131));
 		PAINT_HIGHWAY_UNCLASSIFIED1.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_UNCLASSIFIED1.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_UNCLASSIFIED1.setStrokeCap(Paint.Cap.ROUND);
@@ -953,6 +955,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_INFO_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_INFO_BLACK_13.setTextSize(12);
 
+		PAINT_LANDUSE_ALLOTMENTS_FILL.setStyle(Paint.Style.FILL);
+		PAINT_LANDUSE_ALLOTMENTS_FILL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_LANDUSE_ALLOTMENTS_FILL.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_LANDUSE_ALLOTMENTS_FILL.setColor(Color.rgb(189, 227, 203));
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setColor(Color.rgb(112, 194, 63));
 		PAINT_LANDUSE_BASIN_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_BASIN_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_BASIN_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -964,7 +974,11 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeCap(Paint.Cap.ROUND);
-		PAINT_LANDUSE_COMMERCIAL_FILL.setColor(Color.rgb(239, 200, 200));
+		PAINT_LANDUSE_COMMERCIAL_FILL.setColor(Color.rgb(255, 254, 192));
+		PAINT_LANDUSE_COMMERCIAL_OUTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_LANDUSE_COMMERCIAL_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_LANDUSE_COMMERCIAL_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_LANDUSE_COMMERCIAL_OUTLINE.setColor(Color.rgb(228, 228, 228));
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1141,14 +1155,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_RAILWAY_LIGHT_RAIL2.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_RAILWAY_LIGHT_RAIL2.setStrokeCap(Paint.Cap.BUTT);
 		PAINT_RAILWAY_LIGHT_RAIL2.setColor(Color.rgb(16, 77, 17));
-		PAINT_RAILWAY_RAIL_TUNNEL1.setStyle(Paint.Style.STROKE);
-		PAINT_RAILWAY_RAIL_TUNNEL1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_RAILWAY_RAIL_TUNNEL1.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_RAILWAY_RAIL_TUNNEL1.setColor(Color.rgb(248, 248, 248));
-		PAINT_RAILWAY_RAIL_TUNNEL2.setStyle(Paint.Style.STROKE);
-		PAINT_RAILWAY_RAIL_TUNNEL2.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_RAILWAY_RAIL_TUNNEL2.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_RAILWAY_RAIL_TUNNEL2.setColor(Color.rgb(153, 156, 153));
+		PAINT_RAILWAY_RAIL_TUNNEL.setStyle(Paint.Style.STROKE);
+		PAINT_RAILWAY_RAIL_TUNNEL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_RAILWAY_RAIL_TUNNEL.setStrokeCap(Paint.Cap.BUTT);
+		PAINT_RAILWAY_RAIL_TUNNEL.setColor(Color.argb(150, 153, 156, 153));
 		PAINT_RAILWAY_RAIL1.setStyle(Paint.Style.STROKE);
 		PAINT_RAILWAY_RAIL1.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_RAILWAY_RAIL1.setStrokeCap(Paint.Cap.BUTT);
@@ -1173,14 +1183,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_RAILWAY_SUBWAY2.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_RAILWAY_SUBWAY2.setStrokeCap(Paint.Cap.BUTT);
 		PAINT_RAILWAY_SUBWAY2.setColor(Color.rgb(25, 24, 91));
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setStyle(Paint.Style.STROKE);
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setColor(Color.rgb(161, 153, 159));
-		PAINT_RAILWAY_SUBWAY_TUNNEL2.setStyle(Paint.Style.STROKE);
-		PAINT_RAILWAY_SUBWAY_TUNNEL2.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_RAILWAY_SUBWAY_TUNNEL2.setStrokeCap(Paint.Cap.BUTT);
-		PAINT_RAILWAY_SUBWAY_TUNNEL2.setColor(Color.rgb(234, 234, 234));
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setStyle(Paint.Style.STROKE);
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setStrokeCap(Paint.Cap.BUTT);
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setColor(Color.argb(150, 165, 162, 184));
 		PAINT_RAILWAY_TRAM1.setStyle(Paint.Style.STROKE);
 		PAINT_RAILWAY_TRAM1.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_RAILWAY_TRAM1.setStrokeCap(Paint.Cap.BUTT);
@@ -1334,10 +1340,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_HIGHWAY_SECONDARY2.setStrokeWidth(1.7f * paintScaleFactor);
 		PAINT_HIGHWAY_TERTIARY1.setStrokeWidth(1.8f * paintScaleFactor);
 		PAINT_HIGHWAY_TERTIARY2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_TUNNEL1.setPathEffect(new DashPathEffect(new float[] {
+		PAINT_HIGHWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
 				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
-		PAINT_HIGHWAY_TUNNEL1.setStrokeWidth(1.3f * paintScaleFactor);
-		PAINT_HIGHWAY_TUNNEL2.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_HIGHWAY_TUNNEL.setStrokeWidth(0.8f * paintScaleFactor);
 		PAINT_HIGHWAY_UNCLASSIFIED1.setStrokeWidth(1.8f * paintScaleFactor);
 		PAINT_HIGHWAY_UNCLASSIFIED2.setStrokeWidth(1.5f * paintScaleFactor);
 		PAINT_HIGHWAY_ROAD1.setStrokeWidth(1.8f * paintScaleFactor);
@@ -1378,10 +1383,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_WATERWAY_RIVER.setStrokeWidth(1 * paintScaleFactor);
 		PAINT_WATERWAY_STREAM.setStrokeWidth(0.7f * paintScaleFactor);
 
-		PAINT_RAILWAY_RAIL_TUNNEL1.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_RAIL_TUNNEL1.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_RAIL_TUNNEL2.setStrokeWidth(0.6f * paintScaleFactor);
+		PAINT_RAILWAY_RAIL_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
+				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
+		PAINT_RAILWAY_RAIL_TUNNEL.setStrokeWidth(0.5f * paintScaleFactor);
 		PAINT_RAILWAY_RAIL1.setPathEffect(new DashPathEffect(new float[] {
 				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
 		PAINT_RAILWAY_RAIL1.setStrokeWidth(0.5f * paintScaleFactor);
@@ -1398,10 +1402,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
 		PAINT_RAILWAY_SUBWAY1.setStrokeWidth(0.4f * paintScaleFactor);
 		PAINT_RAILWAY_SUBWAY2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setPathEffect(new DashPathEffect(new float[] {
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
 				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_SUBWAY_TUNNEL1.setStrokeWidth(0.4f * paintScaleFactor);
-		PAINT_RAILWAY_SUBWAY_TUNNEL2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setStrokeWidth(0.4f * paintScaleFactor);
 		PAINT_RAILWAY_STATION_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_AEROWAY_AERODROME_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
@@ -1414,7 +1417,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_MAN_MADE_PIER.setStrokeWidth(0.8f * paintScaleFactor);
 
 		PAINT_BUILDING_ROOF_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
-		PAINT_BUILDING_YES_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_BUILDING_YES_OUTLINE.setStrokeWidth(0.2f * paintScaleFactor);
 
 		PAINT_LEISURE_COMMON_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_LEISURE_STADIUM_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
@@ -1424,6 +1427,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		PAINT_TOURISM_ZOO_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_LANDUSE_GRASS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_ROUTE_FERRY.setPathEffect(new DashPathEffect(new float[] { 3 * paintScaleFactor,
@@ -1473,7 +1477,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	final void doMapGeneration(Tile tile) {
 		this.currentTile = tile;
 		// check if the paint parameters need to be set again
-		if (tile.zoomLevel != lastTileZoomLevel) {
+		if (tile.zoomLevel != this.lastTileZoomLevel) {
 			setPaintParameters(tile.zoomLevel);
 			this.lastTileZoomLevel = tile.zoomLevel;
 		}
@@ -1556,6 +1560,19 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * This method is called after all map objects have been rendered.
 	 */
 	abstract void finishMapGeneration();
+
+	@Override
+	final GeoPoint getDefaultStartPoint() {
+		if (this.database == null || this.database.getMapBoundary() == null) {
+			return null;
+		}
+		return this.database.getMapBoundary().getCenter();
+	}
+
+	@Override
+	final byte getMaxZoomLevel() {
+		return ZOOM_MAX;
+	}
 
 	@Override
 	final void prepareMapGeneration() {
@@ -2004,10 +2021,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* highway */
 		if ((wayTagBitmap & BITMAP_HIGHWAY) != 0) {
 			if (wayTagIds[TagIdsWays.TUNNEL$YES]) {
-				this.layer.get(LayerIds.HIGHWAY_TUNNEL$YES1).add(
-						new PathContainer(this.path, PAINT_HIGHWAY_TUNNEL1));
-				this.layer.get(LayerIds.HIGHWAY_TUNNEL$YES2).add(
-						new PathContainer(this.path, PAINT_HIGHWAY_TUNNEL2));
+				this.layer.get(LayerIds.HIGHWAY_TUNNEL$YES).add(
+						new PathContainer(this.path, PAINT_HIGHWAY_TUNNEL));
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$MOTORWAY]) {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY1);
@@ -2584,6 +2599,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.BUILDING$APARTMENTS]
+					|| wayTagIds[TagIdsWays.BUILDING$EMBASSY]
 					|| wayTagIds[TagIdsWays.BUILDING$GOVERNMENT]
 					|| wayTagIds[TagIdsWays.BUILDING$GYM]
 					|| wayTagIds[TagIdsWays.BUILDING$SPORTS]
@@ -2607,9 +2623,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			if (wayTagIds[TagIdsWays.RAILWAY$RAIL]) {
 				if (wayTagIds[TagIdsWays.TUNNEL$YES]) {
 					this.layer.get(LayerIds.RAILWAY$RAIL_TUNNEL$YES).add(
-							new PathContainer(this.path, PAINT_RAILWAY_RAIL_TUNNEL1));
-					this.layer.get(LayerIds.RAILWAY$RAIL_TUNNEL$YES).add(
-							new PathContainer(this.path, PAINT_RAILWAY_RAIL_TUNNEL2));
+							new PathContainer(this.path, PAINT_RAILWAY_RAIL_TUNNEL));
 				} else {
 					this.layer.get(LayerIds.RAILWAY$RAIL).add(
 							new PathContainer(this.path, PAINT_RAILWAY_RAIL1));
@@ -2646,9 +2660,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new PathContainer(this.path, PAINT_RAILWAY_SUBWAY2));
 				} else {
 					this.layer.get(LayerIds.RAILWAY$SUBWAY_TUNNEL).add(
-							new PathContainer(this.path, PAINT_RAILWAY_SUBWAY_TUNNEL1));
-					this.layer.get(LayerIds.RAILWAY$SUBWAY_TUNNEL).add(
-							new PathContainer(this.path, PAINT_RAILWAY_SUBWAY_TUNNEL2));
+							new PathContainer(this.path, PAINT_RAILWAY_SUBWAY_TUNNEL));
 				}
 				if (this.remainingTags == 1) {
 					return;
@@ -2668,8 +2680,17 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* landuse */
 		if ((wayTagBitmap & BITMAP_LANDUSE) != 0) {
-			if (wayTagIds[TagIdsWays.LANDUSE$ALLOTMENTS]
-					|| wayTagIds[TagIdsWays.LANDUSE$CEMETERY]
+			if (wayTagIds[TagIdsWays.LANDUSE$ALLOTMENTS]) {
+				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
+						new PathContainer(this.path, PAINT_LANDUSE_ALLOTMENTS_FILL));
+				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
+						new PathContainer(this.path, PAINT_LANDUSE_ALLOTMENTS_OUTLINE));
+				if (this.remainingTags == 1) {
+					return;
+				}
+				--this.remainingTags;
+			} else if (wayTagIds[TagIdsWays.LANDUSE$CEMETERY]
 					|| wayTagIds[TagIdsWays.LANDUSE$FARM]
 					|| wayTagIds[TagIdsWays.LANDUSE$RECREATION_GROUND]) {
 				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
@@ -2700,11 +2721,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new PathContainer(this.path, PAINT_LANDUSE_COMMERCIAL_FILL));
+				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
+						new PathContainer(this.path, PAINT_LANDUSE_COMMERCIAL_OUTLINE));
 				if (this.remainingTags == 1) {
 					return;
 				}
 				--this.remainingTags;
-			} else if (wayTagIds[TagIdsWays.LANDUSE$CONSTRUCTION]) {
+			} else if (wayTagIds[TagIdsWays.LANDUSE$CONSTRUCTION]
+					|| wayTagIds[TagIdsWays.LANDUSE$GREENFIELD]) {
 				this.layer.get(LayerIds.LANDUSE$CONSTRUCTION).add(
 						new PathContainer(this.path, PAINT_LANDUSE_CONSTRUCTION_FILL));
 				if (this.remainingTags == 1) {
@@ -2808,7 +2832,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$HOSPITAL]) {
 				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.hospital);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.hospital, (byte) 16);
 				this.layer.get(LayerIds.AMENITY$HOSPITAL).add(
 						new PathContainer(this.path, PAINT_AMENITY_HOSPITAL_FILL));
 				if (this.remainingTags == 1) {
@@ -2817,7 +2841,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$PARKING]) {
 				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.parking);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.parking, (byte) 17);
 				this.layer.get(LayerIds.AMENITY$PARKING).add(
 						new PathContainer(this.path, PAINT_AMENITY_PARKING_FILL));
 				this.layer.get(LayerIds.AMENITY$PARKING).add(
@@ -2827,7 +2851,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 				--this.remainingTags;
 			} else if (wayTagIds[TagIdsWays.AMENITY$FOUNTAIN]) {
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.fountain);
+				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.fountain, (byte) 16);
 				--this.remainingTags;
 			}
 		}

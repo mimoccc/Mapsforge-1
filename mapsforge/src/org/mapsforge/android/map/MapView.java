@@ -25,6 +25,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -39,9 +40,10 @@ import android.widget.ZoomControls;
 public class MapView extends ViewGroup {
 	private static final int BITMAP_CACHE_SIZE = 25;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
+	private static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
+	private static final int DEFAULT_MOVE_SPEED = 10;
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
 	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
-	private static final byte DEFAULT_ZOOM_LEVEL = 14;
 	private static final short MAP_SCALE_HEIGHT = 35;
 	private static final int[] MAP_SCALE_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
@@ -55,8 +57,21 @@ public class MapView extends ViewGroup {
 	private static final float TRACKBALL_MOVE_SPEED = 40;
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
-	private static final byte ZOOM_MAX = 23;
 	private static final byte ZOOM_MIN = 0;
+	static final byte DEFAULT_ZOOM_LEVEL = 14;
+	static final double LATITUDE_MAX = 85.0511;
+	static final double LATITUDE_MIN = -85.0511;
+	final static double LONGITUDE_MAX = 180;
+	final static double LONGITUDE_MIN = -180;
+
+	/**
+	 * Returns the default operation mode of a MapView.
+	 * 
+	 * @return the default operation mode.
+	 */
+	public static MapViewMode getDefaultMapViewMode() {
+		return DEFAULT_MAP_VIEW_MODE;
+	}
 
 	/**
 	 * Returns the size of a single map tile in bytes.
@@ -88,10 +103,10 @@ public class MapView extends ViewGroup {
 	private short frame_counter;
 	private ImageBitmapCache imageBitmapCache;
 	private ImageFileCache imageFileCache;
-	private final MapActivity mapActivity;
+	private MapActivity mapActivity;
 	private MapController mapController;
 	private String mapFile;
-	private CanvasMapGenerator mapGenerator;
+	private MapGenerator mapGenerator;
 	private MapMover mapMover;
 	private float mapMoveX;
 	private float mapMoveY;
@@ -104,6 +119,7 @@ public class MapView extends ViewGroup {
 	private Bitmap mapViewBitmap1;
 	private Bitmap mapViewBitmap2;
 	private Canvas mapViewCanvas;
+	private MapViewMode mapViewMode;
 	private double mapViewPixelX;
 	private double mapViewPixelY;
 	private long mapViewTileX1;
@@ -111,6 +127,7 @@ public class MapView extends ViewGroup {
 	private long mapViewTileY1;
 	private long mapViewTileY2;
 	private double meterPerPixel;
+	private float moveSpeedFactor;
 	private int numberOfTiles;
 	private float previousPositionX;
 	private float previousPositionY;
@@ -129,12 +146,11 @@ public class MapView extends ViewGroup {
 	double latitude;
 	double longitude;
 	Matrix matrix;
-	float moveSpeedFactor;
 	ZoomControls zoomControls;
 	byte zoomLevel;
 
 	/**
-	 * Constructs a new MapView.
+	 * Constructs a new MapView with the default MapView mode.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -142,21 +158,17 @@ public class MapView extends ViewGroup {
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
 	public MapView(Context context) {
-		super(context);
-		if (!(context instanceof MapActivity)) {
-			throw new IllegalArgumentException();
-		}
-		this.mapActivity = (MapActivity) context;
-		setupMapView();
+		this(context, DEFAULT_MAP_VIEW_MODE);
 	}
 
 	/**
-	 * Constructs a new MapView.
+	 * Constructs a new MapView. The mode can be configured via XML. Simply put an attribute
+	 * named "mode" in the layout file with a value from {@link MapViewMode}.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
 	 * @param attrs
-	 *            A set of attributes (currently ignored).
+	 *            A set of attributes.
 	 * @throws IllegalArgumentException
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
@@ -166,6 +178,37 @@ public class MapView extends ViewGroup {
 			throw new IllegalArgumentException();
 		}
 		this.mapActivity = (MapActivity) context;
+		String attributeValue = attrs.getAttributeValue(null, "mode");
+		if (attributeValue == null) {
+			// no mode specified, use default
+			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
+		} else if (attributeValue.equals(MapViewMode.TILE_DOWNLOAD.name())) {
+			this.mapViewMode = MapViewMode.TILE_DOWNLOAD;
+		} else if (attributeValue.equals(MapViewMode.OPENGL_RENDERER.name())) {
+			this.mapViewMode = MapViewMode.OPENGL_RENDERER;
+		} else {
+			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
+		}
+		setupMapView();
+	}
+
+	/**
+	 * Constructs a new MapView.
+	 * 
+	 * @param context
+	 *            the enclosing MapActivity object.
+	 * @param mapViewMode
+	 *            the mode in which the MapView should operate.
+	 * @throws IllegalArgumentException
+	 *             if the context object is not an instance of {@link MapActivity}.
+	 */
+	public MapView(Context context, MapViewMode mapViewMode) {
+		super(context);
+		if (!(context instanceof MapActivity)) {
+			throw new IllegalArgumentException();
+		}
+		this.mapActivity = (MapActivity) context;
+		this.mapViewMode = mapViewMode;
 		setupMapView();
 	}
 
@@ -186,8 +229,13 @@ public class MapView extends ViewGroup {
 	 * Returns the currently used map file.
 	 * 
 	 * @return the map file.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
 	 */
 	public String getMapFile() {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
 		return this.mapFile;
 	}
 
@@ -195,12 +243,40 @@ public class MapView extends ViewGroup {
 	 * Returns the center coordinates of the current map file as a GeoPoint object.
 	 * 
 	 * @return the center coordinates of the map file.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
 	 */
 	public GeoPoint getMapFileCenter() {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
 		if (this.database == null || this.database.getMapBoundary() == null) {
 			return null;
 		}
 		return this.database.getMapBoundary().getCenter();
+	}
+
+	/**
+	 * Returns the host name of the tile download server.
+	 * 
+	 * @return the server name.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode with a map file.
+	 */
+	public String getMapTileDownloadServer() {
+		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
+		return ((TileDownloadMapGenerator) this.mapGenerator).getServerHostName();
+	}
+
+	/**
+	 * Returns the current operation mode of the MapView.
+	 * 
+	 * @return the mode of the MapView.
+	 */
+	public MapViewMode getMapViewMode() {
+		return this.mapViewMode;
 	}
 
 	/**
@@ -209,7 +285,7 @@ public class MapView extends ViewGroup {
 	 * @return the maximum zoom level.
 	 */
 	public int getMaxZoomLevel() {
-		return ZOOM_MAX;
+		return this.mapGenerator.getMaxZoomLevel();
 	}
 
 	/**
@@ -225,8 +301,13 @@ public class MapView extends ViewGroup {
 	 * Convenience method to get isValidMapFile() on the current map file.
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
 	 */
 	public boolean hasValidMapFile() {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
 		return isValidMapFile(this.mapFile);
 	}
 
@@ -285,9 +366,9 @@ public class MapView extends ViewGroup {
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
 
 				// calculate the new position of the map center
-				this.latitude = MercatorProjection.pixelYToLatitude((MercatorProjection
-						.latitudeToPixelY(this.latitude, this.zoomLevel) - this.mapMoveY),
-						this.zoomLevel);
+				this.latitude = getValidLatitude(MercatorProjection
+						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
+								this.zoomLevel) - this.mapMoveY), this.zoomLevel));
 				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
 						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
 						this.zoomLevel);
@@ -318,9 +399,9 @@ public class MapView extends ViewGroup {
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
 
 				// calculate the new position of the map center
-				this.latitude = MercatorProjection.pixelYToLatitude((MercatorProjection
-						.latitudeToPixelY(this.latitude, this.zoomLevel) - this.mapMoveY),
-						this.zoomLevel);
+				this.latitude = getValidLatitude(MercatorProjection
+						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
+								this.zoomLevel) - this.mapMoveY), this.zoomLevel));
 				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
 						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
 						this.zoomLevel);
@@ -376,13 +457,21 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @param newMapFile
 	 *            the path to the new map file.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
 	 */
 	public void setMapFile(String newMapFile) {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
 		if (newMapFile == null) {
 			// no map file is given
 			return;
 		} else if (this.mapFile != null && this.mapFile.equals(newMapFile)) {
 			// same map file as before
+			return;
+		} else if (this.database == null) {
+			// do database exists
 			return;
 		}
 
@@ -401,16 +490,8 @@ public class MapView extends ViewGroup {
 		this.database.closeFile();
 		if (this.database.setFile(newMapFile)) {
 			this.mapFile = newMapFile;
-			synchronized (this) {
-				// clear the MapView bitmaps
-				if (this.mapViewBitmap1 != null) {
-					this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
-				}
-				if (this.mapViewBitmap2 != null) {
-					this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
-				}
-				setCenter(this.database.getMapBoundary().getCenter());
-			}
+			clearMapView();
+			setCenter(this.database.getMapBoundary().getCenter());
 			handleTiles(true);
 		} else {
 			this.mapFile = null;
@@ -430,6 +511,23 @@ public class MapView extends ViewGroup {
 		}
 		// invalidate the MapView
 		invalidate();
+	}
+
+	/**
+	 * Sets a new operation mode for the MapView.
+	 * 
+	 * @param newMapViewMode
+	 *            the new mode.
+	 */
+	public void setMapViewMode(MapViewMode newMapViewMode) {
+		// check if the new mode differs from the old one
+		if (this.mapViewMode != newMapViewMode) {
+			stopMapGeneratorThread();
+			this.mapViewMode = newMapViewMode;
+			startMapGeneratorThread();
+			clearMapView();
+			handleTiles(true);
+		}
 	}
 
 	/**
@@ -467,14 +565,23 @@ public class MapView extends ViewGroup {
 		return false;
 	}
 
+	private synchronized void clearMapView() {
+		// clear the MapView bitmaps
+		if (this.mapViewBitmap1 != null) {
+			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
+		}
+		if (this.mapViewBitmap2 != null) {
+			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+		}
+	}
+
 	private byte getValidZoomLevel(byte zoom) {
 		if (zoom < ZOOM_MIN) {
 			return ZOOM_MIN;
-		} else if (zoom > ZOOM_MAX) {
-			return ZOOM_MAX;
-		} else {
-			return zoom;
+		} else if (zoom > this.mapGenerator.getMaxZoomLevel()) {
+			return this.mapGenerator.getMaxZoomLevel();
 		}
+		return zoom;
 	}
 
 	private void renderMapScale() {
@@ -524,6 +631,13 @@ public class MapView extends ViewGroup {
 		}
 	}
 
+	private void setupFpsText() {
+		// create the paint for drawing the FPS text
+		this.fpsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		this.fpsPaint.setTextSize(20);
+	}
+
 	private void setupMapScale() {
 		// create the bitmap for the map scale and the canvas to draw on it
 		this.mapScaleBitmap = Bitmap.createBitmap(MAP_SCALE_WIDTH, MAP_SCALE_HEIGHT,
@@ -549,9 +663,9 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setupMapView() {
-		this.latitude = Double.NaN;
-		this.longitude = Double.NaN;
 		this.zoomLevel = DEFAULT_ZOOM_LEVEL;
+		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
+		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 
 		setBackgroundColor(MAP_VIEW_BACKGROUND);
 		setWillNotDraw(false);
@@ -559,14 +673,12 @@ public class MapView extends ViewGroup {
 
 		setupZoomControls();
 		setupMapScale();
-
-		// create the paint for drawing the FPS text
-		this.fpsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		this.fpsPaint.setTextSize(20);
+		setupFpsText();
 
 		// create the transformation matrix
 		this.matrix = new Matrix();
+
+		// create the tile bitmap and buffer
 		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 				Bitmap.Config.RGB_565);
 		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
@@ -575,9 +687,8 @@ public class MapView extends ViewGroup {
 		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
 
 		// create the image file cache
-		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
-		this.imageFileCache = new ImageFileCache(System.getProperty("java.io.tmpdir"),
-				this.fileCacheSize);
+		this.imageFileCache = new ImageFileCache(Environment.getExternalStorageDirectory()
+				.getAbsolutePath(), this.fileCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -585,18 +696,15 @@ public class MapView extends ViewGroup {
 		// create the database
 		this.database = new Database();
 
-		// get the MapGenerator from the MapActivity
-		this.mapGenerator = this.mapActivity.getMapGenerator();
-		this.mapGenerator.setDatabase(this.database);
-		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
-		this.mapGenerator.setMapView(this);
+		startMapGeneratorThread();
 
-		// get the MapMover from the MapActivity
-		this.mapMover = this.mapActivity.getMapMover();
+		// create and start the MapMover thread
+		this.mapMover = new MapMover();
 		this.mapMover.setMapView(this);
+		this.mapMover.start();
 
 		// register the MapView in the MapActivity
-		this.mapActivity.setMapView(this);
+		this.mapActivity.registerMapView(this);
 	}
 
 	private void setupZoomControls() {
@@ -639,6 +747,42 @@ public class MapView extends ViewGroup {
 		}
 	}
 
+	/**
+	 * Create and start the MapGenerator thread.
+	 */
+	private void startMapGeneratorThread() {
+		switch (this.mapViewMode) {
+			case CANVAS_RENDERER:
+				this.mapGenerator = new CanvasMapGenerator();
+				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
+				break;
+			case OPENGL_RENDERER:
+				this.mapGenerator = new OpenGlMapGenerator(this.mapActivity);
+				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
+				break;
+			case TILE_DOWNLOAD:
+				this.mapGenerator = new TileDownloadMapGenerator();
+				break;
+		}
+		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
+		this.mapGenerator.setMapView(this);
+		this.mapGenerator.start();
+	}
+
+	private void stopMapGeneratorThread() {
+		// stop the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.interrupt();
+			try {
+				this.mapGenerator.join();
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+			this.mapGenerator = null;
+		}
+	}
+
 	private void waitForReadyMapGenerator() {
 		while (!this.mapGenerator.isReady()) {
 			try {
@@ -663,6 +807,32 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected void onDetachedFromWindow() {
+		// unregister the MapView in the MapActivity
+		if (this.mapActivity != null) {
+			this.mapActivity.unregisterMapView(this);
+			this.mapActivity = null;
+		}
+
+		// stop the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.interrupt();
+			try {
+				this.mapMover.join();
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+			this.mapMover = null;
+		}
+
+		stopMapGeneratorThread();
+
+		// destroy the map controller
+		if (this.mapController != null) {
+			this.mapController.destroy();
+			this.mapController = null;
+		}
+
 		// free the mapViewBitmap1 memory
 		if (this.mapViewBitmap1 != null) {
 			this.mapViewBitmap1.recycle();
@@ -740,10 +910,9 @@ public class MapView extends ViewGroup {
 			// neither size nor position have changed
 			return;
 		}
-
 		// position the ZoomControls at the bottom right corner
-		this.zoomControls.layout(r - this.zoomControls.getMeasuredWidth() - 5, b
-				- this.zoomControls.getMeasuredHeight(), r - 5, b);
+		this.zoomControls.layout(r - this.zoomControls.getMeasuredWidth() - l - 5, b
+				- this.zoomControls.getMeasuredHeight() - t, r - l - 5, b - t);
 	}
 
 	@Override
@@ -761,10 +930,6 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected synchronized void onSizeChanged(int w, int h, int oldw, int oldh) {
-		// calculate how many tiles are needed to fill the view completely
-		this.numberOfTiles = ((getWidth() / Tile.TILE_SIZE) + 1)
-				* ((getHeight() / Tile.TILE_SIZE) + 1);
-
 		// check if the previous map view bitmaps must be recycled
 		if (this.mapViewBitmap1 != null) {
 			this.mapViewBitmap1.recycle();
@@ -773,20 +938,44 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap2.recycle();
 		}
 
-		// create the new map view bitmaps
-		this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(),
-				Bitmap.Config.RGB_565);
-		this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(),
-				Bitmap.Config.RGB_565);
+		// check if the new size is positive
+		if (w > 0 && h > 0) {
+			// calculate how many tiles are needed to fill the view completely
+			this.numberOfTiles = ((getWidth() / Tile.TILE_SIZE) + 1)
+					* ((getHeight() / Tile.TILE_SIZE) + 1);
 
-		// create the mapViewCanvas
-		this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
-		this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
-		handleTiles(true);
+			// create the new map view bitmaps
+			this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(),
+					Bitmap.Config.RGB_565);
+			this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(),
+					Bitmap.Config.RGB_565);
+
+			// create the mapViewCanvas
+			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
+			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
+			handleTiles(true);
+		}
+	}
+
+	GeoPoint getDefaultStartPoint() {
+		return this.mapGenerator.getDefaultStartPoint();
+	}
+
+	float getMoveSpeedFactor() {
+		return this.moveSpeedFactor;
+	}
+
+	double getValidLatitude(double lat) {
+		if (lat < LATITUDE_MIN) {
+			return LATITUDE_MIN;
+		} else if (lat > LATITUDE_MAX) {
+			return LATITUDE_MAX;
+		}
+		return lat;
 	}
 
 	void handleTiles(boolean calledByUiThread) {
-		if (this.mapFile == null) {
+		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD && this.mapFile == null) {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
@@ -801,17 +990,20 @@ public class MapView extends ViewGroup {
 					this.zoomLevel)
 					- (getHeight() >> 1);
 
-			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX);
-			this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY);
+			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX,
+					this.zoomLevel);
+			this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY,
+					this.zoomLevel);
 			this.mapViewTileX2 = MercatorProjection.pixelXToTileX(this.mapViewPixelX
-					+ getWidth());
+					+ getWidth(), this.zoomLevel);
 			this.mapViewTileY2 = MercatorProjection.pixelYToTileY(this.mapViewPixelY
-					+ getHeight());
+					+ getHeight(), this.zoomLevel);
 
 			// go through all tiles that intersect the screen rectangle
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
-					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
+					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel,
+							this.mapViewMode);
 					if (this.imageBitmapCache.containsKey(this.currentTile)) {
 						// bitmap cache hit
 						putTileOnBitmap(this.currentTile, this.imageBitmapCache
@@ -845,13 +1037,15 @@ public class MapView extends ViewGroup {
 	}
 
 	boolean hasValidCenter() {
-		if (Double.isNaN(this.latitude) || this.latitude > 90 || this.latitude < -90) {
+		if (Double.isNaN(this.latitude) || this.latitude > LATITUDE_MAX
+				|| this.latitude < LATITUDE_MIN) {
 			return false;
-		} else if (Double.isNaN(this.longitude) || this.longitude > 180
-				|| this.longitude < -180) {
+		} else if (Double.isNaN(this.longitude) || this.longitude > LONGITUDE_MAX
+				|| this.longitude < LONGITUDE_MIN) {
 			return false;
-		} else if (this.database == null || this.database.getMapBoundary() == null
-				|| !this.database.getMapBoundary().contains(getMapCenter())) {
+		} else if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD
+				&& (this.database == null || this.database.getMapBoundary() == null || !this.database
+						.getMapBoundary().contains(getMapCenter()))) {
 			return false;
 		}
 		return true;
@@ -868,6 +1062,30 @@ public class MapView extends ViewGroup {
 		}
 	}
 
+	void onPause() {
+		// pause the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.pause();
+		}
+
+		// pause the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.pause();
+		}
+	}
+
+	void onResume() {
+		// unpause the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.unpause();
+		}
+
+		// unpause the MapGenerator thread
+		if (this.mapGenerator != null) {
+			this.mapGenerator.unpause();
+		}
+	}
+
 	synchronized void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
 		// check if the tile and the current MapView rectangle intersect
 		if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
@@ -877,6 +1095,9 @@ public class MapView extends ViewGroup {
 		} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
 				|| this.mapViewPixelY + getHeight() < tile.pixelY) {
 			// no intersection in y direction
+			return;
+		} else if (tile.zoomLevel != this.zoomLevel) {
+			// the tile doesn't fit to the current zoom level
 			return;
 		}
 
@@ -911,25 +1132,30 @@ public class MapView extends ViewGroup {
 	 * This method is called by the MapGenerator when its job queue is empty.
 	 */
 	void requestMoreJobs() {
-		if (this.mapFile == null) {
+		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD && this.mapFile == null) {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
 		} else if (this.fileCacheSize < this.numberOfTiles * 3) {
 			// the capacity of the file cache is to small, skip preprocessing
 			return;
+		} else if (this.zoomLevel == 0) {
+			// there are no surrounding tiles on zoom level 0
+			return;
 		}
 
 		synchronized (this) {
 			// tiles below and above the visible area
 			for (this.tileX = this.mapViewTileX2 + 1; this.tileX >= this.mapViewTileX1 - 1; --this.tileX) {
-				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel,
+						this.mapViewMode);
 				if (!this.imageFileCache.containsKey(this.currentTile)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentTile);
 				}
 
-				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel,
+						this.mapViewMode);
 				if (!this.imageFileCache.containsKey(this.currentTile)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentTile);
@@ -938,13 +1164,15 @@ public class MapView extends ViewGroup {
 
 			// tiles left and right from the visible area
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
-				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
+				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel,
+						this.mapViewMode);
 				if (!this.imageFileCache.containsKey(this.currentTile)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentTile);
 				}
 
-				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
+				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel,
+						this.mapViewMode);
 				if (!this.imageFileCache.containsKey(this.currentTile)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentTile);
@@ -958,36 +1186,50 @@ public class MapView extends ViewGroup {
 	}
 
 	void setCenter(GeoPoint point) {
-		if (hasValidCenter()) {
-			synchronized (this) {
-				// add the movement to the transformation matrix
-				this.matrix.postTranslate((float) (MercatorProjection.longitudeToPixelX(
-						this.longitude, this.zoomLevel) - MercatorProjection.longitudeToPixelX(
-						point.getLongitude(), this.zoomLevel)), (float) (MercatorProjection
-						.latitudeToPixelY(this.latitude, this.zoomLevel) - MercatorProjection
-						.latitudeToPixelY(point.getLatitude(), this.zoomLevel)));
-			}
-		}
 		setCenterAndZoom(point, this.zoomLevel);
 	}
 
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
-		if (this.database != null && this.database.getMapBoundary() != null
-				&& this.database.getMapBoundary().contains(point)) {
-			this.latitude = point.getLatitude();
-			this.longitude = point.getLongitude();
-			this.zoomLevel = getValidZoomLevel(zoom);
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD
+				|| (this.database != null && this.database.getMapBoundary() != null && this.database
+						.getMapBoundary().contains(point))) {
+			synchronized (this) {
+				if (hasValidCenter()) {
+					// add the movement to the transformation matrix
+					this.matrix.postTranslate((float) (MercatorProjection.longitudeToPixelX(
+							this.longitude, this.zoomLevel) - MercatorProjection
+							.longitudeToPixelX(point.getLongitude(), this.zoomLevel)),
+							(float) (MercatorProjection.latitudeToPixelY(this.latitude,
+									this.zoomLevel) - MercatorProjection.latitudeToPixelY(point
+									.getLatitude(), this.zoomLevel)));
+				}
+
+				this.latitude = getValidLatitude(point.getLatitude());
+				this.longitude = point.getLongitude();
+				this.zoomLevel = getValidZoomLevel(zoom);
+			}
+
 			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+					.getMaxZoomLevel());
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 			handleTiles(true);
 		}
 	}
 
+	/**
+	 * Sets the map file for this MapView without displaying it.
+	 * 
+	 * @param newMapFile
+	 *            the path to the new map file.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
+	 */
 	void setMapFileFromPreferences(String newMapFile) {
-		if (newMapFile == null) {
-			this.mapFile = null;
-		} else if (this.database.setFile(newMapFile)) {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
+		if (newMapFile != null && this.database != null && this.database.setFile(newMapFile)) {
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;
@@ -1015,24 +1257,30 @@ public class MapView extends ViewGroup {
 	}
 
 	byte setZoom(byte zoomLevel) {
-		this.zoomLevel = getValidZoomLevel(zoomLevel);
+		synchronized (this) {
+			this.zoomLevel = getValidZoomLevel(zoomLevel);
+		}
+
 		// enable or disable the zoom buttons if necessary
-		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
+		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+				.getMaxZoomLevel());
 		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 		handleTiles(true);
 		return this.zoomLevel;
 	}
 
 	boolean zoomIn() {
-		if (this.zoomLevel < ZOOM_MAX) {
-			++this.zoomLevel;
-			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
-			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-			hideZoomControlsDelayed();
+		if (this.zoomLevel < this.mapGenerator.getMaxZoomLevel()) {
 			synchronized (this) {
 				this.matrix.postScale(2, 2, getWidth() >> 1, getHeight() >> 1);
+				++this.zoomLevel;
 			}
+
+			// enable or disable the zoom buttons if necessary
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+					.getMaxZoomLevel());
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+			hideZoomControlsDelayed();
 			handleTiles(true);
 			return true;
 		}
@@ -1041,14 +1289,16 @@ public class MapView extends ViewGroup {
 
 	boolean zoomOut() {
 		if (this.zoomLevel > ZOOM_MIN) {
-			--this.zoomLevel;
-			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != ZOOM_MAX);
-			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-			hideZoomControlsDelayed();
 			synchronized (this) {
 				this.matrix.postScale(0.5f, 0.5f, getWidth() >> 1, getHeight() >> 1);
+				--this.zoomLevel;
 			}
+
+			// enable or disable the zoom buttons if necessary
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+					.getMaxZoomLevel());
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+			hideZoomControlsDelayed();
 			handleTiles(true);
 			return true;
 		}

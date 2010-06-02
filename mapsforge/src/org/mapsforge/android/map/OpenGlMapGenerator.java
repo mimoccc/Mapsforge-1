@@ -18,6 +18,7 @@ package org.mapsforge.android.map;
 
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 /**
@@ -25,6 +26,9 @@ import android.graphics.Bitmap;
  */
 class OpenGlMapGenerator extends DatabaseMapGenerator {
 	private static final String THREAD_NAME = "OpenGlMapGenerator";
+
+	OpenGlMapGenerator(Context context) {
+	}
 
 	@Override
 	void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols) {

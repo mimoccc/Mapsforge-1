@@ -37,10 +37,7 @@ abstract class MapGenerator extends Thread {
 	private boolean scheduleNeeded;
 	private PriorityQueue<Tile> tempQueue;
 
-	@Override
-	final public void run() {
-		setName(getThreadName());
-
+	MapGenerator() {
 		// set up the two job queues
 		this.jobQueue1 = new PriorityQueue<Tile>(64);
 		this.jobQueue2 = new PriorityQueue<Tile>(64);
@@ -48,6 +45,11 @@ abstract class MapGenerator extends Thread {
 		// create the currentTileBitmap for the tile content
 		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 				Bitmap.Config.RGB_565);
+	}
+
+	@Override
+	final public void run() {
+		setName(getThreadName());
 		setup(this.currentTileBitmap);
 
 		while (!isInterrupted()) {
@@ -83,7 +85,7 @@ abstract class MapGenerator extends Thread {
 			// check if the current job can be skipped or must be processed
 			if (!this.imageBitmapCache.containsKey(this.currentTile)
 					&& !this.imageFileCache.containsKey(this.currentTile)) {
-				doMapGeneration(currentTile);
+				doMapGeneration(this.currentTile);
 
 				if (isInterrupted()) {
 					break;
@@ -116,6 +118,18 @@ abstract class MapGenerator extends Thread {
 		this.mapView = null;
 		this.imageBitmapCache = null;
 		this.imageFileCache = null;
+
+		if (this.jobQueue1 != null) {
+			this.jobQueue1.clear();
+			this.jobQueue1 = null;
+		}
+
+		if (this.jobQueue2 != null) {
+			this.jobQueue2.clear();
+			this.jobQueue2 = null;
+		}
+
+		this.tempQueue = null;
 	}
 
 	/**
@@ -163,6 +177,20 @@ abstract class MapGenerator extends Thread {
 	 *            the tile that is needed.
 	 */
 	abstract void doMapGeneration(Tile tile);
+
+	/**
+	 * Returns the default starting point on the map.
+	 * 
+	 * @return the default starting point.
+	 */
+	abstract GeoPoint getDefaultStartPoint();
+
+	/**
+	 * Returns the maximum zoom level that the MapGenerator can handle.
+	 * 
+	 * @return the maximum zoom level.
+	 */
+	abstract byte getMaxZoomLevel();
 
 	/**
 	 * Returns the name of the MapGenerator. It will be used as the name for the thread.

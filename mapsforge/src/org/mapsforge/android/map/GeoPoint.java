@@ -17,10 +17,6 @@
 package org.mapsforge.android.map;
 
 public class GeoPoint implements Comparable<GeoPoint> {
-	private final static double LATITUDE_MAX = 85.05112878;
-	private final static double LATITUDE_MIN = -85.05112878;
-	private final static double LONGITUDE_MAX = 180;
-	private final static double LONGITUDE_MIN = -180;
 	private final static int MULTIPLICATION_FACTOR = 1000000;
 	private final int hashCode;
 	private final int latitudeE6;
@@ -106,20 +102,20 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	private int clipLatitude(int latitude) {
-		if (latitude < LATITUDE_MIN * MULTIPLICATION_FACTOR) {
-			return (int) (LATITUDE_MIN * MULTIPLICATION_FACTOR);
-		} else if (latitude > LATITUDE_MAX * MULTIPLICATION_FACTOR) {
-			return (int) (LATITUDE_MAX * MULTIPLICATION_FACTOR);
+		if (latitude < MapView.LATITUDE_MIN * MULTIPLICATION_FACTOR) {
+			return (int) (MapView.LATITUDE_MIN * MULTIPLICATION_FACTOR);
+		} else if (latitude > MapView.LATITUDE_MAX * MULTIPLICATION_FACTOR) {
+			return (int) (MapView.LATITUDE_MAX * MULTIPLICATION_FACTOR);
 		} else {
 			return latitude;
 		}
 	}
 
 	private int clipLongitude(int longitude) {
-		if (longitude < LONGITUDE_MIN * MULTIPLICATION_FACTOR) {
-			return (int) (LONGITUDE_MIN * MULTIPLICATION_FACTOR);
-		} else if (longitude > LONGITUDE_MAX * MULTIPLICATION_FACTOR) {
-			return (int) (LONGITUDE_MAX * MULTIPLICATION_FACTOR);
+		if (longitude < MapView.LONGITUDE_MIN * MULTIPLICATION_FACTOR) {
+			return (int) (MapView.LONGITUDE_MIN * MULTIPLICATION_FACTOR);
+		} else if (longitude > MapView.LONGITUDE_MAX * MULTIPLICATION_FACTOR) {
+			return (int) (MapView.LONGITUDE_MAX * MULTIPLICATION_FACTOR);
 		} else {
 			return longitude;
 		}

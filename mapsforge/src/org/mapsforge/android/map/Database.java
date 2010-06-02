@@ -135,7 +135,7 @@ class Database {
 			}
 
 			// TODO: read the node layer
-			this.currentNodeLayer = (byte) 0;
+			this.currentNodeLayer = (byte) 5;
 
 			// reset node tag array
 			System.arraycopy(this.defaultNodeTagIds, 0, this.currentNodeTagIds, 0,
@@ -359,6 +359,7 @@ class Database {
 		try {
 			if (this.inputFile != null) {
 				this.inputFile.close();
+				this.inputFile = null;
 			}
 		} catch (IOException e) {
 			Logger.e(e);

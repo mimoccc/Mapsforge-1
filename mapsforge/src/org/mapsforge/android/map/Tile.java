@@ -32,6 +32,7 @@ class Tile implements Comparable<Tile> {
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
 	private final int hashCode;
+	final MapViewMode mapViewMode;
 	final long pixelX;
 	final long pixelY;
 	int renderPriority;
@@ -48,11 +49,14 @@ class Tile implements Comparable<Tile> {
 	 *            the Y number of the tile.
 	 * @param zoomLevel
 	 *            the zoom level of the tile.
+	 * @param mapViewMode
+	 *            the map view mode.
 	 */
-	Tile(long x, long y, byte zoomLevel) {
+	Tile(long x, long y, byte zoomLevel, MapViewMode mapViewMode) {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;
+		this.mapViewMode = mapViewMode;
 		this.hashCode = calculateHashCode();
 		this.pixelX = x * TILE_SIZE;
 		this.pixelY = y * TILE_SIZE;
@@ -80,6 +84,8 @@ class Tile implements Comparable<Tile> {
 				return false;
 			} else if (this.zoomLevel != other.zoomLevel) {
 				return false;
+			} else if (this.mapViewMode != other.mapViewMode) {
+				return false;
 			} else {
 				return true;
 			}
@@ -102,6 +108,8 @@ class Tile implements Comparable<Tile> {
 		result = prime * result + (int) (this.x ^ (this.x >>> 32));
 		result = prime * result + (int) (this.y ^ (this.y >>> 32));
 		result = prime * result + this.zoomLevel;
+		result = prime * result
+				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		return result;
 	}
 

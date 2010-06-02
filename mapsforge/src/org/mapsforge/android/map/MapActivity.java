@@ -16,6 +16,8 @@
  */
 package org.mapsforge.android.map;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -25,65 +27,38 @@ import android.content.SharedPreferences.Editor;
  */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
-	private CanvasMapGenerator mapGenerator;
-	private MapMover mapMover;
-	private MapView mapView;
+	private ArrayList<MapView> mapViews = new ArrayList<MapView>(4);
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 
-		// stop the MapMover thread
-		if (this.mapMover != null) {
-			this.mapMover.interrupt();
-			try {
-				this.mapMover.join();
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
-			}
-			this.mapMover = null;
+		if (this.mapViews != null) {
+			this.mapViews.clear();
+			this.mapViews = null;
 		}
-
-		// stop the MapGenerator thread
-		if (this.mapGenerator != null) {
-			this.mapGenerator.interrupt();
-			try {
-				this.mapGenerator.join();
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
-			}
-			this.mapGenerator = null;
-		}
-
-		this.mapView = null;
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 
-		// pause the MapMover thread
-		if (this.mapMover != null) {
-			this.mapMover.pause();
-		}
+		Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
+		for (MapView currentMapView : this.mapViews) {
+			currentMapView.onPause();
 
-		// pause the MapGenerator thread
-		if (this.mapGenerator != null) {
-			this.mapGenerator.pause();
-		}
-
-		if (this.mapView != null) {
-			Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
 			editor.clear();
-			if (this.mapView.hasValidMapFile() && this.mapView.hasValidCenter()) {
-				// save the current map file, map position and zoom level
-				editor.putString("mapFile", this.mapView.getMapFile());
-				GeoPoint mapCenter = this.mapView.getMapCenter();
+			if (currentMapView.hasValidCenter()) {
+				if (currentMapView.getMapViewMode() != MapViewMode.TILE_DOWNLOAD
+						&& currentMapView.hasValidMapFile()) {
+					// save the map file
+					editor.putString("mapFile", currentMapView.getMapFile());
+				}
+				// save the map position and zoom level
+				GeoPoint mapCenter = currentMapView.getMapCenter();
 				editor.putInt("latitude", mapCenter.getLatitudeE6());
 				editor.putInt("longitude", mapCenter.getLongitudeE6());
-				editor.putInt("zoomLevel", this.mapView.getZoomLevel());
+				editor.putInt("zoomLevel", currentMapView.getZoomLevel());
 			}
 			editor.commit();
 		}
@@ -93,55 +68,42 @@ public abstract class MapActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 
-		// unpause the MapMover thread
-		if (this.mapMover != null) {
-			this.mapMover.unpause();
-		}
-
-		// unpause the MapGenerator thread
-		if (this.mapGenerator != null) {
-			this.mapGenerator.unpause();
+		for (MapView currentMapView : this.mapViews) {
+			currentMapView.onResume();
 		}
 	}
 
-	final CanvasMapGenerator getMapGenerator() {
-		if (this.mapGenerator == null) {
-			// create and start the MapGenerator thread
-			this.mapGenerator = new CanvasMapGenerator();
-			this.mapGenerator.start();
-		}
-		return this.mapGenerator;
-	}
+	final void registerMapView(MapView mapView) {
+		if (this.mapViews != null) {
+			this.mapViews.add(mapView);
 
-	final MapMover getMapMover() {
-		if (this.mapMover == null) {
-			// create and start the MapMover thread
-			this.mapMover = new MapMover();
-			this.mapMover.start();
-		}
-		return this.mapMover;
-	}
-
-	/**
-	 * This method is called only once by the MapView after the setup.
-	 * 
-	 * @param mapView
-	 *            the calling MapView.
-	 */
-	final void setMapView(MapView mapView) {
-		this.mapView = mapView;
-		SharedPreferences preferences = getSharedPreferences(PREFERENCES, MODE_PRIVATE);
-		if (preferences.contains("mapFile") && preferences.contains("latitude")
-				&& preferences.contains("longitude") && preferences.contains("zoomLevel")) {
-			try {
-				// get and set the current map file, map position and zoom level
-				this.mapView.setMapFileFromPreferences(preferences.getString("mapFile", null));
-				this.mapView.setCenterAndZoom(new GeoPoint(preferences.getInt("latitude", 0),
-						preferences.getInt("longitude", 0)), (byte) preferences.getInt(
-						"zoomLevel", 0));
-			} catch (ClassCastException e) {
-				// bad coordinates, do nothing
+			SharedPreferences preferences = getSharedPreferences(PREFERENCES, MODE_PRIVATE);
+			// restore the position
+			if (preferences.contains("latitude") && preferences.contains("longitude")
+					&& preferences.contains("zoomLevel")) {
+				try {
+					if (mapView.getMapViewMode() != MapViewMode.TILE_DOWNLOAD
+							&& preferences.contains("mapFile")) {
+						// get and set the map file
+						mapView.setMapFileFromPreferences(preferences
+								.getString("mapFile", null));
+					}
+					// get and set the map position and zoom level
+					GeoPoint defaultStartPoint = mapView.getDefaultStartPoint();
+					mapView.setCenterAndZoom(new GeoPoint(preferences.getInt("latitude",
+							defaultStartPoint.getLatitudeE6()), preferences.getInt("longitude",
+							defaultStartPoint.getLongitudeE6())), (byte) preferences.getInt(
+							"zoomLevel", MapView.DEFAULT_ZOOM_LEVEL));
+				} catch (ClassCastException e) {
+					// bad coordinates, do nothing
+				}
 			}
+		}
+	}
+
+	final void unregisterMapView(MapView mapView) {
+		if (this.mapViews != null) {
+			this.mapViews.remove(mapView);
 		}
 	}
 }

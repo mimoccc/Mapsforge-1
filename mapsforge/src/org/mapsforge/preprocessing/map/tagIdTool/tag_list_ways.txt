@@ -33,6 +33,7 @@ boundary=administrative
 bridge=yes
 
 building=apartments
+building=embassy
 building=government
 building=gym
 building=roof
@@ -75,6 +76,7 @@ landuse=farm
 landuse=farmland
 landuse=forest
 landuse=grass
+landuse=greenfield
 landuse=industrial
 landuse=military
 landuse=recreation_ground

@@ -34,7 +34,7 @@ class WhiteList {
 		tagWhitelist.put("amenity=fire_station", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=fountain", Byte.valueOf((byte) 16));
 		tagWhitelist.put("amenity=fuel", Byte.valueOf((byte) 17));
-		tagWhitelist.put("amenity=hospital", Byte.valueOf((byte) 17));
+		tagWhitelist.put("amenity=hospital", Byte.valueOf((byte) 16));
 		tagWhitelist.put("amenity=library", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=parking", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=pharmacy", Byte.valueOf((byte) 17));
@@ -45,13 +45,13 @@ class WhiteList {
 		tagWhitelist.put("amenity=recycling", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=restaurant", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=school", Byte.valueOf((byte) 17));
-		tagWhitelist.put("amenity=shelter", Byte.valueOf((byte) 17));
+		tagWhitelist.put("amenity=shelter", Byte.valueOf((byte) 16));
 		tagWhitelist.put("amenity=telephone", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=theatre", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=toilets", Byte.valueOf((byte) 17));
 		tagWhitelist.put("amenity=university", Byte.valueOf((byte) 17));
 
-		tagWhitelist.put("barrier=bollard", Byte.valueOf((byte) 17));
+		tagWhitelist.put("barrier=bollard", Byte.valueOf((byte) 16));
 
 		tagWhitelist.put("highway=bus_stop", Byte.valueOf((byte) 16));
 		tagWhitelist.put("highway=traffic_signals", Byte.valueOf((byte) 17));
@@ -128,6 +128,7 @@ class WhiteList {
 		tagWhitelist.put("bridge=yes", Byte.valueOf(Byte.MAX_VALUE));
 
 		tagWhitelist.put("building=apartments", Byte.valueOf((byte) 16));
+		tagWhitelist.put("building=embassy", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=government", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=gym", Byte.valueOf((byte) 16));
 		tagWhitelist.put("building=roof", Byte.valueOf((byte) 16));
@@ -170,6 +171,7 @@ class WhiteList {
 		tagWhitelist.put("landuse=farmland", Byte.valueOf((byte) 13));
 		tagWhitelist.put("landuse=forest", Byte.valueOf((byte) 13));
 		tagWhitelist.put("landuse=grass", Byte.valueOf((byte) 15));
+		tagWhitelist.put("landuse=greenfield", Byte.valueOf((byte) 15));
 		tagWhitelist.put("landuse=industrial", Byte.valueOf((byte) 13));
 		tagWhitelist.put("landuse=military", Byte.valueOf((byte) 13));
 		tagWhitelist.put("landuse=recreation_ground", Byte.valueOf((byte) 13));

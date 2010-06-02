@@ -10,7 +10,7 @@ landuse=residential
 landuse=retail
 landuse=brownfield landuse=industrial
 landuse=commercial
-landuse=construction
+landuse=construction landuse=greenfield
 
 // Artificial landuse
 amenity=college amenity=fountain amenity=hospital amenity=school amenity=university
@@ -67,7 +67,7 @@ highway=service_area=yes
 
 // Buildings
 aeroway=terminal
-building=apartments building=gym building=roof building=sports building=train_station building=university building=yes
+building=apartments building=embassy building=government building=gym building=roof building=sports building=train_station building=university building=yes
 
 // marine features
 man_made=pier
@@ -78,8 +78,7 @@ route=ferry
 // Barriers
 barrier=fence barrier=wall
 
-highway_tunnel=yes1
-highway_tunnel=yes2
+highway_tunnel=yes
 
 highway=construction
 

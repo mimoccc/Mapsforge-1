@@ -20,7 +20,7 @@ import android.view.KeyEvent;
 import android.view.View;
 
 public final class MapController implements android.view.View.OnKeyListener {
-	private final MapView mapView;
+	private MapView mapView;
 
 	MapController(MapView mapView) {
 		this.mapView = mapView;
@@ -52,5 +52,9 @@ public final class MapController implements android.view.View.OnKeyListener {
 
 	public boolean zoomOut() {
 		return this.mapView.zoomOut();
+	}
+
+	void destroy() {
+		this.mapView = null;
 	}
 }

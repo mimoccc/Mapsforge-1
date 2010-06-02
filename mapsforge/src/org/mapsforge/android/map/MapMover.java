@@ -65,10 +65,12 @@ class MapMover extends Thread {
 						this.moveTimeElapsed * this.moveY);
 
 				// calculate the new position of the map center
-				this.mapView.latitude = MercatorProjection.pixelYToLatitude(
-						(MercatorProjection.latitudeToPixelY(this.mapView.latitude,
-								this.mapView.zoomLevel) - (this.moveTimeElapsed * this.moveY)),
-						this.mapView.zoomLevel);
+				this.mapView.latitude = this.mapView
+						.getValidLatitude(MercatorProjection
+								.pixelYToLatitude(
+										(MercatorProjection.latitudeToPixelY(
+												this.mapView.latitude, this.mapView.zoomLevel) - (this.moveTimeElapsed * this.moveY)),
+										this.mapView.zoomLevel));
 				this.mapView.longitude = MercatorProjection.pixelXToLongitude(
 						(MercatorProjection.longitudeToPixelX(this.mapView.longitude,
 								this.mapView.zoomLevel) - (this.moveTimeElapsed * this.moveX)),
@@ -105,7 +107,7 @@ class MapMover extends Thread {
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = -MOVE_SPEED * this.mapView.moveSpeedFactor;
+			this.moveY = -MOVE_SPEED * this.mapView.getMoveSpeedFactor();
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -119,7 +121,7 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = MOVE_SPEED * this.mapView.moveSpeedFactor;
+			this.moveX = MOVE_SPEED * this.mapView.getMoveSpeedFactor();
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -133,7 +135,7 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = -MOVE_SPEED * this.mapView.moveSpeedFactor;
+			this.moveX = -MOVE_SPEED * this.mapView.getMoveSpeedFactor();
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
@@ -147,7 +149,7 @@ class MapMover extends Thread {
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = MOVE_SPEED * this.mapView.moveSpeedFactor;
+			this.moveY = MOVE_SPEED * this.mapView.getMoveSpeedFactor();
 			this.moveTimePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				this.notify();
