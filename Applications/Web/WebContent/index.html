@@ -4,20 +4,9 @@
 
 <link type="text/css" href="mapsforge.css" rel="stylesheet" />
 
-<!-- bring in the OpenLayers javascript library
-         (here we bring it from the remote site, but you could
-         easily serve up this javascript yourself) -->
-<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script src="http://openlayers.org/api/OpenLayers.js"></script>
 
-<!-- bring in the OpenStreetMap OpenLayers layers.
-         Using this hosted file will make sure we are kept up
-         to date with any necessary changes -->
-<script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
-
-<!-- import for Overlays -->
-<script src="js/GPXmod.js"></script>
 <script src="js/mapsforge.js"></script>
-<script src="js/Textmod.js"></script>
 
 </head>
 
@@ -29,28 +18,21 @@
 
 <div id="leftDiv">
 	
-	<a href="javascript:info()">Routing-Info</a>
-	
 	<form name="search">
 		<label for="start">Start:</label>
 		<input name="start" type="text" size="22" value="Brandenburger Tor"/>
-		<input type="hidden" name="startlon" value="13377655" />
-		<input type="hidden" name="startlat" value="52516471" />
 
-		<label for="stop">Halt:</label>
-		<input name="stop" type="text" size="22" />
-		<input type="hidden" name="stoplon" value="" />
-		<input type="hidden" name="stoplat" value="" />
+		<label for="via">Halt:</label>
+		<input name="via" type="text" size="22" />
 
 		<label for="end">Ziel:</label>
 		<input name="end" type="text" size="22" value="Arnimallee 3, Berlin" />
-		<input type="hidden" name="endlon" value="13297510" />
-		<input type="hidden" name="endlat" value="52455790" />
 
-		<input type="button" value="Start-/Zielpunkt suchen" class="mfbutton"
-			onclick="getStartEndPoints(this.form.start.value, this.form.stop.value, this.form.end.value);" />
-		<input type="button" value="Route berechnen" class="mfbutton" onclick="getroute();" />
+		<!-- <input type="button" value="Start-/Zielpunkt suchen" class="mfbutton"
+			onclick="getStartEndPoints(this.form.start.value, this.form.stop.value, this.form.end.value);" />-->
+		<input type="button" value="Route berechnen" class="mfbutton" onclick="hhRoute();" />
 		<input type="button" value="Neue Anfrage" class="mfbutton" onclick="newRequest();" />
+		
 	</form>
 	
 	<span id="resultAreaStart" /></span> 
