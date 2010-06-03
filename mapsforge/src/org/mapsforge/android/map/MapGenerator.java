@@ -183,7 +183,9 @@ abstract class MapGenerator extends Thread {
 	 * 
 	 * @return the default starting point.
 	 */
-	abstract GeoPoint getDefaultStartPoint();
+	GeoPoint getDefaultStartPoint() {
+		return new GeoPoint(51.33, 10.45);
+	}
 
 	/**
 	 * Returns the maximum zoom level that the MapGenerator can handle.

@@ -87,11 +87,6 @@ class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
-	GeoPoint getDefaultStartPoint() {
-		return new GeoPoint(51.33, 10.45);
-	}
-
-	@Override
 	byte getMaxZoomLevel() {
 		return ZOOM_MAX;
 	}

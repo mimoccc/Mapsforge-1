@@ -282,7 +282,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 */
 	private void addAreaSymbol(int currentWayNodes, int[] currentWayNodesSequence,
 			Bitmap symbolBitmap, byte zoomLevel) {
-		if (this.currentTile.zoomLevel >= zoomLevel) {
+		if (this.symbols != null && symbolBitmap != null
+				&& this.currentTile.zoomLevel >= zoomLevel) {
 			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
 					currentWayNodesSequence);
 			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
@@ -519,8 +520,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	private void addPOISymbol(float x, float y, Bitmap symbolBitmap) {
-		this.symbols.add((new SymbolContainer(symbolBitmap, x - (symbolBitmap.getWidth() >> 1),
-				y - (symbolBitmap.getHeight() >> 1))));
+		if (this.symbols != null && symbolBitmap != null) {
+			this.symbols.add((new SymbolContainer(symbolBitmap, x
+					- (symbolBitmap.getWidth() >> 1), y - (symbolBitmap.getHeight() >> 1))));
+		}
 	}
 
 	private void addWayName(String wayName, short wayNodes, int[] wayNodesSequence) {
@@ -1564,7 +1567,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	@Override
 	final GeoPoint getDefaultStartPoint() {
 		if (this.database == null || this.database.getMapBoundary() == null) {
-			return null;
+			return super.getDefaultStartPoint();
 		}
 		return this.database.getMapBoundary().getCenter();
 	}
