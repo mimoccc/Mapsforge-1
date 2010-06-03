@@ -26,6 +26,8 @@ public interface IRouter {
 
 	public IVertex getNearestVertex(GeoCoordinate coord);
 
+	public IVertex getVertex(int id);
+
 	public Iterator<? extends IVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
 			int maxLat);
 
@@ -40,5 +42,7 @@ public interface IRouter {
 	public int getMinLatitude();
 
 	public int getMaxLatitude();
+
+	public GeoCoordinate getMapCenter();
 
 }

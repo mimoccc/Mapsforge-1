@@ -19,7 +19,6 @@ package org.mapsforge.server.routing.highwayHierarchies;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -238,6 +237,17 @@ public class RouterImpl implements IRouter {
 		return Math.min(vertexIndex.getMinLongitude(), edgeIndex.getMinLongitude());
 	}
 
+	@Override
+	public GeoCoordinate getMapCenter() {
+		return new GeoCoordinate((getMaxLatitude() + getMinLatitude()) / 2,
+				(getMaxLongitude() + getMinLongitude()) / 2);
+	}
+
+	@Override
+	public IVertex getVertex(int id) {
+		return new HHVertex(routingGraph.getVertex(id));
+	}
+
 	private class HHEdge implements IEdge {
 
 		private HHStaticEdge e;
@@ -328,13 +338,10 @@ public class RouterImpl implements IRouter {
 		}
 	}
 
-	public static void main(String[] args) throws SQLException, FileNotFoundException,
-			IOException, ClassNotFoundException {
+	public static void main(String[] args) throws SQLException {
 		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
 				"osm", "osm");
 
-		// RouterImpl router = RouterImpl.getFromDb(conn);
-		// router.serialize(new FileOutputStream("router"));
 		IRouter router = RouterFactory.getRouter();
 		IEdge[] sp = router.getShortestPath(12, 12312);
 
@@ -349,5 +356,4 @@ public class RouterImpl implements IRouter {
 		}
 
 	}
-
 }

@@ -56,6 +56,7 @@ public class HHAlgorithm {
 	private BinaryMinHeap<DiscoveredVertex, HeapKey>[] queue;
 	private TIntObjectHashMap<DiscoveredVertex>[] discoveredVertices;
 
+	@SuppressWarnings("unchecked")
 	public HHAlgorithm() {
 		queue = new BinaryMinHeap[] {
 				new BinaryMinHeap<DiscoveredVertex, HeapKey>(INITIAL_QUEUE_SIZE),

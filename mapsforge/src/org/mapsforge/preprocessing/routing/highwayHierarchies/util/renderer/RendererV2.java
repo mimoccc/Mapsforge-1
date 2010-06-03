@@ -16,17 +16,35 @@
  */
 package org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer;
 
+import gnu.trove.set.hash.THashSet;
+
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.InRamCoordinateIndex;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
@@ -38,58 +56,10 @@ import com.jhlabs.map.proj.Projection;
 
 public class RendererV2 {
 
-	private static final double[] zoomLevels = getZoomLevels(20);
+	private static Color[] CLUSTER_COLORS = { Color.GREEN, Color.BLUE, Color.RED, Color.YELLOW,
+			Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK, Color.MAGENTA };
 
-	private final BufferedCanvas canvas;
-
-	private final Projection proj;
-	private final IRouter router;
-	private final HashMap<IEdge[], Color> routes;
-
-	private int zoomLevel;
-	private GeoCoordinate center;
-	private double screenW, screenH, metersPerPixel;
-	private double minX, minY;
-	private int minLon, minLat, maxLon, maxLat;
-
-	private Color bgColor, fgColor;
-
-	public RendererV2(int width, int height, IRouter router, Color bgColor, Color fgColor) {
-		this.screenW = width;
-		this.screenH = height;
-		this.proj = InRamCoordinateIndex.DEFAULT_PROJECTION_GERMANY;
-		this.router = router;
-
-		this.bgColor = bgColor;
-		this.fgColor = fgColor;
-
-		this.routes = new HashMap<IEdge[], Color>();
-		this.canvas = new BufferedCanvas(width, height);
-		canvas.clear(bgColor);
-
-		setRenderParam(new GeoCoordinate(
-				(router.getMaxLatitude() + router.getMinLatitude()) / 2, (router
-						.getMaxLongitude() + router.getMinLongitude()) / 2), 3);
-
-		new RendererFrame();
-	}
-
-	public void addRoute(IEdge[] route, Color c) {
-		if (route != null && c != null) {
-			synchronized (routes) {
-				routes.put(route, c);
-				drawRoutes();
-				update();
-			}
-		}
-	}
-
-	public void clearRoutes() {
-		synchronized (routes) {
-			routes.clear();
-			update();
-		}
-	}
+	private static final double[] ZOOM_LEVELS = getZoomLevels(20);
 
 	private static double[] getZoomLevels(int n) {
 		double[] tmp = new double[n];
@@ -100,33 +70,168 @@ public class RendererV2 {
 		return tmp;
 	}
 
-	public synchronized boolean zoomOut() {
-		if (zoomLevel < zoomLevels.length - 1) {
-			setRenderParam(center, zoomLevel + 1);
-			return true;
-		}
-		return false;
+	private final BufferedCanvas canvas;
+
+	private final Projection proj;
+	private final IRouter router;
+	private final HashMap<IEdge[], Color> routes;
+	private IClustering clustering;
+	private HashMap<ICluster, Color> clusterColors;
+
+	private int zoomLevel;
+	private GeoCoordinate center;
+	private double screenW, screenH, metersPerPixel;
+	private double minX, minY;
+	private int minLon, minLat, maxLon, maxLat;
+
+	private Color bgColor, fgColor;
+
+	public RendererV2(int width, int height, IRouter router, Color bgColor, Color fgColor) {
+		this.clustering = null;
+		this.screenW = width;
+		this.screenH = height;
+		this.proj = InRamCoordinateIndex.DEFAULT_PROJECTION_GERMANY;
+		this.router = router;
+
+		this.bgColor = bgColor;
+		this.fgColor = fgColor;
+
+		this.routes = new HashMap<IEdge[], Color>();
+		this.canvas = new BufferedCanvas(width, height);
+
+		canvas.clear(bgColor);
+		setRenderParam(router.getMapCenter(), 3);
+
+		new RendererGui();
 	}
 
-	public synchronized boolean zoomIn() {
-		if (zoomLevel > 0) {
-			setRenderParam(center, zoomLevel - 1);
-			return true;
-		}
-		return false;
+	public void setRenderParam(GeoCoordinate center, int zoomLevel) {
+		this.center = center;
+		this.zoomLevel = zoomLevel;
+		this.metersPerPixel = ZOOM_LEVELS[zoomLevel];
+
+		// project center
+		double[] tmp = new double[] { GeoCoordinate.itod(center.getLongitudeInt()),
+				GeoCoordinate.itod(center.getLatitudeInt()) };
+		proj.transform(tmp, 0, tmp, 0, 1);
+		double cx = tmp[0];
+		double cy = tmp[1];
+
+		// set bounding coordinates
+		minX = cx - (metersPerPixel * (screenW / 2));
+		// maxX = cx + (metersPerPixel * (screenW / 2));
+		minY = cy - (metersPerPixel * (screenH / 2));
+		// maxY = cy + (metersPerPixel * (screenH / 2));
+
+		GeoCoordinate minC = screenToGeo(0, 0);
+		GeoCoordinate maxC = screenToGeo((int) screenW, (int) screenH);
+
+		this.minLon = minC.getLongitudeInt();
+		this.minLat = minC.getLatitudeInt();
+		this.maxLon = maxC.getLongitudeInt();
+		this.maxLat = maxC.getLatitudeInt();
+
+		// update screen
+		drawRenderContent();
 	}
 
 	private void drawRenderContent() {
+		canvas.clear(bgColor);
 		drawGraph();
 		drawRoutes();
-	}
-
-	private void update() {
 		canvas.update();
 	}
 
-	private void clear() {
-		canvas.clear(bgColor);
+	public int getNumZoomLevels() {
+		return ZOOM_LEVELS.length;
+	}
+
+	public int getZoomLevel() {
+		return zoomLevel;
+	}
+
+	public boolean setZoomLevel(int zl) {
+		if (zl >= 0 && zl < ZOOM_LEVELS.length && zl != zoomLevel) {
+			zoomLevel = zl;
+			setRenderParam(center, zoomLevel);
+			return true;
+		}
+		return false;
+	}
+
+	public void addRoute(IEdge[] route, Color c) {
+		if (route != null && c != null) {
+			synchronized (routes) {
+				routes.put(route, c);
+				drawRoute(route, c);
+				canvas.update();
+			}
+		}
+	}
+
+	public void clearRoutes() {
+		synchronized (routes) {
+			routes.clear();
+			drawRenderContent();
+		}
+	}
+
+	public void setClustering(IClustering clustering) {
+		this.clustering = clustering;
+		if (clustering != null) {
+			clusterColors = getClusterColors();
+		}
+	}
+
+	private void drawClustering() {
+		if (clustering != null) {
+			HashMap<ICluster, Color> colors = getClusterColors();
+			for (ICluster c : colors.keySet()) {
+				for (int v : c.getVertices()) {
+					for (IEdge e : router.getVertex(v).getOutboundEdges()) {
+						if (clustering.getCluster(e.getSource().getId()) == clustering
+								.getCluster(e.getTarget().getId()))
+							drawEdge(e, colors.get(c), 1);
+					}
+				}
+			}
+		}
+	}
+
+	private HashMap<ICluster, Color> getClusterColors() {
+		HashMap<ICluster, Color> colors = new HashMap<ICluster, Color>();
+
+		for (ICluster cluster : clustering.getClusters()) {
+			HashSet<Color> adjColors = new HashSet<Color>();
+			for (ICluster adj : getAdjClusters(cluster)) {
+				Color cAdj = colors.get(adj);
+				if (cAdj != null) {
+					adjColors.add(cAdj);
+				}
+			}
+			for (int i = 0; i < CLUSTER_COLORS.length; i++) {
+				if (!adjColors.contains(CLUSTER_COLORS[i])) {
+					colors.put(cluster, CLUSTER_COLORS[i]);
+					break;
+				}
+			}
+		}
+		return colors;
+	}
+
+	private ICluster[] getAdjClusters(ICluster cluster) {
+		THashSet<ICluster> set = new THashSet<ICluster>();
+		for (int v : cluster.getVertices()) {
+			for (IEdge e : router.getVertex(v).getOutboundEdges()) {
+				ICluster c = clustering.getCluster(e.getTarget().getId());
+				if (c != null && !c.equals(cluster)) {
+					set.add(c);
+				}
+			}
+		}
+		ICluster[] adjClusters = new ICluster[set.size()];
+		set.toArray(adjClusters);
+		return adjClusters;
 	}
 
 	private void drawGraph() {
@@ -134,21 +239,39 @@ public class RendererV2 {
 				maxLon, maxLat); iter.hasNext();) {
 			IVertex v = iter.next();
 			for (IEdge e : v.getOutboundEdges()) {
-				ScreenCoordinate sc1 = geoToScreen(v.getCoordinate().getLongitudeInt(), v
-						.getCoordinate().getLatitudeInt());
-				ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate()
-						.getLongitudeInt(), e.getTarget().getCoordinate().getLatitudeInt());
-
-				canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, fgColor);
+				drawEdge(e, fgColor);
+				if (clustering != null) {
+					ICluster c1 = clustering.getCluster(e.getSource().getId());
+					ICluster c2 = clustering.getCluster(e.getTarget().getId());
+					if (c1 != null && c1 == c2) {
+						drawEdge(e, clusterColors.get(c1), 1);
+					} else {
+						drawEdge(e, fgColor);
+					}
+				} else {
+					drawEdge(e, fgColor);
+				}
 			}
 		}
 	}
 
+	private void drawEdge(IEdge e, Color c) {
+		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate().getLongitudeInt(), e
+				.getSource().getCoordinate().getLatitudeInt());
+		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate().getLongitudeInt(), e
+				.getTarget().getCoordinate().getLatitudeInt());
+		canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c);
+	}
+
+	private void drawEdge(IEdge e, Color c, int width) {
+		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate());
+		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate());
+		canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, width);
+	}
+
 	private void drawRoute(IEdge[] route, Color c) {
 		for (IEdge e : route) {
-			ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate());
-			ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate());
-			canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, 2);
+			drawEdge(e, c, 2);
 		}
 	}
 
@@ -189,38 +312,6 @@ public class RendererV2 {
 		return new GeoCoordinate(tmp[1], tmp[0]);
 	}
 
-	private void setRenderParam(GeoCoordinate center, int zoomLevel) {
-		this.center = center;
-		this.zoomLevel = zoomLevel;
-		this.metersPerPixel = zoomLevels[zoomLevel];
-
-		// project center
-		double[] tmp = new double[] { GeoCoordinate.itod(center.getLongitudeInt()),
-				GeoCoordinate.itod(center.getLatitudeInt()) };
-		proj.transform(tmp, 0, tmp, 0, 1);
-		double cx = tmp[0];
-		double cy = tmp[1];
-
-		// set bounding coordinates
-		minX = cx - (metersPerPixel * (screenW / 2));
-		// maxX = cx + (metersPerPixel * (screenW / 2));
-		minY = cy - (metersPerPixel * (screenH / 2));
-		// maxY = cy + (metersPerPixel * (screenH / 2));
-
-		GeoCoordinate minC = screenToGeo(0, 0);
-		GeoCoordinate maxC = screenToGeo((int) screenW, (int) screenH);
-
-		this.minLon = minC.getLongitudeInt();
-		this.minLat = minC.getLatitudeInt();
-		this.maxLon = maxC.getLongitudeInt();
-		this.maxLat = maxC.getLatitudeInt();
-
-		// update screen
-		canvas.clear(bgColor);
-		drawRenderContent();
-		canvas.update();
-	}
-
 	private class ScreenCoordinate {
 
 		private final int x, y;
@@ -231,57 +322,181 @@ public class RendererV2 {
 		}
 	}
 
-	private class RendererFrame extends JFrame {
+	private class RendererGui extends JFrame {
 
 		private static final long serialVersionUID = -7699248454662433016L;
 
-		private MyMouseAdapter mouseAdapter;
+		private MapMouseAdapter mouseAdapter;
+		private JSlider zoomSlider;
 
-		public RendererFrame() {
+		private GeoCoordinate routeSource, routeDestination;
+		private Object lockSrcTgt = new Boolean(true);
+
+		private final double SCROLL_FAC = 0.20;
+
+		public RendererGui() {
 			super("Graph Renderer v0.1a");
-			mouseAdapter = new MyMouseAdapter();
-			canvas.addMouseListener(mouseAdapter);
-			canvas.addMouseMotionListener(mouseAdapter);
-			canvas.addMouseWheelListener(mouseAdapter);
 
-			getContentPane().add(canvas);
+			// temporary for selection of source and target
+			this.routeSource = null;
+			this.routeDestination = null;
+
+			// add root all components
+			getContentPane().setLayout(new BorderLayout());
+			getContentPane().add(canvas, BorderLayout.CENTER);
+			this.zoomSlider = getMapZoomSlider();
+			getContentPane().add(zoomSlider, BorderLayout.EAST);
+
+			// set up display
 			pack();
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			setResizable(false);
 			setVisible(true);
+
+			// menu
+			PopMenu menu = new PopMenu();
+			canvas.addMouseListener(menu.getMouseAdapter());
+
+			// map mouse handling
+			mouseAdapter = new MapMouseAdapter();
+			canvas.addMouseListener(mouseAdapter);
+			canvas.addMouseMotionListener(mouseAdapter);
+			canvas.addMouseWheelListener(mouseAdapter);
+
+			// map keyboard handling
+			this.addKeyListener(getMapKeyAdapter());
+
 		}
 
-		private class MyMouseAdapter extends MouseAdapter {
+		private void setRouteSource(Point p) {
+			GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
+			synchronized (lockSrcTgt) {
+				routeSource = c;
+				triggerRouteComputation();
+			}
+		}
+
+		private void setRouteTarget(Point p) {
+			GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
+			synchronized (lockSrcTgt) {
+				routeDestination = c;
+				triggerRouteComputation();
+			}
+		}
+
+		private void triggerRouteComputation() {
+			synchronized (lockSrcTgt) {
+				if (routeSource != null && routeDestination != null) {
+					IVertex s = router.getNearestVertex(routeSource);
+					IVertex t = router.getNearestVertex(routeDestination);
+					IEdge[] route = router.getShortestPath(s.getId(), t.getId());
+					addRoute(route, Color.BLUE);
+					routeSource = null;
+					routeDestination = null;
+				}
+			}
+		}
+
+		private JSlider getMapZoomSlider() {
+			final JSlider slider = new JSlider(SwingConstants.VERTICAL, 0, getNumZoomLevels(),
+					getZoomLevel());
+			slider.setMajorTickSpacing(5);
+			slider.setMinorTickSpacing(1);
+			slider.setPaintTicks(true);
+			slider.setPaintLabels(true);
+			slider.setSnapToTicks(true);
+			slider.setPreferredSize(new Dimension(slider.getPreferredSize().width, 150));
+			slider.addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					if (!slider.getValueIsAdjusting()) {
+						setRenderParam(center, slider.getValue());
+					}
+				}
+			});
+
+			return slider;
+		}
+
+		private KeyAdapter getMapKeyAdapter() {
+			return new KeyAdapter() {
+				@Override
+				public void keyReleased(KeyEvent e) {
+					switch (e.getKeyChar()) {
+						case '-': {
+							setZoomLevel(getZoomLevel() - 1);
+							return;
+						}
+						case '+': {
+							setZoomLevel(getZoomLevel() + 1);
+							return;
+						}
+					}
+
+					switch (e.getKeyCode()) {
+
+						case KeyEvent.VK_DOWN: {
+							int x = (int) (screenW / 2);
+							int y = (int) ((screenH / 2) - (SCROLL_FAC * screenH));
+							setRenderParam(screenToGeo(x, y), zoomLevel);
+							return;
+						}
+						case KeyEvent.VK_UP: {
+							int x = (int) (screenW / 2);
+							int y = (int) ((screenH / 2) + (SCROLL_FAC * screenH));
+							setRenderParam(screenToGeo(x, y), zoomLevel);
+							return;
+						}
+						case KeyEvent.VK_LEFT: {
+							int x = (int) ((screenW / 2) - (SCROLL_FAC * screenH));
+							int y = (int) (screenH / 2);
+							setRenderParam(screenToGeo(x, y), zoomLevel);
+							return;
+						}
+						case KeyEvent.VK_RIGHT: {
+							int x = (int) ((screenW / 2) + (SCROLL_FAC * screenH));
+							int y = (int) (screenH / 2);
+							setRenderParam(screenToGeo(x, y), zoomLevel);
+							return;
+						}
+
+					}
+				}
+			};
+		}
+
+		private class MapMouseAdapter extends MouseAdapter {
 
 			private Point lastDragPoint;
-			private final MyMouseAdapter lock;
-			private GeoCoordinate source;
+			private final Object lockDragPoint;
 			private final DecimalFormat df;
 
-			public MyMouseAdapter() {
+			public MapMouseAdapter() {
 				super();
 				this.df = new DecimalFormat("#.#####");
 				df.setMinimumFractionDigits(5);
 				df.setMaximumFractionDigits(5);
 				lastDragPoint = null;
-				lock = this;
-				source = null;
+				lockDragPoint = new Object();
 			}
 
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
-				synchronized (lock) {
-					if (e.getUnitsToScroll() < 0) {
-						zoomIn();
-					} else {
-						zoomOut();
-					}
+				int zl = getZoomLevel();
+				if (e.getUnitsToScroll() < 0) {
+					zl--;
+				} else {
+					zl++;
+				}
+				if (zl > 0 && zl < getNumZoomLevels()) {
+					zoomSlider.setValue(zl);
 				}
 			}
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				synchronized (lock) {
+				synchronized (lockDragPoint) {
 					if (lastDragPoint != null) {
 						int dx = lastDragPoint.x - e.getPoint().x;
 						int dy = e.getPoint().y - lastDragPoint.y;
@@ -297,7 +512,7 @@ public class RendererV2 {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					synchronized (lock) {
+					synchronized (lockDragPoint) {
 						lastDragPoint = null;
 					}
 				}
@@ -306,25 +521,8 @@ public class RendererV2 {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
-					synchronized (lock) {
+					synchronized (lockDragPoint) {
 						lastDragPoint = e.getPoint();
-					}
-				}
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					Point p = e.getPoint();
-					if (source == null) {
-						source = screenToGeo(p.x, (int) screenH - p.y);
-					} else {
-						GeoCoordinate target = screenToGeo(p.x, (int) screenH - p.y);
-						IVertex s = router.getNearestVertex(source);
-						IVertex t = router.getNearestVertex(target);
-						IEdge[] route = router.getShortestPath(s.getId(), t.getId());
-						addRoute(route, Color.BLUE);
-						source = null;
 					}
 				}
 			}
@@ -335,6 +533,103 @@ public class RendererV2 {
 				GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
 				canvas.setToolTipText("(" + df.format(c.getLatitude().getDegree()) + ","
 						+ df.format(c.getLongitude().getDegree()) + ")");
+			}
+		}
+
+		private class PopMenu extends JPopupMenu {
+
+			private static final long serialVersionUID = 1L;
+
+			private MouseAdapter mouseListener;
+			private Color cSelected = Color.green.darker().darker();
+			private Point position;
+
+			public PopMenu() {
+				super();
+				mouseListener = new MouseAdapter() {
+
+					@Override
+					public void mouseReleased(MouseEvent e) {
+						if (e.isPopupTrigger()) {
+							show(e.getComponent(), e.getX(), e.getY());
+							position = e.getPoint();
+						}
+					}
+				};
+				add(getRouterMenu());
+				add(getMapMenu());
+			}
+
+			public MouseAdapter getMouseAdapter() {
+				return mouseListener;
+			}
+
+			private JMenu getMapMenu() {
+				JMenu menu = new JMenu("map");
+				JMenuItem miCenter = new JMenuItem("go to center");
+				miCenter.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						setRenderParam(router.getMapCenter(), zoomLevel);
+					}
+				});
+				menu.add(miCenter);
+				return menu;
+			}
+
+			private JMenu getRouterMenu() {
+				JMenu menu = new JMenu("routing");
+				JMenuItem miSrc = new JMenuItem("choose as source") {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public Color getForeground() {
+						if (routeSource == null) {
+							return super.getForeground();
+						}
+						return cSelected;
+					}
+				};
+				miSrc.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						setRouteSource(position);
+					}
+				});
+				menu.add(miSrc);
+				JMenuItem miDst = new JMenuItem("choose as destination") {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public Color getForeground() {
+						if (routeDestination == null) {
+							return super.getForeground();
+						}
+						return cSelected;
+					}
+				};
+				miDst.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						setRouteTarget(position);
+					}
+				});
+				menu.add(miDst);
+
+				JMenuItem miClear = new JMenuItem("clear Routes");
+				miClear.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						clearRoutes();
+					}
+				});
+				menu.add(miClear);
+
+				return menu;
 			}
 		}
 	}

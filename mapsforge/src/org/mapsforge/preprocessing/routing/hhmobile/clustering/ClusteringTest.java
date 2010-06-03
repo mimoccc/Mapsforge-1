@@ -31,10 +31,11 @@ import org.mapsforge.preprocessing.routing.hhmobile.clustering.DirectedWeightedS
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.HHRenderer;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouter;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterFactory;
+import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.RouterFactory;
 
 public class ClusteringTest {
 
@@ -43,7 +44,7 @@ public class ClusteringTest {
 
 		// get data from db
 
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "germany",
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
 				"postgres", "admin");
 		DirectedWeightedStaticArrayGraph graph = DirectedWeightedStaticArrayGraph.buildHHGraph(
 				conn, 0);
@@ -66,33 +67,36 @@ public class ClusteringTest {
 		KCenterClustering kCenterClustering = kCenterAlgorithm.computeClustering(graph, k,
 				KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 
-		HHRouter router = HHRouterFactory.getHHRouterInstance();
-		HHRenderer renderer1 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 600);
-		drawClustering(renderer1, graph, kCenterClustering, getClusterColors(graph,
-				kCenterClustering));
-		renderer1.update();
+		IRouter router = RouterFactory.getRouter();
+		RendererV2 renderer1 = new RendererV2(1024, 768, router, Color.white, Color.black);
+		renderer1.setClustering(kCenterClustering);
 
-		// quad
-		QuadTreeClusteringAlgorithm quadAlgorithm = new QuadTreeClusteringAlgorithm();
-		QuadTreeClustering quadClustering = quadAlgorithm.computeClustering(graph, lon, lat,
-				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
-
-		HHRenderer renderer2 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 600);
-		drawClustering(renderer2, graph, quadClustering,
-				getClusterColors(graph, quadClustering));
-		renderer2.update();
-
-		// dijkstra based
-		DijkstraBasedClusteringAlgorithm dbAlgorithm = new DijkstraBasedClusteringAlgorithm();
-		QuadTreeClustering dbClustering = dbAlgorithm.computeClustering(graph,
-				avgVerticesPerCluster);
-
-		HHRenderer renderer3 = new HHRenderer(1920, 1200, router.routingGraph.graph,
-				router.routingGraph.vertexIndex, 600);
-		drawClustering(renderer3, graph, dbClustering, getClusterColors(graph, dbClustering));
-		renderer3.update();
+		// drawClustering(renderer1, graph, kCenterClustering, getClusterColors(graph,
+		// kCenterClustering));
+		// renderer1.update();
+		//
+		// // quad
+		// QuadTreeClusteringAlgorithm quadAlgorithm = new QuadTreeClusteringAlgorithm();
+		// QuadTreeClustering quadClustering = quadAlgorithm.computeClustering(graph, lon, lat,
+		// QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
+		//
+		// HHRenderer renderer2 = new HHRenderer(1920, 1200, router.routingGraph.graph,
+		// router.routingGraph.vertexIndex, 26);
+		// drawClustering(renderer2, graph, quadClustering,
+		// getClusterColors(graph, quadClustering));
+		// renderer2.update();
+		//
+		// // dijkstra based
+		// DijkstraBasedClusteringAlgorithm dbAlgorithm = new
+		// DijkstraBasedClusteringAlgorithm();
+		// QuadTreeClustering dbClustering = dbAlgorithm.computeClustering(graph,
+		// avgVerticesPerCluster);
+		//
+		// HHRenderer renderer3 = new HHRenderer(1920, 1200, router.routingGraph.graph,
+		// router.routingGraph.vertexIndex, 26);
+		// drawClustering(renderer3, graph, dbClustering, getClusterColors(graph,
+		// dbClustering));
+		// renderer3.update();
 
 	}
 
