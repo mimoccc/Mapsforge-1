@@ -27,7 +27,6 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
@@ -339,9 +338,6 @@ public class RouterImpl implements IRouter {
 	}
 
 	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm");
-
 		IRouter router = RouterFactory.getRouter();
 		IEdge[] sp = router.getShortestPath(12, 12312);
 

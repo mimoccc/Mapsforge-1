@@ -183,20 +183,20 @@ public class RendererV2 {
 		}
 	}
 
-	private void drawClustering() {
-		if (clustering != null) {
-			HashMap<ICluster, Color> colors = getClusterColors();
-			for (ICluster c : colors.keySet()) {
-				for (int v : c.getVertices()) {
-					for (IEdge e : router.getVertex(v).getOutboundEdges()) {
-						if (clustering.getCluster(e.getSource().getId()) == clustering
-								.getCluster(e.getTarget().getId()))
-							drawEdge(e, colors.get(c), 1);
-					}
-				}
-			}
-		}
-	}
+	// private void drawClustering() {
+	// if (clustering != null) {
+	// HashMap<ICluster, Color> colors = getClusterColors();
+	// for (ICluster c : colors.keySet()) {
+	// for (int v : c.getVertices()) {
+	// for (IEdge e : router.getVertex(v).getOutboundEdges()) {
+	// if (clustering.getCluster(e.getSource().getId()) == clustering
+	// .getCluster(e.getTarget().getId()))
+	// drawEdge(e, colors.get(c), 1);
+	// }
+	// }
+	// }
+	// }
+	// }
 
 	private HashMap<ICluster, Color> getClusterColors() {
 		HashMap<ICluster, Color> colors = new HashMap<ICluster, Color>();
