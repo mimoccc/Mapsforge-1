@@ -18,12 +18,10 @@ package org.mapsforge.android.map;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 
 /**
  * A MapGenerator that downloads map tiles from the openstreetmap server.
@@ -50,7 +48,7 @@ class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
-	void doMapGeneration(Tile tile) {
+	boolean generateTile(Tile tile) {
 		// build the relative path to the tile
 		this.stringBuilder.append(tile.zoomLevel);
 		this.stringBuilder.append("/");
@@ -64,25 +62,22 @@ class TileDownloadMapGenerator extends MapGenerator {
 			this.decodedBitmap = BitmapFactory.decodeStream(this.inputStream);
 			this.inputStream.close();
 
+			// check if the input stream could be decoded into a bitmap
 			if (this.decodedBitmap == null) {
-				// erase the tileBitmap with the default color
-				if (this.tileBitmap != null) {
-					this.tileBitmap.eraseColor(Color.rgb(248, 248, 248));
-				}
-			} else {
-				// copy all pixels from the decoded bitmap to the tile bitmap
-				this.decodedBitmap.getPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
-						DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
-				this.decodedBitmap.recycle();
-				if (this.tileBitmap != null) {
-					this.tileBitmap.setPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
-							DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
-				}
+				return false;
 			}
-		} catch (MalformedURLException e) {
-			Logger.e(e);
+
+			// copy all pixels from the decoded bitmap to the tile bitmap
+			this.decodedBitmap.getPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
+					DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
+			this.decodedBitmap.recycle();
+			if (this.tileBitmap != null) {
+				this.tileBitmap.setPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
+						DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
+			}
+			return true;
 		} catch (IOException e) {
-			Logger.e(e);
+			return false;
 		}
 	}
 

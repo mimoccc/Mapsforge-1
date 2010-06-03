@@ -34,6 +34,7 @@ abstract class MapGenerator extends Thread {
 	private MapView mapView;
 	private boolean pause;
 	private boolean ready;
+	private boolean requestMoreJobs;
 	private boolean scheduleNeeded;
 	private PriorityQueue<Tile> tempQueue;
 
@@ -85,23 +86,24 @@ abstract class MapGenerator extends Thread {
 			// check if the current job can be skipped or must be processed
 			if (!this.imageBitmapCache.containsKey(this.currentTile)
 					&& !this.imageFileCache.containsKey(this.currentTile)) {
-				doMapGeneration(this.currentTile);
+				// check if the tile was generated successfully
+				if (generateTile(this.currentTile)) {
+					if (isInterrupted()) {
+						break;
+					}
 
-				if (isInterrupted()) {
-					break;
+					// copy the tile to the MapView
+					this.mapView
+							.putTileOnBitmap(this.currentTile, this.currentTileBitmap, true);
+					this.mapView.postInvalidate();
+
+					// put the tile image in the cache
+					this.imageFileCache.put(this.currentTile, this.currentTileBitmap);
 				}
-
-				// copy the tile to the MapView
-				this.mapView.putTileOnBitmap(this.currentTile, this.currentTileBitmap, true);
-				this.mapView.postInvalidate();
-				Thread.yield();
-
-				// put the tile image in the cache
-				this.imageFileCache.put(this.currentTile, this.currentTileBitmap);
 			}
 
 			// if the job queue is empty, ask the MapView for more jobs
-			if (!isInterrupted() && this.jobQueue1.isEmpty()) {
+			if (!isInterrupted() && this.jobQueue1.isEmpty() && this.requestMoreJobs) {
 				this.mapView.requestMoreJobs();
 			}
 		}
@@ -171,12 +173,13 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method will by called when a map tile is needed.
+	 * This method will by called when a map tile needs to be generated.
 	 * 
 	 * @param tile
 	 *            the tile that is needed.
+	 * @return true, if the tile was generated successfully, false otherwise.
 	 */
-	abstract void doMapGeneration(Tile tile);
+	abstract boolean generateTile(Tile tile);
 
 	/**
 	 * Returns the default starting point on the map.
@@ -225,9 +228,13 @@ abstract class MapGenerator extends Thread {
 
 	/**
 	 * Request a scheduling of all tiles that are currently in the job queue.
+	 * 
+	 * @param askForMoreJobs
+	 *            true, if the MapGenerator may ask for more jobs, false otherwise.
 	 */
-	final synchronized void requestSchedule() {
+	final synchronized void requestSchedule(boolean askForMoreJobs) {
 		this.scheduleNeeded = true;
+		this.requestMoreJobs = askForMoreJobs;
 		if (!this.jobQueue1.isEmpty()) {
 			this.notify();
 		}

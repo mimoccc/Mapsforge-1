@@ -1476,47 +1476,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.database = null;
 	}
 
-	@Override
-	final void doMapGeneration(Tile tile) {
-		this.currentTile = tile;
-		// check if the paint parameters need to be set again
-		if (tile.zoomLevel != this.lastTileZoomLevel) {
-			setPaintParameters(tile.zoomLevel);
-			this.lastTileZoomLevel = tile.zoomLevel;
-		}
-
-		this.database.executeQuery(tile, tile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
-		if (isInterrupted()) {
-			return;
-		}
-		addCoastlines();
-
-		// erase the tileBitmap with the default color
-		this.tileBitmap.eraseColor(TILE_BACKGROUND);
-
-		// draw all map objects
-		drawWays(this.ways, LAYERS, LayerIds.LEVELS_PER_LAYER);
-		if (isInterrupted()) {
-			return;
-		}
-		drawWayNames(this.wayNames);
-		if (isInterrupted()) {
-			return;
-		}
-		drawMapSymbols(this.symbols);
-		if (isInterrupted()) {
-			return;
-		}
-		drawNodes(this.nodes);
-
-		if (DRAW_TILE_FRAMES) {
-			// draw tile frames
-			drawTileFrame();
-		}
-
-		finishMapGeneration();
-	}
-
 	/**
 	 * This method is called when the map symbols should be rendered.
 	 * 
@@ -1563,6 +1522,48 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * This method is called after all map objects have been rendered.
 	 */
 	abstract void finishMapGeneration();
+
+	@Override
+	final boolean generateTile(Tile tile) {
+		this.currentTile = tile;
+		// check if the paint parameters need to be set again
+		if (tile.zoomLevel != this.lastTileZoomLevel) {
+			setPaintParameters(tile.zoomLevel);
+			this.lastTileZoomLevel = tile.zoomLevel;
+		}
+
+		this.database.executeQuery(tile, tile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
+		if (isInterrupted()) {
+			return false;
+		}
+		addCoastlines();
+
+		// erase the tileBitmap with the default color
+		this.tileBitmap.eraseColor(TILE_BACKGROUND);
+
+		// draw all map objects
+		drawWays(this.ways, LAYERS, LayerIds.LEVELS_PER_LAYER);
+		if (isInterrupted()) {
+			return false;
+		}
+		drawWayNames(this.wayNames);
+		if (isInterrupted()) {
+			return false;
+		}
+		drawMapSymbols(this.symbols);
+		if (isInterrupted()) {
+			return false;
+		}
+		drawNodes(this.nodes);
+
+		if (DRAW_TILE_FRAMES) {
+			// draw tile frames
+			drawTileFrame();
+		}
+
+		finishMapGeneration();
+		return true;
+	}
 
 	@Override
 	final GeoPoint getDefaultStartPoint() {

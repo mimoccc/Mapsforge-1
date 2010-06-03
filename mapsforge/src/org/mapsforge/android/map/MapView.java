@@ -1033,7 +1033,7 @@ public class MapView extends ViewGroup {
 		}
 
 		// notify the MapGenerator to process the job list
-		this.mapGenerator.requestSchedule();
+		this.mapGenerator.requestSchedule(true);
 	}
 
 	boolean hasValidCenter() {
@@ -1182,7 +1182,7 @@ public class MapView extends ViewGroup {
 		}
 
 		// notify the MapGenerator to process the job list
-		this.mapGenerator.requestSchedule();
+		this.mapGenerator.requestSchedule(false);
 	}
 
 	void setCenter(GeoPoint point) {
