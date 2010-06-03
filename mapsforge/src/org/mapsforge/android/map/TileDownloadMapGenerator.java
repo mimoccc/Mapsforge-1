@@ -114,4 +114,10 @@ class TileDownloadMapGenerator extends MapGenerator {
 		this.pixelColors = new int[DOWNLOAD_TILE_SIZE * DOWNLOAD_TILE_SIZE];
 		this.stringBuilder = new StringBuilder(128);
 	}
+
+	@Override
+	void mapViewHasParent() {
+		// TODO Auto-generated method stub
+
+	}
 }

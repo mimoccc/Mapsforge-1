@@ -281,4 +281,6 @@ abstract class MapGenerator extends Thread {
 			this.notify();
 		}
 	}
+
+	abstract void mapViewHasParent();
 }

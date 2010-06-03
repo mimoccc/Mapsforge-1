@@ -101,4 +101,10 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	void setupRenderer(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
 	}
+
+	@Override
+	void mapViewHasParent() {
+		// TODO Auto-generated method stub
+
+	}
 }

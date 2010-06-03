@@ -757,7 +757,7 @@ public class MapView extends ViewGroup {
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
 			case OPENGL_RENDERER:
-				this.mapGenerator = new OpenGlMapGenerator(this.mapActivity);
+				this.mapGenerator = new OpenGlMapGenerator(this.mapActivity, this);
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
 			case TILE_DOWNLOAD:
@@ -954,6 +954,8 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
+
+			this.mapGenerator.mapViewHasParent();
 		}
 	}
 

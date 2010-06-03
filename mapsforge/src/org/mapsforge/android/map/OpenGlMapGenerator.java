@@ -18,16 +18,35 @@ package org.mapsforge.android.map;
 
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.opengl.GLSurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
 
 /**
  * A map renderer which uses a OpenGL for drawing.
  */
 class OpenGlMapGenerator extends DatabaseMapGenerator {
 	private static final String THREAD_NAME = "OpenGlMapGenerator";
+	private MapView mMapView;
+	private GLSurfaceView mGLSurfaceView;
+	private OpenGlMapRenderer mRenderer;
+	private Bitmap mBitmap;
+	private Context mContext;
 
-	OpenGlMapGenerator(Context context) {
+	OpenGlMapGenerator(Context context, MapView mapView) {
+		this.mContext = context;
+		this.mMapView = mapView;
+
+		this.mGLSurfaceView = new GLSurfaceView(context);
+		this.mRenderer = new OpenGlMapRenderer();
+
+		mGLSurfaceView.setRenderer(mRenderer);
+		mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		mGLSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
+				| GLSurfaceView.DEBUG_LOG_GL_CALLS);
 	}
 
 	@Override
@@ -58,7 +77,33 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void finishMapGeneration() {
-		// TODO Auto-generated method stub
+		while (mGLSurfaceView.getWidth() <= 0) {
+			try {
+				Logger.d("'waiting for width > 0 -- " + mGLSurfaceView.getWidth());
+				sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		Logger.d("width: " + mGLSurfaceView.getWidth() + " height: "
+				+ mGLSurfaceView.getHeight());
+
+		this.mGLSurfaceView.requestRender();
+
+		// wait for frame
+		while (!mRenderer.frameReady) {
+			try {
+				sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		// Logger.d("copying frame");
+		this.mBitmap = mRenderer.mBitmap;
+		this.mRenderer.frameReady = false;
 	}
 
 	@Override
@@ -68,6 +113,45 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void setupRenderer(Bitmap bitmap) {
-		// TODO Auto-generated method stub
+		this.mBitmap = bitmap;
+		this.mRenderer.setBitmap(bitmap);
+
 	}
+
+	@Override
+	void mapViewHasParent() {
+		final ViewGroup viewGroup = (ViewGroup) mMapView.getParent();
+		Logger.d("has parent");
+		if (viewGroup == null) {
+			Logger.d("  ViewGroup is null");
+			return;
+		}
+
+		Activity mActivity = (Activity) this.mContext;
+		mActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				viewGroup.addView(mGLSurfaceView, 256, 256);
+				// viewGroup.bringChildToFront(mGLSurfaceView);
+				mGLSurfaceView.setVisibility(View.VISIBLE);
+				// mGLSurfaceView.requestLayout();
+				// mGLSurfaceView.invalidate();
+				// mGLSurfaceView.requestFocus();
+			}
+		});
+	}
+	//
+	// @Override
+	// void onPause() {
+	// if (this.mGLSurfaceView != null) {
+	// this.mGLSurfaceView.onPause();
+	// }
+	// }
+	//
+	// @Override
+	// void onResume() {
+	// if (this.mGLSurfaceView != null) {
+	// this.mGLSurfaceView.onResume();
+	// }
+	// }
 }
