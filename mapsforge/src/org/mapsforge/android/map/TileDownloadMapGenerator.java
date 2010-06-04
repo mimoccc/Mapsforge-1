@@ -101,6 +101,16 @@ class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
+	void onAttachedToWindow() {
+		// do nothing
+	}
+
+	@Override
+	void onDetachedFromWindow() {
+		// do nothing
+	}
+
+	@Override
 	void prepareMapGeneration() {
 		this.stringBuilder.setLength(0);
 		this.stringBuilder.append("http://");
@@ -113,11 +123,5 @@ class TileDownloadMapGenerator extends MapGenerator {
 		this.tileBitmap = bitmap;
 		this.pixelColors = new int[DOWNLOAD_TILE_SIZE * DOWNLOAD_TILE_SIZE];
 		this.stringBuilder = new StringBuilder(128);
-	}
-
-	@Override
-	void mapViewHasParent() {
-		// TODO Auto-generated method stub
-
 	}
 }

@@ -98,13 +98,17 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void setupRenderer(Bitmap bitmap) {
-		this.canvas = new Canvas(bitmap);
+	void onAttachedToWindow() {
+		// do nothing
 	}
 
 	@Override
-	void mapViewHasParent() {
-		// TODO Auto-generated method stub
+	void onDetachedFromWindow() {
+		// do nothing
+	}
 
+	@Override
+	void setupMapGenerator(Bitmap bitmap) {
+		this.canvas = new Canvas(bitmap);
 	}
 }

@@ -18,11 +18,9 @@ package org.mapsforge.android.map;
 
 import java.util.ArrayList;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
-import android.view.View;
 import android.view.ViewGroup;
 
 /**
@@ -30,23 +28,14 @@ import android.view.ViewGroup;
  */
 class OpenGlMapGenerator extends DatabaseMapGenerator {
 	private static final String THREAD_NAME = "OpenGlMapGenerator";
-	private MapView mMapView;
-	private GLSurfaceView mGLSurfaceView;
-	private OpenGlMapRenderer mRenderer;
-	private Bitmap mBitmap;
-	private Context mContext;
+	private Context context;
+	private GLSurfaceView glSurfaceView;
+	private MapView mapView;
+	private OpenGlMapRenderer renderer;
 
 	OpenGlMapGenerator(Context context, MapView mapView) {
-		this.mContext = context;
-		this.mMapView = mapView;
-
-		this.mGLSurfaceView = new GLSurfaceView(context);
-		this.mRenderer = new OpenGlMapRenderer();
-
-		mGLSurfaceView.setRenderer(mRenderer);
-		mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		mGLSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
-				| GLSurfaceView.DEBUG_LOG_GL_CALLS);
+		this.context = context;
+		this.mapView = mapView;
 	}
 
 	@Override
@@ -77,33 +66,18 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void finishMapGeneration() {
-		while (mGLSurfaceView.getWidth() <= 0) {
-			try {
-				Logger.d("'waiting for width > 0 -- " + mGLSurfaceView.getWidth());
-				sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		Logger.d("width: " + mGLSurfaceView.getWidth() + " height: "
-				+ mGLSurfaceView.getHeight());
-
-		this.mGLSurfaceView.requestRender();
+		this.renderer.frameReady = false;
+		this.glSurfaceView.requestRender();
 
 		// wait for frame
-		while (!mRenderer.frameReady) {
+		while (!this.renderer.frameReady) {
 			try {
-				sleep(10);
+				sleep(20);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// restore the interrupted status
+				interrupt();
 			}
 		}
-		// Logger.d("copying frame");
-		this.mBitmap = mRenderer.mBitmap;
-		this.mRenderer.frameReady = false;
 	}
 
 	@Override
@@ -112,34 +86,26 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void setupRenderer(Bitmap bitmap) {
-		this.mBitmap = bitmap;
-		this.mRenderer.setBitmap(bitmap);
+	synchronized void onAttachedToWindow() {
+		Logger.d("onAttachedToWindow called");
+		this.renderer = new OpenGlMapRenderer();
+		this.glSurfaceView = new GLSurfaceView(this.context);
+		this.glSurfaceView.setRenderer(this.renderer);
+		this.glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		this.glSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
+				| GLSurfaceView.DEBUG_LOG_GL_CALLS);
 
+		((ViewGroup) this.mapView.getParent()).addView(this.glSurfaceView, 256, 256);
 	}
 
 	@Override
-	void mapViewHasParent() {
-		final ViewGroup viewGroup = (ViewGroup) mMapView.getParent();
-		Logger.d("has parent");
-		if (viewGroup == null) {
-			Logger.d("  ViewGroup is null");
-			return;
-		}
-
-		Activity mActivity = (Activity) this.mContext;
-		mActivity.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				viewGroup.addView(mGLSurfaceView, 256, 256);
-				// viewGroup.bringChildToFront(mGLSurfaceView);
-				mGLSurfaceView.setVisibility(View.VISIBLE);
-				// mGLSurfaceView.requestLayout();
-				// mGLSurfaceView.invalidate();
-				// mGLSurfaceView.requestFocus();
-			}
-		});
+	synchronized void onDetachedFromWindow() {
+		Logger.d("onDetachedFromWindow called");
+		// TODO: remove the GLSurfaceView from the view hierarchy
+		this.context = null;
+		this.mapView = null;
 	}
+
 	//
 	// @Override
 	// void onPause() {
@@ -154,4 +120,10 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	// this.mGLSurfaceView.onResume();
 	// }
 	// }
+
+	@Override
+	synchronized void setupMapGenerator(Bitmap bitmap) {
+		Logger.d("setupMapGenerator called");
+		this.renderer.setBitmap(bitmap);
+	}
 }

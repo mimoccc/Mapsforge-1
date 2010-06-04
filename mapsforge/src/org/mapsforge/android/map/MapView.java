@@ -94,6 +94,7 @@ public class MapView extends ViewGroup {
 		return file != null;
 	}
 
+	private boolean attachedToWindow;
 	private Tile currentTile;
 	private long currentTime;
 	private Database database;
@@ -764,6 +765,9 @@ public class MapView extends ViewGroup {
 				this.mapGenerator = new TileDownloadMapGenerator();
 				break;
 		}
+		if (this.attachedToWindow) {
+			this.mapGenerator.onAttachedToWindow();
+		}
 		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
 		this.mapGenerator.setMapView(this);
 		this.mapGenerator.start();
@@ -779,6 +783,7 @@ public class MapView extends ViewGroup {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
 			}
+			this.mapGenerator.onDetachedFromWindow();
 			this.mapGenerator = null;
 		}
 	}
@@ -806,7 +811,17 @@ public class MapView extends ViewGroup {
 	}
 
 	@Override
+	protected void onAttachedToWindow() {
+		this.attachedToWindow = true;
+		if (this.mapGenerator != null) {
+			this.mapGenerator.onAttachedToWindow();
+		}
+	}
+
+	@Override
 	protected void onDetachedFromWindow() {
+		this.attachedToWindow = false;
+
 		// unregister the MapView in the MapActivity
 		if (this.mapActivity != null) {
 			this.mapActivity.unregisterMapView(this);
@@ -954,8 +969,6 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
-
-			this.mapGenerator.mapViewHasParent();
 		}
 	}
 

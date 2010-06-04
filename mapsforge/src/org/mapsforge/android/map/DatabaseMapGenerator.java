@@ -3214,7 +3214,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.coastlineEnds = new TreeMap<GeoPoint, int[]>();
 		this.coastlineStarts = new TreeMap<GeoPoint, int[]>();
 
-		setupRenderer(this.tileBitmap);
+		setupMapGenerator(this.tileBitmap);
 	}
 
 	/**
@@ -3224,5 +3224,5 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param bitmap
 	 *            the bitmap on which all future tiles need to be copied.
 	 */
-	abstract void setupRenderer(Bitmap bitmap);
+	abstract void setupMapGenerator(Bitmap bitmap);
 }

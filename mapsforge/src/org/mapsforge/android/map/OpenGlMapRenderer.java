@@ -24,28 +24,23 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.graphics.Bitmap;
 
-public class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
-
-	int vboHandle;
-
-	GL10 mGL;
-
-	private Random mRandom;
-
-	Bitmap mBitmap;
-
+class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
+	private Bitmap bitmap;
+	private GL10 mGL;
+	private ByteBuffer pixelBuffer;
+	private Random random;
 	boolean frameReady;
 
-	public OpenGlMapRenderer() {
-		Logger.d("OpenGlMapRenderer constructor");
-		this.mRandom = new Random();
-		this.frameReady = false;
+	OpenGlMapRenderer() {
+		Logger.d("OpenGlMapRenderer called");
+		this.random = new Random();
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
+		Logger.d("onDrawFrame called");
 
-		gl.glClearColor(this.mRandom.nextFloat(), this.mRandom.nextFloat(), this.mRandom
+		gl.glClearColor(this.random.nextFloat(), this.random.nextFloat(), this.random
 				.nextFloat(), 1);
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glLoadIdentity(); // Reset The Current Modelview Matrix
@@ -65,18 +60,13 @@ public class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer 
 		//
 		// gl11.glDrawArrays(GL10.GL_TRIANGLE_FAN, 0, 4);
 
-		Logger.d(" drawing frame.");
-
-		final int numPixelBytes = 4 * mBitmap.getHeight() * mBitmap.getWidth();
-
 		// int[] b = new int[numPixelBytes];
 		// int[] bt = new int[numPixelBytes];
 		// IntBuffer pixelBuffer = IntBuffer.wrap(b);
 
-		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(numPixelBytes);
 		// pixelBuffer.order(ByteOrder.nativeOrder());
 
-		// if (mBitmap == null) {
+		// if (bitmap == null) {
 		// Logger.d("Bitmap is null");
 		// }
 		//
@@ -88,36 +78,17 @@ public class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer 
 		// Logger.d("mGL is null");
 		// }
 
-		// pixelBuffer.position(0);
-		mGL.glReadPixels(0, 0, mBitmap.getWidth(), mBitmap.getHeight(), GL10.GL_RGBA,
-				GL10.GL_UNSIGNED_BYTE, pixelBuffer);
-
-		// pixelBuffer.rewind();
-		// for (int i = 0; i < mBitmap.getHeight(); i++) {// remember, that OpenGL bitmap is
-		// // incompatible with Android bitmap
-		// // and so, some correction need.
-		// for (int j = 0; j < mBitmap.getWidth(); j++) {
-		// int pix = b[i * mBitmap.getWidth() + j];
-		// int pb = (pix >> 16) & 0xff;
-		// int pr = (pix << 16) & 0x00ff0000;
-		// int pix1 = (pix & 0xff00ff00) | pr | pb;
-		// bt[(mBitmap.getHeight() - i - 1) * mBitmap.getWidth() + j] = pix1;
-		// }
-		// }
-		// this.mBitmap = Bitmap.createBitmap(bt, mBitmap.getWidth(), mBitmap.getHeight(),
-		// Bitmap.Config.ALPHA_8);
-		//		
-
-		this.mBitmap.copyPixelsFromBuffer(pixelBuffer);
-
-		frameReady = true;
-		Logger.d("frame ready");
-
+		if (this.pixelBuffer != null) {
+			this.mGL.glReadPixels(0, 0, this.bitmap.getWidth(), this.bitmap.getHeight(),
+					GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, this.pixelBuffer);
+			this.bitmap.copyPixelsFromBuffer(this.pixelBuffer);
+			this.frameReady = true;
+		}
 	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
-		// TODO Auto-generated method stub
+		Logger.d("onSurfaceChanged called, width: " + width + ", height: " + height);
 
 		gl.glViewport(0, 0, width, height);
 
@@ -133,14 +104,11 @@ public class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer 
 		gl.glDisable(GL10.GL_LIGHTING);
 		gl.glEnable(GL10.GL_LINE_SMOOTH);
 		gl.glEnable(GL10.GL_POINT_SMOOTH);
-
-		// mGL11 = (GL11) gl;
-
-		Logger.d("onSurfaceChanged() width: " + width + " height:" + height);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		Logger.d("onSurfaceCreated called");
 
 		// gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
 		// gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
@@ -190,13 +158,12 @@ public class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer 
 		// // data
 		// gl11.glBindBuffer(GL11.GL_ARRAY_BUFFER, 0); // unbind the buffer
 
-		mGL = gl;
-		Logger.d("onSurfaceCreated()");
-
+		this.mGL = gl;
 	}
 
-	public void setBitmap(Bitmap bitmap) {
-		this.mBitmap = bitmap;
+	void setBitmap(Bitmap bitmap) {
+		this.bitmap = bitmap;
+		this.pixelBuffer = ByteBuffer.allocateDirect(4 * this.bitmap.getHeight()
+				* this.bitmap.getWidth());
 	}
-
 }

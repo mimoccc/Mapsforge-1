@@ -213,6 +213,10 @@ abstract class MapGenerator extends Thread {
 		return this.ready;
 	}
 
+	abstract void onAttachedToWindow();
+
+	abstract void onDetachedFromWindow();
+
 	/**
 	 * Request the MapGenerator to stop working.
 	 */
@@ -281,6 +285,4 @@ abstract class MapGenerator extends Thread {
 			this.notify();
 		}
 	}
-
-	abstract void mapViewHasParent();
 }
