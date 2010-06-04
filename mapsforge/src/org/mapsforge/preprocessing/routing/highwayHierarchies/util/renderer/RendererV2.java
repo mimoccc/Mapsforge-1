@@ -40,12 +40,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.InRamCoordinateIndex;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
@@ -53,6 +53,7 @@ import org.mapsforge.server.routing.IVertex;
 import org.mapsforge.server.routing.RouterFactory;
 
 import com.jhlabs.map.proj.Projection;
+import com.jhlabs.map.proj.ProjectionFactory;
 
 public class RendererV2 {
 
@@ -60,6 +61,11 @@ public class RendererV2 {
 			Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK, Color.MAGENTA };
 
 	private static final double[] ZOOM_LEVELS = getZoomLevels(20);
+
+	public final static Projection PROJ = ProjectionFactory
+			.fromPROJ4Specification(new String[] { "+proj=cass", "+lat_0=52.41864827777778",
+					"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
+					"+datum=potsdam", "+units=m", "+no_defs" });
 
 	private static double[] getZoomLevels(int n) {
 		double[] tmp = new double[n];
@@ -72,7 +78,6 @@ public class RendererV2 {
 
 	private final BufferedCanvas canvas;
 
-	private final Projection proj;
 	private final IRouter router;
 	private final HashMap<IEdge[], Color> routes;
 	private IClustering clustering;
@@ -90,7 +95,6 @@ public class RendererV2 {
 		this.clustering = null;
 		this.screenW = width;
 		this.screenH = height;
-		this.proj = InRamCoordinateIndex.DEFAULT_PROJECTION_GERMANY;
 		this.router = router;
 
 		this.bgColor = bgColor;
@@ -113,7 +117,7 @@ public class RendererV2 {
 		// project center
 		double[] tmp = new double[] { GeoCoordinate.itod(center.getLongitudeInt()),
 				GeoCoordinate.itod(center.getLatitudeInt()) };
-		proj.transform(tmp, 0, tmp, 0, 1);
+		PROJ.transform(tmp, 0, tmp, 0, 1);
 		double cx = tmp[0];
 		double cy = tmp[1];
 
@@ -181,6 +185,8 @@ public class RendererV2 {
 		if (clustering != null) {
 			clusterColors = getClusterColors();
 		}
+		drawRenderContent();
+		canvas.update();
 	}
 
 	// private void drawClustering() {
@@ -289,7 +295,7 @@ public class RendererV2 {
 	private ScreenCoordinate geoToScreen(int lon, int lat) {
 		// projection to carthesian coordinate (x, y)
 		double[] tmp = new double[] { GeoCoordinate.itod(lon), GeoCoordinate.itod(lat) };
-		proj.transform(tmp, 0, tmp, 0, 1);
+		PROJ.transform(tmp, 0, tmp, 0, 1);
 		double x = tmp[0];
 		double y = tmp[1];
 
@@ -307,7 +313,7 @@ public class RendererV2 {
 
 		// inverse projection
 		double[] tmp = new double[] { x, y };
-		proj.inverseTransform(tmp, 0, tmp, 0, 1);
+		PROJ.inverseTransform(tmp, 0, tmp, 0, 1);
 
 		return new GeoCoordinate(tmp[1], tmp[0]);
 	}
@@ -349,7 +355,7 @@ public class RendererV2 {
 
 			// set up display
 			pack();
-			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			setResizable(false);
 			setVisible(true);
 

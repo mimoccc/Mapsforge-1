@@ -22,16 +22,18 @@ import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 public class DirectedWeightedStaticArrayGraph {
+
+	private static final int MSG_INT = 100000;
 
 	private final int[] vFirstOutboundEdge;
 	private final int[] eWeight;
 	private final int[] eTarget;
 	private final int numConnectedVertices;
 
-	private DirectedWeightedStaticArrayGraph(int[] vFirstOutboundEdge, int[] eWeight, int[] eTarget) {
+	private DirectedWeightedStaticArrayGraph(int[] vFirstOutboundEdge, int[] eWeight,
+			int[] eTarget) {
 		this.vFirstOutboundEdge = vFirstOutboundEdge;
 		this.eWeight = eWeight;
 		this.eTarget = eTarget;
@@ -46,7 +48,9 @@ public class DirectedWeightedStaticArrayGraph {
 		numConnectedVertices = count;
 	}
 
-	public static DirectedWeightedStaticArrayGraph buildHHGraph(Connection conn, int lvl) throws SQLException {
+	public static DirectedWeightedStaticArrayGraph buildHHGraph(Connection conn, int lvl)
+			throws SQLException {
+		System.out.println("building graph (lvl=" + lvl + ")");
 		HHDbReader reader = new HHDbReader(conn);
 		int numVertices = reader.numVertices();
 		int numEdges = reader.numEdges(lvl);
@@ -70,7 +74,14 @@ public class DirectedWeightedStaticArrayGraph {
 			eWeight[offset] = e.weight;
 			eTarget[offset] = e.targetId;
 			offset++;
+			if (offset % MSG_INT == 0) {
+				System.out.println("[build graph] edges : " + (offset - MSG_INT) + " - "
+						+ offset);
+			}
 		}
+		System.out.println("[build graph] edges : " + ((offset / MSG_INT) * MSG_INT) + " - "
+				+ offset);
+
 		// some vertices might have no edges -> we need to initialize the offset nervertheless
 		vFirstOutboundEdge[numVertices] = numEdges;
 		for (int j = vFirstOutboundEdge.length - 2; j >= 0; j--) {
@@ -163,26 +174,4 @@ public class DirectedWeightedStaticArrayGraph {
 			return eWeight[id];
 		}
 	}
-
-	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm");
-
-		DirectedWeightedStaticArrayGraph g = buildHHGraph(conn, 1);
-		System.out.println(g.numVertices());
-		System.out.println(g.numEdges());
-		int count = 0;
-		int maxDegree = 0;
-		for (int i = 0; i < g.numVertices(); i++) {
-			System.out.println(g.getOutboundEdges(g.getVertex(i)).length);
-			if (g.getOutboundEdges(g.getVertex(i)).length > 0)
-				count++;
-
-			maxDegree = Math.max(maxDegree, g.getOutboundEdges(g.getVertex(i)).length);
-		}
-		System.out.println("numVertices : " + count);
-		System.out.println("maxDegree : " + maxDegree);
-
-	}
-
 }

@@ -30,6 +30,9 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBi
 
 public class KCenterClusteringAlgorithm {
 
+	private static final int MSG_INT_BUILD_CLUSTERS = 100000;
+	private static final int MSG_INT_SAMPLE_DOWN = 1000;
+
 	public static final int HEURISTIC_MIN_SIZE = 0;
 	public static final int HEURISTIC_MIN_RADIUS = 1;
 
@@ -43,7 +46,7 @@ public class KCenterClusteringAlgorithm {
 		System.out.println("randomly choosing k' centers");
 		KCenterClustering clustering = chooseRandomCenters(graph, k_);
 
-		System.out.println("expanding the clusters from their centers");
+		System.out.println("building clusters from centers");
 		expandClusters(graph, clustering);
 
 		System.out.println("sampling down to k = " + Math.min(k, k_) + " clusters");
@@ -84,6 +87,7 @@ public class KCenterClusteringAlgorithm {
 		BitArray visited = new BitArray(graph.numVertices());
 
 		// dijkstra loop
+		int count = 0;
 		while (!queue.isEmpty()) {
 			// dequeue vertex u
 			HeapItem uItem = queue.extractMin();
@@ -116,17 +120,30 @@ public class KCenterClusteringAlgorithm {
 					}
 				}
 			}
+			if ((++count % MSG_INT_BUILD_CLUSTERS == 0)) {
+				System.out.println("[build clusters] vertices : "
+						+ (count - MSG_INT_BUILD_CLUSTERS) + " - " + count);
+			}
 		}
+		System.out.println("[build clusters] vertices : "
+				+ ((count / MSG_INT_BUILD_CLUSTERS) * MSG_INT_BUILD_CLUSTERS) + " - " + count);
 	}
 
 	private void sampleDown(DirectedWeightedStaticArrayGraph graph,
 			KCenterClustering clustering, int k, int k_, int heuristik) {
-		while (k_ > k) {
-			System.out.println(k_);
+		int count = 0;
+		while (k_ - count > k) {
 			Cluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
 			removeClusterAndRearrange(graph, clustering, cluster);
-			k_--;
+			count++;
+			if (count % MSG_INT_SAMPLE_DOWN == 0) {
+				System.out.println("[sample down] clusters : " + (count - MSG_INT_SAMPLE_DOWN)
+						+ " - " + count);
+			}
 		}
+		System.out.println("[sample down] clusters : "
+				+ ((count / MSG_INT_SAMPLE_DOWN) * MSG_INT_SAMPLE_DOWN) + " - " + count);
+
 	}
 
 	private void removeClusterAndRearrange(DirectedWeightedStaticArrayGraph graph,

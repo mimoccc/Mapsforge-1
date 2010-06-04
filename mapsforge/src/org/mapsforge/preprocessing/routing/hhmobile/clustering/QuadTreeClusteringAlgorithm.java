@@ -27,6 +27,9 @@ public class QuadTreeClusteringAlgorithm {
 	public static final int HEURISTIC_MEDIAN = 1;
 	public static final int HEURISTIC_AVERAGE = 2;
 
+	private static final String[] HEURISTIC_NAMES = new String[] { "center", "median",
+			"average" };
+
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MEDIAN;
 
 	private final QuickSort quicksort;
@@ -41,6 +44,9 @@ public class QuadTreeClusteringAlgorithm {
 			throw new IllegalArgumentException(
 					"Must pass exactly one coordinate for each vertex");
 		}
+		System.out.println("computing quad-clustering (|V|=" + graph.numVertices()
+				+ ", threshold=" + threshold + ", heuristic=" + HEURISTIC_NAMES[heuristik]
+				+ ")");
 
 		// due to reordering we also store and reorder vertexIds to keep the mapping
 		int[] vertexId = new int[lon.length];
