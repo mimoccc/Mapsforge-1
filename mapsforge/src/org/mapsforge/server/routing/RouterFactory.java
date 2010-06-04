@@ -40,7 +40,11 @@ public class RouterFactory {
 	private final static Logger logger = Logger.getLogger(RouterFactory.class.getName());
 
 	public static IRouter getRouter() {
-		Properties props = loadProperties();
+		return getRouter(PROPERTIES_FILE);
+	}
+	
+	public static IRouter getRouter(String fileURI) {
+		Properties props = loadProperties(fileURI);
 		if (props != null) {
 			String algorithm = props.getProperty("algorithm");
 			if (algorithm == null) {
@@ -118,11 +122,11 @@ public class RouterFactory {
 		return hhRouter;
 	}
 
-	private static Properties loadProperties() {
+	private static Properties loadProperties(String fileURI) {
 		Properties props = null;
 		try {
 			props = new Properties();
-			props.load(new FileInputStream(PROPERTIES_FILE));
+			props.load(new FileInputStream(fileURI));
 		} catch (FileNotFoundException e) {
 		} catch (IOException e) {
 		}
