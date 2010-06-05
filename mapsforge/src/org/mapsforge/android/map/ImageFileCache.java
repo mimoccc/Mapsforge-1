@@ -30,6 +30,9 @@ import android.graphics.Bitmap;
  * A cache for image files with a fixed size and LRU policy.
  */
 class ImageFileCache {
+	/**
+	 * The load factor of the internal HashMap.
+	 */
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
 	private int capacity;
@@ -65,7 +68,7 @@ class ImageFileCache {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public boolean removeEldestEntry(Map.Entry<Tile, File> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<Tile, File> eldest) {
 				if (size() > initialCapacity) {
 					// remove the entry from the cache and delete the cached file
 					this.remove(eldest.getKey());

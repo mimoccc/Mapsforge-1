@@ -61,8 +61,8 @@ public class MapView extends ViewGroup {
 	static final byte DEFAULT_ZOOM_LEVEL = 14;
 	static final double LATITUDE_MAX = 85.0511;
 	static final double LATITUDE_MIN = -85.0511;
-	final static double LONGITUDE_MAX = 180;
-	final static double LONGITUDE_MIN = -180;
+	static final double LONGITUDE_MAX = 180;
+	static final double LONGITUDE_MIN = -180;
 
 	/**
 	 * Returns the default operation mode of a MapView.

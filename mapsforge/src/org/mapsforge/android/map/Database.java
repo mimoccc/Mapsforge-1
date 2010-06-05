@@ -27,10 +27,10 @@ import java.util.HashSet;
 class Database {
 	private static final byte DATABASE_ZOOM_MAX = 18;
 	private int blockNumber;
-	private int[] blockPointers;
 	private int blockSize;
-	private int[] blockSizes;
 	private int bufferPosition;
+	private long currentBlockPointer;
+	private int currentBlockSize;
 	private long currentColumn;
 	private short currentInnerWayNodes;
 	private String currentName;
@@ -53,6 +53,7 @@ class Database {
 	private byte currentWayNumberOfTags;
 	private byte currentWayTagBitmap;
 	private boolean[] currentWayTagIds;
+	private DatabaseIndexCache databaseIndexCache;
 	private boolean[] defaultNodeTagIds;
 	private boolean[] defaultWayTagIds;
 	private int elementCounter;
@@ -70,6 +71,7 @@ class Database {
 	private int matrixHeight;
 	private int matrixWidth;
 	private byte[] nameBuffer = new byte[128];
+	private long nextBlockPointer;
 	private int nodeListSizeInBytes;
 	private short nodesOnZoomLevel;
 	private byte numberOfInnerWays;
@@ -88,6 +90,20 @@ class Database {
 	 */
 	Database() {
 		this.ways = new HashSet<Integer>((int) (5000 / 0.5f) + 2, 0.5f);
+	}
+
+	/**
+	 * Create the DatabaseIndexCache.
+	 */
+	private void handleIndexBlockPointers() {
+		this.databaseIndexCache = new DatabaseIndexCache(this.inputFile, this.matrixBlocks,
+				this.firstBlockPointer, 16);
+		// 12 bytes per block (block id, block pointer and block size)
+		int blockPointerSize = this.matrixBlocks * 12;
+		this.firstBlockPointer += blockPointerSize;
+
+		// FIXME: we don't know the size of the largest block!
+		this.readBuffer = new byte[1000000];
 	}
 
 	/**
@@ -308,54 +324,13 @@ class Database {
 	}
 
 	/**
-	 * Read the block pointers and sizes in the current map file.
-	 * 
-	 * @throws IOException
-	 *             if an error occurs while processing the data
-	 */
-	private void readBlockPointers() throws IOException {
-		try {
-			// 12 bytes per block (block id, block pointer and block size)
-			int blockPointerSize = this.matrixBlocks * 12;
-			this.readBuffer = new byte[blockPointerSize];
-			if (this.inputFile.read(this.readBuffer, 0, blockPointerSize) != blockPointerSize) {
-				throw new IOException();
-			}
-			this.firstBlockPointer += blockPointerSize;
-
-			// create the array for the block pointers and sizes
-			this.blockPointers = new int[this.matrixBlocks];
-			this.blockSizes = new int[this.matrixBlocks];
-			this.bufferPosition = 0;
-			int currentBlockId;
-			int currentBlockPointer;
-			int currentBlockSize;
-			int largestBlockSize = Integer.MIN_VALUE;
-
-			// read each block information and store it in the array
-			while (this.bufferPosition < this.readBuffer.length) {
-				currentBlockId = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-				this.bufferPosition += 4;
-				currentBlockPointer = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-				this.bufferPosition += 4;
-				this.blockPointers[currentBlockId] = currentBlockPointer;
-				currentBlockSize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-				this.bufferPosition += 4;
-				this.blockSizes[currentBlockId] = currentBlockSize;
-				if (currentBlockSize > largestBlockSize) {
-					largestBlockSize = currentBlockSize;
-				}
-			}
-			this.readBuffer = new byte[largestBlockSize];
-		} catch (IOException e) {
-			throw e;
-		}
-	}
-
-	/**
 	 * Close the map file.
 	 */
 	void closeFile() {
+		if (this.databaseIndexCache != null) {
+			this.databaseIndexCache.destroy();
+			this.databaseIndexCache = null;
+		}
 		try {
 			if (this.inputFile != null) {
 				this.inputFile.close();
@@ -418,19 +393,30 @@ class Database {
 					}
 
 					// calculate the block number of the current block
-					// FIXME: bad cast to int, should be long instead
 					this.blockNumber = (int) (this.currentRow * this.matrixWidth + this.currentColumn);
 
-					// if the current block is empty continue with the next one
-					if (this.blockSizes[this.blockNumber] == 80) {
+					// get the pointers to the current and the next block
+					this.currentBlockPointer = this.databaseIndexCache
+							.getAddress(this.blockNumber);
+					this.nextBlockPointer = this.databaseIndexCache
+							.getAddress(this.blockNumber + 1);
+					// check if the next block has a valid pointer
+					if (this.nextBlockPointer == -1) {
+						// the current block is the last one in the file
+						this.nextBlockPointer = this.inputFile.length();
+					}
+
+					// calculate the size of the current block
+					this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
+
+					// if the current block has no map data continue with the next one
+					if (currentBlockSize == 80) {
 						continue;
 					}
 
 					// go to the current block and read its data to the buffer
-					this.inputFile.seek(this.firstBlockPointer
-							+ this.blockPointers[this.blockNumber]);
-					if (this.inputFile.read(this.readBuffer, 0,
-							this.blockSizes[this.blockNumber]) != this.blockSizes[this.blockNumber]) {
+					this.inputFile.seek(this.firstBlockPointer + this.currentBlockPointer);
+					if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
 						// if reading the current block has failed, skip it
 						continue;
 					}
@@ -492,7 +478,7 @@ class Database {
 			this.currentWayTagIds = new boolean[Byte.MAX_VALUE];
 
 			// read the block information
-			readBlockPointers();
+			handleIndexBlockPointers();
 			return true;
 		} catch (ArrayIndexOutOfBoundsException e) {
 			Logger.e(e);

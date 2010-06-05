@@ -23,7 +23,13 @@ import java.util.Map;
 
 import android.graphics.Bitmap;
 
+/**
+ * A cache for bitmap images with a fixed size and LRU policy.
+ */
 class ImageBitmapCache {
+	/**
+	 * The load factor of the internal HashMap.
+	 */
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
@@ -60,7 +66,7 @@ class ImageBitmapCache {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public boolean removeEldestEntry(Map.Entry<Tile, Bitmap> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<Tile, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
 					ImageBitmapCache.this.bitmapPool.add(eldest.getValue());
