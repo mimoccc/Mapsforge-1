@@ -76,10 +76,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private static final int VERSION = 1;
 
 	private int nodes;
-	private int node_tags;
+	private short node_tags;
 
 	private int ways;
-	private int way_tags;
+	private short way_tags;
 
 	private int multipolygons;
 
@@ -94,6 +94,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 	private long startTime;
 
+	// sql queries
 	private final String SQL_INSERT_POIS_TMP = "INSERT INTO pois_tmp (id, latitude, longitude, name_length, name, tags_amount, tags, layer, elevation, housenumber) VALUES (?,?,?,?,?,?,?,?,?,?)";
 	private final String SQL_INSERT_POIS = "INSERT INTO pois (id, latitude, longitude, name_length, name, tags_amount, tags, layer, elevation, housenumber) VALUES (?,?,?,?,?,?,?,?,?,?)";
 	private final String SQL_INSERT_POI_TAG = "INSERT INTO pois_tags(poi_id, tag) VALUES (?,?)";
@@ -103,15 +104,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_SELECT_WAYNODES = "SELECT latitude, longitude FROM pois_tmp WHERE id = ?";
 	private final String SQL_INSERT_WAYNODES = "INSERT INTO waynodes (way_id, waynode_sequence, latitude, longitude) VALUES (?,?,?,?)";
 	private final String SQL_INSERT_WAYNODES_TMP = "INSERT INTO waynodes_tmp (way_id, waynode_sequence, latitude, longitude) VALUES (?,?,?,?)";
-	// private final String SQL_SELECT_INNERWAYNODES =
-	// "SELECT latitude,longitude FROM waynodes WHERE wayid = ?";
 	private final String SQL_SELECT_INNERWAYNODES = "SELECT latitude,longitude FROM waynodes_tmp WHERE way_id = ?";
-	private final String SQL_INSERT_METADATA = "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom,tile_size) VALUES (?,?,?,?,?,?,?,?)";
+	private final String SQL_INSERT_METADATA = "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom,tile_size,min_zoom_level,max_zoom_level) VALUES (?,?,?,?,?,?,?,?,?,?)";
 	private final String SQL_SELECT_BBOX = "SELECT max(latitude) as maxlat,min(longitude) as minlon,min(latitude) as minlat,max(longitude) as maxlon from pois_tmp";
 	private final String SQL_UPDATE_WAYTYPE_FLAG = "UPDATE ways SET way_type = 3 WHERE id = ?";
 	private final String SQL_UPDATE_OPEN_WAYTYPE_FLAG = "UPDATE ways SET way_type = 0 WHERE id = ?";
-	// private final String SQL_INSERT_POI_TILE =
-	// "INSERT INTO pois_tmp_to_tiles (poiid,tilex,tiley,copy) VALUES (?,?,?,?)";
 	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level,size) VALUES (?,?,?,?,?)";
 	private final String SQL_INSERT_WAY_TILE = "INSERT INTO ways_to_tiles (way_id,tile_x,tile_y,tile_bitmask,zoom_level,size) VALUES (?,?,?,?,?,?)";
 	private final String SQL_DISTINCT_WAY_TILES = "SELECT DISTINCT tile_x,tile_y FROM ways_to_tiles";
@@ -124,11 +121,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_SELECT_TEMP_RECORD_SIZE = "SELECT size FROM ways_to_tiles WHERE way_id = ? LIMIT 1";
 	private final String SQL_UPDATE_INNER_WAY_AMOUNT = "UPDATE ways SET inner_way_amount = ? WHERE id = ?";
 
-	private PreparedStatement pstmtPoisTmp;
-
 	private boolean poisBatched = false;
 	private boolean waysBatched = false;
 
+	// prepared statements
+	private PreparedStatement pstmtPoisTmp;
 	private PreparedStatement pstmtSelectWayNodes;
 	private PreparedStatement pstmtInsertWayNodes;
 	private PreparedStatement pstmtInsertWayNodesTmp;
@@ -154,6 +151,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private PreparedStatement pstmtSelectTempRecordSize;
 	private PreparedStatement pstmtUpdateWayInnerWayAmount;
 
+	// result sets
 	private ResultSet rsWayNodes;
 	private ResultSet rsInnerWays;
 	private ResultSet rsBoundingBox;
@@ -169,9 +167,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 	private Map<String, Byte> poiTagWhiteList;
 	private Map<String, Byte> wayTagWhiteList;
-
-	private Map<String, Byte> tagIdsPOIs;
-	private Map<String, Byte> tagIdsWays;
 
 	private GeometryFactory geoFac;
 
@@ -223,7 +218,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		conn.createStatement().execute("SET CONSTRAINTS ALL DEFERRED");
 
-		/*************** CREATING TEMPORARY TABLES *********************************/
+		// create temporary tables
 		conn.createStatement().execute(
 				"CREATE TEMPORARY TABLE pois_tmp (id bigint NOT NULL,"
 						+ "latitude bigint,longitude bigint,name_length smallint,"
@@ -245,7 +240,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				.createStatement()
 				.execute(
 						"ALTER TABLE ONLY waynodes_tmp ADD CONSTRAINT waynodes_tmp_pkey PRIMARY KEY (way_id,waynode_sequence)");
-		/**************************************************************************/
 
 		pstmtPoisTmp = conn.prepareStatement(SQL_INSERT_POIS_TMP);
 
@@ -314,9 +308,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		poiTagWhiteList = WhiteList.getNodeTagWhitelist();
 		wayTagWhiteList = WhiteList.getWayTagWhitelist();
 
-		tagIdsPOIs = TagIdsPOIs.getMap();
-		tagIdsWays = TagIdsWays.getMap();
-
 		logger.info("start reading file");
 		startTime = System.currentTimeMillis();
 	}
@@ -328,8 +319,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		logger.info("executing last batches...");
 
 		try {
+			// write metadata into the database
 
 			rsBoundingBox = pstmtBoundingBox.executeQuery();
+
+			// get bounding box coordinates
 			while (rsBoundingBox.next()) {
 				maxlat = rsBoundingBox.getInt("maxlat");
 				minlon = rsBoundingBox.getInt("minlon");
@@ -345,12 +339,15 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMetadata.setInt(6, VERSION);
 			pstmtMetadata.setInt(7, zoom);
 			pstmtMetadata.setInt(8, Tile.TILE_SIZE);
+			pstmtMetadata.setShort(9, (short) 12);
+			pstmtMetadata.setShort(10, (short) 17);
 			pstmtMetadata.execute();
 
 			logger.info("metadata inserted");
 
 			logger.info("execute last multipolygon batches");
 
+			// execute very last batches
 			pstmtMultipolygons.executeBatch();
 			pstmtUpdateWayType.executeBatch();
 			pstmtUpdateWaySize.executeBatch();
@@ -364,11 +361,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 			logger.info("create indices on tag tables");
 
+			// create indices
 			conn.createStatement().execute("CREATE INDEX pois_tags_idx ON pois_tags (tag)");
 			conn.createStatement().execute("CREATE INDEX ways_tags_idx ON ways_tags(tag)");
 
 			logger.info("created indices on tag tables");
 
+			// truncate temporary tables
 			conn.createStatement().execute("TRUNCATE TABLE waynodes_tmp CASCADE");
 			conn.createStatement().execute("TRUNCATE TABLE pois_tmp CASCADE");
 
@@ -477,23 +476,25 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	public void startElement(String uri, String localName, String qName, Attributes attributes)
 			throws SAXException {
 
+		// get bounding box coordinates
 		if (qName.equals("bounds")) {
 			maxlat = (int) (Double.parseDouble(attributes.getValue("maxlat")) * 1000000);
 			minlon = (int) (Double.parseDouble(attributes.getValue("minlon")) * 1000000);
 			minlat = (int) (Double.parseDouble(attributes.getValue("minlat")) * 1000000);
 			maxlon = (int) (Double.parseDouble(attributes.getValue("maxlon")) * 1000000);
-
-			// System.out.println(maxlat+" "+minlon+" "+minlat+" "+maxlon);
 		}
 
 		if (qName.equals("node")) {
 			currentTags.clear();
 
+			// get id and coordinates
 			long id = Long.parseLong(attributes.getValue("id"));
 			int latitude = (int) (Double.parseDouble(attributes.getValue("lat")) * 1000000);
 			int longitude = (int) (Double.parseDouble(attributes.getValue("lon")) * 1000000);
 			currentNode = new MapElementNode(id, latitude, longitude);
+
 		} else if (qName.equals("way")) {
+			// execute last poi batches
 			if (!poisBatched) {
 				try {
 					pstmtPoisTmp.executeBatch();
@@ -503,18 +504,18 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				} catch (SQLException e) {
 					System.err.println(pstmtPoisTmp);
 					e.printStackTrace();
-
 				}
-
 				poisBatched = true;
 			}
 
 			currentTags.clear();
 			currentWayNodes.clear();
 
+			// get id
 			currentWay = new MapElementWay(Integer.parseInt(attributes.getValue("id")));
 
 		} else if (qName.equals("relation")) {
+			// execute last way batches
 			if (!waysBatched) {
 				try {
 					pstmtWays.executeBatch();
@@ -546,6 +547,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		} else if (qName.equals("nd")) {
 			currentWayNodes.add(Integer.parseInt(attributes.getValue("ref")));
 		} else if (qName.equals("member")) {
+			// only multipolygons with outer and inner ways are considered
 			if (attributes.getValue("role").equals("outer")) {
 				currentOuterWays.add(Integer.parseInt(attributes.getValue("ref")));
 			} else if (attributes.getValue("role").equals("inner")) {
@@ -558,6 +560,26 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		try {
 			int recordSize = 0;
+			String tag;
+			Iterator<String> tagIterator;
+			int tagSize;
+			String[] splittedTags;
+			Vector<String> tempTags;
+			String storedTags = "";
+			short nameLength;
+			int wnSize;
+			int sequence = 1;
+			int lat = 0;
+			int lon = 0;
+
+			int firstLat = 0;
+			int firstLon = 0;
+			int size;
+			int innersize;
+			long outer;
+			int[] innerNodes;
+			int waytype;
+
 			if (qName.equals("node")) {
 
 				nodes++;
@@ -565,19 +587,21 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				pstmtPoisTmp.setInt(2, currentNode.latitude);
 				pstmtPoisTmp.setInt(3, currentNode.longitude);
 
-				String tag;
-				Iterator<String> it = currentTags.iterator();
-				int size = currentTags.size();
-				String[] splits = new String[2];
+				tagIterator = currentTags.iterator();
+				tagSize = currentTags.size();
+				splittedTags = new String[2];
 
-				Vector<Byte> t = new Vector<Byte>();
+				tempTags = new Vector<String>();
 				node_tags = 0;
-				while (it.hasNext()) {
-					tag = it.next();
-					splits = tag.split("=");
-					if (splits[0].equals("ele")) {
+				while (tagIterator.hasNext()) {
+					tag = tagIterator.next();
+					splittedTags = tag.split("=");
+
+					// special tags like elevation, housenumber, name and layer are stored in
+					// separate fields in the database
+					if (splittedTags[0].equals("ele")) {
 						try {
-							currentNode.elevation = (int) Double.parseDouble(splits[1]);
+							currentNode.elevation = (int) Double.parseDouble(splittedTags[1]);
 							if (currentNode.elevation < 32000) {
 								currentNode.elevation = 0;
 							}
@@ -585,97 +609,92 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						} catch (NumberFormatException e) {
 							currentNode.elevation = 0;
 						}
-					} else if (splits[0].equals("addr:housenumber")) {
-						currentNode.housenumber = splits[1];
+					} else if (splittedTags[0].equals("addr:housenumber")) {
+						currentNode.housenumber = splittedTags[1];
+						// increase the record size
 						recordSize += currentNode.housenumber.getBytes().length + 1;
-					} else if (splits[0].equals("name")) {
-						currentNode.name = splits[1];
+					} else if (splittedTags[0].equals("name")) {
+						currentNode.name = splittedTags[1];
+						// increase the record size
 						recordSize += 2 + currentNode.name.getBytes().length;
-					} else if (splits[0].equals("layer")) {
+					} else if (splittedTags[0].equals("layer")) {
 						try {
-							currentNode.layer = Integer.parseInt(splits[1]);
+							currentNode.layer = Integer.parseInt(splittedTags[1]) + 5;
 						} catch (NumberFormatException e) {
-							currentNode.layer = 0;
+							currentNode.layer = 5;
 						}
 					} else if (poiTagWhiteList.containsKey(tag)) {
-						t.add(tagIdsPOIs.get(tag));
+						// if current tag is in the white list, add it to the temporary tag list
 						currentNode.zoomLevel = poiTagWhiteList.get(tag);
-						// t.add(tag);
+						tempTags.add(tag);
 
 						node_tags++;
 					}
-					size--;
+					tagSize--;
 				}
 
-				String tags = "";
+				// create one string of tags. tags are separated with a line break
 				for (int k = 0; k < node_tags; k++) {
-					tags += t.get(k);
-					tags += "\n";
+					storedTags += tempTags.get(k);
+					storedTags += "\n";
 				}
 
-				int nameLength;
 				if (currentNode.name != null) {
-					nameLength = currentNode.name.getBytes().length;
+					nameLength = (short) currentNode.name.getBytes().length;
 				} else {
 					nameLength = 0;
 				}
 
+				// all nodes are stored in the temporary poi table
 				pstmtPoisTmp.setInt(4, nameLength);
 				pstmtPoisTmp.setString(5, currentNode.name);
-				pstmtPoisTmp.setInt(6, node_tags);
-				pstmtPoisTmp.setString(7, tags);
+				pstmtPoisTmp.setShort(6, node_tags);
+				pstmtPoisTmp.setString(7, storedTags);
 				pstmtPoisTmp.setInt(8, currentNode.layer);
 				pstmtPoisTmp.setInt(9, currentNode.elevation);
 				pstmtPoisTmp.setString(10, currentNode.housenumber);
 				pstmtPoisTmp.addBatch();
 
-				if (!tags.equals("")) {
+				// if the node has tags it is a poi and it is stored in the persistent poi table
+				if (!storedTags.equals("")) {
 					pstmtPoisTags.setLong(1, currentNode.id);
 					pstmtPoisTags.setInt(2, currentNode.latitude);
 					pstmtPoisTags.setInt(3, currentNode.longitude);
-					pstmtPoisTags.setInt(4, nameLength);
+					pstmtPoisTags.setShort(4, nameLength);
 					pstmtPoisTags.setString(5, currentNode.name);
-					pstmtPoisTags.setInt(6, node_tags);
-					pstmtPoisTags.setString(7, tags);
+					pstmtPoisTags.setShort(6, node_tags);
+					pstmtPoisTags.setString(7, storedTags);
 					pstmtPoisTags.setInt(8, currentNode.layer);
 					pstmtPoisTags.setInt(9, currentNode.elevation);
 					pstmtPoisTags.setString(10, currentNode.housenumber);
 					pstmtPoisTags.addBatch();
 
-					String[] oneTag = tags.split("\n");
+					// to execute fast filtering of elements every tag is stored together with
+					// the element id in a tag table
+					String[] oneTag = storedTags.split("\n");
 					for (String s : oneTag) {
 						pstmtPoisTag.setLong(1, currentNode.id);
 						pstmtPoisTag.setString(2, s);
 						pstmtPoisTag.addBatch();
 					}
 
+					// calculate the tile in which the poi is located
 					Tile mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
 							(double) currentNode.longitude / 1000000, zoom), MercatorProjection
 							.latitudeToTileY((double) currentNode.latitude / 1000000, zoom),
 							zoom);
 
-					// recordSize = lat + lon + nameLength + name + tagsAmount + tags + layer +
-					// elevation +
+					// calculate the record size for a poi
+					// recordSize
 					recordSize += 4 + 4 + 1 + node_tags + 1 + 2
 							+ currentNode.name.getBytes().length;
 
-					// if(!tags.equals("")){
-					// List<Tile> otherTilesForPOI = POIToTiles.getPOITiles(currentNode, zoom);
-
-					// for(Tile tile:otherTilesForPOI){
 					pstmtPoisTiles.setLong(1, currentNode.id);
 					pstmtPoisTiles.setLong(2, mainTileForPOI.x);
 					pstmtPoisTiles.setLong(3, mainTileForPOI.y);
-					// if(tile.equals(mainTileForPOI)){
-					// pstmtPoisTiles.setBoolean(4, false);
 					pstmtPoisTiles.setShort(4, currentNode.zoomLevel);
 					pstmtPoisTiles.setInt(5, recordSize);
-					// }else{
-					// pstmtPoisTiles.setBoolean(4, true);
-					// }
 					pstmtPoisTiles.addBatch();
-					// }
-					// }
 				}
 
 				poisBatched = false;
@@ -694,59 +713,58 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 				ways++;
 
-				String tag;
-				Iterator<String> itWayTags = currentTags.iterator();
-				int size = currentTags.size();
-				Vector<Byte> t = new Vector<Byte>();
+				tagIterator = currentTags.iterator();
+				tagSize = currentTags.size();
+				tempTags = new Vector<String>();
 				way_tags = 0;
-				String[] splits = new String[2];
+				splittedTags = new String[2];
 
-				while (itWayTags.hasNext()) {
-					tag = itWayTags.next();
-					splits = tag.split("=");
-					if (splits[0].equals("name")) {
-						currentWay.name = splits[1];
+				while (tagIterator.hasNext()) {
+					tag = tagIterator.next();
+					splittedTags = tag.split("=");
+
+					// special tags like elevation, housenumber, name and layer are stored in
+					// separate fields in the database
+					if (splittedTags[0].equals("name")) {
+						currentWay.name = splittedTags[1];
+						// increase the record size
 						recordSize += 2 + currentWay.name.getBytes().length;
-					} else if (splits[0].equals("layer")) {
+					} else if (splittedTags[0].equals("layer")) {
 						try {
-							currentWay.layer = (byte) Integer.parseInt(splits[1]);
+							currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]) + 5);
 						} catch (NumberFormatException e) {
-							currentWay.layer = 0;
+							currentWay.layer = 5;
 						}
 					} else if (wayTagWhiteList.containsKey(tag)) {
-						t.add(tagIdsWays.get(tag));
+						// if current tag is in the white list, add it to the temporary tag list
 						currentWay.zoomLevel = wayTagWhiteList.get(tag);
-						// t.add(tag);
+						tempTags.add(tag);
 
 						way_tags++;
 					}
-					size--;
+					tagSize--;
 				}
 
-				String tags = "";
+				// create one string of tags. tags are separated with a line break
 				for (int k = 0; k < way_tags; k++) {
-					tags += t.get(k);
-					tags += "\n";
+					storedTags += tempTags.get(k);
+					storedTags += "\n";
 				}
 
-				int wnSize = currentWayNodes.size();
-				int sequence = 1;
+				wnSize = currentWayNodes.size();
 
 				if (wnSize > 1) {
 
+					// mark the way as area if the first and the last way node are the same and
+					// if the way has more than two way nodes
 					if (currentWayNodes.get(0).equals(currentWayNodes.get(wnSize - 1))
 							&& !(currentWayNodes.size() == 2)) {
 						currentWay.wayType = 2;
 					}
 
-					int lat = 0;
-					int lon = 0;
-
-					int firstLat = 0;
-					int firstLon = 0;
-
 					Coordinate[] wayNodes = new Coordinate[wnSize];
 
+					// get the way nodes from the temporary poi table
 					for (int i = 0; i < wnSize; i++) {
 						pstmtSelectWayNodes.setInt(1, currentWayNodes.get(i));
 						rsWayNodes = pstmtSelectWayNodes.executeQuery();
@@ -762,19 +780,25 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 							wayNodes[i] = (new Coordinate((double) lat / 1000000,
 									(double) lon / 1000000));
+
+							// store all way nodes in a temporary way node table
 							pstmtInsertWayNodesTmp.setLong(1, currentWay.id);
 							pstmtInsertWayNodesTmp.setInt(2, sequence);
 							pstmtInsertWayNodesTmp.setInt(3, lat);
 							pstmtInsertWayNodesTmp.setInt(4, lon);
 							pstmtInsertWayNodesTmp.addBatch();
 
-							if (tags != "") {
+							if (storedTags != "") {
+								// if the way has tags store the way nodes in a persistent way
+								// node table
 								pstmtInsertWayNodes.setLong(1, currentWay.id);
 								pstmtInsertWayNodes.setInt(2, sequence);
 								pstmtInsertWayNodes.setInt(3, lat);
 								pstmtInsertWayNodes.setInt(4, lon);
 								pstmtInsertWayNodes.addBatch();
 
+								// for development: calculate the differences between the first
+								// and all following way nodes
 								pstmtWayNodeDiff.setLong(1, currentWay.id);
 								pstmtWayNodeDiff.setInt(2, sequence);
 								// System.out.println((Math.abs(firstLat - lat)));
@@ -787,8 +811,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						sequence++;
 					}
 
-					if (tags != "") {
-						String[] oneTag = tags.split("\n");
+					// store only ways with tags in the persistent table
+					if (storedTags != "") {
+						// to execute fast filtering of elements every tag is stored together
+						// with the element id in a tag table
+						String[] oneTag = storedTags.split("\n");
 						for (String s : oneTag) {
 							pstmtWayTag.setLong(1, currentWay.id);
 							pstmtWayTag.setString(2, s);
@@ -799,6 +826,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						// way of a multipolygon
 						recordSize += 2 + 2 + 1 + 1 + 1 + way_tags + 2 + wnSize * 8 + 1;
 
+						// calculate all tiles which are related to a way
 						wayTiles = Utils.wayToTiles(currentWay, wayNodes, currentWay.wayType,
 								zoom);
 						for (Tile wayTile : wayTiles) {
@@ -819,7 +847,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						}
 						pstmtWays.setString(3, currentWay.name);
 						pstmtWays.setInt(4, way_tags);
-						pstmtWays.setString(5, tags);
+						pstmtWays.setString(5, storedTags);
 						pstmtWays.setInt(6, currentWay.layer);
 						pstmtWays.setInt(7, wnSize);
 						pstmtWays.setInt(8, currentWay.wayType);
@@ -827,7 +855,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						// TODO calculate label position
 						pstmtWays.setInt(10, 0);
 						pstmtWays.setInt(11, 0);
-						// inner way amount if way is mp!
+						// inner way amount if way is outer way of a multipolygon
 						pstmtWays.setInt(12, 0);
 						pstmtWays.addBatch();
 						waysBatched = false;
@@ -845,58 +873,61 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				}
 			} else if (qName.equals("relation")) {
 
-				int size = currentOuterWays.size();
+				size = currentOuterWays.size();
 
-				int innersize;
 				if (size != 0) {
 					for (int i = 0; i < size; i++) {
-						long outer = currentOuterWays.get(i);
-						int[] innerNodes;
+						// a multipolygon could have multiple outer ways
+						outer = currentOuterWays.get(i);
 
 						pstmtWaysWithTags.setLong(1, outer);
 						rsWaysWithTags = pstmtWaysWithTags.executeQuery();
 
 						if (rsWaysWithTags.next()) {
-							int waytype = rsWaysWithTags.getInt("way_type");
+							waytype = rsWaysWithTags.getInt("way_type");
 
 							if (waytype == 2) {
+								// outer way is a closed way
 								pstmtUpdateWayType.setLong(1, outer);
 								pstmtUpdateWayType.addBatch();
 							} else if (waytype == 1) {
+								// outer way is a "normal" way
 								pstmtUpdateOpenWayType.setLong(1, outer);
 								pstmtUpdateOpenWayType.addBatch();
 							}
 
+							// get inner way nodes
 							innersize = currentInnerWays.size();
 							innerNodes = new int[innersize];
 							for (int j = 0; j < innersize; j++) {
 								pstmtInnerWays.setInt(1, currentInnerWays.get(j));
 								rsInnerWays = pstmtInnerWays.executeQuery();
-								int nodeSequence = 1;
+								sequence = 1;
 								while (rsInnerWays.next()) {
 									try {
 										pstmtMultipolygons.setLong(1, outer);
 										pstmtMultipolygons.setInt(2, j + 1);
-										pstmtMultipolygons.setInt(3, nodeSequence);
+										pstmtMultipolygons.setInt(3, sequence);
 										pstmtMultipolygons.setLong(4, rsInnerWays
 												.getInt("latitude"));
 										pstmtMultipolygons.setLong(5, rsInnerWays
 												.getInt("longitude"));
 										pstmtMultipolygons.addBatch();
-										nodeSequence++;
+										sequence++;
 									} catch (SQLException e) {
 
 										System.err.println(pstmtMultipolygons);
 										throw e;
 									}
 								}
-								innerNodes[j] = nodeSequence - 1;
+								innerNodes[j] = sequence - 1;
 							}
 							recordSize += 1;
 							for (int k = 0; k < innerNodes.length; k++) {
 								recordSize += innerNodes[k] * 8;
 							}
 
+							// update temporary way record size
 							pstmtSelectTempRecordSize.setLong(1, outer);
 							rsTempRecordSize = pstmtSelectTempRecordSize.executeQuery();
 							while (rsTempRecordSize.next()) {
@@ -907,6 +938,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							pstmtUpdateWaySize.setLong(2, outer);
 							pstmtUpdateWaySize.addBatch();
 
+							// set inner way amount for every outer way
 							pstmtUpdateWayInnerWayAmount.setInt(1, innersize);
 							pstmtUpdateWayInnerWayAmount.setLong(2, outer);
 							pstmtUpdateWayInnerWayAmount.addBatch();

@@ -31,4 +31,9 @@ class Serializer {
 	static byte[] getBytes(short value) {
 		return new byte[] { (byte) (value >> 8), (byte) value };
 	}
+
+	static byte[] getFiveBytes(long value) {
+		return new byte[] { (byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
+				(byte) (value >> 8), (byte) (value) };
+	}
 }
