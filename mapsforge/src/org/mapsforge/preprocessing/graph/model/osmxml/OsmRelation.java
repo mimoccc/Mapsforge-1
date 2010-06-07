@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
+package org.mapsforge.preprocessing.graph.model.osmxml;
 
 import java.sql.Timestamp;
 import java.util.LinkedList;
@@ -26,12 +26,17 @@ public class OsmRelation extends OsmElement {
 
 	private final LinkedList<Member> wayRefs;
 
+	public OsmRelation(long id) {
+		super(id);
+		this.wayRefs = new LinkedList<Member>();
+	}
+
 	public OsmRelation(long id, Timestamp timestamp, String user, boolean visible) {
 		super(id, timestamp, user, visible);
 		this.wayRefs = new LinkedList<Member>();
 	}
 
-	void addMember(Member ref) {
+	public void addMember(Member ref) {
 		wayRefs.add(ref);
 	}
 

@@ -30,10 +30,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmNodeListener;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmWayListener;
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmWay;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmXmlParser;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
@@ -129,7 +129,7 @@ public class RgExtractor {
 			});
 			parser.addWayListener(new IOsmWayListener() {
 				@Override
-				public void handleWay(OsmWay way) {
+				public void handleWay(OsmWay_withNodeRefs way) {
 					if ((++countOverallWays) % MSG_INT == 0) {
 						System.out.println("[write routingGraph] - processed ways "
 								+ (countOverallWays - MSG_INT) + " - " + countOverallWays);
@@ -227,7 +227,7 @@ public class RgExtractor {
 			});
 			parser.addWayListener(new IOsmWayListener() {
 				@Override
-				public void handleWay(OsmWay way) {
+				public void handleWay(OsmWay_withNodeRefs way) {
 					EHighwayLevel hwyLvl = way.getHighwayLevel();
 					if (way.isVisible() && way.getNodeRefs().size() > 1 && hwyLvl != null
 							&& hwyLevels.contains(hwyLvl)) {

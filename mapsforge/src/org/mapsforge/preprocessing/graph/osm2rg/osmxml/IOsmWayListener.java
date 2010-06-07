@@ -16,11 +16,12 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
 
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
 import org.xml.sax.SAXException;
 
 /**
  * @author Frank Viernau Implement for listening for OsmElements at OsmXmlParser.
  */
 public interface IOsmWayListener {
-	public void handleWay(OsmWay way) throws SAXException;
+	public void handleWay(OsmWay_withNodeRefs way) throws SAXException;
 }

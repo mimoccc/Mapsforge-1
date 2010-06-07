@@ -14,33 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.gui;
+package org.mapsforge.preprocessing.graph.model.gui;
 
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+
+import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 public class Transport {
 
-	int id;
-	String name;
-	int maxSpeed;
-	List<Tag> useableWays;
+	private String name;
+	private int maxSpeed;
+	private HashSet<EHighwayLevel> useableWays;
 
-	public Transport(String name, int speed, List<Tag> ways) {
-		//this.id = -1;
+	public Transport(String name, int speed) {
+		this.name = name;
+		this.maxSpeed = speed;
+		this.useableWays = new HashSet<EHighwayLevel>();
+	}
+
+	public Transport(String name, int speed, HashSet<EHighwayLevel> ways) {
 		this.name = name;
 		this.maxSpeed = speed;
 		this.useableWays = ways;
 	}
 
-	public Transport(int id, String name, int speed, List<Tag> ways) {
-		this.id = id;
-		this.name = name;
-		this.maxSpeed = speed;
-		this.useableWays = ways;
-	}
-
-	// Getter
 	/**
 	 * @return the name
 	 */
@@ -49,64 +47,40 @@ public class Transport {
 	}
 
 	/**
-	 * @return the id
-	 */
-	public int getId() {
-		return id;
-	}
-
-	/**
 	 * @return the maxSpeed
 	 */
 	public int getMaxSpeed() {
 		return maxSpeed;
 	}
-	/*
-	public String getMaxSpeedToString() {
-		Integer speed = maxSpeed;
-		return speed.toString();
-	}
-*/
-	/**
-	 * @return the useableWays
-	 */
-	public List<Tag> getUseableWays() {
-		return useableWays;
-	}
 
 	public String getUseableWaysSerialized() {
-		// TODO Auto-generated method stub
 		String result = "";
 		if (useableWays == null)
 			return result;
-		Iterator<Tag> it = useableWays.iterator();
+		Iterator<EHighwayLevel> it = useableWays.iterator();
 		while (it.hasNext()) {
-			result+=(it.next().toString() + ";");
+			result += (it.next().toString() + ";");
 		}
 		return result;
 	}
 
-	// Setter
-	/**
-	 * @param id
-	 *            the id to set
-	 */
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	/**
-	 * @param useableWays
-	 *            the useableWays to set
-	 */
-	public void setUseableWays(List<Tag> useableWays) {
-		this.useableWays = useableWays;
-	}
-	
 	@Override
 	public String toString() {
 		return name;
-		
+
+	}
+
+	public HashSet<EHighwayLevel> getUseableWays() {
+		return useableWays;
+	}
+
+	public boolean addHighwayLevelToUsableWays(EHighwayLevel hwyLvl) {
+		if (!useableWays.contains(hwyLvl)) {
+			useableWays.add(hwyLvl);
+			return true;
+		}
+
+		return false;
 	}
 
 }

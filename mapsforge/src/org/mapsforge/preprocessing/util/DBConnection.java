@@ -25,6 +25,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties;
+
 public class DBConnection {
 
 	public final static int DEFAULT_FETCH_SIZE = 1000;
@@ -44,6 +46,13 @@ public class DBConnection {
 	public DBConnection(String hostName, String dbName, String username, String password,
 			int port) throws SQLException {
 		this.conn = getJdbcConnectionPg(hostName, port, dbName, username, password);
+		conn.setAutoCommit(false);
+	}
+
+	public DBConnection(DatabaseProperties dbProperties) throws SQLException {
+		this.conn = getJdbcConnectionPg(dbProperties.getHost(), dbProperties.getPort(),
+				dbProperties.getDbName(), dbProperties.getUsername(), dbProperties
+						.getPassword());
 		conn.setAutoCommit(false);
 	}
 

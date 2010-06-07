@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
 
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation;
 import org.xml.sax.SAXException;
 
 /**

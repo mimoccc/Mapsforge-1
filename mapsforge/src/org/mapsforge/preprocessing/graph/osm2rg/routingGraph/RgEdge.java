@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
 
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 
@@ -33,6 +34,21 @@ public class RgEdge implements IRgEdge {
 	private final long osmWayId;
 	private final String name;
 	private final EHighwayLevel hwyLevel;
+
+	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
+			OsmWay_withNodes way, double lengthMeters) {
+		this.id = id;
+		this.sourceId = sourceId;
+		this.targetId = targetId;
+		this.longitudes = longitudes;
+		this.latitudes = latitudes;
+		this.isUndirected = way.isOneway();
+		this.isUrban = way.isUrban();
+		this.osmWayId = way.getId();
+		this.name = way.getName();
+		this.lengthMeters = lengthMeters;
+		this.hwyLevel = way.getHighwayLevel();
+	}
 
 	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
 			boolean isUndirected, boolean isUrban, long osmWayId, String name,

@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
+package org.mapsforge.preprocessing.graph.model.osmxml;
 
 import java.sql.Timestamp;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 
-public class OsmWay extends OsmElement {
+public class OsmWay_withNodeRefs extends OsmElement {
 
 	private static int DEFAULT_TAG_VALUE_ONEWAY = 0;
 	private static boolean DEFAULT_TAG_VALUE_URBAN = false;
@@ -30,12 +30,12 @@ public class OsmWay extends OsmElement {
 
 	private LinkedList<Long> nodeRefs;
 
-	public OsmWay(long id, Timestamp timestamp, String user, boolean visible) {
+	public OsmWay_withNodeRefs(long id, Timestamp timestamp, String user, boolean visible) {
 		super(id, timestamp, user, visible);
 		this.nodeRefs = new LinkedList<Long>();
 	}
 
-	void addNodeRef(Long id) {
+	public void addNodeRef(Long id) {
 		if (id != null && !nodeRefs.contains(id)) {
 			nodeRefs.add(id);
 		}

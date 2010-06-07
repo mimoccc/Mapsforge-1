@@ -23,7 +23,10 @@ import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmRelation.Member;
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation;
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation.Member;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -85,7 +88,7 @@ public class OsmXmlParser {
 	private class OsmXmlHandler extends DefaultHandler {
 
 		private OsmNode currentNode;
-		private OsmWay currentWay;
+		private OsmWay_withNodeRefs currentWay;
 		private OsmRelation currentRelation;
 
 		@Override
@@ -118,7 +121,7 @@ public class OsmXmlParser {
 				String user = attributes.getValue("user");
 				Timestamp timestamp = parseTimestampTag(attributes.getValue("timestamp"));
 				boolean visible = parseBooleanTag(attributes.getValue("visible"), true);
-				this.currentWay = new OsmWay(id, timestamp, user, visible);
+				this.currentWay = new OsmWay_withNodeRefs(id, timestamp, user, visible);
 			}
 			/* way tags */
 			else if (currentWay != null && qName.equals("tag")) {

@@ -14,9 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.gui;
+package org.mapsforge.preprocessing.graph.gui.util;
 
 import java.util.ArrayList;
+
+import org.mapsforge.preprocessing.graph.model.gui.Profil;
+import org.mapsforge.preprocessing.graph.model.gui.Transport;
 
 public interface IDatabaseService {
 
@@ -28,23 +31,23 @@ public interface IDatabaseService {
 	 * @throws Exception
 	 */
 	public void addTransport(Transport transport);
-	
+
 	/**
 	 * Update an existing transport object in the database.
-	 *  
-	 * @param transport 
+	 * 
+	 * @param transport
 	 */
-	public void updateTransport(Transport transport); 
-	
+	public void updateTransport(Transport transport);
+
 	/**
 	 * Delete the transport object with the given name of the database;
 	 * 
 	 * @param name
 	 */
 	public void deleteTransport(String name);
-	
+
 	/**
-	 * @param transportName 
+	 * @param transportName
 	 * @return transport
 	 */
 	public Transport getTransport(String transportName);
@@ -58,6 +61,8 @@ public interface IDatabaseService {
 
 	public void addProfil(Profil profil);
 
-	public ArrayList<Profil> getAllProfilsOfTransport(Transport transport);
+	public ArrayList<Profil> getProfilesOfTransport(Transport transport);
+
+	public ArrayList<Profil> getAllProfiles();
 
 }

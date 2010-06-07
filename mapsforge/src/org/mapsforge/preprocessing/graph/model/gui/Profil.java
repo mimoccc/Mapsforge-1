@@ -14,39 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.gui;
+package org.mapsforge.preprocessing.graph.model.gui;
+
 
 public class Profil {
 
-	private int pid;
 	private String name;
 	private String url;
 	private Transport transport;
 	private String heuristic;
+	private DatabaseProperties dbprops;
 
 	public Profil(String name, String url, Transport transport, String heuristic) {
-		//this.setPid(pid);
 		this.name = name;
 		this.url = url;
 		this.transport = transport;
 		this.heuristic = heuristic;
+		this.dbprops = null;
 	}
-	
-	public Profil(int pid, String name, String url, Transport transport, String heuristic) {
-		this.pid = pid;
+
+	public Profil(String name, String url, Transport transport, String heuristic,
+			DatabaseProperties dbProbs) {
 		this.name = name;
 		this.url = url;
 		this.transport = transport;
 		this.heuristic = heuristic;
+		this.setDbProberties(dbProbs);
 	}
 
 	// Getter
-	/**
-	 * @return the pid
-	 */
-	public int getPid() {
-		return pid;
-	}
 
 	/**
 	 * @return the name
@@ -77,13 +73,6 @@ public class Profil {
 	}
 
 	// Setter
-	/**
-	 * @param pid
-	 *            the pid to set
-	 */
-	public void setPid(int pid) {
-		this.pid = pid;
-	}
 
 	/**
 	 * @param name
@@ -115,6 +104,19 @@ public class Profil {
 	 */
 	public void setHeuristik(String heuristic) {
 		this.heuristic = heuristic;
+	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
+
+	public void setDbProberties(DatabaseProperties dbprobs) {
+		this.dbprops = dbprobs;
+	}
+
+	public DatabaseProperties getDbProberties() {
+		return dbprops;
 	}
 
 }

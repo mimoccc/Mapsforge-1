@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
+package org.mapsforge.preprocessing.graph.model.osmxml;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -32,6 +32,14 @@ public class OsmElement {
 	private final String user;
 	private final boolean visible;
 	private final HashMap<String, String> tags;
+
+	public OsmElement(long id) {
+		this.id = id;
+		this.timestamp = null;
+		this.user = "";
+		this.visible = true;
+		this.tags = new HashMap<String, String>();
+	}
 
 	public OsmElement(long id, Timestamp timestamp, String user, boolean visible) {
 		this.id = id;
@@ -58,6 +66,12 @@ public class OsmElement {
 	}
 
 	public void setTag(String key, String value) {
+		if (key != null && value != null) {
+			this.tags.put(key, value);
+		}
+	}
+
+	public void addTag(String key, String value) {
 		if (key != null && value != null) {
 			this.tags.put(key, value);
 		}
