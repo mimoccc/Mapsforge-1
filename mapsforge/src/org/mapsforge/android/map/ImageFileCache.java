@@ -90,10 +90,14 @@ class ImageFileCache {
 	 */
 	synchronized void destroy() {
 		// delete all cached files
-		for (File file : this.map.values()) {
-			if (!file.delete()) {
-				file.deleteOnExit();
+		if (this.map != null) {
+			for (File file : this.map.values()) {
+				if (!file.delete()) {
+					file.deleteOnExit();
+				}
 			}
+			this.map.clear();
+			this.map = null;
 		}
 	}
 
@@ -137,10 +141,10 @@ class ImageFileCache {
 	 */
 	synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
-		// make a new map with the new capacity and put all entries from the old map in the new
-		// one. The replacement policy will keep the right files in the new map if the new map
-		// has a smaller capacity than the old map.
+		// create a new map with the new capacity
 		LinkedHashMap<Tile, File> newMap = createMap(this.capacity);
+
+		// put all entries from the old map in the new one.
 		for (Map.Entry<Tile, File> entry : this.map.entrySet()) {
 			newMap.put(entry.getKey(), entry.getValue());
 		}

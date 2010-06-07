@@ -37,8 +37,11 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ZoomControls;
 
+/**
+ * Custom implementation of the MapView class from the Google Maps library.
+ */
 public class MapView extends ViewGroup {
-	private static final int BITMAP_CACHE_SIZE = 25;
+	private static final int BITMAP_CACHE_SIZE = 20;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
 	private static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
 	private static final int DEFAULT_MOVE_SPEED = 10;
@@ -58,7 +61,6 @@ public class MapView extends ViewGroup {
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
 	private static final byte ZOOM_MIN = 0;
-	static final byte DEFAULT_ZOOM_LEVEL = 14;
 	static final double LATITUDE_MAX = 85.0511;
 	static final double LATITUDE_MIN = -85.0511;
 	static final double LONGITUDE_MAX = 180;
@@ -664,7 +666,6 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setupMapView() {
-		this.zoomLevel = DEFAULT_ZOOM_LEVEL;
 		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 
@@ -698,6 +699,12 @@ public class MapView extends ViewGroup {
 		this.database = new Database();
 
 		startMapGeneratorThread();
+
+		// set the default position and zoom level of the map
+		GeoPoint defaultStartPoint = this.mapGenerator.getDefaultStartPoint();
+		this.latitude = defaultStartPoint.getLatitude();
+		this.longitude = defaultStartPoint.getLongitude();
+		this.zoomLevel = this.mapGenerator.getDefaultZoomLevel();
 
 		// create and start the MapMover thread
 		this.mapMover = new MapMover();
@@ -974,6 +981,10 @@ public class MapView extends ViewGroup {
 
 	GeoPoint getDefaultStartPoint() {
 		return this.mapGenerator.getDefaultStartPoint();
+	}
+
+	byte getDefaultZoomLevel() {
+		return this.mapGenerator.getDefaultZoomLevel();
 	}
 
 	float getMoveSpeedFactor() {

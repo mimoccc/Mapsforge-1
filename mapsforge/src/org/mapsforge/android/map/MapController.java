@@ -19,6 +19,9 @@ package org.mapsforge.android.map;
 import android.view.KeyEvent;
 import android.view.View;
 
+/**
+ * Custom implementation of the MapController class from the Google Maps library.
+ */
 public final class MapController implements android.view.View.OnKeyListener {
 	private MapView mapView;
 

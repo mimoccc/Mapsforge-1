@@ -191,6 +191,15 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
+	 * Returns the default zoom level of the map.
+	 * 
+	 * @return the default zoom level.
+	 */
+	byte getDefaultZoomLevel() {
+		return 5;
+	}
+
+	/**
 	 * Returns the maximum zoom level that the MapGenerator can handle.
 	 * 
 	 * @return the maximum zoom level.

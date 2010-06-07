@@ -23,7 +23,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 /**
- * Abstract class which must be extended in order to use a MapView.
+ * Custom implementation of the MapActivity class from the Google Maps library.
  */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES = "MapActivity";
@@ -93,7 +93,7 @@ public abstract class MapActivity extends Activity {
 					mapView.setCenterAndZoom(new GeoPoint(preferences.getInt("latitude",
 							defaultStartPoint.getLatitudeE6()), preferences.getInt("longitude",
 							defaultStartPoint.getLongitudeE6())), (byte) preferences.getInt(
-							"zoomLevel", MapView.DEFAULT_ZOOM_LEVEL));
+							"zoomLevel", mapView.getDefaultZoomLevel()));
 				} catch (ClassCastException e) {
 					// bad coordinates, do nothing
 				}

@@ -33,7 +33,7 @@ class ImageBitmapCache {
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
-	private final LinkedHashMap<Tile, Bitmap> map;
+	private LinkedHashMap<Tile, Bitmap> map;
 	private Bitmap tempBitmap;
 	final LinkedList<Bitmap> bitmapPool;
 
@@ -84,11 +84,15 @@ class ImageBitmapCache {
 	 * Destroy the cache at the end of its lifetime.
 	 */
 	synchronized void destroy() {
-		for (Bitmap bitmap : this.map.values()) {
-			bitmap.recycle();
-		}
-		for (Bitmap bitmap : this.bitmapPool) {
-			bitmap.recycle();
+		if (this.map != null) {
+			for (Bitmap bitmap : this.map.values()) {
+				bitmap.recycle();
+			}
+			for (Bitmap bitmap : this.bitmapPool) {
+				bitmap.recycle();
+			}
+			this.map.clear();
+			this.map = null;
 		}
 	}
 
@@ -98,9 +102,8 @@ class ImageBitmapCache {
 
 	synchronized void put(Tile tile, Bitmap bitmap) {
 		if (this.capacity > 0) {
-			if (this.map.containsKey(tile)) {
-				// query the element to update its LRU status
-				this.map.get(tile);
+			if (this.map.get(tile) != null) {
+				// the item is already in the cache
 				return;
 			}
 			bitmap.copyPixelsToBuffer(this.bitmapBuffer);

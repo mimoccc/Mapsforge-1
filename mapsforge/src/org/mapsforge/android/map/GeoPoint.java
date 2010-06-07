@@ -16,6 +16,9 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * Custom implementation of the GeoPoint class from the Google Maps library.
+ */
 public class GeoPoint implements Comparable<GeoPoint> {
 	private static final int MULTIPLICATION_FACTOR = 1000000;
 	private final int hashCode;

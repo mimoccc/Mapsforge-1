@@ -16,6 +16,9 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * All possible operating modes of the MapView.
+ */
 public enum MapViewMode {
 	CANVAS_RENDERER, OPENGL_RENDERER, TILE_DOWNLOAD
 }

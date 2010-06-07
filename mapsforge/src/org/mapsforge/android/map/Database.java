@@ -263,8 +263,7 @@ class Database {
 				}
 			}
 
-			// return the way if at least one of its nodes is in the requested
-			// area
+			// return the way if at least node is in the requested area
 			if (!this.wayInRange) {
 				for (short i = 0; i < this.currentWayNodes - 2; i += 2) {
 					this.currentNodeLongitude = this.currentWayNodesSequence[i];

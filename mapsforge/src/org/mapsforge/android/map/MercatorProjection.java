@@ -16,6 +16,9 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * A static class that implements spherical mercator projection.
+ */
 class MercatorProjection {
 	/**
 	 * Calculate the distance on the ground that is represented by a single pixel on the map.

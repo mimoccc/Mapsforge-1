@@ -16,53 +16,67 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * Fast implementation of the Cohen–Sutherland clipping algorithm.
+ */
 class CohenSutherlandClipping {
-	private static final int BOTTOM = 4;
-	private static int code;
-	private static final int LEFT = 1;
-	private static final int RIGHT = 2;
+	private static final int BOTTOM = 1;
+	private static final int LEFT = 2;
+	private static final int RIGHT = 4;
 	private static final int TOP = 8;
 
 	/**
-	 * Sets the correct flags in the bitmap that represents the position of the point.
+	 * Computes the region code for a given point and rectangle.
 	 */
-	private static int ComputeOutCode(long x, long y, long left2, long bottom2, long right2,
-			long top2) {
-		code = 0;
-		if (y > top2) {
-			code = TOP;
-		} else if (y < bottom2) {
-			code = BOTTOM;
-		}
-		if (x > right2) {
-			return code | RIGHT;
-		} else if (x < left2) {
-			return code | LEFT;
+	private static int calculateOutCode(long x, long y, long left, long bottom, long right,
+			long top) {
+		if (y > top) {
+			if (x > right) {
+				return TOP | RIGHT;
+			} else if (x < left) {
+				return TOP | LEFT;
+			} else {
+				return TOP;
+			}
+		} else if (y < bottom) {
+			if (x > right) {
+				return BOTTOM | RIGHT;
+			} else if (x < left) {
+				return BOTTOM | LEFT;
+			} else {
+				return BOTTOM;
+			}
 		} else {
-			return code;
+			if (x > right) {
+				return RIGHT;
+			} else if (x < left) {
+				return LEFT;
+			} else {
+				return 0;
+			}
 		}
 	}
 
 	/**
-	 * Checks, if a part of a line lies within a rectangular area.
+	 * Checks, if a line intersects with a rectangle.
 	 * 
 	 * @param x1
-	 *            first x coordinate of the line
+	 *            first x coordinate of the line.
 	 * @param y1
-	 *            first y coordinate of the line
+	 *            first y coordinate of the line.
 	 * @param x2
-	 *            second x coordinate of the line
+	 *            second x coordinate of the line.
 	 * @param y2
-	 *            second y coordinate of the line
+	 *            second y coordinate of the line.
 	 * @param left
-	 *            left coordinate of the rectangle
+	 *            left coordinate of the rectangle.
 	 * @param bottom
-	 *            bottom coordinate of the rectangle
+	 *            bottom coordinate of the rectangle.
 	 * @param right
-	 *            right coordinate of the rectangle
+	 *            right coordinate of the rectangle.
 	 * @param top
-	 *            top coordinate of the rectangle
-	 * @return true if the line is in the area, false otherwise.
+	 *            top coordinate of the rectangle.
+	 * @return true if the line is in the rectangle, false otherwise.
 	 */
 	static boolean isLineInRectangle(long x1, long y1, long x2, long y2, long left,
 			long bottom, long right, long top) {
@@ -70,40 +84,52 @@ class CohenSutherlandClipping {
 		long y1new = y1;
 		long x2new = x2;
 		long y2new = y2;
-		int outcodeOut;
-		int outcode0 = ComputeOutCode(x1new, y1new, left, bottom, right, top);
-		int outcode1 = ComputeOutCode(x2new, y2new, left, bottom, right, top);
+
+		// compute the region codes for both points
+		int outcode1 = calculateOutCode(x1, y1, left, bottom, right, top);
+		int outcode2 = calculateOutCode(x2, y2, left, bottom, right, top);
 
 		while (true) {
-			if ((outcode0 | outcode1) == 0) {
+			if ((outcode1 | outcode2) == 0) {
+				// both points are inside the rectangle
 				return true;
-			} else if ((outcode0 & outcode1) > 0) {
+			} else if ((outcode1 & outcode2) > 0) {
+				// both points are outside the rectangle in the same region
 				return false;
+			} else if (outcode1 != 0) {
+				// first point is outside the rectangle
+				if ((outcode1 & TOP) > 0) {
+					x1new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					y1new = top;
+				} else if ((outcode1 & BOTTOM) > 0) {
+					x1new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					y1new = bottom;
+				} else if ((outcode1 & RIGHT) > 0) {
+					x1new = right;
+					y1new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+				} else { // must be LEFT
+					x1new = left;
+					y1new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+				}
+				// recompute the region code for the first point
+				outcode1 = calculateOutCode(x1new, y1new, left, bottom, right, top);
 			} else {
-				long x = 0, y = 0;
-				outcodeOut = outcode0 != 0 ? outcode0 : outcode1;
-				if ((outcodeOut & TOP) > 0) {
-					x = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
-					y = top;
-				} else if ((outcodeOut & BOTTOM) > 0) {
-					x = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
-					y = bottom;
-				} else if ((outcodeOut & RIGHT) > 0) {
-					y = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
-					x = right;
-				} else if ((outcodeOut & LEFT) > 0) {
-					y = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
-					x = left;
+				// second point is outside the rectangle
+				if ((outcode2 & TOP) > 0) {
+					x2new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					y2new = top;
+				} else if ((outcode2 & BOTTOM) > 0) {
+					x2new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					y2new = bottom;
+				} else if ((outcode2 & RIGHT) > 0) {
+					x2new = right;
+					y2new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+				} else { // must be LEFT
+					x2new = left;
+					y2new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
 				}
-				if (outcodeOut == outcode0) {
-					x1new = x;
-					y1new = y;
-					outcode0 = ComputeOutCode(x1new, y1new, left, bottom, right, top);
-				} else {
-					x2new = x;
-					y2new = y;
-					outcode1 = ComputeOutCode(x2new, y2new, left, bottom, right, top);
-				}
+				// recompute the region code for the second point
+				outcode2 = calculateOutCode(x2new, y2new, left, bottom, right, top);
 			}
 		}
 	}
