@@ -16,15 +16,18 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * This static class converts byte arrays to numbers. Byte order is big-endian.
+ */
 class Deserializer {
 	/**
-	 * Converts four bytes from an byte array to an int number.
+	 * Converts four bytes of a byte array to an int number.
 	 * 
 	 * @param buffer
-	 *            the byte array
+	 *            the byte array.
 	 * @param offset
-	 *            the offset in the array
-	 * @return the int value
+	 *            the offset in the array.
+	 * @return the int value.
 	 */
 	static int toInt(byte[] buffer, int offset) {
 		return buffer[offset] << 24 | (buffer[offset + 1] & 0xff) << 16
@@ -32,13 +35,13 @@ class Deserializer {
 	}
 
 	/**
-	 * Converts eight bytes from an byte array to a long number.
+	 * Converts eight bytes of a byte array to a long number.
 	 * 
 	 * @param buffer
-	 *            the byte array
+	 *            the byte array.
 	 * @param offset
-	 *            the offset in the array
-	 * @return the long value
+	 *            the offset in the array.
+	 * @return the long value.
 	 */
 	static long toLong(byte[] buffer, int offset) {
 		return (long) buffer[offset] << 56 | (buffer[offset + 1] & 0xffL) << 48
@@ -48,13 +51,13 @@ class Deserializer {
 	}
 
 	/**
-	 * Converts two bytes from an byte array to a short number.
+	 * Converts two bytes of a byte array to a short number.
 	 * 
 	 * @param buffer
-	 *            the byte array
+	 *            the byte array.
 	 * @param offset
-	 *            the offset in the array
-	 * @return the short value
+	 *            the offset in the array.
+	 * @return the short value.
 	 */
 	static short toShort(byte[] buffer, int offset) {
 		return (short) (buffer[offset] << 8 | (buffer[offset + 1] & 0xff));

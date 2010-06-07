@@ -16,22 +16,53 @@
  */
 package org.mapsforge.preprocessing.map;
 
+/**
+ * This static class converts numbers to byte arrays. Byte order is big-endian.
+ */
 class Serializer {
+	/**
+	 * Converts an int number to a byte array.
+	 * 
+	 * @param value
+	 *            the int value.
+	 * @return an array with four bytes.
+	 */
 	static final byte[] getBytes(int value) {
 		return new byte[] { (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8),
 				(byte) value };
 	}
 
+	/**
+	 * Converts a long number to a byte array.
+	 * 
+	 * @param value
+	 *            the long value.
+	 * @return an array with eight bytes.
+	 */
 	static byte[] getBytes(long value) {
 		return new byte[] { (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40),
 				(byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
 				(byte) (value >> 8), (byte) (value) };
 	}
 
+	/**
+	 * Converts a short number to a byte array.
+	 * 
+	 * @param value
+	 *            the short value.
+	 * @return an array with two bytes.
+	 */
 	static byte[] getBytes(short value) {
 		return new byte[] { (byte) (value >> 8), (byte) value };
 	}
 
+	/**
+	 * Converts the lowest five bytes of a long number to a byte array.
+	 * 
+	 * @param value
+	 *            the long value.
+	 * @return an array with five bytes.
+	 */
 	static byte[] getFiveBytes(long value) {
 		return new byte[] { (byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
 				(byte) (value >> 8), (byte) (value) };
