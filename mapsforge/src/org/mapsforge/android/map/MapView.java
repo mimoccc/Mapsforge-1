@@ -498,6 +498,8 @@ public class MapView extends ViewGroup {
 			handleTiles(true);
 		} else {
 			this.mapFile = null;
+			clearMapView();
+			invalidate();
 		}
 	}
 
