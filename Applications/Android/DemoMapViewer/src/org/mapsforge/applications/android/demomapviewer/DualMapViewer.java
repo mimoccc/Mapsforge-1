@@ -23,6 +23,7 @@ import org.mapsforge.android.map.MapViewMode;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
@@ -48,6 +49,12 @@ public class DualMapViewer extends MapActivity {
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		// forward the event to both MapViews for simultaneous movement
 		return (this.mapView1.onKeyUp(keyCode, event) | this.mapView2.onKeyUp(keyCode, event));
+	}
+
+	@Override
+	public boolean onTrackballEvent(MotionEvent event) {
+		// forward the event to both MapViews for simultaneous movement
+		return (this.mapView1.onTrackballEvent(event) | this.mapView2.onTrackballEvent(event));
 	}
 
 	@Override
