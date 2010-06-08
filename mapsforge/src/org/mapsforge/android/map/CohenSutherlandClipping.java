@@ -105,11 +105,11 @@ class CohenSutherlandClipping {
 					x1new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
 					y1new = bottom;
 				} else if ((outcode1 & RIGHT) > 0) {
-					x1new = right;
 					y1new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					x1new = right;
 				} else { // must be LEFT
-					x1new = left;
 					y1new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					x1new = left;
 				}
 				// recompute the region code for the first point
 				outcode1 = calculateOutCode(x1new, y1new, left, bottom, right, top);
@@ -122,11 +122,11 @@ class CohenSutherlandClipping {
 					x2new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
 					y2new = bottom;
 				} else if ((outcode2 & RIGHT) > 0) {
-					x2new = right;
 					y2new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					x2new = right;
 				} else { // must be LEFT
-					x2new = left;
 					y2new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					x2new = left;
 				}
 				// recompute the region code for the second point
 				outcode2 = calculateOutCode(x2new, y2new, left, bottom, right, top);

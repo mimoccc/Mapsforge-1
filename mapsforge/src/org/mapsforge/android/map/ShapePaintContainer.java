@@ -18,29 +18,12 @@ package org.mapsforge.android.map;
 
 import android.graphics.Paint;
 
-class PointContainer {
+class ShapePaintContainer {
 	final Paint paint;
-	final String text;
-	final float x;
-	final float y;
+	final ShapeContainer shapeContainer;
 
-	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
-	 * and a paint for drawing.
-	 * 
-	 * @param text
-	 *            the text of the point.
-	 * @param x
-	 *            the x coordinate of the point.
-	 * @param y
-	 *            the y coordinate of the point.
-	 * @param paint
-	 *            the paint for the point.
-	 */
-	PointContainer(String text, float x, float y, Paint paint) {
-		this.text = text;
-		this.x = x;
-		this.y = y;
+	ShapePaintContainer(ShapeContainer shapeContainer, Paint paint) {
+		this.shapeContainer = shapeContainer;
 		this.paint = paint;
 	}
 }

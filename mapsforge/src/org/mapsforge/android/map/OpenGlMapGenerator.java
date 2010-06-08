@@ -44,7 +44,7 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawNodes(ArrayList<PointContainer> drawNodes) {
+	void drawNodes(ArrayList<PointTextContainer> drawNodes) {
 		// TODO Auto-generated method stub
 	}
 
@@ -54,12 +54,12 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWayNames(ArrayList<PathTextContainer> drawWayNames) {
+	void drawWayNames(ArrayList<WayTextContainer> drawWayNames) {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
-	void drawWays(ArrayList<ArrayList<ArrayList<PathContainer>>> drawWays, byte layers,
+	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer) {
 		// TODO Auto-generated method stub
 	}

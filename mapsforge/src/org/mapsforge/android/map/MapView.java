@@ -637,7 +637,7 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setupFpsText() {
-		// create the paint for drawing the FPS text
+		// create the paint1 for drawing the FPS text
 		this.fpsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		this.fpsPaint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		this.fpsPaint.setTextSize(20);

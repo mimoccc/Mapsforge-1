@@ -16,28 +16,19 @@
  */
 package org.mapsforge.android.map;
 
-import android.graphics.Paint;
-import android.graphics.Path;
+class CircleContainer extends ShapeContainer {
+	final float radius;
+	final float x;
+	final float y;
 
-class PathTextContainer {
-	final Paint paint;
-	final Path path;
-	final String text;
+	CircleContainer(float x, float y, float radius) {
+		this.x = x;
+		this.y = y;
+		this.radius = radius;
+	}
 
-	/**
-	 * Create a new path text container, that holds a path, a text variable and a paint for
-	 * drawing.
-	 * 
-	 * @param path
-	 *            the path
-	 * @param paint
-	 *            the paint
-	 * @param text
-	 *            the text
-	 */
-	PathTextContainer(Path path, Paint paint, String text) {
-		this.path = path;
-		this.paint = paint;
-		this.text = text;
+	@Override
+	ShapeType getShapeType() {
+		return ShapeType.CIRCLE;
 	}
 }

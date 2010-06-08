@@ -16,23 +16,6 @@
  */
 package org.mapsforge.android.map;
 
-import android.graphics.Paint;
-import android.graphics.Path;
-
-class PathContainer {
-	final Paint paint;
-	final Path path;
-
-	/**
-	 * Create a new path container, that holds a path and a paint for drawing.
-	 * 
-	 * @param path
-	 *            the path
-	 * @param paint
-	 *            the paint
-	 */
-	PathContainer(Path path, Paint paint) {
-		this.path = path;
-		this.paint = paint;
-	}
+abstract class ShapeContainer {
+	abstract ShapeType getShapeType();
 }
