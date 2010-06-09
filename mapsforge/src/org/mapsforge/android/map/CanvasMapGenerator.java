@@ -82,7 +82,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 			for (int i = 2; i < this.coordinates.length; i += 2) {
 				this.path.lineTo(this.coordinates[i], this.coordinates[i + 1]);
 			}
-			this.path.setFillType(Path.FillType.WINDING);
 			this.canvas.drawTextOnPath(this.pathTextContainer.text, this.path, 0, 3,
 					this.pathTextContainer.paint);
 		}
@@ -103,7 +102,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 							this.circleContainer = (CircleContainer) this.shapePaintContainer.shapeContainer;
 							this.path.addCircle(this.circleContainer.x, this.circleContainer.y,
 									this.circleContainer.radius, Path.Direction.CCW);
-							this.path.setFillType(Path.FillType.WINDING);
 							break;
 						case SIMPLE_WAY:
 							this.simpleWayContainer = (SimpleWayContainer) this.shapePaintContainer.shapeContainer;
@@ -112,7 +110,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 							for (int i = 2; i < this.coordinates.length; i += 2) {
 								this.path.lineTo(this.coordinates[i], this.coordinates[i + 1]);
 							}
-							this.path.setFillType(Path.FillType.WINDING);
 							break;
 						case COMPLEX_WAY:
 							this.complexWayContainer = (ComplexWayContainer) this.shapePaintContainer.shapeContainer;
@@ -125,15 +122,12 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 							this.innerCoordinates = this.complexWayContainer.innerCoordinates;
 							for (int j = 0; j < this.innerCoordinates.length; ++j) {
 								this.coordinates = this.innerCoordinates[j];
-								Path innerPath = new Path();
-								innerPath.moveTo(this.coordinates[0], this.coordinates[1]);
+								this.path.moveTo(this.coordinates[0], this.coordinates[1]);
 								for (int i = 2; i < this.coordinates.length; i += 2) {
-									innerPath.lineTo(this.coordinates[i],
+									this.path.lineTo(this.coordinates[i],
 											this.coordinates[i + 1]);
 								}
-								this.path.addPath(innerPath);
 							}
-							this.path.setFillType(Path.FillType.EVEN_ODD);
 							break;
 					}
 					this.canvas.drawPath(this.path, this.shapePaintContainer.paint);
@@ -166,5 +160,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	void setupMapGenerator(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
 		this.path = new Path();
+		this.path.setFillType(Path.FillType.EVEN_ODD);
 	}
 }

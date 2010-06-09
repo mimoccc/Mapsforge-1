@@ -407,12 +407,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 	}
 
-	private void addWayName(String wayName, short wayNodes, int[] wayNodesSequence) {
+	private void addWayName(String wayName, short wayNodes) {
 		// calculate the approximate way name length plus some margin of safety
 		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 5;
 
-		this.previousX = scaleLongitude(wayNodesSequence[0]);
-		this.previousY = scaleLatitude(wayNodesSequence[1]);
+		this.previousX = this.coordinates[0];
+		this.previousY = this.coordinates[1];
 
 		// flag if the current way name has been rendered at least once
 		this.wayNameRendered = false;
@@ -420,15 +420,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		// find way segments long enough to draw the way name on them
 		for (short i = 2; i < wayNodes; i += 2) {
-			this.currentX = scaleLongitude(wayNodesSequence[i]);
-			this.currentY = scaleLatitude(wayNodesSequence[i + 1]);
+			this.currentX = this.coordinates[i];
+			this.currentY = this.coordinates[i + 1];
 			if (this.skipSegments > 0) {
 				--this.skipSegments;
 			} else {
-				/*
-				 * check the length of the current segment by calculating the Euclidian distance
-				 * of the segment way points
-				 */
+				// check the length of the current segment by calculating the Euclidian distance
 				this.distanceX = this.currentX - this.previousX;
 				this.distanceY = this.currentY - this.previousY;
 				this.pathLengthInPixel = SquareRoot
@@ -459,16 +456,30 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.previousY = this.currentY;
 		}
 
-		/*
-		 * if no segment is long enough, test if the name can be drawn on the whole way which
-		 * may lead to collisions with other way names
-		 */
+		// if no segment is long enough, check if the name can be drawn on the whole way
 		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
-				&& getWayLengthInPixel(wayNodes, wayNodesSequence) > this.wayNameWidth) {
-			this.coordinates = new float[wayNodesSequence.length];
-			for (short i = 0; i < wayNodes; i += 2) {
-				this.coordinates[i] = scaleLongitude(wayNodesSequence[i]);
-				this.coordinates[i + 1] = scaleLatitude(wayNodesSequence[i + 1]);
+				&& getWayLengthInPixel(wayNodes) > this.wayNameWidth) {
+			// check to prevent inverted way names
+			if (this.coordinates[0] > this.coordinates[wayNodes - 2]) {
+				// reverse the way coordinates
+				int offsetLeft = 0;
+				int offsetRight = this.coordinates.length - 2;
+				float exchangeValue;
+				while (offsetLeft < offsetRight) {
+					// exchange the way x coordinates
+					exchangeValue = this.coordinates[offsetLeft];
+					this.coordinates[offsetLeft] = this.coordinates[offsetRight];
+					this.coordinates[offsetRight] = exchangeValue;
+
+					// exchange the way y coordinates
+					exchangeValue = this.coordinates[offsetLeft + 1];
+					this.coordinates[offsetLeft + 1] = this.coordinates[offsetRight + 1];
+					this.coordinates[offsetRight + 1] = exchangeValue;
+
+					// move the pointers to the next position;
+					offsetLeft += 2;
+					offsetRight -= 2;
+				}
 			}
 			this.wayNames.add(new WayTextContainer(this.coordinates, wayName,
 					PAINT_NAME_BLACK_10));
@@ -505,16 +516,16 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	/**
-	 * Calculate the approximate length in pixel of this way using the Euclidean distance for
-	 * each way segment.
+	 * Calculate the approximate length in pixel of the current way coordinates using the
+	 * Euclidean distance for each way segment.
 	 */
-	private int getWayLengthInPixel(short wayNodes, int[] wayNodesSequence) {
-		this.previousX = scaleLongitude(wayNodesSequence[0]);
-		this.previousY = scaleLatitude(wayNodesSequence[1]);
+	private int getWayLengthInPixel(short wayNodes) {
+		this.previousX = this.coordinates[0];
+		this.previousY = this.coordinates[1];
 		this.pathLengthInPixel = 0;
 		for (short i = 2; i < wayNodes; i += 2) {
-			this.currentX = scaleLongitude(wayNodesSequence[i]);
-			this.currentY = scaleLatitude(wayNodesSequence[i + 1]);
+			this.currentX = this.coordinates[i];
+			this.currentY = this.coordinates[i + 1];
 			this.distanceX = this.currentX - this.previousX;
 			this.distanceY = this.currentY - this.previousY;
 			this.pathLengthInPixel += SquareRoot
@@ -1923,7 +1934,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY1).add(
@@ -1933,7 +1944,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$MOTORWAY_LINK]) {
@@ -1947,7 +1958,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK1).add(
@@ -1957,7 +1968,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRUNK]) {
@@ -1971,7 +1982,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK1).add(
@@ -1979,7 +1990,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRUNK_LINK]) {
@@ -1993,7 +2004,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK1).add(
@@ -2003,7 +2014,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TRUNK_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PRIMARY]) {
@@ -2017,7 +2028,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY1)
@@ -2029,7 +2040,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_PRIMARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PRIMARY_LINK]) {
@@ -2043,7 +2054,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK1).add(
@@ -2053,7 +2064,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PRIMARY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$SECONDARY]) {
@@ -2067,7 +2078,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY1).add(
@@ -2077,7 +2088,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TERTIARY]) {
@@ -2091,7 +2102,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY1).add(
@@ -2101,7 +2112,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TERTIARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$UNCLASSIFIED]) {
@@ -2115,7 +2126,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED1).add(
@@ -2125,7 +2136,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_UNCLASSIFIED2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$ROAD]) {
@@ -2139,7 +2150,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$ROAD1).add(
@@ -2147,7 +2158,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$RESIDENTIAL]) {
@@ -2161,7 +2172,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL1).add(
@@ -2171,7 +2182,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_RESIDENTIAL2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$LIVING_STREET]) {
@@ -2185,7 +2196,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET1).add(
@@ -2195,7 +2206,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_LIVING_STREET2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$SERVICE]) {
@@ -2218,7 +2229,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE1)
@@ -2230,7 +2241,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_SERVICE2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRACK]) {
@@ -2244,7 +2255,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRACK1).add(
@@ -2252,7 +2263,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PEDESTRIAN]) {
@@ -2275,7 +2286,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN1).add(
@@ -2285,7 +2296,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PATH]) {
@@ -2299,7 +2310,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PATH1).add(
@@ -2307,7 +2318,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$CYCLEWAY]) {
@@ -2321,7 +2332,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY1).add(
@@ -2331,7 +2342,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CYCLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$FOOTWAY]) {
@@ -2354,7 +2365,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY1)
@@ -2366,7 +2377,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_FOOTWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$BRIDLEWAY]) {
@@ -2380,7 +2391,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY1).add(
@@ -2390,7 +2401,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_BRIDLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$STEPS]) {
@@ -2404,7 +2415,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$STEPS1).add(
@@ -2412,7 +2423,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$CONSTRUCTION]) {
@@ -2422,14 +2433,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CONSTRUCTION));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes, wayNodesSequence);
+						addWayName(wayName, wayNodes);
 					}
 				}
 			}
