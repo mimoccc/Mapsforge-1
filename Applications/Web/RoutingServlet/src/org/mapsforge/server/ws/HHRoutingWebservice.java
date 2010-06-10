@@ -3,7 +3,7 @@ package org.mapsforge.server.ws;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,9 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.*;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.datastructures.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
-import org.mapsforge.server.routing.highwayHierarchies.*;
+import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.server.routing.IEdge;
+import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.RouterFactory;
 
 /**
  * Servlet implementation class HHRoutingWebservice
@@ -21,11 +22,17 @@ import org.mapsforge.server.routing.highwayHierarchies.*;
 public class HHRoutingWebservice extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	private static HHRouter router;
+	private static IRouter router;
+	private String propertiesURI;
 	
 	public void init() {
 		try {
-			router = HHRouterFactory.getHHRouterInstance();
+			propertiesURI = getServletContext().getRealPath("/WEB-INF/routerFactory.properties");
+			System.out.println("Loading from: " + propertiesURI);
+			long t = System.currentTimeMillis();
+			router = RouterFactory.getRouter(propertiesURI);
+			t = System.currentTimeMillis() - t;
+			System.out.println("Loaded in " + t + " milliseconds");
 		} catch (Exception e) {
 			System.err.print(e.toString());
 		}
@@ -49,15 +56,15 @@ public class HHRoutingWebservice extends HttpServlet {
 			ArrayList<Integer> pointIds = parseInputString(request.getParameter("points"));
 			// ToDo: handle any number of stops along the way
 			// for now its just source and destination
-			LinkedList<HHStaticEdge> routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
+			IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
+			//IEdge[] routeEdges = router.getShortestPath(2, 6921);
 			JSONObject json = getGeoJson(routeEdges);
 			String format = request.getParameter("format");
-			System.out.println(format);
 			if (format.equalsIgnoreCase("json")) {
-				response.setHeader("Content-Type", "application/json");
+				response.setHeader("Content-Type", "application/json; charset=utf-8"); // iso-8859-1  utf-8
 				json.write(out);
 			} else if (format.equalsIgnoreCase("xml")) {
-				response.setHeader("Content-Type", "text/xml");
+				response.setHeader("Content-Type", "text/xml;");
 				// Put it into a root object
 				out.write(org.json.XML.toString(json, "route"));
 			}
@@ -71,21 +78,22 @@ public class HHRoutingWebservice extends HttpServlet {
 	 * @param c the coordinate which is to be added
 	 * @param a the JSONArray to which the coordinate is added
 	 */
-	private JSONObject getGeoJson(LinkedList<HHStaticEdge> routeEdges) {
+	private JSONObject getGeoJson(IEdge[] routeEdges) {
 		try {
 			JSONObject json = new JSONObject();
 			JSONArray jsonfeatures = new JSONArray();
 			json.put("type", "FeatureCollection");
 			json.put("features", jsonfeatures);
-			for (HHStaticEdge routeEdge : routeEdges) {
-				ArrayList<PolarCoordinate> streetCoordinates = new ArrayList<PolarCoordinate>();
-				streetCoordinates.add(router.getCoordinate(routeEdge.getSource().getId()));
-				streetCoordinates.add(router.getCoordinate(routeEdge.getTarget().getId()));
+			for (IEdge routeEdge : routeEdges) {
+				ArrayList<GeoCoordinate> streetCoordinates = new ArrayList<GeoCoordinate>();
+				streetCoordinates.add(routeEdge.getSource().getCoordinate());
+				streetCoordinates.addAll(Arrays.asList(routeEdge.getWaypoints()));
+				streetCoordinates.add(routeEdge.getTarget().getCoordinate());
 				JSONArray streetCoordinatesAsJson = new JSONArray();
-				for (PolarCoordinate sc : streetCoordinates) {
+				for (GeoCoordinate sc : streetCoordinates) {
 					streetCoordinatesAsJson.put(new JSONArray()
-						.put(sc.getLongitudeDouble())
-						.put(sc.getLatitudeDouble())
+						.put(sc.getLongitude().getDegree())
+						.put(sc.getLatitude().getDegree())
 					);
 				}
 				jsonfeatures.put(new JSONObject()
@@ -95,7 +103,7 @@ public class HHRoutingWebservice extends HttpServlet {
 						.put("coordinates", streetCoordinatesAsJson)
 					)
 					.put("properties", new JSONObject()
-						.put("Name", "Value")
+						.put("Name", routeEdge.getName())
 					)
 				);	
 			}
@@ -117,10 +125,12 @@ public class HHRoutingWebservice extends HttpServlet {
 		String[] alternatingCoordinates = points.split("[;,]");
 		ArrayList<Integer> pp = new ArrayList<Integer>();
 		for (int i = 0; i < alternatingCoordinates.length; i += 2) {
-			pp.add(router.getNearestVertexId(
-					Double.valueOf(alternatingCoordinates[i]), 
-					Double.valueOf(alternatingCoordinates[i+1])
-				));
+			int id = router.getNearestVertex(new GeoCoordinate(
+					Double.valueOf(alternatingCoordinates[i+1]), 
+					Double.valueOf(alternatingCoordinates[i])
+				)).getId();
+			System.out.println(id);
+			pp.add(id);
 		}
 		return pp;
 	}	
