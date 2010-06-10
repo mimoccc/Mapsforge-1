@@ -17,14 +17,17 @@
 package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 
 import gnu.trove.set.hash.THashSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.DirectedWeightedStaticArrayGraph.Edge;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering.Cluster;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
@@ -38,9 +41,20 @@ public class KCenterClusteringAlgorithm {
 
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MIN_SIZE;
 
-	public KCenterClustering computeClustering(DirectedWeightedStaticArrayGraph graph, int k,
-			int heuristic) {
+	public static KCenterClustering[] computeClustering(IGraph[] graph,
+			int avgVerticesPerCluster, int heuristic) {
+		KCenterClustering[] clustering = new KCenterClustering[graph.length];
+		for (int i = 0; i < graph.length; i++) {
+			clustering[i] = computeClustering(graph[i], graph[i].numVertices()
+					/ avgVerticesPerCluster, heuristic);
+		}
+		return clustering;
+	}
+
+	public static KCenterClustering computeClustering(IGraph graph, int k, int heuristic) {
+		k = Math.max(k, 1);
 		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(2)));
+		k_ = Math.max(k, k_);
 		System.out.println("computing k-center clustering (k = " + k + ", k' = " + k_ + ")");
 
 		System.out.println("randomly choosing k' centers");
@@ -54,24 +68,31 @@ public class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	private KCenterClustering chooseRandomCenters(DirectedWeightedStaticArrayGraph graph, int k_) {
-		KCenterClustering clustering = new KCenterClustering(graph.numVertices());
+	private static KCenterClustering chooseRandomCenters(IGraph graph, int k_) {
 
 		Random rnd = new Random(1);
-		int[] potentialIds = graph.getConnectedVertices();
+		int maxVertexId = 0;
+		int[] ids = new int[graph.numVertices()];
+		int offset = 0;
+		for (Iterator<? extends IVertex> iter = graph.getVertices(); iter.hasNext();) {
+			IVertex v = iter.next();
+			ids[offset] = v.getId();
+			maxVertexId = Math.max(ids[offset], maxVertexId);
+			offset++;
+		}
+		KCenterClustering clustering = new KCenterClustering(maxVertexId);
 
 		for (int i = 0; i < k_; i++) {
-			int centerVertex = potentialIds[rnd.nextInt(potentialIds.length)];
+			int centerVertex = ids[rnd.nextInt(ids.length)];
 			while (clustering.getCluster(centerVertex) != null) {
-				centerVertex = potentialIds[rnd.nextInt(potentialIds.length)];
+				centerVertex = ids[rnd.nextInt(ids.length)];
 			}
 			clustering.addCluster(centerVertex);
 		}
 		return clustering;
 	}
 
-	private void expandClusters(DirectedWeightedStaticArrayGraph graph,
-			KCenterClustering clustering) {
+	private static void expandClusters(IGraph graph, KCenterClustering clustering) {
 		// map vertex id to heap item of enqueued vertex
 		HashMap<Integer, HeapItem> enqueuedVertices = new HashMap<Integer, HeapItem>();
 
@@ -83,8 +104,8 @@ public class KCenterClusteringAlgorithm {
 			enqueuedVertices.put(c.getCenterVertex(), item);
 		}
 
-		// keep one bit for every visited vertex
-		BitArray visited = new BitArray(graph.numVertices());
+		// remember which vertices were visited
+		TIntHashSet visited = new TIntHashSet();
 
 		// dijkstra loop
 		int count = 0;
@@ -93,20 +114,20 @@ public class KCenterClusteringAlgorithm {
 			HeapItem uItem = queue.extractMin();
 			int u = uItem.vertexId;
 			enqueuedVertices.remove(u);
-			visited.set(u);
+			visited.add(u);
 
 			// add u to the cluster his it parent belongs to
 			if (uItem.parent != u) {
 				clustering.getCluster(uItem.parent).addVertex(u, uItem.distance);
 			}
 			// relax adjacent edges
-			Edge[] adjEdges = graph.getOutboundEdges(graph.getVertex(u));
+			IEdge[] adjEdges = graph.getVertex(u).getOutboundEdges();
 			for (int i = 0; i < adjEdges.length; i++) {
 				int weight = adjEdges[i].getWeight();
-				int v = adjEdges[i].getTargetId();
+				int v = adjEdges[i].getTarget().getId();
 
 				// relax edge if v was not already visited
-				if (!visited.get(v)) {
+				if (!visited.contains(v)) {
 					HeapItem vItem = enqueuedVertices.get(v);
 					if (vItem == null) {
 						vItem = new HeapItem(v, uItem.distance + weight, u);
@@ -129,8 +150,8 @@ public class KCenterClusteringAlgorithm {
 				+ ((count / MSG_INT_BUILD_CLUSTERS) * MSG_INT_BUILD_CLUSTERS) + " - " + count);
 	}
 
-	private void sampleDown(DirectedWeightedStaticArrayGraph graph,
-			KCenterClustering clustering, int k, int k_, int heuristik) {
+	private static void sampleDown(IGraph graph, KCenterClustering clustering, int k, int k_,
+			int heuristik) {
 		int count = 0;
 		while (k_ - count > k) {
 			Cluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
@@ -146,8 +167,8 @@ public class KCenterClusteringAlgorithm {
 
 	}
 
-	private void removeClusterAndRearrange(DirectedWeightedStaticArrayGraph graph,
-			KCenterClustering clustering, Cluster cluster) {
+	private static void removeClusterAndRearrange(IGraph graph, KCenterClustering clustering,
+			Cluster cluster) {
 		// remove the cluster
 		Cluster[] adjClusters = getAdjacentClusters(graph, clustering, cluster);
 		int clusterSize = cluster.size();
@@ -166,8 +187,8 @@ public class KCenterClusteringAlgorithm {
 			enqueuedVertices.put(c.getCenterVertex(), item);
 		}
 
-		// keep one bit for every visited vertex
-		BitArray visited = new BitArray(graph.numVertices());
+		// remember which vertices were visited
+		TIntHashSet visited = new TIntHashSet();
 
 		int disseminatedVertices = 0;
 		// dijkstra loop (skip if all vertices of cluster are disseminated)
@@ -176,7 +197,7 @@ public class KCenterClusteringAlgorithm {
 			HeapItem uItem = queue.extractMin();
 			int u = uItem.vertexId;
 			enqueuedVertices.remove(u);
-			visited.set(u);
+			visited.add(u);
 
 			// add u to the cluster his it parent belongs to, if u does not belong to any
 			// cluster
@@ -185,13 +206,13 @@ public class KCenterClusteringAlgorithm {
 				disseminatedVertices++;
 			}
 			// relax adjacent edges
-			Edge[] adjEdges = graph.getOutboundEdges(graph.getVertex(u));
+			IEdge[] adjEdges = graph.getVertex(u).getOutboundEdges();
 			for (int i = 0; i < adjEdges.length; i++) {
 				int weight = adjEdges[i].getWeight();
-				int v = adjEdges[i].getTargetId();
+				int v = adjEdges[i].getTarget().getId();
 
 				// relax edge if v was not already visited
-				if (!visited.get(v)) {
+				if (!visited.contains(v)) {
 					HeapItem vItem = enqueuedVertices.get(v);
 					if (vItem == null) {
 						vItem = new HeapItem(v, uItem.distance + weight, u);
@@ -208,12 +229,12 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private Cluster[] getAdjacentClusters(DirectedWeightedStaticArrayGraph graph,
-			KCenterClustering clustering, Cluster cluster) {
+	private static Cluster[] getAdjacentClusters(IGraph graph, KCenterClustering clustering,
+			Cluster cluster) {
 		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : cluster.getVertices()) {
-			for (Edge e : graph.getOutboundEdges(graph.getVertex(v))) {
-				Cluster c = clustering.getCluster(e.getTargetId());
+			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
+				Cluster c = clustering.getCluster(e.getTarget().getId());
 				if (c != null && !c.equals(cluster)) {
 					set.add(c);
 				}
@@ -224,8 +245,8 @@ public class KCenterClusteringAlgorithm {
 		return adjClusters;
 	}
 
-	private Cluster chooseClusterForRemoval(DirectedWeightedStaticArrayGraph graph,
-			KCenterClustering clustering, int heuristik) {
+	private static Cluster chooseClusterForRemoval(IGraph graph, KCenterClustering clustering,
+			int heuristik) {
 		switch (heuristik) {
 			case HEURISTIC_MIN_RADIUS:
 				return getMinCluster(clustering, new Comparator<Cluster>() {
@@ -248,7 +269,7 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private Cluster getMinCluster(KCenterClustering clustering, Comparator<Cluster> comp) {
+	private static Cluster getMinCluster(KCenterClustering clustering, Comparator<Cluster> comp) {
 		Cluster min = clustering.getClusters().iterator().next();
 		for (Cluster c : clustering.getClusters()) {
 			if (comp.compare(c, min) < 0) {
@@ -258,7 +279,7 @@ public class KCenterClusteringAlgorithm {
 		return min;
 	}
 
-	private class HeapItem implements IBinaryHeapItem<Integer> {
+	private static class HeapItem implements IBinaryHeapItem<Integer> {
 
 		private final int vertexId;
 		private int heapIndex, distance, parent;

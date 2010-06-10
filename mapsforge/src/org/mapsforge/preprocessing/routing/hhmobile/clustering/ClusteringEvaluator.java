@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 mapsforge.org
+ * Copyright 2010 mapsfor-*ge.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import java.awt.Color;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.DirectedWeightedStaticArrayGraph.Edge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.RouterFactory;
 
@@ -36,45 +35,26 @@ public class ClusteringEvaluator {
 
 		// get data from db
 
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "germany",
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
 				"postgres", "admin");
-		DirectedWeightedStaticArrayGraph graph = DirectedWeightedStaticArrayGraph.buildHHGraph(
-				conn, 0);
-		IRouter router = RouterFactory.getRouter();
-
-		HHDbReader reader = new HHDbReader(conn);
-		int n = reader.numVertices();
-		int[] lon = new int[n];
-		int[] lat = new int[n];
-
-		for (Iterator<HHVertex> iter = reader.getVertices(); iter.hasNext();) {
-			HHVertex v = iter.next();
-			lon[v.id] = GeoCoordinate.dtoi(v.longitude);
-			lat[v.id] = GeoCoordinate.dtoi(v.latitude);
-		}
+		LevelGraph levelGraph = new LevelGraph(conn);
+		Level graph = levelGraph.getLevel(0);
 
 		// k-center
 		int avgVerticesPerCluster = 500;
-		KCenterClusteringAlgorithm kCenterAlgorithm = new KCenterClusteringAlgorithm();
-		int k = (int) Math.rint(graph.numConnectedVertices() / avgVerticesPerCluster);
-		KCenterClustering kCenterClustering = kCenterAlgorithm.computeClustering(graph, k,
-				KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+		int k = (int) Math.rint(graph.numVertices() / avgVerticesPerCluster);
+		KCenterClustering kCenterClustering = KCenterClusteringAlgorithm.computeClustering(
+				graph, k, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 
 		// quad
-		// QuadTreeClusteringAlgorithm quadAlgorithm = new QuadTreeClusteringAlgorithm();
-		// QuadTreeClustering quadClustering = quadAlgorithm.computeClustering(graph, lon, lat,
-		// QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
-		//
-		// // dijkstra based
-		// DijkstraBasedClusteringAlgorithm dbAlgorithm = new
-		// DijkstraBasedClusteringAlgorithm();
-		// QuadTreeClustering dbClustering = dbAlgorithm.computeClustering(graph,
-		// avgVerticesPerCluster);
+		QuadTreeClustering quadClustering = QuadTreeClusteringAlgorithm.computeClustering(
+				graph, levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
+				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
 
 		// render
-		// renderClustering(router, kCenterClustering);
-		// renderClustering(router, quadClustering);
-		// renderClustering(router, dbClustering);
+		IRouter router = RouterFactory.getRouter();
+		renderClustering(router, kCenterClustering);
+		renderClustering(router, quadClustering);
 
 		evaluateClustering(kCenterClustering, graph);
 	}
@@ -85,8 +65,7 @@ public class ClusteringEvaluator {
 
 	}
 
-	private static void evaluateClustering(IClustering clustering,
-			DirectedWeightedStaticArrayGraph graph) {
+	private static void evaluateClustering(IClustering clustering, IGraph graph) {
 		int[] countV, countInternalE, countExternalE, countVE, percentInternalE;
 		countV = new int[clustering.size()];
 		countInternalE = new int[clustering.size()];
@@ -101,8 +80,8 @@ public class ClusteringEvaluator {
 			countInternalE[i] = 0;
 			countExternalE[i] = 0;
 			for (int v : c.getVertices()) {
-				for (Edge e : graph.getOutboundEdges(graph.getVertex(v))) {
-					if (clustering.getCluster(e.getTargetId()) == c) {
+				for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
+					if (clustering.getCluster(e.getTarget().getId()) == c) {
 						countInternalE[i]++;
 					} else {
 						countExternalE[i]++;

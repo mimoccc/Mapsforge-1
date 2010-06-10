@@ -19,6 +19,7 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClustering.QuadTreeCluster;
+import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class QuadTreeClusteringAlgorithm {
@@ -27,19 +28,22 @@ public class QuadTreeClusteringAlgorithm {
 	public static final int HEURISTIC_MEDIAN = 1;
 	public static final int HEURISTIC_AVERAGE = 2;
 
+	private static final int HEURISTIC_DEFAULT = HEURISTIC_MEDIAN;
 	private static final String[] HEURISTIC_NAMES = new String[] { "center", "median",
 			"average" };
+	private static final QuickSort quicksort = new QuickSort();
 
-	private static final int HEURISTIC_DEFAULT = HEURISTIC_MEDIAN;
-
-	private final QuickSort quicksort;
-
-	public QuadTreeClusteringAlgorithm() {
-		this.quicksort = new QuickSort();
+	public static QuadTreeClustering[] computeClustering(IGraph[] graph, int[] lon, int[] lat,
+			int heuristik, int threshold) throws IllegalArgumentException {
+		QuadTreeClustering[] clustering = new QuadTreeClustering[graph.length];
+		for (int i = 0; i < graph.length; i++) {
+			clustering[i] = computeClustering(graph[i], lon, lat, heuristik, threshold);
+		}
+		return clustering;
 	}
 
-	public QuadTreeClustering computeClustering(DirectedWeightedStaticArrayGraph graph,
-			int[] lon, int[] lat, int heuristik, int threshold) throws IllegalArgumentException {
+	public static QuadTreeClustering computeClustering(IGraph graph, int[] lon, int[] lat,
+			int heuristik, int threshold) throws IllegalArgumentException {
 		if (lon.length != lat.length || lon.length != graph.numVertices()) {
 			throw new IllegalArgumentException(
 					"Must pass exactly one coordinate for each vertex");
@@ -66,8 +70,8 @@ public class QuadTreeClusteringAlgorithm {
 		return clustering;
 	}
 
-	private void subdivide(int vertexId[], int lon[], int lat[], int l, int r, int heuristic,
-			QuadTreeClustering clustering, int threshold) {
+	private static void subdivide(int vertexId[], int lon[], int lat[], int l, int r,
+			int heuristic, QuadTreeClustering clustering, int threshold) {
 		if ((r - l) > threshold) {
 			// subdivide
 			GeoCoordinate splitCoord = getSplitCoordinate(vertexId, lon, lat, l, r, heuristic);
@@ -127,8 +131,8 @@ public class QuadTreeClusteringAlgorithm {
 		}
 	}
 
-	private GeoCoordinate getSplitCoordinate(int vertexId[], int lon[], int lat[], int l,
-			int r, int heuristic) {
+	private static GeoCoordinate getSplitCoordinate(int vertexId[], int lon[], int lat[],
+			int l, int r, int heuristic) {
 		switch (heuristic) {
 			case HEURISTIC_CENTER:
 				return getCenterCoordinate(lon, lat, l, r);
@@ -141,7 +145,7 @@ public class QuadTreeClusteringAlgorithm {
 		}
 	}
 
-	private GeoCoordinate getCenterCoordinate(int lon[], int lat[], int l, int r) {
+	private static GeoCoordinate getCenterCoordinate(int lon[], int lat[], int l, int r) {
 		long minLon = Integer.MAX_VALUE;
 		long minLat = Integer.MAX_VALUE;
 		long maxLon = Integer.MIN_VALUE;
@@ -160,7 +164,7 @@ public class QuadTreeClusteringAlgorithm {
 		return new GeoCoordinate(latitude, longitude);
 	}
 
-	private GeoCoordinate getAverageCoordinate(int lon[], int lat[], int l, int r) {
+	private static GeoCoordinate getAverageCoordinate(int lon[], int lat[], int l, int r) {
 		double sumLon = 0d;
 		double sumLat = 0d;
 
@@ -175,7 +179,8 @@ public class QuadTreeClusteringAlgorithm {
 		return new GeoCoordinate(latitude, longitude);
 	}
 
-	private GeoCoordinate getMedianCoordinate(int[] vertexId, int lon[], int lat[], int l, int r) {
+	private static GeoCoordinate getMedianCoordinate(int[] vertexId, int lon[], int lat[],
+			int l, int r) {
 		SortableVertices s = new SortableVertices(vertexId, lon, lat);
 		int medianIdx = l + ((r - l) / 2);
 
@@ -190,7 +195,7 @@ public class QuadTreeClusteringAlgorithm {
 		return new GeoCoordinate(latitude, longitude);
 	}
 
-	private class SortableVertices implements IndexedSortable {
+	private static class SortableVertices implements IndexedSortable {
 
 		private final int[][] data;
 		private int sortDim;

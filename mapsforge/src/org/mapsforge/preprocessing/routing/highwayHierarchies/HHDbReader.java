@@ -44,6 +44,7 @@ public class HHDbReader {
 	public static final String SQL_SELECT_VERTICES = "SELECT id, longitude AS lon, latitude AS lat FROM hh_vertex ORDER BY id;";
 	private static final String SQL_SELECT_VERTEX_LVLS = "SELECT * FROM hh_vertex_lvl ORDER BY id, lvl;";
 	private static final String SQL_SELECT_EDGES = "SELECT * FROM hh_edge ORDER BY source_id, max_lvl, min_lvl, weight;";
+	private static final String SQL_SELECT_LVL_EDGES = "SELECT v.lvl, e.* FROM hh_vertex_lvl v JOIN hh_edge e ON v.id = e.source_id AND v.lvl >= e.min_lvl AND v.lvl <= e.max_lvl ORDER BY e.source_id, v.lvl;";
 	private static final String SQL_SELECT_EDGES_LVL = "SELECT * FROM hh_edge  WHERE min_lvl <= ? AND max_lvl >= ? ORDER BY source_id, weight;";
 	private static final String SQL_SELECT_LEVEL_STATS = "SELECT * FROM hh_lvl_stats ORDER BY lvl;";
 	private static final String SQL_SELECT_GRAPH_PROPERTIES = "SELECT * FROM hh_graph_properties;";
@@ -274,6 +275,64 @@ public class HHDbReader {
 		}
 	}
 
+	public Iterator<HHEdgeLvl> getEdgesLvl() {
+		try {
+			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+					SQL_SELECT_LVL_EDGES, FETCH_SIZE);
+			return getEdgesLvl(pstmt);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private Iterator<HHEdgeLvl> getEdgesLvl(final PreparedStatement stmt) {
+		try {
+			return new Iterator<HHEdgeLvl>() {
+				private final ResultSet rs = stmt.executeQuery();
+
+				@Override
+				public boolean hasNext() {
+					try {
+						return !(rs.isLast() || rs.isAfterLast());
+					} catch (SQLException e) {
+						e.printStackTrace();
+						while (e.getNextException() != null) {
+							e = e.getNextException();
+							e.printStackTrace();
+						}
+						return false;
+					}
+				}
+
+				@Override
+				public HHEdgeLvl next() {
+					try {
+						if (rs.next()) {
+							return new HHEdgeLvl(rs.getInt("id"), rs.getInt("source_id"), rs
+									.getInt("target_id"), rs.getInt("weight"), rs
+									.getInt("min_lvl"), rs.getInt("max_lvl"), rs
+									.getBoolean("fwd"), rs.getBoolean("bwd"), rs
+									.getBoolean("shortcut"), rs.getInt("lvl"));
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					return null;
+				}
+
+				@Override
+				public void remove() {
+
+				}
+			};
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	private Iterator<HHEdge> getEdges(final PreparedStatement stmt) {
 		try {
 			return new Iterator<HHEdge>() {
@@ -336,6 +395,17 @@ public class HHDbReader {
 			this.fwd = fwd;
 			this.bwd = bwd;
 			this.shortcut = shortcut;
+		}
+	}
+
+	public class HHEdgeLvl extends HHEdge {
+
+		public final int lvl;
+
+		public HHEdgeLvl(int id, int sourceId, int targetId, int weight, int minLvl,
+				int maxLvl, boolean fwd, boolean bwd, boolean shortcut, int lvl) {
+			super(id, sourceId, targetId, weight, minLvl, maxLvl, fwd, bwd, shortcut);
+			this.lvl = lvl;
 		}
 	}
 

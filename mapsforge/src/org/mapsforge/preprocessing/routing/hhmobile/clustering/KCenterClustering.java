@@ -48,7 +48,10 @@ public class KCenterClustering implements IClustering {
 
 	@Override
 	public Cluster getCluster(int vertexId) {
-		return clusters.get(clusterIds[vertexId]);
+		if (vertexId < clusterIds.length) {
+			return clusters.get(clusterIds[vertexId]);
+		}
+		return null;
 	}
 
 	@Override
