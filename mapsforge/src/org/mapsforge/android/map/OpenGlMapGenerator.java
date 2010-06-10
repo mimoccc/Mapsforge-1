@@ -61,7 +61,8 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	@Override
 	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer) {
-		// TODO Auto-generated method stub
+		this.renderer.drawWays(drawWays, layers, levelsPerLayer);
+
 	}
 
 	@Override

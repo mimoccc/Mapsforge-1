@@ -17,5 +17,5 @@
 package org.mapsforge.android.map;
 
 enum ShapeType {
-	CIRCLE, COMPLEX_WAY, SIMPLE_WAY;
+	CIRCLE, WAY;
 }

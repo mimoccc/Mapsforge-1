@@ -32,9 +32,9 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private int arrayListIndex;
 	private Canvas canvas;
 	private CircleContainer circleContainer;
-	private ComplexWayContainer complexWayContainer;
-	private float[] coordinates;
-	private float[][] innerCoordinates;
+	private WayContainer complexWayContainer;
+	private float[][] coordinates;
+	private float[] textCoordinates;
 	private byte currentLayer;
 	private byte currentLevel;
 	private Path path;
@@ -42,7 +42,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private PointTextContainer pointTextContainer;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
-	private SimpleWayContainer simpleWayContainer;
 	private SymbolContainer symbolContainer;
 	private ArrayList<ShapePaintContainer> wayList;
 
@@ -77,10 +76,10 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 		for (this.arrayListIndex = drawWayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 			this.pathTextContainer = drawWayNames.get(this.arrayListIndex);
 			this.path.rewind();
-			this.coordinates = this.pathTextContainer.coordinates;
-			this.path.moveTo(this.coordinates[0], this.coordinates[1]);
-			for (int i = 2; i < this.coordinates.length; i += 2) {
-				this.path.lineTo(this.coordinates[i], this.coordinates[i + 1]);
+			this.textCoordinates = this.pathTextContainer.coordinates;
+			this.path.moveTo(this.textCoordinates[0], this.textCoordinates[1]);
+			for (int i = 2; i < this.textCoordinates.length; i += 2) {
+				this.path.lineTo(this.textCoordinates[i], this.textCoordinates[i + 1]);
 			}
 			this.canvas.drawTextOnPath(this.pathTextContainer.text, this.path, 0, 3,
 					this.pathTextContainer.paint);
@@ -103,29 +102,15 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 							this.path.addCircle(this.circleContainer.x, this.circleContainer.y,
 									this.circleContainer.radius, Path.Direction.CCW);
 							break;
-						case SIMPLE_WAY:
-							this.simpleWayContainer = (SimpleWayContainer) this.shapePaintContainer.shapeContainer;
-							this.coordinates = this.simpleWayContainer.coordinates;
-							this.path.moveTo(this.coordinates[0], this.coordinates[1]);
-							for (int i = 2; i < this.coordinates.length; i += 2) {
-								this.path.lineTo(this.coordinates[i], this.coordinates[i + 1]);
-							}
-							break;
-						case COMPLEX_WAY:
-							this.complexWayContainer = (ComplexWayContainer) this.shapePaintContainer.shapeContainer;
-							this.coordinates = this.complexWayContainer.outerCoordinates;
-							this.path.moveTo(this.coordinates[0], this.coordinates[1]);
-							for (int i = 2; i < this.coordinates.length; i += 2) {
-								this.path.lineTo(this.coordinates[i], this.coordinates[i + 1]);
-							}
-							// add inner ways
-							this.innerCoordinates = this.complexWayContainer.innerCoordinates;
-							for (int j = 0; j < this.innerCoordinates.length; ++j) {
-								this.coordinates = this.innerCoordinates[j];
-								this.path.moveTo(this.coordinates[0], this.coordinates[1]);
-								for (int i = 2; i < this.coordinates.length; i += 2) {
-									this.path.lineTo(this.coordinates[i],
-											this.coordinates[i + 1]);
+						case WAY:
+							this.complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
+							this.coordinates = this.complexWayContainer.coordinates;
+							for (int j = 0; j < this.coordinates.length; ++j) {
+								this.path
+										.moveTo(this.coordinates[j][0], this.coordinates[j][1]);
+								for (int i = 2; i < this.coordinates[j].length; i += 2) {
+									this.path.lineTo(this.coordinates[j][i],
+											this.coordinates[j][i + 1]);
 								}
 							}
 							break;

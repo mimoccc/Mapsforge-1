@@ -16,15 +16,15 @@
  */
 package org.mapsforge.android.map;
 
-class SimpleWayContainer extends ShapeContainer {
-	final float[] coordinates;
+class WayContainer extends ShapeContainer {
+	final float[][] coordinates;
 
-	SimpleWayContainer(float[] coordinates) {
+	WayContainer(float[][] coordinates) {
 		this.coordinates = coordinates;
 	}
 
 	@Override
 	ShapeType getShapeType() {
-		return ShapeType.SIMPLE_WAY;
+		return ShapeType.WAY;
 	}
 }

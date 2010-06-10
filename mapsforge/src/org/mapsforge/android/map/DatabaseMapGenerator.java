@@ -219,7 +219,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private int bboxLongitude2;
 	private TreeMap<GeoPoint, int[]> coastlineEnds;
 	private TreeMap<GeoPoint, int[]> coastlineStarts;
-	private float[] coordinates;
+	private float[][] coordinates;
 	private float currentNodeX;
 	private float currentNodeY;
 	private Tile currentTile;
@@ -228,7 +228,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private Database database;
 	private float distanceX;
 	private float distanceY;
-	private float[][] innerCoordinates;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
 	private byte lastTileZoomLevel;
@@ -411,8 +410,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		// calculate the approximate way name length plus some margin of safety
 		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 5;
 
-		this.previousX = this.coordinates[0];
-		this.previousY = this.coordinates[1];
+		this.previousX = this.coordinates[0][0];
+		this.previousY = this.coordinates[0][1];
 
 		// flag if the current way name has been rendered at least once
 		this.wayNameRendered = false;
@@ -420,8 +419,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		// find way segments long enough to draw the way name on them
 		for (short i = 2; i < wayNodes; i += 2) {
-			this.currentX = this.coordinates[i];
-			this.currentY = this.coordinates[i + 1];
+			this.currentX = this.coordinates[0][i];
+			this.currentY = this.coordinates[0][i + 1];
 			if (this.skipSegments > 0) {
 				--this.skipSegments;
 			} else {
@@ -460,28 +459,28 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
 				&& getWayLengthInPixel(wayNodes) > this.wayNameWidth) {
 			// check to prevent inverted way names
-			if (this.coordinates[0] > this.coordinates[wayNodes - 2]) {
+			if (this.coordinates[0][0] > this.coordinates[0][wayNodes - 2]) {
 				// reverse the way coordinates
 				int offsetLeft = 0;
 				int offsetRight = this.coordinates.length - 2;
 				float exchangeValue;
 				while (offsetLeft < offsetRight) {
 					// exchange the way x coordinates
-					exchangeValue = this.coordinates[offsetLeft];
-					this.coordinates[offsetLeft] = this.coordinates[offsetRight];
-					this.coordinates[offsetRight] = exchangeValue;
+					exchangeValue = this.coordinates[0][offsetLeft];
+					this.coordinates[0][offsetLeft] = this.coordinates[0][offsetRight];
+					this.coordinates[0][offsetRight] = exchangeValue;
 
 					// exchange the way y coordinates
-					exchangeValue = this.coordinates[offsetLeft + 1];
-					this.coordinates[offsetLeft + 1] = this.coordinates[offsetRight + 1];
-					this.coordinates[offsetRight + 1] = exchangeValue;
+					exchangeValue = this.coordinates[0][offsetLeft + 1];
+					this.coordinates[0][offsetLeft + 1] = this.coordinates[0][offsetRight + 1];
+					this.coordinates[0][offsetRight + 1] = exchangeValue;
 
 					// move the pointers to the next position;
 					offsetLeft += 2;
 					offsetRight -= 2;
 				}
 			}
-			this.wayNames.add(new WayTextContainer(this.coordinates, wayName,
+			this.wayNames.add(new WayTextContainer(this.coordinates[0], wayName,
 					PAINT_NAME_BLACK_10));
 			this.renderedWayNames.add(wayName);
 		}
@@ -520,12 +519,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * Euclidean distance for each way segment.
 	 */
 	private int getWayLengthInPixel(short wayNodes) {
-		this.previousX = this.coordinates[0];
-		this.previousY = this.coordinates[1];
+		this.previousX = this.coordinates[0][0];
+		this.previousY = this.coordinates[0][1];
 		this.pathLengthInPixel = 0;
 		for (short i = 2; i < wayNodes; i += 2) {
-			this.currentX = this.coordinates[i];
-			this.currentY = this.coordinates[i + 1];
+			this.currentX = this.coordinates[0][i];
+			this.currentY = this.coordinates[0][i + 1];
 			this.distanceX = this.currentX - this.previousX;
 			this.distanceY = this.currentY - this.previousY;
 			this.pathLengthInPixel += SquareRoot
@@ -1892,29 +1891,30 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			boolean[] wayTagIds, byte wayTagBitmap, short wayNodes, int[] wayNodesSequence,
 			int[][] innerWays) {
 		this.remainingTags = wayNumberOfRealTags;
-		this.coordinates = new float[wayNodesSequence.length];
+		if (innerWays == null) {
+			this.coordinates = new float[1][];
+		} else {
+			this.coordinates = new float[1 + innerWays.length][];
+		}
+		this.coordinates[0] = new float[wayNodes];
 		for (short i = 0; i < wayNodes; i += 2) {
-			this.coordinates[i] = scaleLongitude(wayNodesSequence[i]);
-			this.coordinates[i + 1] = scaleLatitude(wayNodesSequence[i + 1]);
+			this.coordinates[0][i] = scaleLongitude(wayNodesSequence[i]);
+			this.coordinates[0][i + 1] = scaleLatitude(wayNodesSequence[i + 1]);
 		}
 
-		if (innerWays == null) {
-			this.shapeContainer = new SimpleWayContainer(this.coordinates);
-		} else {
-			this.innerCoordinates = new float[innerWays.length][];
-			for (int j = 0; j < innerWays.length; ++j) {
-				int[] innerWay = innerWays[j];
+		if (innerWays != null) {
+			for (int j = 1; j <= innerWays.length; ++j) {
+				int[] innerWay = innerWays[j - 1];
 				this.innerWayLength = innerWay.length;
-				this.innerCoordinates[j] = new float[this.innerWayLength];
+				this.coordinates[j] = new float[this.innerWayLength];
 
 				for (short i = 0; i < this.innerWayLength; i += 2) {
-					this.innerCoordinates[j][i] = scaleLongitude(innerWay[i]);
-					this.innerCoordinates[j][i + 1] = scaleLatitude(innerWay[i + 1]);
+					this.coordinates[j][i] = scaleLongitude(innerWay[i]);
+					this.coordinates[j][i + 1] = scaleLatitude(innerWay[i + 1]);
 				}
 			}
-			this.shapeContainer = new ComplexWayContainer(this.coordinates,
-					this.innerCoordinates);
 		}
+		this.shapeContainer = new WayContainer(this.coordinates);
 
 		this.layer = this.ways.get(wayLayer);
 
