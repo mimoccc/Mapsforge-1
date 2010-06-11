@@ -72,6 +72,7 @@ public class RouterFactory {
 		try {
 			FileInputStream iStream = new FileInputStream(filename);
 			hhRouter = RouterImpl.deserialize(iStream);
+			iStream.close();
 
 		} catch (FileNotFoundException e) {
 		} catch (IOException e) {
@@ -125,8 +126,10 @@ public class RouterFactory {
 	private static Properties loadProperties(String fileURI) {
 		Properties props = null;
 		try {
+			FileInputStream fis = new FileInputStream(fileURI);
 			props = new Properties();
-			props.load(new FileInputStream(fileURI));
+			props.load(fis);
+			fis.close();
 		} catch (FileNotFoundException e) {
 		} catch (IOException e) {
 		}
