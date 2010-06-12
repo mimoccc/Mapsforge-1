@@ -14,10 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
+package org.mapsforge.preprocessing.routing.hhmobile.util;
 
 public class BitSerializer {
 
@@ -154,10 +151,6 @@ public class BitSerializer {
 
 		}
 		if (nBits > 0) {
-			if (val == 282) {
-				System.out.println("writebits " + byteOffset + ":" + bitOffset + " n=" + nBits
-						+ " val=" + BUFFER[j]);
-			}
 			writeBits(BUFFER[j], nBits, buff, byteOffset, bitOffset);
 		}
 	}
@@ -221,47 +214,8 @@ public class BitSerializer {
 		return bytesToLong(BUFFER);
 	}
 
-	public static void main(String[] args) throws IOException {
-		byte[] buff = new byte[1000000 * 4];
-		long time = System.currentTimeMillis();
-		for (int i = 0; i < 100000; i++) {
-			writeUInt(0, 31, buff, 1, 6);
-			// writeInt(0, buff, 0, 0);
-		}
-		System.out.println(System.currentTimeMillis() - time);
-		// int byteOffset = 0;
-		// int bitOffset = 0;
-		// Integer lastBitOffset = null;
-		// Integer lastByteOffset = null;
-		// Integer lastNBits = null;
-		//
-		// for (int i = 1; i < buff.length / 4; i++) {
-		//
-		// int nBits = (int) Math.floor(Math.log(i) / Math.log(2)) + 1;
-		// Serializer.writeUInt(i, nBits, buff, byteOffset, bitOffset);
-		// int i_ = (int) Serializer.readUInt(buff, nBits, byteOffset, bitOffset);
-		// if (i != i_) {
-		// System.out.println(i + "!=" + i_ + "   " + byteOffset + " : " + bitOffset + " "
-		// + nBits);
-		// }
-		// if (lastBitOffset != null) {
-		// int i__ = (int) Serializer.readUInt(buff, lastNBits, lastByteOffset,
-		// lastBitOffset);
-		//
-		// System.out.println(i__ + " " + (i - 1));
-		// if (i__ != (i - 1)) {
-		// System.out.println(i__ + " != " + i);
-		// }
-		// }
-		//
-		// lastBitOffset = bitOffset;
-		// lastByteOffset = byteOffset;
-		// lastNBits = nBits;
-		// byteOffset += (bitOffset + nBits) / 8;
-		// bitOffset = (bitOffset + nBits) % 8;
-		// }
-		FileOutputStream oStream = new FileOutputStream("test");
-		oStream.write(buff);
+	public static byte numBitsToEncodeUInt(int minVal, int maxVal) {
+		int interval = maxVal - minVal + 1;
+		return (byte) (Math.floor(Math.log(interval) / Math.log(2)) + 1);
 	}
-
 }

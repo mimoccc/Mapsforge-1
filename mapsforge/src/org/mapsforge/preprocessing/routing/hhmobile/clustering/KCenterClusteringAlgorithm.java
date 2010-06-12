@@ -19,17 +19,24 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import gnu.trove.set.hash.THashSet;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering.Cluster;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IEdge;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
+import org.mapsforge.preprocessing.util.DBConnection;
 
 public class KCenterClusteringAlgorithm {
 
@@ -53,7 +60,7 @@ public class KCenterClusteringAlgorithm {
 
 	public static KCenterClustering computeClustering(IGraph graph, int k, int heuristic) {
 		k = Math.max(k, 1);
-		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(2)));
+		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(8)));
 		k_ = Math.max(k, k_);
 		System.out.println("computing k-center clustering (k = " + k + ", k' = " + k_ + ")");
 
@@ -311,5 +318,16 @@ public class KCenterClusteringAlgorithm {
 		public void setHeapKey(Integer key) {
 			this.distance = key;
 		}
+	}
+
+	public static void main(String[] args) throws SQLException, IOException {
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "germany",
+				"postgres", "admin");
+		LevelGraph levelGraph = new LevelGraph(conn);
+		int avgVerticesPerCluster = 1000;
+		KCenterClustering[] clustering = computeClustering(levelGraph.getLevels(),
+				avgVerticesPerCluster, HEURISTIC_MIN_SIZE);
+		Serializer.serialize(new File("clustering_ger"), clustering);
+		Serializer.serialize(new File("graph_ger"), levelGraph);
 	}
 }

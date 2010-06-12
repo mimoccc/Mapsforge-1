@@ -14,18 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.util.graph;
+package org.mapsforge.preprocessing.routing.hhmobile.graph;
 
-import java.util.Iterator;
+public interface IEdge {
 
-public interface IGraph {
+	public IVertex getSource();
 
-	public Iterator<? extends IVertex> getVertices();
+	public IVertex getTarget();
 
-	public int numVertices();
-
-	public int numEdges();
-
-	public IVertex getVertex(int id);
+	public int getWeight();
 
 }

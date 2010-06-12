@@ -19,7 +19,7 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClustering.QuadTreeCluster;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class QuadTreeClusteringAlgorithm {

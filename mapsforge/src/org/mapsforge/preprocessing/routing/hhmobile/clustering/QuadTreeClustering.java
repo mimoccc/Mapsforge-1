@@ -23,6 +23,8 @@ import java.util.Collection;
 
 public class QuadTreeClustering implements IClustering {
 
+	private static final long serialVersionUID = 1L;
+
 	private final TIntObjectHashMap<QuadTreeCluster> clusters;
 	private final int[] clusterIds;
 
@@ -61,6 +63,8 @@ public class QuadTreeClustering implements IClustering {
 	}
 
 	public class QuadTreeCluster implements ICluster {
+
+		private static final long serialVersionUID = 1L;
 
 		private TIntArrayList vertices;
 		private int clusterId;

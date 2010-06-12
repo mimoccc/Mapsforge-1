@@ -24,6 +24,8 @@ import java.util.Collection;
 
 public class KCenterClustering implements IClustering {
 
+	private static final long serialVersionUID = 1L;
+
 	private final TIntObjectHashMap<Cluster> clusters;
 	private final int[] clusterIds;
 
@@ -77,6 +79,8 @@ public class KCenterClustering implements IClustering {
 	}
 
 	public class Cluster implements ICluster {
+
+		private static final long serialVersionUID = 1L;
 
 		private TIntArrayList vertices;
 		private int centerVertex;

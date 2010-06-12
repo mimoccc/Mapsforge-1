@@ -16,9 +16,10 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 
+import java.io.Serializable;
 import java.util.Collection;
 
-public interface IClustering {
+public interface IClustering extends Serializable {
 
 	public ICluster getCluster(int vertexId);
 

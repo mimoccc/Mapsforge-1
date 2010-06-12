@@ -20,10 +20,10 @@ import java.awt.Color;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph;
-import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IEdge;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.IRouter;

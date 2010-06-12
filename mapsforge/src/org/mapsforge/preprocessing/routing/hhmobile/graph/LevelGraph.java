@@ -14,16 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile;
+package org.mapsforge.preprocessing.routing.hhmobile.graph;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IEdge;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IGraph;
-import org.mapsforge.preprocessing.routing.hhmobile.util.graph.IVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
@@ -32,7 +30,9 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArr
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
-public class LevelGraph {
+public class LevelGraph implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private static final int FWD = 0;
 	private static final int BWD = 1;
@@ -79,6 +79,7 @@ public class LevelGraph {
 			HHVertex v = iter.next();
 			vLon[offset] = GeoCoordinate.dtoi(v.longitude);
 			vLat[offset] = GeoCoordinate.dtoi(v.latitude);
+			offset++;
 		}
 
 		// vLvlVNh + vFirstLvlVertex
@@ -141,7 +142,9 @@ public class LevelGraph {
 		return vLat;
 	}
 
-	public class Level implements IGraph {
+	public class Level implements IGraph, Serializable {
+
+		private static final long serialVersionUID = 1L;
 
 		private final int lvl;
 		private final int lvlNumVertices, lvlNumEdges;
@@ -208,7 +211,9 @@ public class LevelGraph {
 			return lvlNumVertices;
 		}
 
-		public class LevelVertex implements IVertex {
+		public class LevelVertex implements IVertex, Serializable {
+
+			private static final long serialVersionUID = 1L;
 
 			private final int id;
 
@@ -240,9 +245,15 @@ public class LevelGraph {
 			public GeoCoordinate getCoordinate() {
 				return new GeoCoordinate(vLat[id], vLon[id]);
 			}
+
+			public int getLevel() {
+				return lvl;
+			}
 		}
 
-		public class LevelEdge implements IEdge {
+		public class LevelEdge implements IEdge, Serializable {
+
+			private static final long serialVersionUID = 1L;
 
 			private final int id;
 
@@ -251,12 +262,12 @@ public class LevelGraph {
 			}
 
 			@Override
-			public IVertex getSource() {
+			public LevelVertex getSource() {
 				return new LevelVertex(eSource[id]);
 			}
 
 			@Override
-			public IVertex getTarget() {
+			public LevelVertex getTarget() {
 				return new LevelVertex(eTarget[id]);
 			}
 
