@@ -97,6 +97,7 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 				| GLSurfaceView.DEBUG_LOG_GL_CALLS);
 
 		((ViewGroup) this.mapView.getParent()).addView(this.glSurfaceView, 256, 256);
+		this.mapView.bringToFront();
 	}
 
 	@Override
