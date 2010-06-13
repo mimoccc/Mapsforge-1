@@ -43,6 +43,8 @@ public class BlockedGraphWriter {
 		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
 
 		int[] byteSize = getBlockByteSizes(mapping, cUtil, getEncodingParams(cUtil));
+		System.out.println(getEncodingParams(cUtil));
+		printEncodingParams(cUtil);
 		reassignBlockIdsByAscByteSize(byteSize, mapping);
 		reassignClusterVertexOffsetByAscNh(levelGraph, clustering);
 
@@ -67,13 +69,30 @@ public class BlockedGraphWriter {
 	}
 
 	private static BlockEncodingParams getEncodingParams(ClusteringUtil cUtil) {
-		int bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.numClusters() - 1);
-		int bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil.maxVerticesPerCluster());
-		int bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil.maxEdgesPerCluster());
-		int bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.maxNeighborhood());
-		int numGraphLevels = cUtil.numLevels();
+		int bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getGlobalNumClusters() - 1);
+		int bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
+				.getGlobalMaxVerticesPerCluster());
+		int bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil.getGlobalMaxEdgesPerCluster());
+		int bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.getGlobalMaxNeighborhood());
+		int numGraphLevels = cUtil.getGlobalNumLevels();
 		return new BlockEncodingParams(bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
 				bitsPerNeighborhood, numGraphLevels);
+	}
+
+	private static void printEncodingParams(ClusteringUtil cUtil) {
+		for (int lvl = 0; lvl < cUtil.getGlobalNumLevels(); lvl++) {
+			int bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getLevelNumClusters(lvl) - 1);
+			int bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
+					.getLevelMaxVerticesPerCluster(lvl));
+			int bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil
+					.getLevelMaxEdgesPerCluster(lvl));
+			int bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil
+					.getLevelMaxNeighborhood(lvl));
+			int numGraphLevels = cUtil.getGlobalNumLevels();
+			BlockEncodingParams enc = new BlockEncodingParams(bitsPerClusterId,
+					bitsPerVertexOffset, bitsPerEdgeCount, bitsPerNeighborhood, numGraphLevels);
+			System.out.println(enc);
+		}
 	}
 
 	private static int[] getBlockByteSizes(ClusterBlockMapping mapping, ClusteringUtil cUtil,

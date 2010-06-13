@@ -63,7 +63,6 @@ public class BlockPointerIndex {
 		for (int gSize = MIN_G_SIZE; gSize <= maxGSize; gSize++) {
 			BlockPointerIndex index = new BlockPointerIndex(blockSize, gSize);
 			indexSize[gSize - MIN_G_SIZE] = index.byteSize();
-			System.out.println("[" + gSize + "]" + indexSize[gSize - MIN_G_SIZE]);
 		}
 		int optGSize = MIN_G_SIZE + Utils.firstIndexOfMin(indexSize);
 

@@ -22,12 +22,11 @@ import gnu.trove.set.hash.THashSet;
 
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.hhmobile.graph.IEdge;
-import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.util.BoundingBox;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
@@ -84,39 +83,47 @@ public class ClusteringUtil {
 		}
 	}
 
-	public int maxVerticesPerCluster() {
+	public int getGlobalMaxVerticesPerCluster() {
 		return Utils.max(lvlMaxVerticesPerCluster);
 	}
 
-	public int maxEdgesPerCluster() {
+	public int getGlobalMaxEdgesPerCluster() {
 		return Utils.max(lvlMaxEdgesPerCluster);
 	}
 
-	public int maxNeighborhood() {
+	public int getGlobalMaxNeighborhood() {
 		return Utils.max(lvlMaxNeighborhood);
 	}
 
-	public static int getNumClusters(IClustering[] clustering) {
-		int sum = 0;
-		for (int i = 0; i < clustering.length; i++) {
-			sum += clustering[i].size();
-		}
-		return sum;
-	}
-
-	public int numClusters() {
+	public int getGlobalNumClusters() {
 		return clusterLevels.size();
 	}
 
-	public int numLevels() {
+	public int getGlobalNumLevels() {
 		return clustering.length;
+	}
+
+	public int getLevelMaxVerticesPerCluster(int lvl) {
+		return lvlMaxVerticesPerCluster[lvl];
+	}
+
+	public int getLevelMaxEdgesPerCluster(int lvl) {
+		return lvlMaxEdgesPerCluster[lvl];
+	}
+
+	public int getLevelMaxNeighborhood(int lvl) {
+		return lvlMaxNeighborhood[lvl];
+	}
+
+	public int getLevelNumClusters(int lvl) {
+		return clustering[lvl].size();
 	}
 
 	public int getClusterLevel(ICluster c) {
 		return clusterLevels.get(c);
 	}
 
-	public int getClusterOffset(int vertexId, int lvl) {
+	public int getClusterVertexOffset(int vertexId, int lvl) {
 		return vertexIdToClusterOffset[lvl].get(vertexId);
 	}
 
@@ -236,7 +243,7 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<LevelVertex> getExternalReferencedVertices(ICluster c) {
+	public LinkedList<LevelVertex> getClusterExternalReferencedVertices(ICluster c) {
 		int lvl = clusterLevels.get(c);
 		LinkedList<LevelVertex> list = new LinkedList<LevelVertex>();
 		for (LevelEdge e : getClusterEdges(c)) {
@@ -249,295 +256,12 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public static int getClusterDegree(LevelGraph levelGraph, IClustering[] clustering,
-			ICluster cluster, int clusterLevel) {
-		int numAdj = getAdjacentClusters(clustering[clusterLevel], cluster, levelGraph
-				.getLevel(clusterLevel)).length;
-		int numSubj = getSubjacentClusters(clustering, cluster, clusterLevel).length;
-		int numOverly = getOverlyingClusters(clustering, cluster, clusterLevel).length;
-
-		return numAdj + numSubj + numOverly;
-	}
-
-	public static int getMaxClusterDegree(LevelGraph levelGraph, IClustering[] clustering,
-			int lvl) {
-		int max = 0;
-		for (ICluster cluster : clustering[lvl].getClusters()) {
-			max = Math.max(max, getClusterDegree(levelGraph, clustering, cluster, lvl));
+	public static int getGlobalNumClusters(IClustering[] clustering) {
+		int sum = 0;
+		for (int i = 0; i < clustering.length; i++) {
+			sum += clustering[i].size();
 		}
-		return max;
-	}
-
-	public static int getMaxClusterDegree(LevelGraph levelGraph, IClustering[] clustering) {
-		int max = 0;
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			max = Math.max(max, getMaxClusterDegree(levelGraph, clustering, lvl));
-		}
-		return max;
-	}
-
-	public static int[] getMaxClusterDegrees(LevelGraph levelGraph, IClustering[] clustering) {
-		int[] maxDegree = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			maxDegree[lvl] = getMaxClusterDegree(levelGraph, clustering, lvl);
-		}
-		return maxDegree;
-	}
-
-	public static int getMaxVertexDegree(ICluster cluster, IGraph graph) {
-		int max = 0;
-		for (int v : cluster.getVertices()) {
-			max = Math.max(max, graph.getVertex(v).getOutboundEdges().length);
-		}
-		return max;
-	}
-
-	public static int getMaxVertexDegree(IClustering clustering, IGraph graph) {
-		int max = 0;
-		for (ICluster cluster : clustering.getClusters()) {
-			max = Math.max(max, getMaxVertexDegree(cluster, graph));
-		}
-		return max;
-	}
-
-	public static int getMaxVertexDegree(LevelGraph levelGraph, IClustering[] clustering) {
-		int max = 0;
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			max = Math.max(max, getMaxVertexDegree(clustering[lvl], levelGraph.getLevel(lvl)));
-		}
-		return max;
-	}
-
-	public static int[] getMaxVertexDegrees(LevelGraph levelGraph, IClustering[] clustering) {
-		int[] maxVertexDegrees = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			maxVertexDegrees[lvl] = getMaxVertexDegree(clustering[lvl], levelGraph
-					.getLevel(lvl));
-		}
-		return maxVertexDegrees;
-	}
-
-	public static int getMinLongitude(ICluster cluster, int[] vertexLon) {
-		int min = Integer.MAX_VALUE;
-		for (int v : cluster.getVertices()) {
-			min = Math.min(min, vertexLon[v]);
-		}
-		return min;
-	}
-
-	public static int getMinLatitude(ICluster cluster, int[] vertexLat) {
-		int min = Integer.MAX_VALUE;
-		for (int v : cluster.getVertices()) {
-			min = Math.min(min, vertexLat[v]);
-		}
-		return min;
-	}
-
-	public static int getMaxLongitude(ICluster cluster, int[] vertexLon) {
-		int max = Integer.MIN_VALUE;
-		for (int v : cluster.getVertices()) {
-			max = Math.max(max, vertexLon[v]);
-		}
-		return max;
-	}
-
-	public static int getMaxLatitude(ICluster cluster, int[] vertexLat) {
-		int max = Integer.MIN_VALUE;
-		for (int v : cluster.getVertices()) {
-			max = Math.max(max, vertexLat[v]);
-		}
-		return max;
-	}
-
-	public static int getMaxNumVerticesPerCluster(IClustering clustering) {
-		int max = 0;
-		for (ICluster cluster : clustering.getClusters()) {
-			max = Math.max(max, cluster.size());
-		}
-		return max;
-	}
-
-	public static int getMaxNumVerticesPerCluster(IClustering[] clustering) {
-		int max = 0;
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			max = Math.max(max, getMaxNumVerticesPerCluster(clustering[lvl]));
-		}
-		return max;
-	}
-
-	public static int getMinEdgeWeight(ICluster cluster, IGraph graph) {
-		int min = Integer.MAX_VALUE;
-		for (int v : cluster.getVertices()) {
-			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
-				min = Math.min(min, e.getWeight());
-			}
-		}
-		return min;
-	}
-
-	public static int getMinEdgeWeight(IClustering clustering, IGraph graph) {
-		int min = Integer.MAX_VALUE;
-		for (ICluster cluster : clustering.getClusters()) {
-			min = Math.min(min, getMinEdgeWeight(cluster, graph));
-		}
-		return min;
-	}
-
-	public static int[] getMinEdgeWeights(IClustering[] clustering, LevelGraph levelGraph) {
-		int[] minWeights = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < levelGraph.numLevels(); lvl++) {
-			minWeights[lvl] = getMinEdgeWeight(clustering[lvl], levelGraph.getLevel(0));
-		}
-		return minWeights;
-	}
-
-	public static int getMaxEdgeWeight(ICluster cluster, IGraph graph) {
-		int max = 0;
-		for (int v : cluster.getVertices()) {
-			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
-				max = Math.max(max, e.getWeight());
-			}
-		}
-		return max;
-	}
-
-	public static int getMaxEdgeWeight(IClustering clustering, IGraph graph) {
-		int max = 0;
-		for (ICluster cluster : clustering.getClusters()) {
-			max = Math.max(max, getMaxEdgeWeight(cluster, graph));
-		}
-		return max;
-	}
-
-	public static int[] getMaxEdgeWeights(IClustering[] clustering, LevelGraph levelGraph) {
-		int[] maxWeights = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < levelGraph.numLevels(); lvl++) {
-			maxWeights[lvl] = getMaxEdgeWeight(clustering[lvl], levelGraph.getLevel(lvl));
-		}
-		return maxWeights;
-	}
-
-	public static int getMinNeighborhood(ICluster cluster, Level graph) {
-		int min = Integer.MAX_VALUE;
-		for (int v : cluster.getVertices()) {
-			int nh = graph.getVertex(v).getNeighborhood();
-			min = Math.min(nh, min);
-		}
-		return min;
-	}
-
-	public static int getMinNeighborhood(IClustering clustering, Level graph) {
-		int min = Integer.MAX_VALUE;
-		for (ICluster cluster : clustering.getClusters()) {
-			min = Math.min(min, getMinNeighborhood(cluster, graph));
-		}
-		if (min == Integer.MAX_VALUE) {
-			min = 0;
-		}
-		return min;
-	}
-
-	public static int[] getMinNeighborhoods(IClustering[] clustering, LevelGraph levelGraph) {
-		int[] min = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < levelGraph.numLevels(); lvl++) {
-			min[lvl] = getMinNeighborhood(clustering[lvl], levelGraph.getLevel(lvl));
-		}
-		return min;
-	}
-
-	public static int getMaxNeighborhood(ICluster cluster, Level graph) {
-		int max = 0;
-		for (int v : cluster.getVertices()) {
-			int nh = graph.getVertex(v).getNeighborhood();
-			if (nh != HHComputation.INFINITY_1 && nh != HHComputation.INFINITY_2) {
-				max = Math.max(nh, max);
-			}
-		}
-		return max;
-	}
-
-	public static int getMaxNeighborhood(IClustering clustering, Level graph) {
-		int max = 0;
-		for (ICluster cluster : clustering.getClusters()) {
-			max = Math.max(max, getMaxNeighborhood(cluster, graph));
-		}
-		return max;
-	}
-
-	public static int[] getMaxNeighborhoods(IClustering[] clustering, LevelGraph levelGraph) {
-		int[] max = new int[levelGraph.numLevels()];
-		for (int lvl = 0; lvl < levelGraph.numLevels(); lvl++) {
-			max[lvl] = getMaxNeighborhood(clustering[lvl], levelGraph.getLevel(lvl));
-		}
-		return max;
-	}
-
-	public static ICluster[] getAdjacentClusters(IClustering clustering, ICluster cluster,
-			IGraph graph) {
-		THashSet<ICluster> set = new THashSet<ICluster>();
-		for (int v : cluster.getVertices()) {
-			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
-				ICluster c = clustering.getCluster(e.getTarget().getId());
-				if (c != null && !c.equals(cluster)) {
-					set.add(c);
-				}
-			}
-		}
-		ICluster[] adjClusters = new ICluster[set.size()];
-		set.toArray(adjClusters);
-		return adjClusters;
-	}
-
-	public static ICluster[] getSubjacentClusters(IClustering[] clustering, ICluster cluster,
-			int clusterLevel) {
-		if (clusterLevel == 0) {
-			return new ICluster[0];
-		}
-
-		THashSet<ICluster> set = new THashSet<ICluster>();
-		for (int v : cluster.getVertices()) {
-			ICluster c = clustering[clusterLevel - 1].getCluster(v);
-			if (c != null) {
-				set.add(c);
-			}
-		}
-		ICluster[] subjClusters = new ICluster[set.size()];
-		set.toArray(subjClusters);
-		return subjClusters;
-	}
-
-	public static ICluster[] getOverlyingClusters(IClustering[] clustering, ICluster cluster,
-			int clusterLevel) {
-		if (clusterLevel == clustering.length - 1) {
-			return new ICluster[0];
-		}
-
-		THashSet<ICluster> set = new THashSet<ICluster>();
-		for (int v : cluster.getVertices()) {
-			ICluster c = clustering[clusterLevel + 1].getCluster(v);
-			if (c != null) {
-				set.add(c);
-			}
-		}
-		ICluster[] overlClusters = new ICluster[set.size()];
-		set.toArray(overlClusters);
-		return overlClusters;
-	}
-
-	public class BoundingBox {
-
-		public final int minLon, minLat, maxLon, maxLat;
-
-		public BoundingBox(int minLon, int minLat, int maxLon, int maxLat) {
-			this.minLon = minLon;
-			this.minLat = minLat;
-			this.maxLon = maxLon;
-			this.maxLat = maxLat;
-		}
-
-		public String toString() {
-			return "(" + minLon + ", " + minLat + ") (" + maxLon + " " + maxLat + ")";
-		}
+		return sum;
 	}
 
 }

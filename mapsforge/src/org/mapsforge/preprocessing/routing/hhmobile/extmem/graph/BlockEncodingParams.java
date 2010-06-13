@@ -29,4 +29,17 @@ final class BlockEncodingParams {
 		this.bitsPerNeighborhood = bitsPerNeighborhood;
 		this.numGraphLevels = numGraphLevels;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(BlockEncodingParams.class.getName() + " (\n");
+		sb.append("  bitsPerClusterId = " + bitsPerClusterId + "\n");
+		sb.append("  bitsPerVertexOffset = " + bitsPerVertexOffset + "\n");
+		sb.append("  bitsPerEdgeCount = " + bitsPerEdgeCount + "\n");
+		sb.append("  bitsPerNeighborhood = " + bitsPerNeighborhood + "\n");
+		sb.append("  numGraphLevels = " + numGraphLevels + "\n");
+		sb.append(")");
+		return sb.toString();
+	}
 }

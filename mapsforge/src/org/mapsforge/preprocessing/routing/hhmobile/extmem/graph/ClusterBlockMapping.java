@@ -31,7 +31,7 @@ public final class ClusterBlockMapping {
 	private final ICluster[] clusters;
 
 	public ClusterBlockMapping(IClustering[] clustering) {
-		this.clusters = new ICluster[ClusteringUtil.getNumClusters(clustering)];
+		this.clusters = new ICluster[ClusteringUtil.getGlobalNumClusters(clustering)];
 		this.blockIds = new TObjectIntHashMap<ICluster>();
 		int blockId = 0;
 		for (int lvl = 0; lvl < clustering.length; lvl++) {

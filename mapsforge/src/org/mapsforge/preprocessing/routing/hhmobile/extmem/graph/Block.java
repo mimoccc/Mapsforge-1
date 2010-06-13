@@ -27,12 +27,12 @@ import java.util.LinkedList;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ClusteringUtil;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.ClusteringUtil.BoundingBox;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
+import org.mapsforge.preprocessing.routing.hhmobile.util.BoundingBox;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
@@ -113,7 +113,7 @@ final class Block {
 		}
 
 		TIntObjectHashMap<IndirectVertexPointer> overlyingPointers = new TIntObjectHashMap<IndirectVertexPointer>();
-		if (level < cUtil.numLevels() - 1) {
+		if (level < cUtil.getGlobalNumLevels() - 1) {
 			overlyingPointers = getVertexPointers(overLyingClusters, vertexList, cUtil,
 					level + 1);
 		}
@@ -135,7 +135,7 @@ final class Block {
 		}
 
 		// edges
-		LinkedList<LevelVertex> edgeTargets = cUtil.getExternalReferencedVertices(cluster);
+		LinkedList<LevelVertex> edgeTargets = cUtil.getClusterExternalReferencedVertices(cluster);
 		edgeTargets.addAll(vertexList);
 		TIntObjectHashMap<IndirectVertexPointer> adjacentPointers = getVertexPointers(
 				adjacentClusters, edgeTargets, cUtil, level);
@@ -312,7 +312,7 @@ final class Block {
 		// calculate vertex references
 		TIntObjectHashMap<IndirectVertexPointer> pointers = new TIntObjectHashMap<IndirectVertexPointer>();
 		for (LevelVertex v : vertexList) {
-			int vertexOffset = cUtil.getClusterOffset(v.getId(), lvl);
+			int vertexOffset = cUtil.getClusterVertexOffset(v.getId(), lvl);
 			ICluster c = cUtil.getCluster(v.getId(), lvl);
 			if (clusterToOffset.containsKey(c)) {
 				IndirectVertexPointer pointer = new IndirectVertexPointer(clusterToOffset
@@ -354,7 +354,7 @@ final class Block {
 						clustering.length));
 				if ((++count) % 100 == 0) {
 					System.out.println("[writing blocks] " + count + " / "
-							+ cUtil.numClusters());
+							+ cUtil.getGlobalNumClusters());
 				}
 				V += b.vertices.length;
 				E += b.edges.length;
