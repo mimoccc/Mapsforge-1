@@ -220,8 +220,10 @@ final class Block {
 						enc.bitsPerVertexOffset);
 			}
 			stream.writeUInt(v.neighborhood, enc.bitsPerNeighborhood);
-			stream.writeUInt(v.longitude - minLon, bitsPerLon);
-			stream.writeUInt(v.longitude - minLon, bitsPerLat);
+			if (level == 0) {
+				stream.writeUInt(v.longitude - minLon, bitsPerLon);
+				stream.writeUInt(v.longitude - minLon, bitsPerLat);
+			}
 		}
 		stream.alignPointer(1);
 
