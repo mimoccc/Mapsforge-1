@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.util;
+package org.mapsforge.preprocessing.routing.hhmobile.testing;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,6 +22,7 @@ import java.util.Random;
 import java.util.Stack;
 
 import org.junit.Test;
+import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
 
 public class BitSerializerTest {
 
@@ -57,7 +58,8 @@ public class BitSerializerTest {
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
-				BitSerializer.writeShort((short) rnd.nextInt(), buff, byteOffsets[i], bitOffset);
+				BitSerializer
+						.writeShort((short) rnd.nextInt(), buff, byteOffsets[i], bitOffset);
 			}
 
 			rnd = new Random(seed);

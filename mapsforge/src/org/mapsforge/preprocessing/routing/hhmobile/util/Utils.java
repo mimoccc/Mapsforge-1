@@ -16,7 +16,19 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.util;
 
+import java.util.Random;
+
 public final class Utils {
+
+	private final static Random RND = new Random();
+
+	public static int[] getRandomInts(int n, int minVal, int maxVal) {
+		int[] arr = new int[n];
+		for (int i = 0; i < arr.length; i++) {
+			arr[i] = minVal + RND.nextInt(maxVal - minVal + 1);
+		}
+		return arr;
+	}
 
 	public static int min(int[] arr) {
 		if (arr.length == 0) {
@@ -38,6 +50,21 @@ public final class Utils {
 			max = Math.max(max, val);
 		}
 		return max;
+	}
+
+	public static int firstIndexOfMin(int[] arr) {
+		if (arr.length == 0) {
+			return -1;
+		}
+		int min = arr[0];
+		int minIdx = 0;
+		for (int i = 1; i < arr.length; i++) {
+			if (arr[i] < min) {
+				min = arr[i];
+				minIdx = i;
+			}
+		}
+		return minIdx;
 	}
 
 	public static long sum(int[] arr, int start, int end) {

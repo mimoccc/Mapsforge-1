@@ -136,19 +136,12 @@ public class BlockedGraphWriter {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		System.out.print("reading files... ");
-		LevelGraph levelGraph = Serializer.deserialize(new File("gBerlin"));
-		KCenterClustering[] clustering = Serializer.deserialize(new File("cBerlin"));
+		LevelGraph levelGraph = Serializer.deserialize(new File("gGer"));
+		KCenterClustering[] clustering = Serializer.deserialize(new File("cGer"));
 		System.out.println("ready!");
-		int[] blockSizes = writeBlocks(new FileOutputStream("binBerlin"), levelGraph,
-				clustering);
+		int[] blockSizes = writeBlocks(new FileOutputStream("binGer"), levelGraph, clustering);
 
-		BlockPointerIndex index = new BlockPointerIndex(blockSizes, 10);
-		int startAddr = 0;
-		for (int i = 0; i < index.size(); i++) {
-			System.out.println(index.getPointer(i));
-			System.out.println("[" + startAddr + " - " + (startAddr + blockSizes[i] + "]"));
-			startAddr += blockSizes[i];
-		}
+		BlockPointerIndex index = BlockPointerIndex.getOptimalIndex(blockSizes, 50);
 		System.out.println("Index size: " + index.byteSize() + "bytes.");
 	}
 }

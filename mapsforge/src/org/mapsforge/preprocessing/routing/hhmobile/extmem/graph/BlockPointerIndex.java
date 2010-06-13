@@ -24,6 +24,8 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
 public class BlockPointerIndex {
 
+	private final static int MIN_G_SIZE = 5;
+
 	// 8 bytes overhead per index
 	private final int gSize;
 	private final int numBlocks;
@@ -52,6 +54,20 @@ public class BlockPointerIndex {
 		this.gFirstBlockSize = new int[numBlocks];
 		this.encBlockSize = encodeBlockSizes(gEncBits, blockSize, gSize, gBlockEncOffs,
 				gFirstBlockSize);
+	}
+
+	public static BlockPointerIndex getOptimalIndex(int[] blockSize, int maxGSize) {
+		maxGSize = Math.min(blockSize.length, maxGSize);
+		int[] indexSize = new int[maxGSize - MIN_G_SIZE + 1];
+
+		for (int gSize = MIN_G_SIZE; gSize <= maxGSize; gSize++) {
+			BlockPointerIndex index = new BlockPointerIndex(blockSize, gSize);
+			indexSize[gSize - MIN_G_SIZE] = index.byteSize();
+			System.out.println("[" + gSize + "]" + indexSize[gSize - MIN_G_SIZE]);
+		}
+		int optGSize = MIN_G_SIZE + Utils.firstIndexOfMin(indexSize);
+
+		return new BlockPointerIndex(blockSize, optGSize);
 	}
 
 	public BlockPointer getPointer(int blockId) {
