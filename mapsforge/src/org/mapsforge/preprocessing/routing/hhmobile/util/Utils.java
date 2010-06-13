@@ -40,6 +40,17 @@ public final class Utils {
 		return max;
 	}
 
+	public static long sum(int[] arr, int start, int end) {
+		if (arr.length == 0) {
+			return 0;
+		}
+		long sum = 0;
+		for (int i = start; i < end; i++) {
+			sum += arr[i];
+		}
+		return sum;
+	}
+
 	public static String arrToString(int[] arr) {
 		StringBuilder sb = new StringBuilder();
 		for (int i : arr) {

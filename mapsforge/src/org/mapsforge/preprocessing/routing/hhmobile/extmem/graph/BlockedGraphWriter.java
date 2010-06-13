@@ -37,7 +37,7 @@ public class BlockedGraphWriter {
 	private final static int BUFFER_SIZE = 25000000;
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
 
-	public static int[] writeGraph(OutputStream oStream, LevelGraph levelGraph,
+	public static int[] writeBlocks(OutputStream oStream, LevelGraph levelGraph,
 			IClustering[] clustering) throws IOException {
 		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
 		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
@@ -47,19 +47,21 @@ public class BlockedGraphWriter {
 		reassignClusterVertexOffsetByAscNh(levelGraph, clustering);
 
 		// important to create new instance after block'ids and vertex order has changed!
+		// since some values are pre-processed
 		cUtil = new ClusteringUtil(clustering, levelGraph);
 
 		// write the blocks
-		Utils.setZero(BUFFER, 0, BUFFER.length);
-		int[] blockSize = new int[mapping.size()];
 		BlockEncodingParams enc = getEncodingParams(cUtil);
+		Utils.setZero(BUFFER, 0, BUFFER.length);
+
+		int[] blockSize = new int[mapping.size()];
+
 		for (int blockId = 0; blockId < mapping.size(); blockId++) {
 			Block block = new Block(mapping.getCluster(blockId), mapping, cUtil);
 			blockSize[blockId] = block.write(BUFFER, enc);
+
 			oStream.write(BUFFER, 0, blockSize[blockId]);
 			Utils.setZero(BUFFER, 0, blockSize[blockId]);
-			// byte sizes should not change after reassigning ids
-			assert (blockSize[blockId] == byteSize[blockId]);
 		}
 		return blockSize;
 	}
@@ -134,10 +136,19 @@ public class BlockedGraphWriter {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		System.out.print("reading files... ");
-		LevelGraph levelGraph = Serializer.deserialize(new File("graph_ger"));
-		KCenterClustering[] clustering = Serializer.deserialize(new File("clustering_ger"));
+		LevelGraph levelGraph = Serializer.deserialize(new File("gBerlin"));
+		KCenterClustering[] clustering = Serializer.deserialize(new File("cBerlin"));
 		System.out.println("ready!");
-		writeGraph(new FileOutputStream("germany_binary"), levelGraph, clustering);
-	}
+		int[] blockSizes = writeBlocks(new FileOutputStream("binBerlin"), levelGraph,
+				clustering);
 
+		BlockPointerIndex index = new BlockPointerIndex(blockSizes, 10);
+		int startAddr = 0;
+		for (int i = 0; i < index.size(); i++) {
+			System.out.println(index.getPointer(i));
+			System.out.println("[" + startAddr + " - " + (startAddr + blockSizes[i] + "]"));
+			startAddr += blockSizes[i];
+		}
+		System.out.println("Index size: " + index.byteSize() + "bytes.");
+	}
 }

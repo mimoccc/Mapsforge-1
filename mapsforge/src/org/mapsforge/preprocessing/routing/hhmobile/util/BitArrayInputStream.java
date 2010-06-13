@@ -18,7 +18,6 @@ package org.mapsforge.preprocessing.routing.hhmobile.util;
 
 import java.io.IOException;
 
-
 public class BitArrayInputStream {
 
 	private int byteOffset, bitOffset;
@@ -107,6 +106,17 @@ public class BitArrayInputStream {
 		if (_byteOffset <= buff.length) {
 			byteOffset = _byteOffset;
 			bitOffset = 0;
+			bitsAvailable = (buff.length - byteOffset) * 8L;
+		} else {
+			throw new IOException();
+		}
+	}
+
+	public void setPointer(int _byteOffset, int _bitOffset) throws IOException {
+		if (_byteOffset < buff.length || (_byteOffset == buff.length && _bitOffset == 0)) {
+			byteOffset = _byteOffset;
+			bitOffset = _bitOffset;
+			bitsAvailable = ((buff.length - byteOffset) * 8L) - bitOffset;
 		} else {
 			throw new IOException();
 		}
