@@ -461,6 +461,10 @@ class Database {
 			this.mapBoundary = new Rect(Deserializer.toInt(this.readBuffer, 0), Deserializer
 					.toInt(this.readBuffer, 4), Deserializer.toInt(this.readBuffer, 8),
 					Deserializer.toInt(this.readBuffer, 12));
+			if (this.mapBoundary.isEmpty()) {
+				closeFile();
+				return false;
+			}
 
 			// read the matrix width and height
 			this.matrixWidth = Deserializer.toInt(this.readBuffer, 16);
@@ -479,7 +483,7 @@ class Database {
 			// read the block information
 			handleIndexBlockPointers();
 			return true;
-		} catch (ArrayIndexOutOfBoundsException e) {
+		} catch (RuntimeException e) {
 			Logger.e(e);
 			return false;
 		} catch (IOException e) {

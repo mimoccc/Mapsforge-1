@@ -17,7 +17,7 @@
 package org.mapsforge.android.map;
 
 /**
- * Container class that holds four long coordinates for a rectangle.
+ * Class that holds two coordinates which define a rectangular area.
  */
 class Rect {
 	final long bottom;
@@ -30,6 +30,15 @@ class Rect {
 		this.top = top;
 		this.right = right;
 		this.bottom = bottom;
+	}
+
+	/**
+	 * Returns true, if left >= right or top <= bottom.
+	 * 
+	 * @return true if this rectangle is empty, false otherwise.
+	 */
+	boolean isEmpty() {
+		return this.left >= this.right || this.top <= this.bottom;
 	}
 
 	/**

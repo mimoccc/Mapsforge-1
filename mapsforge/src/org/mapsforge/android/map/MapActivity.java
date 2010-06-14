@@ -26,24 +26,29 @@ import android.content.SharedPreferences.Editor;
  * Custom implementation of the MapActivity class from the Google Maps library.
  */
 public abstract class MapActivity extends Activity {
-	private static final String PREFERENCES = "MapActivity";
-	private ArrayList<MapView> mapViews = new ArrayList<MapView>(4);
+	private static final String PREFERENCES_FILE = "MapActivity";
+	private ArrayList<MapView> mapViews = new ArrayList<MapView>(2);
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-
+	private void destroyMapViews() {
 		if (this.mapViews != null) {
+			for (MapView currentMapView : this.mapViews) {
+				currentMapView.destroyMapView();
+			}
 			this.mapViews.clear();
 			this.mapViews = null;
 		}
 	}
 
 	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		destroyMapViews();
+	}
+
+	@Override
 	protected void onPause() {
 		super.onPause();
-
-		Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
+		Editor editor = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
 		for (MapView currentMapView : this.mapViews) {
 			currentMapView.onPause();
 
@@ -62,12 +67,15 @@ public abstract class MapActivity extends Activity {
 			}
 			editor.commit();
 		}
+
+		if (isFinishing()) {
+			destroyMapViews();
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-
 		for (MapView currentMapView : this.mapViews) {
 			currentMapView.onResume();
 		}
@@ -77,7 +85,7 @@ public abstract class MapActivity extends Activity {
 		if (this.mapViews != null) {
 			this.mapViews.add(mapView);
 
-			SharedPreferences preferences = getSharedPreferences(PREFERENCES, MODE_PRIVATE);
+			SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
 			// restore the position
 			if (preferences.contains("latitude") && preferences.contains("longitude")
 					&& preferences.contains("zoomLevel")) {

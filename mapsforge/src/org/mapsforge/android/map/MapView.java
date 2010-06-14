@@ -85,15 +85,17 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Checks whether a file is a valid map file.
+	 * Checks whether a given file is a valid map file.
 	 * 
-	 * @param file
-	 *            path to the file that should be tested.
+	 * @param mapFile
+	 *            the path to the map file that should be tested.
 	 * @return true, if the file is a valid map file, false otherwise.
 	 */
-	public static boolean isValidMapFile(String file) {
-		// TODO: implement this
-		return file != null;
+	public static boolean isValidMapFile(String mapFile) {
+		Database testDatabase = new Database();
+		boolean isValid = testDatabase.setFile(mapFile);
+		testDatabase.closeFile();
+		return isValid;
 	}
 
 	private boolean attachedToWindow;
@@ -301,7 +303,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Convenience method to get isValidMapFile() on the current map file.
+	 * Convenience method to check for a valid current map file.
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
 	 * @throws UnsupportedOperationException
@@ -311,7 +313,7 @@ public class MapView extends ViewGroup {
 		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
 			throw new UnsupportedOperationException();
 		}
-		return isValidMapFile(this.mapFile);
+		return this.mapFile != null;
 	}
 
 	@Override
@@ -830,76 +832,8 @@ public class MapView extends ViewGroup {
 	@Override
 	protected void onDetachedFromWindow() {
 		this.attachedToWindow = false;
-
-		// unregister the MapView in the MapActivity
-		if (this.mapActivity != null) {
-			this.mapActivity.unregisterMapView(this);
-			this.mapActivity = null;
-		}
-
-		// stop the MapMover thread
-		if (this.mapMover != null) {
-			this.mapMover.interrupt();
-			try {
-				this.mapMover.join();
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
-			}
-			this.mapMover = null;
-		}
-
-		stopMapGeneratorThread();
-
-		// destroy the map controller
-		if (this.mapController != null) {
-			this.mapController.destroy();
-			this.mapController = null;
-		}
-
-		// free the mapViewBitmap1 memory
-		if (this.mapViewBitmap1 != null) {
-			this.mapViewBitmap1.recycle();
-			this.mapViewBitmap1 = null;
-		}
-
-		// free the mapViewBitmap2 memory
-		if (this.mapViewBitmap2 != null) {
-			this.mapViewBitmap2.recycle();
-			this.mapViewBitmap2 = null;
-		}
-
-		// free the mapScaleBitmap memory
-		if (this.mapScaleBitmap != null) {
-			this.mapScaleBitmap.recycle();
-			this.mapScaleBitmap = null;
-		}
-
-		// set the pointer to null to avoid memory leaks
-		this.swapMapViewBitmap = null;
-
-		// free the tileBitmap memory
-		if (this.tileBitmap != null) {
-			this.tileBitmap.recycle();
-			this.tileBitmap = null;
-		}
-
-		// destroy the image bitmap cache
-		if (this.imageBitmapCache != null) {
-			this.imageBitmapCache.destroy();
-			this.imageBitmapCache = null;
-		}
-
-		// destroy the image file cache
-		if (this.imageFileCache != null) {
-			this.imageFileCache.destroy();
-			this.imageFileCache = null;
-		}
-
-		// close the map file
-		if (this.database != null) {
-			this.database.closeFile();
-			this.database = null;
+		if (this.mapGenerator != null) {
+			this.mapGenerator.onDetachedFromWindow();
 		}
 	}
 
@@ -978,6 +912,79 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
+		}
+	}
+
+	void destroyMapView() {
+		// unregister the MapView in the MapActivity
+		if (this.mapActivity != null) {
+			this.mapActivity.unregisterMapView(this);
+			this.mapActivity = null;
+		}
+
+		// stop the MapMover thread
+		if (this.mapMover != null) {
+			this.mapMover.interrupt();
+			try {
+				this.mapMover.join();
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+			this.mapMover = null;
+		}
+
+		stopMapGeneratorThread();
+
+		// destroy the map controller
+		if (this.mapController != null) {
+			this.mapController.destroy();
+			this.mapController = null;
+		}
+
+		// free the mapViewBitmap1 memory
+		if (this.mapViewBitmap1 != null) {
+			this.mapViewBitmap1.recycle();
+			this.mapViewBitmap1 = null;
+		}
+
+		// free the mapViewBitmap2 memory
+		if (this.mapViewBitmap2 != null) {
+			this.mapViewBitmap2.recycle();
+			this.mapViewBitmap2 = null;
+		}
+
+		// free the mapScaleBitmap memory
+		if (this.mapScaleBitmap != null) {
+			this.mapScaleBitmap.recycle();
+			this.mapScaleBitmap = null;
+		}
+
+		// set the pointer to null to avoid memory leaks
+		this.swapMapViewBitmap = null;
+
+		// free the tileBitmap memory
+		if (this.tileBitmap != null) {
+			this.tileBitmap.recycle();
+			this.tileBitmap = null;
+		}
+
+		// destroy the image bitmap cache
+		if (this.imageBitmapCache != null) {
+			this.imageBitmapCache.destroy();
+			this.imageBitmapCache = null;
+		}
+
+		// destroy the image file cache
+		if (this.imageFileCache != null) {
+			this.imageFileCache.destroy();
+			this.imageFileCache = null;
+		}
+
+		// close the map file
+		if (this.database != null) {
+			this.database.closeFile();
+			this.database = null;
 		}
 	}
 
