@@ -17,8 +17,10 @@
 package org.mapsforge.android.map;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -31,6 +33,9 @@ import android.graphics.Paint.Align;
  * A MapGenerator that reads map data from a database and renders them.
  */
 abstract class DatabaseMapGenerator extends MapGenerator {
+	private static final byte AREA_NAME_BLACK = 0;
+	private static final byte AREA_NAME_BLUE = 1;
+	private static final byte AREA_NAME_RED = 2;
 	private static final short BITMAP_AMENITY = 32;
 	private static final short BITMAP_BUILDING = 2;
 	private static final short BITMAP_HIGHWAY = 1;
@@ -39,13 +44,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_NATURAL = 64;
 	private static final short BITMAP_RAILWAY = 4;
 	private static final short BITMAP_WATERWAY = 128;
-	private static final boolean DRAW_TILE_FRAMES = false;
+	private static final boolean DRAW_TILE_FRAMES = true; // TODO: set back to false
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
-	private static final byte MODE_AREA_NAME_BLACK = 0;
-	private static final byte MODE_AREA_NAME_BLUE = 1;
-	private static final byte MODE_AREA_NAME_RED = 2;
 	private static final Paint PAINT_AEROWAY_AERODROME_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_AERODROME_OUTLINE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
@@ -213,12 +215,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 	private float[] areaNamePositions;
-	private int bboxLatitude1;
-	private int bboxLatitude2;
-	private int bboxLongitude1;
-	private int bboxLongitude2;
-	private TreeMap<GeoPoint, int[]> coastlineEnds;
-	private TreeMap<GeoPoint, int[]> coastlineStarts;
+	private float bboxLatitude1;
+	private float bboxLatitude2;
+	private float bboxLongitude1;
+	private float bboxLongitude2;
+	private TreeMap<GeoPoint, float[]> coastlineEnds;
+	private TreeMap<GeoPoint, float[]> coastlineStarts;
 	private float[][] coordinates;
 	private float currentNodeX;
 	private float currentNodeY;
@@ -252,29 +254,23 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
 	 */
-	private void addAreaName(String currentWayName, int currentWayNodes,
-			int[] currentWayNodesSequence, byte mode, byte nameOffset) {
-		if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES && currentWayName != null) {
-			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
-					currentWayNodesSequence);
-			// choose correct text paint1
-			if (mode == MODE_AREA_NAME_BLUE) {
-				this.nodes.add(new PointTextContainer(currentWayName,
-						this.areaNamePositions[0], this.areaNamePositions[1] - nameOffset,
-						PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(currentWayName,
-						this.areaNamePositions[0], this.areaNamePositions[1] - nameOffset,
-						PAINT_NAME_WHITE_STROKE_10));
-			} else if (mode == MODE_AREA_NAME_BLACK) {
-				this.nodes.add(new PointTextContainer(currentWayName,
-						this.areaNamePositions[0], this.areaNamePositions[1] - nameOffset,
-						PAINT_NAME_BLACK_15));
-			} else if (mode == MODE_AREA_NAME_RED) {
-				this.nodes.add(new PointTextContainer(currentWayName,
-						this.areaNamePositions[0], this.areaNamePositions[1] - nameOffset,
-						PAINT_NAME_RED_10));
+	private void addAreaName(String wayName, byte nameColor, byte nameOffset) {
+		if (wayName != null && this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES) {
+			this.areaNamePositions = calculateCenterOfBoundingBox();
+			// choose the correct text paint
+			if (nameColor == AREA_NAME_BLUE) {
+				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10));
+				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_WHITE_STROKE_10));
+			} else if (nameColor == AREA_NAME_BLACK) {
+				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
+			} else if (nameColor == AREA_NAME_RED) {
+				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
 			} else {
-				Logger.d("unknown render mode: " + mode);
+				Logger.d("unknown render mode: " + nameColor);
 			}
 		}
 	}
@@ -282,131 +278,117 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	/**
 	 * Draws the symbol of an area if the zoomLevel level is high enough.
 	 */
-	private void addAreaSymbol(int currentWayNodes, int[] currentWayNodesSequence,
-			Bitmap symbolBitmap, byte zoomLevel) {
-		if (this.symbols != null && symbolBitmap != null
-				&& this.currentTile.zoomLevel >= zoomLevel) {
-			this.areaNamePositions = calculateCenterOfBoundingBox(currentWayNodes,
-					currentWayNodesSequence);
+	private void addAreaSymbol(Bitmap symbolBitmap, byte zoomLevel) {
+		if (symbolBitmap != null && this.currentTile.zoomLevel >= zoomLevel) {
+			this.areaNamePositions = calculateCenterOfBoundingBox();
 			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
 					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
 					- (symbolBitmap.getHeight() >> 1))));
 		}
 	}
 
-	// TODO: implement a better algorithm, this one produces bad results
+	class CoastlineWay {
+		float[] coordinates;
+		double entryAngle;
+		double exitAngle;
+		byte entrySide;
+		byte exitSide;
+
+		CoastlineWay(float[] coordinates, double entryAngle, double exitAngle) {
+			this.coordinates = coordinates;
+			this.entryAngle = entryAngle;
+			this.exitAngle = exitAngle;
+			this.entrySide = calculateSide(entryAngle);
+			this.exitSide = calculateSide(exitAngle);
+		}
+
+		private byte calculateSide(double angle) {
+			if (angle < Math.PI * 0.25) {
+				return 0; // right
+			} else if (angle < Math.PI * 0.75) {
+				return 1; // top
+			} else if (angle < Math.PI * 1.25) {
+				return 2; // left
+			} else if (angle < Math.PI * 1.75) {
+				return 3; // bottom
+			} else {
+				return 0; // right
+			}
+		}
+	}
+
+	class Complex {
+		private double a;
+		private double b;
+
+		Complex(double a, double b) {
+			this.a = a;
+			this.b = b;
+		}
+
+		double arg() {
+			return Math.atan2(this.b, this.a);
+		}
+	}
+
+	// TODO: implement an algorithm for closing water polygons
 	private void addCoastlines() {
-		/*
-		 * if (this.coastlineStarts.size() > 0) { Iterator<int[]> coastlinePartsIterator =
-		 * this.coastlineStarts.values().iterator(); int[] currentPart; int currentPartLength;
-		 * boolean isClosedPolygon; Path pathCoast; Path pathLand; Path pathWater;
-		 * 
-		 * int longitude1; int longitude2; int latitude1; int latitude2; int longitudeX; int
-		 * latitudeX;
-		 * 
-		 * while (!isInterrupted() && coastlinePartsIterator.hasNext()) { currentPart =
-		 * coastlinePartsIterator.next(); currentPartLength = currentPart.length; if
-		 * (currentPart[0] == currentPart[currentPartLength - 2] && currentPart[1] ==
-		 * currentPart[currentPartLength - 1]) { isClosedPolygon = true; } else {
-		 * isClosedPolygon = false; }
-		 * 
-		 * pathCoast = new Path(); pathCoast.moveTo(scaleLongitude(currentPart[0]),
-		 * scaleLatitude(currentPart[1])); for (int i = 2; i < currentPartLength; i += 2) {
-		 * pathCoast.lineTo(scaleLongitude(currentPart[i]), scaleLatitude(currentPart[i + 1]));
-		 * } pathLand = new Path(pathCoast); if (isClosedPolygon) { longitude1 = currentPart[0];
-		 * longitude2 = currentPart[0]; latitude1 = currentPart[1]; latitude2 = currentPart[1];
-		 * for (int i = 2; i < currentPartLength; i += 2) { if (currentPart[i] < longitude1) {
-		 * longitude1 = currentPart[i]; } else if (currentPart[i] > longitude2) { longitude2 =
-		 * currentPart[i]; } if (currentPart[i + 1] > latitude1) { latitude1 = currentPart[i +
-		 * 1]; } else if (currentPart[i + 1] < latitude2) { latitude2 = currentPart[i + 1]; } }
-		 * pathWater = new Path(); pathWater.moveTo(scaleLongitude(longitude1),
-		 * scaleLatitude(latitude1)); pathWater.lineTo(scaleLongitude(longitude2),
-		 * scaleLatitude(latitude1)); pathWater.lineTo(scaleLongitude(longitude2),
-		 * scaleLatitude(latitude2)); pathWater.lineTo(scaleLongitude(longitude1),
-		 * scaleLatitude(latitude2)); pathWater.close();
-		 * this.ways.get(0).get(LayerIds.NATURAL$LAND).add( new PathContainer(pathLand,
-		 * PAINT_NATURAL_LAND_FILL)); this.ways.get(0).get(LayerIds.NATURAL$WATER).add( new
-		 * PathContainer(pathWater, PAINT_NATURAL_WATER_FILL)); } else { pathWater = new
-		 * Path(pathCoast); longitude1 = currentPart[0]; latitude1 = currentPart[1]; longitude2
-		 * = currentPart[currentPartLength - 2]; latitude2 = currentPart[currentPartLength - 1];
-		 * 
-		 * if (longitude1 < longitude2) { if (latitude1 > latitude2) { longitudeX = longitude2;
-		 * latitudeX = latitude1; for (int i = 2; i < currentPartLength; i += 2) { if
-		 * (currentPart[i] > longitudeX) { longitudeX = currentPart[i]; } if (currentPart[i + 1]
-		 * > latitudeX) { latitudeX = currentPart[i + 1]; } }
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude2));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitude1), scaleLatitude(latitudeX));
-		 * 
-		 * longitudeX = longitude1; latitudeX = latitude2; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] < longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] < latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } }
-		 * 
-		 * pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude1)); } else {
-		 * longitudeX = longitude1; latitudeX = latitude2; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] < longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] > latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } } pathLand.lineTo(scaleLongitude(longitude2), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude1));
-		 * 
-		 * longitudeX = longitude2; latitudeX = latitude1; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] > longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] < latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } }
-		 * 
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude2));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitude1), scaleLatitude(latitudeX)); } } else { if
-		 * (latitude1 > latitude2) { longitudeX = longitude1; latitudeX = latitude2; for (int i
-		 * = 2; i < currentPartLength; i += 2) { if (currentPart[i] > longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] < latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } } pathLand.lineTo(scaleLongitude(longitude2), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude1));
-		 * 
-		 * longitudeX = longitude2; latitudeX = latitude1; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] < longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] > latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } }
-		 * 
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude2));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitude1), scaleLatitude(latitudeX)); } else {
-		 * longitudeX = longitude2; latitudeX = latitude1; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] < longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] < latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } } pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude2));
-		 * pathLand.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathLand.lineTo(scaleLongitude(longitude1), scaleLatitude(latitudeX));
-		 * 
-		 * longitudeX = longitude1; latitudeX = latitude2; for (int i = 2; i <
-		 * currentPartLength; i += 2) { if (currentPart[i] > longitudeX) { longitudeX =
-		 * currentPart[i]; } if (currentPart[i + 1] > latitudeX) { latitudeX = currentPart[i +
-		 * 1]; } }
-		 * 
-		 * pathWater.lineTo(scaleLongitude(longitude2), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitudeX));
-		 * pathWater.lineTo(scaleLongitude(longitudeX), scaleLatitude(latitude1)); } }
-		 * pathLand.close(); pathWater.close(); this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
-		 * new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
-		 * this.ways.get(0).get(LayerIds.NATURAL$WATER).add( new PathContainer(pathWater,
-		 * PAINT_NATURAL_WATER_FILL)); this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add( new
-		 * PathContainer(pathCoast, PAINT_NATURAL_COASTLINE_OUTLINE)); } } }
-		 */
+		Comparator<CoastlineWay> wayComparator = new Comparator<CoastlineWay>() {
+			@Override
+			public int compare(CoastlineWay o1, CoastlineWay o2) {
+				if (o1.entryAngle < o2.entryAngle) {
+					return 1;
+				}
+				return -1;
+			}
+		};
+
+		TreeSet<CoastlineWay> coastlineWays = new TreeSet<CoastlineWay>(wayComparator);
+
+		for (float[] coastline : this.coastlineStarts.values()) {
+			this.coordinates = new float[1][coastline.length];
+			System.arraycopy(coastline, 0, this.coordinates[0], 0, coastline.length);
+			this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add(
+					new ShapePaintContainer(new WayContainer(this.coordinates),
+							PAINT_NATURAL_COASTLINE_OUTLINE));
+
+			float firstX = coastline[0];
+			float firstY = coastline[1];
+
+			float lastX = coastline[coastline.length - 2];
+			float lastY = coastline[coastline.length - 1];
+
+			Complex zFirst = new Complex(firstX - 128, firstY - 128);
+			double entryAngle = zFirst.arg();
+			if (entryAngle < 0) {
+				entryAngle += 2 * Math.PI;
+			}
+
+			Complex zLast = new Complex(lastX - 128, lastY - 128);
+			double exitAngle = zLast.arg();
+			if (exitAngle < 0) {
+				exitAngle += 2 * Math.PI;
+			}
+
+			coastlineWays.add(new CoastlineWay(coastline, entryAngle, exitAngle));
+		}
+
+		// this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
+		// new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
+		// this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
+		// new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
+		// this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add(
+		// new PathContainer(pathCoast, PAINT_NATURAL_COASTLINE_OUTLINE));
 	}
 
 	private void addPOISymbol(float x, float y, Bitmap symbolBitmap) {
-		if (this.symbols != null && symbolBitmap != null) {
+		if (symbolBitmap != null) {
 			this.symbols.add((new SymbolContainer(symbolBitmap, x
 					- (symbolBitmap.getWidth() >> 1), y - (symbolBitmap.getHeight() >> 1))));
 		}
 	}
 
-	private void addWayName(String wayName, short wayNodes) {
+	private void addWayName(String wayName) {
 		// calculate the approximate way name length plus some margin of safety
 		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 5;
 
@@ -418,7 +400,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.skipSegments = 0;
 
 		// find way segments long enough to draw the way name on them
-		for (short i = 2; i < wayNodes; i += 2) {
+		for (short i = 2; i < this.coordinates[0].length; i += 2) {
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
 			if (this.skipSegments > 0) {
@@ -457,15 +439,15 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		// if no segment is long enough, check if the name can be drawn on the whole way
 		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
-				&& getWayLengthInPixel(wayNodes) > this.wayNameWidth) {
+				&& getWayLengthInPixel() > this.wayNameWidth) {
 			// check to prevent inverted way names
-			if (this.coordinates[0][0] > this.coordinates[0][wayNodes - 2]) {
+			if (this.coordinates[0][0] > this.coordinates[0][this.coordinates[0].length - 2]) {
 				// reverse the way coordinates
 				int offsetLeft = 0;
 				int offsetRight = this.coordinates.length - 2;
 				float exchangeValue;
 				while (offsetLeft < offsetRight) {
-					// exchange the way x coordinates
+					// exchange the way a coordinates
 					exchangeValue = this.coordinates[0][offsetLeft];
 					this.coordinates[0][offsetLeft] = this.coordinates[0][offsetRight];
 					this.coordinates[0][offsetRight] = exchangeValue;
@@ -486,43 +468,39 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 	}
 
-	private float[] calculateCenterOfBoundingBox(int currentWayNodes,
-			int[] currentWayNodesSequence) {
-		// calculate bounding box
-		this.bboxLongitude1 = currentWayNodesSequence[0];
-		this.bboxLongitude2 = currentWayNodesSequence[0];
-		this.bboxLatitude1 = currentWayNodesSequence[1];
-		this.bboxLatitude2 = currentWayNodesSequence[1];
-		for (int i = 2; i < currentWayNodes; i += 2) {
-			if (currentWayNodesSequence[i] < this.bboxLongitude1) {
-				this.bboxLongitude1 = currentWayNodesSequence[i];
-			} else if (currentWayNodesSequence[i] > this.bboxLongitude2) {
-				this.bboxLongitude2 = currentWayNodesSequence[i];
+	private float[] calculateCenterOfBoundingBox() {
+		// calculate the minimal bounding box
+		this.bboxLongitude1 = this.coordinates[0][0];
+		this.bboxLongitude2 = this.coordinates[0][0];
+		this.bboxLatitude1 = this.coordinates[0][1];
+		this.bboxLatitude2 = this.coordinates[0][1];
+		for (int i = 2; i < this.coordinates[0].length; i += 2) {
+			if (this.coordinates[0][i] < this.bboxLongitude1) {
+				this.bboxLongitude1 = this.coordinates[0][i];
+			} else if (this.coordinates[0][i] > this.bboxLongitude2) {
+				this.bboxLongitude2 = this.coordinates[0][i];
 			}
-			if (currentWayNodesSequence[i + 1] > this.bboxLatitude1) {
-				this.bboxLatitude1 = currentWayNodesSequence[i + 1];
-			} else if (currentWayNodesSequence[i + 1] < this.bboxLatitude2) {
-				this.bboxLatitude2 = currentWayNodesSequence[i + 1];
+			if (this.coordinates[0][i + 1] > this.bboxLatitude1) {
+				this.bboxLatitude1 = this.coordinates[0][i + 1];
+			} else if (this.coordinates[0][i + 1] < this.bboxLatitude2) {
+				this.bboxLatitude2 = this.coordinates[0][i + 1];
 			}
 		}
 
 		// return center coordinates
-		return new float[] {
-				scaleLongitude(this.bboxLongitude1
-						+ ((this.bboxLongitude2 - this.bboxLongitude1) >> 1)),
-				scaleLatitude(this.bboxLatitude2
-						+ ((this.bboxLatitude1 - this.bboxLatitude2) >> 1)) };
+		return new float[] { (this.bboxLongitude1 + this.bboxLongitude2) / 2,
+				(this.bboxLatitude1 + this.bboxLatitude2) / 2 };
 	}
 
 	/**
 	 * Calculate the approximate length in pixel of the current way coordinates using the
 	 * Euclidean distance for each way segment.
 	 */
-	private int getWayLengthInPixel(short wayNodes) {
+	private int getWayLengthInPixel() {
 		this.previousX = this.coordinates[0][0];
 		this.previousY = this.coordinates[0][1];
 		this.pathLengthInPixel = 0;
-		for (short i = 2; i < wayNodes; i += 2) {
+		for (short i = 2; i < this.coordinates[0].length; i += 2) {
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
 			this.distanceX = this.currentX - this.previousX;
@@ -1174,12 +1152,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private void setPaintParameters(byte zoomLevel) {
 		float paintScaleFactor;
 		switch (zoomLevel) {
-			case 25:
-				paintScaleFactor = 2048;
-				break;
-			case 24:
-				paintScaleFactor = 1024;
-				break;
 			case 23:
 				paintScaleFactor = 512;
 				break;
@@ -1934,7 +1906,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY1).add(
@@ -1944,7 +1916,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$MOTORWAY_LINK]) {
@@ -1958,7 +1930,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK1).add(
@@ -1968,7 +1940,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRUNK]) {
@@ -1982,7 +1954,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK1).add(
@@ -1990,7 +1962,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRUNK_LINK]) {
@@ -2004,7 +1976,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK1).add(
@@ -2014,7 +1986,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TRUNK_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PRIMARY]) {
@@ -2028,7 +2000,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY1)
@@ -2040,7 +2012,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_PRIMARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PRIMARY_LINK]) {
@@ -2054,7 +2026,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK1).add(
@@ -2064,7 +2036,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PRIMARY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$SECONDARY]) {
@@ -2078,7 +2050,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY1).add(
@@ -2088,7 +2060,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TERTIARY]) {
@@ -2102,7 +2074,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY1).add(
@@ -2112,7 +2084,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TERTIARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$UNCLASSIFIED]) {
@@ -2126,7 +2098,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED1).add(
@@ -2136,7 +2108,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_UNCLASSIFIED2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$ROAD]) {
@@ -2150,7 +2122,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$ROAD1).add(
@@ -2158,7 +2130,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$RESIDENTIAL]) {
@@ -2172,7 +2144,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL1).add(
@@ -2182,7 +2154,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_RESIDENTIAL2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$LIVING_STREET]) {
@@ -2196,7 +2168,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET1).add(
@@ -2206,7 +2178,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_LIVING_STREET2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$SERVICE]) {
@@ -2217,8 +2189,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SERVICE_AREA_FILL));
-					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-							(byte) 0);
+					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SERVICE1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2229,7 +2200,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE1)
@@ -2241,7 +2212,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_SERVICE2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$TRACK]) {
@@ -2255,7 +2226,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$TRACK1).add(
@@ -2263,7 +2234,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PEDESTRIAN]) {
@@ -2274,8 +2245,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN_AREA_FILL));
-					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-							(byte) 0);
+					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2286,7 +2256,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN1).add(
@@ -2296,7 +2266,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$PATH]) {
@@ -2310,7 +2280,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$PATH1).add(
@@ -2318,7 +2288,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$CYCLEWAY]) {
@@ -2332,7 +2302,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY1).add(
@@ -2342,7 +2312,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CYCLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$FOOTWAY]) {
@@ -2353,8 +2323,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_FOOTWAY_AREA_FILL));
-					addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE,
-							(byte) 0);
+					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2365,7 +2334,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY1)
@@ -2377,7 +2346,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_FOOTWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$BRIDLEWAY]) {
@@ -2391,7 +2360,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY1).add(
@@ -2401,7 +2370,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_BRIDLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$STEPS]) {
@@ -2415,7 +2384,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$STEPS1).add(
@@ -2423,7 +2392,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			} else if (wayTagIds[TagIdsWays.HIGHWAY$CONSTRUCTION]) {
@@ -2433,14 +2402,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				} else {
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CONSTRUCTION));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
-						addWayName(wayName, wayNodes);
+						addWayName(wayName);
 					}
 				}
 			}
@@ -2463,7 +2432,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.BUILDING$TRAIN_STATION]
 					|| wayTagIds[TagIdsWays.BUILDING$UNIVERSITY]
 					|| wayTagIds[TagIdsWays.BUILDING$YES]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.BUILDING$YES)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2535,7 +2504,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* landuse */
 		if ((wayTagBitmap & BITMAP_LANDUSE) != 0) {
 			if (wayTagIds[TagIdsWays.LANDUSE$ALLOTMENTS]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_ALLOTMENTS_FILL));
@@ -2545,7 +2514,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			} else if (wayTagIds[TagIdsWays.LANDUSE$CEMETERY]
 					|| wayTagIds[TagIdsWays.LANDUSE$FARM]
 					|| wayTagIds[TagIdsWays.LANDUSE$RECREATION_GROUND]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_CEMETERY_FILL));
@@ -2555,12 +2524,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_BASIN_FILL));
 			} else if (wayTagIds[TagIdsWays.LANDUSE$BROWNFIELD]
 					|| wayTagIds[TagIdsWays.LANDUSE$INDUSTRIAL]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$INDUSTRIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_INDUSTRIAL_FILL));
 			} else if (wayTagIds[TagIdsWays.LANDUSE$COMMERCIAL]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_COMMERCIAL_FILL));
@@ -2612,7 +2581,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$PARK]
 					|| wayTagIds[TagIdsWays.LEISURE$PITCH]
 					|| wayTagIds[TagIdsWays.LEISURE$PLAYGROUND]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$COMMON)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2624,7 +2593,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$STADIUM]
 					|| wayTagIds[TagIdsWays.LEISURE$TRACK]
 					|| wayTagIds[TagIdsWays.LEISURE$WATER_PARK]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$STADIUM)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2642,7 +2611,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		if ((wayTagBitmap & BITMAP_AMENITY) != 0) {
 			if (wayTagIds[TagIdsWays.AMENITY$COLLEGE] || wayTagIds[TagIdsWays.AMENITY$SCHOOL]
 					|| wayTagIds[TagIdsWays.AMENITY$UNIVERSITY]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.AMENITY$SCHOOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2655,14 +2624,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_GRAVE_YARD_FILL));
 			} else if (wayTagIds[TagIdsWays.AMENITY$HOSPITAL]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.hospital, (byte) 16);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 18);
+				addAreaSymbol(this.mapSymbols.hospital, (byte) 16);
 				this.layer.get(LayerIds.AMENITY$HOSPITAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_HOSPITAL_FILL));
 			} else if (wayTagIds[TagIdsWays.AMENITY$PARKING]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 18);
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.parking, (byte) 17);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 18);
+				addAreaSymbol(this.mapSymbols.parking, (byte) 17);
 				this.layer.get(LayerIds.AMENITY$PARKING)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2671,7 +2640,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_PARKING_OUTLINE));
 			} else if (wayTagIds[TagIdsWays.AMENITY$FOUNTAIN]) {
-				addAreaSymbol(wayNodes, wayNodesSequence, this.mapSymbols.fountain, (byte) 16);
+				addAreaSymbol(this.mapSymbols.fountain, (byte) 16);
 			}
 			if (--this.remainingTags <= 0) {
 				return;
@@ -2681,7 +2650,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* natural */
 		if ((wayTagBitmap & BITMAP_NATURAL) != 0) {
 			if (wayTagIds[TagIdsWays.NATURAL$BEACH]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$BEACH).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_BEACH_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$HEATH]) {
@@ -2695,36 +2664,40 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.layer.get(LayerIds.NATURAL$WOOD).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WOOD_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$WATER]) {
-				addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WATER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$COASTLINE]) {
-				int[] nodesSequence = wayNodesSequence;
-				GeoPoint startPoint = new GeoPoint(nodesSequence[0], nodesSequence[1]);
-				GeoPoint endPoint = new GeoPoint(nodesSequence[nodesSequence.length - 2],
-						nodesSequence[nodesSequence.length - 1]);
-				int[] matchPath;
-				int[] newPath;
+				float[] nodesSequence = this.coordinates[0];
+				GeoPoint startPoint = new GeoPoint(nodesSequence[1], nodesSequence[0]);
+				GeoPoint endPoint = new GeoPoint(nodesSequence[nodesSequence.length - 1],
+						nodesSequence[nodesSequence.length - 2]);
+				float[] matchPath;
+				float[] newPath;
 
+				// check if a coastline way starts with the last point of the current way
 				if (this.coastlineStarts.containsKey(endPoint)) {
+					// merge both ways
 					matchPath = this.coastlineStarts.remove(endPoint);
-					newPath = new int[nodesSequence.length + matchPath.length - 2];
+					newPath = new float[nodesSequence.length + matchPath.length - 2];
 					System.arraycopy(nodesSequence, 0, newPath, 0, nodesSequence.length - 2);
 					System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
 							matchPath.length);
 					nodesSequence = newPath;
-					endPoint = new GeoPoint(newPath[nodesSequence.length - 2],
-							newPath[nodesSequence.length - 1]);
+					endPoint = new GeoPoint(nodesSequence[nodesSequence.length - 1],
+							nodesSequence[nodesSequence.length - 2]);
 				}
 
+				// check if a coastline way ends with the first point of the current way
 				if (this.coastlineEnds.containsKey(startPoint)) {
+					// merge both ways
 					matchPath = this.coastlineEnds.remove(startPoint);
-					newPath = new int[nodesSequence.length + matchPath.length - 2];
-					System.arraycopy(matchPath, 0, newPath, 0, matchPath.length);
-					System.arraycopy(nodesSequence, 2, newPath, matchPath.length,
-							nodesSequence.length - 2);
+					newPath = new float[nodesSequence.length + matchPath.length - 2];
+					System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);
+					System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
+							nodesSequence.length);
 					nodesSequence = newPath;
-					startPoint = new GeoPoint(newPath[0], newPath[1]);
+					startPoint = new GeoPoint(nodesSequence[1], nodesSequence[2]);
 				}
 
 				this.coastlineStarts.put(startPoint, nodesSequence);
@@ -2873,7 +2846,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* tourism */
 		if (wayTagIds[TagIdsWays.TOURISM$ATTRACTION]) {
-			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_RED, (byte) 0);
+			addAreaName(wayName, AREA_NAME_RED, (byte) 0);
 			this.layer.get(LayerIds.TOURISM$ATTRACTION)
 					.add(
 							new ShapePaintContainer(this.shapeContainer,
@@ -2919,7 +2892,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* historic */
 		if (wayTagIds[TagIdsWays.HISTORIC$RUINS]) {
-			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLUE, (byte) 0);
+			addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
 			}
@@ -2927,7 +2900,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* place */
 		if (wayTagIds[TagIdsWays.PLACE$LOCALITY]) {
-			addAreaName(wayName, wayNodes, wayNodesSequence, MODE_AREA_NAME_BLACK, (byte) 0);
+			addAreaName(wayName, AREA_NAME_BLACK, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
 			}
@@ -2967,8 +2940,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.renderedWayNames = new HashSet<String>((int) (64 / 0.5f) + 2, 0.5f);
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
-		this.coastlineEnds = new TreeMap<GeoPoint, int[]>();
-		this.coastlineStarts = new TreeMap<GeoPoint, int[]>();
+		this.coastlineEnds = new TreeMap<GeoPoint, float[]>();
+		this.coastlineStarts = new TreeMap<GeoPoint, float[]>();
 
 		setupMapGenerator(this.tileBitmap);
 	}
