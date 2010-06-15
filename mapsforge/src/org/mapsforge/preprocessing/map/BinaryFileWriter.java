@@ -50,12 +50,12 @@ public class BinaryFileWriter {
 	private final String SQL_GET_POIS_SIZE_FOR_TILE = "SELECT sum(size) FROM pois_to_tiles WHERE tile_x = ? AND tile_y = ?";
 	private final String SQL_GET_WAYS_SIZE_FOR_TILE = "SELECT sum(size) FROM ways_to_tiles WHERE tile_x = ? AND tile_y = ?";
 
-	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level, count(*) FROM zoom_level z LEFT OUTER JOIN filtered_pois ptt ON (z.zoom_level = ptt.zoom_level) WHERE ptt.tile_x = ? AND ptt.tile_y = ? GROUP BY z.zoom_level ORDER BY z.zoom_level";
-	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS = "SELECT z.zoom_level, count(*) FROM zoom_level z LEFT OUTER JOIN filtered_ways wtt ON (z.zoom_level = wtt.zoom_level) WHERE wtt.tile_x = ? AND wtt.tile_y = ? GROUP BY z.zoom_level ORDER BY z.zoom_level";
+	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level z LEFT OUTER JOIN (select pt.poi_id,pt.zoom_level from pois_to_tiles pt WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
+	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level z LEFT OUTER JOIN (select wt.way_id, wt.zoom_level from ways_to_tiles wt where wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
 
-	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM filtered_pois ptt JOIN pois pois "
+	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM pois_to_tiles ptt JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
-	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM filtered_ways wtt "
+	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM ways_to_tiles wtt "
 			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 	private final String SQL_GET_WAYNODES = "SELECT latitude,longitude FROM waynodes WHERE way_id = ? ORDER BY waynode_sequence";
 	private final String SQL_GET_INNER_WAY_NODES = "SELECT latitude,longitude FROM multipolygons WHERE outer_way_id = ? AND inner_way_sequence = ? order by waynode_sequence";
@@ -125,8 +125,12 @@ public class BinaryFileWriter {
 	private static final short BITMAP_NATURAL = 2;
 	private static final short BITMAP_WATERWAY = 1;
 
+	private static long startTime;
+
 	public BinaryFileWriter(String propertiesFile) {
 		try {
+			startTime = System.currentTimeMillis();
+
 			// setup database connection
 			Properties props = new Properties();
 			props.load(new FileInputStream(propertiesFile));
@@ -135,10 +139,10 @@ public class BinaryFileWriter {
 
 			conn.setAutoCommit(false);
 
-			conn.createStatement().execute("TRUNCATE TABLE filtered_pois CASCADE");
-			conn.createStatement().execute("TRUNCATE TABLE filtered_ways CASCADE");
+			// conn.createStatement().execute("TRUNCATE TABLE filtered_pois CASCADE");
+			// conn.createStatement().execute("TRUNCATE TABLE filtered_ways CASCADE");
 
-			conn.commit();
+			// conn.commit();
 
 			pstmtPoisSizeForTiles = conn.prepareStatement(SQL_GET_POIS_SIZE_FOR_TILE);
 			pstmtWaysSizeForTiles = conn.prepareStatement(SQL_GET_WAYS_SIZE_FOR_TILE);
@@ -179,8 +183,6 @@ public class BinaryFileWriter {
 			int version = -1;
 			short zoom = -1;
 			short tilePixel = -1;
-			// short minZoom = -1;
-			// short maxZoom = -1;
 
 			String comment = mapFileComment;
 
@@ -224,49 +226,77 @@ public class BinaryFileWriter {
 				raf.writeByte(b);
 			}
 			// version number of the binary file format
-			raf.writeByte(version);
+			raf.writeInt(version);
+
 			// basic zoom level
 			raf.writeByte(zoom);
+
 			// width and height of a tile in pixel
 			raf.writeShort(tilePixel);
+
 			// minimal zoom level
 			raf.writeByte((byte) minZoom);
+
 			// maximal zoom level
 			raf.writeByte((byte) maxZoom);
+
 			// upper left corner of the bounding box
 			raf.writeInt(maxlat);
 			raf.writeInt(minlon);
+
 			// bottom right corner of the bounding box
 			raf.writeInt(minlat);
-			raf.writeInt(minlon);
+			raf.writeInt(maxlon);
+
 			// date of the map data
 			raf.writeLong(date);
+
 			// place holder for the size of the biggest tile
 			biggestTileSizePosition = raf.getFilePointer();
-			raf.seek(biggestTileSizePosition + 4);
+			raf.seek(biggestTileSizePosition + 5);
+
 			// comment
 			if (!comment.equals("")) {
 				raf.writeUTF(comment);
 			} else {
-				raf.writeShort(0);
+				raf.writeUTF("no comment");
 			}
 
 			// zoom_level = (short) ((maxZoom - minZoom) + 1);
 
 			// create temporary zoom table
 			conn.createStatement().execute(
-					"CREATE TEMPORARY TABLE zoom_level(zoom_level smallint");
+					"CREATE TEMPORARY TABLE zoom_level(zoom_level smallint)");
 			for (short s = minZoom; s <= maxZoom; s++) {
 				conn.createStatement().execute(
 						"INSERT INTO zoom_level (zoom_level) VALUES (" + s + ")");
 			}
 
+			// TODO: needs refactoring: zoom level of elements should not be changed!
+			// set zoom level smaller than minimal zoom to the value of the minimal zoom
+			conn.createStatement().execute(
+					"UPDATE pois_to_tiles SET zoom_level = " + minZoom + " WHERE zoom_level < "
+							+ minZoom);
+			conn.createStatement().execute(
+					"UPDATE ways_to_tiles SET zoom_level = " + minZoom + " WHERE zoom_level < "
+							+ minZoom);
+
 			// write Index
 			// for debug:
-			raf.writeUTF("+++IndexStart+++");
+
+			/** only for debug **/
+			// write tile header
+			String tileStart = "+++IndexStart+++";
+			logger.info(tileStart);
+			byte[] stringBytes = tileStart.getBytes();
+			for (byte b : stringBytes) {
+				raf.writeByte(b);
+			}
+			/** only for debug **/
 			logger.info("+++IndexStart+++");
 
 			long tileSize;
+			long cumulatedTileSize = raf.getFilePointer();
 			for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
 				for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
 					tileSize = 0;
@@ -290,8 +320,10 @@ public class BinaryFileWriter {
 					if (tileSize > biggestTileSize)
 						biggestTileSize = tileSize;
 
+					cumulatedTileSize += tileSize;
+
 					// write tile size
-					tileSizeBytes = Serializer.getFiveBytes(tileSize);
+					tileSizeBytes = Serializer.getFiveBytes(cumulatedTileSize);
 					for (byte b : tileSizeBytes) {
 						raf.writeByte(b);
 					}
@@ -332,8 +364,8 @@ public class BinaryFileWriter {
 
 			Map<Short, Short> poiTableForTile;
 			Map<Short, Short> wayTableForTile;
-			short cumulatedCounterPois;
-			short cumulatedCounterWays;
+			// short cumulatedCounterPois;
+			// short cumulatedCounterWays;
 
 			long id;
 			// int latitude;
@@ -365,235 +397,272 @@ public class BinaryFileWriter {
 			Map<String, Byte> tagIdsPOIs = TagIdsPOIs.getMap();
 			Map<String, Byte> tagIdsWays = TagIdsWays.getMap();
 
-			for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
-				for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
+			int tileCounter = 0;
+
+			for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
+				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
+					tileCounter++;
 					/** only for debug **/
 					// write tile header
 					tileStart = tileHead + tileX + "," + tileY + tileTail;
 					logger.info(tileStart);
+
 					stringBytes = tileStart.getBytes();
+					byteArrayLength = stringBytes.length;
 					for (byte b : stringBytes) {
 						raf.writeByte(b);
 					}
-					/** only for debug **/
 
-					logger.info("write element zoom table");
-					poiTableForTile = new TreeMap<Short, Short>();
-					wayTableForTile = new TreeMap<Short, Short>();
-
-					// get amount of pois and ways grouped by zoom level for this certain tile
-					pstmtPoisZoomTable.setLong(1, tileX);
-					pstmtPoisZoomTable.setLong(2, tileY);
-					rsPoisZoomTable = pstmtPoisZoomTable.executeQuery();
-
-					// join temporary zoom level table with filtered pois table
-					while (rsPoisZoomTable.next()) {
-						poiTableForTile.put(rsPoisZoomTable.getShort("zoom_level"),
-								rsPoisZoomTable.getShort("count"));
-					}
-
-					pstmtWaysZoomTable.setLong(1, tileX);
-					pstmtWaysZoomTable.setLong(2, tileY);
-					rsWaysZoomTable = pstmtWaysZoomTable.executeQuery();
-
-					while (rsWaysZoomTable.next()) {
-						wayTableForTile.put(rsWaysZoomTable.getShort("zoom_level"),
-								rsWaysZoomTable.getShort("count"));
-					}
-
-					// cumulate the amount of pois and ways
-					cumulatedCounterPois = 0;
-					cumulatedCounterWays = 0;
-					for (short min = minZoom; min <= maxZoom; min++) {
-						cumulatedCounterPois += poiTableForTile.get(min);
-						cumulatedCounterWays += wayTableForTile.get(min);
-
-						// write amount of pois and ways which should be read for a certain zoom
-						// level
-						raf.writeShort(cumulatedCounterPois);
-						raf.writeShort(cumulatedCounterWays);
-					}
-
-					// get pointer to first way in this tile
-					firstWayInTile = raf.getFilePointer();
-					raf.seek(firstWayInTile + 4);
-
-					pstmtPoisForTile.setLong(1, tileX);
-					pstmtPoisForTile.setLong(2, tileY);
-
-					// get all pois for this tile ordered by zoom level
-					rsPoisForTile = pstmtPoisForTile.executeQuery();
-					while (rsPoisForTile.next()) {
-						/** only for debug **/
-						// write debug string
-						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
-						logger.info(poiStart);
-						stringBytes = poiStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							raf.writeByte(b);
+					if (byteArrayLength < 32) {
+						while (byteArrayLength < 32) {
+							raf.writeByte(32);
+							byteArrayLength++;
 						}
-						logger.info("wrote debug header");
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								raf.writeByte(32);
-								byteArrayLength++;
+						/** only for debug **/
+
+						logger.info("write element zoom table");
+						poiTableForTile = new TreeMap<Short, Short>();
+						wayTableForTile = new TreeMap<Short, Short>();
+
+						// get amount of pois and ways grouped by zoom level for this certain
+						// tile
+						pstmtPoisZoomTable.setLong(1, tileX);
+						pstmtPoisZoomTable.setLong(2, tileY);
+						rsPoisZoomTable = pstmtPoisZoomTable.executeQuery();
+
+						// join temporary zoom level table with filtered pois table
+						while (rsPoisZoomTable.next()) {
+							poiTableForTile.put(rsPoisZoomTable.getShort(1), rsPoisZoomTable
+									.getShort(2));
+						}
+
+						pstmtWaysZoomTable.setLong(1, tileX);
+						pstmtWaysZoomTable.setLong(2, tileY);
+						rsWaysZoomTable = pstmtWaysZoomTable.executeQuery();
+
+						while (rsWaysZoomTable.next()) {
+							wayTableForTile.put(rsWaysZoomTable.getShort(1), rsWaysZoomTable
+									.getShort(2));
+						}
+
+						// cumulate the amount of pois and ways
+						// cumulatedCounterPois = 0;
+						// cumulatedCounterWays = 0;
+						for (short min = minZoom; min <= maxZoom; min++) {
+							// cumulatedCounterPois += poiTableForTile.get(min);
+							// cumulatedCounterWays += wayTableForTile.get(min);
+
+							// write amount of pois and ways which should be read for a certain
+							// zoom level
+							raf.writeShort(poiTableForTile.get(min));
+							raf.writeShort(wayTableForTile.get(min));
+						}
+
+						// get pointer to first way in this tile
+						firstWayInTile = raf.getFilePointer();
+						raf.seek(firstWayInTile + 8);
+
+						pstmtPoisForTile.setLong(1, tileX);
+						pstmtPoisForTile.setLong(2, tileY);
+
+						// get all pois for this tile ordered by zoom level
+						rsPoisForTile = pstmtPoisForTile.executeQuery();
+						while (rsPoisForTile.next()) {
+							/** only for debug **/
+							// write debug string
+							poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
+							logger.info(poiStart);
+							stringBytes = poiStart.getBytes();
+							byteArrayLength = stringBytes.length;
+							for (byte b : stringBytes) {
+								raf.writeByte(b);
 							}
-						}
-						/** only for debug **/
-
-						// write poi features to the file
-						raf.writeInt(rsPoisForTile.getInt("latitude"));
-						raf.writeInt(rsPoisForTile.getInt("longitude"));
-						logger.info("wrote coordinates");
-						nameLength = rsPoisForTile.getShort("name_length");
-						name = rsPoisForTile.getString("name");
-						tagAmount = rsPoisForTile.getShort("tags_amount");
-						layer = (byte) rsPoisForTile.getShort("layer");
-						elevation = rsPoisForTile.getInt("elevation");
-						housenumber = rsPoisForTile.getString("housenumber");
-						tags = rsPoisForTile.getString("tags");
-						// zoom = rsPoisForTile.getShort("zoom_level");
-
-						// write byte with layer and tag amount info
-						raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
-
-						// write tag ids to the file
-						tagStrings = tags.split("\n");
-						for (String tag : tagStrings) {
-							raf.writeByte(tagIdsPOIs.get(tag));
-						}
-
-						// write byte with bits set to 1 if the poi has a name, an elevation or
-						// a housenumber
-						raf.writeByte(buildInfoByteForPOI(nameLength, elevation, housenumber
-								.getBytes().length));
-
-						if (nameLength != 0) {
-							raf.writeUTF(name);
-						}
-
-						if (elevation != 0) {
-							raf.writeShort(elevation);
-						}
-
-						if (housenumber != "") {
-							raf.writeUTF(housenumber);
-						}
-					}
-
-					// write position of the first way in the tile
-					currentPosition = raf.getFilePointer();
-					raf.seek(firstWayInTile);
-					raf.writeLong(currentPosition);
-					raf.seek(currentPosition);
-
-					// get ways
-					pstmtWaysForTile.setLong(1, tileX);
-					pstmtWaysForTile.setLong(2, tileY);
-
-					// get all ways for this tile ordered by zoom level
-					rsWaysForTile = pstmtWaysForTile.executeQuery();
-					while (rsWaysForTile.next()) {
-						id = rsWaysForTile.getLong("id");
-						/** only for debug **/
-						// write debug string
-						wayStart = waysHead + id + waysTail;
-						logger.info(wayStart);
-						stringBytes = wayStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							raf.writeByte(b);
-						}
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								raf.writeByte(32);
-								byteArrayLength++;
-							}
-						}
-						/** only for debug **/
-
-						nameLength = rsWaysForTile.getShort("name_length");
-						name = rsWaysForTile.getString("name");
-						tagAmount = rsWaysForTile.getShort("tags_amount");
-						layer = (byte) rsWaysForTile.getShort("layer");
-						waynodesAmount = rsWaysForTile.getInt("waynodes_amount");
-						wayType = rsWaysForTile.getShort("way_type");
-						tags = rsWaysForTile.getString("tags");
-						labelPositionLatitude = rsWaysForTile.getInt("label_pos_lat");
-						labelPositionLongitude = rsWaysForTile.getInt("label_pos_lon");
-						innerWayAmount = rsWaysForTile.getShort("inner_way_amount");
-						tileBitmask = rsWaysForTile.getShort("tile_bitmask");
-						waySize = rsWaysForTile.getShort("size");
-
-						tagStrings = tags.split("\n");
-
-						// write way features
-						raf.writeShort(waySize);
-						raf.writeShort(tileBitmask);
-
-						// write byte with layer and tag amount
-						raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
-
-						// write byte with amount of tags which are rendered
-						raf.writeByte(buildRenderTagByte(tagStrings));
-
-						// write tag bitmap
-						raf.writeByte(buildTagBitmapByte(tagStrings));
-
-						// write tag ids
-						for (String tag : tagStrings) {
-							raf.writeByte(tagIdsWays.get(tag));
-						}
-
-						// write way nodes
-						raf.writeShort(waynodesAmount);
-
-						pstmtWaynodes.setLong(1, id);
-						rsWaynodes = pstmtWaynodes.executeQuery();
-						while (rsWaynodes.next()) {
-							raf.writeInt(rsWaynodes.getInt("latitude"));
-							raf.writeInt(rsWaynodes.getInt("longitude"));
-						}
-
-						// write byte with name, label and way type information
-						raf.writeByte(buildInfoByteForWay(nameLength, labelPositionLatitude,
-								labelPositionLongitude, wayType));
-
-						if (nameLength != 0) {
-							raf.writeUTF(name);
-						}
-						if (labelPositionLatitude != 0 && labelPositionLongitude != 0) {
-							raf.writeInt(labelPositionLatitude);
-							raf.writeInt(labelPositionLongitude);
-						}
-
-						// if way is an outer way of a multipolygon write all inner ways and the
-						// corresponding way nodes
-						if (wayType == 3) { // || wayType == 0) {
-							raf.writeByte((byte) innerWayAmount);
-							innerwayNodeCounterPos = raf.getFilePointer();
-							raf.seek(innerwayNodeCounterPos + 2);
-							for (int k = 0; k < innerWayAmount; k++) {
-								pstmtMultipolygons.setLong(1, id);
-								pstmtMultipolygons.setShort(2, (short) k);
-								rsMultipolygons = pstmtMultipolygons.executeQuery();
-								while (rsMultipolygons.next()) {
-									innerwayNodes++;
-									raf.writeInt(rsMultipolygons.getInt("latitude"));
-									raf.writeInt(rsMultipolygons.getInt("longitude"));
+							// if string is not 32 byte long append whitespaces, byte value = 32
+							if (byteArrayLength < 32) {
+								while (byteArrayLength < 32) {
+									raf.writeByte(32);
+									byteArrayLength++;
 								}
-								currentPosition = raf.getFilePointer();
-								raf.seek(innerwayNodeCounterPos);
-								raf.writeShort(innerwayNodes);
-								raf.seek(currentPosition);
+							}
+							/** only for debug **/
+
+							// write poi features to the file
+							raf.writeInt(rsPoisForTile.getInt("latitude"));
+							raf.writeInt(rsPoisForTile.getInt("longitude"));
+							nameLength = rsPoisForTile.getShort("name_length");
+							name = rsPoisForTile.getString("name");
+							tagAmount = rsPoisForTile.getShort("tags_amount");
+							layer = (byte) rsPoisForTile.getShort("layer");
+							elevation = rsPoisForTile.getInt("elevation");
+							housenumber = rsPoisForTile.getString("housenumber");
+							tags = rsPoisForTile.getString("tags");
+							// zoom = rsPoisForTile.getShort("zoom_level");
+
+							/** debug **/
+							logger.info("hausnumber: " + housenumber + " length: "
+									+ housenumber.getBytes().length);
+							logger.info("name: " + name + " length: " + nameLength);
+							logger.info("elevation: " + elevation);
+							/** debug **/
+
+							// write byte with layer and tag amount info
+							raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
+
+							// write tag ids to the file
+							tagStrings = tags.split("\n");
+							for (String tag : tagStrings) {
+								raf.writeByte(tagIdsPOIs.get(tag));
+							}
+
+							// write byte with bits set to 1 if the poi has a name, an elevation
+							// or
+							// a housenumber
+							raf.writeByte(buildInfoByteForPOI(nameLength, elevation,
+									housenumber.getBytes().length));
+
+							if (nameLength != 0) {
+								/** debug **/
+								logger.info("poi has name");
+								/** debug **/
+								raf.writeUTF(name);
+							}
+
+							if (elevation != 0) {
+								/** debug **/
+								logger.info("poi has elevation");
+								/** debug **/
+								raf.writeShort(elevation);
+							}
+
+							if (housenumber.getBytes().length != 0) {
+								/** debug **/
+								logger.info("poi has housenumber");
+								/** debug **/
+								raf.writeUTF(housenumber);
+							}
+						}
+
+						// write position of the first way in the tile
+						currentPosition = raf.getFilePointer();
+						raf.seek(firstWayInTile);
+						raf.writeLong(currentPosition);
+						raf.seek(currentPosition);
+
+						// get ways
+						pstmtWaysForTile.setLong(1, tileX);
+						pstmtWaysForTile.setLong(2, tileY);
+
+						// get all ways for this tile ordered by zoom level
+						rsWaysForTile = pstmtWaysForTile.executeQuery();
+						while (rsWaysForTile.next()) {
+							id = rsWaysForTile.getLong("id");
+							/** only for debug **/
+							// write debug string
+							wayStart = waysHead + id + waysTail;
+							logger.info(wayStart);
+							stringBytes = wayStart.getBytes();
+							byteArrayLength = stringBytes.length;
+							for (byte b : stringBytes) {
+								raf.writeByte(b);
+							}
+							// if string is not 32 byte long append whitespaces, byte value = 32
+							if (byteArrayLength < 32) {
+								while (byteArrayLength < 32) {
+									raf.writeByte(32);
+									byteArrayLength++;
+								}
+							}
+							/** only for debug **/
+
+							nameLength = rsWaysForTile.getShort("name_length");
+							name = rsWaysForTile.getString("name");
+							tagAmount = rsWaysForTile.getShort("tags_amount");
+							layer = (byte) rsWaysForTile.getShort("layer");
+							waynodesAmount = rsWaysForTile.getInt("waynodes_amount");
+							wayType = rsWaysForTile.getShort("way_type");
+							tags = rsWaysForTile.getString("tags");
+							labelPositionLatitude = rsWaysForTile.getInt("label_pos_lat");
+							labelPositionLongitude = rsWaysForTile.getInt("label_pos_lon");
+							innerWayAmount = rsWaysForTile.getShort("inner_way_amount");
+							tileBitmask = rsWaysForTile.getShort("tile_bitmask");
+							waySize = rsWaysForTile.getInt("size");
+
+							tagStrings = tags.split("\n");
+
+							// write way features
+							raf.writeInt(waySize);
+							raf.writeShort(tileBitmask);
+
+							// write byte with layer and tag amount
+							raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
+
+							// write byte with amount of tags which are rendered
+							raf.writeByte(buildRenderTagByte(tagStrings));
+
+							// write tag bitmap
+							raf.writeByte(buildTagBitmapByte(tagStrings));
+
+							// write tag ids
+							for (String tag : tagStrings) {
+								raf.writeByte(tagIdsWays.get(tag));
+							}
+
+							// write way nodes
+							raf.writeShort(waynodesAmount);
+
+							pstmtWaynodes.setLong(1, id);
+							rsWaynodes = pstmtWaynodes.executeQuery();
+							while (rsWaynodes.next()) {
+								raf.writeInt(rsWaynodes.getInt("latitude"));
+								raf.writeInt(rsWaynodes.getInt("longitude"));
+							}
+
+							// write byte with name, label and way type information
+							raf.writeByte(buildInfoByteForWay(nameLength,
+									labelPositionLatitude, labelPositionLongitude, wayType));
+
+							if (nameLength != 0) {
+								raf.writeUTF(name);
+							}
+							if (labelPositionLatitude != 0 && labelPositionLongitude != 0) {
+								raf.writeInt(labelPositionLatitude);
+								raf.writeInt(labelPositionLongitude);
+							}
+
+							// if way is an outer way of a multipolygon write all inner ways and
+							// the
+							// corresponding way nodes
+							if (wayType == 3) { // || wayType == 0) {
+								/** debug **/
+								logger.info("amount of innerways: " + innerWayAmount);
+								/** debug **/
+								raf.writeByte((byte) innerWayAmount);
+								for (int k = 1; k <= innerWayAmount; k++) {
+									innerwayNodeCounterPos = raf.getFilePointer();
+									raf.seek(innerwayNodeCounterPos + 2);
+									innerwayNodes = 0;
+									pstmtMultipolygons.setLong(1, id);
+									pstmtMultipolygons.setShort(2, (short) k);
+									rsMultipolygons = pstmtMultipolygons.executeQuery();
+									while (rsMultipolygons.next()) {
+										innerwayNodes++;
+										raf.writeInt(rsMultipolygons.getInt("latitude"));
+										raf.writeInt(rsMultipolygons.getInt("longitude"));
+									}
+									currentPosition = raf.getFilePointer();
+									raf.seek(innerwayNodeCounterPos);
+									logger.info("innerwayNodes: " + innerwayNodes);
+									raf.writeShort(innerwayNodes);
+									raf.seek(currentPosition);
+								}
 							}
 						}
 					}
 				}
 			}
+			logger.info("total number of " + tileCounter + " tiles");
+			logger.info("processing took " + (System.currentTimeMillis() - startTime) / 1000
+					+ "s.");
 			logger.info("binary map data file created");
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -625,6 +694,8 @@ public class BinaryFileWriter {
 		if (housenumberLength != 0) {
 			infoByte |= BITMAP_HOUSENUMBER;
 		}
+
+		logger.info("infobyte: " + infoByte);
 
 		return infoByte;
 	}
@@ -713,6 +784,7 @@ public class BinaryFileWriter {
 		String key;
 
 		for (String tag : tags) {
+			logger.info("tag for bitmap: " + tag);
 			key = tag.substring(0, tag.indexOf("="));
 			if (key.equals("highway")) {
 				infoByte |= BITMAP_HIGHWAY;
@@ -757,6 +829,8 @@ public class BinaryFileWriter {
 			bfw.writeHeaderAndIndex();
 			bfw.writeTiles();
 
+			logger.info("processing took " + (System.currentTimeMillis() - startTime) / 1000
+					+ "s.");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}

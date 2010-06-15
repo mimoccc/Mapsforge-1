@@ -210,9 +210,17 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		conn.createStatement().execute("TRUNCATE TABLE metadata CASCADE");
 		conn.createStatement().execute("TRUNCATE TABLE pois_to_tiles CASCADE");
 		conn.createStatement().execute("TRUNCATE TABLE ways_to_tiles CASCADE");
+		conn.createStatement().execute("TRUNCATE TABLE pois_tags CASCADE");
+		conn.createStatement().execute("TRUNCATE TABLE ways_tags CASCADE");
 
 		conn.createStatement().execute("DROP INDEX IF EXISTS pois_tags_idx");
 		conn.createStatement().execute("DROP INDEX IF EXISTS ways_tags_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS pois_to_tiles_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS ways_to_tiles_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS pois_to_tiles_id_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS ways_to_tiles_id_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS waynodes_id_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS multipolygons_idx");
 
 		conn.commit();
 
@@ -364,6 +372,21 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			// create indices
 			conn.createStatement().execute("CREATE INDEX pois_tags_idx ON pois_tags (tag)");
 			conn.createStatement().execute("CREATE INDEX ways_tags_idx ON ways_tags(tag)");
+
+			conn.createStatement().execute(
+					"CREATE INDEX pois_to_tiles_idx ON pois_to_tiles(tile_x,tile_y)");
+			conn.createStatement().execute(
+					"CREATE INDEX ways_to_tiles_idx ON ways_to_tiles(tile_x,tile_y)");
+
+			conn.createStatement().execute(
+					"CREATE INDEX pois_to_tiles_id_idx ON pois_to_tiles(poi_id)");
+			conn.createStatement().execute(
+					"CREATE INDEX ways_to_tiles_id_idx ON ways_to_tiles(way_id)");
+
+			conn.createStatement().execute("CREATE INDEX waynodes_id_idx ON waynodes(way_id)");
+
+			conn.createStatement().execute(
+					"CREATE INDEX multipolygons_idx ON multipolygons(outer_way_id)");
 
 			logger.info("created indices on tag tables");
 
@@ -626,6 +649,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					} else if (poiTagWhiteList.containsKey(tag)) {
 						// if current tag is in the white list, add it to the temporary tag list
 						currentNode.zoomLevel = poiTagWhiteList.get(tag);
+						if (currentNode.zoomLevel == 127) {
+							currentNode.zoomLevel = zoom;
+						}
 						tempTags.add(tag);
 
 						node_tags++;
@@ -738,6 +764,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					} else if (wayTagWhiteList.containsKey(tag)) {
 						// if current tag is in the white list, add it to the temporary tag list
 						currentWay.zoomLevel = wayTagWhiteList.get(tag);
+						if (currentWay.zoomLevel == 127) {
+							currentWay.zoomLevel = zoom;
+						}
 						tempTags.add(tag);
 
 						way_tags++;
