@@ -152,7 +152,7 @@ final class Block {
 	public int serialize(byte[] buff, BlockEncoding enc) throws IOException {
 		BitArrayOutputStream stream = new BitArrayOutputStream(buff);
 
-		// --- HEADER ---
+		// ----------------- HEADER --------------------------
 
 		stream.writeByte((byte) (level & 0xff));
 		stream.writeUInt(numVerticesHavingNh, enc.bitsPerVertexOffset);
@@ -166,7 +166,7 @@ final class Block {
 		// TODO array length
 		stream.alignPointer(1);
 
-		// --- DATA ---
+		// ------------------ DATA -----------------------------
 
 		// block-identifiers of referenced blocks :
 		for (int i = 0; i < adjacentBlocks.length; i++) {
