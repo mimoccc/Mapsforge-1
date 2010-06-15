@@ -104,6 +104,12 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	public void write(byte[] b) throws IOException {
+		for (int i = 0; i < b.length; i++) {
+			writeByte(b[i]);
+		}
+	}
+
 	public void alignPointer(int byteAlignment) throws IOException {
 		int _byteOffset = byteOffset;
 		if (bitOffset != 0) {

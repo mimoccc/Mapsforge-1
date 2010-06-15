@@ -19,15 +19,11 @@ package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
-import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ClusteringUtil;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering;
-import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
@@ -35,7 +31,6 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BoundingBox;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
 final class Block {
 
@@ -135,7 +130,8 @@ final class Block {
 		}
 
 		// edges
-		LinkedList<LevelVertex> edgeTargets = cUtil.getClusterExternalReferencedVertices(cluster);
+		LinkedList<LevelVertex> edgeTargets = cUtil
+				.getClusterExternalReferencedVertices(cluster);
 		edgeTargets.addAll(vertexList);
 		TIntObjectHashMap<IndirectVertexPointer> adjacentPointers = getVertexPointers(
 				adjacentClusters, edgeTargets, cUtil, level);
@@ -143,20 +139,25 @@ final class Block {
 		this.edges = new EdgeEntry[edgeList.size()];
 		i = 0;
 		for (LevelEdge e : edgeList) {
-			this.edges[i++] = new EdgeEntry(e.getWeight(), true, adjacentPointers.get(e
-					.getTarget().getId()));
+			boolean isCore = e.getSource().getNeighborhood() != HHComputation.INFINITY_1
+					&& e.getSource().getNeighborhood() != HHComputation.INFINITY_2
+					&& e.getTarget().getNeighborhood() != HHComputation.INFINITY_1
+					&& e.getTarget().getNeighborhood() != HHComputation.INFINITY_2;
+
+			this.edges[i++] = new EdgeEntry(e.getWeight(), isCore, e.isForward(), e
+					.isBackward(), adjacentPointers.get(e.getTarget().getId()));
 		}
 	}
 
-	public int serialize(byte[] buff, BlockedGraphHeader graphHeader) throws IOException {
+	public int serialize(byte[] buff, BlockEncoding enc) throws IOException {
 		BitArrayOutputStream stream = new BitArrayOutputStream(buff);
 
 		// --- HEADER ---
 
 		stream.writeByte((byte) (level & 0xff));
-		stream.writeUInt(numVerticesHavingNh, graphHeader.bitsPerVertexOffset);
-		stream.writeUInt(numVerticesHavingNoNh, graphHeader.bitsPerVertexOffset);
-		stream.writeUInt(numEdges, graphHeader.bitsPerEdgeCount);
+		stream.writeUInt(numVerticesHavingNh, enc.bitsPerVertexOffset);
+		stream.writeUInt(numVerticesHavingNoNh, enc.bitsPerVertexOffset);
+		stream.writeUInt(numEdges, enc.bitsPerEdgeCount);
 		stream.writeUInt(bitsPerEdgeWeight, 5);
 		stream.writeUInt(bitsPerLon, 5);
 		stream.writeUInt(bitsPerLat, 5);
@@ -169,22 +170,22 @@ final class Block {
 
 		// block-identifiers of referenced blocks :
 		for (int i = 0; i < adjacentBlocks.length; i++) {
-			stream.writeUInt(adjacentBlocks[i], graphHeader.bitsPerClusterId);
+			stream.writeUInt(adjacentBlocks[i], enc.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < subjacentBlocks.length; i++) {
-			stream.writeUInt(subjacentBlocks[i], graphHeader.bitsPerClusterId);
+			stream.writeUInt(subjacentBlocks[i], enc.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < overlyingBlocks.length; i++) {
-			stream.writeUInt(overlyingBlocks[i], graphHeader.bitsPerClusterId);
+			stream.writeUInt(overlyingBlocks[i], enc.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < levelZeroBlocks.length; i++) {
-			stream.writeUInt(levelZeroBlocks[i], graphHeader.bitsPerClusterId);
+			stream.writeUInt(levelZeroBlocks[i], enc.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
@@ -201,25 +202,25 @@ final class Block {
 				stream.writeUInt(v.vertexPointers[POINTER_IDX_SUBJACENT].blockIdOffset,
 						bitsPerSubjacentOffset);
 				stream.writeUInt(v.vertexPointers[POINTER_IDX_SUBJACENT].vertexOffset,
-						graphHeader.bitsPerVertexOffset);
+						enc.bitsPerVertexOffset);
 			}
-			if (level < (graphHeader.numGraphLevels - 1)) {
+			if (level < (enc.numGraphLevels - 1)) {
 				if (v.vertexPointers[POINTER_IDX_OVERLYING] != null) {
 					stream.writeUInt(v.vertexPointers[POINTER_IDX_OVERLYING].blockIdOffset,
 							bitsPerOverlyingZeroOffset);
 					stream.writeUInt(v.vertexPointers[POINTER_IDX_OVERLYING].vertexOffset,
-							graphHeader.bitsPerVertexOffset);
+							enc.bitsPerVertexOffset);
 				} else {
-					stream.writeUInt(0, bitsPerOverlyingZeroOffset + graphHeader.bitsPerVertexOffset);
+					stream.writeUInt(0, bitsPerOverlyingZeroOffset + enc.bitsPerVertexOffset);
 				}
 			}
 			if (level > 0) {
 				stream.writeUInt(v.vertexPointers[POINTER_IDX_LEVEL_ZERO].blockIdOffset,
 						bitsPerLevelZeroOffset);
 				stream.writeUInt(v.vertexPointers[POINTER_IDX_LEVEL_ZERO].vertexOffset,
-						graphHeader.bitsPerVertexOffset);
+						enc.bitsPerVertexOffset);
 			}
-			stream.writeUInt(v.neighborhood, graphHeader.bitsPerNeighborhood);
+			stream.writeUInt(v.neighborhood, enc.bitsPerNeighborhood);
 			if (level == 0) {
 				stream.writeUInt(v.longitude - minLon, bitsPerLon);
 				stream.writeUInt(v.longitude - minLon, bitsPerLat);
@@ -234,7 +235,7 @@ final class Block {
 			stream.writeUInt(e.weight, bitsPerEdgeWeight);
 			stream.writeBit(e.isCore);
 			stream.writeUInt(e.target.blockIdOffset, bitsPerAdjacentZeroOffset);
-			stream.writeUInt(e.target.vertexOffset, graphHeader.bitsPerVertexOffset);
+			stream.writeUInt(e.target.vertexOffset, enc.bitsPerVertexOffset);
 		}
 		stream.alignPointer(1);
 
@@ -332,36 +333,5 @@ final class Block {
 			}
 		}
 		return count;
-	}
-
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		System.out.print("reading files... ");
-		LevelGraph levelGraph = Serializer.deserialize(new File("graph_ger"));
-		KCenterClustering[] clustering = Serializer.deserialize(new File("clustering_ger"));
-		System.out.println("ready!");
-
-		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
-		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
-		int count = 0;
-		int bytes = 0;
-		int V = 0;
-		int E = 0;
-		for (int lvl = 0; lvl < clustering.length; lvl++) {
-			for (ICluster c : clustering[lvl].getClusters()) {
-				Block b = new Block(c, mapping, cUtil);
-				byte[] buff = new byte[1000000];
-				bytes += b.serialize(buff, new BlockedGraphHeader(24, 16, 24, 24,
-						clustering.length));
-				if ((++count) % 100 == 0) {
-					System.out.println("[writing blocks] " + count + " / "
-							+ cUtil.getGlobalNumClusters());
-				}
-				V += b.vertices.length;
-				E += b.edges.length;
-			}
-		}
-		DecimalFormat df = new DecimalFormat("###,###,###");
-		System.out.println(df.format(bytes) + " Bytes |V| = " + df.format(V) + ", |E| = "
-				+ df.format(E));
 	}
 }

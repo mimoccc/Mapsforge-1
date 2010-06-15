@@ -20,11 +20,16 @@ final class EdgeEntry {
 
 	public final int weight;
 	public final boolean isCore;
+	public final boolean isForward;
+	public final boolean isBackward;
 	public final IndirectVertexPointer target;
 
-	public EdgeEntry(int weight, boolean isCore, IndirectVertexPointer target) {
+	public EdgeEntry(int weight, boolean isCore, boolean isForward, boolean isBackward,
+			IndirectVertexPointer target) {
 		this.weight = weight;
 		this.isCore = isCore;
+		this.isForward = isForward;
+		this.isBackward = isBackward;
 		this.target = target;
 	}
 
@@ -32,9 +37,11 @@ final class EdgeEntry {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(EdgeEntry.class.getName() + " (\n");
-		sb.append("  target = " + target + "\n");
 		sb.append("  weight = " + weight + "\n");
 		sb.append("  isCore = " + isCore + "\n");
+		sb.append("  isForward = " + isCore + "\n");
+		sb.append("  isBackward = " + isCore + "\n");
+		sb.append("  target = " + target + "\n");
 		sb.append(")");
 		return sb.toString();
 	}
