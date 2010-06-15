@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 
-public class BlockPointer {
+public final class BlockPointer {
 
 	public final long startAddr;
 	public final int lengthBytes;

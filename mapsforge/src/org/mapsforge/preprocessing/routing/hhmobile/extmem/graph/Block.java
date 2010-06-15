@@ -148,15 +148,15 @@ final class Block {
 		}
 	}
 
-	public int write(byte[] buff, BlockEncodingParams enc) throws IOException {
+	public int serialize(byte[] buff, BlockedGraphHeader graphHeader) throws IOException {
 		BitArrayOutputStream stream = new BitArrayOutputStream(buff);
 
 		// --- HEADER ---
 
 		stream.writeByte((byte) (level & 0xff));
-		stream.writeUInt(numVerticesHavingNh, enc.bitsPerVertexOffset);
-		stream.writeUInt(numVerticesHavingNoNh, enc.bitsPerVertexOffset);
-		stream.writeUInt(numEdges, enc.bitsPerEdgeCount);
+		stream.writeUInt(numVerticesHavingNh, graphHeader.bitsPerVertexOffset);
+		stream.writeUInt(numVerticesHavingNoNh, graphHeader.bitsPerVertexOffset);
+		stream.writeUInt(numEdges, graphHeader.bitsPerEdgeCount);
 		stream.writeUInt(bitsPerEdgeWeight, 5);
 		stream.writeUInt(bitsPerLon, 5);
 		stream.writeUInt(bitsPerLat, 5);
@@ -169,22 +169,22 @@ final class Block {
 
 		// block-identifiers of referenced blocks :
 		for (int i = 0; i < adjacentBlocks.length; i++) {
-			stream.writeUInt(adjacentBlocks[i], enc.bitsPerClusterId);
+			stream.writeUInt(adjacentBlocks[i], graphHeader.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < subjacentBlocks.length; i++) {
-			stream.writeUInt(subjacentBlocks[i], enc.bitsPerClusterId);
+			stream.writeUInt(subjacentBlocks[i], graphHeader.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < overlyingBlocks.length; i++) {
-			stream.writeUInt(overlyingBlocks[i], enc.bitsPerClusterId);
+			stream.writeUInt(overlyingBlocks[i], graphHeader.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
 		for (int i = 0; i < levelZeroBlocks.length; i++) {
-			stream.writeUInt(levelZeroBlocks[i], enc.bitsPerClusterId);
+			stream.writeUInt(levelZeroBlocks[i], graphHeader.bitsPerClusterId);
 		}
 		stream.alignPointer(1);
 
@@ -198,28 +198,28 @@ final class Block {
 
 		for (VertexEntry v : vertices) {
 			if (level > 1) {
-				stream.writeUInt(v.interLevelPointers[POINTER_IDX_SUBJACENT].blockIdOffset,
+				stream.writeUInt(v.vertexPointers[POINTER_IDX_SUBJACENT].blockIdOffset,
 						bitsPerSubjacentOffset);
-				stream.writeUInt(v.interLevelPointers[POINTER_IDX_SUBJACENT].vertexOffset,
-						enc.bitsPerVertexOffset);
+				stream.writeUInt(v.vertexPointers[POINTER_IDX_SUBJACENT].vertexOffset,
+						graphHeader.bitsPerVertexOffset);
 			}
-			if (level < (enc.numGraphLevels - 1)) {
-				if (v.interLevelPointers[POINTER_IDX_OVERLYING] != null) {
-					stream.writeUInt(v.interLevelPointers[POINTER_IDX_OVERLYING].blockIdOffset,
+			if (level < (graphHeader.numGraphLevels - 1)) {
+				if (v.vertexPointers[POINTER_IDX_OVERLYING] != null) {
+					stream.writeUInt(v.vertexPointers[POINTER_IDX_OVERLYING].blockIdOffset,
 							bitsPerOverlyingZeroOffset);
-					stream.writeUInt(v.interLevelPointers[POINTER_IDX_OVERLYING].vertexOffset,
-							enc.bitsPerVertexOffset);
+					stream.writeUInt(v.vertexPointers[POINTER_IDX_OVERLYING].vertexOffset,
+							graphHeader.bitsPerVertexOffset);
 				} else {
-					stream.writeUInt(0, bitsPerOverlyingZeroOffset + enc.bitsPerVertexOffset);
+					stream.writeUInt(0, bitsPerOverlyingZeroOffset + graphHeader.bitsPerVertexOffset);
 				}
 			}
 			if (level > 0) {
-				stream.writeUInt(v.interLevelPointers[POINTER_IDX_LEVEL_ZERO].blockIdOffset,
+				stream.writeUInt(v.vertexPointers[POINTER_IDX_LEVEL_ZERO].blockIdOffset,
 						bitsPerLevelZeroOffset);
-				stream.writeUInt(v.interLevelPointers[POINTER_IDX_LEVEL_ZERO].vertexOffset,
-						enc.bitsPerVertexOffset);
+				stream.writeUInt(v.vertexPointers[POINTER_IDX_LEVEL_ZERO].vertexOffset,
+						graphHeader.bitsPerVertexOffset);
 			}
-			stream.writeUInt(v.neighborhood, enc.bitsPerNeighborhood);
+			stream.writeUInt(v.neighborhood, graphHeader.bitsPerNeighborhood);
 			if (level == 0) {
 				stream.writeUInt(v.longitude - minLon, bitsPerLon);
 				stream.writeUInt(v.longitude - minLon, bitsPerLat);
@@ -234,7 +234,7 @@ final class Block {
 			stream.writeUInt(e.weight, bitsPerEdgeWeight);
 			stream.writeBit(e.isCore);
 			stream.writeUInt(e.target.blockIdOffset, bitsPerAdjacentZeroOffset);
-			stream.writeUInt(e.target.vertexOffset, enc.bitsPerVertexOffset);
+			stream.writeUInt(e.target.vertexOffset, graphHeader.bitsPerVertexOffset);
 		}
 		stream.alignPointer(1);
 
@@ -350,7 +350,7 @@ final class Block {
 			for (ICluster c : clustering[lvl].getClusters()) {
 				Block b = new Block(c, mapping, cUtil);
 				byte[] buff = new byte[1000000];
-				bytes += b.write(buff, new BlockEncodingParams(24, 16, 24, 24,
+				bytes += b.serialize(buff, new BlockedGraphHeader(24, 16, 24, 24,
 						clustering.length));
 				if ((++count) % 100 == 0) {
 					System.out.println("[writing blocks] " + count + " / "

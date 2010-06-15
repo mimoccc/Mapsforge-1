@@ -25,7 +25,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
-public final class ClusterBlockMapping {
+final class ClusterBlockMapping {
 
 	private final TObjectIntHashMap<ICluster> blockIds;
 	private final ICluster[] clusters;

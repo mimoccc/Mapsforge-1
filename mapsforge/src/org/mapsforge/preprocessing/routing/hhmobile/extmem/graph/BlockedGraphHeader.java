@@ -16,12 +16,18 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 
-final class BlockEncodingParams {
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+final class BlockedGraphHeader {
 
 	public final int bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
 			bitsPerNeighborhood, numGraphLevels;
 
-	public BlockEncodingParams(int bitsPerClusterId, int bitsPerVertexOffset,
+	public BlockedGraphHeader(int bitsPerClusterId, int bitsPerVertexOffset,
 			int bitsPerEdgeCount, int bitsPerNeighborhood, int numGraphLevels) {
 		this.bitsPerClusterId = bitsPerClusterId;
 		this.bitsPerVertexOffset = bitsPerVertexOffset;
@@ -30,10 +36,32 @@ final class BlockEncodingParams {
 		this.numGraphLevels = numGraphLevels;
 	}
 
+	public static BlockedGraphHeader deserialize(byte[] b) throws IOException {
+		DataInputStream in = new DataInputStream(new ByteArrayInputStream(b));
+		int bitsPerClusterId = in.readInt();
+		int bitsPerVertexOffset = in.readInt();
+		int bitsPerEdgeCount = in.readInt();
+		int bitsPerNeighborhood = in.readInt();
+		int numGraphLevels = in.readInt();
+
+		return new BlockedGraphHeader(bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
+				bitsPerNeighborhood, numGraphLevels);
+	}
+
+	public void serialize(OutputStream oStream) throws IOException {
+		DataOutputStream out = new DataOutputStream(oStream);
+		out.writeInt(bitsPerClusterId);
+		out.writeInt(bitsPerVertexOffset);
+		out.writeInt(bitsPerEdgeCount);
+		out.writeInt(bitsPerNeighborhood);
+		out.writeInt(numGraphLevels);
+		out.flush();
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(BlockEncodingParams.class.getName() + " (\n");
+		sb.append(BlockedGraphHeader.class.getName() + " (\n");
 		sb.append("  bitsPerClusterId = " + bitsPerClusterId + "\n");
 		sb.append("  bitsPerVertexOffset = " + bitsPerVertexOffset + "\n");
 		sb.append("  bitsPerEdgeCount = " + bitsPerEdgeCount + "\n");

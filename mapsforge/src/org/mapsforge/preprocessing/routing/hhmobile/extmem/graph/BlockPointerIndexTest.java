@@ -14,15 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.testing;
+package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.mapsforge.preprocessing.routing.hhmobile.extmem.graph.BlockPointer;
-import org.mapsforge.preprocessing.routing.hhmobile.extmem.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
 public class BlockPointerIndexTest {

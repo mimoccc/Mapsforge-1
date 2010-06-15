@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,19 +33,46 @@ import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
-public class BlockedGraphWriter {
+public class BlockedGraphSerializer {
 
 	private final static int BUFFER_SIZE = 25000000;
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
 
-	public static int[] writeBlocks(OutputStream oStream, LevelGraph levelGraph,
-			IClustering[] clustering) throws IOException {
+	public static void writeBlockedGraph(File headerFile, File clusterBlocksFile,
+			File blockPointerIndexFile, LevelGraph levelGraph, IClustering[] clustering,
+			int indexGroupSizeThreshold) throws IOException {
+
+		// write cluster blocks
+		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
+				clusterBlocksFile));
+		int numBlocks = ClusteringUtil.getGlobalNumClusters(clustering);
+		int[] blockSize = new int[numBlocks];
+		BlockedGraphHeader header = serializeBlocks(out, levelGraph, clustering, blockSize);
+		out.close();
+
+		// write header
+		out = new BufferedOutputStream(new FileOutputStream(headerFile));
+		header.serialize(out);
+		out.close();
+
+		// write block pointer index
+		BlockPointerIndex pointerIndex = BlockPointerIndex.getSpaceOptimalIndex(blockSize,
+				indexGroupSizeThreshold);
+		out = new BufferedOutputStream(new FileOutputStream(blockPointerIndexFile));
+		pointerIndex.serialize(out);
+		out.flush();
+		out.close();
+	}
+
+	private static BlockedGraphHeader serializeBlocks(OutputStream oStream,
+			LevelGraph levelGraph, IClustering[] clustering, int[] blockSizeBuff)
+			throws IOException {
 		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
 		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
 
-		int[] byteSize = getBlockByteSizes(mapping, cUtil, getEncodingParams(cUtil));
-		System.out.println(getEncodingParams(cUtil));
-		printEncodingParams(cUtil);
+		int[] byteSize = getBlockByteSizes(mapping, cUtil, getGraphHeader(cUtil));
+		System.out.println(getGraphHeader(cUtil));
+
 		reassignBlockIdsByAscByteSize(byteSize, mapping);
 		reassignClusterVertexOffsetByAscNh(levelGraph, clustering);
 
@@ -53,33 +81,31 @@ public class BlockedGraphWriter {
 		cUtil = new ClusteringUtil(clustering, levelGraph);
 
 		// write the blocks
-		BlockEncodingParams enc = getEncodingParams(cUtil);
+		BlockedGraphHeader graphHeader = getGraphHeader(cUtil);
 		Utils.setZero(BUFFER, 0, BUFFER.length);
-
-		int[] blockSize = new int[mapping.size()];
 
 		for (int blockId = 0; blockId < mapping.size(); blockId++) {
 			Block block = new Block(mapping.getCluster(blockId), mapping, cUtil);
-			blockSize[blockId] = block.write(BUFFER, enc);
+			blockSizeBuff[blockId] = block.serialize(BUFFER, graphHeader);
 
-			oStream.write(BUFFER, 0, blockSize[blockId]);
-			Utils.setZero(BUFFER, 0, blockSize[blockId]);
+			oStream.write(BUFFER, 0, blockSizeBuff[blockId]);
+			Utils.setZero(BUFFER, 0, blockSizeBuff[blockId]);
 		}
-		return blockSize;
+		return graphHeader;
 	}
 
-	private static BlockEncodingParams getEncodingParams(ClusteringUtil cUtil) {
+	private static BlockedGraphHeader getGraphHeader(ClusteringUtil cUtil) {
 		int bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getGlobalNumClusters() - 1);
 		int bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
 				.getGlobalMaxVerticesPerCluster());
 		int bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil.getGlobalMaxEdgesPerCluster());
 		int bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.getGlobalMaxNeighborhood());
 		int numGraphLevels = cUtil.getGlobalNumLevels();
-		return new BlockEncodingParams(bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
+		return new BlockedGraphHeader(bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
 				bitsPerNeighborhood, numGraphLevels);
 	}
 
-	private static void printEncodingParams(ClusteringUtil cUtil) {
+	static void printEncodingParams(ClusteringUtil cUtil) {
 		for (int lvl = 0; lvl < cUtil.getGlobalNumLevels(); lvl++) {
 			int bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getLevelNumClusters(lvl) - 1);
 			int bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
@@ -89,20 +115,20 @@ public class BlockedGraphWriter {
 			int bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil
 					.getLevelMaxNeighborhood(lvl));
 			int numGraphLevels = cUtil.getGlobalNumLevels();
-			BlockEncodingParams enc = new BlockEncodingParams(bitsPerClusterId,
+			BlockedGraphHeader enc = new BlockedGraphHeader(bitsPerClusterId,
 					bitsPerVertexOffset, bitsPerEdgeCount, bitsPerNeighborhood, numGraphLevels);
 			System.out.println(enc);
 		}
 	}
 
 	private static int[] getBlockByteSizes(ClusterBlockMapping mapping, ClusteringUtil cUtil,
-			BlockEncodingParams enc) throws IOException {
+			BlockedGraphHeader enc) throws IOException {
 		int[] byteSize = new int[mapping.size()];
 
 		for (int i = 0; i < byteSize.length; i++) {
 			ICluster c = mapping.getCluster(i);
 			Block b = new Block(c, mapping, cUtil);
-			byteSize[i] = b.write(BUFFER, enc);
+			byteSize[i] = b.serialize(BUFFER, enc);
 		}
 		return byteSize;
 	}
@@ -154,13 +180,20 @@ public class BlockedGraphWriter {
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		System.out.print("reading files... ");
-		LevelGraph levelGraph = Serializer.deserialize(new File("gGer"));
-		KCenterClustering[] clustering = Serializer.deserialize(new File("cGer"));
-		System.out.println("ready!");
-		int[] blockSizes = writeBlocks(new FileOutputStream("binGer"), levelGraph, clustering);
+		String map = "Ger";
 
-		BlockPointerIndex index = BlockPointerIndex.getOptimalIndex(blockSizes, 50);
-		System.out.println("Index size: " + index.byteSize() + "bytes.");
+		System.out.print("reading input data (" + map + ") ... ");
+		LevelGraph levelGraph = Serializer.deserialize(new File("g" + map));
+		KCenterClustering[] clustering = Serializer.deserialize(new File("c" + map));
+		System.out.println("ready!");
+
+		File headerFile = new File("graph" + map + ".header");
+		File blocksFile = new File("graph" + map + ".blocks");
+		File indexFile = new File("graph" + map + ".index");
+
+		int indexGroupSizeThreshold = 100;
+
+		writeBlockedGraph(headerFile, blocksFile, indexFile, levelGraph, clustering,
+				indexGroupSizeThreshold);
 	}
 }

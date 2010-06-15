@@ -16,13 +16,17 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayInputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
-public class BlockPointerIndex {
+public final class BlockPointerIndex {
 
 	private final static int MIN_G_SIZE = 5;
 
@@ -56,7 +60,7 @@ public class BlockPointerIndex {
 				gFirstBlockSize);
 	}
 
-	public static BlockPointerIndex getOptimalIndex(int[] blockSize, int maxGSize) {
+	public static BlockPointerIndex getSpaceOptimalIndex(int[] blockSize, int maxGSize) {
 		maxGSize = Math.min(blockSize.length, maxGSize);
 		int[] indexSize = new int[maxGSize - MIN_G_SIZE + 1];
 
@@ -67,6 +71,64 @@ public class BlockPointerIndex {
 		int optGSize = MIN_G_SIZE + Utils.firstIndexOfMin(indexSize);
 
 		return new BlockPointerIndex(blockSize, optGSize);
+	}
+
+	private BlockPointerIndex(int gSize, int numBlocks, long[] gStartAddr, int[] gBlockEncOffs,
+			int[] gFirstBlockSize, byte[] gEncBits, byte[] encBlockSize) {
+		this.gSize = gSize;
+		this.numBlocks = numBlocks;
+		this.gStartAddr = gStartAddr;
+		this.gBlockEncOffs = gBlockEncOffs;
+		this.gFirstBlockSize = gFirstBlockSize;
+		this.gEncBits = gEncBits;
+		this.encBlockSize = encBlockSize;
+	}
+
+	public static BlockPointerIndex deserialize(byte[] buff) throws IOException {
+		ByteArrayInputStream iStream = new ByteArrayInputStream(buff);
+		DataInputStream in = new DataInputStream(iStream);
+
+		int gSize = in.readInt();
+		int numBlocks = in.readInt();
+
+		int numGroups = in.readInt();
+		long[] gStartAddr = new long[numGroups];
+		int[] gBlockEncOffs = new int[numGroups];
+		int[] gFirstBlockSize = new int[numGroups];
+		byte[] gEncBits = new byte[numGroups];
+		for (int groupIdx = 0; groupIdx < numGroups; groupIdx++) {
+			gStartAddr[groupIdx] = in.readLong();
+			gBlockEncOffs[groupIdx] = in.readInt();
+			gFirstBlockSize[groupIdx] = in.readInt();
+			gEncBits[groupIdx] = in.readByte();
+		}
+
+		int encBlockSizeLength = in.readInt();
+		byte[] encBlockSize = new byte[encBlockSizeLength];
+		in.read(encBlockSize);
+
+		return new BlockPointerIndex(gSize, numBlocks, gStartAddr, gBlockEncOffs,
+				gFirstBlockSize, gEncBits, encBlockSize);
+	}
+
+	public void serialize(OutputStream oStream) throws IOException {
+		DataOutputStream out = new DataOutputStream(oStream);
+
+		out.writeInt(gSize);
+		out.writeInt(numBlocks);
+
+		out.writeInt(gStartAddr.length);
+		for (int i = 0; i < gStartAddr.length; i++) {
+			out.writeLong(gStartAddr[i]);
+			out.writeInt(gBlockEncOffs[i]);
+			out.writeInt(gFirstBlockSize[i]);
+			out.writeByte(gEncBits[i]);
+		}
+
+		out.writeInt(encBlockSize.length);
+		out.write(encBlockSize);
+
+		out.flush();
 	}
 
 	public BlockPointer getPointer(int blockId) {
@@ -95,7 +157,11 @@ public class BlockPointerIndex {
 	}
 
 	public int byteSize() {
-		return 8 + (17 * gStartAddr.length) + encBlockSize.length;
+		return 8 // gSize, numBlocks
+				+ 4 // g*[].length
+				+ (17 * gStartAddr.length) // g*[] entries
+				+ 4 // encBlocksize[].length
+				+ encBlockSize.length; // encBlockSize[] entries
 	}
 
 	private static byte[] encodeBlockSizes(byte[] gEncBits, int[] blockSize, int gSize,

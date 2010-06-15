@@ -20,7 +20,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
 final class VertexEntry {
 
-	public final IndirectVertexPointer[] interLevelPointers;
+	public final IndirectVertexPointer[] vertexPointers;
 	public final int neighborhood;
 	public final int edgeOffset;
 	public final int longitude;
@@ -28,7 +28,7 @@ final class VertexEntry {
 
 	public VertexEntry(IndirectVertexPointer[] interLevelPointers, int neighborhood,
 			int edgeOffset, int longitude, int latitude) {
-		this.interLevelPointers = interLevelPointers;
+		this.vertexPointers = interLevelPointers;
 		this.neighborhood = neighborhood;
 		this.edgeOffset = edgeOffset;
 		this.longitude = longitude;
@@ -39,7 +39,7 @@ final class VertexEntry {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(VertexEntry.class.getName() + " (\n");
-		sb.append("  interLevelPointers = {" + Utils.arrToString(interLevelPointers) + "}\n");
+		sb.append("  interLevelPointers = {" + Utils.arrToString(vertexPointers) + "}\n");
 		sb.append("  neighborhood = " + neighborhood + "\n");
 		sb.append("  edgeOffset = " + edgeOffset + "\n");
 		sb.append("  longitude = " + longitude + "\n");
