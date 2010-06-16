@@ -127,6 +127,11 @@ public class BinaryFileWriter {
 
 	private static long startTime;
 
+	private long nextIndexValue;
+	private long biggestTileSizePosition;
+
+	long previousTilePosition = 0;
+
 	public BinaryFileWriter(String propertiesFile) {
 		try {
 			startTime = System.currentTimeMillis();
@@ -192,8 +197,6 @@ public class BinaryFileWriter {
 
 			byte[] tileSizeBytes;
 
-			long biggestTileSizePosition;
-
 			// get metadata for the map file
 			rsBBoxCorners = conn.createStatement().executeQuery(SQL_GET_METADATA);
 			while (rsBBoxCorners.next()) {
@@ -253,7 +256,12 @@ public class BinaryFileWriter {
 
 			// place holder for the size of the biggest tile
 			biggestTileSizePosition = raf.getFilePointer();
+			System.out.println("position of the value for the biggest tile: "
+					+ biggestTileSizePosition);
 			raf.seek(biggestTileSizePosition + 5);
+			/** test **/
+			// raf.writeInt(20000);
+			/** test **/
 
 			// comment
 			if (!comment.equals("")) {
@@ -294,51 +302,70 @@ public class BinaryFileWriter {
 			}
 			/** only for debug **/
 			logger.info("+++IndexStart+++");
+			System.out.println("filepointer " + raf.getFilePointer());
 
-			long tileSize;
-			long cumulatedTileSize = raf.getFilePointer();
-			for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
-				for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
-					tileSize = 0;
+			/** test **/
+			long diffX = (bottomRight.x - upperLeft.x) + 1;
+			System.out.println(diffX);
+			long diffY = (bottomRight.y - upperLeft.y) + 1;
+			System.out.println(diffY);
+			long tileAmount = diffX * diffY;
+			System.out.println(tileAmount);
 
-					// get size of all pois for a tile
-					pstmtPoisSizeForTiles.setLong(1, tileX);
-					pstmtPoisSizeForTiles.setLong(2, tileY);
-					rsPoisSize = pstmtPoisSizeForTiles.executeQuery();
-					while (rsPoisSize.next()) {
-						tileSize += rsPoisSize.getInt(1);
-					}
+			long bytesForIndex = tileAmount * 5;
+			System.out.println(bytesForIndex);
 
-					// get size of all ways for a tile
-					pstmtWaysSizeForTiles.setLong(1, tileX);
-					pstmtWaysSizeForTiles.setLong(2, tileY);
-					rsWaysSize = pstmtWaysSizeForTiles.executeQuery();
-					while (rsWaysSize.next()) {
-						tileSize += rsWaysSize.getInt(1);
-					}
-					// set biggest tile size
-					if (tileSize > biggestTileSize)
-						biggestTileSize = tileSize;
+			nextIndexValue = raf.getFilePointer();
+			System.out.println("first index value at: " + nextIndexValue);
 
-					cumulatedTileSize += tileSize;
+			raf.seek(raf.getFilePointer() + bytesForIndex);
+			System.out.println("current filepointer " + raf.getFilePointer());
 
-					// write tile size
-					tileSizeBytes = Serializer.getFiveBytes(cumulatedTileSize);
-					for (byte b : tileSizeBytes) {
-						raf.writeByte(b);
-					}
-				}
-			}
+			/** test **/
 
-			// write biggest tile size into the header
-			long currentPosition = raf.getFilePointer();
-			raf.seek(biggestTileSizePosition);
-			tileSizeBytes = Serializer.getFiveBytes(biggestTileSize);
-			for (byte b : tileSizeBytes) {
-				raf.writeByte(b);
-			}
-			raf.seek(currentPosition);
-
+			// long tileSize;
+			// long cumulatedTileSize = raf.getFilePointer();
+			// for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
+			// for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
+			// tileSize = 0;
+			//
+			// // get size of all pois for a tile
+			// pstmtPoisSizeForTiles.setLong(1, tileX);
+			// pstmtPoisSizeForTiles.setLong(2, tileY);
+			// rsPoisSize = pstmtPoisSizeForTiles.executeQuery();
+			// while (rsPoisSize.next()) {
+			// tileSize += rsPoisSize.getInt(1);
+			// }
+			//
+			// // get size of all ways for a tile
+			// pstmtWaysSizeForTiles.setLong(1, tileX);
+			// pstmtWaysSizeForTiles.setLong(2, tileY);
+			// rsWaysSize = pstmtWaysSizeForTiles.executeQuery();
+			// while (rsWaysSize.next()) {
+			// tileSize += rsWaysSize.getInt(1);
+			// }
+			// // set biggest tile size
+			// if (tileSize > biggestTileSize)
+			// biggestTileSize = tileSize;
+			//
+			// cumulatedTileSize += tileSize;
+			//
+			// // write tile size
+			// tileSizeBytes = Serializer.getFiveBytes(cumulatedTileSize);
+			// for (byte b : tileSizeBytes) {
+			// raf.writeByte(b);
+			// }
+			// }
+			// }
+			//
+			// // write biggest tile size into the header
+			// long currentPosition = raf.getFilePointer();
+			// raf.seek(biggestTileSizePosition);
+			// tileSizeBytes = Serializer.getFiveBytes(biggestTileSize);
+			// for (byte b : tileSizeBytes) {
+			// raf.writeByte(b);
+			// }
+			// raf.seek(currentPosition);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -391,6 +418,9 @@ public class BinaryFileWriter {
 			short innerwayNodes = 0;
 
 			long currentPosition;
+			byte[] currentPositionInFiveBytes;
+			long tileDiff;
+			long biggestTileSize = 0;
 
 			String[] tagStrings;
 
@@ -402,6 +432,32 @@ public class BinaryFileWriter {
 			for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
 				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
 					tileCounter++;
+					/** test **/
+					System.out.println("before tile:" + raf.getFilePointer());
+					currentPosition = raf.getFilePointer();
+					currentPositionInFiveBytes = Serializer.getFiveBytes(currentPosition);
+					System.out.println("currentPos " + currentPosition);
+					raf.seek(nextIndexValue);
+					System.out.println("nextindexvalue " + nextIndexValue);
+					for (byte b : currentPositionInFiveBytes) {
+						raf.writeByte(b);
+					}
+					nextIndexValue = raf.getFilePointer();
+					System.out.println("new nextindexvalue " + nextIndexValue);
+					raf.seek(currentPosition);
+					System.out.println("new position " + raf.getFilePointer());
+					if (previousTilePosition != 0) {
+						System.out.println("previousTilePosition: " + previousTilePosition);
+						tileDiff = raf.getFilePointer() - previousTilePosition;
+						// TODO compare last tile also!
+						System.out.println("size of the previous tile " + tileDiff);
+						if (tileDiff > biggestTileSize) {
+							biggestTileSize = tileDiff;
+						}
+					}
+					previousTilePosition = currentPosition;
+					System.out.println("previous tilePosition " + previousTilePosition);
+					/** test **/
 					/** only for debug **/
 					// write tile header
 					tileStart = tileHead + tileX + "," + tileY + tileTail;
@@ -660,6 +716,23 @@ public class BinaryFileWriter {
 					}
 				}
 			}
+			currentPosition = raf.getFilePointer();
+			System.out.println("file ends at: " + currentPosition);
+			// compare size of last tile in file with the size of the biggest tile
+			tileDiff = raf.getFilePointer() - previousTilePosition;
+			if (tileDiff > biggestTileSize) {
+				biggestTileSize = tileDiff;
+			}
+			raf.seek(biggestTileSizePosition);
+			System.out.println("biggest tile is written to: " + raf.getFilePointer());
+			byte[] biggestTileInFiveBytes = Serializer.getFiveBytes(biggestTileSize);
+			for (byte b : biggestTileInFiveBytes) {
+				raf.writeByte(b);
+			}
+			System.out.println("biggest tile is written to file " + raf.getFilePointer());
+			raf.seek(currentPosition);
+			System.out.println("end of file: " + raf.getFilePointer());
+
 			logger.info("total number of " + tileCounter + " tiles");
 			logger.info("processing took " + (System.currentTimeMillis() - startTime) / 1000
 					+ "s.");
