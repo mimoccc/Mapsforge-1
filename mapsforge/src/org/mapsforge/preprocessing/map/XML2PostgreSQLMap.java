@@ -370,9 +370,12 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			logger.info("create indices on tag tables");
 
 			// create indices
+
+			// pois/ways_tags
 			conn.createStatement().execute("CREATE INDEX pois_tags_idx ON pois_tags (tag)");
 			conn.createStatement().execute("CREATE INDEX ways_tags_idx ON ways_tags(tag)");
 
+			// pois/ways_to_tiles
 			conn.createStatement().execute(
 					"CREATE INDEX pois_to_tiles_idx ON pois_to_tiles(tile_x,tile_y)");
 			conn.createStatement().execute(
@@ -383,8 +386,19 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			conn.createStatement().execute(
 					"CREATE INDEX ways_to_tiles_id_idx ON ways_to_tiles(way_id)");
 
-			conn.createStatement().execute("CREATE INDEX waynodes_id_idx ON waynodes(way_id)");
+			conn
+					.createStatement()
+					.execute(
+							"CREATE INDEX ways_to_tiles_id_tile_idx ON ways_to_tiles(way_id, tile_x, tile_y)");
 
+			// waynodes
+			conn.createStatement().execute("CREATE INDEX waynodes_id_idx ON waynodes(way_id)");
+			conn
+					.createStatement()
+					.execute(
+							"CREATE INDEX waynodes_id_sequence_idx ON waynodes(way_id,waynode_sequence)");
+
+			// multipolygons
 			conn.createStatement().execute(
 					"CREATE INDEX multipolygons_idx ON multipolygons(outer_way_id)");
 
