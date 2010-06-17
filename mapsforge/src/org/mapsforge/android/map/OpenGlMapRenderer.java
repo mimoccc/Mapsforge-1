@@ -86,8 +86,23 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		// }
 
 		if (this.pixelBuffer != null) {
+			// this.mGL.glReadPixels(0, 0, this.bitmap.getWidth(), this.bitmap.getHeight(),
+			// GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, this.pixelBuffer);
+
 			this.mGL.glReadPixels(0, 0, this.bitmap.getWidth(), this.bitmap.getHeight(),
-					GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, this.pixelBuffer);
+					GL10.GL_RGB, GL10.GL_UNSIGNED_SHORT_5_6_5, this.pixelBuffer);
+
+			// int newLength = this.pixelBuffer.array().length / 2;
+			// byte[] bufferArray = this.pixelBuffer.array();
+			// byte tempByte;
+			// for (int i = 0; i < newLength; i += 2) {
+			// tempByte = (byte) ((0xF8 & bufferArray[i * 2 + 1]) << 2 | (0xFF & bufferArray[i *
+			// 2 + 2]) >> 3);
+			// bufferArray[i + 1] = (byte) (0xF8 & bufferArray[i * 2] | (0xFF & bufferArray[i *
+			// 2 + 1]) >> 5);
+			// bufferArray[i] = tempByte;
+			// }
+
 			this.bitmap.copyPixelsFromBuffer(this.pixelBuffer);
 			this.frameReady = true;
 		}
@@ -170,8 +185,8 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 
 	void setBitmap(Bitmap bitmap) {
 		this.bitmap = bitmap;
-		this.pixelBuffer = ByteBuffer.allocateDirect(4 * this.bitmap.getHeight()
-				* this.bitmap.getWidth());
+		byte[] bytes = new byte[2 * this.bitmap.getHeight() * this.bitmap.getWidth()];
+		this.pixelBuffer = ByteBuffer.wrap(bytes);
 	}
 
 	public void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays,
