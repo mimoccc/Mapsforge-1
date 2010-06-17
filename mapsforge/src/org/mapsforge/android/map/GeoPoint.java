@@ -38,14 +38,14 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	@Override
-	public int compareTo(GeoPoint geoCoordinate) {
-		if (this.longitudeE6 > geoCoordinate.longitudeE6) {
+	public int compareTo(GeoPoint geoPoint) {
+		if (this.longitudeE6 > geoPoint.longitudeE6) {
 			return 1;
-		} else if (this.longitudeE6 < geoCoordinate.longitudeE6) {
+		} else if (this.longitudeE6 < geoPoint.longitudeE6) {
 			return -1;
-		} else if (this.latitudeE6 > geoCoordinate.latitudeE6) {
+		} else if (this.latitudeE6 > geoPoint.latitudeE6) {
 			return 1;
-		} else if (this.latitudeE6 < geoCoordinate.latitudeE6) {
+		} else if (this.latitudeE6 < geoPoint.latitudeE6) {
 			return -1;
 		}
 		return 0;
@@ -55,8 +55,6 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	public boolean equals(Object o) {
 		if (this == o) {
 			return true;
-		} else if (o == null) {
-			return false;
 		} else if (!(o instanceof GeoPoint)) {
 			return false;
 		} else {

@@ -72,8 +72,6 @@ class Tile implements Comparable<Tile> {
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (obj == null) {
-			return false;
 		} else if (!(obj instanceof Tile)) {
 			return false;
 		} else {

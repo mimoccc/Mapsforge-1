@@ -28,8 +28,8 @@ class CohenSutherlandClipping {
 	/**
 	 * Computes the region code for a given point and rectangle.
 	 */
-	private static int calculateOutCode(long x, long y, long left, long bottom, long right,
-			long top) {
+	private static int calculateOutCode(double x, double y, double left, double bottom,
+			double right, double top) {
 		if (y > top) {
 			if (x > right) {
 				return TOP | RIGHT;
@@ -78,12 +78,12 @@ class CohenSutherlandClipping {
 	 *            top coordinate of the rectangle.
 	 * @return true if the line is in the rectangle, false otherwise.
 	 */
-	static boolean isLineInRectangle(long x1, long y1, long x2, long y2, long left,
-			long bottom, long right, long top) {
-		long x1new = x1;
-		long y1new = y1;
-		long x2new = x2;
-		long y2new = y2;
+	static boolean isLineInRectangle(double x1, double y1, double x2, double y2, double left,
+			double bottom, double right, double top) {
+		double x1new = x1;
+		double y1new = y1;
+		double x2new = x2;
+		double y2new = y2;
 
 		// compute the region codes for both points
 		int outcode1 = calculateOutCode(x1, y1, left, bottom, right, top);
@@ -96,6 +96,83 @@ class CohenSutherlandClipping {
 			} else if ((outcode1 & outcode2) > 0) {
 				// both points are outside the rectangle in the same region
 				return false;
+			} else if (outcode1 != 0) {
+				// first point is outside the rectangle
+				if ((outcode1 & TOP) > 0) {
+					x1new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					y1new = top;
+				} else if ((outcode1 & BOTTOM) > 0) {
+					x1new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					y1new = bottom;
+				} else if ((outcode1 & RIGHT) > 0) {
+					y1new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					x1new = right;
+				} else { // must be LEFT
+					y1new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					x1new = left;
+				}
+				// recompute the region code for the first point
+				outcode1 = calculateOutCode(x1new, y1new, left, bottom, right, top);
+			} else {
+				// second point is outside the rectangle
+				if ((outcode2 & TOP) > 0) {
+					x2new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					y2new = top;
+				} else if ((outcode2 & BOTTOM) > 0) {
+					x2new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					y2new = bottom;
+				} else if ((outcode2 & RIGHT) > 0) {
+					y2new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					x2new = right;
+				} else { // must be LEFT
+					y2new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					x2new = left;
+				}
+				// recompute the region code for the second point
+				outcode2 = calculateOutCode(x2new, y2new, left, bottom, right, top);
+			}
+		}
+	}
+
+	/**
+	 * Clips a line to a rectangle.
+	 * 
+	 * @param x1
+	 *            first x coordinate of the line.
+	 * @param y1
+	 *            first y coordinate of the line.
+	 * @param x2
+	 *            second x coordinate of the line.
+	 * @param y2
+	 *            second y coordinate of the line.
+	 * @param left
+	 *            left coordinate of the rectangle.
+	 * @param bottom
+	 *            bottom coordinate of the rectangle.
+	 * @param right
+	 *            right coordinate of the rectangle.
+	 * @param top
+	 *            top coordinate of the rectangle.
+	 * @return the clipped line or null, in case of no intersection.
+	 */
+	static double[] clipLineToRectangle(double x1, double y1, double x2, double y2,
+			double left, double bottom, double right, double top) {
+		double x1new = x1;
+		double y1new = y1;
+		double x2new = x2;
+		double y2new = y2;
+
+		// compute the region codes for both points
+		int outcode1 = calculateOutCode(x1, y1, left, bottom, right, top);
+		int outcode2 = calculateOutCode(x2, y2, left, bottom, right, top);
+
+		while (true) {
+			if ((outcode1 | outcode2) == 0) {
+				// both points are inside the rectangle
+				return new double[] { x1new, y1new, x2new, y2new };
+			} else if ((outcode1 & outcode2) > 0) {
+				// both points are outside the rectangle in the same region
+				return null;
 			} else if (outcode1 != 0) {
 				// first point is outside the rectangle
 				if ((outcode1 & TOP) > 0) {
