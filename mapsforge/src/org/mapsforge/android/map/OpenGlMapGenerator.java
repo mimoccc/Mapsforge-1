@@ -93,8 +93,8 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 		this.glSurfaceView = new GLSurfaceView(this.context);
 		this.glSurfaceView.setRenderer(this.renderer);
 		this.glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		this.glSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
-				| GLSurfaceView.DEBUG_LOG_GL_CALLS);
+		// this.glSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
+		// | GLSurfaceView.DEBUG_LOG_GL_CALLS);
 
 		((ViewGroup) this.mapView.getParent()).addView(this.glSurfaceView, 256, 256);
 		this.mapView.bringToFront();
