@@ -26,21 +26,58 @@ import javax.microedition.khronos.opengles.GL10;
 import android.graphics.Bitmap;
 
 class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
+	private int arrayListIndex;
 	private Bitmap bitmap;
+	private byte currentLayer;
+	private byte currentLevel;
 	private GL10 mGL;
 	private ByteBuffer pixelBuffer;
 	private Random random;
-	boolean frameReady;
-	private int arrayListIndex;
-	private ArrayList<ShapePaintContainer> wayList;
-	private byte currentLayer;
-	private byte currentLevel;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
+	private ArrayList<ShapePaintContainer> wayList;
+	boolean frameReady;
 
 	OpenGlMapRenderer() {
 		Logger.d("OpenGlMapRenderer called");
 		this.random = new Random();
+	}
+
+	public void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays,
+			byte layers, byte levelsPerLayer) {
+		for (this.currentLayer = 0; this.currentLayer < layers; ++this.currentLayer) {
+			this.shapePaintContainers = drawWays.get(this.currentLayer);
+			for (this.currentLevel = 0; this.currentLevel < levelsPerLayer; ++this.currentLevel) {
+				this.wayList = this.shapePaintContainers.get(this.currentLevel);
+				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
+					switch (this.shapePaintContainer.shapeContainer.getShapeType()) {
+						case CIRCLE:
+							// this.circleContainer = (CircleContainer)
+							// this.shapePaintContainer.shapeContainer;
+							// // this.shapePaintContainer.paint.
+							//
+							// this.mGL11.glVertexPointer(2, GL10.GL_FLOAT, 0, 0);
+							// // mGL11.glColorPointer( 2, GL10.GL_FLOAT, 6 * 2, 2 * 4 );
+							//
+							// this.mGL11.glPointSize(this.circleContainer.radius * 2f);
+							// this.circleVertexBuffer.clear();
+							// this.circleVertexBuffer.put(new float[] { this.circleContainer.x,
+							// this.circleContainer.y });
+							// // mGL11.glLineWidth(8f);
+							// this.mGL11.glDrawArrays(GL10.GL_POINTS, 0, 1);
+							//
+							// break;
+
+						case WAY:
+
+							break;
+					}
+
+				}
+			}
+		}
+
 	}
 
 	@Override
@@ -187,42 +224,5 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		this.bitmap = bitmap;
 		byte[] bytes = new byte[2 * this.bitmap.getHeight() * this.bitmap.getWidth()];
 		this.pixelBuffer = ByteBuffer.wrap(bytes);
-	}
-
-	public void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays,
-			byte layers, byte levelsPerLayer) {
-		for (this.currentLayer = 0; this.currentLayer < layers; ++this.currentLayer) {
-			this.shapePaintContainers = drawWays.get(this.currentLayer);
-			for (this.currentLevel = 0; this.currentLevel < levelsPerLayer; ++this.currentLevel) {
-				this.wayList = this.shapePaintContainers.get(this.currentLevel);
-				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
-					switch (this.shapePaintContainer.shapeContainer.getShapeType()) {
-						case CIRCLE:
-							// this.circleContainer = (CircleContainer)
-							// this.shapePaintContainer.shapeContainer;
-							// // this.shapePaintContainer.paint.
-							//
-							// this.mGL11.glVertexPointer(2, GL10.GL_FLOAT, 0, 0);
-							// // mGL11.glColorPointer( 2, GL10.GL_FLOAT, 6 * 2, 2 * 4 );
-							//
-							// this.mGL11.glPointSize(this.circleContainer.radius * 2f);
-							// this.circleVertexBuffer.clear();
-							// this.circleVertexBuffer.put(new float[] { this.circleContainer.x,
-							// this.circleContainer.y });
-							// // mGL11.glLineWidth(8f);
-							// this.mGL11.glDrawArrays(GL10.GL_POINTS, 0, 1);
-							//
-							// break;
-
-						case WAY:
-
-							break;
-					}
-
-				}
-			}
-		}
-
 	}
 }

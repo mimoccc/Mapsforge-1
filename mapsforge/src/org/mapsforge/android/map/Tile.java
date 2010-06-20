@@ -84,9 +84,8 @@ class Tile implements Comparable<Tile> {
 				return false;
 			} else if (this.mapViewMode != other.mapViewMode) {
 				return false;
-			} else {
-				return true;
 			}
+			return true;
 		}
 	}
 

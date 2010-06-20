@@ -17,11 +17,9 @@
 package org.mapsforge.android.map;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.TreeMap;
 
 import android.graphics.Bitmap;
@@ -46,6 +44,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_NATURAL = 64;
 	private static final short BITMAP_RAILWAY = 4;
 	private static final short BITMAP_WATERWAY = 128;
+	private static final byte DEFAULT_LAYER = 5;
 	private static final boolean DRAW_TILE_FRAMES = true; // TODO: set back to false
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
@@ -80,6 +79,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_9 = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_BOUNDARY_NATIONAL_PARK = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BUILDING_ROOF_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BUILDING_YES_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BUILDING_YES_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -182,7 +182,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_NAME_WHITE_STROKE_11 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_BEACH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NATURAL_COASTLINE_OUTLINE = new Paint(
+	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NATURAL_COASTLINE_INVALID = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_HEATH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_LAND_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -216,13 +217,20 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
+	private ArrayList<Point> additionalCoastlinePoints;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
 	private float bboxLatitude2;
 	private float bboxLongitude1;
 	private float bboxLongitude2;
-	private TreeMap<HelperPoint, float[]> coastlineEnds;
-	private TreeMap<HelperPoint, float[]> coastlineStarts;
+	private CoastlineWay coastlineEnd;
+	private int coastlineEndLength;
+	private TreeMap<Point, float[]> coastlineEnds;
+	private CoastlineWay coastlineStart;
+	private int coastlineStartLength;
+	private TreeMap<Point, float[]> coastlineStarts;
+	private Comparator<CoastlineWay> coastlineWayComparator;
+	private ArrayList<CoastlineWay> coastlineWays;
 	private float[][] coordinates;
 	private float currentNodeX;
 	private float currentNodeY;
@@ -232,8 +240,11 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private Database database;
 	private float distanceX;
 	private float distanceY;
+	private Point[] helperPoints;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
+	private boolean invalidCoastlineSegments;
+	private boolean islandSituation;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
 	private MapSymbols mapSymbols;
@@ -289,398 +300,154 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 	}
 
-	private class CoastlineWay {
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + Arrays.hashCode(coastline);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			} else if (!(obj instanceof CoastlineWay)) {
-				return false;
-			} else {
-				CoastlineWay other = (CoastlineWay) obj;
-				if (!Arrays.equals(coastline, other.coastline)) {
-					return false;
-				}
-				return true;
-			}
-		}
-
-		float[] coastline;
-		double entryIntersectAngle;
-		double exitIntersectAngle;
-		byte entrySide;
-		byte exitSide;
-
-		private static final byte RIGHT = 0;
-		private static final byte BOTTOM = 1;
-		private static final byte LEFT = 2;
-		private static final byte TOP = 3;
-
-		float[][] getCoordinates() {
-			float[][] wayCoordinates = new float[1][coastline.length];
-			System.arraycopy(coastline, 0, wayCoordinates[0], 0, coastline.length);
-			return wayCoordinates;
-		}
-
-		boolean isValid() {
-			return ((this.coastline[0] <= 0 || this.coastline[0] >= 256) || (this.coastline[1] <= 0 || this.coastline[1] >= 256))
-					&& ((this.coastline[this.coastline.length - 2] <= 0 || this.coastline[this.coastline.length - 2] >= 256) || (this.coastline[this.coastline.length - 1] <= 0 || this.coastline[this.coastline.length - 1] >= 256));
-		}
-
-		void compress() {
-			int skipVerticesStart = 0;
-			float x1 = this.coastline[0];
-			float y1 = this.coastline[1];
-			float x2;
-			float y2;
-			double[] clippedSegment;
-			for (int i = 2; i < this.coastline.length; i += 2) {
-				x2 = this.coastline[i];
-				y2 = this.coastline[i + 1];
-				clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0,
-						0, 256, 256);
-				if (clippedSegment != null) {
-					this.coastline[i - 2] = (float) clippedSegment[0];
-					this.coastline[i - 1] = (float) clippedSegment[1];
-					this.coastline[i] = (float) clippedSegment[2];
-					this.coastline[i + 1] = (float) clippedSegment[3];
-					break;
-				}
-				x1 = x2;
-				y1 = y2;
-				++skipVerticesStart;
-			}
-
-			float[] newCoastline = new float[this.coastline.length - 2 * skipVerticesStart];
-			System.arraycopy(this.coastline, 2 * skipVerticesStart, newCoastline, 0,
-					newCoastline.length);
-			this.coastline = newCoastline;
-
-			int skipVerticesEnd = 0;
-			x1 = this.coastline[this.coastline.length - 2];
-			y1 = this.coastline[this.coastline.length - 1];
-			for (int i = this.coastline.length - 4; i >= 0; i -= 2) {
-				x2 = this.coastline[i];
-				y2 = this.coastline[i + 1];
-				clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0,
-						0, 256, 256);
-				if (clippedSegment != null) {
-					this.coastline[i + 2] = (float) clippedSegment[0];
-					this.coastline[i + 3] = (float) clippedSegment[1];
-					this.coastline[i] = (float) clippedSegment[2];
-					this.coastline[i + 1] = (float) clippedSegment[3];
-					break;
-				}
-				x1 = x2;
-				y1 = y2;
-				++skipVerticesEnd;
-			}
-
-			newCoastline = new float[this.coastline.length - 2 * skipVerticesEnd];
-			System.arraycopy(this.coastline, 0, newCoastline, 0, newCoastline.length);
-			this.coastline = newCoastline;
-
-			setup();
-		}
-
-		CoastlineWay(float[] coastlineCoordinates) {
-			this.coastline = coastlineCoordinates;
-			setup();
-		}
-
-		void setup() {
-			float firstX = this.coastline[0];
-			float firstY = this.coastline[1];
-			float lastX = this.coastline[this.coastline.length - 2];
-			float lastY = this.coastline[this.coastline.length - 1];
-
-			this.entryIntersectAngle = Math.atan2(firstY - 128, firstX - 128);
-			if (entryIntersectAngle < 0) {
-				entryIntersectAngle += 2 * Math.PI;
-			}
-			this.exitIntersectAngle = Math.atan2(lastY - 128, lastX - 128);
-			if (exitIntersectAngle < 0) {
-				exitIntersectAngle += 2 * Math.PI;
-			}
-
-			this.entrySide = calculateSide(this.entryIntersectAngle);
-			this.exitSide = calculateSide(this.exitIntersectAngle);
-		}
-
-		boolean isClosed() {
-			return this.coastline[0] == this.coastline[this.coastline.length - 2]
-					&& this.coastline[1] == this.coastline[this.coastline.length - 1];
-		}
-
-		private byte calculateSide(double angle) {
-			if (angle < 0) {
-				Logger.d("ERROR1: BAD ANGLE: " + angle);
-				return -1;
-			} else if (angle < Math.PI * 0.25) {
-				return RIGHT;
-			} else if (angle < Math.PI * 0.75) {
-				return BOTTOM;
-			} else if (angle < Math.PI * 1.25) {
-				return LEFT;
-			} else if (angle < Math.PI * 1.75) {
-				return TOP;
-			} else if (angle < Math.PI * 2) {
-				return RIGHT;
-			} else {
-				Logger.d("ERROR2: BAD ANGLE: " + angle);
-				return -1;
-			}
-		}
-	}
-
-	private class HelperPoint implements Comparable<HelperPoint> {
-		final float x;
-		final float y;
-
-		@Override
-		public int compareTo(HelperPoint helperPoint) {
-			if (this.x > helperPoint.x) {
-				return 1;
-			} else if (this.x < helperPoint.x) {
-				return -1;
-			} else if (this.y > helperPoint.y) {
-				return 1;
-			} else if (this.y < helperPoint.y) {
-				return -1;
-			}
-			return 0;
-		}
-
-		HelperPoint(float x, float y) {
-			this.x = x;
-			this.y = y;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + Float.floatToIntBits(x);
-			result = prime * result + Float.floatToIntBits(y);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) {
-				return true;
-			} else if (!(o instanceof HelperPoint)) {
-				return false;
-			} else {
-				HelperPoint helperPoint = (HelperPoint) o;
-				if (this.x != helperPoint.x) {
-					return false;
-				} else if (this.y != helperPoint.y) {
-					return false;
-				} else {
-					return true;
-				}
-			}
-		}
-	}
-
-	// TODO: implement an algorithm for closing water polygons
 	private void addCoastlines() {
+		// check if there are any coastline segments
 		if (this.coastlineStarts.isEmpty()) {
 			return;
 		}
 
-		Comparator<CoastlineWay> wayComparator = new Comparator<CoastlineWay>() {
-			@Override
-			public int compare(CoastlineWay o1, CoastlineWay o2) {
-				if (o1.entryIntersectAngle > o2.entryIntersectAngle) {
-					return 1;
-				}
-				return -1;
-			}
-		};
-
-		ArrayList<CoastlineWay> coastlineWays = new ArrayList<CoastlineWay>(4);
-
-		Random r = new Random(this.currentTile.hashCode());
-		Logger.d("inspecting coastlines: " + this.coastlineStarts.values().size());
+		this.islandSituation = false;
+		this.invalidCoastlineSegments = false;
 		for (float[] coastline : this.coastlineStarts.values()) {
-			CoastlineWay coastlineWay = new CoastlineWay(coastline);
-			if (coastlineWay.isClosed()) {
-				Logger.d(" way was already closed: " + coastline[0] + ", " + coastline[1]);
-
-				Paint randomPaint = new Paint(PAINT_NATURAL_COASTLINE_OUTLINE);
-				randomPaint.setARGB(255, r.nextInt(255), r.nextInt(255), r.nextInt(255));
-				randomPaint.setStrokeWidth(3);
-
-				// TODO: PAINT_NATURAL_WATER_FILL PAINT_NATURAL_LAND_FILL
-				this.ways.get(4).get(LayerIds.NATURAL$COASTLINE + 40).add(
-						new ShapePaintContainer(
-								new WayContainer(coastlineWay.getCoordinates()), randomPaint));
-			} else {
-				coastlineWay.compress();
-				if (coastlineWay.isValid()) {
-					coastlineWays.add(coastlineWay);
+			// is the current segment already closed?
+			if (CoastlineWay.isClosed(coastline)) {
+				// depending on the orientation we have either water or an island
+				if (CoastlineWay.isClockWise(coastline)) {
+					// water
+					this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+									PAINT_NATURAL_WATER_FILL));
 				} else {
-					Logger.d(" dropping way");
+					// island
+					this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$LAND).add(
+							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+									PAINT_NATURAL_LAND_FILL));
+					this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
+							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+									PAINT_NATURAL_COASTLINE));
+					this.islandSituation = true;
 				}
-				Paint randomPaint = new Paint(PAINT_NATURAL_COASTLINE_OUTLINE);
-				randomPaint.setARGB(255, r.nextInt(255), r.nextInt(255), r.nextInt(255));
-				randomPaint.setStrokeWidth(3);
-				this.ways.get(4).get(LayerIds.NATURAL$COASTLINE + 40).add(
-						new ShapePaintContainer(
-								new WayContainer(coastlineWay.getCoordinates()), randomPaint));
-
-				this.shapeContainer = new CircleContainer(coastline[0], coastline[1], 4);
-				this.ways.get(5).get(LayerIds.POI_CIRCLE_SYMBOL).add(
-						new ShapePaintContainer(shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
-				this.ways.get(5).get(LayerIds.POI_CIRCLE_SYMBOL).add(
-						new ShapePaintContainer(shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
-
-				this.shapeContainer = new CircleContainer(coastline[coastline.length - 2],
-						coastline[coastline.length - 1], 4);
-				this.ways.get(5).get(LayerIds.POI_CIRCLE_SYMBOL).add(
-						new ShapePaintContainer(shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
-				this.ways.get(5).get(LayerIds.POI_CIRCLE_SYMBOL).add(
-						new ShapePaintContainer(shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
+			} else if (CoastlineWay.isValid(coastline)) {
+				this.coastlineWays.add(new CoastlineWay(coastline));
+			} else {
+				this.invalidCoastlineSegments = true;
+				this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
+						new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+								PAINT_NATURAL_COASTLINE_INVALID));
 			}
 		}
 
-		// TODO: add sigma
-		HelperPoint p0 = new HelperPoint(256, 256);
-		HelperPoint p1 = new HelperPoint(0, 256);
-		HelperPoint p2 = new HelperPoint(0, 0);
-		HelperPoint p3 = new HelperPoint(256, 0);
-		HelperPoint[] helperPoints = new HelperPoint[4];
-		helperPoints[0] = p0;
-		helperPoints[1] = p1;
-		helperPoints[2] = p2;
-		helperPoints[3] = p3;
+		// check if there are only islands and no invalid or unconnected coastline segments
+		if (this.islandSituation && !this.invalidCoastlineSegments
+				&& this.coastlineWays.isEmpty()) {
+			// add a water polygon for the whole tile
+			this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+					new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
+							Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0,
+							Tile.TILE_SIZE, 0, 0 } }), PAINT_NATURAL_WATER_FILL));
+			return;
+		}
 
-		Collections.sort(coastlineWays, wayComparator);
-		ArrayList<HelperPoint> additionalPoints = new ArrayList<HelperPoint>(4);
+		// order all coastline segments ascending by their entering angle
+		Collections.sort(this.coastlineWays, this.coastlineWayComparator);
+		this.additionalCoastlinePoints = new ArrayList<Point>(4);
 
-		Logger.d("coastlines: " + coastlineWays.size());
-		while (!coastlineWays.isEmpty()) {
-			Logger.d("  list is not empty, checking way ...");
-			CoastlineWay coastlineWay = coastlineWays.get(0);
+		// join coastline segments to create closed water segments
+		while (!this.coastlineWays.isEmpty()) {
+			this.coastlineStart = coastlineWays.get(0);
 
-			CoastlineWay connectToWay = null;
-			for (CoastlineWay connectCandidat : coastlineWays) {
-				if (connectCandidat.entryIntersectAngle > coastlineWay.exitIntersectAngle) {
-					connectToWay = connectCandidat;
+			this.coastlineEnd = null;
+			// try to find a matching coastline segment
+			for (CoastlineWay coastline : this.coastlineWays) {
+				if (coastline.entryAngle > coastlineStart.exitAngle) {
+					this.coastlineEnd = coastline;
 					break;
 				}
 			}
 
-			if (connectToWay == null) {
-				Logger.d("  no way found, taking the first");
-				connectToWay = coastlineWays.get(0);
+			if (this.coastlineEnd == null) {
+				// no coastline segment was found, take the first one
+				this.coastlineEnd = this.coastlineWays.get(0);
 			}
+			this.coastlineWays.remove(0);
 
-			coastlineWays.remove(0);
-
-			byte entrySide = connectToWay.entrySide;
-			byte exitSide = coastlineWay.exitSide;
-
-			double entryAngle = connectToWay.entryIntersectAngle;
-			double exitAngle = coastlineWay.exitIntersectAngle;
-
-			boolean minOnce;
-			if (entrySide == 0 && exitSide == 0) {
-				minOnce = (exitAngle > entryAngle && (exitAngle - entryAngle) < Math.PI)
-						|| (exitAngle < Math.PI && entryAngle > Math.PI);
+			// check if at least one helper point is needed
+			boolean needHelperPoint;
+			if (coastlineEnd.entrySide == 0 && coastlineStart.exitSide == 0) {
+				needHelperPoint = (coastlineStart.exitAngle > coastlineEnd.entryAngle && (coastlineStart.exitAngle - coastlineEnd.entryAngle) < Math.PI)
+						|| (coastlineStart.exitAngle < Math.PI && coastlineEnd.entryAngle > Math.PI);
 			} else {
-				minOnce = exitAngle > entryAngle;
+				needHelperPoint = coastlineStart.exitAngle > coastlineEnd.entryAngle;
 			}
 
-			additionalPoints.clear();
-			int i = exitSide;
-			while (true) {
-				if (i == 4) {
-					i = 0;
-				}
+			this.additionalCoastlinePoints.clear();
+			int currentSide = coastlineStart.exitSide;
 
-				if (i == entrySide && !minOnce) {
+			// walk around the tile and add additional points to the list
+			while (true) {
+				if (currentSide == coastlineEnd.entrySide && !needHelperPoint) {
 					break;
 				}
-
-				minOnce = false;
-				additionalPoints.add(helperPoints[i]);
-				++i;
+				needHelperPoint = false;
+				this.additionalCoastlinePoints.add(helperPoints[currentSide]);
+				currentSide = (currentSide + 1) % 4;
 			}
 
-			if (coastlineWay.equals(connectToWay)) {
-				Logger.d("  ways are equal");
-				// close the way
-				int oldWayLength = coastlineWay.coastline.length;
-				int newWayLength = oldWayLength + additionalPoints.size() * 2 + 2;
-				this.coordinates = new float[1][newWayLength];
-				System.arraycopy(coastlineWay.coastline, 0, this.coordinates[0], 0,
-						oldWayLength);
+			// check if the start segment is also the end segment
+			if (coastlineStart == coastlineEnd) {
+				// calculate the length of the new way
+				this.coastlineStartLength = coastlineStart.data.length;
+				this.coordinates = new float[1][this.coastlineStartLength
+						+ this.additionalCoastlinePoints.size() * 2 + 2];
 
-				for (i = 0; i < additionalPoints.size(); ++i) {
-					this.coordinates[0][oldWayLength + 2 * i] = additionalPoints.get(i).x;
-					this.coordinates[0][oldWayLength + 2 * i + 1] = additionalPoints.get(i).y;
+				// copy the start segment
+				System.arraycopy(coastlineStart.data, 0, this.coordinates[0], 0,
+						this.coastlineStartLength);
+
+				// copy the additional points
+				for (currentSide = 0; currentSide < this.additionalCoastlinePoints.size(); ++currentSide) {
+					this.coordinates[0][this.coastlineStartLength + 2 * currentSide] = this.additionalCoastlinePoints
+							.get(currentSide).x;
+					this.coordinates[0][this.coastlineStartLength + 2 * currentSide + 1] = this.additionalCoastlinePoints
+							.get(currentSide).y;
 				}
 
-				this.coordinates[0][newWayLength - 2] = this.coordinates[0][0];
-				this.coordinates[0][newWayLength - 1] = this.coordinates[0][1];
+				// close the way
+				this.coordinates[0][this.coordinates[0].length - 2] = this.coordinates[0][0];
+				this.coordinates[0][this.coordinates[0].length - 1] = this.coordinates[0][1];
 
-				r = new Random(this.currentTile.hashCode());
-				Paint randomPaint = new Paint(PAINT_NATURAL_COASTLINE_OUTLINE);
-				randomPaint.setARGB(100, r.nextInt(255), r.nextInt(255), r.nextInt(255));
-				randomPaint.setStrokeWidth(8);
-				randomPaint.setPathEffect(new DashPathEffect(new float[] { 20, 20 }, 0));
-
-				// randomPaint
-				// TODO: change back to PAINT_NATURAL_WATER_FILL
-
-				this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
+				this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
 						new ShapePaintContainer(new WayContainer(this.coordinates),
 								PAINT_NATURAL_WATER_FILL));
 			} else {
-				Logger.d("  !!!ways are NOT equal!!!");
-				// join both ways
-				coastlineWays.remove(connectToWay);
+				// calculate the length of the new coastline segment
+				this.coastlineStartLength = coastlineStart.data.length;
+				this.coastlineEndLength = coastlineEnd.data.length;
+				float[] newSegment = new float[this.coastlineStartLength
+						+ this.additionalCoastlinePoints.size() * 2 + this.coastlineEndLength];
 
-				int coastlineWayLength = coastlineWay.coastline.length;
-				int connectToWayLength = connectToWay.coastline.length;
+				// copy the start segment
+				System.arraycopy(coastlineStart.data, 0, newSegment, 0,
+						this.coastlineStartLength);
 
-				int newWayLength = coastlineWayLength + additionalPoints.size() * 2
-						+ connectToWayLength;
-
-				float[] newCoordinates = new float[newWayLength];
-				System.arraycopy(coastlineWay.coastline, 0, newCoordinates, 0,
-						coastlineWayLength);
-
-				for (i = 0; i < additionalPoints.size(); ++i) {
-					newCoordinates[coastlineWayLength + 2 * i] = additionalPoints.get(i).x;
-					newCoordinates[coastlineWayLength + 2 * i + 1] = additionalPoints.get(i).y;
+				// copy the additional points
+				for (currentSide = 0; currentSide < this.additionalCoastlinePoints.size(); ++currentSide) {
+					newSegment[this.coastlineStartLength + 2 * currentSide] = this.additionalCoastlinePoints
+							.get(currentSide).x;
+					newSegment[this.coastlineStartLength + 2 * currentSide + 1] = this.additionalCoastlinePoints
+							.get(currentSide).y;
 				}
 
-				System.arraycopy(connectToWay.coastline, 0, newCoordinates, coastlineWayLength
-						+ additionalPoints.size() * 2, connectToWayLength);
-				CoastlineWay newCoastlineWay = new CoastlineWay(newCoordinates);
-				coastlineWays.add(newCoastlineWay);
-				Collections.sort(coastlineWays, wayComparator);
+				// copy the end segment
+				System.arraycopy(coastlineEnd.data, 0, newSegment, this.coastlineStartLength
+						+ this.additionalCoastlinePoints.size() * 2, this.coastlineEndLength);
+
+				// replace the end segment in the list with the new segment
+				this.coastlineWays.remove(coastlineEnd);
+				this.coastlineWays.add(new CoastlineWay(newSegment));
+				Collections.sort(this.coastlineWays, this.coastlineWayComparator);
 			}
 		}
-
-		// this.ways.get(0).get(LayerIds.NATURAL$LAND).add(
-		// new PathContainer(pathLand, PAINT_NATURAL_LAND_FILL));
-		// this.ways.get(0).get(LayerIds.NATURAL$WATER).add(
-		// new PathContainer(pathWater, PAINT_NATURAL_WATER_FILL));
-		// this.ways.get(0).get(LayerIds.NATURAL$COASTLINE).add(
-		// new PathContainer(pathCoast, PAINT_NATURAL_COASTLINE_OUTLINE));
 	}
 
 	private void addPOISymbol(float x, float y, Bitmap symbolBitmap) {
@@ -913,6 +680,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10.setStrokeCap(Paint.Cap.SQUARE);
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10.setColor(Color.rgb(242, 100, 93));
+		PAINT_BOUNDARY_NATIONAL_PARK.setStyle(Paint.Style.STROKE);
+		PAINT_BOUNDARY_NATIONAL_PARK.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_BOUNDARY_NATIONAL_PARK.setStrokeCap(Paint.Cap.SQUARE);
+		PAINT_BOUNDARY_NATIONAL_PARK.setColor(Color.rgb(79, 248, 76));
 
 		PAINT_BUILDING_ROOF_OUTLINE.setStyle(Paint.Style.STROKE);
 		PAINT_BUILDING_ROOF_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
@@ -1295,10 +1066,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NATURAL_BEACH_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_BEACH_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_BEACH_FILL.setColor(Color.rgb(238, 204, 85));
-		PAINT_NATURAL_COASTLINE_OUTLINE.setStyle(Paint.Style.STROKE);
-		PAINT_NATURAL_COASTLINE_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_NATURAL_COASTLINE_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
-		PAINT_NATURAL_COASTLINE_OUTLINE.setColor(Color.rgb(181, 214, 241));
+		PAINT_NATURAL_COASTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_NATURAL_COASTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_NATURAL_COASTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_NATURAL_COASTLINE.setColor(Color.rgb(181, 214, 241));
+		PAINT_NATURAL_COASTLINE_INVALID.setStyle(Paint.Style.STROKE);
+		PAINT_NATURAL_COASTLINE_INVALID.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_NATURAL_COASTLINE_INVALID.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_NATURAL_COASTLINE_INVALID.setColor(Color.rgb(112, 133, 153));
 		PAINT_NATURAL_HEATH_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_HEATH_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_HEATH_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1622,11 +1397,15 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10.setPathEffect(new DashPathEffect(
 				new float[] { 1 * paintScaleFactor, 4 * paintScaleFactor }, 0));
+		PAINT_BOUNDARY_NATIONAL_PARK.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_BOUNDARY_NATIONAL_PARK.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 4 * paintScaleFactor }, 0));
 
 		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_SPORT_TENNIS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
-		PAINT_NATURAL_COASTLINE_OUTLINE.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_NATURAL_COASTLINE.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_NATURAL_COASTLINE_INVALID.setStrokeWidth(1 * paintScaleFactor);
 	}
 
 	@Override
@@ -2971,13 +2750,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$COASTLINE]) {
 				float[] nodesSequence = this.coordinates[0];
-				HelperPoint startPoint = new HelperPoint(nodesSequence[0], nodesSequence[1]);
-				HelperPoint endPoint = new HelperPoint(nodesSequence[nodesSequence.length - 2],
+				Point startPoint = new Point(nodesSequence[0], nodesSequence[1]);
+				Point endPoint = new Point(nodesSequence[nodesSequence.length - 2],
 						nodesSequence[nodesSequence.length - 1]);
 				float[] matchPath;
 				float[] newPath;
 
-				// check if a coastline way starts with the last point of the current way
+				// check if a data way starts with the last point of the current way
 				if (this.coastlineStarts.containsKey(endPoint)) {
 					// merge both ways
 					matchPath = this.coastlineStarts.remove(endPoint);
@@ -2986,24 +2765,22 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
 							matchPath.length);
 					nodesSequence = newPath;
-					endPoint = new HelperPoint(nodesSequence[nodesSequence.length - 2],
+					endPoint = new Point(nodesSequence[nodesSequence.length - 2],
 							nodesSequence[nodesSequence.length - 1]);
 				}
 
-				// TODO: fix this
-
-				// check if a coastline way ends with the first point of the current way
+				// check if a data way ends with the first point of the current way
 				if (this.coastlineEnds.containsKey(startPoint)) {
 					matchPath = this.coastlineEnds.remove(startPoint);
 					// check if the merged way is already a circle
-					if (!startPoint.equals(endPoint)) {
+					if (startPoint.x != endPoint.x || startPoint.y != endPoint.y) {
 						// merge both ways
 						newPath = new float[nodesSequence.length + matchPath.length - 2];
 						System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);
 						System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
 								nodesSequence.length);
 						nodesSequence = newPath;
-						startPoint = new HelperPoint(nodesSequence[0], nodesSequence[1]);
+						startPoint = new Point(nodesSequence[0], nodesSequence[1]);
 					}
 				}
 
@@ -3086,6 +2863,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			if (--this.remainingTags <= 0) {
 				return;
 			}
+		} else if (wayTagIds[TagIdsWays.BOUNDARY$NATIONAL_PARK]) {
+			this.layer.get(LayerIds.BOUNDARY$NATIONAL_PARK).add(
+					new ShapePaintContainer(this.shapeContainer, PAINT_BOUNDARY_NATIONAL_PARK));
 		}
 
 		/* sport */
@@ -3239,7 +3019,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.innerWayList = new ArrayList<ArrayList<ShapePaintContainer>>(
 					LayerIds.LEVELS_PER_LAYER);
 			for (byte j = LayerIds.LEVELS_PER_LAYER - 1; j >= 0; --j) {
-				this.innerWayList.add(new ArrayList<ShapePaintContainer>());
+				this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
 			}
 			this.ways.add(this.innerWayList);
 		}
@@ -3247,8 +3027,24 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.renderedWayNames = new HashSet<String>((int) (64 / 0.5f) + 2, 0.5f);
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
-		this.coastlineEnds = new TreeMap<HelperPoint, float[]>();
-		this.coastlineStarts = new TreeMap<HelperPoint, float[]>();
+		this.coastlineEnds = new TreeMap<Point, float[]>();
+		this.coastlineStarts = new TreeMap<Point, float[]>();
+		this.coastlineWayComparator = new Comparator<CoastlineWay>() {
+			@Override
+			public int compare(CoastlineWay o1, CoastlineWay o2) {
+				if (o1.entryAngle > o2.entryAngle) {
+					return 1;
+				}
+				return -1;
+			}
+		};
+		this.helperPoints = new Point[4];
+		this.helperPoints[0] = new Point(Tile.TILE_SIZE, Tile.TILE_SIZE);
+		this.helperPoints[1] = new Point(0, Tile.TILE_SIZE);
+		this.helperPoints[2] = new Point(0, 0);
+		this.helperPoints[3] = new Point(Tile.TILE_SIZE, 0);
+		this.additionalCoastlinePoints = new ArrayList<Point>(4);
+		this.coastlineWays = new ArrayList<CoastlineWay>(4);
 
 		setupMapGenerator(this.tileBitmap);
 	}

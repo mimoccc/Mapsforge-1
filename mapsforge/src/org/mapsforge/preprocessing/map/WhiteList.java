@@ -66,9 +66,9 @@ class WhiteList {
 		tagWhitelist.put("natural=peak", Byte.valueOf((byte) 15));
 
 		tagWhitelist.put("place=city", Byte.valueOf((byte) 8));
-		tagWhitelist.put("place=island", Byte.valueOf((byte) 13));
+		tagWhitelist.put("place=island", Byte.valueOf((byte) 12));
 		tagWhitelist.put("place=suburb", Byte.valueOf((byte) 14));
-		tagWhitelist.put("place=town", Byte.valueOf((byte) 10));
+		tagWhitelist.put("place=town", Byte.valueOf((byte) 9));
 		tagWhitelist.put("place=village", Byte.valueOf((byte) 14));
 
 		tagWhitelist.put("railway=halt", Byte.valueOf((byte) 17));
@@ -124,6 +124,7 @@ class WhiteList {
 		tagWhitelist.put("barrier=wall", Byte.valueOf((byte) 17));
 
 		tagWhitelist.put("boundary=administrative", Byte.valueOf(Byte.MAX_VALUE));
+		tagWhitelist.put("boundary=national_park", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("bridge=yes", Byte.valueOf(Byte.MAX_VALUE));
 
@@ -142,8 +143,8 @@ class WhiteList {
 		tagWhitelist.put("highway=cycleway", Byte.valueOf((byte) 15));
 		tagWhitelist.put("highway=footway", Byte.valueOf((byte) 15));
 		tagWhitelist.put("highway=living_street", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=motorway", Byte.valueOf((byte) 10));
-		tagWhitelist.put("highway=motorway_link", Byte.valueOf((byte) 10));
+		tagWhitelist.put("highway=motorway", Byte.valueOf((byte) 9));
+		tagWhitelist.put("highway=motorway_link", Byte.valueOf((byte) 9));
 		tagWhitelist.put("highway=path", Byte.valueOf((byte) 15));
 		tagWhitelist.put("highway=pedestrian", Byte.valueOf((byte) 15));
 		tagWhitelist.put("highway=primary", Byte.valueOf((byte) 10));
@@ -199,12 +200,12 @@ class WhiteList {
 		tagWhitelist.put("military=naval_base", Byte.valueOf((byte) 13));
 
 		tagWhitelist.put("natural=beach", Byte.valueOf((byte) 14));
-		tagWhitelist.put("natural=coastline", Byte.valueOf((byte) 8));
+		tagWhitelist.put("natural=data", Byte.valueOf((byte) 0));
 		tagWhitelist.put("natural=heath", Byte.valueOf((byte) 13));
-		tagWhitelist.put("natural=land", Byte.valueOf((byte) 13));
+		tagWhitelist.put("natural=land", Byte.valueOf((byte) 12));
 		tagWhitelist.put("natural=scrub", Byte.valueOf((byte) 13));
-		tagWhitelist.put("natural=water", Byte.valueOf((byte) 13));
-		tagWhitelist.put("natural=wood", Byte.valueOf((byte) 13));
+		tagWhitelist.put("natural=water", Byte.valueOf((byte) 12));
+		tagWhitelist.put("natural=wood", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("place=locality", Byte.valueOf((byte) 17));
 
@@ -214,7 +215,7 @@ class WhiteList {
 		tagWhitelist.put("railway=subway", Byte.valueOf((byte) 13));
 		tagWhitelist.put("railway=tram", Byte.valueOf((byte) 13));
 
-		tagWhitelist.put("route=ferry", Byte.valueOf((byte) 14));
+		tagWhitelist.put("route=ferry", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("sport=shooting", Byte.valueOf((byte) 15));
 		tagWhitelist.put("sport=tennis", Byte.valueOf((byte) 15));

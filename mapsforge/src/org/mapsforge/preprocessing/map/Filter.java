@@ -199,7 +199,7 @@ public class Filter {
 		filter.put("military=naval_base", Byte.valueOf((byte) 13));
 
 		filter.put("natural=beach", Byte.valueOf((byte) 14));
-		filter.put("natural=coastline", Byte.valueOf((byte) 8));
+		filter.put("natural=data", Byte.valueOf((byte) 8));
 		filter.put("natural=heath", Byte.valueOf((byte) 13));
 		filter.put("natural=land", Byte.valueOf((byte) 13));
 		filter.put("natural=scrub", Byte.valueOf((byte) 13));

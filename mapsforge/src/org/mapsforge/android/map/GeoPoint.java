@@ -52,20 +52,19 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
-		} else if (!(o instanceof GeoPoint)) {
+		} else if (!(obj instanceof GeoPoint)) {
 			return false;
 		} else {
-			GeoPoint geoPoint = (GeoPoint) o;
+			GeoPoint geoPoint = (GeoPoint) obj;
 			if (this.latitudeE6 != geoPoint.latitudeE6) {
 				return false;
 			} else if (this.longitudeE6 != geoPoint.longitudeE6) {
 				return false;
-			} else {
-				return true;
 			}
+			return true;
 		}
 	}
 

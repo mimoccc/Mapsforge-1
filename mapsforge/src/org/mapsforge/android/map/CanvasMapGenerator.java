@@ -34,7 +34,6 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private CircleContainer circleContainer;
 	private WayContainer complexWayContainer;
 	private float[][] coordinates;
-	private float[] textCoordinates;
 	private byte currentLayer;
 	private byte currentLevel;
 	private Path path;
@@ -43,6 +42,7 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private SymbolContainer symbolContainer;
+	private float[] textCoordinates;
 	private ArrayList<ShapePaintContainer> wayList;
 
 	@Override

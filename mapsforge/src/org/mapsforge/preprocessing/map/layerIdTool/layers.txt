@@ -19,6 +19,9 @@ amenity=college amenity=fountain amenity=hospital amenity=school amenity=univers
 landuse=cemetery
 amenity=grave_yard
 
+// special entry for rendered sea areas
+SEA_AREAS
+
 // Natural features
 natural=coastline
 natural=land
@@ -60,6 +63,8 @@ natural=water
 landuse=reservoir
 landuse=basin
 waterway=riverbank
+
+boundary=national_park
 
 highway=footway_area=yes
 highway=pedestrian_area=yes

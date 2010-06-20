@@ -29,6 +29,7 @@ barrier=fence
 barrier=wall
 
 boundary=administrative
+boundary=national_park
 
 bridge=yes
 

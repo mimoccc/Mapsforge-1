@@ -33,15 +33,6 @@ class Rect {
 	}
 
 	/**
-	 * Returns true, if left >= right or top <= bottom.
-	 * 
-	 * @return true if this rectangle is empty, false otherwise.
-	 */
-	boolean isEmpty() {
-		return this.left >= this.right || this.top <= this.bottom;
-	}
-
-	/**
 	 * Returns true, if the given GeoPoint is inside this rectangle, false otherwise.
 	 * 
 	 * @param geoPoint
@@ -61,5 +52,14 @@ class Rect {
 	GeoPoint getCenter() {
 		return new GeoPoint((int) ((this.top + this.bottom) >> 1),
 				(int) ((this.left + this.right) >> 1));
+	}
+
+	/**
+	 * Returns true, if left >= right or top <= bottom.
+	 * 
+	 * @return true if this rectangle is empty, false otherwise.
+	 */
+	boolean isEmpty() {
+		return this.left >= this.right || this.top <= this.bottom;
 	}
 }

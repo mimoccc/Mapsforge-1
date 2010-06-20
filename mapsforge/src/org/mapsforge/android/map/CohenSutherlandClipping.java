@@ -58,7 +58,7 @@ class CohenSutherlandClipping {
 	}
 
 	/**
-	 * Checks, if a line intersects with a rectangle.
+	 * Clips a line to a rectangle.
 	 * 
 	 * @param x1
 	 *            first x coordinate of the line.
@@ -76,10 +76,10 @@ class CohenSutherlandClipping {
 	 *            right coordinate of the rectangle.
 	 * @param top
 	 *            top coordinate of the rectangle.
-	 * @return true if the line is in the rectangle, false otherwise.
+	 * @return the clipped line or null, in case of no intersection.
 	 */
-	static boolean isLineInRectangle(double x1, double y1, double x2, double y2, double left,
-			double bottom, double right, double top) {
+	static double[] clipLineToRectangle(double x1, double y1, double x2, double y2,
+			double left, double bottom, double right, double top) {
 		double x1new = x1;
 		double y1new = y1;
 		double x2new = x2;
@@ -92,10 +92,10 @@ class CohenSutherlandClipping {
 		while (true) {
 			if ((outcode1 | outcode2) == 0) {
 				// both points are inside the rectangle
-				return true;
+				return new double[] { x1new, y1new, x2new, y2new };
 			} else if ((outcode1 & outcode2) > 0) {
 				// both points are outside the rectangle in the same region
-				return false;
+				return null;
 			} else if (outcode1 != 0) {
 				// first point is outside the rectangle
 				if ((outcode1 & TOP) > 0) {
@@ -135,7 +135,7 @@ class CohenSutherlandClipping {
 	}
 
 	/**
-	 * Clips a line to a rectangle.
+	 * Checks, if a line intersects with a rectangle.
 	 * 
 	 * @param x1
 	 *            first x coordinate of the line.
@@ -153,10 +153,10 @@ class CohenSutherlandClipping {
 	 *            right coordinate of the rectangle.
 	 * @param top
 	 *            top coordinate of the rectangle.
-	 * @return the clipped line or null, in case of no intersection.
+	 * @return true if the line is in the rectangle, false otherwise.
 	 */
-	static double[] clipLineToRectangle(double x1, double y1, double x2, double y2,
-			double left, double bottom, double right, double top) {
+	static boolean isLineInRectangle(double x1, double y1, double x2, double y2, double left,
+			double bottom, double right, double top) {
 		double x1new = x1;
 		double y1new = y1;
 		double x2new = x2;
@@ -169,10 +169,10 @@ class CohenSutherlandClipping {
 		while (true) {
 			if ((outcode1 | outcode2) == 0) {
 				// both points are inside the rectangle
-				return new double[] { x1new, y1new, x2new, y2new };
+				return true;
 			} else if ((outcode1 & outcode2) > 0) {
 				// both points are outside the rectangle in the same region
-				return null;
+				return false;
 			} else if (outcode1 != 0) {
 				// first point is outside the rectangle
 				if ((outcode1 & TOP) > 0) {
