@@ -151,10 +151,10 @@ class WhiteList {
 		tagWhitelist.put("highway=primary_link", Byte.valueOf((byte) 10));
 		tagWhitelist.put("highway=residential", Byte.valueOf((byte) 14));
 		tagWhitelist.put("highway=road", Byte.valueOf((byte) 13));
-		tagWhitelist.put("highway=secondary", Byte.valueOf((byte) 12));
+		tagWhitelist.put("highway=secondary", Byte.valueOf((byte) 11));
 		tagWhitelist.put("highway=service", Byte.valueOf((byte) 15));
 		tagWhitelist.put("highway=steps", Byte.valueOf((byte) 16));
-		tagWhitelist.put("highway=tertiary", Byte.valueOf((byte) 13));
+		tagWhitelist.put("highway=tertiary", Byte.valueOf((byte) 12));
 		tagWhitelist.put("highway=track", Byte.valueOf((byte) 13));
 		tagWhitelist.put("highway=trunk", Byte.valueOf((byte) 13));
 		tagWhitelist.put("highway=trunk_link", Byte.valueOf((byte) 13));
@@ -200,7 +200,7 @@ class WhiteList {
 		tagWhitelist.put("military=naval_base", Byte.valueOf((byte) 13));
 
 		tagWhitelist.put("natural=beach", Byte.valueOf((byte) 14));
-		tagWhitelist.put("natural=data", Byte.valueOf((byte) 0));
+		tagWhitelist.put("natural=coastline", Byte.valueOf((byte) 0));
 		tagWhitelist.put("natural=heath", Byte.valueOf((byte) 13));
 		tagWhitelist.put("natural=land", Byte.valueOf((byte) 12));
 		tagWhitelist.put("natural=scrub", Byte.valueOf((byte) 13));
@@ -227,9 +227,9 @@ class WhiteList {
 		tagWhitelist.put("tunnel=no", Byte.valueOf(Byte.MAX_VALUE));
 		tagWhitelist.put("tunnel=yes", Byte.valueOf(Byte.MAX_VALUE));
 
-		tagWhitelist.put("waterway=canal", Byte.valueOf((byte) 13));
+		tagWhitelist.put("waterway=canal", Byte.valueOf((byte) 12));
 		tagWhitelist.put("waterway=drain", Byte.valueOf((byte) 14));
-		tagWhitelist.put("waterway=river", Byte.valueOf((byte) 13));
+		tagWhitelist.put("waterway=river", Byte.valueOf((byte) 12));
 		tagWhitelist.put("waterway=riverbank", Byte.valueOf((byte) 13));
 		tagWhitelist.put("waterway=stream", Byte.valueOf((byte) 14));
 

@@ -409,7 +409,7 @@ class Database {
 					this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
 
 					// if the current block has no map data continue with the next one
-					if (currentBlockSize == 80) {
+					if (this.currentBlockSize == 80) {
 						continue;
 					}
 

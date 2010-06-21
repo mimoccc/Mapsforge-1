@@ -839,6 +839,10 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected final void onDraw(Canvas canvas) {
+		if (this.mapViewBitmap1 == null) {
+			return;
+		}
+
 		synchronized (this) {
 			// draw the map and the map scale
 			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);

@@ -232,7 +232,7 @@ final class TagIdsWays {
 		map.put("military=barracks", Byte.valueOf((byte) 87));
 		map.put("military=naval_base", Byte.valueOf((byte) 88));
 		map.put("natural=beach", Byte.valueOf((byte) 89));
-		map.put("natural=data", Byte.valueOf((byte) 90));
+		map.put("natural=coastline", Byte.valueOf((byte) 90));
 		map.put("natural=heath", Byte.valueOf((byte) 91));
 		map.put("natural=land", Byte.valueOf((byte) 92));
 		map.put("natural=scrub", Byte.valueOf((byte) 93));

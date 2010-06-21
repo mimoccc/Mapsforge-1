@@ -29,7 +29,7 @@ class CoastlineWay {
 	 *            the x coordinate of the coastline point.
 	 * @param y
 	 *            the y coordinate of the coastline point.
-	 * @return the angle, always between 0 and 2π.
+	 * @return the angle, always between 0 (inclusively) and 2π (exclusively).
 	 */
 	private static double calculateAngle(float x, float y) {
 		double angle = Math.atan2(y - (Tile.TILE_SIZE >> 1), x - (Tile.TILE_SIZE >> 1));
@@ -43,7 +43,7 @@ class CoastlineWay {
 	 * Calculates the side of the tile that corresponds to a given angle.
 	 * 
 	 * @param angle
-	 *            the angle, must be between 0 and 2π.
+	 *            the angle, must be between 0 (inclusively) and 2π (exclusively).
 	 * @return the corresponding side of the tile.
 	 */
 	private static byte calculateSide(double angle) {
@@ -79,6 +79,7 @@ class CoastlineWay {
 		for (int i = 2; i < coastline.length; i += 2) {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
+			// clip the current way segment to the tile rectangle
 			clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
 					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			if (clippedSegment != null) {
@@ -100,6 +101,7 @@ class CoastlineWay {
 		for (int i = coastline.length - 4; i >= 0; i -= 2) {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
+			// clip the current way segment to the tile rectangle
 			clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
 					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			if (clippedSegment != null) {
@@ -184,8 +186,14 @@ class CoastlineWay {
 	final double exitAngle;
 	final byte exitSide;
 
-	CoastlineWay(float[] coastlineCoordinates) {
-		this.data = shortenCoastlineSegment(coastlineCoordinates);
+	/**
+	 * Constructs a new CoastlineWay object with the given coordinates.
+	 * 
+	 * @param coastline
+	 *            the coordinates of the coastline segment.
+	 */
+	CoastlineWay(float[] coastline) {
+		this.data = shortenCoastlineSegment(coastline);
 		this.entryAngle = calculateAngle(this.data[0], this.data[1]);
 		this.exitAngle = calculateAngle(this.data[this.data.length - 2],
 				this.data[this.data.length - 1]);

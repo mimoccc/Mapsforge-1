@@ -113,7 +113,7 @@ class DatabaseIndexCache {
 	 * @throws IOException
 	 *             if an error occurs while reading the map file.
 	 */
-	int getAddress(Integer blockNumber) throws IOException {
+	int getAddress(int blockNumber) throws IOException {
 		try {
 			if (blockNumber >= this.inputFileBlocks) {
 				return -1;
@@ -122,9 +122,9 @@ class DatabaseIndexCache {
 			this.cacheBlockNumber = blockNumber / INDEX_ENTRIES_PER_CACHE_BLOCK;
 
 			// check for cached index block
-			if (this.map.containsKey(this.cacheBlockNumber)) {
+			if (this.map.containsKey(Integer.valueOf(this.cacheBlockNumber))) {
 				// cache hit, read the index block from the map
-				this.cacheBlock = this.map.get(this.cacheBlockNumber);
+				this.cacheBlock = this.map.get(Integer.valueOf(this.cacheBlockNumber));
 			} else {
 				// cache miss, create a new index block
 				this.cacheBlock = new byte[SIZE_OF_CACHE_BLOCK];
@@ -135,7 +135,7 @@ class DatabaseIndexCache {
 					throw new IOException();
 				}
 				// put the index block in the map
-				this.map.put(this.cacheBlockNumber, this.cacheBlock);
+				this.map.put(Integer.valueOf(this.cacheBlockNumber), this.cacheBlock);
 			}
 
 			// calculate the address of the index entry inside the index block

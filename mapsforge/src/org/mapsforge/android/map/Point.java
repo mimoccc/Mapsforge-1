@@ -20,6 +20,14 @@ class Point implements Comparable<Point> {
 	final float x;
 	final float y;
 
+	/**
+	 * Constructs a new Point object with the given x and y coordinates.
+	 * 
+	 * @param x
+	 *            the x coordinate of the point.
+	 * @param y
+	 *            the y coordinate of the point.
+	 */
 	Point(float x, float y) {
 		this.x = x;
 		this.y = y;

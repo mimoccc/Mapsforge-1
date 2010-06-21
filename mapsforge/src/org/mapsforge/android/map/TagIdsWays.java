@@ -24,12 +24,12 @@ import java.util.Map;
  * final byte to speed up the rendering process.
  */
 final class TagIdsWays {
-	static final byte ADMIN_LEVEL$10 = 5;
 	static final byte ADMIN_LEVEL$2 = 0;
 	static final byte ADMIN_LEVEL$4 = 1;
 	static final byte ADMIN_LEVEL$6 = 2;
 	static final byte ADMIN_LEVEL$8 = 3;
 	static final byte ADMIN_LEVEL$9 = 4;
+	static final byte ADMIN_LEVEL$10 = 5;
 	static final byte AEROWAY$AERODROME = 6;
 	static final byte AEROWAY$APRON = 7;
 	static final byte AEROWAY$HELIPAD = 8;
@@ -232,7 +232,7 @@ final class TagIdsWays {
 		map.put("military=barracks", Byte.valueOf((byte) 87));
 		map.put("military=naval_base", Byte.valueOf((byte) 88));
 		map.put("natural=beach", Byte.valueOf((byte) 89));
-		map.put("natural=data", Byte.valueOf((byte) 90));
+		map.put("natural=coastline", Byte.valueOf((byte) 90));
 		map.put("natural=heath", Byte.valueOf((byte) 91));
 		map.put("natural=land", Byte.valueOf((byte) 92));
 		map.put("natural=scrub", Byte.valueOf((byte) 93));
