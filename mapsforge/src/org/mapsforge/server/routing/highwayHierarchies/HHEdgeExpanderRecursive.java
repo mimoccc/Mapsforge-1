@@ -44,7 +44,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * 
  * @author Frank Viernau
  */
-public class HHEdgeExpanderRecursive implements Serializable {
+class HHEdgeExpanderRecursive implements Serializable {
 
 	private static final long serialVersionUID = 5266959681778938376L;
 

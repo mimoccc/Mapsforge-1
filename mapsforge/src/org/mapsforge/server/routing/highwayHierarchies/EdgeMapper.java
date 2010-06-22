@@ -31,7 +31,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-public class EdgeMapper implements Serializable {
+class EdgeMapper implements Serializable {
 
 	private static final long serialVersionUID = 7749333198499552855L;
 

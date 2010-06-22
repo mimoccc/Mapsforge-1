@@ -18,11 +18,8 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
@@ -618,50 +615,5 @@ public final class DijkstraAlgorithm {
 		public void setHeapKey(Integer key) {
 			distance = key;
 		}
-	}
-
-	public static void main(String[] args) throws SQLException {
-		// DynamicLevelGraph graph =
-		// DynamicLevelGraph.importRoutingGraph(DbConnection.getBerlinDbConn());
-		// DynamicLevelVertex s = graph.getVertex(15);
-		// DynamicLevelVertex t = graph.getVertex(155);
-		// System.out.println(DijkstraAlgorithm.shortestDistance(s, t, true, false, 0));
-		// System.out.println(DijkstraAlgorithm.shortestDistance(s, t, false, true, 0));
-		// System.out.println(DijkstraAlgorithm.shortestDistance(s, t, true, true, 0));
-
-		// HHDbReader reader = new HHDbReader(DBConnection.getBerlinDbConn());
-		// HHStaticGraph g = HHStaticGraph.getFromHHDb(DBConnection.getBerlinDbConn());
-		// int[] x = getEMinLvl(reader);
-		// // int[] x = new int[reader.numEdges()];
-		// int max = 0;
-		// for (int i = 0; i < g.numVertices(); i++) {
-		// HHStaticVertex v = g.getVertex(i);
-		// for (HHStaticEdge e : v.getAdjacentEdges(0)) {
-		// boolean fwd = e.getDirection(HHStaticGraph.FWD);
-		// boolean bwd = e.getDirection(HHStaticGraph.BWD);
-		// if (fwd && bwd) {
-		// bwd = false;
-		// }
-		// HHStaticVertex tmp = e.getSource();
-		// LinkedList<Integer> list = shortestPathHopIndices(e.getSource(), e.getTarget(),
-		// fwd, bwd, Math.max(0, x[e.getId()] - 1), x);
-		// max = Math.max(list.size(), max);
-		// for (int k : list) {
-		// tmp = tmp.getAdjacentEdge(k).getTarget();
-		// }
-		// if (tmp.getId() != e.getTarget().getId())
-		// System.out.println("error");
-		// }
-		// }
-		// System.out.println(max);
-	}
-
-	private static int[] getEMinLvl(HHDbReader reader) {
-		int i = 0;
-		int[] eMinLvl = new int[reader.numEdges()];
-		for (Iterator<HHEdge> iter = reader.getEdges(); iter.hasNext();) {
-			eMinLvl[i++] = iter.next().minLvl;
-		}
-		return eMinLvl;
 	}
 }

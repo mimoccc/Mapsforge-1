@@ -100,13 +100,6 @@ public class HHDynamicGraph implements Serializable {
 		freeEdgeSlots = new TIntArrayStack();
 	}
 
-	/**
-	 * @param <V>
-	 * @param <E>
-	 * @param dao
-	 * @param wFunc
-	 * @return
-	 */
 	public static <V extends IRgVertex, E extends IRgEdge> HHDynamicGraph importRoutingGraph(
 			IRgDAO<V, E> dao, IRgWeightFunction<E> wFunc) {
 

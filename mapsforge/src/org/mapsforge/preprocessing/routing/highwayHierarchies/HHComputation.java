@@ -410,12 +410,12 @@ public final class HHComputation {
 		 */
 	}
 
-	private static int getCoreLevel(HHDynamicVertex v) {
-		if (v.getNeighborhood(v.getMaxLevel()) != INFINITY_1) {
-			return v.getMaxLevel();
-		}
-		return v.getMaxLevel() - 1;
-	}
+	// private static int getCoreLevel(HHDynamicVertex v) {
+	// if (v.getNeighborhood(v.getMaxLevel()) != INFINITY_1) {
+	// return v.getMaxLevel();
+	// }
+	// return v.getMaxLevel() - 1;
+	// }
 
 	private static void removeParallelEdges(HHDynamicGraph graph, int lvl) {
 		for (Iterator<HHDynamicVertex> iter = graph.getVertices(lvl); iter.hasNext();) {

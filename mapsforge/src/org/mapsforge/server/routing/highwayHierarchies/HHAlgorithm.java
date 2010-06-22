@@ -41,7 +41,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * 
  *         For experimantal verification, two versions of dijkstra are implemented here too.
  */
-public class HHAlgorithm {
+class HHAlgorithm {
 
 	private static final int INFINITY_1 = HHComputation.INFINITY_1;
 	private static final int INFINITY_2 = HHComputation.INFINITY_2;

@@ -33,7 +33,7 @@ import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
-public final class EdgeIndex {
+final class EdgeIndex {
 
 	private final int[] lons, lats, edgeIds;
 	private final int[] offsets;

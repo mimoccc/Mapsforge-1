@@ -33,11 +33,10 @@ import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.geo.PolarCoordinate;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
-public class GeoCoordinateKDTree implements Serializable {
+class GeoCoordinateKDTree implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -241,8 +240,8 @@ public class GeoCoordinateKDTree implements Serializable {
 
 		for (Iterator<HHVertex> iter = reader.getVertices(); iter.hasNext();) {
 			HHVertex v = iter.next();
-			lon[v.id] = PolarCoordinate.double2Int(v.longitude);
-			lat[v.id] = PolarCoordinate.double2Int(v.latitude);
+			lon[v.id] = GeoCoordinate.dtoi(v.longitude);
+			lat[v.id] = GeoCoordinate.dtoi(v.latitude);
 		}
 
 		GeoCoordinateKDTree index = new GeoCoordinateKDTree(lon, lat);

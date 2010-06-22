@@ -31,7 +31,7 @@ import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-public class RgEdgeNames implements Serializable {
+class RgEdgeNames implements Serializable {
 
 	private static final long serialVersionUID = 2122661604323386224L;
 

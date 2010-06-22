@@ -36,7 +36,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * 
  * @author Frank Viernau
  */
-public class HHEdgeReverser implements Serializable {
+class HHEdgeReverser implements Serializable {
 
 	private static final long serialVersionUID = 5882576822167830309L;
 
@@ -97,7 +97,9 @@ public class HHEdgeReverser implements Serializable {
 	 * buff.
 	 * 
 	 * @param edges
+	 *            edges to reverse.
 	 * @param buff
+	 *            buffer to add reversed edges to.
 	 */
 	public void reverseEdges(LinkedList<HHStaticEdge> edges, LinkedList<HHStaticEdge> buff) {
 		for (Iterator<HHStaticEdge> iter = edges.descendingIterator(); iter.hasNext();) {

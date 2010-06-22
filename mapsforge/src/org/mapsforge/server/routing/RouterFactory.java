@@ -24,14 +24,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.HHRenderer;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 
 public class RouterFactory {
@@ -42,7 +40,7 @@ public class RouterFactory {
 	public static IRouter getRouter() {
 		return getRouter(PROPERTIES_FILE);
 	}
-	
+
 	public static IRouter getRouter(String fileURI) {
 		Properties props = loadProperties(fileURI);
 		if (props != null) {
@@ -136,58 +134,22 @@ public class RouterFactory {
 		return props;
 	}
 
-	public static void main(String[] args) throws SQLException, FileNotFoundException,
-			IOException {
+	public static void main(String[] args) {
 		RouterImpl router = (RouterImpl) RouterFactory.getRouter();
 
 		Random rnd = new Random(1122);
-		HHRenderer renderer = new HHRenderer(1920, 1200, router.routingGraph,
-				router.vertexIndex, 26);
+		RendererV2 renderer = new RendererV2(1024, 768, router, Color.WHITE, Color.BLACK);
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 3; i++) {
 
 			int s = rnd.nextInt(router.routingGraph.numVertices());
 			int t = rnd.nextInt(router.routingGraph.numVertices());
 			System.out.println("s = " + s + " t = " + t);
 			IEdge[] sp = router.getShortestPath(s, t);
-			System.out.println("s = " + s + " t = " + t);
+			renderer.addRoute(sp, Color.BLUE);
 
-			if (sp != null) {
-				LinkedList<GeoCoordinate> coords = new LinkedList<GeoCoordinate>();
-				for (IEdge e : sp) {
-					for (GeoCoordinate c : e.getWaypoints()) {
-						coords.add(c);
-					}
-					coords.add(e.getTarget().getCoordinate());
-				}
-				for (int j = 1; j < coords.size(); j++) {
-					renderer.drawLine(coords.get(j - 1), coords.get(j), Color.RED, 1);
-				}
-			}
-		}
-		IEdge[] es = router.getNearestEdges(new GeoCoordinate(52.508058, 13.462372));
-		IEdge[] et = router.getNearestEdges(new GeoCoordinate(52.533388, 13.348131));
-
-		System.out.println((es[0] == null) + " " + (et[0] == null));
-
-		IEdge[] sp = router.getShortestPath(es[0].getSource().getId(), et[0].getTarget()
-				.getId());
-
-		if (sp != null) {
-			LinkedList<GeoCoordinate> coords = new LinkedList<GeoCoordinate>();
-			for (IEdge e : sp) {
-				for (GeoCoordinate c : e.getWaypoints()) {
-					coords.add(c);
-				}
-				coords.add(e.getTarget().getCoordinate());
-				System.out.println(e.getName());
-			}
-			for (int j = 1; j < coords.size(); j++) {
-				renderer.drawLine(coords.get(j - 1), coords.get(j), Color.RED, 1);
-			}
 		}
 
-		renderer.update();
 		System.out.println("ready");
 
 	}

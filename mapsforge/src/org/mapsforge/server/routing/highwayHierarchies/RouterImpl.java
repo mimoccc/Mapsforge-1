@@ -337,7 +337,7 @@ public class RouterImpl implements IRouter {
 		}
 	}
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) {
 		IRouter router = RouterFactory.getRouter();
 		IEdge[] sp = router.getShortestPath(12, 12312);
 
