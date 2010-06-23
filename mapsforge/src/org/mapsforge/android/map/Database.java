@@ -268,7 +268,7 @@ class Database {
 				for (short i = 0; i < this.currentWayNodes - 2; i += 2) {
 					this.currentNodeLongitude = this.currentWayNodesSequence[i];
 					this.currentNodeLatitude = this.currentWayNodesSequence[i + 1];
-					if (CohenSutherlandClipping.isLineInRectangle(this.currentNodeLongitude,
+					if (LineClipping.isLineInRectangle(this.currentNodeLongitude,
 							this.currentNodeLatitude, this.currentWayNodesSequence[i + 2],
 							this.currentWayNodesSequence[i + 3], this.geoRectangle.left,
 							this.geoRectangle.bottom, this.geoRectangle.right,

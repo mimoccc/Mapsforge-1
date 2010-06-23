@@ -80,7 +80,7 @@ class CoastlineWay {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
 			// clip the current way segment to the tile rectangle
-			clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
 					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			if (clippedSegment != null) {
 				coastline[i - 2] = (float) clippedSegment[0];
@@ -102,7 +102,7 @@ class CoastlineWay {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
 			// clip the current way segment to the tile rectangle
-			clippedSegment = CohenSutherlandClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
 					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			if (clippedSegment != null) {
 				coastline[i + 2] = (float) clippedSegment[0];
