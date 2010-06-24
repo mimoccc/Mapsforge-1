@@ -96,8 +96,8 @@ class WhiteList {
 	static TreeMap<String, Byte> getWayTagWhitelist() {
 		TreeMap<String, Byte> tagWhitelist = new TreeMap<String, Byte>();
 
-		tagWhitelist.put("admin_level=2", Byte.valueOf((byte) 8));
-		tagWhitelist.put("admin_level=4", Byte.valueOf((byte) 13));
+		tagWhitelist.put("admin_level=2", Byte.valueOf((byte) 6));
+		tagWhitelist.put("admin_level=4", Byte.valueOf((byte) 12)); // like Osmarender
 		tagWhitelist.put("admin_level=6", Byte.valueOf((byte) 15));
 		tagWhitelist.put("admin_level=8", Byte.valueOf((byte) 16));
 		tagWhitelist.put("admin_level=9", Byte.valueOf((byte) 16));
@@ -106,8 +106,8 @@ class WhiteList {
 		tagWhitelist.put("aeroway=aerodrome", Byte.valueOf((byte) 13));
 		tagWhitelist.put("aeroway=apron", Byte.valueOf((byte) 13));
 		tagWhitelist.put("aeroway=helipad", Byte.valueOf((byte) 17));
-		tagWhitelist.put("aeroway=runway", Byte.valueOf((byte) 12));
-		tagWhitelist.put("aeroway=taxiway", Byte.valueOf((byte) 12));
+		tagWhitelist.put("aeroway=runway", Byte.valueOf((byte) 10));
+		tagWhitelist.put("aeroway=taxiway", Byte.valueOf((byte) 10));
 		tagWhitelist.put("aeroway=terminal", Byte.valueOf((byte) 16));
 
 		tagWhitelist.put("amenity=college", Byte.valueOf((byte) 15));
@@ -140,77 +140,77 @@ class WhiteList {
 
 		tagWhitelist.put("highway=bridleway", Byte.valueOf((byte) 13));
 		tagWhitelist.put("highway=construction", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=cycleway", Byte.valueOf((byte) 15));
+		tagWhitelist.put("highway=cycleway", Byte.valueOf((byte) 13));
 		tagWhitelist.put("highway=footway", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=living_street", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=motorway", Byte.valueOf((byte) 9));
-		tagWhitelist.put("highway=motorway_link", Byte.valueOf((byte) 9));
-		tagWhitelist.put("highway=path", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=pedestrian", Byte.valueOf((byte) 15));
-		tagWhitelist.put("highway=primary", Byte.valueOf((byte) 10));
-		tagWhitelist.put("highway=primary_link", Byte.valueOf((byte) 10));
+		tagWhitelist.put("highway=living_street", Byte.valueOf((byte) 14));
+		tagWhitelist.put("highway=motorway", Byte.valueOf((byte) 8));
+		tagWhitelist.put("highway=motorway_link", Byte.valueOf((byte) 8));
+		tagWhitelist.put("highway=path", Byte.valueOf((byte) 14));
+		tagWhitelist.put("highway=pedestrian", Byte.valueOf((byte) 14));
+		tagWhitelist.put("highway=primary", Byte.valueOf((byte) 8));
+		tagWhitelist.put("highway=primary_link", Byte.valueOf((byte) 8));
 		tagWhitelist.put("highway=residential", Byte.valueOf((byte) 14));
-		tagWhitelist.put("highway=road", Byte.valueOf((byte) 13));
-		tagWhitelist.put("highway=secondary", Byte.valueOf((byte) 11));
-		tagWhitelist.put("highway=service", Byte.valueOf((byte) 15));
+		tagWhitelist.put("highway=road", Byte.valueOf((byte) 12));
+		tagWhitelist.put("highway=secondary", Byte.valueOf((byte) 9));
+		tagWhitelist.put("highway=service", Byte.valueOf((byte) 14));
 		tagWhitelist.put("highway=steps", Byte.valueOf((byte) 16));
-		tagWhitelist.put("highway=tertiary", Byte.valueOf((byte) 12));
-		tagWhitelist.put("highway=track", Byte.valueOf((byte) 13));
-		tagWhitelist.put("highway=trunk", Byte.valueOf((byte) 13));
-		tagWhitelist.put("highway=trunk_link", Byte.valueOf((byte) 13));
-		tagWhitelist.put("highway=unclassified", Byte.valueOf((byte) 15));
+		tagWhitelist.put("highway=tertiary", Byte.valueOf((byte) 10));
+		tagWhitelist.put("highway=track", Byte.valueOf((byte) 12));
+		tagWhitelist.put("highway=trunk", Byte.valueOf((byte) 8));
+		tagWhitelist.put("highway=trunk_link", Byte.valueOf((byte) 8));
+		tagWhitelist.put("highway=unclassified", Byte.valueOf((byte) 13));
 
 		tagWhitelist.put("historic=ruins", Byte.valueOf((byte) 17));
 
-		tagWhitelist.put("landuse=allotments", Byte.valueOf((byte) 13));
+		tagWhitelist.put("landuse=allotments", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=basin", Byte.valueOf((byte) 15));
-		tagWhitelist.put("landuse=brownfield", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=cemetery", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=commercial", Byte.valueOf((byte) 13));
+		tagWhitelist.put("landuse=brownfield", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=cemetery", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=commercial", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=construction", Byte.valueOf((byte) 15));
-		tagWhitelist.put("landuse=farm", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=farmland", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=forest", Byte.valueOf((byte) 13));
+		tagWhitelist.put("landuse=farm", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=farmland", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=forest", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=grass", Byte.valueOf((byte) 15));
 		tagWhitelist.put("landuse=greenfield", Byte.valueOf((byte) 15));
-		tagWhitelist.put("landuse=industrial", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=military", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=recreation_ground", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=reservoir", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=residential", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=retail", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=village_green", Byte.valueOf((byte) 13));
-		tagWhitelist.put("landuse=wood", Byte.valueOf((byte) 13));
+		tagWhitelist.put("landuse=industrial", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=military", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=recreation_ground", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=reservoir", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=residential", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=retail", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=village_green", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=wood", Byte.valueOf((byte) 12));
 
-		tagWhitelist.put("leisure=common", Byte.valueOf((byte) 13));
+		tagWhitelist.put("leisure=common", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=garden", Byte.valueOf((byte) 15));
-		tagWhitelist.put("leisure=golf_course", Byte.valueOf((byte) 13));
-		tagWhitelist.put("leisure=park", Byte.valueOf((byte) 13));
+		tagWhitelist.put("leisure=golf_course", Byte.valueOf((byte) 12));
+		tagWhitelist.put("leisure=park", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=pitch", Byte.valueOf((byte) 15));
 		tagWhitelist.put("leisure=playground", Byte.valueOf((byte) 16));
-		tagWhitelist.put("leisure=sports_centre", Byte.valueOf((byte) 13));
-		tagWhitelist.put("leisure=stadium", Byte.valueOf((byte) 13));
+		tagWhitelist.put("leisure=sports_centre", Byte.valueOf((byte) 12));
+		tagWhitelist.put("leisure=stadium", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=track", Byte.valueOf((byte) 15));
 		tagWhitelist.put("leisure=water_park", Byte.valueOf((byte) 15));
 
 		tagWhitelist.put("man_made=pier", Byte.valueOf((byte) 15));
 
-		tagWhitelist.put("military=airfield", Byte.valueOf((byte) 13));
-		tagWhitelist.put("military=barracks", Byte.valueOf((byte) 13));
-		tagWhitelist.put("military=naval_base", Byte.valueOf((byte) 13));
+		tagWhitelist.put("military=airfield", Byte.valueOf((byte) 12));
+		tagWhitelist.put("military=barracks", Byte.valueOf((byte) 12));
+		tagWhitelist.put("military=naval_base", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("natural=beach", Byte.valueOf((byte) 14));
 		tagWhitelist.put("natural=coastline", Byte.valueOf((byte) 0));
-		tagWhitelist.put("natural=heath", Byte.valueOf((byte) 13));
+		tagWhitelist.put("natural=heath", Byte.valueOf((byte) 12));
 		tagWhitelist.put("natural=land", Byte.valueOf((byte) 12));
-		tagWhitelist.put("natural=scrub", Byte.valueOf((byte) 13));
+		tagWhitelist.put("natural=scrub", Byte.valueOf((byte) 12));
 		tagWhitelist.put("natural=water", Byte.valueOf((byte) 12));
 		tagWhitelist.put("natural=wood", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("place=locality", Byte.valueOf((byte) 17));
 
-		tagWhitelist.put("railway=light_rail", Byte.valueOf((byte) 13));
-		tagWhitelist.put("railway=rail", Byte.valueOf((byte) 13));
+		tagWhitelist.put("railway=light_rail", Byte.valueOf((byte) 12));
+		tagWhitelist.put("railway=rail", Byte.valueOf((byte) 10));
 		tagWhitelist.put("railway=station", Byte.valueOf((byte) 13));
 		tagWhitelist.put("railway=subway", Byte.valueOf((byte) 13));
 		tagWhitelist.put("railway=tram", Byte.valueOf((byte) 13));
@@ -228,10 +228,10 @@ class WhiteList {
 		tagWhitelist.put("tunnel=yes", Byte.valueOf(Byte.MAX_VALUE));
 
 		tagWhitelist.put("waterway=canal", Byte.valueOf((byte) 12));
-		tagWhitelist.put("waterway=drain", Byte.valueOf((byte) 14));
+		tagWhitelist.put("waterway=drain", Byte.valueOf((byte) 12));
 		tagWhitelist.put("waterway=river", Byte.valueOf((byte) 12));
-		tagWhitelist.put("waterway=riverbank", Byte.valueOf((byte) 13));
-		tagWhitelist.put("waterway=stream", Byte.valueOf((byte) 14));
+		tagWhitelist.put("waterway=riverbank", Byte.valueOf((byte) 12));
+		tagWhitelist.put("waterway=stream", Byte.valueOf((byte) 12));
 
 		return tagWhitelist;
 	}
