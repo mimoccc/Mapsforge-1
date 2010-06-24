@@ -212,7 +212,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 
 		gl.glDisable(GL10.GL_DEPTH_TEST);
 		gl.glEnable(GL10.GL_TEXTURE_2D); // needed for textured lines?
-		gl.glEnable(GL10.GL_BLEND); // needed for textured lines?
+		// gl.glEnable(GL10.GL_BLEND); // needed for textured lines?
 		gl.glBlendFunc(GL10.GL_ONE, GL10.GL_SRC_COLOR); // needed for textured lines?
 		gl.glDisable(GL10.GL_DITHER);
 		gl.glDisable(GL10.GL_LIGHTING);
