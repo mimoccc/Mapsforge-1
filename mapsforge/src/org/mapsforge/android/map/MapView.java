@@ -57,12 +57,14 @@ public class MapView extends ViewGroup {
 	private static final Paint PAINT_MAP_SCALE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MAP_SCALE_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MAP_SCALE_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_MAP_SCALE_TEXT_WHITE_STROKE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 	private static final float TRACKBALL_MOVE_SPEED = 40;
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
 	private static final byte ZOOM_MIN = 0;
-	static final double LATITUDE_MAX = 85.0511;
-	static final double LATITUDE_MIN = -85.0511;
+	static final double LATITUDE_MAX = 85.05113;
+	static final double LATITUDE_MIN = -85.05113;
 	static final double LONGITUDE_MAX = 180;
 	static final double LONGITUDE_MIN = -180;
 
@@ -631,8 +633,12 @@ public class MapView extends ViewGroup {
 		// draw the scale text
 		if (this.mapScale < 1000) {
 			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
+					PAINT_MAP_SCALE_TEXT_WHITE_STROKE);
+			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
 					PAINT_MAP_SCALE_TEXT);
 		} else {
+			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
+					10, 15, PAINT_MAP_SCALE_TEXT_WHITE_STROKE);
 			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
 					10, 15, PAINT_MAP_SCALE_TEXT);
 		}
@@ -659,7 +665,6 @@ public class MapView extends ViewGroup {
 		PAINT_MAP_SCALE.setStrokeWidth(2);
 		PAINT_MAP_SCALE.setStrokeCap(Paint.Cap.SQUARE);
 		PAINT_MAP_SCALE.setColor(Color.BLACK);
-
 		PAINT_MAP_SCALE_STROKE.setStrokeWidth(5);
 		PAINT_MAP_SCALE_STROKE.setStrokeCap(Paint.Cap.SQUARE);
 		PAINT_MAP_SCALE_STROKE.setColor(Color.WHITE);
@@ -667,6 +672,11 @@ public class MapView extends ViewGroup {
 		PAINT_MAP_SCALE_TEXT.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_MAP_SCALE_TEXT.setTextSize(14);
 		PAINT_MAP_SCALE_TEXT.setColor(Color.BLACK);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setStyle(Paint.Style.STROKE);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setStrokeWidth(3);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setTextSize(14);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setColor(Color.WHITE);
 	}
 
 	private void setupMapView() {
@@ -1217,7 +1227,6 @@ public class MapView extends ViewGroup {
 					this.mapGenerator.addJob(this.currentTile);
 				}
 			}
-
 		}
 
 		// notify the MapGenerator to process the job list
