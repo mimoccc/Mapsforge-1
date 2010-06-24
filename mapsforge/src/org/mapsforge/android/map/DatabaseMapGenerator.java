@@ -181,6 +181,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_NAME_WHITE_STROKE_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_11 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_25 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_BEACH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE_INVALID = new Paint(
@@ -1064,6 +1067,24 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_WHITE_STROKE_13.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_13.setTextSize(13);
 		PAINT_NAME_WHITE_STROKE_13.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_15.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_15.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_15.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_15.setTextSize(15);
+		PAINT_NAME_WHITE_STROKE_15.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_20.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_20.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_20.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_20.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_20.setTextSize(20);
+		PAINT_NAME_WHITE_STROKE_20.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_25.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_25.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_25.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_25.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_25.setTextSize(25);
+		PAINT_NAME_WHITE_STROKE_25.setColor(Color.rgb(255, 255, 255));
 
 		PAINT_NATURAL_BEACH_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_BEACH_FILL.setStrokeJoin(Paint.Join.ROUND);
@@ -1788,17 +1809,23 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_25));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_WHITE_STROKE_25));
 			}
 		} else if (nodeTagIds[TagIdsPOIs.PLACE$ISLAND]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_20));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_WHITE_STROKE_20));
 			}
 		} else if (nodeTagIds[TagIdsPOIs.PLACE$SUBURB] || nodeTagIds[TagIdsPOIs.PLACE$TOWN]
 				|| nodeTagIds[TagIdsPOIs.PLACE$VILLAGE]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_15));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_WHITE_STROKE_15));
 			}
 		}
 
