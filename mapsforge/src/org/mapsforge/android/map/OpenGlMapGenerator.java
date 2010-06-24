@@ -87,7 +87,7 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	}
 
 	@Override
-	synchronized void onAttachedToWindow() {
+	void onAttachedToWindow() {
 		Logger.d("onAttachedToWindow called");
 		this.renderer = new OpenGlMapRenderer();
 		this.glSurfaceView = new GLSurfaceView(this.context);
@@ -96,8 +96,13 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 		// this.glSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR
 		// | GLSurfaceView.DEBUG_LOG_GL_CALLS);
 
-		((ViewGroup) this.mapView.getParent()).addView(this.glSurfaceView, 256, 256);
-		this.mapView.bringToFront();
+		// add the GlSurfaceView on which the rendering will be done
+		((ViewGroup) this.mapView.getRootView()).addView(this.glSurfaceView, 256, 256);
+
+		// this will hide the GlSurfaceView in most cases
+		// TODO: find some more intelligent way to achieve this
+		((ViewGroup) this.mapView.getRootView()).getChildAt(0).bringToFront();
+
 	}
 
 	@Override
@@ -124,8 +129,23 @@ class OpenGlMapGenerator extends DatabaseMapGenerator {
 	// }
 
 	@Override
-	synchronized void setupMapGenerator(Bitmap bitmap) {
+	void setupMapGenerator(Bitmap bitmap) {
+
 		Logger.d("setupMapGenerator called");
+
+		// TODO: in some cases the renderer is null here
+		// and we have to wait forever
+		while (this.renderer == null) {
+			try {
+				synchronized (this) {
+					wait(20);
+				}
+				// Logger.d("wating 20msec for renderer to be created...");
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		this.renderer.setBitmap(bitmap);
 	}
 }
