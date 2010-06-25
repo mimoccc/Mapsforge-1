@@ -27,6 +27,20 @@ class LineClipping {
 
 	/**
 	 * Computes the region code for a given point and rectangle.
+	 * 
+	 * @param x
+	 *            the x coordinate of the point.
+	 * @param y
+	 *            the y coordinate of the point.
+	 * @param left
+	 *            left coordinate of the rectangle.
+	 * @param bottom
+	 *            bottom coordinate of the rectangle.
+	 * @param right
+	 *            right coordinate of the rectangle.
+	 * @param top
+	 *            top coordinate of the rectangle.
+	 * @return the region code bitmask.
 	 */
 	private static int calculateOutCode(double x, double y, double left, double bottom,
 			double right, double top) {

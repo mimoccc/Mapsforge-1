@@ -273,6 +273,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
+	 * 
+	 * @param wayName
+	 *            the name of the area.
+	 * @param nameColor
+	 *            the area name color mode.
+	 * @param nameOffset
+	 *            the vertical offset from the area center.
 	 */
 	private void addAreaName(String wayName, byte nameColor, byte nameOffset) {
 		if (wayName != null && this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES) {
@@ -297,6 +304,11 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	/**
 	 * Draws the symbol of an area if the zoomLevel level is high enough.
+	 * 
+	 * @param symbolBitmap
+	 *            the bitmap containing the symbol.
+	 * @param zoomLevel
+	 *            the minimum zoom level at which the symbol should be rendered.
 	 */
 	private void addAreaSymbol(Bitmap symbolBitmap, byte zoomLevel) {
 		if (symbolBitmap != null && this.currentTile.zoomLevel >= zoomLevel) {
@@ -570,6 +582,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	/**
 	 * Calculate the approximate length in pixel of the current way coordinates using the
 	 * Euclidean distance for each way segment.
+	 * 
+	 * @return the approximate length of the way in pixels.
 	 */
 	private int getWayLengthInPixel() {
 		this.previousX = this.coordinates[0][0];
@@ -1247,8 +1261,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	/**
-	 * Sets the stroke width and dash coordinates effects of all paints depending on the current
-	 * zoomLevel level.
+	 * Sets the stroke width and dash coordinates effects of all paints.
+	 * 
+	 * @param zoomLevel
+	 *            the zoom level for which the properties should be set.
 	 */
 	private void setPaintParameters(byte zoomLevel) {
 		float paintScaleFactor;

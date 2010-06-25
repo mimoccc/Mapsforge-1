@@ -110,7 +110,9 @@ class Database {
 	 * Read a single block and call the render functions on all map elements.
 	 * 
 	 * @throws IndexOutOfBoundsException
+	 *             if the block contains invalid data.
 	 * @throws UnsupportedEncodingException
+	 *             if the string decoding fails.
 	 */
 	private void processBlock() throws IndexOutOfBoundsException, UnsupportedEncodingException {
 		// read the amount of way and nodes on the current zoomLevel level
