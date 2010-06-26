@@ -2824,8 +2824,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (this.coastlineEnds.containsKey(this.coastlineStartPoint)) {
 					matchPath = this.coastlineEnds.remove(this.coastlineStartPoint);
 					// check if the merged way is already a circle
-					if (this.coastlineStartPoint.x != this.coastlineEndPoint.x
-							|| this.coastlineStartPoint.y != this.coastlineEndPoint.y) {
+					if (!this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
 						// merge both way segments
 						newPath = new float[nodesSequence.length + matchPath.length - 2];
 						System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);

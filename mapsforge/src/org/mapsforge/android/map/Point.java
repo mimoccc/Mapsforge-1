@@ -17,6 +17,7 @@
 package org.mapsforge.android.map;
 
 class Point implements Comparable<Point> {
+	private final int hashCode;
 	final float x;
 	final float y;
 
@@ -31,6 +32,7 @@ class Point implements Comparable<Point> {
 	Point(float x, float y) {
 		this.x = x;
 		this.y = y;
+		this.hashCode = calculateHashCode();
 	}
 
 	@Override
@@ -45,5 +47,41 @@ class Point implements Comparable<Point> {
 			return -1;
 		}
 		return 0;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof Point)) {
+			return false;
+		} else {
+			Point other = (Point) obj;
+			if (this.x != other.x) {
+				return false;
+			}
+			if (this.y != other.y) {
+				return false;
+			}
+			return true;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCode;
+	}
+
+	/**
+	 * Calculates the hash value of this Point.
+	 * 
+	 * @return the hash value of this Point.
+	 */
+	private int calculateHashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Float.floatToIntBits(x);
+		result = prime * result + Float.floatToIntBits(y);
+		return result;
 	}
 }

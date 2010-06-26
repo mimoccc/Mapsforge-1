@@ -134,6 +134,11 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		return this.latitudeE6 + "," + this.longitudeE6;
 	}
 
+	/**
+	 * Calculates the hash value of this GeoPoint.
+	 * 
+	 * @return the hash value of this GeoPoint.
+	 */
 	private int calculateHashCode() {
 		int result = 7;
 		result = 31 * result + this.latitudeE6;

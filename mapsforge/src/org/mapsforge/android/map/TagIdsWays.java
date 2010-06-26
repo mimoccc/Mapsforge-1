@@ -24,12 +24,12 @@ import java.util.Map;
  * final byte to speed up the rendering process.
  */
 final class TagIdsWays {
+	static final byte ADMIN_LEVEL$10 = 5;
 	static final byte ADMIN_LEVEL$2 = 0;
 	static final byte ADMIN_LEVEL$4 = 1;
 	static final byte ADMIN_LEVEL$6 = 2;
 	static final byte ADMIN_LEVEL$8 = 3;
 	static final byte ADMIN_LEVEL$9 = 4;
-	static final byte ADMIN_LEVEL$10 = 5;
 	static final byte AEROWAY$AERODROME = 6;
 	static final byte AEROWAY$APRON = 7;
 	static final byte AEROWAY$HELIPAD = 8;

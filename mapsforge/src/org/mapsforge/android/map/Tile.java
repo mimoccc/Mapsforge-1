@@ -95,9 +95,9 @@ class Tile implements Comparable<Tile> {
 	}
 
 	/**
-	 * Calculate and save the hash code of this tile.
+	 * Calculates the hash value of this Tile.
 	 * 
-	 * @return the hash code for this tile.
+	 * @return the hash value of this Tile.
 	 */
 	private int calculateHashCode() {
 		final int prime = 31;
