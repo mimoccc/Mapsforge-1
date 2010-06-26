@@ -44,6 +44,8 @@ class POIToTiles {
 
 	/**
 	 * Return a map with tags and their maximum size per character.
+	 * 
+	 * @return the map.
 	 */
 	private static Map<String, Byte> getCharacterSizeMap() {
 		Map<String, Byte> fontSizeMap = new HashMap<String, Byte>();

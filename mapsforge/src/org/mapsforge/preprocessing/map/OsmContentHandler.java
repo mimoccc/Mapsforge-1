@@ -23,7 +23,6 @@ import java.util.TreeMap;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
 
 class OsmContentHandler implements ContentHandler {
 	private MapElementNode currentNode;
@@ -50,18 +49,18 @@ class OsmContentHandler implements ContentHandler {
 	}
 
 	@Override
-	public void characters(char[] ch, int start, int length) throws SAXException {
+	public void characters(char[] ch, int start, int length) {
 	}
 
 	@Override
-	public void endDocument() throws SAXException {
+	public void endDocument() {
 		this.parseTimeStop = new Date().getTime();
 		System.out.println("parsing finished (" + (this.parseTimeStop - this.parseTimeStart)
 				+ " ms)");
 	}
 
 	@Override
-	public void endElement(String uri, String localName, String qName) throws SAXException {
+	public void endElement(String uri, String localName, String qName) {
 		if (localName.equals("node")) {
 			endNodeElement();
 		} else if (localName.equals("way")) {
@@ -84,15 +83,15 @@ class OsmContentHandler implements ContentHandler {
 	}
 
 	@Override
-	public void endPrefixMapping(String prefix) throws SAXException {
+	public void endPrefixMapping(String prefix) {
 	}
 
 	@Override
-	public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
+	public void ignorableWhitespace(char[] ch, int start, int length) {
 	}
 
 	@Override
-	public void processingInstruction(String target, String data) throws SAXException {
+	public void processingInstruction(String target, String data) {
 	}
 
 	@Override
@@ -100,17 +99,16 @@ class OsmContentHandler implements ContentHandler {
 	}
 
 	@Override
-	public void skippedEntity(String name) throws SAXException {
+	public void skippedEntity(String name) {
 	}
 
 	@Override
-	public void startDocument() throws SAXException {
+	public void startDocument() {
 		this.parseTimeStart = new Date().getTime();
 	}
 
 	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes)
-			throws SAXException {
+	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 		if (localName.equals("node")) {
 			startNodeElement(attributes);
 		} else if (localName.equals("way")) {
@@ -133,7 +131,7 @@ class OsmContentHandler implements ContentHandler {
 	}
 
 	@Override
-	public void startPrefixMapping(String prefix, String uri) throws SAXException {
+	public void startPrefixMapping(String prefix, String uri) {
 	}
 
 	private void endNdElement() {
