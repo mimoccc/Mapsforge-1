@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -162,6 +163,37 @@ public class RouterImpl implements IRouter {
 		edgeExpander.expandShortestPath(fwd, sp);
 		edgeExpander.expandShortestPath(bwd, expandedBwd);
 		edgeReverser.reverseEdges(expandedBwd, sp);
+
+		HHEdge[] e = new HHEdge[sp.size()];
+		int i = 0;
+		for (Iterator<HHStaticEdge> iter = sp.iterator(); iter.hasNext();) {
+			e[i++] = new HHEdge(iter.next());
+		}
+		return e;
+	}
+
+	@Override
+	public IEdge[] getShortestPathDebug(int sourceId, int targetId,
+			Collection<IEdge> searchspaceBuff) {
+		LinkedList<HHStaticEdge> searchSpace = new LinkedList<HHStaticEdge>();
+		LinkedList<HHStaticEdge> fwd = new LinkedList<HHStaticEdge>();
+		LinkedList<HHStaticEdge> bwd = new LinkedList<HHStaticEdge>();
+		LinkedList<HHStaticEdge> expandedBwd = new LinkedList<HHStaticEdge>();
+		int distance = algorithm.shortestPath(routingGraph, sourceId, targetId, distanceTable,
+				fwd, bwd, searchSpace);
+		if (distance == Integer.MAX_VALUE) {
+			return null;
+		}
+		LinkedList<HHStaticEdge> sp = new LinkedList<HHStaticEdge>();
+		edgeExpander.expandShortestPath(fwd, sp);
+		edgeExpander.expandShortestPath(bwd, expandedBwd);
+		edgeReverser.reverseEdges(expandedBwd, sp);
+
+		LinkedList<HHStaticEdge> searchSpaceExpanded = new LinkedList<HHStaticEdge>();
+		edgeExpander.expandShortestPath(searchSpace, searchSpaceExpanded);
+		for (Iterator<HHStaticEdge> iter = searchSpaceExpanded.iterator(); iter.hasNext();) {
+			searchspaceBuff.add(new HHEdge(iter.next()));
+		}
 
 		HHEdge[] e = new HHEdge[sp.size()];
 		int i = 0;
@@ -352,4 +384,5 @@ public class RouterImpl implements IRouter {
 		}
 
 	}
+
 }

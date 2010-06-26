@@ -16,6 +16,7 @@
  */
 package org.mapsforge.server.routing;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.util.GeoCoordinate;
@@ -23,6 +24,9 @@ import org.mapsforge.preprocessing.util.GeoCoordinate;
 public interface IRouter {
 
 	public IEdge[] getShortestPath(int sourceId, int targetId);
+
+	public IEdge[] getShortestPathDebug(int sourceId, int targetId,
+			Collection<IEdge> searchspaceBuff);
 
 	public IVertex getNearestVertex(GeoCoordinate coord);
 
