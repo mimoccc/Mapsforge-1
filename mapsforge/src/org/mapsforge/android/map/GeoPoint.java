@@ -25,12 +25,32 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	private final int latitudeE6;
 	private final int longitudeE6;
 
+	/**
+	 * Creates a new GeoPoint with the given latitude and longitude, measured in degrees.
+	 * 
+	 * @param latitude
+	 *            the latitude of the point. This will be limited by the minimum and maximum
+	 *            possible latitude value.
+	 * @param longitude
+	 *            the longitude of the point. This will be limited by the minimum and maximum
+	 *            possible longitude value.
+	 */
 	public GeoPoint(double latitude, double longitude) {
 		this.latitudeE6 = clipLatitude((int) (latitude * MULTIPLICATION_FACTOR));
 		this.longitudeE6 = clipLongitude((int) (longitude * MULTIPLICATION_FACTOR));
 		this.hashCode = calculateHashCode();
 	}
 
+	/**
+	 * Creates a new GeoPoint with the given latitude and longitude, measured in microdegrees.
+	 * 
+	 * @param latitudeE6
+	 *            the latitude of the point in microdegrees. This will be limited by the minimum
+	 *            and maximum possible latitude value.
+	 * @param longitudeE6
+	 *            the longitude of the point in microdegrees. This will be limited by the
+	 *            minimum and maximum possible longitude value.
+	 */
 	public GeoPoint(int latitudeE6, int longitudeE6) {
 		this.latitudeE6 = clipLatitude(latitudeE6);
 		this.longitudeE6 = clipLongitude(longitudeE6);
@@ -68,18 +88,38 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		}
 	}
 
+	/**
+	 * Get the latitude value of this GeoPoint in degrees.
+	 * 
+	 * @return the latitude value in degrees.
+	 */
 	public double getLatitude() {
 		return this.latitudeE6 / (double) 1000000;
 	}
 
+	/**
+	 * Get the latitude value of this GeoPoint in microdegrees.
+	 * 
+	 * @return the latitude value in microdegrees.
+	 */
 	public int getLatitudeE6() {
 		return this.latitudeE6;
 	}
 
+	/**
+	 * Get the longitude value of this GeoPoint in degrees.
+	 * 
+	 * @return the longitude value in degrees.
+	 */
 	public double getLongitude() {
 		return this.longitudeE6 / (double) 1000000;
 	}
 
+	/**
+	 * Get the longitude value of this GeoPoint in microdegrees.
+	 * 
+	 * @return the longitude value in microdegrees.
+	 */
 	public int getLongitudeE6() {
 		return this.longitudeE6;
 	}

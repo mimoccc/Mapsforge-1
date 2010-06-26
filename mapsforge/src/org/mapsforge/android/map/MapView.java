@@ -219,6 +219,11 @@ public class MapView extends ViewGroup {
 		setupMapView();
 	}
 
+	/**
+	 * Returns the {@link MapController} for this MapView.
+	 * 
+	 * @return the MapController.
+	 */
 	public MapController getController() {
 		return this.mapController;
 	}

@@ -41,18 +41,41 @@ public final class MapController implements android.view.View.OnKeyListener {
 		return false;
 	}
 
+	/**
+	 * Set the center of the MapView.
+	 * 
+	 * @param point
+	 *            the new center point.
+	 */
 	public void setCenter(GeoPoint point) {
 		this.mapView.setCenter(point);
 	}
 
+	/**
+	 * Set the zoom level of the MapView.
+	 * 
+	 * @param zoomLevel
+	 *            the new zoom level. This will be limited by the maximum possible zoom level.
+	 * @return the new zoom level.
+	 */
 	public int setZoom(byte zoomLevel) {
 		return this.mapView.setZoom(zoomLevel);
 	}
 
+	/**
+	 * If possible, increase the zoom level of the MapView.
+	 * 
+	 * @return true, if the zoom level was changed, false otherwise.
+	 */
 	public boolean zoomIn() {
 		return this.mapView.zoomIn();
 	}
 
+	/**
+	 * If possible, decrease the zoom level of the MapView.
+	 * 
+	 * @return true, if the zoom level was changed, false otherwise.
+	 */
 	public boolean zoomOut() {
 		return this.mapView.zoomOut();
 	}

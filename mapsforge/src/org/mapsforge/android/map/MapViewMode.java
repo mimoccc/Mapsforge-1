@@ -20,5 +20,16 @@ package org.mapsforge.android.map;
  * All possible operating modes of the MapView.
  */
 public enum MapViewMode {
-	CANVAS_RENDERER, OPENGL_RENDERER, TILE_DOWNLOAD
+	/**
+	 * Map tiles are rendered using the Skia library from Android. This is the default mode.
+	 */
+	CANVAS_RENDERER,
+	/**
+	 * Map tiles are rendered using OpenGL ES. This mode is unstable and for testing only.
+	 */
+	OPENGL_RENDERER,
+	/**
+	 * Map tiles are downloaded from the OpenStreetMap servers. Requires an Internet connection.
+	 */
+	TILE_DOWNLOAD
 }
