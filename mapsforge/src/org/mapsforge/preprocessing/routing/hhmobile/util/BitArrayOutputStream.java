@@ -115,7 +115,9 @@ public class BitArrayOutputStream {
 		if (bitOffset != 0) {
 			_byteOffset++;
 		}
-		_byteOffset += byteAlignment - (_byteOffset % byteAlignment);
+		if (_byteOffset % byteAlignment != 0) {
+			_byteOffset += byteAlignment - (_byteOffset % byteAlignment);
+		}
 		if (_byteOffset <= buff.length) {
 			byteOffset = _byteOffset;
 			bitOffset = 0;

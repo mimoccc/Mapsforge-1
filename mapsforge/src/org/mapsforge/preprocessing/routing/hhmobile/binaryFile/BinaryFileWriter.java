@@ -14,29 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.extmem;
+package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.sql.SQLException;
 
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphSerializer;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering;
-import org.mapsforge.preprocessing.routing.hhmobile.extmem.graph.BlockEncoding;
-import org.mapsforge.preprocessing.routing.hhmobile.extmem.graph.BlockedGraphSerializer;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
-import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
+import org.mapsforge.preprocessing.util.DBConnection;
 
 public class BinaryFileWriter {
-
-	public final static String HEADER_MAGIC = "# mapsforge hh #";
-	public final static int HEADER_LENGTH = 4096;
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 
@@ -45,65 +43,48 @@ public class BinaryFileWriter {
 
 		// temporary files
 
+		File fGraphHeader = new File(targetFile.getAbsolutePath() + ".blocksHeader");
 		File fClusterBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
 		File fBlockPointerIdx = new File(targetFile.getAbsolutePath() + ".blockIdx");
-		File fRTree = new File(targetFile.getAbsolutePath() + ".blockIdx");
 
-		// write data to temporary files
+		// write graphHeader and clusterBlocks
 
-		BlockEncoding blockEnc = BlockedGraphSerializer.writeBlockedGraph(fClusterBlocks,
-				fBlockPointerIdx, levelGraph, clustering, indexGroupSizeThreshold);
+		int[] blockSize = BlockedGraphSerializer.writeBlockedGraph(fGraphHeader,
+				fClusterBlocks, levelGraph, clustering);
 
-		// components location within file
+		// write blockPointer Index
 
-		long startAddrClusterBlocks = HEADER_LENGTH;
+		BlockPointerIndex blockIdx = BlockPointerIndex.getSpaceOptimalIndex(blockSize,
+				indexGroupSizeThreshold);
+		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
+				fBlockPointerIdx));
+		blockIdx.serialize(out);
+		out.close();
+
+		// create binary file header
+
+		long startAddrGraphHeader = BinaryFileHeader.HEADER_LENGTH;
+		long endAddrGraphHeader = startAddrGraphHeader + fGraphHeader.length();
+
+		long startAddrClusterBlocks = endAddrGraphHeader;
 		long endAddrClusterBlocks = startAddrClusterBlocks + fClusterBlocks.length();
 
 		long startAddrBlockPointerIdx = endAddrClusterBlocks;
 		long endAddrBlockPointerIdx = startAddrBlockPointerIdx + fBlockPointerIdx.length();
 
-		long startAddrRTree = endAddrBlockPointerIdx;
-		long endAddrRTree = startAddrRTree + fBlockPointerIdx.length();
-
-		// ---------------- SERIALIZE HEADER -----------------
-
-		byte[] header = new byte[HEADER_LENGTH];
-		try {
-			BitArrayOutputStream bitStream = new BitArrayOutputStream(header);
-
-			bitStream.write(HEADER_MAGIC.getBytes());
-
-			// cluster blocks
-			bitStream.writeLong(startAddrClusterBlocks);
-			bitStream.writeByte(blockEnc.bitsPerClusterId);
-			bitStream.writeByte(blockEnc.bitsPerVertexOffset);
-			bitStream.writeByte(blockEnc.bitsPerEdgeCount);
-			bitStream.writeByte(blockEnc.bitsPerNeighborhood);
-			bitStream.writeByte(blockEnc.numGraphLevels);
-			bitStream.writeLong(endAddrClusterBlocks);
-
-			// block pointer index
-			bitStream.writeLong(startAddrBlockPointerIdx);
-			bitStream.writeLong(endAddrBlockPointerIdx);
-
-			// r-tree
-			bitStream.writeLong(startAddrRTree);
-			bitStream.writeLong(endAddrRTree);
-
-			bitStream.writeInt(comment.getBytes("utf-8").length);
-			bitStream.write(comment.getBytes("utf-8"));
-		} catch (IOException e) {
-			throw new RuntimeException(
-					"header size exceeded, increase header size! cannot build file.");
-		}
+		BinaryFileHeader header = new BinaryFileHeader(startAddrGraphHeader,
+				endAddrGraphHeader, startAddrClusterBlocks, endAddrClusterBlocks,
+				startAddrBlockPointerIdx, endAddrBlockPointerIdx, comment);
 
 		// ---------------- WRITE THE BINARY FILE --------------------------
 
-		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
-				new FileOutputStream(targetFile)));
+		out = new BufferedOutputStream(new FileOutputStream(targetFile));
 
 		// write header
-		out.write(header);
+		out.write(header.serialize());
+
+		// write graph header
+		writeFile(fGraphHeader, out);
 
 		// write cluster blocks
 		writeFile(fClusterBlocks, out);
@@ -111,16 +92,13 @@ public class BinaryFileWriter {
 		// write cluster blocks
 		writeFile(fBlockPointerIdx, out);
 
-		// write cluster blocks
-		writeFile(fRTree, out);
-
 		out.flush();
 		out.close();
 
 		// clean up
+		fGraphHeader.delete();
 		fClusterBlocks.delete();
 		fBlockPointerIdx.delete();
-		fRTree.delete();
 	}
 
 	private static long writeFile(File f, OutputStream oStream) throws IOException {
@@ -137,12 +115,24 @@ public class BinaryFileWriter {
 		return offset;
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		String map = "Ger";
+	public static void main(String[] args) throws IOException, ClassNotFoundException,
+			SQLException {
+		LevelGraph levelGraph;
+		KCenterClustering[] clustering;
+		String map = "germany";
+
+		if (false) {
+			levelGraph = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
+					map, "postgres", "admin"));
+			Serializer.serialize(new File(map + ".levelGraph"), levelGraph);
+			clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
+					100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+			Serializer.serialize(new File(map + ".clustering"), clustering);
+		}
 
 		System.out.print("reading input data (" + map + ") ... ");
-		LevelGraph levelGraph = Serializer.deserialize(new File("g" + map));
-		KCenterClustering[] clustering = Serializer.deserialize(new File("c" + map));
+		levelGraph = Serializer.deserialize(new File(map + ".levelGraph"));
+		clustering = Serializer.deserialize(new File(map + ".clustering"));
 		System.out.println("ready!");
 
 		File file = new File(map + ".mobile_hh");

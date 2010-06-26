@@ -24,6 +24,8 @@ public interface ICluster extends Serializable {
 
 	public int[] getVertices();
 
+	public void swapVertices(int i, int j);
+
 	public int size();
 
 }

@@ -213,9 +213,4 @@ public class BitSerializer {
 		}
 		return bytesToLong(BUFFER);
 	}
-
-	public static byte numBitsToEncodeUInt(int minVal, int maxVal) {
-		int interval = maxVal - minVal + 1;
-		return (byte) (Math.floor(Math.log(interval) / Math.log(2)) + 1);
-	}
 }

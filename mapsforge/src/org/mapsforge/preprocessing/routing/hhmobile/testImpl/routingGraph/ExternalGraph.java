@@ -14,19 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
+package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
-final class IndirectVertexPointer {
-	public final int blockIdOffset;
-	public final int vertexOffset;
+public class ExternalGraph {
 
-	public IndirectVertexPointer(int blockIdOffset, int vertexOffset) {
-		this.blockIdOffset = blockIdOffset;
-		this.vertexOffset = vertexOffset;
+	public ExternalGraph() {
+
 	}
 
-	@Override
-	public String toString() {
-		return blockIdOffset + ":" + vertexOffset;
-	}
 }

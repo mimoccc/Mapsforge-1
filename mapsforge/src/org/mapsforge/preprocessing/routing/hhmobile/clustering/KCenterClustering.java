@@ -125,6 +125,13 @@ public class KCenterClustering implements IClustering {
 		}
 
 		@Override
+		public void swapVertices(int i, int j) {
+			int tmp = vertices.get(i);
+			vertices.set(i, vertices.get(j));
+			vertices.set(j, tmp);
+		}
+
+		@Override
 		public int size() {
 			return vertices.size();
 		}

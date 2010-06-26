@@ -160,20 +160,4 @@ public class ClusteringEvaluator {
 		}
 		return max;
 	}
-
-	private static double min(double[] arr) {
-		double min = Integer.MAX_VALUE;
-		for (int i = 0; i < arr.length; i++) {
-			min = Math.min(arr[i], min);
-		}
-		return min;
-	}
-
-	private static double max(double[] arr) {
-		double max = Integer.MIN_VALUE;
-		for (int i = 0; i < arr.length; i++) {
-			max = Math.max(arr[i], max);
-		}
-		return max;
-	}
 }

@@ -82,6 +82,7 @@ public class RendererV2 {
 	private final HashMap<IEdge[], Color> routes;
 	private IClustering clustering;
 	private HashMap<ICluster, Color> clusterColors;
+	private final HashMap<GeoCoordinate, Color> circles;
 
 	private int zoomLevel;
 	private GeoCoordinate center;
@@ -101,6 +102,7 @@ public class RendererV2 {
 		this.fgColor = fgColor;
 
 		this.routes = new HashMap<IEdge[], Color>();
+		this.circles = new HashMap<GeoCoordinate, Color>();
 		this.canvas = new BufferedCanvas(width, height);
 
 		canvas.clear(bgColor);
@@ -143,6 +145,7 @@ public class RendererV2 {
 		canvas.clear(bgColor);
 		drawGraph();
 		drawRoutes();
+		drawCircles();
 		canvas.update();
 	}
 
@@ -171,6 +174,10 @@ public class RendererV2 {
 				canvas.update();
 			}
 		}
+	}
+
+	public void addCircle(GeoCoordinate coord, Color c) {
+		circles.put(coord, c);
 	}
 
 	public void clearRoutes() {
@@ -285,6 +292,14 @@ public class RendererV2 {
 		for (IEdge[] route : routes.keySet()) {
 			Color c = routes.get(route);
 			drawRoute(route, c);
+		}
+	}
+
+	private void drawCircles() {
+		for (GeoCoordinate coord : circles.keySet()) {
+			Color c = circles.get(coord);
+			ScreenCoordinate sc = geoToScreen(coord);
+			canvas.drawCircle(sc.x, sc.y, c, 3);
 		}
 	}
 

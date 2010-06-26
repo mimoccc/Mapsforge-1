@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.extmem.graph;
+package org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
 

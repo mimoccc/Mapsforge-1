@@ -16,6 +16,9 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.util;
 
+import gnu.trove.set.hash.THashSet;
+
+import java.util.Collection;
 import java.util.Random;
 
 public final class Utils {
@@ -115,8 +118,21 @@ public final class Utils {
 	}
 
 	public static byte numBitsToEncode(int minVal, int maxVal) {
-		int interval = maxVal - minVal + 1;
+		int interval = maxVal - minVal;
 		return (byte) (Math.floor(Math.log(interval) / Math.log(2)) + 1);
 	}
 
+	public static <T> void removeDuplicates(Collection<T> a) {
+		THashSet<T> set = new THashSet<T>();
+		set.addAll(a);
+		a.clear();
+		a.addAll(set);
+	}
+
+	public static void main(String[] args) {
+		for (int i = 0; i < 65; i++) {
+			System.out.println(i + " " + numBitsToEncode(0, i));
+		}
+
+	}
 }

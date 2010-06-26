@@ -21,13 +21,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class LevelGraph implements Serializable {
@@ -40,6 +38,7 @@ public class LevelGraph implements Serializable {
 	private final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, vLon, vLat, eSource, eTarget,
 			eWeight;
 	private final BitArray[] eDirection;
+	private final BitArray eIsShortcut;
 	private final int numLevels, numVertices, numLvlVertices, numEdges;
 
 	private final Level[] levels;
@@ -69,6 +68,7 @@ public class LevelGraph implements Serializable {
 		eTarget = new int[numEdges];
 		eWeight = new int[numEdges];
 		eDirection = new BitArray[] { new BitArray(numEdges), new BitArray(numEdges) };
+		this.eIsShortcut = new BitArray(numEdges);
 		levels = new Level[numLevels];
 
 		// copy data to arrays
@@ -105,6 +105,7 @@ public class LevelGraph implements Serializable {
 			eWeight[offset] = e.weight;
 			eDirection[FWD].set(offset, e.fwd);
 			eDirection[BWD].set(offset, e.bwd);
+			eIsShortcut.set(offset, e.minLvl > 0);
 			if (vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] == -1) {
 				vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] = offset;
 			}
@@ -249,6 +250,10 @@ public class LevelGraph implements Serializable {
 			public int getLevel() {
 				return lvl;
 			}
+
+			public int getMaxLevel() {
+				return vFirstLvlVertex[id + 1] - vFirstLvlVertex[id] - 1;
+			}
 		}
 
 		public class LevelEdge implements IEdge, Serializable {
@@ -283,27 +288,10 @@ public class LevelGraph implements Serializable {
 			public boolean isBackward() {
 				return eDirection[BWD].get(id);
 			}
-		}
-	}
 
-	public static void main(String[] args) throws SQLException {
-		LevelGraph hh = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
-				"berlin", "postgres", "admin"));
-		System.out.println(hh.getLevel(0).getVertex(0).getOutboundEdges().length);
-		System.out.println(hh.getLevel(1).getVertex(0).getOutboundEdges().length);
-
-		for (int i = 0; i < hh.numLevels; i++) {
-			Level l = hh.getLevel(i);
-			System.out.println(l.numVertices() + " " + l.numEdges());
-			int vertexCount = 0;
-			int edgeCount = 0;
-			for (Iterator<LevelVertex> iter = l.getVertices(); iter.hasNext();) {
-				LevelVertex v = iter.next();
-				vertexCount++;
-				edgeCount += v.getOutboundEdges().length;
+			public boolean isShortcut() {
+				return eIsShortcut.get(id);
 			}
-			System.out.println(vertexCount + " " + edgeCount);
 		}
 	}
-
 }

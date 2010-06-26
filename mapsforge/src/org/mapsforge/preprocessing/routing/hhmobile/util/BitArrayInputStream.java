@@ -43,6 +43,12 @@ public class BitArrayInputStream {
 		return bitsAvailable;
 	}
 
+	public void read(byte[] b) throws IOException {
+		for (int i = 0; i < b.length; i++) {
+			b[i] = readByte();
+		}
+	}
+
 	public boolean readBit() throws IOException {
 		if (bitsAvailable >= 1) {
 			boolean val = BitSerializer.readBit(buff, byteOffset, bitOffset);
@@ -102,7 +108,9 @@ public class BitArrayInputStream {
 		if (bitOffset != 0) {
 			_byteOffset++;
 		}
-		_byteOffset += byteAlignment - (_byteOffset % byteAlignment);
+		if (_byteOffset % byteAlignment != 0) {
+			_byteOffset += byteAlignment - (_byteOffset % byteAlignment);
+		}
 		if (_byteOffset <= buff.length) {
 			byteOffset = _byteOffset;
 			bitOffset = 0;
@@ -113,6 +121,18 @@ public class BitArrayInputStream {
 	}
 
 	public void setPointer(int _byteOffset, int _bitOffset) throws IOException {
+		if (_byteOffset < buff.length || (_byteOffset == buff.length && _bitOffset == 0)) {
+			byteOffset = _byteOffset;
+			bitOffset = _bitOffset;
+			bitsAvailable = ((buff.length - byteOffset) * 8L) - bitOffset;
+		} else {
+			throw new IOException();
+		}
+	}
+
+	public void skipBits(int nBits) throws IOException {
+		int _byteOffset = byteOffset + ((bitOffset + nBits) / 8);
+		int _bitOffset = (bitOffset + nBits) % 8;
 		if (_byteOffset < buff.length || (_byteOffset == buff.length && _bitOffset == 0)) {
 			byteOffset = _byteOffset;
 			bitOffset = _bitOffset;

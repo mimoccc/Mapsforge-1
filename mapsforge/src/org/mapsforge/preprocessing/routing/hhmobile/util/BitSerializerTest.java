@@ -25,13 +25,14 @@ import org.junit.Test;
 
 public class BitSerializerTest {
 
+	private final static int N = 10000;
+
 	@Test
 	public void testByteRW() {
 		long seed = System.currentTimeMillis();
-		int n = 10000;
-		byte[] buff = new byte[n];
+		byte[] buff = new byte[N];
 		int bitOffset = 1;
-		int[] byteOffsets = getRandomOffsets(n - 1, 1);
+		int[] byteOffsets = getRandomOffsets(N - 1, 1);
 
 		Random rnd = new Random(seed);
 		for (int i = 0; i < byteOffsets.length; i++) {
@@ -49,10 +50,9 @@ public class BitSerializerTest {
 	@Test
 	public void testShortRW() {
 		long seed = System.currentTimeMillis();
-		int n = 10000;
 		int alignment = 2;
-		byte[] buff = new byte[n * alignment];
-		int[] byteOffsets = getRandomOffsets(n - 1, alignment);
+		byte[] buff = new byte[N * alignment];
+		int[] byteOffsets = getRandomOffsets(N - 1, alignment);
 
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
@@ -73,10 +73,9 @@ public class BitSerializerTest {
 	@Test
 	public void testIntRW() {
 		long seed = System.currentTimeMillis();
-		int n = 10000;
 		int alignment = 4;
-		byte[] buff = new byte[n * alignment];
-		int[] byteOffsets = getRandomOffsets(n - 1, alignment);
+		byte[] buff = new byte[N * alignment];
+		int[] byteOffsets = getRandomOffsets(N - 1, alignment);
 
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
@@ -96,10 +95,9 @@ public class BitSerializerTest {
 	@Test
 	public void testLongRW() {
 		long seed = System.currentTimeMillis();
-		int n = 10000;
 		int alignment = 8;
-		byte[] buff = new byte[n * alignment];
-		int[] byteOffsets = getRandomOffsets(n - 1, alignment);
+		byte[] buff = new byte[N * alignment];
+		int[] byteOffsets = getRandomOffsets(N - 1, alignment);
 
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
@@ -118,11 +116,10 @@ public class BitSerializerTest {
 
 	@Test
 	public void testUintRW() {
-		int n = 10000;
-		int[] vals = getRandomInts(n);
-		byte[] buff = new byte[n * 64];
-		int[] byteOffset = new int[n];
-		int[] bitOffset = new int[n];
+		int[] vals = getRandomInts(N);
+		byte[] buff = new byte[N * 64];
+		int[] byteOffset = new int[N];
+		int[] bitOffset = new int[N];
 		byteOffset[0] = 0;
 		bitOffset[0] = 0;
 		for (int i = 1; i < vals.length; i++) {
@@ -131,7 +128,7 @@ public class BitSerializerTest {
 			bitOffset[i] = (bitOffset[i - 1] + nBits) % 8;
 		}
 
-		int[] order = getRandomOffsets(n, 1);
+		int[] order = getRandomOffsets(N, 1);
 		for (int i = 1; i < order.length; i++) {
 			int nBits = (int) Math.floor(Math.log(vals[order[i]]) / Math.log(2)) + 1;
 			BitSerializer.writeUInt(vals[order[i]], nBits, buff, byteOffset[order[i]],
@@ -146,6 +143,42 @@ public class BitSerializerTest {
 					bitOffset[order[i]]);
 			assertEquals(vals[order[i]], val);
 		}
+	}
+
+	@Test
+	public void testBitRW() {
+		byte[] buff = new byte[(N / 8) + 1];
+		boolean[] bits = getRandomBooleans(N);
+		int byteOffset = 0;
+		int bitOffset = 0;
+		for (int i = 0; i < bits.length; i++) {
+			BitSerializer.writeBit(bits[i], buff, byteOffset, bitOffset);
+			bitOffset++;
+			if (bitOffset == 8) {
+				byteOffset++;
+				bitOffset = 0;
+			}
+		}
+		byteOffset = 0;
+		bitOffset = 0;
+		for (int i = 0; i < bits.length; i++) {
+			boolean b = BitSerializer.readBit(buff, byteOffset, bitOffset);
+			assertEquals(bits[i], b);
+			bitOffset++;
+			if (bitOffset == 8) {
+				byteOffset++;
+				bitOffset = 0;
+			}
+		}
+	}
+
+	private boolean[] getRandomBooleans(int n) {
+		boolean[] b = new boolean[n];
+		Random rnd = new Random();
+		for (int i = 0; i < b.length; i++) {
+			b[i] = rnd.nextBoolean();
+		}
+		return b;
 	}
 
 	private int[] getRandomOffsets(int n, int alignment) {
