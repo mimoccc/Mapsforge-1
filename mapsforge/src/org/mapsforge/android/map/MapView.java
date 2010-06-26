@@ -38,7 +38,7 @@ import android.view.ViewGroup;
 import android.widget.ZoomControls;
 
 /**
- * Custom implementation of the MapView class from the Google Maps library.
+ * An implementation of the MapView class from the Google Maps library.
  */
 public class MapView extends ViewGroup {
 	private static final int BITMAP_CACHE_SIZE = 20;
@@ -157,7 +157,7 @@ public class MapView extends ViewGroup {
 	byte zoomLevel;
 
 	/**
-	 * Constructs a new MapView with the default MapView mode.
+	 * Constructs a new MapView with the default {@link MapViewMode}.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -169,8 +169,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView. The mode can be configured via XML. Simply put an attribute
-	 * named "mode" in the layout file with a value from {@link MapViewMode}.
+	 * Constructs a new MapView. The {@link MapViewMode} can be configured via XML with the
+	 * "mode" attribute in the layout file.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -200,7 +200,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView.
+	 * Constructs a new MapView with the given MapViewMode.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -220,7 +220,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the {@link MapController} for this MapView.
+	 * Returns the MapController for this MapView.
 	 * 
 	 * @return the MapController.
 	 */
@@ -252,7 +252,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the center coordinates of the current map file as a GeoPoint object.
+	 * Returns the center coordinates of the current map file as a GeoPoint.
 	 * 
 	 * @return the center coordinates of the map file.
 	 * @throws UnsupportedOperationException
@@ -310,7 +310,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Convenience method to check for a valid current map file.
+	 * Checks for a valid current map file.
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
 	 * @throws UnsupportedOperationException
@@ -437,7 +437,7 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Sets the new size of the file cache. If the cache already contains more items than the
-	 * new capacity allows, items are discarded based on the normal file cache policy.
+	 * new capacity allows, items are discarded based on the cache policy.
 	 * 
 	 * @param newCacheSize
 	 *            the new capacity of the file cache.
@@ -560,12 +560,18 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets an internal text variable to an arbitrary string.
+	 * Overrides an internal text field with the given string.
+	 * 
+	 * Currently the following text fields can be set:
+	 * <ul>
+	 * <li>unit_symbol_kilometer</li>
+	 * <li>unit_symbol_meter</li>
+	 * </ul>
 	 * 
 	 * @param name
-	 *            the name of the text variable to set.
+	 *            the name of the text field to override.
 	 * @param value
-	 *            the new value of the text variable.
+	 *            the new value of the text field.
 	 * @return true, if the new value could be set, false otherwise.
 	 */
 	public boolean setText(String name, String value) {

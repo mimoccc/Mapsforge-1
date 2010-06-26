@@ -17,7 +17,7 @@
 package org.mapsforge.android.map;
 
 /**
- * Custom implementation of the GeoPoint class from the Google Maps library.
+ * An implementation of the GeoPoint class from the Google Maps library.
  */
 public class GeoPoint implements Comparable<GeoPoint> {
 	private static final int MULTIPLICATION_FACTOR = 1000000;
@@ -89,7 +89,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Get the latitude value of this GeoPoint in degrees.
+	 * Gets the latitude value of this GeoPoint in degrees.
 	 * 
 	 * @return the latitude value in degrees.
 	 */
@@ -98,7 +98,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Get the latitude value of this GeoPoint in microdegrees.
+	 * Gets the latitude value of this GeoPoint in microdegrees.
 	 * 
 	 * @return the latitude value in microdegrees.
 	 */
@@ -107,7 +107,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Get the longitude value of this GeoPoint in degrees.
+	 * Gets the longitude value of this GeoPoint in degrees.
 	 * 
 	 * @return the longitude value in degrees.
 	 */
@@ -116,7 +116,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Get the longitude value of this GeoPoint in microdegrees.
+	 * Gets the longitude value of this GeoPoint in microdegrees.
 	 * 
 	 * @return the longitude value in microdegrees.
 	 */

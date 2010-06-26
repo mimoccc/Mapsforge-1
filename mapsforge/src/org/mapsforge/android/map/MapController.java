@@ -20,7 +20,7 @@ import android.view.KeyEvent;
 import android.view.View;
 
 /**
- * Custom implementation of the MapController class from the Google Maps library.
+ * An implementation of the MapController class from the Google Maps library.
  */
 public final class MapController implements android.view.View.OnKeyListener {
 	private MapView mapView;
@@ -42,7 +42,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * Set the center of the MapView.
+	 * Sets the center of the MapView.
 	 * 
 	 * @param point
 	 *            the new center point.
@@ -52,7 +52,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * Set the zoom level of the MapView.
+	 * Sets the zoom level of the MapView.
 	 * 
 	 * @param zoomLevel
 	 *            the new zoom level. This will be limited by the maximum possible zoom level.
@@ -63,7 +63,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * If possible, increase the zoom level of the MapView.
+	 * Increases the zoom level of the MapView.
 	 * 
 	 * @return true, if the zoom level was changed, false otherwise.
 	 */
@@ -72,7 +72,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * If possible, decrease the zoom level of the MapView.
+	 * Decreases the zoom level of the MapView.
 	 * 
 	 * @return true, if the zoom level was changed, false otherwise.
 	 */

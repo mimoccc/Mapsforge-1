@@ -23,7 +23,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 /**
- * Custom implementation of the MapActivity class from the Google Maps library.
+ * An implementation of the MapActivity class from the Google Maps library.
  */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES_FILE = "MapActivity";
