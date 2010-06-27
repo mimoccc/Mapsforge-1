@@ -67,11 +67,11 @@ public class RoutingGraph {
 		return numLevels;
 	}
 
-	public Vertex getRandomVertex() throws IOException {
+	public Vertex getRandomVertex(int lvl) throws IOException {
 		Random rnd = new Random();
 		int blockId = rnd.nextInt(blockReader.getNumBlocks());
 		Vertex v = getVertex(blockId << shiftClusterId);
-		while (v.getLvl() != 2) {
+		while (v.getLvl() != lvl) {
 			blockId = rnd.nextInt(blockReader.getNumBlocks());
 			v = getVertex(blockId << shiftClusterId);
 		}
@@ -118,8 +118,8 @@ public class RoutingGraph {
 		String map = "berlin";
 
 		RoutingGraph router = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
-		Vertex s = router.getRandomVertex();
-		Vertex t = router.getRandomVertex();
+		Vertex s = router.getRandomVertex(0);
+		Vertex t = router.getRandomVertex(0);
 		System.out.println(s);
 		System.out.println(t);
 

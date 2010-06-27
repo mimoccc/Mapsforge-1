@@ -49,7 +49,8 @@ public class ClusteringEvaluator {
 		// quad
 		QuadTreeClustering quadClustering = QuadTreeClusteringAlgorithm.computeClustering(
 				graph, levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
-				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2);
+				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2,
+				levelGraph.getLevel(0).numVertices());
 
 		// render
 		IRouter router = RouterFactory.getRouter();

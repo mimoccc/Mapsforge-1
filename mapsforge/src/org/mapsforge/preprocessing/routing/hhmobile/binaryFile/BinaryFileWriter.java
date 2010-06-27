@@ -28,8 +28,7 @@ import java.sql.SQLException;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphSerializer;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClusteringAlgorithm;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.DBConnection;
@@ -118,15 +117,19 @@ public class BinaryFileWriter {
 	public static void main(String[] args) throws IOException, ClassNotFoundException,
 			SQLException {
 		LevelGraph levelGraph;
-		KCenterClustering[] clustering;
+		IClustering[] clustering;
 		String map = "berlin";
 
-		if (false) {
+		if (true) {
 			levelGraph = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
 					map, "postgres", "admin"));
 			Serializer.serialize(new File(map + ".levelGraph"), levelGraph);
-			clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
-					100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+			clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
+					levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
+					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 200);
+			// clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
+			// 100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+
 			Serializer.serialize(new File(map + ".clustering"), clustering);
 		}
 

@@ -45,7 +45,7 @@ public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>
 	}
 
 	public void decreaseKey(I item, K newKey) {
-		if (newKey.compareTo(item.getHeapKey()) < 0) {
+		if (newKey.compareTo(item.getHeapKey()) <= 0) {
 			item.setHeapKey(newKey);
 			moveUpward(item.getHeapIndex());
 		}

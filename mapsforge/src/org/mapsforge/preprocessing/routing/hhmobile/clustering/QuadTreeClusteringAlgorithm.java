@@ -16,10 +16,13 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 
+import java.util.Iterator;
+
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClustering.QuadTreeCluster;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.IVertex;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class QuadTreeClusteringAlgorithm {
@@ -37,30 +40,39 @@ public class QuadTreeClusteringAlgorithm {
 			int heuristik, int threshold) throws IllegalArgumentException {
 		QuadTreeClustering[] clustering = new QuadTreeClustering[graph.length];
 		for (int i = 0; i < graph.length; i++) {
-			clustering[i] = computeClustering(graph[i], lon, lat, heuristik, threshold);
+			clustering[i] = computeClustering(graph[i], lon, lat, heuristik, threshold,
+					graph[0].numVertices());
 		}
 		return clustering;
 	}
 
 	public static QuadTreeClustering computeClustering(IGraph graph, int[] lon, int[] lat,
-			int heuristik, int threshold) throws IllegalArgumentException {
-		if (lon.length != lat.length || lon.length != graph.numVertices()) {
-			throw new IllegalArgumentException(
-					"Must pass exactly one coordinate for each vertex");
-		}
+			int heuristik, int threshold, int numVerticesLvlZero)
+			throws IllegalArgumentException {
 		System.out.println("computing quad-clustering (|V|=" + graph.numVertices()
 				+ ", threshold=" + threshold + ", heuristic=" + HEURISTIC_NAMES[heuristik]
 				+ ")");
 
 		// due to reordering we also store and reorder vertexIds to keep the mapping
-		int[] vertexId = new int[lon.length];
-		for (int i = 0; i < vertexId.length; i++) {
-			vertexId[i] = i;
+		// int[] vertexId = new int[lon.length];
+		// for (int i = 0; i < vertexId.length; i++) {
+		// vertexId[i] = i;
+		// }
+		int[] vertexId = new int[graph.numVertices()];
+		int[] lon_ = new int[graph.numVertices()];
+		int[] lat_ = new int[graph.numVertices()];
+		int i = 0;
+		for (Iterator<? extends IVertex> iter = graph.getVertices(); iter.hasNext();) {
+			IVertex v = iter.next();
+			vertexId[i] = v.getId();
+			lon_[i] = lon[v.getId()];
+			lat_[i] = lat[v.getId()];
+			i++;
 		}
 
 		// subdivide
-		QuadTreeClustering clustering = new QuadTreeClustering(graph.numVertices());
-		subdivide(vertexId, lon, lat, 0, vertexId.length, heuristik, clustering, threshold);
+		QuadTreeClustering clustering = new QuadTreeClustering(numVerticesLvlZero);
+		subdivide(vertexId, lon_, lat_, 0, vertexId.length, heuristik, clustering, threshold);
 
 		// restore initial ordering
 		SortableVertices s = new SortableVertices(vertexId, lon, lat);

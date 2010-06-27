@@ -55,14 +55,7 @@ public class DijkstraAlgorithm {
 		discovered.put(s.vertexId, s);
 		while (!queue.isEmpty()) {
 			HeapItem _u = queue.extractMin();
-			// if (_u.parent != null) {
-			// System.out.println("(" + graph.getBlockId(_u.parent.getId()) + ","
-			// + graph.getVertexOffset(_u.parent.getId()) + ")" + " -> ("
-			// + graph.getBlockId(_u.vertexId) + ","
-			// + graph.getVertexOffset(_u.vertexId) + ")");
-			// }
 			Vertex u = graph.getVertex(_u.vertexId);
-
 			if (u.getId() == targetId) {
 				break;
 			}
@@ -141,8 +134,8 @@ public class DijkstraAlgorithm {
 
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
-			Vertex s = graph.getRandomVertex();
-			Vertex t = graph.getRandomVertex();
+			Vertex s = graph.getRandomVertex(0);
+			Vertex t = graph.getRandomVertex(0);
 			int distance = d.getShortestPath(s.getId(), t.getId(), sp);
 			for (Vertex v : sp) {
 				Vertex v_ = graph.getVertex(v.getIdLvlZero());
