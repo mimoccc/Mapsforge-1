@@ -296,8 +296,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			} else if (nameColor == AREA_NAME_RED) {
 				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
-			} else {
-				Logger.d("unknown render mode: " + nameColor);
 			}
 		}
 	}
@@ -1963,9 +1961,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
 		}
 
-		/* unknown */
+		/* unknown node */
 		else {
-			Logger.d("unknown node");
 			return;
 		}
 	}

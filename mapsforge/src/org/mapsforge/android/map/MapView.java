@@ -16,6 +16,7 @@
  */
 package org.mapsforge.android.map;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 
 import android.content.Context;
@@ -47,6 +48,7 @@ public class MapView extends ViewGroup {
 	private static final int DEFAULT_MOVE_SPEED = 10;
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
 	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
+	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
 	private static final short MAP_SCALE_HEIGHT = 35;
 	private static final int[] MAP_SCALE_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
@@ -152,6 +154,7 @@ public class MapView extends ViewGroup {
 	private Handler zoomControlsHideHandler;
 	double latitude;
 	double longitude;
+	final int mapViewId;
 	Matrix matrix;
 	ZoomControls zoomControls;
 	byte zoomLevel;
@@ -196,6 +199,7 @@ public class MapView extends ViewGroup {
 		} else {
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
 		}
+		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
 	}
 
@@ -216,6 +220,7 @@ public class MapView extends ViewGroup {
 		}
 		this.mapActivity = (MapActivity) context;
 		this.mapViewMode = mapViewMode;
+		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
 	}
 
@@ -713,9 +718,11 @@ public class MapView extends ViewGroup {
 		// create the image bitmap cache
 		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
 
-		// create the image file cache
+		// create the image file cache with a unique directory
 		this.imageFileCache = new ImageFileCache(Environment.getExternalStorageDirectory()
-				.getAbsolutePath(), this.fileCacheSize);
+				.getAbsolutePath()
+				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
+				this.fileCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);

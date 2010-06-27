@@ -40,7 +40,7 @@ class ImageFileCache {
 	private FileOutputStream fileOutputStream;
 	private File imageFile;
 	private LinkedHashMap<Tile, File> map;
-	private final String tempDir;
+	private final File tempDir;
 
 	/**
 	 * Constructs an image file cache with a fixes size and LRU policy.
@@ -56,8 +56,22 @@ class ImageFileCache {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}
-		this.tempDir = tempDir;
-		this.capacity = capacity;
+		this.tempDir = new File(tempDir);
+		// check if the cache directory exists
+		if (!this.tempDir.exists()) {
+			// check if the cache directory could be created
+			if (this.tempDir.mkdirs()) {
+				this.capacity = capacity;
+			} else {
+				this.capacity = 0;
+			}
+		} else if (!this.tempDir.isDirectory() || !this.tempDir.canRead()
+				|| !this.tempDir.canWrite()) {
+			this.capacity = 0;
+		} else {
+			this.capacity = capacity;
+		}
+
 		this.map = createMap(this.capacity);
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
@@ -98,6 +112,12 @@ class ImageFileCache {
 			}
 			this.map.clear();
 			this.map = null;
+		}
+		// delete the cache directory
+		if (this.tempDir != null) {
+			if (!this.tempDir.delete()) {
+				this.tempDir.deleteOnExit();
+			}
 		}
 	}
 

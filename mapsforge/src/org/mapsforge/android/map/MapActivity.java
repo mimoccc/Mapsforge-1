@@ -27,13 +27,17 @@ import android.content.SharedPreferences.Editor;
  */
 public abstract class MapActivity extends Activity {
 	private static final String PREFERENCES_FILE = "MapActivity";
+	private int mapViewId;
 	private ArrayList<MapView> mapViews = new ArrayList<MapView>(2);
 
 	private void destroyMapViews() {
 		if (this.mapViews != null) {
-			for (MapView currentMapView : this.mapViews) {
+			MapView currentMapView;
+			while (!this.mapViews.isEmpty()) {
+				currentMapView = this.mapViews.get(0);
 				currentMapView.destroyMapView();
 			}
+			currentMapView = null;
 			this.mapViews.clear();
 			this.mapViews = null;
 		}
@@ -79,6 +83,15 @@ public abstract class MapActivity extends Activity {
 		for (MapView currentMapView : this.mapViews) {
 			currentMapView.onResume();
 		}
+	}
+
+	/**
+	 * Returns a unique MapView ID.
+	 * 
+	 * @return the new ID.
+	 */
+	final int getMapViewId() {
+		return ++mapViewId;
 	}
 
 	final void registerMapView(MapView mapView) {
