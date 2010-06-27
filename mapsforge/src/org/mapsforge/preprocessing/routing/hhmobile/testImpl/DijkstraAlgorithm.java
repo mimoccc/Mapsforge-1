@@ -30,16 +30,15 @@ import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
-public class Dijkstra {
+public class DijkstraAlgorithm {
 
 	private final BinaryMinHeap<HeapItem, Integer> queue;
 	private final RoutingGraph graph;
 	private final TIntObjectHashMap<HeapItem> discovered;
 
-	public Dijkstra(RoutingGraph graph) {
+	public DijkstraAlgorithm(RoutingGraph graph) {
 		this.queue = new BinaryMinHeap<HeapItem, Integer>(10000);
 		this.graph = graph;
 		this.discovered = new TIntObjectHashMap<HeapItem>();
@@ -130,27 +129,34 @@ public class Dijkstra {
 
 	public static void main(String[] args) throws IOException {
 		String map = "berlin";
+		int n = 10;
 
 		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
 
-		Dijkstra d = new Dijkstra(graph);
+		DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
 		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
 				Color.BLACK);
 		LinkedList<Vertex> sp = new LinkedList<Vertex>();
 
 		long time = System.currentTimeMillis();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < n; i++) {
 			Vertex s = graph.getRandomVertex();
 			Vertex t = graph.getRandomVertex();
 			int distance = d.getShortestPath(s.getId(), t.getId(), sp);
-			System.out.println(distance);
 			for (Vertex v : sp) {
-				renderer.addCircle(new GeoCoordinate(v.getLat(), v.getLon()), Color.BLUE);
+				// renderer.addCircle(new GeoCoordinate(v.getLat(), v.getLon()), Color.BLUE);
+				Vertex vv = v;
+				while (vv.getIdOverly() != -1) {
+					vv = graph.getVertex(vv.getIdOverly());
+					System.out.println(vv);
+				}
 			}
 			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
 			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
 			sp.clear();
 		}
-		System.out.println((System.currentTimeMillis() - time) + "ms.");
+		System.out.println("num routes : " + n);
+		System.out.println("cache misses : " + graph.numCacheMisses);
+		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}
 }

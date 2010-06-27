@@ -42,44 +42,44 @@ class Block {
 	private final int minLon;
 	private final int minLat;
 
-	public final byte bpLon, bpLat, bpOffsEdgeInt, bpOffsEdgeExt, bpOffsBlockAdj,
+	private final byte bpLon, bpLat, bpOffsEdgeInt, bpOffsEdgeExt, bpOffsBlockAdj,
 			bpOffsBlockSubj, bpOffsBlockOverly, bpOffsBlockLvlZero, bpEdgeWeight;
 
-	public final int startAddrBlockAdj;
-	public final int startAddrBlockSubj;
-	public final int startAddrBlockOverly;
-	public final int startAddrBlockLevelZero;
+	private final int startAddrBlockAdj;
+	private final int startAddrBlockSubj;
+	private final int startAddrBlockOverly;
+	private final int startAddrBlockLevelZero;
 
-	public final int startAddrVOffsBlockSubj;
-	public final int startAddrVOffsVertexSubj;
-	public final int startAddrVOffsBlockOverly;
-	public final int startAddrVOffsVertexOverly;
-	public final int startAddrVOffsBlockLvlZero;
-	public final int startAddrVOffsVertexLvlZero;
+	private final int startAddrVOffsBlockSubj;
+	private final int startAddrVOffsVertexSubj;
+	private final int startAddrVOffsBlockOverly;
+	private final int startAddrVOffsVertexOverly;
+	private final int startAddrVOffsBlockLvlZero;
+	private final int startAddrVOffsVertexLvlZero;
 
-	public final int startAddrVNeighborhood;
-	public final int startAddrVLongitude;
-	public final int startAddrVLatitude;
-	public final int startAddrVOffsIntEdge;
-	public final int startAddrVOffsExtEdge;
+	private final int startAddrVNeighborhood;
+	private final int startAddrVLongitude;
+	private final int startAddrVLatitude;
+	private final int startAddrVOffsIntEdge;
+	private final int startAddrVOffsExtEdge;
 
-	public final int startAddrEIntTargetOffset;
-	public final int startAddrEIntWeight;
-	public final int startAddrEIntIsShortcut;
-	public final int startAddrEIntIsForward;
-	public final int startAddrEIntIsBackward;
-	public final int startAddrEIntIsCore;
+	private final int startAddrEIntTargetOffset;
+	private final int startAddrEIntWeight;
+	private final int startAddrEIntIsShortcut;
+	private final int startAddrEIntIsForward;
+	private final int startAddrEIntIsBackward;
+	private final int startAddrEIntIsCore;
 
-	public int startAddrEExtTargetOffsBlockAdj;
-	public int startAddrEExtTargetOffsVertexAdj;
-	public int startAddrEExtTargetOffsBlockLvlZero;
-	public int startAddrEExtTargetOffsVertexLvlZero;
+	private int startAddrEExtTargetOffsBlockAdj;
+	private int startAddrEExtTargetOffsVertexAdj;
+	private int startAddrEExtTargetOffsBlockLvlZero;
+	private int startAddrEExtTargetOffsVertexLvlZero;
 
-	public int startAddrEExtWeight;
-	public int startAddrEExtIsShortcut;
-	public int startAddrEExtIsForward;
-	public int startAddrEExtIsBackward;
-	public int startAddrEExtIsCore;
+	private int startAddrEExtWeight;
+	private int startAddrEExtIsShortcut;
+	private int startAddrEExtIsForward;
+	private int startAddrEExtIsBackward;
+	private int startAddrEExtIsCore;
 
 	public Block(byte[] b, BlockedGraphHeader graphHeader, int blockId) throws IOException {
 		this.bId = blockId;
@@ -274,7 +274,7 @@ class Block {
 			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsBlockLvlZero + (graphHeader.bpClusterId * i);
+			offset = startAddrVOffsVertexLvlZero + (graphHeader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
 					offset / 8, offset % 8);
 			idLvlZero = getVertexId(_blockId, _vertexOffset);
@@ -290,7 +290,7 @@ class Block {
 			offset = startAddrBlockSubj + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsBlockSubj + (graphHeader.bpClusterId * i);
+			offset = startAddrVOffsVertexSubj + (graphHeader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
 					offset / 8, offset % 8);
 			idSubj = getVertexId(_blockId, _vertexOffset);
@@ -308,7 +308,7 @@ class Block {
 			offset = startAddrBlockOverly + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsBlockOverly + (graphHeader.bpClusterId * i);
+			offset = startAddrVOffsVertexOverly + (graphHeader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
 					offset / 8, offset % 8);
 			idOverly = getVertexId(_blockId, _vertexOffset);
