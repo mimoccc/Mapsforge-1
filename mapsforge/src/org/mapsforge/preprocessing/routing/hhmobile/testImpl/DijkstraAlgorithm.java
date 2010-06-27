@@ -30,6 +30,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
+import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
 public class DijkstraAlgorithm {
@@ -144,11 +145,13 @@ public class DijkstraAlgorithm {
 			Vertex t = graph.getRandomVertex();
 			int distance = d.getShortestPath(s.getId(), t.getId(), sp);
 			for (Vertex v : sp) {
-				// renderer.addCircle(new GeoCoordinate(v.getLat(), v.getLon()), Color.BLUE);
-				Vertex vv = v;
-				while (vv.getIdOverly() != -1) {
-					vv = graph.getVertex(vv.getIdOverly());
-					System.out.println(vv);
+				Vertex v_ = graph.getVertex(v.getIdLvlZero());
+				renderer.addCircle(new GeoCoordinate(v_.getLat(), v_.getLon()), Color.BLUE);
+
+				Edge e = v.getOutboundEdges()[0];
+				Vertex et = graph.getVertex(e.getTargetId());
+				if (et.getIdLvlZero() != e.getTargetIdLvlZero()) {
+					System.out.println("error");
 				}
 			}
 			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);

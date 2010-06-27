@@ -386,17 +386,18 @@ class Block {
 		if (lvl == 0) {
 			targetIdLvlZero = targetId;
 		} else {
+			// read level zero id of internal vertex (analog to code within getVertex())
 			offset = startAddrVOffsBlockLvlZero + (bpOffsBlockLvlZero * _targetVertexOffset);
-			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
+			int _blockOffsetLvlZero = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
 					offset / 8, offset % 8);
-			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _blockOffset);
-			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
+			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _blockOffsetLvlZero);
+			int _blockIdLvlZero = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsBlockLvlZero
-					+ (graphHeader.bpClusterId * _targetVertexOffset);
-			int _vertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
-					offset / 8, offset % 8);
-			targetIdLvlZero = getVertexId(_blockId, _vertexOffset);
+			offset = startAddrVOffsVertexLvlZero
+					+ (graphHeader.bpVertexCount * _targetVertexOffset);
+			int _vertexOffsetLvlZero = (int) BitSerializer.readUInt(data,
+					graphHeader.bpVertexCount, offset / 8, offset % 8);
+			targetIdLvlZero = getVertexId(_blockIdLvlZero, _vertexOffsetLvlZero);
 		}
 
 		int weight;
@@ -448,8 +449,7 @@ class Block {
 					+ (graphHeader.bpClusterId * _targetBlockOffsetLvlZero);
 			int _targetBlockIdLvlZero = (int) BitSerializer.readUInt(data,
 					graphHeader.bpClusterId, offset / 8, offset % 8);
-			offset = startAddrVOffsBlockLvlZero
-					+ (graphHeader.bpClusterId * _targetVertexOffset);
+			offset = startAddrEExtTargetOffsVertexLvlZero + (i * graphHeader.bpVertexCount);
 			int _targetVertexOffsetLvlZero = (int) BitSerializer.readUInt(data,
 					graphHeader.bpVertexCount, offset / 8, offset % 8);
 			targetIdLvlZero = getVertexId(_targetBlockIdLvlZero, _targetVertexOffsetLvlZero);

@@ -71,7 +71,7 @@ public class RoutingGraph {
 		Random rnd = new Random();
 		int blockId = rnd.nextInt(blockReader.getNumBlocks());
 		Vertex v = getVertex(blockId << shiftClusterId);
-		while (v.getLvl() != 0) {
+		while (v.getLvl() != 2) {
 			blockId = rnd.nextInt(blockReader.getNumBlocks());
 			v = getVertex(blockId << shiftClusterId);
 		}
