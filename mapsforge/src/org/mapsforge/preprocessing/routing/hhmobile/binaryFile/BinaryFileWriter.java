@@ -126,12 +126,20 @@ public class BinaryFileWriter {
 			Serializer.serialize(new File(map + ".levelGraph"), levelGraph);
 			clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 					levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
-					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 200);
+					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 100);
 			// clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 			// 100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 
 			Serializer.serialize(new File(map + ".clustering"), clustering);
 		}
+		for (int i = 0; i < levelGraph.numLevels(); i++) {
+			System.out.print(levelGraph.getLevel(i).numVertices() + " ");
+		}
+		System.out.println();
+		for (int i = 0; i < levelGraph.numLevels(); i++) {
+			System.out.print(levelGraph.getLevel(i).numEdges() + " ");
+		}
+		System.out.println();
 
 		System.out.print("reading input data (" + map + ") ... ");
 		levelGraph = Serializer.deserialize(new File(map + ".levelGraph"));

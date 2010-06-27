@@ -18,7 +18,6 @@ package org.mapsforge.preprocessing.routing.hhmobile.testImpl;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -29,8 +28,6 @@ import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Routin
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.RouterFactory;
 
 public class HighwayHierarchiesAlgorithm {
 
@@ -43,6 +40,7 @@ public class HighwayHierarchiesAlgorithm {
 	private final RoutingGraph graph;
 	private final Queue[] queue;
 	private final DiscoveredMap[] discovered;
+	private int[][] numSettled;
 
 	public HighwayHierarchiesAlgorithm(RoutingGraph graph) {
 		this.graph = graph;
@@ -57,14 +55,15 @@ public class HighwayHierarchiesAlgorithm {
 		queue[BWD].clear();
 		discovered[FWD].clear();
 		discovered[BWD].clear();
+		numSettled = new int[][] { new int[graph.numLevels()], new int[graph.numLevels()] };
 
 		Vertex s = graph.getVertex(sourceId);
-		HeapItem _s = new HeapItem(0, 0, 0, s, -1);
+		HeapItem _s = new HeapItem(0, 0, s.getNeighborhood(), s, -1);
 		queue[FWD].insert(_s);
 		discovered[FWD].put(s.getIdLvlZero(), _s);
 
 		Vertex t = graph.getVertex(targetId);
-		HeapItem _t = new HeapItem(0, 0, 0, t, -1);
+		HeapItem _t = new HeapItem(0, 0, t.getNeighborhood(), t, -1);
 		queue[BWD].insert(_t);
 		discovered[BWD].put(t.getIdLvlZero(), _t);
 
@@ -78,6 +77,7 @@ public class HighwayHierarchiesAlgorithm {
 			HeapItem u = queue[direction].extractMin();
 			u.heapIdx = HEAP_IDX_SETTLED;
 			shortestPathBuff.add(u.vertex);
+			numSettled[direction][u.level]++;
 
 			if (u.distance > distance) {
 				queue[direction].clear();
@@ -99,7 +99,14 @@ public class HighwayHierarchiesAlgorithm {
 			}
 			direction = (direction + 1) % 2;
 		}
-
+		for (int i = 0; i < numSettled[FWD].length; i++) {
+			System.out.print(numSettled[FWD][i] + " ");
+		}
+		System.out.println();
+		for (int i = 0; i < numSettled[BWD].length; i++) {
+			System.out.print(numSettled[BWD][i] + " ");
+		}
+		System.out.println();
 		return distance;
 	}
 
@@ -127,6 +134,7 @@ public class HighwayHierarchiesAlgorithm {
 				if (u.vertex.getNeighborhood() != Integer.MAX_VALUE
 						&& _v.getNeighborhood() == Integer.MAX_VALUE) {
 					// don't leave the core
+					result = false;
 					continue;
 				}
 				gap_ = gap - e.getWeight();
@@ -252,28 +260,31 @@ public class HighwayHierarchiesAlgorithm {
 
 	public static void main(String[] args) throws IOException {
 		String map = "berlin";
-		int n = 1;
+		int n = 100;
 
 		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
-		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.BLACK,
-				Color.WHITE);
+		// RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(),
+		// Color.BLACK,
+		// Color.WHITE);
 		LinkedList<Vertex> sp1 = new LinkedList<Vertex>();
 		LinkedList<Vertex> sp2 = new LinkedList<Vertex>();
 
 		long time = System.currentTimeMillis();
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < 1; i++) {
 			Vertex s = graph.getRandomVertex(0);
 			Vertex t = graph.getRandomVertex(0);
 			graph.clearCache();
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
-			// int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
-			// System.out.println(d1 + " ?= " + d2);
+			int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
+			if (d1 != d2) {
+				System.out.println(d1 + " != " + d2);
+			}
 			// for (Vertex v : sp1) {
 			// Vertex vLz = graph.getVertex(v.getIdLvlZero());
-			// renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
+			// // renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
 			// }
 			// for (Vertex v : sp2) {
 			// Vertex vLz = graph.getVertex(v.getIdLvlZero());

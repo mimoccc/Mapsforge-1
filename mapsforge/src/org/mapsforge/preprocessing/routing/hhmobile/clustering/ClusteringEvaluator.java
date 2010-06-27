@@ -19,11 +19,13 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import java.awt.Color;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.IRouter;
@@ -38,7 +40,8 @@ public class ClusteringEvaluator {
 		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
 				"postgres", "admin");
 		LevelGraph levelGraph = new LevelGraph(conn);
-		Level graph = levelGraph.getLevel(0);
+		int lvl = 0;
+		Level graph = levelGraph.getLevel(lvl);
 
 		// k-center
 		int avgVerticesPerCluster = 500;
@@ -51,6 +54,21 @@ public class ClusteringEvaluator {
 				graph, levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
 				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2,
 				levelGraph.getLevel(0).numVertices());
+
+		// verify
+		int count = 0;
+		for (ICluster c : quadClustering.getClusters()) {
+			count += c.size();
+		}
+		System.out.println("VERIFY " + count + ":" + levelGraph.getLevel(lvl).numVertices());
+
+		for (Iterator<LevelVertex> iter = levelGraph.getLevel(lvl).getVertices(); iter
+				.hasNext();) {
+			LevelVertex v = iter.next();
+			if (quadClustering.getCluster(v.getId()) == null) {
+				System.out.println("no cluster for vertex : " + v.getId());
+			}
+		}
 
 		// render
 		IRouter router = RouterFactory.getRouter();

@@ -18,7 +18,10 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
@@ -94,15 +97,22 @@ public class HHAlgorithmDynamicGraph {
 				d = Math.min(d, u.key.distance + u_.key.distance);
 				// System.out.println(u.key + " " + u_.key);
 			}
-
-			if (!relaxAdjacentEdges(u, direction, u.key.level, u.key.gap)) {
-				int maxLvl = u.vertex.getMaxLevel();
-				for (int lvl = u.key.level + 1; lvl <= maxLvl; lvl++) {
-					if (relaxAdjacentEdges(u, direction, lvl, u.vertex.getNeighborhood(lvl))) {
-						break;
-					}
-				}
+			int lvl = u.key.level;
+			int gap = u.key.gap;
+			int maxLvl = u.vertex.getMaxLevel();
+			while (!relaxAdjacentEdges(u, direction, lvl, gap) && lvl < maxLvl) {
+				lvl++;
+				gap = u.vertex.getNeighborhood(lvl);
 			}
+
+			// if (!relaxAdjacentEdges(u, direction, u.key.level, u.key.gap)) {
+			// int maxLvl = u.vertex.getMaxLevel();
+			// for (int lvl = u.key.level + 1; lvl <= maxLvl; lvl++) {
+			// if (relaxAdjacentEdges(u, direction, lvl, u.vertex.getNeighborhood(lvl))) {
+			// break;
+			// }
+			// }
+			// }
 			direction = (direction + 1) % 2;
 		}
 		return d;
@@ -260,37 +270,27 @@ public class HHAlgorithmDynamicGraph {
 			if (u_ != null && u_.heapIdx == -456) {
 				return u.key.distance + u_.key.distance;
 			}
-			if (direction == FWD) {
-				for (HHDynamicEdge e : u.vertex.getOutboundEdges(0)) {
-					DiscoveredVertex v = discoveredVertices[direction].get(e.getTarget()
-							.getId());
-					HeapKey key = new HeapKey(u.key.distance + e.getWeight(), 0, 0);
-					if (v == null) {
-						v = new DiscoveredVertex(e.getTarget(), e, u, key);
-						queue[direction].insert(v);
-						discoveredVertices[direction].put(v.vertex.getId(), v);
-					} else if (key.compareTo(v.key) < 0) {
-						queue[direction].decreaseKey(v, key);
-						v.parent = u;
-						v.edgeToParent = e;
-					}
+			boolean forward = direction == FWD;
+			for (HHDynamicEdge e : u.vertex.getOutboundEdges(0)) {
+				if (forward && !e.isForward()) {
+					continue;
 				}
-			} else {
-				for (HHDynamicEdge e : u.vertex.getInboundEdges(0)) {
-					DiscoveredVertex v = discoveredVertices[direction].get(e.getSource()
-							.getId());
-					HeapKey key = new HeapKey(u.key.distance + e.getWeight(), 0, 0);
-					if (v == null) {
-						v = new DiscoveredVertex(e.getSource(), e, u, key);
-						queue[direction].insert(v);
-						discoveredVertices[direction].put(v.vertex.getId(), v);
-					} else if (key.compareTo(v.key) < 0) {
-						queue[direction].decreaseKey(v, key);
-						v.parent = u;
-						v.edgeToParent = e;
-					}
+				if (!forward && !e.isBackward()) {
+					continue;
+				}
+				DiscoveredVertex v = discoveredVertices[direction].get(e.getTarget().getId());
+				HeapKey key = new HeapKey(u.key.distance + e.getWeight(), 0, 0);
+				if (v == null) {
+					v = new DiscoveredVertex(e.getTarget(), e, u, key);
+					queue[direction].insert(v);
+					discoveredVertices[direction].put(v.vertex.getId(), v);
+				} else if (key.compareTo(v.key) < 0) {
+					queue[direction].decreaseKey(v, key);
+					v.parent = u;
+					v.edgeToParent = e;
 				}
 			}
+
 			direction = (direction + 1) % 2;
 		}
 		return d;
@@ -336,7 +336,7 @@ public class HHAlgorithmDynamicGraph {
 		return Integer.MAX_VALUE;
 	}
 
-	public int dijkstrab(HHDynamicVertex source, HHDynamicVertex target) {
+	public int dijkstraBackwardTestInbound(HHDynamicVertex source, HHDynamicVertex target) {
 		int numSettled = 0;
 
 		// clear queue
@@ -357,6 +357,9 @@ public class HHAlgorithmDynamicGraph {
 			}
 
 			for (HHDynamicEdge e : u.vertex.getInboundEdges(0)) {
+				if (!e.isBackward()) {
+					continue;
+				}
 				DiscoveredVertex v = discoveredVertices[FWD].get(e.getSource().getId());
 				HeapKey key = new HeapKey(u.key.distance + e.getWeight(), 0, 0);
 				if (v == null) {
@@ -371,5 +374,36 @@ public class HHAlgorithmDynamicGraph {
 			}
 		}
 		return Integer.MAX_VALUE;
+	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		System.out.println("verify graph");
+		HHAlgorithmDynamicGraph algo = new HHAlgorithmDynamicGraph();
+		HHDynamicGraph graph = HHDynamicGraph.getFromSerialization(new File(
+				"test.dynamicLevelGraph"));
+		Random rnd = new Random();
+		boolean ok = true;
+		for (int i = 0; i < 100; i++) {
+			int s = rnd.nextInt(graph.numVertices(0));
+			int t = rnd.nextInt(graph.numVertices(0));
+			int d1 = algo.shortestDistance(graph.getVertex(s), graph.getVertex(t));
+			// int d2 = algo.dijkstra(graph.getVertex(s), graph.getVertex(t), 0);
+			// int d3 = algo.dijkstraBackwardTestInbound(graph.getVertex(t),
+			// graph.getVertex(s));
+			int d4 = algo.shortestDistance(graph.getVertex(s), graph.getVertex(t));
+			// if (d1 != d2) {
+			// System.out.println("d1 != d2");
+			// ok = false;
+			// }
+			// if (d1 != d3) {
+			// System.out.println("d1 != d3");
+			// ok = false;
+			// }
+			if (d1 != d4) {
+				System.out.println("d1 != d4");
+				ok = false;
+			}
+		}
+		System.out.println("sucessful = " + ok);
 	}
 }
