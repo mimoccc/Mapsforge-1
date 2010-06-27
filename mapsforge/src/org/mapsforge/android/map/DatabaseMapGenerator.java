@@ -529,7 +529,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			if (this.coordinates[0][0] > this.coordinates[0][this.coordinates[0].length - 2]) {
 				// reverse the way coordinates
 				int offsetLeft = 0;
-				int offsetRight = this.coordinates.length - 2;
+				int offsetRight = this.coordinates[0].length - 2;
 				float exchangeValue;
 				while (offsetLeft < offsetRight) {
 					// exchange the way a coordinates
