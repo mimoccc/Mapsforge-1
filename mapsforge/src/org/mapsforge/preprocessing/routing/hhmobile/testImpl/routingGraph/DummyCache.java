@@ -35,4 +35,10 @@ public class DummyCache implements ICache {
 	public void putBlock(Block block) {
 		map.put(block.getBlockId(), block);
 	}
+
+	@Override
+	public void clear() {
+		map.clear();
+	}
+
 }

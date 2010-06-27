@@ -60,6 +60,9 @@ public class DijkstraAlgorithm {
 				break;
 			}
 			for (Edge e : u.getOutboundEdges()) {
+				if (!e.isForward()) {
+					continue;
+				}
 				HeapItem _v = discovered.get(e.getTargetId());
 				if (_v == null) {
 					_v = new HeapItem(e.getTargetId(), _u.distance + e.getWeight(), u);

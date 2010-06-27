@@ -22,4 +22,6 @@ public interface ICache {
 
 	public void putBlock(Block block);
 
+	public void clear();
+
 }

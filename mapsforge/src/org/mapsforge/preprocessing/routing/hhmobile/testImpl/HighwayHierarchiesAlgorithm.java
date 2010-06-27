@@ -30,7 +30,6 @@ import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
 public class HighwayHierarchiesAlgorithm {
@@ -120,19 +119,21 @@ public class HighwayHierarchiesAlgorithm {
 			}
 
 			Vertex _v = graph.getVertex(e.getTargetId());
+
 			int gap_;
 			if (gap == Integer.MAX_VALUE) {
 				gap_ = _v.getNeighborhood();
 			} else {
 				if (u.vertex.getNeighborhood() != Integer.MAX_VALUE
 						&& _v.getNeighborhood() == Integer.MAX_VALUE) {
-					result = false;
+					// don't leave the core
 					continue;
 				}
 				gap_ = gap - e.getWeight();
 			}
 
 			if (gap_ < 0) {
+				// edge crosses neighborhood of entry point, don't relax it
 				result = false;
 				continue;
 			}
@@ -143,15 +144,11 @@ public class HighwayHierarchiesAlgorithm {
 				discovered[direction].put(v.vertex.getIdLvlZero(), v);
 				queue[direction].insert(v);
 			} else if (v.compareTo(u.distance + e.getWeight(), lvl, gap_) > 0) {
-				System.out.print("(" + v.distance + "," + v.level + "," + v.gap + ") -> ");
 				v.distance = u.distance + e.getWeight();
 				v.level = lvl;
 				v.gap = gap_;
 				v.parentId = u.vertex.getId();
 				queue[direction].decreaseKey(v, v);
-				System.out.println("(" + v.distance + "," + v.level + "," + v.gap + ")");
-			} else {
-				// System.out.println(v.distance + " " + (u.distance + e.getWeight()));
 			}
 		}
 
@@ -230,17 +227,17 @@ public class HighwayHierarchiesAlgorithm {
 		}
 
 		public int compareTo(int _distance, int _level, int _gap) {
-			if (_distance < _distance) {
+			if (distance < _distance) {
 				return -3;
-			} else if (_distance > _distance) {
+			} else if (distance > _distance) {
 				return 3;
-			} else if (_level < _level) {
+			} else if (level < _level) {
 				return -2;
-			} else if (_level > _level) {
+			} else if (level > _level) {
 				return 2;
-			} else if (_gap < _gap) {
+			} else if (gap < _gap) {
 				return -1;
-			} else if (_gap > _gap) {
+			} else if (gap > _gap) {
 				return 1;
 			} else {
 				return 0;
@@ -255,7 +252,7 @@ public class HighwayHierarchiesAlgorithm {
 
 	public static void main(String[] args) throws IOException {
 		String map = "berlin";
-		int n = 10;
+		int n = 1;
 
 		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
 
@@ -267,36 +264,28 @@ public class HighwayHierarchiesAlgorithm {
 		LinkedList<Vertex> sp2 = new LinkedList<Vertex>();
 
 		long time = System.currentTimeMillis();
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < n; i++) {
 			Vertex s = graph.getRandomVertex(0);
 			Vertex t = graph.getRandomVertex(0);
+			graph.clearCache();
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
-			int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
-			System.out.println(d1 + " ?= " + d2);
-			for (Vertex v : sp1) {
-				Vertex vLz = graph.getVertex(v.getIdLvlZero());
-				renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
-			}
-			for (Vertex v : sp2) {
-				Vertex vLz = graph.getVertex(v.getIdLvlZero());
-				renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.BLUE);
-			}
-
-			renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
-			renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
-			sp1.clear();
+			// int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
+			// System.out.println(d1 + " ?= " + d2);
+			// for (Vertex v : sp1) {
+			// Vertex vLz = graph.getVertex(v.getIdLvlZero());
+			// renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
+			// }
+			// for (Vertex v : sp2) {
+			// Vertex vLz = graph.getVertex(v.getIdLvlZero());
+			// renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.BLUE);
+			// }
+			//
+			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
+			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
+			// sp1.clear();
 		}
 		System.out.println("cache misses : " + graph.numCacheMisses);
 		System.out.println("num routes : " + n);
 		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
-
-		Vertex x = graph.getRandomVertex(3);
-		Vertex y = graph.getVertex(x.getIdLvlZero());
-		while (x.getId() != y.getId()) {
-			System.out.println(y.getIdLvlZero());
-			y = graph.getVertex(y.getIdOverly());
-		}
-		System.out.println(x.getIdLvlZero());
-		System.out.println(x.getId() == y.getId());
 	}
 }

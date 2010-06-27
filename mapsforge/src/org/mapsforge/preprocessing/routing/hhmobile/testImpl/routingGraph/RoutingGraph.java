@@ -63,6 +63,11 @@ public class RoutingGraph {
 		this.numCacheMisses = 0;
 	}
 
+	public void clearCache() {
+		cache.clear();
+		this.numCacheMisses = 0;
+	}
+
 	public int numLevels() {
 		return numLevels;
 	}
