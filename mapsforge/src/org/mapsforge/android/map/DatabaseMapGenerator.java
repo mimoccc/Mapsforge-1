@@ -19,7 +19,6 @@ package org.mapsforge.android.map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.TreeMap;
 
 import android.graphics.Bitmap;
@@ -260,7 +259,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
-	private HashSet<String> renderedWayNames;
 	private ShapeContainer shapeContainer;
 	private byte skipSegments;
 	private ArrayList<SymbolContainer> symbols;
@@ -475,7 +473,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	private void addWayName(String wayName) {
 		// calculate the approximate way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 5;
+		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 10;
 
 		this.previousX = this.coordinates[0][0];
 		this.previousY = this.coordinates[0][1];
@@ -497,7 +495,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.pathLengthInPixel = SquareRoot
 						.sqrt((int) (this.distanceX * this.distanceX + this.distanceY
 								* this.distanceY));
-
 				if (this.pathLengthInPixel > this.wayNameWidth) {
 					this.wayNamePath = new float[4];
 					// check to prevent inverted way names
@@ -515,7 +512,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.wayNames.add(new WayTextContainer(this.wayNamePath, wayName,
 							PAINT_NAME_BLACK_10));
 					this.wayNameRendered = true;
-					this.skipSegments = 3;
+					this.skipSegments = 4;
 				}
 			}
 			this.previousX = this.currentX;
@@ -523,8 +520,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 
 		// if no segment is long enough, check if the name can be drawn on the whole way
-		if (!this.wayNameRendered && !this.renderedWayNames.contains(wayName)
-				&& getWayLengthInPixel() > this.wayNameWidth) {
+		if (!this.wayNameRendered && getWayLengthInPixel() > this.wayNameWidth) {
 			// check to prevent inverted way names
 			if (this.coordinates[0][0] > this.coordinates[0][this.coordinates[0].length - 2]) {
 				// reverse the way coordinates
@@ -532,7 +528,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				int offsetRight = this.coordinates[0].length - 2;
 				float exchangeValue;
 				while (offsetLeft < offsetRight) {
-					// exchange the way a coordinates
+					// exchange the way x coordinates
 					exchangeValue = this.coordinates[0][offsetLeft];
 					this.coordinates[0][offsetLeft] = this.coordinates[0][offsetRight];
 					this.coordinates[0][offsetRight] = exchangeValue;
@@ -549,7 +545,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			}
 			this.wayNames.add(new WayTextContainer(this.coordinates[0], wayName,
 					PAINT_NAME_BLACK_10));
-			this.renderedWayNames.add(wayName);
 		}
 	}
 
@@ -1575,7 +1570,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			}
 		}
 		this.wayNames.clear();
-		this.renderedWayNames.clear();
 		this.nodes.clear();
 		this.symbols.clear();
 		this.coastlineStarts.clear();
@@ -3072,7 +3066,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.ways.add(this.innerWayList);
 		}
 		this.wayNames = new ArrayList<WayTextContainer>(64);
-		this.renderedWayNames = new HashSet<String>((int) (64 / 0.5f) + 2, 0.5f);
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
 		this.coastlineEnds = new TreeMap<Point, float[]>();
