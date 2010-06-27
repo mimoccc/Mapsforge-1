@@ -25,7 +25,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointe
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphHeader;
 
-public class BlockReader {
+class BlockReader {
 
 	private final RandomAccessFile raf;
 	private final BlockedGraphHeader graphHeader;
@@ -46,6 +46,10 @@ public class BlockReader {
 		byte[] buff = new byte[pointer.lengthBytes];
 		raf.readFully(buff);
 		return new Block(buff, graphHeader, blockId);
+	}
+
+	public int getNumBlocks() {
+		return blockIndex.size();
 	}
 
 }

@@ -22,7 +22,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGrap
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayInputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
 
-public class Block {
+class Block {
 
 	private final BitArrayInputStream stream;
 
@@ -251,6 +251,10 @@ public class Block {
 		return bId;
 	}
 
+	public int getLevel() {
+		return lvl;
+	}
+
 	public int getNumVertices() {
 		return numVertices;
 	}
@@ -264,7 +268,10 @@ public class Block {
 
 		int idLvlZero;
 		if (lvl > 0) {
-			int offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * i);
+			int offset = startAddrVOffsBlockLvlZero + (bpOffsBlockLvlZero * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
+					offset / 8, offset % 8);
+			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
 			offset = startAddrVOffsBlockLvlZero + (graphHeader.bpClusterId * i);
@@ -277,7 +284,10 @@ public class Block {
 
 		int idSubj;
 		if (lvl > 1) {
-			int offset = startAddrBlockSubj + (graphHeader.bpClusterId * i);
+			int offset = startAddrVOffsBlockSubj + (bpOffsBlockSubj * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockSubj, offset / 8,
+					offset % 8);
+			offset = startAddrBlockSubj + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
 			offset = startAddrVOffsBlockSubj + (graphHeader.bpClusterId * i);
@@ -292,7 +302,10 @@ public class Block {
 
 		int idOverly;
 		if (lvl < graphHeader.numLevels - 1 && i < numVerticesHavingHigherLevel) {
-			int offset = startAddrBlockOverly + (graphHeader.bpClusterId * i);
+			int offset = startAddrVOffsBlockOverly + (bpOffsBlockOverly * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockOverly,
+					offset / 8, offset % 8);
+			offset = startAddrBlockOverly + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
 			offset = startAddrVOffsBlockOverly + (graphHeader.bpClusterId * i);
@@ -357,23 +370,26 @@ public class Block {
 				outboundEdges[j++] = getExternalEdge(k);
 			}
 		}
-		return new Vertex(neighborhood, id, idSubj, idOverly, idLvlZero, bpOffsBlockLvlZero,
-				lon, lat, outboundEdges);
+		return new Vertex(neighborhood, id, idSubj, idOverly, idLvlZero, lvl, lon, lat,
+				outboundEdges);
 	}
 
 	private Edge getInternalEdge(int i) {
 
 		int targetId;
-		int offset = startAddrEIntTargetOffset + (i * bpOffsEdgeInt);
-		int _targetVertexOffset = (int) BitSerializer.readUInt(data, bpOffsEdgeInt, offset / 8,
-				offset % 8);
+		int offset = startAddrEIntTargetOffset + (i * graphHeader.bpVertexCount);
+		int _targetVertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
+				offset / 8, offset % 8);
 		targetId = getVertexId(bId, _targetVertexOffset);
 
 		int targetIdLvlZero;
 		if (lvl == 0) {
 			targetIdLvlZero = targetId;
 		} else {
-			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _targetVertexOffset);
+			offset = startAddrVOffsBlockLvlZero + (bpOffsBlockLvlZero * _targetVertexOffset);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
+					offset / 8, offset % 8);
+			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
 					offset / 8, offset % 8);
 			offset = startAddrVOffsBlockLvlZero
@@ -410,23 +426,33 @@ public class Block {
 	private Edge getExternalEdge(int i) {
 
 		int targetId;
-		int offset = startAddrEExtTargetOffsBlockAdj + (i * bpOffsEdgeExt);
-		int _targetVertexOffset = (int) BitSerializer.readUInt(data, bpOffsEdgeExt, offset / 8,
+		int offset = startAddrEExtTargetOffsBlockAdj + (i * bpOffsBlockAdj);
+		int _targetBlockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockAdj, offset / 8,
 				offset % 8);
-		targetId = getVertexId(bId, _targetVertexOffset);
+		offset = startAddrBlockAdj + (_targetBlockOffset * graphHeader.bpClusterId);
+		int _targetBlockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
+				offset / 8, offset % 8);
+		offset = startAddrEExtTargetOffsVertexAdj + (i * graphHeader.bpVertexCount);
+		int _targetVertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
+				offset / 8, offset % 8);
+		targetId = getVertexId(_targetBlockId, _targetVertexOffset);
 
 		int targetIdLvlZero;
 		if (lvl == 0) {
 			targetIdLvlZero = targetId;
 		} else {
-			offset = startAddrBlockLevelZero + (graphHeader.bpClusterId * _targetVertexOffset);
-			int _blockId = (int) BitSerializer.readUInt(data, graphHeader.bpClusterId,
-					offset / 8, offset % 8);
+			offset = startAddrEExtTargetOffsBlockLvlZero + (i * bpOffsBlockLvlZero);
+			int _targetBlockOffsetLvlZero = (int) BitSerializer.readUInt(data,
+					bpOffsBlockLvlZero, offset / 8, offset % 8);
+			offset = startAddrBlockLevelZero
+					+ (graphHeader.bpClusterId * _targetBlockOffsetLvlZero);
+			int _targetBlockIdLvlZero = (int) BitSerializer.readUInt(data,
+					graphHeader.bpClusterId, offset / 8, offset % 8);
 			offset = startAddrVOffsBlockLvlZero
 					+ (graphHeader.bpClusterId * _targetVertexOffset);
-			int _vertexOffset = (int) BitSerializer.readUInt(data, graphHeader.bpVertexCount,
-					offset / 8, offset % 8);
-			targetIdLvlZero = getVertexId(_blockId, _vertexOffset);
+			int _targetVertexOffsetLvlZero = (int) BitSerializer.readUInt(data,
+					graphHeader.bpVertexCount, offset / 8, offset % 8);
+			targetIdLvlZero = getVertexId(_targetBlockIdLvlZero, _targetVertexOffsetLvlZero);
 		}
 
 		int weight;
@@ -462,6 +488,7 @@ public class Block {
 		StringBuilder sb = new StringBuilder();
 		sb.append(Block.class.getName() + " (\n");
 		sb.append("  lvl = " + lvl + "\n");
+		sb.append("  blockId = " + bId + "\n");
 
 		sb.append("  numVerticesWithNeighborhood = " + numVerticesWithNeighborhood + "\n");
 		sb.append("  numVerticesHavingHigherLevel = " + numVerticesHavingHigherLevel + "\n");

@@ -16,10 +16,10 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
-public class ExternalGraph {
+public interface ICache {
 
-	public ExternalGraph() {
+	public Block getBlock(int blockId);
 
-	}
+	public void putBlock(Block block);
 
 }

@@ -33,6 +33,7 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -83,6 +84,7 @@ public class RendererV2 {
 	private IClustering clustering;
 	private HashMap<ICluster, Color> clusterColors;
 	private final HashMap<GeoCoordinate, Color> circles;
+	private final LinkedList<GeoCoordinate> circlesList;
 
 	private int zoomLevel;
 	private GeoCoordinate center;
@@ -103,6 +105,7 @@ public class RendererV2 {
 
 		this.routes = new HashMap<IEdge[], Color>();
 		this.circles = new HashMap<GeoCoordinate, Color>();
+		this.circlesList = new LinkedList<GeoCoordinate>();
 		this.canvas = new BufferedCanvas(width, height);
 
 		canvas.clear(bgColor);
@@ -178,6 +181,7 @@ public class RendererV2 {
 
 	public void addCircle(GeoCoordinate coord, Color c) {
 		circles.put(coord, c);
+		circlesList.add(coord);
 	}
 
 	public void clearRoutes() {
@@ -296,7 +300,7 @@ public class RendererV2 {
 	}
 
 	private void drawCircles() {
-		for (GeoCoordinate coord : circles.keySet()) {
+		for (GeoCoordinate coord : circlesList) {
 			Color c = circles.get(coord);
 			ScreenCoordinate sc = geoToScreen(coord);
 			canvas.drawCircle(sc.x, sc.y, c, 3);
