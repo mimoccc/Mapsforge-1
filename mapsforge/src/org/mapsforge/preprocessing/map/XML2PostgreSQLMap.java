@@ -23,7 +23,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,7 +43,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 
 /**
  * Extracts information relevant for binary map file generation from the OSM-data and stores it
@@ -109,16 +107,14 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_SELECT_BBOX = "SELECT max(latitude) as maxlat,min(longitude) as minlon,min(latitude) as minlat,max(longitude) as maxlon from pois_tmp";
 	private final String SQL_UPDATE_WAYTYPE_FLAG = "UPDATE ways SET way_type = 3 WHERE id = ?";
 	private final String SQL_UPDATE_OPEN_WAYTYPE_FLAG = "UPDATE ways SET way_type = 0 WHERE id = ?";
-	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level,size) VALUES (?,?,?,?,?)";
-	private final String SQL_INSERT_WAY_TILE = "INSERT INTO ways_to_tiles (way_id,tile_x,tile_y,tile_bitmask,zoom_level,size) VALUES (?,?,?,?,?,?)";
+	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
+	private final String SQL_INSERT_WAY_TILE = "INSERT INTO ways_to_tiles (way_id,tile_x,tile_y,tile_bitmask,zoom_level) VALUES (?,?,?,?,?)";
 	private final String SQL_DISTINCT_WAY_TILES = "SELECT DISTINCT tile_x,tile_y FROM ways_to_tiles";
 	private final String SQL_SELECT_WAY_IDS = "SELECT w.id,w.waynodes_amount,w.way_type FROM ways_to_tiles wtt JOIN ways w ON (wtt.way_id = w.id) WHERE wtt.tile_x = ? AND wtt.tile_y = ?";
 	private final String SQL_SELECT_WAYS_FOR_TILE = "SELECT latitude,longitude FROM waynodes_tmp WHERE way_id = ? order by waynode_sequence";
 	private final String SQL_UPDATE_WAY_TILE = "UPDATE ways_to_tiles SET tile_bitmask = ? WHERE way_id = ? and tile_x = ? and tile_y = ?";
 	private final String SQL_SELECT_WAY_WITH_TAGS = "SELECT * FROM ways WHERE id = ?";
 	private final String SQL_WAY_NODE_DIFF = "INSERT INTO waynodes_diff (way_id,waynode_sequence,diff_lat,diff_lon) VALUES (?,?,?,?)";
-	private final String SQL_UPDATE_WAY_SIZE = "UPDATE ways_to_tiles SET size = ? WHERE way_id = ?";
-	private final String SQL_SELECT_TEMP_RECORD_SIZE = "SELECT size FROM ways_to_tiles WHERE way_id = ? LIMIT 1";
 	private final String SQL_UPDATE_INNER_WAY_AMOUNT = "UPDATE ways SET inner_way_amount = ? WHERE id = ?";
 
 	private boolean poisBatched = false;
@@ -139,27 +135,17 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private PreparedStatement pstmtUpdateOpenWayType;
 	private PreparedStatement pstmtPoisTiles;
 	private PreparedStatement pstmtWaysTiles;
-	private PreparedStatement pstmtDistinctTiles;
-	private PreparedStatement pstmtSelectWayIds;
-	private PreparedStatement pstmtSelectWaysToTiles;
-	private PreparedStatement pstmtUpdateWaysTiles;
 	private PreparedStatement pstmtPoisTags;
 	private PreparedStatement pstmtPoisTag;
 	private PreparedStatement pstmtWaysWithTags;
 	private PreparedStatement pstmtWayNodeDiff;
-	private PreparedStatement pstmtUpdateWaySize;
-	private PreparedStatement pstmtSelectTempRecordSize;
 	private PreparedStatement pstmtUpdateWayInnerWayAmount;
 
 	// result sets
 	private ResultSet rsWayNodes;
 	private ResultSet rsInnerWays;
 	private ResultSet rsBoundingBox;
-	private ResultSet rsDistinctTiles;
-	private ResultSet rsWayIds;
-	private ResultSet rsWaysForTiles;
 	private ResultSet rsWaysWithTags;
-	private ResultSet rsTempRecordSize;
 
 	private Connection conn;
 
@@ -168,14 +154,15 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private Map<String, Byte> poiTagWhiteList;
 	private Map<String, Byte> wayTagWhiteList;
 
-	private GeometryFactory geoFac;
-
 	private int maxlat;
 	private int minlon;
 	private int minlat;
 	private int maxlon;
 
+	Geometry geoWay;
 	private Set<Tile> wayTiles;
+	private Map<Tile, Short> waySubTiles;
+	private Set<Entry<Tile, Short>> wayTilesEntries;
 
 	public XML2PostgreSQLMap(String propertiesFile) throws Exception {
 
@@ -191,10 +178,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		wayTiles = new HashSet<Tile>();
 
-		geoFac = new GeometryFactory();
+		// batchSize = Integer.parseInt(props.getProperty("xml2postgresql.batchSize",
+		// DEFAULT_BATCH_SIZE));
 
-		batchSize = Integer.parseInt(props.getProperty("xml2postgresql.batchSize",
-				DEFAULT_BATCH_SIZE));
+		batchSize = 50000;
 
 		conn = dbConnection.getConnection();
 
@@ -219,7 +206,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		conn.createStatement().execute("DROP INDEX IF EXISTS ways_to_tiles_idx");
 		conn.createStatement().execute("DROP INDEX IF EXISTS pois_to_tiles_id_idx");
 		conn.createStatement().execute("DROP INDEX IF EXISTS ways_to_tiles_id_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS ways_to_tiles_id_tile_idx");
 		conn.createStatement().execute("DROP INDEX IF EXISTS waynodes_id_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS waynodes_id_sequence_idx");
 		conn.createStatement().execute("DROP INDEX IF EXISTS multipolygons_idx");
 
 		conn.commit();
@@ -277,14 +266,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		pstmtWaysTiles = conn.prepareStatement(SQL_INSERT_WAY_TILE);
 
-		pstmtDistinctTiles = conn.prepareStatement(SQL_DISTINCT_WAY_TILES);
-
-		pstmtSelectWayIds = conn.prepareStatement(SQL_SELECT_WAY_IDS);
-
-		pstmtSelectWaysToTiles = conn.prepareStatement(SQL_SELECT_WAYS_FOR_TILE);
-
-		pstmtUpdateWaysTiles = conn.prepareStatement(SQL_UPDATE_WAY_TILE);
-
 		pstmtPoisTags = conn.prepareStatement(SQL_INSERT_POIS);
 
 		pstmtPoisTag = conn.prepareStatement(SQL_INSERT_POI_TAG);
@@ -292,10 +273,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		pstmtWaysWithTags = conn.prepareStatement(SQL_SELECT_WAY_WITH_TAGS);
 
 		pstmtWayNodeDiff = conn.prepareStatement(SQL_WAY_NODE_DIFF);
-
-		pstmtUpdateWaySize = conn.prepareStatement(SQL_UPDATE_WAY_SIZE);
-
-		pstmtSelectTempRecordSize = conn.prepareStatement(SQL_SELECT_TEMP_RECORD_SIZE);
 
 		pstmtUpdateWayInnerWayAmount = conn.prepareStatement(SQL_UPDATE_INNER_WAY_AMOUNT);
 
@@ -358,14 +335,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			// execute very last batches
 			pstmtMultipolygons.executeBatch();
 			pstmtUpdateWayType.executeBatch();
-			pstmtUpdateWaySize.executeBatch();
 			pstmtUpdateWayInnerWayAmount.executeBatch();
-
-			// logger.info("calculate tile bit mask");
-			//			
-			// calculateTileBitmask();
-			//			
-			// logger.info("tile bit masks calculated");
 
 			logger.info("create indices on tag tables");
 
@@ -426,87 +396,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		logger.info("inserted " + nodes + " nodes");
 		logger.info("inserted " + ways + " ways");
 		logger.info("inserted " + multipolygons + " multipolygons");
-	}
-
-	void calculateTileBitmask() throws SQLException {
-
-		Tile tile;
-		MapElementWay way;
-		Geometry geoWay;
-		int id;
-		int waynodes;
-		int wayType;
-		Map<MapElementWay, Geometry> waysMap = new HashMap<MapElementWay, Geometry>();
-
-		int tiles = 0;
-
-		rsDistinctTiles = pstmtDistinctTiles.executeQuery();
-
-		while (rsDistinctTiles.next()) {
-
-			tile = new Tile(rsDistinctTiles.getInt("tile_x"), rsDistinctTiles.getInt("tile_y"),
-					zoom);
-			tiles++;
-			if (tiles % 100 == 0) {
-				logger.info(tiles + " updates are done");
-			}
-			waysMap.clear();
-			pstmtSelectWayIds.setLong(1, tile.x);
-			pstmtSelectWayIds.setLong(2, tile.y);
-			rsWayIds = pstmtSelectWayIds.executeQuery();
-
-			while (rsWayIds.next()) {
-				id = rsWayIds.getInt("id");
-				waynodes = rsWayIds.getInt("waynodes_amount");
-				wayType = rsWayIds.getInt("way_type");
-
-				way = new MapElementWay(id);
-				way.wayType = wayType;
-
-				pstmtSelectWaysToTiles.setInt(1, id);
-				rsWaysForTiles = pstmtSelectWaysToTiles.executeQuery();
-				Coordinate[] coords = new Coordinate[waynodes];
-
-				int k = 0;
-
-				while (rsWaysForTiles.next()) {
-					int lat = rsWaysForTiles.getInt("latitude");
-					int lon = rsWaysForTiles.getInt("longitude");
-
-					coords[k] = new Coordinate((double) lat / 1000000, (double) lon / 1000000);
-					k++;
-				}
-				if (wayType == 1) {
-					geoWay = geoFac.createLineString(coords);
-				} else {
-					try {
-						geoWay = geoFac.createPolygon(geoFac.createLinearRing(coords), null);
-					} catch (IllegalArgumentException e) {
-						logger.info("Way " + way.id + " is no closed LineString");
-						geoWay = geoFac.createLineString(coords);
-					}
-				}
-
-				waysMap.put(way, geoWay);
-			}
-			Map<MapElementWay, Short> results = Utils.getTileBitmasksForWays(tile, waysMap);
-			Set<Entry<MapElementWay, Short>> entries = results.entrySet();
-			for (Entry<MapElementWay, Short> entry : entries) {
-				pstmtUpdateWaysTiles.setShort(1, entry.getValue());
-				// System.out.println(entry.getValue());
-				pstmtUpdateWaysTiles.setLong(2, entry.getKey().id);
-				// System.out.println(entry.getKey().id);
-				pstmtUpdateWaysTiles.setLong(3, tile.x);
-				pstmtUpdateWaysTiles.setLong(4, tile.y);
-				pstmtUpdateWaysTiles.execute();
-			}
-			if (tiles % batchSize == 0) {
-				pstmtUpdateWaysTiles.executeBatch();
-				logger.info("executed batch for tiles updates " + (tiles - batchSize) + "-"
-						+ tiles);
-			}
-		}
-		pstmtUpdateWaysTiles.executeBatch();
 	}
 
 	@Override
@@ -596,7 +485,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		try {
-			int recordSize = 0;
 			String tag;
 			Iterator<String> tagIterator;
 			int tagSize;
@@ -616,6 +504,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			long outer;
 			int[] innerNodes;
 			int waytype;
+
+			double latDouble;
+			double lonDouble;
 
 			if (qName.equals("node")) {
 
@@ -642,18 +533,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							if (currentNode.elevation < 32000) {
 								currentNode.elevation = 0;
 							}
-							recordSize += 2;
 						} catch (NumberFormatException e) {
 							currentNode.elevation = 0;
 						}
 					} else if (splittedTags[0].equals("addr:housenumber")) {
 						currentNode.housenumber = splittedTags[1];
-						// increase the record size
-						recordSize += currentNode.housenumber.getBytes().length + 1;
 					} else if (splittedTags[0].equals("name")) {
 						currentNode.name = splittedTags[1];
-						// increase the record size
-						recordSize += 2 + currentNode.name.getBytes().length;
 					} else if (splittedTags[0].equals("layer")) {
 						try {
 							currentNode.layer = Integer.parseInt(splittedTags[1]) + 5;
@@ -724,16 +610,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							.latitudeToTileY((double) currentNode.latitude / 1000000, zoom),
 							zoom);
 
-					// calculate the record size for a poi
-					// recordSize
-					recordSize += 4 + 4 + 1 + node_tags + 1 + 2
-							+ currentNode.name.getBytes().length;
-
 					pstmtPoisTiles.setLong(1, currentNode.id);
 					pstmtPoisTiles.setLong(2, mainTileForPOI.x);
 					pstmtPoisTiles.setLong(3, mainTileForPOI.y);
 					pstmtPoisTiles.setShort(4, currentNode.zoomLevel);
-					pstmtPoisTiles.setInt(5, recordSize);
 					pstmtPoisTiles.addBatch();
 				}
 
@@ -767,8 +647,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					// separate fields in the database
 					if (splittedTags[0].equals("name")) {
 						currentWay.name = splittedTags[1];
-						// increase the record size
-						recordSize += 2 + currentWay.name.getBytes().length;
 					} else if (splittedTags[0].equals("layer")) {
 						try {
 							currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]) + 5);
@@ -797,7 +675,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				wnSize = currentWayNodes.size();
 
 				if (wnSize > 1) {
-
 					// mark the way as area if the first and the last way node are the same and
 					// if the way has more than two way nodes
 					if (currentWayNodes.get(0).equals(currentWayNodes.get(wnSize - 1))
@@ -821,8 +698,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								firstLon = lon;
 							}
 
-							wayNodes[i] = (new Coordinate((double) lat / 1000000,
-									(double) lon / 1000000));
+							latDouble = (double) lat / 1000000;
+							lonDouble = (double) lon / 1000000;
+
+							wayNodes[i] = (new Coordinate(latDouble, lonDouble));
 
 							// store all way nodes in a temporary way node table
 							pstmtInsertWayNodesTmp.setLong(1, currentWay.id);
@@ -865,20 +744,23 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							pstmtWayTag.addBatch();
 						}
 
-						// calculate temporary record size (without inner ways if way is outer
-						// way of a multipolygon
-						recordSize += 2 + 2 + 1 + 1 + 1 + way_tags + 2 + wnSize * 8 + 1;
+						// create a geometry object for the way
+						geoWay = Utils.createWay(currentWay, wayNodes);
 
 						// calculate all tiles which are related to a way
-						wayTiles = Utils.wayToTiles(currentWay, wayNodes, currentWay.wayType,
-								zoom);
-						for (Tile wayTile : wayTiles) {
+						wayTiles = Utils.wayToTilesWay(geoWay, currentWay.wayType, zoom);
+
+						// calculate all subtiles of the tiles which are related to the way and
+						// create the tile bitmask
+						waySubTiles = Utils
+								.getTileBitMask(geoWay, wayTiles, currentWay.wayType);
+
+						wayTilesEntries = waySubTiles.entrySet();
+						for (Entry<Tile, Short> entry : wayTilesEntries) {
 							pstmtWaysTiles.setLong(1, currentWay.id);
-							pstmtWaysTiles.setLong(2, wayTile.x);
-							pstmtWaysTiles.setLong(3, wayTile.y);
-							pstmtWaysTiles.setInt(4, 0);
-							pstmtWaysTiles.setInt(5, currentWay.zoomLevel);
-							pstmtWaysTiles.setInt(6, recordSize);
+							pstmtWaysTiles.setLong(2, entry.getKey().x);
+							pstmtWaysTiles.setLong(3, entry.getKey().y);
+							pstmtWaysTiles.setInt(4, entry.getValue());
 							pstmtWaysTiles.addBatch();
 						}
 
@@ -929,15 +811,15 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						if (rsWaysWithTags.next()) {
 							waytype = rsWaysWithTags.getInt("way_type");
 
-							if (waytype == 2) {
-								// outer way is a closed way
-								pstmtUpdateWayType.setLong(1, outer);
-								pstmtUpdateWayType.addBatch();
-							} else if (waytype == 1) {
-								// outer way is a "normal" way
-								pstmtUpdateOpenWayType.setLong(1, outer);
-								pstmtUpdateOpenWayType.addBatch();
-							}
+							// if (waytype == 2) {
+							// // outer way is a closed way
+							// pstmtUpdateWayType.setLong(1, outer);
+							// pstmtUpdateWayType.addBatch();
+							// } else if (waytype == 1) {
+							// // outer way is a "normal" way
+							// pstmtUpdateOpenWayType.setLong(1, outer);
+							// pstmtUpdateOpenWayType.addBatch();
+							// }
 
 							// get inner way nodes
 							innersize = currentInnerWays.size();
@@ -965,26 +847,33 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								}
 								innerNodes[j] = sequence - 1;
 							}
-							recordSize += 1;
+
+							boolean noInnerNodes = true;
 							for (int k = 0; k < innerNodes.length; k++) {
-								recordSize += innerNodes[k] * 8;
+								// if inner ways have no inner waynodes don't mark the outer way
+								// as multipolygon
+								if (innerNodes[k] == 0) {
+									noInnerNodes = noInnerNodes && true;
+								} else {
+									noInnerNodes = noInnerNodes && false;
+								}
 							}
-
-							// update temporary way record size
-							pstmtSelectTempRecordSize.setLong(1, outer);
-							rsTempRecordSize = pstmtSelectTempRecordSize.executeQuery();
-							while (rsTempRecordSize.next()) {
-								recordSize += rsTempRecordSize.getInt("size");
-							}
-
-							pstmtUpdateWaySize.setInt(1, recordSize);
-							pstmtUpdateWaySize.setLong(2, outer);
-							pstmtUpdateWaySize.addBatch();
 
 							// set inner way amount for every outer way
-							pstmtUpdateWayInnerWayAmount.setInt(1, innersize);
-							pstmtUpdateWayInnerWayAmount.setLong(2, outer);
-							pstmtUpdateWayInnerWayAmount.addBatch();
+							if (!noInnerNodes) {
+								pstmtUpdateWayInnerWayAmount.setInt(1, innersize);
+								pstmtUpdateWayInnerWayAmount.setLong(2, outer);
+								pstmtUpdateWayInnerWayAmount.addBatch();
+								if (waytype == 2) {
+									// outer way is a closed way
+									pstmtUpdateWayType.setLong(1, outer);
+									pstmtUpdateWayType.addBatch();
+								} else if (waytype == 1) {
+									// outer way is a "normal" way
+									pstmtUpdateOpenWayType.setLong(1, outer);
+									pstmtUpdateOpenWayType.addBatch();
+								}
+							}
 						}
 						multipolygons++;
 					}
@@ -992,7 +881,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				if (multipolygons % batchSizeMP == 0) {
 					pstmtMultipolygons.executeBatch();
 					pstmtUpdateWayType.executeBatch();
-					pstmtUpdateWaySize.executeBatch();
 					pstmtUpdateWayInnerWayAmount.executeBatch();
 					logger.info("executed batch for multipolygons "
 							+ (multipolygons - batchSizeMP) + "-" + multipolygons);
