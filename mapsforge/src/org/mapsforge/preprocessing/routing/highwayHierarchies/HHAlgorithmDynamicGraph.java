@@ -27,6 +27,9 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHD
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
+import org.mapsforge.server.routing.IEdge;
+import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.RouterFactory;
 
 /**
  * @author Frank Viernau viernau[at]mi.fu-berlin.de
@@ -97,22 +100,22 @@ public class HHAlgorithmDynamicGraph {
 				d = Math.min(d, u.key.distance + u_.key.distance);
 				// System.out.println(u.key + " " + u_.key);
 			}
-			int lvl = u.key.level;
-			int gap = u.key.gap;
-			int maxLvl = u.vertex.getMaxLevel();
-			while (!relaxAdjacentEdges(u, direction, lvl, gap) && lvl < maxLvl) {
-				lvl++;
-				gap = u.vertex.getNeighborhood(lvl);
-			}
-
-			// if (!relaxAdjacentEdges(u, direction, u.key.level, u.key.gap)) {
+			// int lvl = u.key.level;
+			// int gap = u.key.gap;
 			// int maxLvl = u.vertex.getMaxLevel();
-			// for (int lvl = u.key.level + 1; lvl <= maxLvl; lvl++) {
-			// if (relaxAdjacentEdges(u, direction, lvl, u.vertex.getNeighborhood(lvl))) {
-			// break;
+			// while (!relaxAdjacentEdges(u, direction, lvl, gap) && lvl < maxLvl) {
+			// lvl++;
+			// gap = u.vertex.getNeighborhood(lvl);
 			// }
-			// }
-			// }
+
+			if (!relaxAdjacentEdges(u, direction, u.key.level, u.key.gap)) {
+				int maxLvl = u.vertex.getMaxLevel();
+				for (int lvl = u.key.level + 1; lvl <= maxLvl; lvl++) {
+					if (relaxAdjacentEdges(u, direction, lvl, u.vertex.getNeighborhood(lvl))) {
+						break;
+					}
+				}
+			}
 			direction = (direction + 1) % 2;
 		}
 		return d;
@@ -380,30 +383,53 @@ public class HHAlgorithmDynamicGraph {
 		System.out.println("verify graph");
 		HHAlgorithmDynamicGraph algo = new HHAlgorithmDynamicGraph();
 		HHDynamicGraph graph = HHDynamicGraph.getFromSerialization(new File(
-				"test.dynamicLevelGraph"));
+				"berlin.hhDynamicGraph"));
 		Random rnd = new Random();
 		boolean ok = true;
-		for (int i = 0; i < 100; i++) {
+		IRouter router = RouterFactory.getRouter();
+		int count = 0;
+
+		for (int i = 0; i < graph.numVertices(0); i++) {
+			int deg1 = 0;
+			for (HHDynamicEdge e1 : graph.getVertex(i).getOutboundEdges(0)) {
+				if (e1.isForward()) {
+					deg1++;
+				}
+			}
+			if (deg1 != router.getVertex(i).getOutboundEdges().length) {
+				count++;
+			}
+		}
+		System.out.println("error " + count);
+
+		for (int i = 0; i < 400; i++) {
 			int s = rnd.nextInt(graph.numVertices(0));
 			int t = rnd.nextInt(graph.numVertices(0));
 			int d1 = algo.shortestDistance(graph.getVertex(s), graph.getVertex(t));
-			// int d2 = algo.dijkstra(graph.getVertex(s), graph.getVertex(t), 0);
+			int d2 = algo.dijkstra(graph.getVertex(s), graph.getVertex(t), 0);
 			// int d3 = algo.dijkstraBackwardTestInbound(graph.getVertex(t),
 			// graph.getVertex(s));
 			int d4 = algo.shortestDistance(graph.getVertex(s), graph.getVertex(t));
-			// if (d1 != d2) {
-			// System.out.println("d1 != d2");
-			// ok = false;
-			// }
-			// if (d1 != d3) {
-			// System.out.println("d1 != d3");
-			// ok = false;
-			// }
-			if (d1 != d4) {
-				System.out.println("d1 != d4");
+			IEdge[] route = router.getShortestPath(s, t);
+			int d5;
+			if (route != null) {
+				d5 = sumWeight(route);
+			} else {
+				d5 = Integer.MAX_VALUE;
+			}
+			if (d1 != d5) {
+				System.out.println(d1 + " != " + d5);
 				ok = false;
 			}
 		}
 		System.out.println("sucessful = " + ok);
+	}
+
+	public static int sumWeight(org.mapsforge.server.routing.IEdge[] e) {
+		int sum = 0;
+		for (org.mapsforge.server.routing.IEdge x : e) {
+			sum += x.getWeight();
+		}
+		return sum;
 	}
 }
