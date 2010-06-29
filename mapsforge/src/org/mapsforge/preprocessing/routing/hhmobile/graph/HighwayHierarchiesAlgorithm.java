@@ -14,22 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.testImpl;
+package org.mapsforge.preprocessing.routing.hhmobile.graph;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Random;
 
-import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.DummyCache;
-import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Edge;
-import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.RoutingGraph;
-import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHAlgorithmDynamicGraph;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
-//check for duplicate ids
 public class HighwayHierarchiesAlgorithm {
 
 	private static final int INITIAL_QUEUE_SIZE = 300;
@@ -38,35 +39,35 @@ public class HighwayHierarchiesAlgorithm {
 	private static final int BWD = 1;
 	private static final int HEAP_IDX_SETTLED = -123456789;
 
-	private final RoutingGraph graph;
+	private final LevelGraph graph;
 	private final Queue[] queue;
 	private final DiscoveredMap[] discovered;
 	private int[][] numSettled;
 
-	public HighwayHierarchiesAlgorithm(RoutingGraph graph) {
+	public HighwayHierarchiesAlgorithm(LevelGraph graph) {
 		this.graph = graph;
 		this.queue = new Queue[] { new Queue(INITIAL_QUEUE_SIZE), new Queue(INITIAL_QUEUE_SIZE) };
 		this.discovered = new DiscoveredMap[] { new DiscoveredMap(INITIAL_MAP_SIZE),
 				new DiscoveredMap(INITIAL_MAP_SIZE) };
 	}
 
-	public int getShortestPath(int sourceId, int targetId, LinkedList<Vertex> shortestPathBuff)
-			throws IOException {
+	public int getShortestPath(int sourceId, int targetId,
+			LinkedList<LevelVertex> shortestPathBuff) throws IOException {
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discovered[FWD].clear();
 		discovered[BWD].clear();
 		numSettled = new int[][] { new int[graph.numLevels()], new int[graph.numLevels()] };
 
-		Vertex s = graph.getVertex(sourceId);
+		LevelVertex s = graph.getLevel(0).getVertex(sourceId);
 		HeapItem _s = new HeapItem(0, 0, s.getNeighborhood(), s, -1);
 		queue[FWD].insert(_s);
-		discovered[FWD].put(s.getIdLvlZero(), _s);
+		discovered[FWD].put(s.getId(), _s);
 
-		Vertex t = graph.getVertex(targetId);
+		LevelVertex t = graph.getLevel(0).getVertex(targetId);
 		HeapItem _t = new HeapItem(0, 0, t.getNeighborhood(), t, -1);
 		queue[BWD].insert(_t);
-		discovered[BWD].put(t.getIdLvlZero(), _t);
+		discovered[BWD].put(t.getId(), _t);
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
@@ -79,24 +80,29 @@ public class HighwayHierarchiesAlgorithm {
 			u.heapIdx = HEAP_IDX_SETTLED;
 			shortestPathBuff.add(u.vertex);
 			numSettled[direction][u.level]++;
+			u.vertex = graph.getLevel(u.level).getVertex(u.vertex.getId());
 
 			if (u.distance > distance) {
 				queue[direction].clear();
 				continue;
 			}
 
-			HeapItem u_ = discovered[(direction + 1) % 2].get(u.vertex.getIdLvlZero());
+			HeapItem u_ = discovered[(direction + 1) % 2].get(u.vertex.getId());
 			if (u_ != null && u_.heapIdx == HEAP_IDX_SETTLED) {
 				distance = Math.min(distance, u.distance + u_.distance);
 			}
 
 			int lvl = u.level;
 			int gap = u.gap;
-			while (!relaxAdjacentEdges(u, direction, lvl, gap) && u.vertex.getIdOverly() != -1) {
-				// switch to next level
-				u.vertex = graph.getVertex(u.vertex.getIdOverly());
-				lvl++;
-				gap = u.vertex.getNeighborhood();
+			while (!relaxAdjacentEdges(u, direction, lvl, gap)) {
+				if (lvl < u.vertex.getMaxLevel()) {
+					lvl++;
+					u.vertex = graph.getLevel(lvl).getVertex(u.vertex.getId());
+					gap = u.vertex.getNeighborhood();
+				} else {
+					break;
+				}
+
 			}
 			direction = (direction + 1) % 2;
 		}
@@ -108,9 +114,9 @@ public class HighwayHierarchiesAlgorithm {
 		boolean result = true;
 		boolean forward = (direction == FWD);
 
-		Edge[] adjEdges = u.vertex.getOutboundEdges();
+		LevelEdge[] adjEdges = u.vertex.getOutboundEdges();
 		for (int i = 0; i < adjEdges.length; i++) {
-			Edge e = adjEdges[i];
+			LevelEdge e = adjEdges[i];
 			if (forward && !e.isForward()) {
 				continue;
 			}
@@ -118,7 +124,7 @@ public class HighwayHierarchiesAlgorithm {
 				continue;
 			}
 
-			Vertex _v = graph.getVertex(e.getTargetId());
+			LevelVertex _v = e.getTarget();
 
 			int gap_;
 			if (gap == Integer.MAX_VALUE) {
@@ -139,15 +145,14 @@ public class HighwayHierarchiesAlgorithm {
 				continue;
 			}
 
-			HeapItem v = discovered[direction].get(_v.getIdLvlZero());
+			HeapItem v = discovered[direction].get(_v.getId());
 			if (v == null) {
 				v = new HeapItem(u.distance + e.getWeight(), lvl, gap_, _v, u.vertex.getId());
-				discovered[direction].put(v.vertex.getIdLvlZero(), v);
+				discovered[direction].put(v.vertex.getId(), v);
 				queue[direction].insert(v);
 			} else if (v.compareTo(u.distance + e.getWeight(), lvl, gap_) > 0) {
 				v.distance = u.distance + e.getWeight();
 				v.level = lvl;
-				v.vertex = graph.getVertex(e.getTargetId());
 				v.gap = gap_;
 				v.parentId = u.vertex.getId();
 				queue[direction].decreaseKey(v, v);
@@ -180,10 +185,10 @@ public class HighwayHierarchiesAlgorithm {
 		public int level;
 		public int gap;
 		// 
-		public Vertex vertex;
+		public LevelVertex vertex;
 		public int parentId;
 
-		public HeapItem(int distance, int level, int gap, Vertex v, int parentId) {
+		public HeapItem(int distance, int level, int gap, LevelVertex v, int parentId) {
 			this.heapIdx = -1;
 			this.distance = distance;
 			this.level = level;
@@ -254,34 +259,52 @@ public class HighwayHierarchiesAlgorithm {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		String map = "berlin";
-		int n = 40000;
+		int n = 500;
 
-		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
-
+		LevelGraph graph = Serializer.deserialize(new File("berlin.levelGraph"));
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
+		HHDynamicGraph graph2 = Serializer.deserialize(new File("berlin.hhDynamicGraph"));
+		HHAlgorithmDynamicGraph hh2 = new HHAlgorithmDynamicGraph();
+
+		// for (Iterator<LevelVertex> iter = graph.getLevel(0).getVertices(); iter.hasNext();) {
+		// LevelVertex v = iter.next();
+		// System.out.println("vertex[" + v.getId() + "]");
+		// for (int i = 0; i <= v.getMaxLevel(); i++) {
+		// LevelVertex v_ = graph.getLevel(i).getVertex(v.getId());
+		// for (LevelEdge e : v_.getOutboundEdges()) {
+		// System.out.println(v.getId() + " -> " + e.getTarget().getId());
+		// }
+		// }
+		//
+		// }
+		// if (true) {
+		// return;
+		// }
 
 		// RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(),
 		// Color.BLACK,
 		// Color.WHITE);
-		LinkedList<Vertex> sp1 = new LinkedList<Vertex>();
-		LinkedList<Vertex> sp2 = new LinkedList<Vertex>();
-
+		LinkedList<LevelVertex> sp1 = new LinkedList<LevelVertex>();
+		LinkedList<LevelVertex> sp2 = new LinkedList<LevelVertex>();
+		Random rnd = new Random();
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
-			Vertex s = graph.getRandomVertex(0);
-			Vertex t = graph.getRandomVertex(0);
-			graph.clearCache();
-			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
-			int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
+			int s = rnd.nextInt(graph.getLevel(0).numVertices());
+			int t = rnd.nextInt(graph.getLevel(0).numVertices());
+			int d1 = hh.getShortestPath(s, t, sp1);
+			int d2 = dijkstra.getShortestPath(s, t, sp2);
+			int d3 = hh2.shortestDistance(graph2.getVertex(s), graph2.getVertex(t));
 			if (d1 != d2) {
-				System.out.println(d1 + " != " + d2);
+				System.out.println(d1 + " " + d2);
 			}
-
-			for (Vertex v : sp1) {
-				Vertex vLz = graph.getVertex(v.getIdLvlZero());
-				// renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
+			if (d1 != d3) {
+				System.out.println(d1 + " " + d3);
 			}
+			// for (Vertex v : sp1) {
+			// Vertex vLz = graph.getVertex(v.getIdLvlZero());
+			// // renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.RED);
+			// }
 			// for (Vertex v : sp2) {
 			// Vertex vLz = graph.getVertex(v.getIdLvlZero());
 			// renderer.addCircle(new GeoCoordinate(vLz.getLat(), vLz.getLon()), Color.BLUE);
@@ -291,8 +314,16 @@ public class HighwayHierarchiesAlgorithm {
 			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
 			// sp1.clear();
 		}
-		System.out.println("cache misses : " + graph.numCacheMisses);
 		System.out.println("num routes : " + n);
 		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}
+
+	public static int sumWeight(org.mapsforge.server.routing.IEdge[] e) {
+		int sum = 0;
+		for (org.mapsforge.server.routing.IEdge x : e) {
+			sum += x.getWeight();
+		}
+		return sum;
+	}
+
 }

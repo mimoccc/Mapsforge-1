@@ -282,8 +282,8 @@ class Block {
 				eExtTargetOffsVertexAdj[i] = cUtil.getClusterVertexOffset(
 						e.getTarget().getId(), this.lvl);
 				if (this.lvl > 0) {
-					eExtTargetOffsBlockLvlZero[i] = clusterToBlockOffsAdj.get(cUtil.getCluster(
-							e.getTarget().getId(), 0));
+					eExtTargetOffsBlockLvlZero[i] = clusterToBlockOffsLvlZero.get(cUtil
+							.getCluster(e.getTarget().getId(), 0));
 					eExtTargetOffsVertexLvlZero[i] = cUtil.getClusterVertexOffset(e.getTarget()
 							.getId(), 0);
 				}

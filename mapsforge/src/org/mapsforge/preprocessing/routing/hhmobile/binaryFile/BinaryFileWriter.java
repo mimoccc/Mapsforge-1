@@ -16,6 +16,8 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
+import gnu.trove.map.hash.TIntIntHashMap;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -30,6 +32,12 @@ import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGrap
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
+import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.DummyCache;
+import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Edge;
+import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.RoutingGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.DBConnection;
 
@@ -150,5 +158,89 @@ public class BinaryFileWriter {
 		int indexGroupSizeThreshold = 100;
 
 		writeBinaryFile(levelGraph, clustering, file, "test", indexGroupSizeThreshold);
+		RoutingGraph rg = new RoutingGraph(file, new DummyCache());
+		TIntIntHashMap e2i = Serializer.deserialize(new File("e2i"));
+		System.out.println("verify graph ok : " + verifyGraph(rg, levelGraph, e2i));
+	}
+
+	public static boolean verifyGraph(RoutingGraph graph, LevelGraph levelGraph,
+			TIntIntHashMap e2i) throws IOException {
+		int[] countV = new int[graph.numLevels()];
+		for (int e : e2i.keys()) {
+			int i = e2i.get(e);
+			Vertex ev = graph.getVertex(e);
+			LevelVertex iv = levelGraph.getLevel(ev.getLvl()).getVertex(i);
+			if (ev.getNeighborhood() != iv.getNeighborhood()) {
+				System.out.println("error nh");
+				return false;
+			}
+			if (ev.getOutboundEdges().length != iv.getOutboundEdges().length) {
+				System.out.println("error degree");
+				return false;
+			}
+			for (LevelEdge ie : iv.getOutboundEdges()) {
+				boolean result = false;
+				for (Edge ee : ev.getOutboundEdges()) {
+					if (ie.getWeight() == ee.getWeight() && ie.isForward() == ee.isForward()
+							&& ie.isBackward() == ee.isBackward()) {
+						Vertex target = graph.getVertex(ee.getTargetId());
+						if (e2i.get(target.getIdLvlZero()) == ie.getTarget().getId()
+								&& target.getLvl() == ev.getLvl()) {
+							result = true;
+						}
+					}
+				}
+				if (result == false) {
+					System.out.println("error edge");
+					return false;
+				}
+			}
+			Vertex ev_ = ev;
+			LevelVertex iv_ = iv;
+			while (ev_.getIdOverly() != -1) {
+				if (e2i.get(ev.getIdOverly()) != iv.getId()) {
+					System.out.println("error upward link");
+				}
+
+				ev_ = graph.getVertex(ev_.getIdOverly());
+				iv_ = levelGraph.getLevel(iv_.getLevel() + 1).getVertex(iv.getId());
+				// System.out.println(ev_.getIdLvlZero() + " " + ev.getId());
+
+				if (ev_.getNeighborhood() != iv_.getNeighborhood()) {
+					System.out.println("error upward nh - lvl=" + iv_.getLevel() + " "
+							+ iv.getId());
+					System.out.println(ev_.getNeighborhood() + " != " + iv_.getNeighborhood());
+					return false;
+				}
+			}
+
+			if (iv_.getLevel() != iv_.getMaxLevel()) {
+				System.out.println("error level " + ev.getLvl() + " " + iv_.getMaxLevel());
+				return false;
+			}
+
+			ev_ = ev;
+			iv_ = iv;
+			while (ev_.getIdSubj() != -1) {
+				if (e2i.get(ev.getIdSubj()) != iv.getId()) {
+					System.out.println("error downward link");
+				}
+
+				ev_ = graph.getVertex(ev_.getIdSubj());
+				iv_ = levelGraph.getLevel(iv_.getLevel() - 1).getVertex(iv.getId());
+				// System.out.println(ev_.getIdLvlZero() + " " + ev.getId());
+
+				if (ev_.getNeighborhood() != iv_.getNeighborhood()) {
+					System.out.println("error downward nh - lvl=" + iv_.getLevel() + " "
+							+ iv.getId());
+					System.out.println(ev_.getNeighborhood() + " != " + iv_.getNeighborhood());
+					return false;
+				}
+			}
+
+			countV[iv.getLevel()]++;
+
+		}
+		return true;
 	}
 }

@@ -147,7 +147,7 @@ public class LevelGraph implements Serializable {
 
 		private static final long serialVersionUID = 1L;
 
-		private final int lvl;
+		public final int lvl;
 		private final int lvlNumVertices, lvlNumEdges;
 
 		private Level(int lvl, int lvlNumVertices, int lvlNumEdges) {
@@ -219,6 +219,9 @@ public class LevelGraph implements Serializable {
 			private final int id;
 
 			private LevelVertex(int id) {
+				if (getVertexLvl(id) < lvl) {
+					System.out.println("dasdsadasgdasdasgjk");
+				}
 				this.id = id;
 			}
 

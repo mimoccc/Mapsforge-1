@@ -24,7 +24,6 @@ import java.io.RandomAccessFile;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointer;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphHeader;
-import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
 class BlockReader {
 
@@ -41,21 +40,6 @@ class BlockReader {
 		this.graphHeader = graphHeader;
 		this.blockIndex = blockIndex;
 		this.startAddrClusterBlocks = startAddrClusterBlocks;
-
-		try {
-			int[] v = new int[graphHeader.numLevels];
-			int[] e = new int[graphHeader.numLevels];
-			for (int i = 0; i < blockIndex.size(); i++) {
-				Block b = readBlock(i);
-				e[b.getLevel()] += b.getNumEdges();
-				v[b.getLevel()] += b.getNumVertices();
-			}
-			System.out.println("|V| : " + Utils.arrToString(v));
-			System.out.println("|E| : " + Utils.arrToString(e));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public Block readBlock(int blockId) throws IOException {
@@ -63,7 +47,6 @@ class BlockReader {
 		raf.seek(startAddrClusterBlocks + pointer.startAddr);
 		byte[] buff = new byte[pointer.lengthBytes];
 		bytesRead += buff.length;
-		// System.out.println("bytes read " + bytesRead);
 		raf.readFully(buff);
 		return new Block(buff, graphHeader, blockId);
 	}
