@@ -1,64 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Use this ant script for convenience with creating a distribution of mapsforge.
- The script in not intended for building the project. Use Eclipse for this purpose. -->
+	<!--
+		Use this ant script for convenience with creating a distribution of mapsforge.
+		The script in not intended for building the project. Use Eclipse for this
+		purpose.
+	-->
 <project name="mapsforge">
-	<property name="mapsforge.version" value="0.1.0"/>
-	<property name="mapsforge.bin" value="bin"/>
-	<property name="mapsforge.src" value="src"/>
+	<property name="mapsforge.version" value="0.1.0" />
 
-	<property name="mapsforge.advancemapviewer.lib.dir"
-				value="${basedir}/../AdvancedMapViewer/libs"/>
-	<property name="mapsforge.demomapviewer.lib.dir"
-					value="${basedir}/../DemoMapViewer/libs"/>
+	<property name="mapsforge.bin" value="bin" />
+	<property name="mapsforge.lib" value="lib" />
+	<property name="mapsforge.src" value="src" />
 
-	<property file="keystore.conf"/>
+	<property name="mapsforge.advancemapviewer.lib.dir" value="${basedir}/../AdvancedMapViewer/lib" />
+	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
 
-	<!-- List of files to be included in every distribution (jar-File) -->
-	<fileset dir="." id="info" includes="COPYING, NEWS"/>
-	
-	<!-- Build jar-Files for the distribution -->
-	<target name="dist" depends="jar-map"/>
-	
-	
-	<!-- Build and sign jar-File for mapsforge-map 
-	     In order to sign the jar, remember to create and adjust keystore.conf -->
-	<target name="jar-map">
-		<mkdir dir="dist"/>
-		<jar destfile="dist/mapsforge-map-${mapsforge.version}.jar">
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/map/"/>
-			<fileset refid="info"/>
-		</jar>
-		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar"
-			keystore="${mapsforge.keystore.location}"
-			storepass="${mapsforge.keystore.pass}"
-			alias="${mapsforge.keystore.alias}"
-			keypass="${mapsforge.key.pass}"/>
+	<!-- Name of the properties file that includes the keystore parameters -->
+	<property file="keystore.properties" />
+
+	<!-- List of files to be included in every distribution (JAR file) -->
+	<fileset dir="." id="info" includes="COPYING, NEWS" />
+
+	<!-- List of all JAR files in the library folder -->
+	<path id="classpath">
+		<fileset dir="${mapsforge.lib}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+
+	<!-- Build JAR files for the distribution -->
+	<target name="dist" depends="mapsforge-map.jar create" />
+
+
+	<!-- Delete temporary folders -->
+	<target name="clean">
+		<delete dir="doc" />
+		<delete dir="dist" />
 	</target>
 
-	<!-- Copy the newly created mapsforge-map.jar to the dependent projects -->
-	<target name="inject-map-jar" depends="jar-map">
-		<mkdir dir="${mapsforge.advancemapviewer.lib.dir}"/>
-		<mkdir dir="${mapsforge.demomapviewer.lib.dir}"/>
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" 
-			todir="${mapsforge.advancemapviewer.lib.dir}"/>
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" 
-			todir="${mapsforge.demomapviewer.lib.dir}"/>
-	</target>
 
-	<!-- Create javadoc for the mapsforge-map component -->
-	<target name="javadoc-map">
-		<mkdir dir="doc/${mapsforge.version}"/>
-		<javadoc  destdir="doc/${mapsforge.version}"
-			author="true"
-			classpath="lib/*.jar">
-			<fileset dir="${mapsforge.src}"
-				includes="org/mapsforge/android/map/*"
-				excludes="org/mapsforge/android/map/package.html"/>
+	<!-- Create javadoc for the map package -->
+	<target name="mapsforge-map javadoc">
+		<mkdir dir="doc/${mapsforge.version}" />
+		<javadoc destdir="doc/${mapsforge.version}" author="false" access="protected"
+			additionalparam="-quiet" classpathref="classpath">
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/*.java" />
+			<!-- Add links to the online Android javadoc reference -->
+			<link href="http://developer.android.com/reference" offline="true"
+				packagelistloc="${basedir}/../../Android/android-sdk-linux_86/docs/reference" />
 		</javadoc>
 	</target>
 
-	<target name="clean">
-		<delete dir="doc"/>
-		<delete dir="dist"/>
+
+	<!-- Copy the newly created map JAR file to the dependent projects -->
+	<target name="mapsforge-map.jar copy" depends="mapsforge-map.jar create">
+		<mkdir dir="${mapsforge.advancemapviewer.lib.dir}" />
+		<mkdir dir="${mapsforge.demomapviewer.lib.dir}" />
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" todir="${mapsforge.advancemapviewer.lib.dir}" />
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" todir="${mapsforge.demomapviewer.lib.dir}" />
+	</target>
+
+
+	<!-- Build, sign and verify the JAR file for mapsforge-map -->
+	<target name="mapsforge-map.jar create">
+		<mkdir dir="dist" />
+		<!-- Include source code and generated class files, avoid duplicates -->
+		<jar destfile="dist/mapsforge-map-${mapsforge.version}.jar" duplicate="preserve">
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/map/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/" />
+			<fileset refid="info" />
+		</jar>
+		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar" keystore="${mapsforge.keystore.location}"
+			storepass="${mapsforge.keystore.pass}" alias="${mapsforge.keystore.alias}"
+			keypass="${mapsforge.key.pass}" />
+		<!-- Verify the signed JAR file and stop if verification was not successful -->
+		<exec executable="jarsigner" failonerror="true">
+			<arg value="-verify" />
+			<arg value="dist/mapsforge-map-${mapsforge.version}.jar" />
+		</exec>
 	</target>
 </project>
