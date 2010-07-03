@@ -51,6 +51,10 @@ public class RoutingGraph {
 				fileHeader.startAddrGraphHeader, fileHeader.endAddrGraphHeader));
 		BlockPointerIndex blockIdx = new BlockPointerIndex(read(raf,
 				fileHeader.startAddrBlockPointerIdx, fileHeader.endAddrBlockPointerIdx));
+		for (int i = 0; i < blockIdx.size(); i++) {
+			blockIdx.getPointer(i);
+		}
+
 		raf.close();
 
 		this.numLevels = graphHeader.numLevels;

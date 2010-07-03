@@ -446,7 +446,7 @@ public class HighwayHierarchiesAlgorithm {
 			Vertex t = graph.getRandomVertex(0);
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
 			graph.clearCache();
-			int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
+			// int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
 			// if (d1 != d2) {
 			// System.out.println(d1 + " != " + d2);
 			// }

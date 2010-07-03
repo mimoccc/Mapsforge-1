@@ -61,10 +61,14 @@ public class BinaryFileWriter {
 
 		// write blockPointer Index
 
-		BlockPointerIndex blockIdx = BlockPointerIndex.getSpaceOptimalIndex(blockSize,
-				indexGroupSizeThreshold);
+		// BlockPointerIndex blockIdx = BlockPointerIndex.getSpaceOptimalIndex(blockSize,
+		// indexGroupSizeThreshold);
+		BlockPointerIndex blockIdx = new BlockPointerIndex(blockSize, 97);
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
 				fBlockPointerIdx));
+		for (int i = 0; i < blockIdx.size(); i++) {
+			blockIdx.getPointer(i);
+		}
 		blockIdx.serialize(out);
 		out.close();
 
@@ -134,7 +138,7 @@ public class BinaryFileWriter {
 			Serializer.serialize(new File(map + ".levelGraph"), levelGraph);
 			clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 					levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
-					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 100);
+					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 70);
 			// clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 			// 100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 

@@ -169,8 +169,12 @@ public class BitSerializer {
 	}
 
 	public static byte readByte(byte[] buff, int byteOffset, int bitOffset) {
+		if (bitOffset == 0) {
+			return buff[byteOffset];
+		}
 		return (byte) (shr(buff[byteOffset], bitOffset) | shl(buff[byteOffset + 1],
 				BITS_PER_BYTE - bitOffset));
+
 	}
 
 	public static short readShort(byte[] buff, int byteOffset, int bitOffset) {
