@@ -113,7 +113,7 @@ public class XMLRouteController implements IRouteController {
 			}
 
 			@Override
-			public void endDocument() throws SAXException {
+			public void endDocument() {
 				if (!isCanceled)
 					routeHandler.onGeoCode(points);
 			}
@@ -151,7 +151,7 @@ public class XMLRouteController implements IRouteController {
 			}
 
 			@Override
-			public void endDocument() throws SAXException {
+			public void endDocument() {
 				if (!isCanceled)
 					routeHandler.onServerFeatures(features);
 			}
@@ -223,7 +223,7 @@ public class XMLRouteController implements IRouteController {
 			}
 
 			@Override
-			public void endDocument() throws SAXException {
+			public void endDocument() {
 				if (!isCanceled)
 					routeHandler.onPoints(points);
 			}
@@ -266,7 +266,7 @@ public class XMLRouteController implements IRouteController {
 
 			@Override
 			public void startElement(String uri, String localName, String qName,
-					Attributes attributes) throws SAXException {
+					Attributes attributes) {
 			}
 
 			@Override
@@ -287,7 +287,7 @@ public class XMLRouteController implements IRouteController {
 			}
 
 			@Override
-			public void endDocument() throws SAXException {
+			public void endDocument() {
 				if (!isCanceled)
 					routeHandler.onRoute(points);
 			}
