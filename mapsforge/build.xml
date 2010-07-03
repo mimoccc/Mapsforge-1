@@ -14,8 +14,8 @@
 	<property name="mapsforge.advancemapviewer.lib.dir" value="${basedir}/../AdvancedMapViewer/lib" />
 	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
 
-	<!-- Name of the properties file that includes the keystore parameters -->
-	<property file="keystore.properties" />
+	<!-- Path to the properties file that includes the keystore parameters -->
+	<property file="../keystore.properties" />
 
 	<!-- List of files to be included in every distribution (JAR file) -->
 	<fileset dir="." id="info" includes="COPYING, NEWS" />
