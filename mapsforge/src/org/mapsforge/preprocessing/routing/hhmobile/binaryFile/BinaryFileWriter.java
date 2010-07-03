@@ -126,7 +126,7 @@ public class BinaryFileWriter {
 			SQLException {
 		LevelGraph levelGraph;
 		IClustering[] clustering;
-		String map = "berlin";
+		String map = "germany";
 
 		if (true) {
 			levelGraph = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,

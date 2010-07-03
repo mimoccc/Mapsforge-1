@@ -62,7 +62,8 @@ public class RouteViewer {
 		mapKit.setDefaultProvider(DefaultProviders.OpenStreetMaps);
 		mapKit.setDataProviderCreditShown(true);
 
-		this.overlay = new RouteOverlay(RouterFactory.getRouter(), Color.RED, Color.BLUE);
+		this.overlay = new RouteOverlay(RouterFactory.getRouter(), Color.RED.darker(),
+				Color.BLUE.darker().darker());
 		mapKit.getMainMap().setOverlayPainter(overlay);
 		mapKit.getMainMap().addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
@@ -208,35 +209,51 @@ public class RouteViewer {
 			g.setStroke(new BasicStroke(2));
 			synchronized (this) {
 				for (IEdge e : searchSpace) {
-					double[] cs = new double[] {
-							e.getSource().getCoordinate().getLatitude().getDegree(),
-							e.getSource().getCoordinate().getLongitude().getDegree() };
-					double[] ct = new double[] {
-							e.getTarget().getCoordinate().getLatitude().getDegree(),
-							e.getTarget().getCoordinate().getLongitude().getDegree() };
-					Point2D s = mapKit.getMainMap().getTileFactory().geoToPixel(
-							new GeoPosition(cs), mapKit.getMainMap().getZoom());
-					Point2D t = mapKit.getMainMap().getTileFactory().geoToPixel(
-							new GeoPosition(ct), mapKit.getMainMap().getZoom());
-					g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(), (int) t.getY());
-				}
-
-				g.setStroke(new BasicStroke(4));
-				g.setColor(cRoute);
-				if (route != null) {
-					for (IEdge e : route) {
-						double[] cs = new double[] {
-								e.getSource().getCoordinate().getLatitude().getDegree(),
-								e.getSource().getCoordinate().getLongitude().getDegree() };
-						double[] ct = new double[] {
-								e.getTarget().getCoordinate().getLatitude().getDegree(),
-								e.getTarget().getCoordinate().getLongitude().getDegree() };
+					GeoCoordinate[] coords = new GeoCoordinate[e.getWaypoints().length + 2];
+					coords[0] = e.getSource().getCoordinate();
+					coords[coords.length - 1] = e.getTarget().getCoordinate();
+					int i = 1;
+					for (GeoCoordinate c : e.getWaypoints()) {
+						coords[i++] = c;
+					}
+					for (int j = 1; j < coords.length; j++) {
+						double[] cs = new double[] { coords[j - 1].getLatitude().getDegree(),
+								coords[j - 1].getLongitude().getDegree() };
+						double[] ct = new double[] { coords[j].getLatitude().getDegree(),
+								coords[j].getLongitude().getDegree() };
 						Point2D s = mapKit.getMainMap().getTileFactory().geoToPixel(
 								new GeoPosition(cs), mapKit.getMainMap().getZoom());
 						Point2D t = mapKit.getMainMap().getTileFactory().geoToPixel(
 								new GeoPosition(ct), mapKit.getMainMap().getZoom());
 						g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(), (int) t
 								.getY());
+					}
+				}
+
+				g.setStroke(new BasicStroke(4));
+				g.setColor(cRoute);
+				if (route != null) {
+					for (IEdge e : route) {
+						GeoCoordinate[] coords = new GeoCoordinate[e.getWaypoints().length + 2];
+						coords[0] = e.getSource().getCoordinate();
+						coords[coords.length - 1] = e.getTarget().getCoordinate();
+						int i = 1;
+						for (GeoCoordinate c : e.getWaypoints()) {
+							coords[i++] = c;
+						}
+						for (int j = 1; j < coords.length; j++) {
+							double[] cs = new double[] {
+									coords[j - 1].getLatitude().getDegree(),
+									coords[j - 1].getLongitude().getDegree() };
+							double[] ct = new double[] { coords[j].getLatitude().getDegree(),
+									coords[j].getLongitude().getDegree() };
+							Point2D s = mapKit.getMainMap().getTileFactory().geoToPixel(
+									new GeoPosition(cs), mapKit.getMainMap().getZoom());
+							Point2D t = mapKit.getMainMap().getTileFactory().geoToPixel(
+									new GeoPosition(ct), mapKit.getMainMap().getZoom());
+							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(), (int) t
+									.getY());
+						}
 					}
 				}
 			}

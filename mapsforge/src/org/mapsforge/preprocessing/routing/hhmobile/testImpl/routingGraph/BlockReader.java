@@ -55,4 +55,12 @@ class BlockReader {
 		return blockIndex.size();
 	}
 
+	public int getBytesRead() {
+		return bytesRead;
+	}
+
+	public void resetBytesRead() {
+		bytesRead = 0;
+	}
+
 }

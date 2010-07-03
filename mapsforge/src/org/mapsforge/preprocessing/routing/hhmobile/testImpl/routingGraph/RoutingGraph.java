@@ -66,6 +66,8 @@ public class RoutingGraph {
 	public void clearCache() {
 		cache.clear();
 		this.numCacheMisses = 0;
+		System.out.println("bytes read : " + blockReader.getBytesRead());
+		blockReader.resetBytesRead();
 	}
 
 	public int numLevels() {

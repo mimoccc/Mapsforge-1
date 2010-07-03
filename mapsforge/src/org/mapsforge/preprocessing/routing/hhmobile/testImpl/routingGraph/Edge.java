@@ -17,7 +17,6 @@
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
 public class Edge {
-
 	private final int targetId, targetIdLvlZero;
 	private final int weight;
 	private final boolean isShortcut, isForward, isBackward, isCore;
