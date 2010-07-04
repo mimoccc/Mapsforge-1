@@ -251,6 +251,10 @@ class Block {
 		return bId;
 	}
 
+	public int getSizeBytes() {
+		return data.length;
+	}
+
 	public int getLevel() {
 		return lvl;
 	}

@@ -23,8 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.DummyCache;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Edge;
+import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.LRUCache;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.RoutingGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
@@ -430,7 +430,8 @@ public class HighwayHierarchiesAlgorithm {
 		String map = "germany";
 		int n = 1;
 
-		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
+		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new LRUCache(
+				1024 * 1000));
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
@@ -445,7 +446,7 @@ public class HighwayHierarchiesAlgorithm {
 			Vertex s = graph.getRandomVertex(0);
 			Vertex t = graph.getRandomVertex(0);
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
-			graph.clearCache();
+			// graph.clearCache();
 			// int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
 			// if (d1 != d2) {
 			// System.out.println(d1 + " != " + d2);

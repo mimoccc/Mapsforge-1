@@ -37,6 +37,7 @@ public class RoutingGraph {
 	private final int shiftClusterId;
 	private final int bitMask;
 	public int numCacheMisses;
+	private final Random rnd = new Random(12);
 
 	public RoutingGraph(File file, ICache cache) throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(file, "r");
@@ -79,7 +80,6 @@ public class RoutingGraph {
 	}
 
 	public Vertex getRandomVertex(int lvl) throws IOException {
-		Random rnd = new Random();
 		int blockId = rnd.nextInt(blockReader.getNumBlocks());
 		Vertex v = getVertex(blockId << shiftClusterId);
 		while (v.getLvl() != lvl) {
