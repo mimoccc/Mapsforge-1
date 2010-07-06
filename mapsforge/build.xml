@@ -15,7 +15,7 @@
 	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
 
 	<!-- Path to the properties file that includes the keystore parameters -->
-	<property file="../keystore.properties" />
+	<property file="../mapsforge-keystore.properties" />
 
 	<!-- List of files to be included in every distribution (JAR file) -->
 	<fileset dir="." id="info" includes="COPYING, NEWS" />
