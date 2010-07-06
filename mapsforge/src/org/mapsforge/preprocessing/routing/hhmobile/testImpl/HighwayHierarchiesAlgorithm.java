@@ -125,13 +125,14 @@ public class HighwayHierarchiesAlgorithm {
 			direction = (direction + 1) % 2;
 		}
 		if (searchScopeHitId != -1) {
-			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
-					.get(searchScopeHitId), shortestPathBuff);
-
+			// expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
+			// .get(searchScopeHitId), shortestPathBuff);
 		}
 
 		System.out.println("settled : " + Utils.arrToString(numSettled[0]) + " | "
 				+ Utils.arrToString(numSettled[1]));
+		System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
+		Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
 		return distance;
 	}
 
@@ -428,10 +429,10 @@ public class HighwayHierarchiesAlgorithm {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		String map = "germany";
-		int n = 1;
+		int n = 30;
 
-		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new LRUCache(
-				1024 * 1000));
+		LRUCache cache = new LRUCache(16384 * 1024);
+		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), cache);
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
@@ -446,7 +447,10 @@ public class HighwayHierarchiesAlgorithm {
 			Vertex s = graph.getRandomVertex(0);
 			Vertex t = graph.getRandomVertex(0);
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
-			// graph.clearCache();
+			System.out.println("cache misses : " + cache.getNumCacheMisses());
+			System.out.println("bytes read : " + cache.getNumBytesRead());
+			cache.clear();
+
 			// int d2 = dijkstra.getShortestPath(s.getId(), t.getId(), sp2);
 			// if (d1 != d2) {
 			// System.out.println(d1 + " != " + d2);
@@ -457,11 +461,10 @@ public class HighwayHierarchiesAlgorithm {
 			}
 
 			//
-			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
-			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
-			// sp1.clear();
+			renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
+			renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
+			sp1.clear();
 		}
-		System.out.println("cache misses : " + graph.numCacheMisses);
 		System.out.println("num routes : " + n);
 		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}

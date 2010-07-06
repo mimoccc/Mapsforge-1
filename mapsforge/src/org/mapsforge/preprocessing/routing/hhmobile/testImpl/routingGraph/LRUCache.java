@@ -25,12 +25,16 @@ public class LRUCache implements ICache {
 	private final TLinkedList<CacheItem> list;
 	private final TIntObjectHashMap<CacheItem> map;
 	private int sizeBytesThreshold, sizeBytes;
+	private int numCacheMisses;
+	private int numBytesRead;
 
 	public LRUCache(int sizeBytesThreshold) {
 		this.list = new TLinkedList<CacheItem>();
 		this.map = new TIntObjectHashMap<CacheItem>();
 		this.sizeBytesThreshold = sizeBytesThreshold;
 		this.sizeBytes = 0;
+		this.numCacheMisses = 0;
+		this.numBytesRead = 0;
 	}
 
 	@Override
@@ -38,6 +42,16 @@ public class LRUCache implements ICache {
 		this.list.clear();
 		this.map.clear();
 		this.sizeBytes = 0;
+		this.numCacheMisses = 0;
+		this.numBytesRead = 0;
+	}
+
+	public int getNumCacheMisses() {
+		return numCacheMisses;
+	}
+
+	public int getNumBytesRead() {
+		return numBytesRead;
 	}
 
 	@Override
@@ -48,6 +62,7 @@ public class LRUCache implements ICache {
 			list.addFirst(item);
 			return item.block;
 		}
+		numCacheMisses++;
 		return null;
 	}
 
@@ -62,7 +77,7 @@ public class LRUCache implements ICache {
 			map.remove(last.block.getBlockId());
 			sizeBytes -= last.block.getSizeBytes();
 		}
-		// System.out.println(sizeBytes);
+		this.numBytesRead += block.getSizeBytes();
 	}
 
 	private static class CacheItem implements TLinkable<CacheItem> {

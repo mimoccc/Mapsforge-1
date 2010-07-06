@@ -138,7 +138,7 @@ public class BinaryFileWriter {
 			Serializer.serialize(new File(map + ".levelGraph"), levelGraph);
 			clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 					levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
-					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 70);
+					QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 100);
 			// clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 			// 100, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 

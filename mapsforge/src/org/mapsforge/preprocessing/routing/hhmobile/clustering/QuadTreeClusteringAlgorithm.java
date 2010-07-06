@@ -74,11 +74,6 @@ public class QuadTreeClusteringAlgorithm {
 		QuadTreeClustering clustering = new QuadTreeClustering(numVerticesLvlZero);
 		subdivide(vertexId, lon_, lat_, 0, vertexId.length, heuristik, clustering, threshold);
 
-		// restore initial ordering
-		SortableVertices s = new SortableVertices(vertexId, lon, lat);
-		s.setSortByVertexId();
-		quicksort.sort(s, 0, vertexId.length);
-
 		return clustering;
 	}
 

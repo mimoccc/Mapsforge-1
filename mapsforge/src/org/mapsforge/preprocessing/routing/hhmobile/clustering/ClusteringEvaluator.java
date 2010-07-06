@@ -40,7 +40,7 @@ public class ClusteringEvaluator {
 		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
 				"postgres", "admin");
 		LevelGraph levelGraph = new LevelGraph(conn);
-		int lvl = 0;
+		int lvl = 2;
 		Level graph = levelGraph.getLevel(lvl);
 
 		// k-center
@@ -54,6 +54,10 @@ public class ClusteringEvaluator {
 				graph, levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
 				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2,
 				levelGraph.getLevel(0).numVertices());
+
+		quadClustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
+				levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
+				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 1000)[2];
 
 		// verify
 		int count = 0;
@@ -75,7 +79,7 @@ public class ClusteringEvaluator {
 		renderClustering(router, kCenterClustering);
 		renderClustering(router, quadClustering);
 
-		evaluateClustering(kCenterClustering, graph);
+		evaluateClustering(quadClustering, graph);
 	}
 
 	private static void renderClustering(IRouter router, IClustering clustering) {

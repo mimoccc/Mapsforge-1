@@ -155,7 +155,6 @@ public class DijkstraAlgorithm {
 			sp.clear();
 		}
 		System.out.println("num routes : " + n);
-		System.out.println("cache misses : " + graph.numCacheMisses);
 		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}
 }

@@ -105,6 +105,12 @@ public final class Utils {
 		}
 	}
 
+	public static void setZero(int[] arr, int offset, int len) {
+		for (int i = 0; i < len; i++) {
+			arr[offset + i] = 0;
+		}
+	}
+
 	public static <T> void swap(T[] arr, int i, int j) {
 		T tmp = arr[i];
 		arr[i] = arr[j];

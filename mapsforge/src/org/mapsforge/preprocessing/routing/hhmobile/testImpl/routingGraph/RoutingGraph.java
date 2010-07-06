@@ -36,8 +36,8 @@ public class RoutingGraph {
 	private final ICache cache;
 	private final int shiftClusterId;
 	private final int bitMask;
-	public int numCacheMisses;
-	private final Random rnd = new Random(12);
+	private final Random rnd = new Random(1222);
+	public int[] numBlockReads;
 
 	public RoutingGraph(File file, ICache cache) throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(file, "r");
@@ -65,14 +65,7 @@ public class RoutingGraph {
 		this.shiftClusterId = graphHeader.bpVertexCount;
 		this.bitMask = getBitmask(shiftClusterId);
 
-		this.numCacheMisses = 0;
-	}
-
-	public void clearCache() {
-		cache.clear();
-		this.numCacheMisses = 0;
-		System.out.println("bytes read : " + blockReader.getBytesRead());
-		blockReader.resetBytesRead();
+		this.numBlockReads = new int[numLevels];
 	}
 
 	public int numLevels() {
@@ -94,8 +87,8 @@ public class RoutingGraph {
 		Block block = cache.getBlock(blockId);
 		if (block == null) {
 			block = blockReader.readBlock(blockId);
+			numBlockReads[block.getLevel()]++;
 			cache.putBlock(block);
-			numCacheMisses++;
 		}
 		int vertexOffset = getVertexOffset(vertexId);
 		return block.getVertex(vertexOffset);
