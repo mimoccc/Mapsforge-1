@@ -50,9 +50,9 @@ public class HHRoutingWebservice extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		response.setCharacterEncoding("UTF-8");
 		PrintWriter out = response.getWriter();
 		try {
-			
 			ArrayList<Integer> pointIds = parseInputString(request.getParameter("points"));
 			// ToDo: handle any number of stops along the way
 			// for now its just source and destination
@@ -61,12 +61,15 @@ public class HHRoutingWebservice extends HttpServlet {
 			JSONObject json = getGeoJson(routeEdges);
 			String format = request.getParameter("format");
 			if (format.equalsIgnoreCase("json")) {
-				response.setHeader("Content-Type", "application/json; charset=utf-8"); // iso-8859-1  utf-8
+				//response.setHeader("Content-Type", "application/json;charset=utf-8"); // iso-8859-1  utf-8´
+				response.setContentType("application/json; charset=UTF-8");
 				json.write(out);
 			} else if (format.equalsIgnoreCase("xml")) {
-				response.setHeader("Content-Type", "text/xml;");
+				//response.setHeader("Content-Type", "text/xml; charset=utf-8");//charset=utf-8");
+				response.setContentType("text/xml; charset=UTF-8");
 				// Put it into a root object
-				out.write(org.json.XML.toString(json, "route"));
+				// "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "\n" + 
+				out.write(org.json.XML.toString(json, "xml"));
 			}
 		} catch (Exception e) {
 			System.err.print(e.toString());
@@ -80,11 +83,17 @@ public class HHRoutingWebservice extends HttpServlet {
 	 */
 	private JSONObject getGeoJson(IEdge[] routeEdges) {
 		try {
+			if (routeEdges == null) {
+				return new JSONObject().put("type", "Error").put("message", "Freaking null pointer exception");
+			}
 			JSONObject json = new JSONObject();
 			JSONArray jsonfeatures = new JSONArray();
 			json.put("type", "FeatureCollection");
 			json.put("features", jsonfeatures);
-			for (IEdge routeEdge : routeEdges) {
+			for (int i = 0; i < routeEdges.length; i++) {
+				IEdge routeEdge = routeEdges[i];
+				String StreetName = routeEdge.getName();
+				if (StreetName == null) StreetName = "";
 				ArrayList<GeoCoordinate> streetCoordinates = new ArrayList<GeoCoordinate>();
 				streetCoordinates.add(routeEdge.getSource().getCoordinate());
 				streetCoordinates.addAll(Arrays.asList(routeEdge.getWaypoints()));
@@ -96,20 +105,39 @@ public class HHRoutingWebservice extends HttpServlet {
 						.put(sc.getLatitude().getDegree())
 					);
 				}
-				jsonfeatures.put(new JSONObject()
-					.put("type", "Feature")
-					.put("geometry", new JSONObject()
-						.put("type", "LineString")
-						.put("coordinates", streetCoordinatesAsJson)
-					)
-					.put("properties", new JSONObject()
-						.put("Name", routeEdge.getName())
-					)
-				);	
+				JSONObject last = null;
+				if (jsonfeatures.length() > 0) {
+					last = jsonfeatures.getJSONObject(jsonfeatures.length()-1);
+					//System.out.println(last.getJSONObject("properties").optString("Name"));
+				}
+				// In this if clause streets are merged into a single GeoJSON feature if they have the same name
+				if (last != null && 
+						last.getJSONObject("properties").getString("Name").equals(StreetName)) {
+					for (int m = 1; m < streetCoordinates.size(); m++) {
+						GeoCoordinate sc = streetCoordinates.get(m);
+						last.getJSONObject("geometry").getJSONArray("coordinates").put(
+							new JSONArray()
+								.put(sc.getLongitude().getDegree())
+								.put(sc.getLatitude().getDegree())
+						);
+					}
+				} else {
+					jsonfeatures.put(new JSONObject()
+						.put("type", "Feature")
+						.put("geometry", new JSONObject()
+							.put("type", "LineString")
+							.put("coordinates", streetCoordinatesAsJson)
+						)
+						.put("properties", new JSONObject()
+							.put("Name", StreetName)
+						)
+					);	
+				}
 			}
 			return json;
 		} catch (Exception e) {
 			System.err.println("Error when creating json");
+			e.printStackTrace();
 			return new JSONObject();
 		}
 	}
