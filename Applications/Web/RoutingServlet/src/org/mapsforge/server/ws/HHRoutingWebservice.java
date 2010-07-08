@@ -90,6 +90,7 @@ public class HHRoutingWebservice extends HttpServlet {
 			JSONArray jsonfeatures = new JSONArray();
 			json.put("type", "FeatureCollection");
 			json.put("features", jsonfeatures);
+			int distance;
 			for (int i = 0; i < routeEdges.length; i++) {
 				IEdge routeEdge = routeEdges[i];
 				String StreetName = routeEdge.getName();
@@ -99,16 +100,20 @@ public class HHRoutingWebservice extends HttpServlet {
 				streetCoordinates.addAll(Arrays.asList(routeEdge.getWaypoints()));
 				streetCoordinates.add(routeEdge.getTarget().getCoordinate());
 				JSONArray streetCoordinatesAsJson = new JSONArray();
-				for (GeoCoordinate sc : streetCoordinates) {
+				distance = 0;
+				for (int j = 0; j < streetCoordinates.size(); j++) {
+					GeoCoordinate sc = streetCoordinates.get(j);
 					streetCoordinatesAsJson.put(new JSONArray()
 						.put(sc.getLongitude().getDegree())
 						.put(sc.getLatitude().getDegree())
 					);
+					if (j > 0) {
+						distance += streetCoordinates.get(j-1).distance(sc);
+					}
 				}
 				JSONObject last = null;
 				if (jsonfeatures.length() > 0) {
 					last = jsonfeatures.getJSONObject(jsonfeatures.length()-1);
-					//System.out.println(last.getJSONObject("properties").optString("Name"));
 				}
 				// In this if clause streets are merged into a single GeoJSON feature if they have the same name
 				if (last != null && 
@@ -121,6 +126,8 @@ public class HHRoutingWebservice extends HttpServlet {
 								.put(sc.getLatitude().getDegree())
 						);
 					}
+					distance += last.getJSONObject("properties").getInt("Length");
+					last.getJSONObject("properties").put("Length", distance);
 				} else {
 					jsonfeatures.put(new JSONObject()
 						.put("type", "Feature")
@@ -130,6 +137,7 @@ public class HHRoutingWebservice extends HttpServlet {
 						)
 						.put("properties", new JSONObject()
 							.put("Name", StreetName)
+							.put("Length", distance)
 						)
 					);	
 				}
@@ -162,4 +170,23 @@ public class HHRoutingWebservice extends HttpServlet {
 		}
 		return pp;
 	}	
+	
+	public static void main(String[] args) {
+		HHRoutingWebservice hhrs = new HHRoutingWebservice();
+		//hhrs.init();
+		router = RouterFactory.getRouter("C:/uni/apache-tomcat-6.0.26/webapps/HHRoutingWebservice/WEB-INF/routerFactory.properties");
+		ArrayList<Integer> pointIds = hhrs.parseInputString("8.7909019470218,53.087836143123;8.8166511535637,53.094743161751");
+		// ToDo: handle any number of stops along the way
+		// for now its just source and destination
+		IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
+		//IEdge[] routeEdges = router.getShortestPath(2, 6921);
+		JSONObject json = hhrs.getGeoJson(routeEdges);
+		try {
+			System.out.println(json.toString(2));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 }
