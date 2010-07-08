@@ -3,10 +3,10 @@
  * Coordinates of Brandenburger Tor
  */
 var initMap = {
-  lon : 13.377655,
-  lat : 52.516471,
+  lon : 8.8,
+  lat : 53.1,
   zoom : 14
-}
+};
 
 /**
  * Initialization of the OpenStreetMap map.
@@ -56,13 +56,39 @@ function init() {
 	map.addControl(mf_dragcontrol);
 	mf_dragcontrol.activate();
 
-  var centerLonLat = new OpenLayers.LonLat(initMap.lon, initMap.lat).transform(projWSG84, projSpheMe);
+  var centerLonLat = new OpenLayers.LonLat(initMap.lon, initMap.lat).tf();
   map.setCenter(centerLonLat, initMap.zoom);
 }
 
 var map; // complex object of type OpenLayers.Map
 var projWSG84 = new OpenLayers.Projection("EPSG:4326");
 var projSpheMe = new OpenLayers.Projection("EPSG:900913");
+
+/**
+ * Helper function for not writing the same transformation over and over again
+ * 
+ * @return this LonLat object in the projection of the OpenStreetMap layer
+ */
+OpenLayers.LonLat.prototype.tf = function() {
+  if (this.tf_result == undefined) {
+    this.tf_result = this.clone().transform(projWSG84, projSpheMe);
+    this.tf_result.rtf_result = this;
+  }
+  return this.tf_result;
+};
+
+/**
+ * Helper function for not writing the same transformation over and over again
+ * 
+ * @return this LonLat object in the WSG 1984 projection 
+ */
+OpenLayers.LonLat.prototype.rtf = function() {
+  if (this.rtf_result == undefined) {
+    this.rtf_result = this.clone().transform(projSpheMe, projWSG84);
+    this.rtf_result.tf_result = this;
+  }
+  return this.rtf_result;
+};
 
 // The route object contains all the info relevant to the routing
 var route = {
@@ -77,21 +103,19 @@ var route = {
 var menupopup;
 function mf_contextmenu(e) {
 
-	clickX = e.pageX - leftDivWidth + 10; // 10 because of padding
-	clickY = e.pageY - 5; // 5 also because of padding
-	clickLatLonMapProj = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY));
-	//console.log(clickLatLonMapProj);
-  clickLatLonWSG84Proj = clickLatLonMapProj.clone().transform(projSpheMe, projWSG84);
-  newValues = clickLatLonWSG84Proj.lon
-              + ',' + clickLatLonWSG84Proj.lat
-              + ',\'' + clickLatLonWSG84Proj.lat
-              + ', ' + clickLatLonWSG84Proj.lon+ '\',';
+  clickX = e.pageX - leftDivWidth + 10; // 10 because of padding
+  clickY = e.pageY - 5; // 5 also because of padding
+  clickLatLon = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY)).rtf();
+  newValues = clickLatLon.lon
+              + ',' + clickLatLon.lat
+              + ',\'' + clickLatLon.lat
+              + ', ' + clickLatLon.lon+ '\',';
   menuhtml = '<div id="popupmenu"><a onclick="setValues(' + newValues + '\'start\')">Set Start</a><br>'
            + '<a onclick="setValues(' + newValues + '\'via\')">Set Via</a><br>'
            + '<a onclick="setValues(' + newValues + '\'end\')">Set End</a></div>';
   
   menupopup = new OpenLayers.Popup("menu",
-                               clickLatLonMapProj,
+                               clickLatLon.tf(),
                                new OpenLayers.Size(80,60),
                                menuhtml,
                                false);
@@ -144,7 +168,7 @@ function newRequest() {
 	document.search.end.value = "";
 }
 
-route.drag = {} // encapsulate the dragging stuff
+route.drag = {}; // encapsulate the dragging stuff
 route.drag.isdragging = false;
 //route.drag.date = new Date;
 //route.drag.lastDrag = route.drag.date.getTime();
@@ -154,9 +178,8 @@ function mf_dragpoint(feature, pixel) {
   // if ((route.drag.date.getTime() - route.drag.lastDrag > 300) && !(route.waitingForResponse) ) {
   if (!(route.waitingForResponse) ) {
     //route.drag.lastDrag = route.drag.date.getTime();
-  	route.drag.LonLatMapProj = map.getLonLatFromPixel(new OpenLayers.Pixel(pixel.x, pixel.y));
-    route.drag.LonLatWSG84Proj = route.drag.LonLatMapProj.clone().transform(projSpheMe, projWSG84);
-    setValues(route.drag.LonLatWSG84Proj.lon, route.drag.LonLatWSG84Proj.lat, route.drag.LonLatWSG84Proj.lon +", "+ route.drag.LonLatWSG84Proj.lat, feature.attributes.mf);
+  	route.drag.LonLat = map.getLonLatFromPixel(new OpenLayers.Pixel(pixel.x, pixel.y));
+    setValues(route.drag.LonLat.rtf().lon, route.drag.LonLat.rtf().lat, route.drag.LonLat.rtf().lon +", "+ route.drag.LonLat.rtf().lat, feature.attributes.mf);
   }
 }
 function mf_dragstart(feature, pixel) {
@@ -188,20 +211,31 @@ function hhRoute() {
  * Here the routing request response is dealt with
  */
 function hhRouteResponseHandler(response) {
-  if(route.line) layerVectors.removeFeatures(route.line);
-  data = eval('('+response.responseText+')');
-  geoJSONParser = new OpenLayers.Format.GeoJSON();
-  route.line = geoJSONParser.read(data);
-  // We need to manualy convert all points to sperical mercator
-  for (i in route.line) {
-    for (j in route.line[i].geometry.components) {
-      route.line[i].geometry.components[j].transform(projWSG84, projSpheMe);
+  //console.log(response.responseText);
+  if (response.responseText != "Error") {
+    data = eval('('+response.responseText+')');
+    if (data.type != "Error") {
+      if(route.line) layerVectors.removeFeatures(route.line);
+      geoJSONParser = new OpenLayers.Format.GeoJSON();
+      route.line = geoJSONParser.read(response.responseText);
+      // We need to manualy convert all points to sperical mercator
+      // While iterating over the whole thing, I'll collect the streetnames too
+      var directions = "";
+      for (i in route.line) {
+        for (j in route.line[i].geometry.components) {
+          route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
+        }
+        length = route.line[i].attributes.Length;
+        if (length > 1000) length = Math.round(length/100)/10 + "k";
+      	directions += route.line[i].attributes.Name + " " +  length + "m<br>";
+      }
+      document.getElementById("TurnByTurn").innerHTML = directions;
+      layerVectors.addFeatures(route.line);
+      route.start.point = route.line[0].geometry.components[0];
+      route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
+      if (!route.drag.isdragging) redrawEndPoints();
     }
   }
-  layerVectors.addFeatures(route.line);
-  route.start.point = route.line[0].geometry.components[0];
-  route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
-  if (!route.drag.isdragging) redrawEndPoints();
   route.waitingForResponse = false;
 }
 
@@ -230,3 +264,11 @@ var resizeMapWindow = function resizeMap() {
 }
 
 window.onresize = resizeMapWindow;
+
+function isEmpty(obj) {
+  for(var prop in obj) {
+    if(obj.hasOwnProperty(prop))
+      return false;
+  }
+  return true;
+}
