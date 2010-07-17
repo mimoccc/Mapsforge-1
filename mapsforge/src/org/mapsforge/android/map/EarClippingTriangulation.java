@@ -35,6 +35,12 @@ public class EarClippingTriangulation {
 		num = polyCoords.length / 2;
 		int i;
 
+		/* closed polygon? skip duplicate coordinate */
+		if ((polyCoords[0] == polyCoords[polyCoords.length - 2])
+				&& (polyCoords[1] == polyCoords[polyCoords.length - 1])) {
+			num--;
+		}
+
 		if (clockwise) {
 			System.out.println("is clockwise");
 		} else {
@@ -43,7 +49,8 @@ public class EarClippingTriangulation {
 
 		xCoords = new float[num];
 		yCoords = new float[num];
-		trianglePoints = new ArrayList<Point>(num * 3); // TODO: really num*3 ?
+		trianglePoints = new ArrayList<Point>((num - 2) * 3); // any polygon triangulation has
+		// n-2 triangles
 
 		for (i = 0; i < num; i++) {
 			if (clockwise) {
@@ -78,10 +85,21 @@ public class EarClippingTriangulation {
 
 	private void clipEarAtPosition(int p) {
 
+		// System.out.println("clipping ear at position: " + p + " number of polygon vertices: "
+		// + num);
+
+		if (p == -1) {
+			for (int x = 0; x < num; x++) {
+				// Logger.d(xCoords[x] + " " + yCoords[x]);
+				// if (((x + 1) % 2) == 0)
+				// Logger.d("");
+			}
+		}
+
 		/*
 		 * add the new triangle to the list
 		 */
-		if ((p > 0) && (p < num - 2)) {
+		if ((p > 0) && (p < num - 1)) {
 			trianglePoints.add(new Point(xCoords[p - 1], yCoords[p - 1]));
 			trianglePoints.add(new Point(xCoords[p], yCoords[p]));
 			trianglePoints.add(new Point(xCoords[p + 1], yCoords[p + 1]));
@@ -89,7 +107,7 @@ public class EarClippingTriangulation {
 			trianglePoints.add(new Point(xCoords[num - 1], yCoords[num - 1]));
 			trianglePoints.add(new Point(xCoords[0], yCoords[0]));
 			trianglePoints.add(new Point(xCoords[1], yCoords[1]));
-		} else if (num - 2 == p) {
+		} else if (num - 1 == p) {
 			trianglePoints.add(new Point(xCoords[num - 2], yCoords[num - 2]));
 			trianglePoints.add(new Point(xCoords[num - 1], yCoords[num - 1]));
 			trianglePoints.add(new Point(xCoords[0], yCoords[0]));
@@ -110,8 +128,8 @@ public class EarClippingTriangulation {
 	 */
 	private boolean isConvex(float x1, float y1, float x2, float y2, float x3, float y3) {
 		/*
-		 * triangle area = 0.5 * ( x1*(y3-y2) + x2*(y1-y3) + x3*(y2-y1) is negative for convex
-		 * and positive for concave triangle
+		 * triangle area = 0.5 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) is negative
+		 * for convex and positive for concave triangle
 		 */
 
 		if ((x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1)) < 0) {
@@ -142,6 +160,8 @@ public class EarClippingTriangulation {
 
 		// make sure the triangle is convex
 		if (!isConvex(x1, y1, x2, y2, x3, y3)) {
+			// System.out.println("not convex at " + x1 + "," + y1 + " " + x2 + "," + y2 + " "
+			// + x3 + "," + y3);
 			return false;
 		}
 
@@ -153,9 +173,13 @@ public class EarClippingTriangulation {
 	 * return true if there is an ear at point p
 	 */
 	private boolean earAtPoint(int p) {
+		// System.out.println("check for ear at point " + p);
 		if (p == 0) {
 			return isEar(xCoords[num - 1], yCoords[num - 1], xCoords[0], yCoords[0],
 					xCoords[1], yCoords[1]);
+		} else if (p == num - 1) {
+			return isEar(xCoords[num - 2], yCoords[num - 2], xCoords[num - 1],
+					yCoords[num - 1], xCoords[0], yCoords[0]);
 		}
 
 		return isEar(xCoords[p - 1], yCoords[p - 1], xCoords[p], yCoords[p], xCoords[p + 1],
@@ -189,11 +213,14 @@ public class EarClippingTriangulation {
 
 		int pos;
 
-		while (num > 2) {
+		while (num > 3) {
 			// as long as there are more than 2 points (at least 1 triangle)
-			pos = -1;
+
+			pos = 0;
 			// find position to clip
-			for (int i = 0; i < num - 1; i++) {
+			// TODO: for negative coordinates this does not always find an ear (convex test
+			// wrong)
+			for (int i = 0; i < num; i++) {
 				// find position to clip an ear
 				if (earAtPoint(i)) {
 					pos = i;
@@ -201,6 +228,10 @@ public class EarClippingTriangulation {
 				}
 			}
 			clipEarAtPosition(pos);
+		}
+		// if 3 points are left, clip this last triangle anywhere
+		if (num == 3) {
+			clipEarAtPosition(0);
 		}
 	}
 
