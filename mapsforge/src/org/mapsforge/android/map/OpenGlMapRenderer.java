@@ -126,27 +126,38 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 					break;
 
 				case WAY:
-
 					this.complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
 					this.coordinates = this.complexWayContainer.coordinates;
 					this.paint = this.shapePaintContainer.paint;
 					this.color = this.paint.getColor();
+
+					boolean fillWay = (this.paint.getStyle() == Paint.Style.FILL);
 
 					this.vertices.rewind();
 
 					for (int j = 0; j < this.coordinates.length; ++j) {
 
 						this.vertices.clear();
-						int i;
-						for (i = 0; i < this.coordinates[j].length; i += 2) {
 
-							this.vertices.put(new float[] {
-									(this.coordinates[j][i] / 128 - 1.0f),
-									(this.coordinates[j][i + 1] / 128 - 1.0f), 0f,
+						float[] nodes;
+
+						if (fillWay) {
+							// triangulate if we need to fill the polygon
+							EarClippingTriangulation ec = new EarClippingTriangulation(
+									this.coordinates[j]);
+							nodes = ec.getTrianglesAsFloatArray();
+						} else {
+							// simply use the coordinates given
+							nodes = this.coordinates[j];
+						}
+
+						int i;
+						for (i = 0; i < nodes.length; i += 2) {
+							this.vertices.put(new float[] { (nodes[i] / 128 - 1.0f),
+									(nodes[i + 1] / 128 - 1.0f), 0f,
 									(float) Color.red(color) / 256,
 									(float) Color.green(color) / 256,
 									(float) Color.blue(color) / 256 });
-
 						}
 						this.vertices.flip();
 
@@ -162,16 +173,16 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 
 						mGL11.glLineWidth(this.paint.getStrokeWidth());
 						// mGL11.glLineWidth(1.0f);
-						// make points clearly visible for debugging
-						this.mGL11.glPointSize(4.0f);
+						this.mGL11.glPointSize(1.0f);
 
 						mGL11.glDrawArrays(GL10.GL_POINTS, 0, i / 2);
 						mGL11.glDrawArrays(GL10.GL_LINE_LOOP, 0, i / 2);
-						// mGL11.glDrawArrays(GL10.GL_TRIANGLE_FAN, 0, i / 2);
+						if (fillWay) {
+							mGL11.glDrawArrays(GL10.GL_TRIANGLES, 0, i / 2);
+						}
 
 						// unbind the buffer
 						mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, 0);
-
 					}
 					break;
 			}
