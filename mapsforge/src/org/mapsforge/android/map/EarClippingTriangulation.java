@@ -18,6 +18,12 @@ package org.mapsforge.android.map;
 
 import java.util.ArrayList;
 
+/**
+ * A class for polygon triangulation using the ear clipping algorithm
+ * 
+ * @author jonas.hoffmann
+ * 
+ */
 public class EarClippingTriangulation {
 
 	/* x coordinates of the input polygon */
@@ -29,6 +35,13 @@ public class EarClippingTriangulation {
 	/* current number of polygon vertices */
 	private int num;
 
+	/**
+	 * initialize and then triangulate
+	 * 
+	 * @param polyCoords
+	 *            the coordinates of the input polygon, x and y alternating
+	 * 
+	 */
 	EarClippingTriangulation(float[] polyCoords) {
 
 		boolean clockwise = CoastlineWay.isClockWise(polyCoords);
@@ -41,11 +54,11 @@ public class EarClippingTriangulation {
 			num--;
 		}
 
-		if (clockwise) {
-			System.out.println("is clockwise");
-		} else {
-			System.out.println("is anti-clockwise");
-		}
+		// if (clockwise) {
+		// System.out.println("is clockwise");
+		// } else {
+		// System.out.println("is anti-clockwise");
+		// }
 
 		xCoords = new float[num];
 		yCoords = new float[num];
@@ -67,10 +80,19 @@ public class EarClippingTriangulation {
 		doTriangulation();
 	}
 
+	/**
+	 * 
+	 * @return triangle points as ArrayList of Points
+	 */
 	ArrayList<Point> getTriangles() {
 		return trianglePoints;
 	}
 
+	/**
+	 * convert ArrayList of triangle points to float array
+	 * 
+	 * @return coordinates as float array
+	 */
 	float[] getTrianglesAsFloatArray() {
 		int s = trianglePoints.size();
 		float[] coords = new float[s * 2];
@@ -83,6 +105,12 @@ public class EarClippingTriangulation {
 		return coords;
 	}
 
+	/**
+	 * clip an ear at position p
+	 * 
+	 * @param p
+	 *            number of the polygon vertex at which the ear is clipped
+	 */
 	private void clipEarAtPosition(int p) {
 
 		// System.out.println("clipping ear at position: " + p + " number of polygon vertices: "
@@ -123,12 +151,27 @@ public class EarClippingTriangulation {
 		num--;
 	}
 
-	/*
-	 * isConvex: return true if triangle (x1,y1) (x1,y2) (x3,y3) is convex
+	/**
+	 * test if the triangle (x1,y1) (x1,y2) (x3,y3) is convex
+	 * 
+	 * @param x1
+	 *            x coordinate of first triangle vertex
+	 * @param y1
+	 *            y coordinate of first triangle vertex
+	 * @param x2
+	 *            x coordinate of second triangle vertex
+	 * @param y2
+	 *            y coordinate of second triangle vertex
+	 * @param x3
+	 *            x coordinate of third triangle vertex
+	 * @param y3
+	 *            y coordinate of third triangle vertex
+	 * 
+	 * @return true if triangle (x1,y1) (x1,y2) (x3,y3) is convex
 	 */
 	private boolean isConvex(float x1, float y1, float x2, float y2, float x3, float y3) {
 		/*
-		 * triangle area = 0.5 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) is negative
+		 * triangle area = 0.5 * (x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1)) is negative
 		 * for convex and positive for concave triangle
 		 */
 
@@ -138,8 +181,12 @@ public class EarClippingTriangulation {
 		return false;
 	}
 
-	/*
-	 * isConvexPoint: return true if polygon is convex at point p
+	/**
+	 * test, if the vertex at position p is convex
+	 * 
+	 * @param p
+	 *            number of vertex to test
+	 * @return true if polygon is convex at vertex p
 	 */
 	private boolean isConvexPoint(int p) {
 		if (p == 0) {
@@ -153,8 +200,23 @@ public class EarClippingTriangulation {
 				yCoords[p + 1]);
 	}
 
-	/*
-	 * return true if the triangle (x1,y1) (x1,y2) (x3,y3) is an ear, false otherwise
+	/**
+	 * test if the triangle (x1,y1) (x1,y2) (x3,y3) is an ear
+	 * 
+	 * @param x1
+	 *            x coordinate of first triangle vertex
+	 * @param y1
+	 *            y coordinate of first triangle vertex
+	 * @param x2
+	 *            x coordinate of second triangle vertex
+	 * @param y2
+	 *            y coordinate of second triangle vertex
+	 * @param x3
+	 *            x coordinate of third triangle vertex
+	 * @param y3
+	 *            y coordinate of third triangle vertex
+	 * 
+	 * @return true if the triangle (x1,y1) (x1,y2) (x3,y3) is an ear, false otherwise
 	 */
 	private boolean isEar(float x1, float y1, float x2, float y2, float x3, float y3) {
 
@@ -169,8 +231,12 @@ public class EarClippingTriangulation {
 		return !pointInsideTriangle(x1, y1, x2, y2, x3, y3);
 	}
 
-	/*
-	 * return true if there is an ear at point p
+	/**
+	 * test for an ear at vertex p
+	 * 
+	 * @param p
+	 *            number of the polygon vertex to test
+	 * @return true if there is an ear at vertex p
 	 */
 	private boolean earAtPoint(int p) {
 		// System.out.println("check for ear at point " + p);
@@ -186,8 +252,25 @@ public class EarClippingTriangulation {
 				yCoords[p + 1]);
 	}
 
-	/*
-	 * test if any point of the polygon lies inside the triangle (x1,y1) (x1,y2) (x3,y3)
+	/**
+	 * 
+	 * test if any points of the polygon lie inside the triangle (x1,y1) (x1,y2) (x3,y3)
+	 * 
+	 * @param x1
+	 *            x coordinate of first triangle vertex
+	 * @param y1
+	 *            y coordinate of first triangle vertex
+	 * @param x2
+	 *            x coordinate of second triangle vertex
+	 * @param y2
+	 *            y coordinate of second triangle vertex
+	 * @param x3
+	 *            x coordinate of third triangle vertex
+	 * @param y3
+	 *            y coordinate of third triangle vertex
+	 * 
+	 * @return true, if any point of the polygon lies inside the triangle (x1,y1) (x1,y2)
+	 *         (x3,y3)
 	 */
 	private boolean pointInsideTriangle(float x1, float y1, float x2, float y2, float x3,
 			float y3) {
@@ -209,6 +292,10 @@ public class EarClippingTriangulation {
 		return false;
 	}
 
+	/**
+	 * triangulate by finding ears to clip and clipping them as long as there are more than 3
+	 * vertices left in the polygon.
+	 */
 	private void doTriangulation() {
 
 		int pos;
@@ -235,6 +322,12 @@ public class EarClippingTriangulation {
 		}
 	}
 
+	/**
+	 * test the function of the EarClippingTriangulation class
+	 * 
+	 * @param args
+	 *            command line arguments (ignored)
+	 */
 	public static void main(String[] args) {
 		// just a test
 
