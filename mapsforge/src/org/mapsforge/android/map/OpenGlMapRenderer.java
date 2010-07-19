@@ -173,12 +173,15 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 
 						mGL11.glLineWidth(this.paint.getStrokeWidth());
 						// mGL11.glLineWidth(1.0f);
-						this.mGL11.glPointSize(1.0f);
+						this.mGL11.glPointSize(this.paint.getStrokeWidth());
 
 						mGL11.glDrawArrays(GL10.GL_POINTS, 0, i / 2);
-						mGL11.glDrawArrays(GL10.GL_LINE_LOOP, 0, i / 2);
+
 						if (fillWay) {
+							mGL11.glDrawArrays(GL10.GL_LINE_LOOP, 0, i / 2);
 							mGL11.glDrawArrays(GL10.GL_TRIANGLES, 0, i / 2);
+						} else {
+							mGL11.glDrawArrays(GL10.GL_LINE_STRIP, 0, i / 2);
 						}
 
 						// unbind the buffer
@@ -224,7 +227,8 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		gl.glDisable(GL10.GL_DEPTH_TEST);
 		gl.glEnable(GL10.GL_TEXTURE_2D); // needed for textured lines?
 		// gl.glEnable(GL10.GL_BLEND); // needed for textured lines?
-		gl.glBlendFunc(GL10.GL_ONE, GL10.GL_SRC_COLOR); // needed for textured lines?
+		// gl.glBlendFunc(GL10.GL_ONE, GL10.GL_SRC_COLOR); // needed for textured lines?
+		gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		gl.glDisable(GL10.GL_DITHER);
 		gl.glDisable(GL10.GL_LIGHTING);
 		gl.glEnable(GL10.GL_LINE_SMOOTH);
@@ -237,7 +241,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		this.mGL = gl;
 		this.mGL11 = (GL11) gl;
 
-		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
 		gl.glClearColor(0.9f, 0.9f, 0.9f, 1);
 
 		// set up buffers for VBOs
