@@ -73,19 +73,6 @@ class Point implements Comparable<Point> {
 	}
 
 	/**
-	 * Calculate the distance of two Points.
-	 * 
-	 * @param minuend
-	 *            the subtrahend.
-	 * @param subtrahend
-	 *            the subtrahend.
-	 * @return the distance.
-	 */
-	public static Point substract(Point minuend, Point subtrahend) {
-		return new Point(minuend.x - subtrahend.x, minuend.y - subtrahend.y);
-	}
-
-	/**
 	 * Calculates the hash value of this Point.
 	 * 
 	 * @return the hash value of this Point.

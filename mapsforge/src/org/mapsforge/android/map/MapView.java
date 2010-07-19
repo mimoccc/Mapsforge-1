@@ -18,8 +18,6 @@ package org.mapsforge.android.map;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -33,7 +31,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -42,7 +39,7 @@ import android.view.ViewGroup;
 import android.widget.ZoomControls;
 
 /**
- * Custom implementation of the MapView class from the Google Maps library.
+ * An implementation of the MapView class from the Google Maps library.
  */
 public class MapView extends ViewGroup {
 	private static final int BITMAP_CACHE_SIZE = 20;
@@ -72,8 +69,6 @@ public class MapView extends ViewGroup {
 	static final double LATITUDE_MIN = -85.05113;
 	static final double LONGITUDE_MAX = 180;
 	static final double LONGITUDE_MIN = -180;
-
-	static final double TIME_DELAY_TO_PREPARE_IN_MS = 1000;
 
 	/**
 	 * Returns the default operation mode of a MapView.
@@ -146,7 +141,6 @@ public class MapView extends ViewGroup {
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
-	private long previousTimeSinceDrawOverlays;
 	private boolean showFpsCounter;
 	private boolean showMapScale;
 	private boolean showZoomControls;
@@ -158,17 +152,15 @@ public class MapView extends ViewGroup {
 	private String unit_symbol_kilometer;
 	private String unit_symbol_meter;
 	private Handler zoomControlsHideHandler;
-	public double latitude;
-	public double longitude;
+	double latitude;
+	double longitude;
+	final int mapViewId;
 	Matrix matrix;
 	ZoomControls zoomControls;
 	byte zoomLevel;
 
-	/** Overlays bound to this mapView */
-	private List<Overlay> overlays;
-
 	/**
-	 * Constructs a new MapView with the default MapView mode.
+	 * Constructs a new MapView with the default {@link MapViewMode}.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -180,8 +172,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView. The mode can be configured via XML. Simply put an attribute
-	 * named "mode" in the layout file with a value from {@link MapViewMode}.
+	 * Constructs a new MapView. The {@link MapViewMode} can be configured via XML with the
+	 * "mode" attribute in the layout file.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -207,11 +199,12 @@ public class MapView extends ViewGroup {
 		} else {
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
 		}
+		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
 	}
 
 	/**
-	 * Constructs a new MapView.
+	 * Constructs a new MapView with the given MapViewMode.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity object.
@@ -227,9 +220,15 @@ public class MapView extends ViewGroup {
 		}
 		this.mapActivity = (MapActivity) context;
 		this.mapViewMode = mapViewMode;
+		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
 	}
 
+	/**
+	 * Returns the MapController for this MapView.
+	 * 
+	 * @return the MapController.
+	 */
 	public MapController getController() {
 		return this.mapController;
 	}
@@ -258,7 +257,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the center coordinates of the current map file as a GeoPoint object.
+	 * Returns the center coordinates of the current map file as a GeoPoint.
 	 * 
 	 * @return the center coordinates of the map file.
 	 * @throws UnsupportedOperationException
@@ -316,17 +315,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the overlays of the map.
-	 * 
-	 * @return the overlays.
-	 */
-
-	public final List<Overlay> getOverlays() {
-		return this.overlays;
-	}
-
-	/**
-	 * Convenience method to check for a valid current map file.
+	 * Checks for a valid current map file.
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
 	 * @throws UnsupportedOperationException
@@ -378,14 +367,6 @@ public class MapView extends ViewGroup {
 			// save the position of the event
 			this.previousPositionX = event.getX();
 			this.previousPositionY = event.getY();
-
-			// trigger event to overlays
-			synchronized (this.overlays) {
-				for (Overlay o : this.overlays) {
-					o.onTouchEvent(event, this);
-				}
-			}
-
 			showZoomControls();
 			return true;
 		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -401,9 +382,6 @@ public class MapView extends ViewGroup {
 				// add the movement to the transformation matrix
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
 
-				for (Overlay o : this.overlays) {
-					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
-				}
 				// calculate the new position of the map center
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
@@ -417,11 +395,6 @@ public class MapView extends ViewGroup {
 		} else if (event.getAction() == MotionEvent.ACTION_UP
 				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
 			hideZoomControlsDelayed();
-			for (Overlay o : this.overlays) {
-				synchronized (o) {
-					o.notify();
-				}
-			}
 			return true;
 		}
 		// the event was not handled
@@ -441,9 +414,7 @@ public class MapView extends ViewGroup {
 			synchronized (this) {
 				// add the movement to the transformation matrix
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
-				for (Overlay o : this.overlays) {
-					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
-				}
+
 				// calculate the new position of the map center
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
@@ -471,7 +442,7 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Sets the new size of the file cache. If the cache already contains more items than the
-	 * new capacity allows, items are discarded based on the normal file cache policy.
+	 * new capacity allows, items are discarded based on the cache policy.
 	 * 
 	 * @param newCacheSize
 	 *            the new capacity of the file cache.
@@ -594,12 +565,18 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets an internal text variable to an arbitrary string.
+	 * Overrides an internal text field with the given string.
+	 * 
+	 * Currently the following text fields can be set:
+	 * <ul>
+	 * <li>unit_symbol_kilometer</li>
+	 * <li>unit_symbol_meter</li>
+	 * </ul>
 	 * 
 	 * @param name
-	 *            the name of the text variable to set.
+	 *            the name of the text field to override.
 	 * @param value
-	 *            the new value of the text variable.
+	 *            the new value of the text field.
 	 * @return true, if the new value could be set, false otherwise.
 	 */
 	public boolean setText(String name, String value) {
@@ -672,8 +649,12 @@ public class MapView extends ViewGroup {
 		// draw the scale text
 		if (this.mapScale < 1000) {
 			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
+					PAINT_MAP_SCALE_TEXT_WHITE_STROKE);
+			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
 					PAINT_MAP_SCALE_TEXT);
 		} else {
+			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
+					10, 15, PAINT_MAP_SCALE_TEXT_WHITE_STROKE);
 			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
 					10, 15, PAINT_MAP_SCALE_TEXT);
 		}
@@ -700,7 +681,6 @@ public class MapView extends ViewGroup {
 		PAINT_MAP_SCALE.setStrokeWidth(2);
 		PAINT_MAP_SCALE.setStrokeCap(Paint.Cap.SQUARE);
 		PAINT_MAP_SCALE.setColor(Color.BLACK);
-
 		PAINT_MAP_SCALE_STROKE.setStrokeWidth(5);
 		PAINT_MAP_SCALE_STROKE.setStrokeCap(Paint.Cap.SQUARE);
 		PAINT_MAP_SCALE_STROKE.setColor(Color.WHITE);
@@ -708,6 +688,11 @@ public class MapView extends ViewGroup {
 		PAINT_MAP_SCALE_TEXT.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_MAP_SCALE_TEXT.setTextSize(14);
 		PAINT_MAP_SCALE_TEXT.setColor(Color.BLACK);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setStyle(Paint.Style.STROKE);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setStrokeWidth(3);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setTextSize(14);
+		PAINT_MAP_SCALE_TEXT_WHITE_STROKE.setColor(Color.WHITE);
 	}
 
 	private void setupMapView() {
@@ -733,9 +718,11 @@ public class MapView extends ViewGroup {
 		// create the image bitmap cache
 		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
 
-		// create the image file cache
+		// create the image file cache with a unique directory
 		this.imageFileCache = new ImageFileCache(Environment.getExternalStorageDirectory()
-				.getAbsolutePath(), this.fileCacheSize);
+				.getAbsolutePath()
+				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
+				this.fileCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -758,9 +745,6 @@ public class MapView extends ViewGroup {
 
 		// register the MapView in the MapActivity
 		this.mapActivity.registerMapView(this);
-
-		// create overlay list
-		this.overlays = new ArrayList<Overlay>();
 	}
 
 	private void setupZoomControls() {
@@ -883,7 +867,6 @@ public class MapView extends ViewGroup {
 
 	@Override
 	protected final void onDraw(Canvas canvas) {
-		Log.d("Overlay", "Mapview:Ondraw aufgerufen");
 		if (this.mapViewBitmap1 == null) {
 			return;
 		}
@@ -908,28 +891,6 @@ public class MapView extends ViewGroup {
 			}
 			canvas.drawText(String.valueOf(this.fps), 20, 30, this.fpsPaint);
 			++this.frame_counter;
-		}
-
-		// draw overlays
-		this.currentTime = SystemClock.uptimeMillis();
-		boolean timeElapsed = false;
-		if (this.currentTime - this.previousTimeSinceDrawOverlays > TIME_DELAY_TO_PREPARE_IN_MS) {
-			timeElapsed = true;
-			this.previousTimeSinceDrawOverlays = this.currentTime;
-		}
-
-		for (Overlay o : this.overlays) {
-			if (!o.isMapViewSet()) {
-				o.setMapViewAndCreateOverlayBitmaps(this);
-				synchronized (o) {
-					o.notify();
-				}
-			} else if (timeElapsed) {
-				synchronized (o) {
-					o.notify();
-				}
-			}
-			o.draw(canvas, this, false);
 		}
 	}
 
@@ -1006,11 +967,6 @@ public class MapView extends ViewGroup {
 		}
 
 		stopMapGeneratorThread();
-
-		// stop the overlays
-		for (Overlay overLay : this.overlays) {
-			overLay.interrupt();
-		}
 
 		// destroy the map controller
 		if (this.mapController != null) {
@@ -1312,17 +1268,6 @@ public class MapView extends ViewGroup {
 							(float) (MercatorProjection.latitudeToPixelY(this.latitude,
 									this.zoomLevel) - MercatorProjection.latitudeToPixelY(point
 									.getLatitude(), this.zoomLevel)));
-
-					for (Overlay o : this.overlays) {
-						o.getMatrix().postTranslate(
-								(float) (MercatorProjection.longitudeToPixelX(this.longitude,
-										this.zoomLevel) - MercatorProjection.longitudeToPixelX(
-										point.getLongitude(), this.zoomLevel)),
-								(float) (MercatorProjection.latitudeToPixelY(this.latitude,
-										this.zoomLevel) - MercatorProjection.latitudeToPixelY(
-										point.getLatitude(), this.zoomLevel)));
-					}
-
 				}
 
 				this.latitude = getValidLatitude(point.getLatitude());
