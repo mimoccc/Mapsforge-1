@@ -1,6 +1,7 @@
 package org.mapsforge.server.ws;
 
 import java.io.IOException;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,55 +91,88 @@ public class HHRoutingWebservice extends HttpServlet {
 			JSONArray jsonfeatures = new JSONArray();
 			json.put("type", "FeatureCollection");
 			json.put("features", jsonfeatures);
-			int distance;
 			for (int i = 0; i < routeEdges.length; i++) {
-				IEdge routeEdge = routeEdges[i];
-				String StreetName = routeEdge.getName();
-				if (StreetName == null) StreetName = "";
-				ArrayList<GeoCoordinate> streetCoordinates = new ArrayList<GeoCoordinate>();
-				streetCoordinates.add(routeEdge.getSource().getCoordinate());
-				streetCoordinates.addAll(Arrays.asList(routeEdge.getWaypoints()));
-				streetCoordinates.add(routeEdge.getTarget().getCoordinate());
-				JSONArray streetCoordinatesAsJson = new JSONArray();
-				distance = 0;
-				for (int j = 0; j < streetCoordinates.size(); j++) {
-					GeoCoordinate sc = streetCoordinates.get(j);
+				IEdge currentStreetEdge = routeEdges[i];
+				// This Object keeps the meta-info of the current street
+				JSONObject streetProperties = new JSONObject();
+				streetProperties.put("Name", currentStreetEdge.getName());
+				IEdge lastStreetEdge = null; // This is the last street as an IEdge
+				JSONObject lastStreetJSON = null; // This is the last street as an JSONObject. This is the representation that gets modified
+				if (i > 0) {
+					lastStreetEdge = routeEdges[i-1];	
+					lastStreetJSON = jsonfeatures.getJSONObject(jsonfeatures.length()-1);
+				}
+				
+				// The angle is calculated here
+				// We need to do this even if the street name remains the same, because we need to identify U-turns
+				
+				double delta = getAngleOfStreets(lastStreetEdge, currentStreetEdge);
+				
+				// This bool marks if the streetname remains the same as before
+				boolean sameStreetAsBefore = lastStreetEdge != null && 
+						((lastStreetEdge.getName() != null && currentStreetEdge.getName() != null && lastStreetEdge.getName().equals(currentStreetEdge.getName())) || 
+						(lastStreetEdge.getName() == null && currentStreetEdge.getName() == null));
+
+				boolean isUturn = false; //delta > 157 && delta < 202;
+				if (lastStreetJSON != null) {
+					int lastAngle = lastStreetJSON.getJSONObject("properties").optInt("Angle"); //.optInt("Angle");
+					// TODO: delta ca gleich lastAngle
+					double anglesum = (lastAngle + delta) % 360;
+					if (i > 1 && (170 <= anglesum && anglesum <= 190)) {
+						IEdge secondLastStreetEdge = routeEdges[i-2];
+						if (currentStreetEdge.getName() != null &&
+								secondLastStreetEdge.getName() != null &&
+								secondLastStreetEdge.getName()
+								.equals(currentStreetEdge.getName())) {
+							isUturn = true;
+						}
+					}
+				}
+
+				GeoCoordinate[] streetCoordinates = currentStreetEdge.getAllWaypoints();
+				// This is the JSON array which holds the geometry coordinates of an individual street
+				JSONArray streetCoordinatesAsJson = new JSONArray();	
+				
+				// If the street is already in the features array, its coordinates will be used
+				if (!isUturn && sameStreetAsBefore) {
+					streetCoordinatesAsJson = lastStreetJSON.getJSONObject("geometry").getJSONArray("coordinates");
+					streetProperties = lastStreetJSON.getJSONObject("properties");
+				}
+				
+				// This if clause checks for 2-lane streets where the uTurn is done 
+				// by crossing another street
+				if (isUturn && !sameStreetAsBefore) {
+					streetCoordinatesAsJson = lastStreetJSON.getJSONObject("geometry").getJSONArray("coordinates");
+					streetProperties = lastStreetJSON.getJSONObject("properties");
+					// We ignore the name of the supershort street
+					streetProperties.put("Name", currentStreetEdge.getName());
+					streetProperties.put("Angle", 180);
+				}
+				
+				// This loop adds the geocoordinates of the current edge to the appropriate json array
+				for (int j = 0; j < streetCoordinates.length; j++) {
+					GeoCoordinate sc = streetCoordinates[j];
 					streetCoordinatesAsJson.put(new JSONArray()
 						.put(sc.getLongitude().getDegree())
 						.put(sc.getLatitude().getDegree())
 					);
 					if (j > 0) {
-						distance += streetCoordinates.get(j-1).distance(sc);
+						streetProperties.put("Length", 
+								streetCoordinates[j-1].distance(sc) + 
+								streetProperties.optInt("Length"));
 					}
 				}
-				JSONObject last = null;
-				if (jsonfeatures.length() > 0) {
-					last = jsonfeatures.getJSONObject(jsonfeatures.length()-1);
-				}
-				// In this if clause streets are merged into a single GeoJSON feature if they have the same name
-				if (last != null && 
-						last.getJSONObject("properties").getString("Name").equals(StreetName)) {
-					for (int m = 1; m < streetCoordinates.size(); m++) {
-						GeoCoordinate sc = streetCoordinates.get(m);
-						last.getJSONObject("geometry").getJSONArray("coordinates").put(
-							new JSONArray()
-								.put(sc.getLongitude().getDegree())
-								.put(sc.getLatitude().getDegree())
-						);
-					}
-					distance += last.getJSONObject("properties").getInt("Length");
-					last.getJSONObject("properties").put("Length", distance);
-				} else {
+
+				// This section creates a new feature i.e. a new street
+				if (!isUturn && !sameStreetAsBefore) {
+					streetProperties.put("Angle", delta);
 					jsonfeatures.put(new JSONObject()
 						.put("type", "Feature")
 						.put("geometry", new JSONObject()
 							.put("type", "LineString")
 							.put("coordinates", streetCoordinatesAsJson)
 						)
-						.put("properties", new JSONObject()
-							.put("Name", StreetName)
-							.put("Length", distance)
-						)
+						.put("properties", streetProperties)
 					);	
 				}
 			}
@@ -148,6 +182,54 @@ public class HHRoutingWebservice extends HttpServlet {
 			e.printStackTrace();
 			return new JSONObject();
 		}
+	}
+
+	/**
+	 * @param lastStreetEdge the IEdge of the street before the crossing
+	 * @param currentStreetEdge the IEdge of the street after the crossing
+	 * @return the angle between the given streets
+	 */
+	private double getAngleOfStreets(IEdge lastStreetEdge, IEdge currentStreetEdge) {
+		double delta = -360.0;
+		if (lastStreetEdge != null ) {
+			// Let's see if i can get the angle between the last street and this
+			// This is the crossing
+			GeoCoordinate crossingCoordinate = currentStreetEdge.getAllWaypoints()[0]; 
+			// The following is the last coordinate before the crossing
+			GeoCoordinate lastCoordinate = lastStreetEdge.getAllWaypoints()
+					[lastStreetEdge.getAllWaypoints().length-2];
+			// Take a coordinate further away from the crossing if it's too close
+			if (lastCoordinate.distance(crossingCoordinate) < 10 && lastStreetEdge.getAllWaypoints().length > 2) {
+				lastCoordinate = lastStreetEdge.getAllWaypoints()
+					[lastStreetEdge.getAllWaypoints().length-3];
+			}
+			// Here comes the first coordinate after the crossing
+			GeoCoordinate firstCoordinate = currentStreetEdge.getAllWaypoints()[1];
+			if (firstCoordinate.distance(crossingCoordinate) < 10 && currentStreetEdge.getAllWaypoints().length > 2) {
+				firstCoordinate = currentStreetEdge.getAllWaypoints()[2];
+			}
+			// calculate angles of the incoming street
+			
+			// TODO: Check for streets which are not really streets, but part of a crossing
+			// in which case they are very short and turn occurs
+			
+			double deltaY = crossingCoordinate.getMercatorY() - lastCoordinate.getMercatorY();
+			double deltaX = crossingCoordinate.getMercatorX() - lastCoordinate.getMercatorX();
+			double alpha = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
+			if (deltaY < 0) alpha += 180; // this compensates for the atan result being between -90 and +90 deg
+			// calculate angles of the outgoing street
+			deltaY = firstCoordinate.getMercatorY() - crossingCoordinate.getMercatorY();
+			deltaX = firstCoordinate.getMercatorX() - crossingCoordinate.getMercatorX();
+			double beta = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
+			if (deltaY < 0) beta += 180; // this compensates for the atan result being between -90 and +90 deg
+			// the angle difference is angle of the turn, 
+			delta = alpha - beta;
+			// For some reason the angle is conterclockwise, so it's turned around
+			delta = 360 - delta;
+			// make sure there are no values above 360 or below 0
+			delta = java.lang.Math.round((delta + 360) % 360);
+		} 
+		return delta;
 	}
 
 	/**
@@ -165,25 +247,23 @@ public class HHRoutingWebservice extends HttpServlet {
 					Double.valueOf(alternatingCoordinates[i+1]), 
 					Double.valueOf(alternatingCoordinates[i])
 				)).getId();
-			System.out.println(id);
 			pp.add(id);
 		}
 		return pp;
 	}	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		HHRoutingWebservice hhrs = new HHRoutingWebservice();
-		//hhrs.init();
 		router = RouterFactory.getRouter("C:/uni/apache-tomcat-6.0.26/webapps/HHRoutingWebservice/WEB-INF/routerFactory.properties");
-		ArrayList<Integer> pointIds = hhrs.parseInputString("8.7909019470218,53.087836143123;8.8166511535637,53.094743161751");
+		ArrayList<Integer> pointIds = hhrs.parseInputString("8.7914813041691,53.095245681407;8.79058008194,53.094910668955");
 		// ToDo: handle any number of stops along the way
 		// for now its just source and destination
 		IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
-		//IEdge[] routeEdges = router.getShortestPath(2, 6921);
 		JSONObject json = hhrs.getGeoJson(routeEdges);
 		try {
-			System.out.println(json.toString(2));
-		} catch (JSONException e) {
+			//System.out.println(json.toString(2));
+			System.out.println("");
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
