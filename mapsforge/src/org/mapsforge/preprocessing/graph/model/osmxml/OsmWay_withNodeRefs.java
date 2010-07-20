@@ -86,6 +86,9 @@ public class OsmWay_withNodeRefs extends OsmElement {
 	public String getName() {
 		String v = getTag("name");
 		if (v == null) {
+			v = getTag("ref");
+		}
+		if (v == null) {
 			return DEFAULT_TAG_VALUE_NAME;
 		}
 		return v;
