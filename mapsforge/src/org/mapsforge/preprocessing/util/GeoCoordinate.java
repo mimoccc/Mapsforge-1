@@ -69,6 +69,18 @@ public class GeoCoordinate {
 		return this.longitude;
 	}
 
+	public double getMercatorX() {
+		return EARTH_RADIUS * this.longitude.getRadians();
+	}
+
+	public double getMercatorY() {
+		return EARTH_RADIUS * 
+			java.lang.Math.log(
+				java.lang.Math.tan(
+						java.lang.Math.PI/4 
+						+ 0.5 * this.latitude.getRadians()));
+	}
+
 	public void setLatitude(Latitude lat) {
 		this.latitude = lat;
 	}
