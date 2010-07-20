@@ -55,7 +55,68 @@ body {
   padding-bottom: 1px;
 }
 
-#TurnByTurn {
-  height: 100%;
-  overflow: scroll;
+#turnByTurn {
+  width: 200px;
+  overflow: auto;
+}
+
+
+/* Here the sprites for the turn by turn directions begin */
+
+
+#TurnByTurn .L90 {
+	background-image: url("img/Pfeile.png");
+	background-position: 0 0;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 26px;
+}
+#TurnByTurn .R90 {
+	background-image: url("img/Pfeile.png");
+	background-position: -22px 0;
+	background-repeat: no-repeat;
+	width: 20px;
+	height: 26px;
+}
+#TurnByTurn .L45 {
+	background-image: url("img/Pfeile.png");
+	background-position: 0 -29px;
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 28px;
+}
+#TurnByTurn .R45 {
+	background-image: url("img/Pfeile.png");
+	background-position: -18px -29px;
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 28px;
+}
+#TurnByTurn .L135 {
+	background-image: url("img/Pfeile.png");
+	background-position: -57px -31px;
+	background-repeat: no-repeat;
+	width: 19px;
+	height: 22px;
+}
+#TurnByTurn .R135 {
+	background-image: url("img/Pfeile.png");
+	background-position: -37px -31px;
+	background-repeat: no-repeat;
+	width: 19px;
+	height: 22px;
+}
+#TurnByTurn .UTurn {
+	background-image: url("img/Pfeile.png");
+	background-position: -44px 0;
+	background-repeat: no-repeat;
+	width: 21px;
+	height: 24px;
+}
+#TurnByTurn .Straight {
+	background-image: url("img/Pfeile.png");
+	background-position: -67px 0;
+	background-repeat: no-repeat;
+	width: 13px;
+	height: 26px;
 }

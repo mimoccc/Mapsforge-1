@@ -225,11 +225,37 @@ function hhRouteResponseHandler(response) {
         for (j in route.line[i].geometry.components) {
           route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
         }
-        length = route.line[i].attributes.Length;
-        if (length > 1000) length = Math.round(length/100)/10 + "k";
-      	directions += route.line[i].attributes.Name + " " +  length + "m<br>";
+        streetName = route.line[i].attributes.Name;
+        length = Math.round(route.line[i].attributes.Length/10)*10;
+        unit = "m";
+        if (length > 1000) {
+        	length = Math.round(length/100)/10;
+        	unit = "km";
+        }
+        angle = route.line[i].attributes.Angle;
+    	if (angle == -360 || isNaN(angle) || angle == undefined) {
+    		arrow = "";
+    	} else if (angle > 337 || angle < 22) {
+    		arrow = '<div class="Straight"></div>';
+    	} else if (angle > 22 && angle < 67) {
+    		arrow = '<div class="R45"></div>';
+    	} else if (angle > 67 && angle < 112) {
+    		arrow = '<div class="R90"></div>';
+    	} else if (angle > 112 && angle < 157) {
+    		arrow = '<div class="R135"></div>';
+    	} else if (angle > 157 && angle < 202) {
+    		arrow = '<div class="UTurn"></div>';
+    	} else if (angle > 202 && angle < 247 ) {
+    		arrow = '<div class="L135"></div>';
+    	} else if (angle > 247 && angle < 292 ) {
+    		arrow = '<div class="L90"></div>';
+    	} else if (angle > 292 && angle < 337 ) {
+    		arrow = '<div class="L45"></div>';
+    	}
+        angle = Math.round(angle);
+      	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  length + '&nbsp;' + unit + '</td></tr>';
       }
-      document.getElementById("TurnByTurn").innerHTML = directions;
+      document.getElementById("turnTable").innerHTML = directions;
       layerVectors.addFeatures(route.line);
       route.start.point = route.line[0].geometry.components[0];
       route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
@@ -259,6 +285,8 @@ var resizeMapWindow = function resizeMap() {
 	windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 	windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 	document.getElementById("map").style.height = windowHeight - 10; // 10 because body padding
+	document.getElementById("leftDiv").style.height = windowHeight - 20; // 10 because body padding
+	document.getElementById("turnByTurn").style.height = windowHeight - 20 - document.getElementById('searchForm').offsetHeight; // 10 because body padding
 	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth);
 	document.getElementById("map").style.width = windowWidth - leftDivWidth;
 }
