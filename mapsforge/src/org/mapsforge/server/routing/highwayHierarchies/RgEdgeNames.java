@@ -31,74 +31,69 @@ import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-class RgEdgeNames implements Serializable {
+public class RgEdgeNames implements Serializable {
 
 	private static final long serialVersionUID = 2122661604323386224L;
 
-	// names[nameOffset[rgEdgeId]] := <edge name>
-	private final byte[] names;
-	private final int[] nameOffsets;
+	private final String[] names;
+	private final int[] namesIndex;
 
-	private RgEdgeNames(byte[] names, int[] nameOffsets) {
+	private RgEdgeNames(String[] names, int[] namesIndex) {
 		this.names = names;
-		this.nameOffsets = nameOffsets;
+		this.namesIndex = namesIndex;
 	}
 
 	public String getName(int rgEdgeId) {
-		if (rgEdgeId < 0 || rgEdgeId >= nameOffsets.length || nameOffsets[rgEdgeId] == -1) {
-			return null;
+		if (rgEdgeId < 0 || rgEdgeId >= namesIndex.length || namesIndex[rgEdgeId] == -1) {
+			return "";
 		}
-		int startIdx = nameOffsets[rgEdgeId];
-		int length = 0;
-		while (names[startIdx + length] != 0x00) {
-			length++;
-		}
-		return new String(names, startIdx, length);
+		return names[namesIndex[rgEdgeId]];
 	}
 
 	public int size() {
-		return nameOffsets.length;
+		return namesIndex.length;
 	}
 
 	public void serialize(OutputStream oStream) throws IOException {
 		Serializer.serialize(oStream, this);
 	}
 
-	public static RgEdgeNames deserialize(InputStream iStream) throws IOException,
-			ClassNotFoundException {
+	public static RgEdgeNames deserialize(InputStream iStream) throws IOException, ClassNotFoundException {
 		return Serializer.deserialize(iStream);
 	}
 
 	public static RgEdgeNames importFromDb(Connection conn) throws SQLException {
 		RgDAO rg = new RgDAO(conn);
 
-		int[] nameOffsets = new int[rg.getNumEdges()];
-		StringBuilder sb = new StringBuilder();
+		int[] index = new int[rg.getNumEdges()];
 
+		int counter = 0;
 		// put all names on a map
-		TObjectIntHashMap<String> names = new TObjectIntHashMap<String>();
+		TObjectIntHashMap<String> namesMap = new TObjectIntHashMap<String>();
 		for (Iterator<RgEdge> iter = rg.getEdges().iterator(); iter.hasNext();) {
 			RgEdge e = iter.next();
 			String name = e.getName();
-			if (name != null) {
-				if (!names.containsKey(name)) {
-					int offset = sb.length();
-					sb.append(name);
-					sb.append((char) 0x00);
-					names.put(name, offset);
+			if (name != null && !name.isEmpty()) {
+				if (!namesMap.containsKey(name)) {
+					namesMap.put(name, counter++);
 				}
-				int offset = names.get(name);
-				nameOffsets[e.getId()] = offset;
+				int offset = namesMap.get(name);
+				index[e.getId()] = offset;
 			} else {
-				nameOffsets[e.getId()] = -1;
+				index[e.getId()] = -1;
 			}
 		}
-		return new RgEdgeNames(sb.toString().getBytes(), nameOffsets);
+
+		String[] names = new String[counter];
+		for (Object s : namesMap.keys()) {
+			String s1 = (String)s;
+			names[namesMap.get(s)] = s1;
+		}
+		return new RgEdgeNames(names, index);
 	}
 
 	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
-				"osm", "osm");
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base", "osm", "osm");
 		RgEdgeNames edgeNames = importFromDb(conn);
 		for (int i = 0; i < edgeNames.size(); i++) {
 			System.out.println(edgeNames.getName(i));
