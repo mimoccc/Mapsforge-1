@@ -18,7 +18,8 @@ package org.mapsforge.android.map;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-
+import java.util.ArrayList;
+import java.util.List;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -69,6 +70,7 @@ public class MapView extends ViewGroup {
 	static final double LATITUDE_MIN = -85.05113;
 	static final double LONGITUDE_MAX = 180;
 	static final double LONGITUDE_MIN = -180;
+	static final double TIME_DELAY_TO_PREPARE_IN_MS = 1000;
 
 	/**
 	 * Returns the default operation mode of a MapView.
@@ -141,6 +143,7 @@ public class MapView extends ViewGroup {
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
+	private long previousTimeSinceDrawOverlays;
 	private boolean showFpsCounter;
 	private boolean showMapScale;
 	private boolean showZoomControls;
@@ -152,12 +155,15 @@ public class MapView extends ViewGroup {
 	private String unit_symbol_kilometer;
 	private String unit_symbol_meter;
 	private Handler zoomControlsHideHandler;
-	double latitude;
-	double longitude;
+	public double latitude;
+	public double longitude;
 	final int mapViewId;
 	Matrix matrix;
 	ZoomControls zoomControls;
 	byte zoomLevel;
+
+	/** Overlays bound to this mapView */
+	private List<Overlay> overlays;
 
 	/**
 	 * Constructs a new MapView with the default {@link MapViewMode}.
@@ -315,6 +321,16 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the overlays of the map.
+	 * 
+	 * @return the overlays.
+	 */
+
+	public final List<Overlay> getOverlays() {
+		return this.overlays;
+	}
+
+	/**
 	 * Checks for a valid current map file.
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
@@ -367,6 +383,14 @@ public class MapView extends ViewGroup {
 			// save the position of the event
 			this.previousPositionX = event.getX();
 			this.previousPositionY = event.getY();
+
+			// trigger event to overlays
+			synchronized (this.overlays) {
+				for (Overlay o : this.overlays) {
+					o.onTouchEvent(event, this);
+				}
+			}
+
 			showZoomControls();
 			return true;
 		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -382,6 +406,9 @@ public class MapView extends ViewGroup {
 				// add the movement to the transformation matrix
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
 
+				for (Overlay o : this.overlays) {
+					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
+				}
 				// calculate the new position of the map center
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
@@ -395,6 +422,11 @@ public class MapView extends ViewGroup {
 		} else if (event.getAction() == MotionEvent.ACTION_UP
 				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
 			hideZoomControlsDelayed();
+			for (Overlay o : this.overlays) {
+				synchronized (o) {
+					o.notify();
+				}
+			}
 			return true;
 		}
 		// the event was not handled
@@ -414,7 +446,9 @@ public class MapView extends ViewGroup {
 			synchronized (this) {
 				// add the movement to the transformation matrix
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
-
+				for (Overlay o : this.overlays) {
+					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
+				}
 				// calculate the new position of the map center
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
@@ -745,6 +779,9 @@ public class MapView extends ViewGroup {
 
 		// register the MapView in the MapActivity
 		this.mapActivity.registerMapView(this);
+
+		// create overlay list
+		this.overlays = new ArrayList<Overlay>();
 	}
 
 	private void setupZoomControls() {
@@ -892,6 +929,28 @@ public class MapView extends ViewGroup {
 			canvas.drawText(String.valueOf(this.fps), 20, 30, this.fpsPaint);
 			++this.frame_counter;
 		}
+
+		// draw overlays
+		this.currentTime = SystemClock.uptimeMillis();
+		boolean timeElapsed = false;
+		if (this.currentTime - this.previousTimeSinceDrawOverlays > TIME_DELAY_TO_PREPARE_IN_MS) {
+			timeElapsed = true;
+			this.previousTimeSinceDrawOverlays = this.currentTime;
+		}
+
+		for (Overlay o : this.overlays) {
+			if (!o.isMapViewSet()) {
+				o.setMapViewAndCreateOverlayBitmaps(this);
+				synchronized (o) {
+					o.notify();
+				}
+			} else if (timeElapsed) {
+				synchronized (o) {
+					o.notify();
+				}
+			}
+			o.draw(canvas, this, false);
+		}
 	}
 
 	@Override
@@ -967,6 +1026,11 @@ public class MapView extends ViewGroup {
 		}
 
 		stopMapGeneratorThread();
+
+		// stop the overlays
+		for (Overlay overLay : this.overlays) {
+			overLay.interrupt();
+		}
 
 		// destroy the map controller
 		if (this.mapController != null) {
@@ -1268,6 +1332,17 @@ public class MapView extends ViewGroup {
 							(float) (MercatorProjection.latitudeToPixelY(this.latitude,
 									this.zoomLevel) - MercatorProjection.latitudeToPixelY(point
 									.getLatitude(), this.zoomLevel)));
+
+					for (Overlay o : this.overlays) {
+						o.getMatrix().postTranslate(
+								(float) (MercatorProjection.longitudeToPixelX(this.longitude,
+										this.zoomLevel) - MercatorProjection.longitudeToPixelX(
+										point.getLongitude(), this.zoomLevel)),
+								(float) (MercatorProjection.latitudeToPixelY(this.latitude,
+										this.zoomLevel) - MercatorProjection.latitudeToPixelY(
+										point.getLatitude(), this.zoomLevel)));
+					}
+
 				}
 
 				this.latitude = getValidLatitude(point.getLatitude());
