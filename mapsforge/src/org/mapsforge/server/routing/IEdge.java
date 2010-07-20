@@ -27,6 +27,8 @@ public interface IEdge {
 	public IVertex getTarget();
 
 	public GeoCoordinate[] getWaypoints();
+	
+	public GeoCoordinate[] getAllWaypoints();
 
 	public String getName();
 
