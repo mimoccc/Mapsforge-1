@@ -307,7 +307,19 @@ public class RouterImpl implements IRouter {
 		public IVertex getTarget() {
 			return new HHVertex(e.getTarget());
 		}
-
+		
+		public GeoCoordinate[] getAllWaypoints() {
+			int s = getWaypoints().length + 2;
+			GeoCoordinate[] result = new GeoCoordinate[s];
+			result[0] = this.getSource().getCoordinate();
+			GeoCoordinate[] inbetween = this.getWaypoints();
+			for (int i = 1; i <= inbetween.length; i++) {
+				result[i] = inbetween[i-1];
+			}
+			result[s-1] = this.getTarget().getCoordinate();
+			return result;
+		}
+		
 		@Override
 		public GeoCoordinate[] getWaypoints() {
 			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
@@ -371,7 +383,14 @@ public class RouterImpl implements IRouter {
 
 	public static void main(String[] args) {
 		IRouter router = RouterFactory.getRouter();
-		IEdge[] sp = router.getShortestPath(12, 12312);
+		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09468, 8.80808)).getId());
+		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09579, 8.80461)).getId());
+
+		//IEdge[] sp = router.getShortestPath(1896, 7873);
+		//IEdge[] sp = router.getShortestPath(10262, 119);
+		IEdge[] sp = router.getShortestPath(8446, 5093);
+		
+		System.out.println(sp.length);
 
 		for (IEdge e : sp) {
 			System.out.print(e.getSource().getId() + " -> " + e.getTarget().getId() + " : "
