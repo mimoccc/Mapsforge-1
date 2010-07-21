@@ -313,4 +313,160 @@ class Utils {
 		}
 		return result;
 	}
+
+	/**
+	 * Clips a given polygon to a clipping edge (here: edge of a tile).
+	 * 
+	 * (edges go from A to B)
+	 * 
+	 * @param tileA
+	 *            first point of the clipping edge
+	 * @param tileB
+	 *            second point of the clipping edge
+	 * @param polygonNodes
+	 *            list of polygon nodes
+	 * @return list of nodes of the clipped polygon
+	 */
+	static ArrayList<Coordinate> clipPolygonToTile(Coordinate tileA, Coordinate tileB,
+			ArrayList<Coordinate> polygonNodes) {
+
+		ArrayList<Coordinate> output = new ArrayList<Coordinate>();
+
+		Coordinate lastPoint;
+		Coordinate currentPoint;
+
+		Coordinate tmpPoint;
+
+		// get the last polygon point
+		lastPoint = polygonNodes.get(polygonNodes.size() - 1);
+
+		// for every point of the polygon
+		for (int j = 0; j < polygonNodes.size(); j++) {
+			// get the current point
+			currentPoint = polygonNodes.get(j);
+
+			if (pointInsideTile(currentPoint, tileA, tileB)) {
+				// the current point lies inside the clipping region
+				if (pointInsideTile(lastPoint, tileA, tileB)) {
+					// the last point lies inside the clipping region
+					// add the current point to the output list
+					output.add(currentPoint);
+
+				} else {
+					// the last point lies outside the clipping region
+
+					// calculate the intersection point of the edges (lastPoint,currentPoint)
+					// and (tileA,tileB)
+					tmpPoint = intersection(lastPoint, currentPoint, tileA, tileB);
+
+					// add the intersection point to the output list
+					output.add(tmpPoint);
+					// add also the current point to the output list
+					output.add(currentPoint);
+				}
+			} else {
+				// the current point lies outside the clipping region
+				if (pointInsideTile(lastPoint, tileA, tileB)) {
+					// the lastPoint lies inside the clipping region
+
+					// calculate the intersection point of the edges (lastPoint,currentPoint)
+					// and (tileA,tileB)
+					tmpPoint = intersection(lastPoint, currentPoint, tileA, tileB);
+					// add the intersection point to the output list
+					output.add(tmpPoint);
+				}
+				// if lastPoint and currentPoint are both outside the clipping region, no point
+				// is added to the output list
+			}
+			// set lastPoint to currentPoint
+			lastPoint = currentPoint;
+		}
+
+		return output;
+	}
+
+	/**
+	 * calculates whether a given point lies inside the clipping region (i.e. on the left side
+	 * of the clipping edge)
+	 * 
+	 * @param pointA
+	 *            point for which the position should be tested
+	 * @param tileA
+	 *            first point of the clipping edge
+	 * @param tileB
+	 *            second point of the clipping edge
+	 * @return true if the given point lies in the clipping region, else false
+	 */
+	static boolean pointInsideTile(Coordinate pointA, Coordinate tileA, Coordinate tileB) {
+		// note: the vertices of the tile edges are ordered counterclockwise
+
+		if (tileB.x > tileA.x) {
+			// left line
+			if (pointA.y <= tileA.y) {
+				return true;
+			}
+		}
+		if (tileB.x < tileA.x) {
+			// right line
+			if (pointA.y >= tileA.y) {
+				return true;
+			}
+		}
+		if (tileB.y > tileA.y) {
+			// bottom line
+			if (pointA.x >= tileB.x) {
+				return true;
+			}
+		}
+		if (tileB.y < tileA.y) {
+			// top line
+			if (pointA.x <= tileB.x) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Calculates the intersection point of two edges (here: an edge of the polygon and the
+	 * current clipping edge
+	 * 
+	 * (the edges go from A to B)
+	 * 
+	 * @param polygonA
+	 *            first point of the polygon edge
+	 * @param polygonB
+	 *            second point of the polygon edge
+	 * @param tileA
+	 *            first point of the clipping edge
+	 * @param tileB
+	 *            second point of the clipping edge
+	 * @return the coordinates of the intersection point
+	 * 
+	 */
+	static Coordinate intersection(Coordinate polygonA, Coordinate polygonB, Coordinate tileA,
+			Coordinate tileB) {
+		Coordinate intersectionPoint = new Coordinate();
+
+		if (tileA.x == tileB.x) {
+			// tile edge is horizontal
+			// this means that the y coordinate of the intersection point is equal to the values
+			// of the y coordinate of the tile edge vertices
+
+			intersectionPoint.x = tileA.x;
+			intersectionPoint.y = polygonA.y + (tileA.x - polygonA.x)
+					* (polygonB.y - polygonA.y) / (polygonB.x - polygonA.x);
+		} else {
+			// tile edge is vertical
+			// this means that the x coordinate of the intersection point is equal to the values
+			// of the y coordinates of the tile edge vertices
+
+			intersectionPoint.x = polygonA.x + (tileA.y - polygonA.y)
+					* (polygonB.x - polygonA.x) / (polygonB.y - polygonA.y);
+			intersectionPoint.y = tileA.y;
+		}
+		return intersectionPoint;
+	}
+
 }
