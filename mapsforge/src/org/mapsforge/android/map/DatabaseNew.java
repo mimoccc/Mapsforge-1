@@ -26,7 +26,7 @@ import java.io.UnsupportedEncodingException;
 class DatabaseNew {
 	private static final int BINARY_OSM_VERSION = 1;
 	private static final int INDEX_CACHE_SIZE = 32;
-	private static final String MAGIC_BYTE = "mapsforge binary OSM";
+	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
 
 	private byte baseZoomLevel;
 	private long blockNumber;
@@ -52,7 +52,7 @@ class DatabaseNew {
 	private int mapFileBlocks;
 	private int mapFileBlocksHeight;
 	private int mapFileBlocksWidth;
-	private int maximumTileSize; // FIXME: int or long?
+	private long maximumTileSize;
 	private long nextBlockPointer;
 	private short nodeElevation;
 	private byte nodeFeatureByte;
@@ -79,7 +79,6 @@ class DatabaseNew {
 	private int tempInt;
 	private short tempShort;
 	private String tempString;
-	private int tileEntriesTableOffset;
 	private int tileEntriesTableSize;
 	private byte tileZoomLevelMax;
 	private byte tileZoomLevelMin;
@@ -109,6 +108,152 @@ class DatabaseNew {
 	private byte wayTagId;
 	private boolean[] wayTagIds;
 	private short wayTileBitmap;
+	private short tilePixelSize;
+
+	/**
+	 * Closes the map file.
+	 */
+	void closeFile() {
+		try {
+			if (this.databaseIndexCache != null) {
+				this.databaseIndexCache.destroy();
+				this.databaseIndexCache = null;
+			}
+
+			if (this.inputFile != null) {
+				this.inputFile.close();
+				this.inputFile = null;
+			}
+		} catch (IOException e) {
+			Logger.e(e);
+		}
+	}
+
+	/**
+	 * Start a database query with the given parameters.
+	 * 
+	 * @param tile
+	 *            the tile to read
+	 * @param readWayNames
+	 *            if way names should be read
+	 * @param mapGenerator
+	 *            the MapGenerator object for rendering all map elements
+	 */
+	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
+		try {
+			Logger.d("executing query ...");
+			Logger.d("  tile: " + tile.x + ", " + tile.y + ", " + tile.zoomLevel);
+			this.stopCurrentQuery = false;
+			if (tile.zoomLevel > this.tileZoomLevelMax) {
+				this.queryZoomLevel = this.tileZoomLevelMax;
+			} else {
+				this.queryZoomLevel = tile.zoomLevel;
+			}
+			this.queryReadWayNames = readWayNames;
+			this.queryMapGenerator = mapGenerator;
+
+			// TODO: for-loop needed for all base tiles within the tile
+			if (tile.zoomLevel >= this.baseZoomLevel) {
+				// check if the current query was interrupted
+				if (this.stopCurrentQuery) {
+					return;
+				}
+
+				// calculate the appropriate tile in the base zoom level
+				double baseTileLongitude = MercatorProjection.tileXToLongitude(tile.x,
+						tile.zoomLevel);
+				double baseTileLatitude = MercatorProjection.tileYToLatitude(tile.y,
+						tile.zoomLevel);
+
+				long baseTileX = MercatorProjection.longitudeToTileX(baseTileLongitude,
+						this.baseZoomLevel);
+				long baseTileY = MercatorProjection.latitudeToTileY(baseTileLatitude,
+						this.baseZoomLevel);
+
+				// calculate the position of the needed block in the file
+				long neededBlockX = baseTileX - this.boundaryTileLeft;
+				long neededBlockY = baseTileY - this.boundaryTileTop;
+
+				// calculate the block number of the needed block in the file
+				this.blockNumber = neededBlockY * this.mapFileBlocksWidth + neededBlockX;
+
+				// get the pointers to the current and the next block
+				this.currentBlockPointer = this.databaseIndexCache.getAddress(this.blockNumber);
+				this.nextBlockPointer = this.databaseIndexCache
+						.getAddress(this.blockNumber + 1);
+
+				// check if the next block has a valid pointer
+				if (this.nextBlockPointer == -1) {
+					// the current block is the last one in the file
+					this.nextBlockPointer = this.inputFile.length();
+				}
+
+				// calculate the size of the current block
+				this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
+
+				// if the current block has no map data continue with the next one
+				if (this.currentBlockSize == 0) {
+					return;
+				}
+
+				// go to the current block and read its data to the buffer
+				Logger.d("  reading block " + this.blockNumber);
+				this.inputFile.seek(this.currentBlockPointer);
+				if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
+					// if reading the current block has failed, skip it
+					return;
+				}
+
+				// handle the current block data
+				processBlock();
+			}
+		} catch (IOException e) {
+			Logger.e(e);
+		}
+		Logger.d("execution finished");
+	}
+
+	/**
+	 * Opens a map file and checks for valid header data.
+	 * 
+	 * @param fileName
+	 *            the path to the map file.
+	 * @return true if the file could be opened and is a valid map file, false otherwise.
+	 */
+	boolean openFile(String fileName) {
+		try {
+			// make sure to close any previous file first
+			closeFile();
+
+			this.inputFile = new RandomAccessFile(fileName, "r");
+			if (!readFileHeader()) {
+				return false;
+			}
+
+			// create the DatabaseIndexCache
+			this.databaseIndexCache = new DatabaseIndexCacheNew(this.inputFile,
+					this.mapFileBlocks, this.indexStartAddress, INDEX_CACHE_SIZE);
+
+			// create a read buffer that is big enough even for the largest tile
+			this.readBuffer = new byte[(int) this.maximumTileSize];
+
+			// calculate the size of the tile entries table
+			this.tileEntriesTableSize = 2 * (this.tileZoomLevelMax - this.tileZoomLevelMin + 1) * 2;
+
+			// create the tag arrays
+			this.defaultNodeTagIds = new boolean[Byte.MAX_VALUE];
+			this.nodeTagIds = new boolean[Byte.MAX_VALUE];
+			this.defaultWayTagIds = new boolean[Byte.MAX_VALUE];
+			this.wayTagIds = new boolean[Byte.MAX_VALUE];
+
+			return true;
+		} catch (IOException e) {
+			Logger.e(e);
+			// make sure that the file is closed
+			closeFile();
+			return false;
+		}
+	}
 
 	/**
 	 * Read a single block and call the render functions on all map elements.
@@ -120,8 +265,7 @@ class DatabaseNew {
 	 */
 	private void processBlock() throws IndexOutOfBoundsException, UnsupportedEncodingException {
 		// calculate the offset in the tile entries table and move the pointer there
-		this.tileEntriesTableOffset = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
-		this.bufferPosition = this.tileEntriesTableOffset;
+		this.bufferPosition = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
 
 		// read the amount of way and nodes on the current zoomLevel level
 		this.nodesOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -132,7 +276,6 @@ class DatabaseNew {
 		this.bufferPosition = this.tileEntriesTableSize;
 
 		// read the offset to the first stored way in the block (8 bytes)
-		// TODO: change to int with 4 bytes?
 		this.firstWayOffset = Deserializer.toLong(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 8;
 
@@ -180,7 +323,11 @@ class DatabaseNew {
 					this.nodeName = new String(this.readBuffer, this.bufferPosition,
 							this.stringLength, "UTF-8");
 					this.bufferPosition += this.stringLength;
+				} else {
+					this.nodeName = null;
 				}
+			} else {
+				this.nodeName = null;
 			}
 
 			// check if the node has an elevation
@@ -189,6 +336,8 @@ class DatabaseNew {
 				// get the node elevation (2 bytes)
 				this.nodeElevation = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
+			} else {
+				this.nodeElevation = -1;
 			}
 
 			// check if the node has a house number
@@ -202,7 +351,11 @@ class DatabaseNew {
 					this.nodeHouseNumber = new String(this.readBuffer, this.bufferPosition,
 							this.stringLength, "UTF-8");
 					this.bufferPosition += this.stringLength;
+				} else {
+					this.nodeHouseNumber = null;
 				}
+			} else {
+				this.nodeHouseNumber = null;
 			}
 
 			// render the node
@@ -213,11 +366,9 @@ class DatabaseNew {
 
 		// finished reading nodes, now move the pointer to the first way
 		this.bufferPosition = (int) this.firstWayOffset;
-		// TODO: remove cast after changed to int
 
 		// read ways
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
-			// FIXME: change from int to short?
 			// read the size of the way (4 bytes)
 			this.waySize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
@@ -315,7 +466,7 @@ class DatabaseNew {
 				this.wayLabelPositionLongitude = Deserializer.toInt(this.readBuffer,
 						this.bufferPosition);
 				this.bufferPosition += 4;
-			}
+			} // TODO: if no label position exists, mark the old values as invalid
 
 			// check if the way represents a closed area
 			this.wayFeatureArea = (this.wayFeatureByte & 20) != 0;
@@ -326,33 +477,41 @@ class DatabaseNew {
 				// read the amount of inner ways (1 byte)
 				this.wayNumberOfInnerWays = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
-				this.wayInnerWays = new int[this.wayNumberOfInnerWays][];
 
-				// for each inner way
-				for (this.tempByte = (byte) (this.wayNumberOfInnerWays - 1); this.tempByte >= 0; --this.tempByte) {
-					// read the number of way nodes (2 bytes)
-					this.innerWayNumberOfNodes = Deserializer.toShort(this.readBuffer,
-							this.bufferPosition);
-					this.bufferPosition += 2;
+				if (this.wayNumberOfInnerWays > 0) {
+					// create a two-dimensional array for the inner way coordinates
+					this.wayInnerWays = new int[this.wayNumberOfInnerWays][];
 
-					// each way node consists of latitude and longitude fields
-					this.innerWayNodesSequenceLength = this.innerWayNumberOfNodes * 2;
-
-					this.innerWay = new int[this.innerWayNodesSequenceLength];
-					for (this.tempShort = 0; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
-						// read inner way node latitude (4 bytes)
-						this.nodeLatitude = Deserializer.toInt(this.readBuffer,
+					// for each inner way
+					for (this.tempByte = (byte) (this.wayNumberOfInnerWays - 1); this.tempByte >= 0; --this.tempByte) {
+						// read the number of way nodes (2 bytes)
+						this.innerWayNumberOfNodes = Deserializer.toShort(this.readBuffer,
 								this.bufferPosition);
-						this.bufferPosition += 4;
-						// read inner way node longitude (4 bytes)
-						this.nodeLongitude = Deserializer.toInt(this.readBuffer,
-								this.bufferPosition);
-						this.bufferPosition += 4;
-						this.innerWay[this.tempShort] = this.nodeLongitude;
-						this.innerWay[this.tempShort + 1] = this.nodeLatitude;
+						this.bufferPosition += 2;
+
+						// each way node consists of latitude and longitude fields
+						this.innerWayNodesSequenceLength = this.innerWayNumberOfNodes * 2;
+
+						this.innerWay = new int[this.innerWayNodesSequenceLength];
+						for (this.tempShort = 0; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+							// read inner way node latitude (4 bytes)
+							this.nodeLatitude = Deserializer.toInt(this.readBuffer,
+									this.bufferPosition);
+							this.bufferPosition += 4;
+							// read inner way node longitude (4 bytes)
+							this.nodeLongitude = Deserializer.toInt(this.readBuffer,
+									this.bufferPosition);
+							this.bufferPosition += 4;
+							this.innerWay[this.tempShort] = this.nodeLongitude;
+							this.innerWay[this.tempShort + 1] = this.nodeLatitude;
+						}
+						this.wayInnerWays[this.tempByte] = this.innerWay;
 					}
-					this.wayInnerWays[this.tempByte] = this.innerWay;
+				} else {
+					this.wayInnerWays = null;
 				}
+			} else {
+				this.wayInnerWays = null;
 			}
 
 			// render the way
@@ -372,7 +531,7 @@ class DatabaseNew {
 	 */
 	private boolean readFileHeader() throws IOException {
 		Logger.d("processing file header ...");
-		final int FIXED_HEADER_SIZE = MAGIC_BYTE.length() + 39; // FIXME: really 39?
+		final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 40;
 		this.readBuffer = new byte[FIXED_HEADER_SIZE];
 
 		// read the fixed size part of the header in the buffer to avoid multiple reads
@@ -382,11 +541,11 @@ class DatabaseNew {
 		this.bufferPosition = 0;
 
 		// check the magic byte
-		this.tempString = new String(this.readBuffer, this.bufferPosition, MAGIC_BYTE.length(),
-				"US-ASCII");
-		this.bufferPosition += MAGIC_BYTE.length();
+		this.tempString = new String(this.readBuffer, this.bufferPosition,
+				BINARY_OSM_MAGIC_BYTE.length(), "UTF-8");
+		this.bufferPosition += BINARY_OSM_MAGIC_BYTE.length();
 		Logger.d("  magic byte: " + this.tempString);
-		if (!this.tempString.equals(MAGIC_BYTE)) {
+		if (!this.tempString.equals(BINARY_OSM_MAGIC_BYTE)) {
 			Logger.d("invalid magic byte: " + this.tempString);
 			return false;
 		}
@@ -409,8 +568,14 @@ class DatabaseNew {
 			return false;
 		}
 
-		// FIXME: Kachelgröße, nach der die Umrechnungen erfolgten (2 Byte).
+		// get and check the tile pixel size (2 bytes)
+		this.tilePixelSize = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
+		Logger.d("  tilePixelSize: " + this.tilePixelSize);
+		if (this.tilePixelSize < 0) {
+			Logger.d("invalid tilePixelSize: " + this.tilePixelSize);
+			return false;
+		}
 
 		// get and check the minimum tile zoom level (1 byte)
 		this.tileZoomLevelMin = this.readBuffer[this.bufferPosition];
@@ -491,9 +656,10 @@ class DatabaseNew {
 			return false;
 		}
 
-		// get and check the maximum tile size (4 bytes) FIXME: int or long?
-		this.maximumTileSize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		// get and check the maximum tile size (5 bytes)
+		this.maximumTileSize = Deserializer.fiveBytesToLong(this.readBuffer,
+				this.bufferPosition);
+		this.bufferPosition += 5;
 		Logger.d("  maximumTileSize: " + this.maximumTileSize);
 		if (this.maximumTileSize < 0) {
 			Logger.d("invalid maximum tile size: " + this.maximumTileSize);
@@ -522,152 +688,6 @@ class DatabaseNew {
 
 		Logger.d("finished file header");
 		return true;
-	}
-
-	/**
-	 * Closes the map file.
-	 */
-	void closeFile() {
-		try {
-			if (this.databaseIndexCache != null) {
-				this.databaseIndexCache.destroy();
-				this.databaseIndexCache = null;
-			}
-
-			if (this.inputFile != null) {
-				this.inputFile.close();
-				this.inputFile = null;
-			}
-		} catch (IOException e) {
-			Logger.e(e);
-		}
-	}
-
-	/**
-	 * Start a database query with the given parameters.
-	 * 
-	 * @param tile
-	 *            the tile to read
-	 * @param readWayNames
-	 *            if way names should be read
-	 * @param mapGenerator
-	 *            the MapGenerator object for rendering all map elements
-	 */
-	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
-		try {
-			Logger.d("executing query ...");
-			Logger.d("  tile: " + tile.x + ", " + tile.y + ", " + tile.zoomLevel);
-			this.stopCurrentQuery = false;
-			if (tile.zoomLevel > this.tileZoomLevelMax) {
-				this.queryZoomLevel = this.tileZoomLevelMax;
-			} else {
-				this.queryZoomLevel = tile.zoomLevel;
-			}
-			this.queryReadWayNames = readWayNames;
-			this.queryMapGenerator = mapGenerator;
-
-			// TODO: for-loop needed for all base tiles within the tile
-			if (tile.zoomLevel >= this.baseZoomLevel) {
-				// check if the current query was interrupted
-				if (this.stopCurrentQuery) {
-					return;
-				}
-
-				// calculate the appropriate tile in the base zoom level
-				double baseTileLongitude = MercatorProjection.tileXToLongitude(tile.x,
-						tile.zoomLevel);
-				double baseTileLatitude = MercatorProjection.tileYToLatitude(tile.y,
-						tile.zoomLevel);
-
-				long baseTileX = MercatorProjection.longitudeToTileX(baseTileLongitude,
-						this.baseZoomLevel);
-				long baseTileY = MercatorProjection.latitudeToTileY(baseTileLatitude,
-						this.baseZoomLevel);
-
-				// calculate the position of the needed block in the file
-				long neededBlockX = baseTileX - this.boundaryTileLeft;
-				long neededBlockY = baseTileY - this.boundaryTileTop;
-
-				// calculate the block number of the needed block in the file
-				this.blockNumber = neededBlockY * this.mapFileBlocksWidth + neededBlockX;
-
-				// get the pointers to the current and the next block
-				this.currentBlockPointer = this.databaseIndexCache.getAddress(this.blockNumber);
-				this.nextBlockPointer = this.databaseIndexCache
-						.getAddress(this.blockNumber + 1);
-
-				// check if the next block has a valid pointer
-				if (this.nextBlockPointer == -1) {
-					// the current block is the last one in the file
-					this.nextBlockPointer = this.inputFile.length();
-				}
-
-				// calculate the size of the current block
-				// FIXME: what if pointer == 0 for empty tiles?
-				this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
-
-				// if the current block has no map data continue with the next one
-				if (this.currentBlockSize == 0) {
-					return;
-				}
-
-				// go to the current block and read its data to the buffer
-				Logger.d("  reading block " + this.blockNumber);
-				this.inputFile.seek(this.currentBlockPointer);
-				if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
-					// if reading the current block has failed, skip it
-					return;
-				}
-
-				// handle the current block data
-				processBlock();
-			}
-		} catch (IOException e) {
-			Logger.e(e);
-		}
-		Logger.d("execution finished");
-	}
-
-	/**
-	 * Opens a map file and checks for valid header data.
-	 * 
-	 * @param fileName
-	 *            the path to the map file.
-	 * @return true if the file could be opened and is a valid map file, false otherwise.
-	 */
-	boolean openFile(String fileName) {
-		try {
-			// make sure to close any previous file first
-			closeFile();
-
-			this.inputFile = new RandomAccessFile(fileName, "r");
-			if (!readFileHeader()) {
-				return false;
-			}
-
-			// create the DatabaseIndexCache
-			this.databaseIndexCache = new DatabaseIndexCacheNew(this.inputFile,
-					this.mapFileBlocks, this.indexStartAddress, INDEX_CACHE_SIZE);
-
-			// create a read buffer that is big enough even for the largest tile
-			this.readBuffer = new byte[this.maximumTileSize];
-
-			// calculate the size of the tile entries table
-			this.tileEntriesTableSize = 2 * (this.tileZoomLevelMax - this.tileZoomLevelMin + 1) * 2;
-
-			// create the tag arrays
-			this.defaultNodeTagIds = new boolean[Byte.MAX_VALUE];
-			this.nodeTagIds = new boolean[Byte.MAX_VALUE];
-			this.defaultWayTagIds = new boolean[Byte.MAX_VALUE];
-			this.wayTagIds = new boolean[Byte.MAX_VALUE];
-
-			return true;
-		} catch (IOException e) {
-			Logger.e(e);
-			// make sure that the file is closed
-			closeFile();
-			return false;
-		}
 	}
 
 	void stopCurrentQuery() {
