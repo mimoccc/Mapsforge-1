@@ -60,9 +60,9 @@ class Deserializer {
 	 * @return the long value.
 	 */
 	static long fiveBytesToLong(byte[] buffer, int offset) {
-		return (buffer[offset + 3] & 0xffL) << 32 | (buffer[offset + 4] & 0xffL) << 24
-				| (buffer[offset + 5] & 0xffL) << 16 | (buffer[offset + 6] & 0xffL) << 8
-				| (buffer[offset + 7] & 0xffL);
+		return (buffer[offset] & 0xffL) << 32 | (buffer[offset + 1] & 0xffL) << 24
+				| (buffer[offset + 2] & 0xffL) << 16 | (buffer[offset + 3] & 0xffL) << 8
+				| (buffer[offset + 4] & 0xffL);
 	}
 
 	/**
