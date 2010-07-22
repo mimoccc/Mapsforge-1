@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<!--
+<!--
 		Use this ant script for convenience with creating a distribution of mapsforge.
 		The script in not intended for building the project. Use Eclipse for this
 		purpose.
@@ -11,7 +11,8 @@
 	<property name="mapsforge.lib" value="lib" />
 	<property name="mapsforge.src" value="src" />
 
-	<property name="mapsforge.advancemapviewer.lib.dir" value="${basedir}/../AdvancedMapViewer/lib" />
+	<property name="mapsforge.advancemapviewer.lib.dir"
+	          value="${basedir}/../AdvancedMapViewer/lib" />
 	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
 
 	<!-- Path to the properties file that includes the keystore parameters -->
@@ -42,12 +43,16 @@
 	<!-- Create javadoc for the map package -->
 	<target name="mapsforge-map javadoc">
 		<mkdir dir="doc/${mapsforge.version}" />
-		<javadoc destdir="doc/${mapsforge.version}" author="false" access="protected"
-			additionalparam="-quiet" classpathref="classpath">
+		<javadoc destdir="doc/${mapsforge.version}"
+		         author="false"
+		         access="protected"
+		         additionalparam="-quiet"
+		         classpathref="classpath">
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/*.java" />
 			<!-- Add links to the online Android javadoc reference -->
-			<link href="http://developer.android.com/reference" offline="true"
-				packagelistloc="${basedir}/../../Android/android-sdk-linux_86/docs/reference" />
+			<link href="http://developer.android.com/reference"
+			      offline="true"
+			      packagelistloc="${basedir}/../../Android/android-sdk-linux_86/docs/reference" />
 		</javadoc>
 	</target>
 
@@ -56,8 +61,12 @@
 	<target name="mapsforge-map.jar copy" depends="mapsforge-map.jar create">
 		<mkdir dir="${mapsforge.advancemapviewer.lib.dir}" />
 		<mkdir dir="${mapsforge.demomapviewer.lib.dir}" />
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" todir="${mapsforge.advancemapviewer.lib.dir}" />
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar" todir="${mapsforge.demomapviewer.lib.dir}" />
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
+		      todir="${mapsforge.advancemapviewer.lib.dir}" />
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
+		      todir="${mapsforge.demomapviewer.lib.dir}" />
+		<eclipse.refreshLocal resource="AdvancedMapViewer/lib" depth="infinite" />
+		<eclipse.refreshLocal resource="DemoMapViewer/lib" depth="infinite" />
 	</target>
 
 
@@ -70,9 +79,11 @@
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/" />
 			<fileset refid="info" />
 		</jar>
-		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar" keystore="${mapsforge.keystore.location}"
-			storepass="${mapsforge.keystore.pass}" alias="${mapsforge.keystore.alias}"
-			keypass="${mapsforge.key.pass}" />
+		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar"
+		         keystore="${mapsforge.keystore.location}"
+		         storepass="${mapsforge.keystore.pass}"
+		         alias="${mapsforge.keystore.alias}"
+		         keypass="${mapsforge.key.pass}" />
 		<!-- Verify the signed JAR file and stop if verification was not successful -->
 		<exec executable="jarsigner" failonerror="true">
 			<arg value="-verify" />
