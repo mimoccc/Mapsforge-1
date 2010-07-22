@@ -156,8 +156,8 @@ public class MapView extends ViewGroup {
 	private String unit_symbol_kilometer;
 	private String unit_symbol_meter;
 	private Handler zoomControlsHideHandler;
-	public double latitude;
-	public double longitude;
+	double latitude;
+	double longitude;
 	final int mapViewId;
 	Matrix matrix;
 	ZoomControls zoomControls;
@@ -414,10 +414,9 @@ public class MapView extends ViewGroup {
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
 								this.zoomLevel) - this.mapMoveY), this.zoomLevel));
-				this.longitude = MercatorProjection
-						.pixelXToLongitude((MercatorProjection.longitudeToPixelX(
-								this.longitude, this.zoomLevel) - this.mapMoveX),
-								this.zoomLevel);
+				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
+						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
+						this.zoomLevel);
 			}
 			handleTiles(true);
 			return true;
@@ -455,10 +454,9 @@ public class MapView extends ViewGroup {
 				this.latitude = getValidLatitude(MercatorProjection
 						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
 								this.zoomLevel) - this.mapMoveY), this.zoomLevel));
-				this.longitude = MercatorProjection
-						.pixelXToLongitude((MercatorProjection.longitudeToPixelX(
-								this.longitude, this.zoomLevel) - this.mapMoveX),
-								this.zoomLevel);
+				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
+						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
+						this.zoomLevel);
 			}
 			handleTiles(true);
 			return true;
@@ -747,6 +745,9 @@ public class MapView extends ViewGroup {
 		// create the transformation matrix
 		this.matrix = new Matrix();
 
+		// create overlay list
+		this.overlays = new ArrayList<Overlay>();
+
 		// create the tile bitmap and buffer
 		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 				Bitmap.Config.RGB_565);
@@ -758,9 +759,8 @@ public class MapView extends ViewGroup {
 		// create the image file cache with a unique directory
 		this.imageFileCache = new ImageFileCache(Environment.getExternalStorageDirectory()
 				.getAbsolutePath()
-				+ EXTERNAL_STORAGE_DIRECTORY
-				+ File.separatorChar
-				+ this.mapViewId, this.fileCacheSize);
+				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
+				this.fileCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -783,9 +783,6 @@ public class MapView extends ViewGroup {
 
 		// register the MapView in the MapActivity
 		this.mapActivity.registerMapView(this);
-
-		// create overlay list
-		this.overlays = new ArrayList<Overlay>();
 	}
 
 	private void setupZoomControls() {
@@ -971,16 +968,14 @@ public class MapView extends ViewGroup {
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		// find out how big the ZoomControls should be
-		this.zoomControls.measure(MeasureSpec.makeMeasureSpec(
-				MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.AT_MOST), MeasureSpec
-				.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.AT_MOST));
+		this.zoomControls.measure(MeasureSpec.makeMeasureSpec(MeasureSpec
+				.getSize(widthMeasureSpec), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(
+				MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.AT_MOST));
 
 		// make sure that MapView is big enough to display the ZoomControls
-		setMeasuredDimension(
-				Math.max(MeasureSpec.getSize(widthMeasureSpec),
-						this.zoomControls.getMeasuredWidth()),
-				Math.max(MeasureSpec.getSize(heightMeasureSpec),
-						this.zoomControls.getMeasuredHeight()));
+		setMeasuredDimension(Math.max(MeasureSpec.getSize(widthMeasureSpec), this.zoomControls
+				.getMeasuredWidth()), Math.max(MeasureSpec.getSize(heightMeasureSpec),
+				this.zoomControls.getMeasuredHeight()));
 	}
 
 	@Override
@@ -1121,9 +1116,11 @@ public class MapView extends ViewGroup {
 		synchronized (this) {
 			// calculate the XY position of the MapView
 			this.mapViewPixelX = MercatorProjection.longitudeToPixelX(this.longitude,
-					this.zoomLevel) - (getWidth() >> 1);
+					this.zoomLevel)
+					- (getWidth() >> 1);
 			this.mapViewPixelY = MercatorProjection.latitudeToPixelY(this.latitude,
-					this.zoomLevel) - (getHeight() >> 1);
+					this.zoomLevel)
+					- (getHeight() >> 1);
 
 			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX,
 					this.zoomLevel);
@@ -1141,8 +1138,8 @@ public class MapView extends ViewGroup {
 							this.mapViewMode);
 					if (this.imageBitmapCache.containsKey(this.currentTile)) {
 						// bitmap cache hit
-						putTileOnBitmap(this.currentTile,
-								this.imageBitmapCache.get(this.currentTile), false);
+						putTileOnBitmap(this.currentTile, this.imageBitmapCache
+								.get(this.currentTile), false);
 					} else if (this.imageFileCache.containsKey(this.currentTile)) {
 						// file cache hit
 						this.imageFileCache.get(this.currentTile, this.tileBuffer);
@@ -1334,8 +1331,8 @@ public class MapView extends ViewGroup {
 							this.longitude, this.zoomLevel) - MercatorProjection
 							.longitudeToPixelX(point.getLongitude(), this.zoomLevel)),
 							(float) (MercatorProjection.latitudeToPixelY(this.latitude,
-									this.zoomLevel) - MercatorProjection.latitudeToPixelY(
-									point.getLatitude(), this.zoomLevel)));
+									this.zoomLevel) - MercatorProjection.latitudeToPixelY(point
+									.getLatitude(), this.zoomLevel)));
 
 					for (Overlay o : this.overlays) {
 						o.getMatrix().postTranslate(
