@@ -24,6 +24,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	private final int hashCode;
 	private final int latitudeE6;
 	private final int longitudeE6;
+	private GeoPoint other;
 
 	/**
 	 * Creates a new GeoPoint with the given latitude and longitude, measured in degrees.
@@ -78,10 +79,10 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		} else if (!(obj instanceof GeoPoint)) {
 			return false;
 		} else {
-			GeoPoint geoPoint = (GeoPoint) obj;
-			if (this.latitudeE6 != geoPoint.latitudeE6) {
+			this.other = (GeoPoint) obj;
+			if (this.latitudeE6 != this.other.latitudeE6) {
 				return false;
-			} else if (this.longitudeE6 != geoPoint.longitudeE6) {
+			} else if (this.longitudeE6 != this.other.longitudeE6) {
 				return false;
 			}
 			return true;

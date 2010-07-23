@@ -17,7 +17,21 @@
 package org.mapsforge.android.map;
 
 class Point implements Comparable<Point> {
+	/**
+	 * Calculate the distance of two Points.
+	 * 
+	 * @param minuend
+	 *            the subtrahend.
+	 * @param subtrahend
+	 *            the subtrahend.
+	 * @return the distance.
+	 */
+	public static Point substract(Point minuend, Point subtrahend) {
+		return new Point(minuend.x - subtrahend.x, minuend.y - subtrahend.y);
+	}
+
 	private final int hashCode;
+	private Point other;
 	final float x;
 	final float y;
 
@@ -56,11 +70,11 @@ class Point implements Comparable<Point> {
 		} else if (!(obj instanceof Point)) {
 			return false;
 		} else {
-			Point other = (Point) obj;
-			if (this.x != other.x) {
+			this.other = (Point) obj;
+			if (this.x != this.other.x) {
 				return false;
 			}
-			if (this.y != other.y) {
+			if (this.y != this.other.y) {
 				return false;
 			}
 			return true;
@@ -70,19 +84,6 @@ class Point implements Comparable<Point> {
 	@Override
 	public int hashCode() {
 		return this.hashCode;
-	}
-
-	/**
-	 * Calculate the distance of two Points.
-	 * 
-	 * @param minuend
-	 *            the subtrahend.
-	 * @param subtrahend
-	 *            the subtrahend.
-	 * @return the distance.
-	 */
-	public static Point substract(Point minuend, Point subtrahend) {
-		return new Point(minuend.x - subtrahend.x, minuend.y - subtrahend.y);
 	}
 
 	/**
