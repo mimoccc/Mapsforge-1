@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -205,7 +204,8 @@ class Utils {
 			Geometry currentTile = e.getValue();
 			if (wayType == 1) {
 				if (geoWay.crosses(currentTile) || geoWay.within(currentTile)
-						|| geoWay.intersects(currentTile)) {
+						|| geoWay.intersects(currentTile) || currentTile.contains(geoWay)
+						|| currentTile.contains(geoWay) || currentTile.intersects(geoWay)) {
 					// System.out.println("crosses -1");
 					parentTile = new Tile((long) c.x, (long) c.y, zoom);
 					// System.out.println("parentTile: " + parentTile.toString());
@@ -215,7 +215,8 @@ class Utils {
 			}
 			if (wayType != 1) {
 				if (currentTile.within(geoWay) || currentTile.intersects(geoWay)
-						|| currentTile.contains(geoWay)) {
+						|| currentTile.contains(geoWay) || geoWay.contains(currentTile)
+						|| geoWay.crosses(currentTile)) {
 					// System.out.println("crosses -2");
 					parentTile = new Tile((long) c.x, (long) c.y, zoom);
 					// System.out.println("parentTile: " + parentTile.toString());
@@ -268,7 +269,7 @@ class Utils {
 	 * @return a map containing tiles and the calculated tile bitmask
 	 */
 	static Map<Tile, Short> getTileBitMask(Geometry geoWay, Set<Tile> wayTiles, int wayType) {
-		Map<Tile, Short> result = new TreeMap<Tile, Short>();
+		Map<Tile, Short> result = new HashMap<Tile, Short>();
 		short tileCounter;
 		short bitmap;
 		short tmp = 0;
@@ -279,10 +280,7 @@ class Utils {
 			return result;
 		}
 
-		System.out.println("new way " + wayType);
-
 		for (Tile p : wayTiles) {
-			System.out.println("new tile");
 			List<Tile> currentSubTiles = getSubtiles(new Tile((long) p.x, (long) p.y,
 					p.zoomLevel), (byte) 2);
 			tileCounter = 0;
@@ -296,7 +294,6 @@ class Utils {
 							|| geoWay.intersects(subTile)) {
 						tmp = result.get(p);
 						tmp |= tileBitMaskValues[tileCounter];
-						System.out.println("bitmap for tile no. " + tileCounter + ": " + tmp);
 						result.put(p, tmp);
 					}
 				}
@@ -304,7 +301,6 @@ class Utils {
 					if (subTile.within(geoWay) || subTile.intersects(geoWay)
 							|| subTile.contains(geoWay)) {
 						bitmap = bitmap |= tileBitMaskValues[tileCounter];
-						System.out.println("bitmap for tile no. " + tileCounter + ": " + tmp);
 						result.put(p, bitmap);
 					}
 				}
