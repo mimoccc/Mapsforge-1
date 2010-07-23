@@ -106,11 +106,14 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 							this.complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
 							this.coordinates = this.complexWayContainer.coordinates;
 							for (int j = 0; j < this.coordinates.length; ++j) {
-								this.path
-										.moveTo(this.coordinates[j][0], this.coordinates[j][1]);
-								for (int i = 2; i < this.coordinates[j].length; i += 2) {
-									this.path.lineTo(this.coordinates[j][i],
-											this.coordinates[j][i + 1]);
+								// make sure that the coordinates sequence is not empty
+								if (this.coordinates[j].length > 2) {
+									this.path.moveTo(this.coordinates[j][0],
+											this.coordinates[j][1]);
+									for (int i = 2; i < this.coordinates[j].length; i += 2) {
+										this.path.lineTo(this.coordinates[j][i],
+												this.coordinates[j][i + 1]);
+									}
 								}
 							}
 							break;
