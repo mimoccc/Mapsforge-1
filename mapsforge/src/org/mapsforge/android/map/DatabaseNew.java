@@ -75,10 +75,10 @@ class DatabaseNew {
 	private boolean[] defaultWayTagIds;
 	private short elementCounter;
 	private long firstWayOffset;
+	private long fromBaseTileX;
+	private long fromBaseTileY;
 	private long fromBlockX;
 	private long fromBlockY;
-	private long fromTileX;
-	private long fromTileY;
 	private long indexStartAddress;
 	private int[] innerWay;
 	private short innerWayNodesSequenceLength;
@@ -117,15 +117,14 @@ class DatabaseNew {
 	private int tempInt;
 	private short tempShort;
 	private String tempString;
-	private Rect tileArea;
 	private int tileEntriesTableSize;
 	private short tilePixelSize;
 	private byte tileZoomLevelMax;
 	private byte tileZoomLevelMin;
+	private long toBaseTileX;
+	private long toBaseTileY;
 	private long toBlockX;
 	private long toBlockY;
-	private long toTileX;
-	private long toTileY;
 	private boolean wayFeatureArea;
 	private byte wayFeatureByte;
 	private boolean wayFeatureLabelPosition;
@@ -152,6 +151,7 @@ class DatabaseNew {
 	private byte wayTagId;
 	private boolean[] wayTagIds;
 	private short wayTileBitmap;
+	private int zoomLevelDifference;
 
 	/**
 	 * Reads a single block and calls the render functions on all map elements.
@@ -207,7 +207,6 @@ class DatabaseNew {
 			// bit 1-4 of the special byte represent the node layer
 			this.nodeLayer = (byte) ((this.nodeSpecialByte & 0xf0) >> 4);
 			// Logger.d("      nodeLayer: " + this.nodeLayer);
-			// TODO: adjust the specification to this change
 			// bit 5-8 of the special byte represent the number of tag IDs
 			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & 0x0f);
 			// Logger.d("      nodeNumberOfTags: " + this.nodeNumberOfTags);
@@ -319,7 +318,6 @@ class DatabaseNew {
 			// bit 1-4 of the first special byte represent the way layer
 			this.wayLayer = (byte) ((this.waySpecialByte1 & 0xf0) >> 4);
 			// Logger.d("      wayLayer: " + this.wayLayer);
-			// TODO: adjust the specification to this change
 			// bit 5-8 of the first special byte represent the number of tag IDs
 			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & 0x0f);
 			// Logger.d("      wayNumberOfTags: " + this.wayNumberOfTags);
@@ -704,14 +702,19 @@ class DatabaseNew {
 	 * @param readWayNames
 	 *            if way names should be read.
 	 * @param mapGenerator
-	 *            the MapGenerator object for rendering all map elements.
+	 *            the MapGenerator callback which handles the extracted map elements.
 	 */
 	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
 		try {
-			// Logger.d("query tile: " + tile.x + ", " + tile.y + ", " + tile.zoomLevel);
+			Logger.d("query tile: " + tile.x + ", " + tile.y + ", " + tile.zoomLevel);
+
+			// reset the stop execution flag
 			this.stopCurrentQuery = false;
-			// TODO: what if tile.zoomLevel < this.tileZoomLevelMin?
-			if (tile.zoomLevel > this.tileZoomLevelMax) {
+
+			// limit the zoom level of the requested tile for this query
+			if (tile.zoomLevel < this.tileZoomLevelMin) {
+				this.queryZoomLevel = this.tileZoomLevelMin;
+			} else if (tile.zoomLevel > this.tileZoomLevelMax) {
 				this.queryZoomLevel = this.tileZoomLevelMax;
 			} else {
 				this.queryZoomLevel = tile.zoomLevel;
@@ -719,29 +722,40 @@ class DatabaseNew {
 			this.queryReadWayNames = readWayNames;
 			this.queryMapGenerator = mapGenerator;
 
-			// get the area of the tile
-			this.tileArea = tile.getBoundingBox();
+			// calculate the base tiles that cover the area of the requested tile
+			if (tile.zoomLevel < this.baseZoomLevel) {
+				// calculate the XY numbers of the upper left and lower right subtiles
+				this.zoomLevelDifference = this.baseZoomLevel - tile.zoomLevel;
+				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
+				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
+				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
+				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
+			} else if (tile.zoomLevel > this.baseZoomLevel) {
+				// calculate the XY numbers of the parent base tile
+				this.zoomLevelDifference = tile.zoomLevel - this.baseZoomLevel;
+				this.fromBaseTileX = tile.x >> this.zoomLevelDifference;
+				this.fromBaseTileY = tile.y >> this.zoomLevelDifference;
+				this.toBaseTileX = this.fromBaseTileX;
+				this.toBaseTileY = this.fromBaseTileY;
+			} else {
+				// use the tile XY numbers of the requested tile
+				this.fromBaseTileX = tile.x;
+				this.fromBaseTileY = tile.y;
+				this.toBaseTileX = this.fromBaseTileX;
+				this.toBaseTileY = this.fromBaseTileY;
+			}
+			// Logger.d("  fromBaseTileX: " + this.fromBaseTileX);
+			// Logger.d("  fromBaseTileY: " + this.fromBaseTileY);
+			// Logger.d("  toBaseTileX: " + this.toBaseTileX);
+			// Logger.d("  toBaseTileY: " + this.toBaseTileY);
 
-			// calculate the base tiles which are in the requested tile
-			this.fromTileX = MercatorProjection.longitudeToTileX(this.tileArea.left
-					/ COORDINATES_DIVISOR, this.baseZoomLevel);
-			this.fromTileY = MercatorProjection.latitudeToTileY(this.tileArea.top
-					/ COORDINATES_DIVISOR, this.baseZoomLevel);
-			// Logger.d("  fromTileX: " + this.fromTileX);
-			// Logger.d("  fromTileY: " + this.fromTileY);
-
-			this.toTileX = MercatorProjection.longitudeToTileX(this.tileArea.right
-					/ COORDINATES_DIVISOR, this.baseZoomLevel);
-			this.toTileY = MercatorProjection.latitudeToTileY(this.tileArea.bottom
-					/ COORDINATES_DIVISOR, this.baseZoomLevel);
-			// Logger.d("  toTileX: " + this.toTileX);
-			// Logger.d("  toTileY: " + this.toTileY);
-
-			// calculate the blocks which need to be read during this query
-			this.fromBlockX = this.fromTileX - this.boundaryLeftTile;
-			this.fromBlockY = this.fromTileY - this.boundaryTopTile;
-			this.toBlockX = this.toTileX - this.boundaryLeftTile;
-			this.toBlockY = this.toTileY - this.boundaryTopTile;
+			// calculate the blocks in the file which need to be read
+			this.fromBlockX = Math.max(this.fromBaseTileX - this.boundaryLeftTile, 0);
+			this.fromBlockY = Math.max(this.fromBaseTileY - this.boundaryTopTile, 0);
+			this.toBlockX = Math.min(this.toBaseTileX - this.boundaryLeftTile,
+					this.mapFileBlocksWidth);
+			this.toBlockY = Math.min(this.toBaseTileY - this.boundaryTopTile,
+					this.mapFileBlocksHeight);
 			// Logger.d("  fromBlockX: " + this.fromBlockX);
 			// Logger.d("  fromBlockY: " + this.fromBlockY);
 			// Logger.d("  toBlockX: " + this.toBlockX);
@@ -757,7 +771,7 @@ class DatabaseNew {
 						return;
 					}
 
-					// calculate the block number of the needed block in the file
+					// calculate the actual block number of the needed block in the file
 					this.blockNumber = this.currentRow * this.mapFileBlocksWidth
 							+ this.currentColumn;
 					// Logger.d("    blockNumber: " + this.blockNumber);
