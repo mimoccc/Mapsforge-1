@@ -109,10 +109,14 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_UPDATE_OPEN_WAYTYPE_FLAG = "UPDATE ways SET way_type = 0 WHERE id = ?";
 	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
 	private final String SQL_INSERT_WAY_TILE = "INSERT INTO ways_to_tiles (way_id,tile_x,tile_y,tile_bitmask,zoom_level) VALUES (?,?,?,?,?)";
-	private final String SQL_DISTINCT_WAY_TILES = "SELECT DISTINCT tile_x,tile_y FROM ways_to_tiles";
-	private final String SQL_SELECT_WAY_IDS = "SELECT w.id,w.waynodes_amount,w.way_type FROM ways_to_tiles wtt JOIN ways w ON (wtt.way_id = w.id) WHERE wtt.tile_x = ? AND wtt.tile_y = ?";
-	private final String SQL_SELECT_WAYS_FOR_TILE = "SELECT latitude,longitude FROM waynodes_tmp WHERE way_id = ? order by waynode_sequence";
-	private final String SQL_UPDATE_WAY_TILE = "UPDATE ways_to_tiles SET tile_bitmask = ? WHERE way_id = ? and tile_x = ? and tile_y = ?";
+	// private final String SQL_DISTINCT_WAY_TILES =
+	// "SELECT DISTINCT tile_x,tile_y FROM ways_to_tiles";
+	// private final String SQL_SELECT_WAY_IDS =
+	// "SELECT w.id,w.waynodes_amount,w.way_type FROM ways_to_tiles wtt JOIN ways w ON (wtt.way_id = w.id) WHERE wtt.tile_x = ? AND wtt.tile_y = ?";
+	// private final String SQL_SELECT_WAYS_FOR_TILE =
+	// "SELECT latitude,longitude FROM waynodes_tmp WHERE way_id = ? order by waynode_sequence";
+	// private final String SQL_UPDATE_WAY_TILE =
+	// "UPDATE ways_to_tiles SET tile_bitmask = ? WHERE way_id = ? and tile_x = ? and tile_y = ?";
 	private final String SQL_SELECT_WAY_WITH_TAGS = "SELECT * FROM ways WHERE id = ?";
 	private final String SQL_WAY_NODE_DIFF = "INSERT INTO waynodes_diff (way_id,waynode_sequence,diff_lat,diff_lon) VALUES (?,?,?,?)";
 	private final String SQL_UPDATE_INNER_WAY_AMOUNT = "UPDATE ways SET inner_way_amount = ? WHERE id = ?";
@@ -474,9 +478,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			currentWayNodes.add(Integer.parseInt(attributes.getValue("ref")));
 		} else if (qName.equals("member")) {
 			// only multipolygons with outer and inner ways are considered
-			if (attributes.getValue("role").equals("outer")) {
+			if (attributes.getValue("type").equals("way")
+					&& attributes.getValue("role").equals("outer")) {
 				currentOuterWays.add(Integer.parseInt(attributes.getValue("ref")));
-			} else if (attributes.getValue("role").equals("inner")) {
+			} else if (attributes.getValue("type").equals("way")
+					&& attributes.getValue("role").equals("inner")) {
 				currentInnerWays.add(Integer.parseInt(attributes.getValue("ref")));
 			}
 		}
@@ -530,8 +536,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					if (splittedTags[0].equals("ele")) {
 						try {
 							currentNode.elevation = (int) Double.parseDouble(splittedTags[1]);
-							if (currentNode.elevation < 32000) {
-								currentNode.elevation = 0;
+							if (currentNode.elevation > 32000) {
+								currentNode.elevation = 32000;
 							}
 						} catch (NumberFormatException e) {
 							currentNode.elevation = 0;
@@ -542,7 +548,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						currentNode.name = splittedTags[1];
 					} else if (splittedTags[0].equals("layer")) {
 						try {
-							currentNode.layer = Integer.parseInt(splittedTags[1]) + 5;
+							currentNode.layer = Integer.parseInt(splittedTags[1]);
+							if (currentNode.layer >= -5 && currentNode.layer <= 5)
+								currentNode.layer += 5;
+							else
+								currentNode.layer = 5;
 						} catch (NumberFormatException e) {
 							currentNode.layer = 5;
 						}
@@ -550,7 +560,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						// if current tag is in the white list, add it to the temporary tag list
 						currentNode.zoomLevel = poiTagWhiteList.get(tag);
 						if (currentNode.zoomLevel == 127) {
-							currentNode.zoomLevel = zoom;
+							// FIXME should zoom level of elements with 127 bet set to base zoom
+							// level or to maxZoom?
+							currentNode.zoomLevel = 17;
 						}
 						tempTags.add(tag);
 
@@ -649,15 +661,21 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						currentWay.name = splittedTags[1];
 					} else if (splittedTags[0].equals("layer")) {
 						try {
-							currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]) + 5);
+							currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]));
+							if (currentWay.layer >= -5 && currentWay.layer <= 5)
+								currentWay.layer += 5;
+							else
+								currentWay.layer = 5;
 						} catch (NumberFormatException e) {
 							currentWay.layer = 5;
 						}
 					} else if (wayTagWhiteList.containsKey(tag)) {
 						// if current tag is in the white list, add it to the temporary tag list
 						currentWay.zoomLevel = wayTagWhiteList.get(tag);
+						// FIXME should zoom level of elements with 127 be set to base zoom
+						// level or to maxZoom?
 						if (currentWay.zoomLevel == 127) {
-							currentWay.zoomLevel = zoom;
+							currentWay.zoomLevel = 17;
 						}
 						tempTags.add(tag);
 
@@ -723,8 +741,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								// and all following way nodes
 								pstmtWayNodeDiff.setLong(1, currentWay.id);
 								pstmtWayNodeDiff.setInt(2, sequence);
-								// System.out.println((Math.abs(firstLat - lat)));
-								// System.out.println((Math.abs(firstLon - lon)));
 								pstmtWayNodeDiff.setInt(3, (Math.abs(firstLat - lat)));
 								pstmtWayNodeDiff.setInt(4, (Math.abs(firstLon - lon)));
 								pstmtWayNodeDiff.addBatch();
@@ -761,6 +777,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							pstmtWaysTiles.setLong(2, entry.getKey().x);
 							pstmtWaysTiles.setLong(3, entry.getKey().y);
 							pstmtWaysTiles.setInt(4, entry.getValue());
+							pstmtWaysTiles.setShort(5, currentWay.zoomLevel);
 							pstmtWaysTiles.addBatch();
 						}
 
@@ -849,11 +866,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							}
 
 							boolean noInnerNodes = true;
+							// short removeFromInnerNodesAmount = 0;
 							for (int k = 0; k < innerNodes.length; k++) {
 								// if inner ways have no inner waynodes don't mark the outer way
 								// as multipolygon
 								if (innerNodes[k] == 0) {
 									noInnerNodes = noInnerNodes && true;
+									// removeFromInnerNodesAmount++;
 								} else {
 									noInnerNodes = noInnerNodes && false;
 								}
@@ -861,6 +880,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 							// set inner way amount for every outer way
 							if (!noInnerNodes) {
+								// innersize -= removeFromInnerNodesAmount;
 								pstmtUpdateWayInnerWayAmount.setInt(1, innersize);
 								pstmtUpdateWayInnerWayAmount.setLong(2, outer);
 								pstmtUpdateWayInnerWayAmount.addBatch();
@@ -902,7 +922,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	}
 
 	private static void usage() {
-		System.out.println("Usage: XML2PostgreSQL <osm-file> <properties-file>");
+		System.out.println("Usage: XML2PostgreSQLMap <osm-file> <properties-file>");
 	}
 
 	public static void main(String[] args) throws Exception {

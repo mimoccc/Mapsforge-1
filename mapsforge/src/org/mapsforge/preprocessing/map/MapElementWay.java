@@ -22,7 +22,7 @@ import java.util.SortedSet;
 class MapElementWay implements Comparable<MapElementWay> {
 	long id;
 	byte innerWays;
-	byte layer;
+	byte layer = 5;
 	SortedSet<Long> multipolygonInnerMemberIds;
 	SortedSet<Long> multipolygonOuterMemberIds;
 	String name = "";
