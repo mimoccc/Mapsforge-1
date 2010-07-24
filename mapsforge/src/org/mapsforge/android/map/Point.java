@@ -21,7 +21,7 @@ class Point implements Comparable<Point> {
 	 * Calculate the distance of two Points.
 	 * 
 	 * @param minuend
-	 *            the subtrahend.
+	 *            the minuend.
 	 * @param subtrahend
 	 *            the subtrahend.
 	 * @return the distance.
