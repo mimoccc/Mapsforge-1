@@ -281,8 +281,7 @@ class Utils {
 		}
 
 		for (Tile p : wayTiles) {
-			List<Tile> currentSubTiles = getSubtiles(new Tile((long) p.x, (long) p.y,
-					p.zoomLevel), (byte) 2);
+			List<Tile> currentSubTiles = getSubtiles(new Tile(p.x, p.y, p.zoomLevel), (byte) 2);
 			tileCounter = 0;
 			bitmap = 0;
 			result.put(p, (short) 0);

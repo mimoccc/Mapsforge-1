@@ -182,8 +182,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		wayTiles = new HashSet<Tile>();
 
-		// batchSize = Integer.parseInt(props.getProperty("xml2postgresql.batchSize",
-		// DEFAULT_BATCH_SIZE));
+		batchSize = Integer.parseInt(props.getProperty("xml2postgresql.batchSize",
+				DEFAULT_BATCH_SIZE));
 
 		batchSize = 50000;
 
@@ -403,8 +403,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	}
 
 	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes)
-			throws SAXException {
+	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 
 		// get bounding box coordinates
 		if (qName.equals("bounds")) {
@@ -489,7 +488,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	}
 
 	@Override
-	public void endElement(String uri, String localName, String qName) throws SAXException {
+	public void endElement(String uri, String localName, String qName) {
 		try {
 			String tag;
 			Iterator<String> tagIterator;
