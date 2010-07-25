@@ -40,6 +40,11 @@ class DatabaseNew {
 	private static final double COORDINATES_DIVISOR = 1000000;
 
 	/**
+	 * The flag to indicate, if the binary map file contains debug signatures.
+	 */
+	private static final boolean DEBUG_FILE = false;
+
+	/**
 	 * The size of the fixed header in a binary map file.
 	 */
 	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 40;
@@ -53,6 +58,26 @@ class DatabaseNew {
 	 * The initial length of the way nodes array.
 	 */
 	private static final int INITIAL_WAY_NODES_CAPACITY = 2048;
+
+	/**
+	 * The length of the debug signature at the beginning of each block.
+	 */
+	private static final byte SIGNATURE_LENGTH_BLOCK = 32;
+
+	/**
+	 * The length of the debug signature at the beginning of the index.
+	 */
+	private static final byte SIGNATURE_LENGTH_INDEX = 16;
+
+	/**
+	 * The length of the debug signature at the beginning of each node.
+	 */
+	private static final byte SIGNATURE_LENGTH_NODE = 32;
+
+	/**
+	 * The length of the debug signature at the beginning of each way.
+	 */
+	private static final byte SIGNATURE_LENGTH_WAY = 32;
 
 	private byte baseZoomLevel;
 	private long blockNumber;
@@ -117,6 +142,7 @@ class DatabaseNew {
 	private int tempInt;
 	private short tempShort;
 	private String tempString;
+	private int tileEntriesTableOffset;
 	private int tileEntriesTableSize;
 	private short tilePixelSize;
 	private byte tileZoomLevelMax;
@@ -162,19 +188,29 @@ class DatabaseNew {
 	 *             if the string decoding fails.
 	 */
 	private void processBlock() throws IndexOutOfBoundsException, UnsupportedEncodingException {
-		// Logger.d("  processing block ...");
-		// calculate the offset in the tile entries table and move the pointer there
-		this.bufferPosition = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
+		if (DEBUG_FILE) {
+			// check read and the block signature
+			this.tempString = new String(this.readBuffer, this.bufferPosition,
+					SIGNATURE_LENGTH_BLOCK, "UTF-8");
+			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
+			if (!this.tempString.startsWith("###TileStart")) {
+				Logger.d("invalid block signature: " + this.tempString);
+				return;
+			}
+		}
+
+		// calculate the offset in the tile entries table and move the pointer
+		this.tileEntriesTableOffset = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
+		this.bufferPosition += tileEntriesTableOffset;
 
 		// read the amount of way and nodes on the current zoomLevel level
 		this.nodesOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
 		this.waysOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
-		// Logger.d("    nodesOnZoomLevel: " + this.nodesOnZoomLevel);
-		// Logger.d("    waysOnZoomLevel: " + this.waysOnZoomLevel);
+		this.bufferPosition += 2;
 
 		// move the pointer to the end of the tile entries table
-		this.bufferPosition = this.tileEntriesTableSize;
+		this.bufferPosition += this.tileEntriesTableSize - this.tileEntriesTableOffset - 4;
 
 		// read the offset to the first stored way in the block (8 bytes)
 		this.firstWayOffset = Deserializer.toLong(this.readBuffer, this.bufferPosition);
@@ -182,34 +218,39 @@ class DatabaseNew {
 		// FIXME: remove this hack, the first way pointer should be relative not absolute
 		this.firstWayOffset = this.firstWayOffset - this.currentBlockPointer;
 		if (this.firstWayOffset > this.readBuffer.length) {
-			Logger.d("  invalid firstWayOffset: " + this.firstWayOffset);
+			Logger.d("invalid firstWayOffset: " + this.firstWayOffset);
 			return;
 		}
 
 		// read nodes
 		for (this.elementCounter = this.nodesOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
-			// Logger.d("    reading node");
+			if (DEBUG_FILE) {
+				// read and check the node signature
+				this.tempString = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_NODE, "UTF-8");
+				this.bufferPosition += SIGNATURE_LENGTH_NODE;
+				if (!this.tempString.startsWith("***POIStart")) {
+					Logger.d("invalid node signature: " + this.tempString);
+					return;
+				}
+			}
+
 			// read node latitude (4 bytes)
 			this.nodeLatitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
-			// Logger.d("      nodeLatitude: " + this.nodeLatitude);
 
 			// read node longitude (4 bytes)
 			this.nodeLongitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
-			// Logger.d("      nodeLongitude: " + this.nodeLongitude);
 
 			// read the special byte that encodes multiple fields (1 byte)
 			this.nodeSpecialByte = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			// Logger.d("      nodeSpecialByte: " + this.nodeSpecialByte);
 
 			// bit 1-4 of the special byte represent the node layer
 			this.nodeLayer = (byte) ((this.nodeSpecialByte & 0xf0) >> 4);
-			// Logger.d("      nodeLayer: " + this.nodeLayer);
 			// bit 5-8 of the special byte represent the number of tag IDs
 			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & 0x0f);
-			// Logger.d("      nodeNumberOfTags: " + this.nodeNumberOfTags);
 
 			// reset the node tag array
 			System.arraycopy(this.defaultNodeTagIds, 0, this.nodeTagIds, 0,
@@ -219,34 +260,29 @@ class DatabaseNew {
 				this.nodeTagId = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
-					Logger.d("        invalid nodeTagId: " + this.nodeTagId);
+					Logger.d("invalid nodeTagId: " + this.nodeTagId);
 					continue;
 				}
 				this.nodeTagIds[this.nodeTagId] = true;
-				// Logger.d("        nodeTagId: " + this.nodeTagId);
 			}
 
 			// read the feature byte that activates optional node features (1 byte)
 			this.nodeFeatureByte = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			// Logger.d("      nodeFeatureByte: " + this.nodeFeatureByte);
 
 			// check if the node has a name
 			this.nodeFeatureName = (this.nodeFeatureByte & 0x80) != 0;
 			if (this.nodeFeatureName) {
-				// Logger.d("      nodeFeatureName");
 				// get the length of the node name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
-				// Logger.d("        stringLength: " + this.stringLength);
 				if (this.stringLength > 0) {
 					// read the node name
 					this.nodeName = new String(this.readBuffer, this.bufferPosition,
 							this.stringLength, "UTF-8");
 					this.bufferPosition += this.stringLength;
-					// Logger.d("        nodeName: " + this.nodeName);
 				} else {
-					Logger.d("  invalid stringLength: " + this.stringLength);
+					Logger.d("invalid stringLength: " + this.stringLength);
 					this.nodeName = null;
 				}
 			} else {
@@ -256,11 +292,9 @@ class DatabaseNew {
 			// check if the node has an elevation
 			this.nodeFeatureElevation = (this.nodeFeatureByte & 0x40) != 0;
 			if (this.nodeFeatureElevation) {
-				// Logger.d("      nodeFeatureElevation");
 				// get the node elevation (2 bytes)
 				this.nodeElevation = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
-				// Logger.d("        nodeElevation: " + this.nodeElevation);
 			} else {
 				this.nodeElevation = -1;
 			}
@@ -268,19 +302,16 @@ class DatabaseNew {
 			// check if the node has a house number
 			this.nodeFeatureHouseNumber = (this.nodeFeatureByte & 0x20) != 0;
 			if (this.nodeFeatureHouseNumber) {
-				// Logger.d("      nodeFeatureHouseNumber");
 				// get the length of the node house number (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
-				// Logger.d("        stringLength: " + this.stringLength);
 				if (this.stringLength > 0) {
 					// read the node house number
 					this.nodeHouseNumber = new String(this.readBuffer, this.bufferPosition,
 							this.stringLength, "UTF-8");
 					this.bufferPosition += this.stringLength;
-					// Logger.d("        nodeHouseNumber: " + this.nodeHouseNumber);
 				} else {
-					Logger.d("  invalid stringLength: " + this.stringLength);
+					Logger.d("invalid stringLength: " + this.stringLength);
 					this.nodeHouseNumber = null;
 				}
 			} else {
@@ -295,15 +326,23 @@ class DatabaseNew {
 
 		// finished reading nodes, now move the pointer to the first way
 		this.bufferPosition = (int) this.firstWayOffset;
-		// Logger.d("    moving to firstWayOffset: " + this.firstWayOffset);
 
 		// read ways
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
-			// Logger.d("    reading way");
+			if (DEBUG_FILE) {
+				// read and check the way signature
+				this.tempString = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_WAY, "UTF-8");
+				this.bufferPosition += SIGNATURE_LENGTH_WAY;
+				if (!this.tempString.startsWith("---WayStart")) {
+					Logger.d("invalid way signature: " + this.tempString);
+					return;
+				}
+			}
+
 			// read the size of the way (4 bytes)
 			this.waySize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
-			// Logger.d("      waySize: " + this.waySize);
 
 			// read the way tile bitmap (2 bytes)
 			this.wayTileBitmap = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -313,28 +352,22 @@ class DatabaseNew {
 			// read the first special byte that encodes multiple fields (1 byte)
 			this.waySpecialByte1 = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			// Logger.d("      waySpecialByte1: " + this.waySpecialByte1);
 
 			// bit 1-4 of the first special byte represent the way layer
 			this.wayLayer = (byte) ((this.waySpecialByte1 & 0xf0) >> 4);
-			// Logger.d("      wayLayer: " + this.wayLayer);
 			// bit 5-8 of the first special byte represent the number of tag IDs
 			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & 0x0f);
-			// Logger.d("      wayNumberOfTags: " + this.wayNumberOfTags);
 
 			// read the second special byte that encodes multiple fields (1 byte)
 			this.waySpecialByte2 = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			// Logger.d("      waySpecialByte2: " + this.waySpecialByte2);
 
 			// bit 1-3 of the second special byte represent the number of relevant tags
 			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & 0xe0) >> 5);
-			// Logger.d("      wayNumberOfRelevantTags: " + this.wayNumberOfRelevantTags);
 
 			// read the way tag bitmap (1 byte)
 			this.wayTagBitmap = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			// Logger.d("      wayTagBitmap: " + this.wayTagBitmap);
 
 			// reset the way tag array
 			System
@@ -345,18 +378,16 @@ class DatabaseNew {
 				this.wayTagId = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
-					Logger.d("        invalid wayTagId: " + this.wayTagId);
+					Logger.d("invalid wayTagId: " + this.wayTagId);
 					continue;
 				}
 				this.wayTagIds[this.wayTagId] = true;
-				// Logger.d("        wayTagId: " + this.wayTagId);
 			}
 
 			// read the number of way nodes (2 bytes)
 			this.wayNumberOfWayNodes = Deserializer.toShort(this.readBuffer,
 					this.bufferPosition);
 			this.bufferPosition += 2;
-			// Logger.d("      wayNumberOfWayNodes: " + this.wayNumberOfWayNodes);
 
 			// each way node consists of latitude and longitude fields
 			this.wayNodesSequenceLength = (short) (this.wayNumberOfWayNodes * 2);
@@ -371,12 +402,10 @@ class DatabaseNew {
 				// read way node latitude (4 bytes)
 				this.wayNodeLatitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 4;
-				// Logger.d("        wayNodeLatitude: " + this.wayNodeLatitude);
 				// read way node longitude (4 bytes)
 				this.wayNodeLongitude = Deserializer
 						.toInt(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 4;
-				// Logger.d("        wayNodeLongitude: " + this.wayNodeLongitude);
 				this.wayNodesSequence[this.tempShort] = this.wayNodeLongitude;
 				this.wayNodesSequence[this.tempShort + 1] = this.wayNodeLatitude;
 			}
@@ -388,7 +417,6 @@ class DatabaseNew {
 			// check if the way has a name
 			this.wayFeatureName = (this.wayFeatureByte & 0x80) != 0;
 			if (this.wayFeatureName) {
-				// Logger.d("      wayFeatureName");
 				// get the length of the way name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
@@ -397,13 +425,12 @@ class DatabaseNew {
 						// read the way name
 						this.wayName = new String(this.readBuffer, this.bufferPosition,
 								this.stringLength, "UTF-8");
-						// Logger.d("      wayName: " + this.wayName);
 					} else {
 						this.wayName = null;
 					}
 					this.bufferPosition += this.stringLength;
 				} else {
-					Logger.d("    invalid stringLength: " + this.stringLength);
+					Logger.d("invalid stringLength: " + this.stringLength);
 					this.wayName = null;
 				}
 			} else {
@@ -413,7 +440,6 @@ class DatabaseNew {
 			// check if the way has a label position
 			this.wayFeatureLabelPosition = (this.wayFeatureByte & 0x40) != 0;
 			if (this.wayFeatureLabelPosition) {
-				// Logger.d("      wayFeatureLabelPosition");
 				// read the label position latitude (4 bytes)
 				this.wayLabelPositionLatitude = Deserializer.toInt(this.readBuffer,
 						this.bufferPosition);
@@ -430,11 +456,9 @@ class DatabaseNew {
 			// check if the way represents a multipolygon
 			this.wayFeatureMultipolygon = (this.wayFeatureByte & 0x10) != 0;
 			if (this.wayFeatureMultipolygon) {
-				// Logger.d("      wayFeatureMultipolygon");
 				// read the amount of inner ways (1 byte)
 				this.wayNumberOfInnerWays = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
-				// Logger.d("        wayNumberOfInnerWays: " + this.wayNumberOfInnerWays);
 
 				if (this.wayNumberOfInnerWays > 0) {
 					// create a two-dimensional array for the coordinates of the inner ways
@@ -469,9 +493,7 @@ class DatabaseNew {
 						this.wayInnerWays[this.tempByte] = this.innerWay;
 					}
 				} else {
-					Logger
-							.d("      invalid wayNumberOfInnerWays: "
-									+ this.wayNumberOfInnerWays);
+					Logger.d("invalid wayNumberOfInnerWays: " + this.wayNumberOfInnerWays);
 					this.wayInnerWays = null;
 				}
 			} else {
@@ -494,11 +516,11 @@ class DatabaseNew {
 	 *             if an error occurs while reading the file.
 	 */
 	private boolean readFileHeader() throws IOException {
-		Logger.d("processing file header ...");
 		this.readBuffer = new byte[FIXED_HEADER_SIZE];
 
 		// read the fixed size part of the header in the buffer to avoid multiple reads
 		if (this.inputFile.read(this.readBuffer, 0, FIXED_HEADER_SIZE) != FIXED_HEADER_SIZE) {
+			Logger.d("reading header data has failed");
 			return false;
 		}
 		this.bufferPosition = 0;
@@ -507,7 +529,6 @@ class DatabaseNew {
 		this.tempString = new String(this.readBuffer, this.bufferPosition,
 				BINARY_OSM_MAGIC_BYTE.length(), "UTF-8");
 		this.bufferPosition += BINARY_OSM_MAGIC_BYTE.length();
-		// Logger.d("  magic byte: " + this.tempString);
 		if (!this.tempString.equals(BINARY_OSM_MAGIC_BYTE)) {
 			Logger.d("invalid magic byte: " + this.tempString);
 			return false;
@@ -516,7 +537,6 @@ class DatabaseNew {
 		// check the version number (4 bytes)
 		this.tempInt = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		// Logger.d("  version number: " + this.tempInt);
 		if (this.tempInt != BINARY_OSM_VERSION) {
 			Logger.d("unsupported version number: " + this.tempInt);
 			return false;
@@ -525,7 +545,6 @@ class DatabaseNew {
 		// get and check the base zoom level (1 byte)
 		this.baseZoomLevel = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
-		Logger.d("  baseZoomLevel: " + this.baseZoomLevel);
 		if (this.baseZoomLevel < 0 || this.baseZoomLevel > 20) {
 			Logger.d("invalid base zooom level: " + this.baseZoomLevel);
 			return false;
@@ -534,7 +553,6 @@ class DatabaseNew {
 		// get and check the tile pixel size (2 bytes)
 		this.tilePixelSize = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
-		Logger.d("  tilePixelSize: " + this.tilePixelSize);
 		if (this.tilePixelSize < 0) {
 			Logger.d("invalid tilePixelSize: " + this.tilePixelSize);
 			return false;
@@ -543,7 +561,6 @@ class DatabaseNew {
 		// get and check the minimum tile zoom level (1 byte)
 		this.tileZoomLevelMin = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
-		Logger.d("  tileZoomLevelMin: " + this.tileZoomLevelMin);
 		if (this.tileZoomLevelMin < 0 || this.baseZoomLevel > 20) {
 			Logger.d("invalid minimum tile zoom level: " + this.tileZoomLevelMin);
 			return false;
@@ -552,7 +569,6 @@ class DatabaseNew {
 		// get and check the maximum tile zoom level (1 byte)
 		this.tileZoomLevelMax = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
-		Logger.d("  tileZoomLevelMax: " + this.tileZoomLevelMax);
 		if (this.tileZoomLevelMax < 0 || this.tileZoomLevelMax > 20) {
 			Logger.d("invalid maximum tile zoom level: " + this.tileZoomLevelMax);
 			return false;
@@ -568,7 +584,6 @@ class DatabaseNew {
 		// get and check the the top boundary (4 bytes)
 		this.boundaryTop = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		Logger.d("  boundaryTop: " + this.boundaryTop);
 		if (this.boundaryTop > 90000000) {
 			Logger.d("invalid top boundary: " + this.boundaryTop);
 			return false;
@@ -577,7 +592,6 @@ class DatabaseNew {
 		// get and check the left boundary (4 bytes)
 		this.boundaryLeft = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		Logger.d("  boundaryLeft: " + this.boundaryLeft);
 		if (this.boundaryLeft < -180000000) {
 			Logger.d("invalid left boundary: " + this.boundaryLeft);
 			return false;
@@ -586,7 +600,6 @@ class DatabaseNew {
 		// get and check the bottom boundary (4 bytes)
 		this.boundaryBottom = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		Logger.d("  boundaryBottom: " + this.boundaryBottom);
 		if (this.boundaryBottom < -90000000) {
 			Logger.d("invalid bottom boundary: " + this.boundaryBottom);
 			return false;
@@ -595,7 +608,6 @@ class DatabaseNew {
 		// get and check the right boundary (4 bytes)
 		this.boundaryRight = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		Logger.d("  boundaryRight: " + this.boundaryRight);
 		if (this.boundaryRight > 180000000) {
 			Logger.d("invalid right boundary: " + this.boundaryRight);
 			return false;
@@ -614,25 +626,17 @@ class DatabaseNew {
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(this.boundaryBottom
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		Logger.d("    boundaryLeftTile: " + this.boundaryLeftTile);
-		Logger.d("    boundaryTopTile: " + this.boundaryTopTile);
-		Logger.d("    boundaryRightTile: " + this.boundaryRightTile);
-		Logger.d("    boundaryBottomTile: " + this.boundaryBottomTile);
 
 		// calculate the horizontal and vertical amount of blocks in the file
 		this.mapFileBlocksWidth = this.boundaryRightTile - this.boundaryLeftTile + 1;
-		Logger.d("  mapFileBlocksWidth: " + this.mapFileBlocksWidth);
 		this.mapFileBlocksHeight = this.boundaryBottomTile - this.boundaryTopTile + 1;
-		Logger.d("  mapFileBlocksHeight: " + this.mapFileBlocksHeight);
 
 		// calculate the total amount of blocks in the file
 		this.mapFileBlocks = this.mapFileBlocksWidth * this.mapFileBlocksHeight;
-		Logger.d("  mapFileBlocks: " + this.mapFileBlocks);
 
 		// get and check the date of the map data (8 bytes)
 		this.mapDataDate = Deserializer.toLong(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 8;
-		// Logger.d("  mapDataDate: " + this.mapDataDate);
 		if (this.mapDataDate < 0) {
 			Logger.d("invalid map data date: " + this.mapDataDate);
 			return false;
@@ -642,7 +646,6 @@ class DatabaseNew {
 		this.maximumTileSize = Deserializer.fiveBytesToLong(this.readBuffer,
 				this.bufferPosition);
 		this.bufferPosition += 5;
-		Logger.d("  maximumTileSize: " + this.maximumTileSize);
 		if (this.maximumTileSize < 0) {
 			Logger.d("invalid maximum tile size: " + this.maximumTileSize);
 			return false;
@@ -651,27 +654,25 @@ class DatabaseNew {
 		// get the length of the comment text (2 bytes)
 		this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
-		// Logger.d("  commentText length: " + this.stringLength);
 		if (this.stringLength > 0) {
 			// read the comment text
 			this.readBuffer = new byte[this.stringLength];
 			if (this.inputFile.read(this.readBuffer, 0, this.stringLength) != this.stringLength) {
+				Logger.d("reading the comment text has failed");
 				return false;
 			}
 			this.bufferPosition = 0;
 			this.commentText = new String(this.readBuffer, this.bufferPosition,
 					this.stringLength, "UTF-8");
 			this.bufferPosition += this.stringLength;
-			Logger.d("  commentText: " + this.commentText);
 		} else {
-			Logger.d("  invalid stringLength: " + this.stringLength);
+			Logger.d("invalid stringLength: " + this.stringLength);
 			this.commentText = null;
 		}
 
 		// save the end address of the header where the index starts
 		this.indexStartAddress = FIXED_HEADER_SIZE + this.stringLength;
 
-		Logger.d("finished file header");
 		return true;
 	}
 
@@ -706,8 +707,6 @@ class DatabaseNew {
 	 */
 	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
 		try {
-			Logger.d("query tile: " + tile.x + ", " + tile.y + ", " + tile.zoomLevel);
-
 			// reset the stop execution flag
 			this.stopCurrentQuery = false;
 
@@ -744,10 +743,6 @@ class DatabaseNew {
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
 			}
-			// Logger.d("  fromBaseTileX: " + this.fromBaseTileX);
-			// Logger.d("  fromBaseTileY: " + this.fromBaseTileY);
-			// Logger.d("  toBaseTileX: " + this.toBaseTileX);
-			// Logger.d("  toBaseTileY: " + this.toBaseTileY);
 
 			// calculate the blocks in the file which need to be read
 			this.fromBlockX = Math.max(this.fromBaseTileX - this.boundaryLeftTile, 0);
@@ -756,16 +751,10 @@ class DatabaseNew {
 					this.mapFileBlocksWidth);
 			this.toBlockY = Math.min(this.toBaseTileY - this.boundaryTopTile,
 					this.mapFileBlocksHeight);
-			// Logger.d("  fromBlockX: " + this.fromBlockX);
-			// Logger.d("  fromBlockY: " + this.fromBlockY);
-			// Logger.d("  toBlockX: " + this.toBlockX);
-			// Logger.d("  toBlockY: " + this.toBlockY);
 
 			// read all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
 				for (this.currentColumn = this.fromBlockX; this.currentColumn <= this.toBlockX; ++this.currentColumn) {
-					// Logger.d("  currentRow: " + this.currentRow);
-					// Logger.d("  currentColumn: " + this.currentColumn);
 					// check if the current query was interrupted
 					if (this.stopCurrentQuery) {
 						return;
@@ -774,28 +763,23 @@ class DatabaseNew {
 					// calculate the actual block number of the needed block in the file
 					this.blockNumber = this.currentRow * this.mapFileBlocksWidth
 							+ this.currentColumn;
-					// Logger.d("    blockNumber: " + this.blockNumber);
 
 					// get and check the pointer to the current block
 					this.currentBlockPointer = this.databaseIndexCache
 							.getAddress(this.blockNumber);
 					if (this.currentBlockPointer < 0
 							|| this.currentBlockPointer > this.inputFileSize) {
-						Logger
-								.d("    invalid currentBlockPointer: "
-										+ this.currentBlockPointer);
+						Logger.d("invalid currentBlockPointer: " + this.currentBlockPointer);
 						return;
 					}
-					// Logger.d("    currentBlockPointer: " + this.currentBlockPointer);
 
 					// get and check the pointer to the next block
 					this.nextBlockPointer = this.databaseIndexCache
 							.getAddress(this.blockNumber + 1);
 					if (this.nextBlockPointer < 0 || this.nextBlockPointer > this.inputFileSize) {
-						Logger.d("    invalid nextBlockPointer: " + this.nextBlockPointer);
+						Logger.d("invalid nextBlockPointer: " + this.nextBlockPointer);
 						return;
 					}
-					// Logger.d("    nextBlockPointer: " + this.nextBlockPointer);
 
 					// check if the next block has a valid pointer
 					if (this.nextBlockPointer == -1) {
@@ -806,10 +790,9 @@ class DatabaseNew {
 					// calculate the size of the current block
 					this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
 					if (this.currentBlockSize < 0) {
-						Logger.d("    invalid currentBlockSize: " + this.currentBlockSize);
+						Logger.d("invalid currentBlockSize: " + this.currentBlockSize);
 						return;
 					}
-					// Logger.d("    currentBlockSize: " + this.currentBlockSize);
 
 					// if the current block has no map data continue with the next one
 					if (this.currentBlockSize == 0) {
@@ -818,11 +801,12 @@ class DatabaseNew {
 
 					// go to the current block and read the data into the buffer
 					this.inputFile.seek(this.currentBlockPointer);
-					// Logger.d("    reading current block");
 					if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
 						// if reading the current block has failed, skip it
+						Logger.d("reading the current block has failed");
 						return;
 					}
+					this.bufferPosition = 0;
 
 					// handle the current block data
 					processBlock();
@@ -831,7 +815,6 @@ class DatabaseNew {
 		} catch (IOException e) {
 			Logger.e(e);
 		}
-		// Logger.d("execution finished");
 	}
 
 	/**
@@ -861,15 +844,37 @@ class DatabaseNew {
 				return false;
 			}
 
+			if (DEBUG_FILE) {
+				// the beginning of the index is marked with a signature
+				this.indexStartAddress += SIGNATURE_LENGTH_INDEX;
+
+				// read the index signature
+				this.readBuffer = new byte[SIGNATURE_LENGTH_INDEX];
+				if (this.inputFile.read(this.readBuffer, 0, SIGNATURE_LENGTH_INDEX) != SIGNATURE_LENGTH_INDEX) {
+					Logger.d("reading the index signature has failed");
+					return false;
+				}
+				this.bufferPosition = 0;
+
+				// check the index signature
+				this.tempString = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_INDEX, "UTF-8");
+				this.bufferPosition += SIGNATURE_LENGTH_INDEX;
+				if (!this.tempString.equals("+++IndexStart+++")) {
+					Logger.d("invalid index signature: " + this.tempString);
+					return false;
+				}
+			}
+
+			// create a read buffer that is big enough even for the largest tile
+			this.readBuffer = new byte[(int) this.maximumTileSize];
+
 			// get the size of the file
 			this.inputFileSize = this.inputFile.length();
 
 			// create the DatabaseIndexCache
 			this.databaseIndexCache = new DatabaseIndexCacheNew(this.inputFile,
 					this.mapFileBlocks, this.indexStartAddress, INDEX_CACHE_SIZE);
-
-			// create a read buffer that is big enough even for the largest tile
-			this.readBuffer = new byte[(int) this.maximumTileSize];
 
 			// create an array for the way nodes coordinates
 			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
