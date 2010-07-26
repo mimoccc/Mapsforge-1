@@ -304,17 +304,6 @@ public class BinaryFileWriter {
 			}
 
 			// write Index
-			// for debug:
-
-			/** only for debug **/
-			// write tile header
-			String tileStart = "+++IndexStart+++";
-			logger.info(tileStart);
-			// byte[] stringBytes = tileStart.getBytes();
-			// for (byte b : stringBytes) {
-			// raf.writeByte(b);
-			// }
-			/** only for debug **/
 			logger.info("+++IndexStart+++");
 			logger.info("filepointer " + raf.getFilePointer());
 
@@ -333,50 +322,6 @@ public class BinaryFileWriter {
 			logger.info("current filepointer " + raf.getFilePointer());
 
 			/** test **/
-
-			// long tileSize;
-			// long cumulatedTileSize = raf.getFilePointer();
-			// for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
-			// for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
-			// tileSize = 0;
-			//
-			// // get size of all pois for a tile
-			// pstmtPoisSizeForTiles.setLong(1, tileX);
-			// pstmtPoisSizeForTiles.setLong(2, tileY);
-			// rsPoisSize = pstmtPoisSizeForTiles.executeQuery();
-			// while (rsPoisSize.next()) {
-			// tileSize += rsPoisSize.getInt(1);
-			// }
-			//
-			// // get size of all ways for a tile
-			// pstmtWaysSizeForTiles.setLong(1, tileX);
-			// pstmtWaysSizeForTiles.setLong(2, tileY);
-			// rsWaysSize = pstmtWaysSizeForTiles.executeQuery();
-			// while (rsWaysSize.next()) {
-			// tileSize += rsWaysSize.getInt(1);
-			// }
-			// // set biggest tile size
-			// if (tileSize > biggestTileSize)
-			// biggestTileSize = tileSize;
-			//
-			// cumulatedTileSize += tileSize;
-			//
-			// // write tile size
-			// tileSizeBytes = Serializer.getFiveBytes(cumulatedTileSize);
-			// for (byte b : tileSizeBytes) {
-			// raf.writeByte(b);
-			// }
-			// }
-			// }
-			//
-			// // write biggest tile size into the header
-			// long currentPosition = raf.getFilePointer();
-			// raf.seek(biggestTileSizePosition);
-			// tileSizeBytes = Serializer.getFiveBytes(biggestTileSize);
-			// for (byte b : tileSizeBytes) {
-			// raf.writeByte(b);
-			// }
-			// raf.seek(currentPosition);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -396,9 +341,7 @@ public class BinaryFileWriter {
 			String poiStart;
 			String wayStart;
 
-			byte[] stringBytes;
 			long firstWayInTile;
-			int byteArrayLength;
 
 			Map<Short, Short> poiTableForTile;
 			Map<Short, Short> wayTableForTile;
@@ -447,6 +390,8 @@ public class BinaryFileWriter {
 				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
 					tileCounter++;
 					/** test **/
+					tileStart = tileHead + tileX + tileY + tileTail;
+					logger.info(tileStart);
 					logger.info("before tile:" + raf.getFilePointer());
 					currentPosition = raf.getFilePointer();
 					currentPositionInFiveBytes = Serializer.getFiveBytes(currentPosition);
@@ -471,24 +416,6 @@ public class BinaryFileWriter {
 					previousTilePosition = currentPosition;
 					logger.info("previous tilePosition " + previousTilePosition);
 					/** test **/
-					/** only for debug **/
-					// write tile header
-					tileStart = tileHead + tileX + "," + tileY + tileTail;
-					logger.info(tileStart);
-
-					stringBytes = tileStart.getBytes();
-					byteArrayLength = stringBytes.length;
-					for (byte b : stringBytes) {
-						// raf.writeByte(b);
-					}
-
-					if (byteArrayLength < 32) {
-						while (byteArrayLength < 32) {
-							// raf.writeByte(32);
-							byteArrayLength++;
-						}
-					}
-					/** only for debug **/
 
 					logger.info("write element zoom table");
 					poiTableForTile = new TreeMap<Short, Short>();
@@ -596,23 +523,8 @@ public class BinaryFileWriter {
 					// get all pois for this tile ordered by zoom level
 					rsPoisForTile = pstmtPoisForTile.executeQuery();
 					while (rsPoisForTile.next()) {
-						/** only for debug **/
-						// write debug string
 						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
 						logger.info(poiStart);
-						stringBytes = poiStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							// raf.writeByte(b);
-						}
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								// raf.writeByte(32);
-								byteArrayLength++;
-							}
-						}
-						/** only for debug **/
 
 						// write poi features to the file
 						raf.writeInt(rsPoisForTile.getInt("latitude"));
@@ -687,23 +599,8 @@ public class BinaryFileWriter {
 					rsWaysForTile = pstmtWaysForTile.executeQuery();
 					while (rsWaysForTile.next()) {
 						id = rsWaysForTile.getLong("id");
-						/** only for debug **/
-						// write debug string
 						wayStart = waysHead + id + waysTail;
 						logger.info(wayStart);
-						stringBytes = wayStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							// raf.writeByte(b);
-						}
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								// raf.writeByte(32);
-								byteArrayLength++;
-							}
-						}
-						/** only for debug **/
 
 						nameLength = rsWaysForTile.getShort("name_length");
 						name = rsWaysForTile.getString("name");
@@ -797,7 +694,7 @@ public class BinaryFileWriter {
 								+ raf.getFilePointer());
 						raf.seek(waySizePosition);
 						logger.info("waysizeposition " + raf.getFilePointer());
-						raf.writeInt((int) (currentPosition - waySizePosition));
+						raf.writeInt((int) (currentPosition - waySizePosition - 4));
 						raf.seek(currentPosition);
 						logger.info("end of way: " + raf.getFilePointer());
 					}
