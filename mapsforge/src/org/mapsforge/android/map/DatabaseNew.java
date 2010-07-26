@@ -857,14 +857,14 @@ class DatabaseNew {
 			this.fromBlockX = Math.max(this.fromBaseTileX - this.boundaryLeftTile, 0);
 			this.fromBlockY = Math.max(this.fromBaseTileY - this.boundaryTopTile, 0);
 			this.toBlockX = Math.min(this.toBaseTileX - this.boundaryLeftTile,
-					this.mapFileBlocksWidth);
+					this.mapFileBlocksWidth - 1);
 			this.toBlockY = Math.min(this.toBaseTileY - this.boundaryTopTile,
-					this.mapFileBlocksHeight);
+					this.mapFileBlocksHeight - 1);
 
 			// read all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
 				for (this.currentColumn = this.fromBlockX; this.currentColumn <= this.toBlockX; ++this.currentColumn) {
-					// check if the current query was interrupted
+					// check if the query was interrupted
 					if (this.stopCurrentQuery) {
 						return;
 					}
@@ -882,18 +882,19 @@ class DatabaseNew {
 						return;
 					}
 
-					// get and check the pointer to the next block
-					this.nextBlockPointer = this.databaseIndexCache
-							.getAddress(this.blockNumber + 1);
-					if (this.nextBlockPointer < 0 || this.nextBlockPointer > this.inputFileSize) {
-						Logger.d("invalid nextBlockPointer: " + this.nextBlockPointer);
-						return;
-					}
-
-					// check if the next block has a valid pointer
-					if (this.nextBlockPointer == -1) {
-						// the current block is the last block in the file
+					// check if the current block is the last block in the file
+					if (this.blockNumber + 1 == this.mapFileBlocks) {
+						// set the pointer to the next block to the end of the file
 						this.nextBlockPointer = this.inputFile.length();
+					} else {
+						// get and check the pointer to the next block
+						this.nextBlockPointer = this.databaseIndexCache
+								.getAddress(this.blockNumber + 1);
+						if (this.nextBlockPointer < 0
+								|| this.nextBlockPointer > this.inputFileSize) {
+							Logger.d("invalid nextBlockPointer: " + this.nextBlockPointer);
+							return;
+						}
 					}
 
 					// calculate the size of the current block
