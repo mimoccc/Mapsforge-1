@@ -132,12 +132,17 @@ class DatabaseNew {
 	private byte nodeSpecialByte;
 	private byte nodeTagId;
 	private boolean[] nodeTagIds;
+	private long parentTileX;
+	private long parentTileY;
 	private DatabaseMapGenerator queryMapGenerator;
 	private boolean queryReadWayNames;
+	private int queryTileBitmask;
 	private byte queryZoomLevel;
 	private byte[] readBuffer;
 	private boolean stopCurrentQuery;
 	private short stringLength;
+	private long subtileX;
+	private long subtileY;
 	private byte tempByte;
 	private int tempInt;
 	private short tempShort;
@@ -151,6 +156,7 @@ class DatabaseNew {
 	private long toBaseTileY;
 	private long toBlockX;
 	private long toBlockY;
+	private boolean useTileBitmask;
 	private boolean wayFeatureArea;
 	private byte wayFeatureByte;
 	private boolean wayFeatureLabelPosition;
@@ -176,7 +182,7 @@ class DatabaseNew {
 	private byte wayTagBitmap;
 	private byte wayTagId;
 	private boolean[] wayTagIds;
-	private short wayTileBitmap;
+	private short wayTileBitmask;
 	private int zoomLevelDifference;
 
 	/**
@@ -201,7 +207,7 @@ class DatabaseNew {
 
 		// calculate the offset in the tile entries table and move the pointer
 		this.tileEntriesTableOffset = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
-		this.bufferPosition += tileEntriesTableOffset;
+		this.bufferPosition += this.tileEntriesTableOffset;
 
 		// read the amount of way and nodes on the current zoomLevel level
 		this.nodesOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -344,10 +350,22 @@ class DatabaseNew {
 			this.waySize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
 
-			// read the way tile bitmap (2 bytes)
-			this.wayTileBitmap = Deserializer.toShort(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 2;
-			// TODO: do something useful with this bitmap
+			if (this.useTileBitmask) {
+				// read the way tile bitmask (2 bytes)
+				this.wayTileBitmask = Deserializer
+						.toShort(this.readBuffer, this.bufferPosition);
+				this.bufferPosition += 2;
+				// check if the way is inside the requested tile
+				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
+					// skip the way and continue with the next one
+					// TODO: adjust the offset
+					this.bufferPosition += this.waySize - 6;
+					continue;
+				}
+			} else {
+				// ignore the way tile bitmask (2 bytes)
+				this.bufferPosition += 2;
+			}
 
 			// read the first special byte that encodes multiple fields (1 byte)
 			this.waySpecialByte1 = this.readBuffer[this.bufferPosition];
@@ -729,6 +747,7 @@ class DatabaseNew {
 				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
 				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
+				this.useTileBitmask = false;
 			} else if (tile.zoomLevel > this.baseZoomLevel) {
 				// calculate the XY numbers of the parent base tile
 				this.zoomLevelDifference = tile.zoomLevel - this.baseZoomLevel;
@@ -736,12 +755,102 @@ class DatabaseNew {
 				this.fromBaseTileY = tile.y >> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
+
+				if (this.zoomLevelDifference == 1) {
+					// determine the correct bitmask for all quadrants
+					if (tile.x % 2 == 0 && tile.y % 2 == 0) {
+						// upper left quadrant
+						this.queryTileBitmask = 0xcc00;
+					} else if (tile.x % 2 == 1 && tile.y % 2 == 0) {
+						// upper right quadrant
+						this.queryTileBitmask = 0x3300;
+					} else if (tile.x % 2 == 0 && tile.y % 2 == 1) {
+						// lower left quadrant
+						this.queryTileBitmask = 0xcc;
+					} else {
+						// lower right quadrant
+						this.queryTileBitmask = 0x33;
+					}
+				} else {
+					// calculate the XY numbers of the second level subtile
+					this.subtileX = tile.x >> (this.zoomLevelDifference - 2);
+					this.subtileY = tile.y >> (this.zoomLevelDifference - 2);
+
+					// calculate the XY numbers of the parent tile
+					this.parentTileX = this.subtileX >> 1;
+					this.parentTileY = this.subtileY >> 1;
+
+					// determine the correct bitmask for all 16 subtiles
+					if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 0) {
+						// upper left quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x8000;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x4000;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x800;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x400;
+						}
+					} else if (this.parentTileX % 2 == 1 && this.parentTileY % 2 == 0) {
+						// upper right quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x2000;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x1000;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x200;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x100;
+						}
+					} else if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 1) {
+						// lower left quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x80;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x40;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x8;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x4;
+						}
+					} else {
+						// lower right quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x20;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x10;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x2;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x1;
+						}
+					}
+				}
+				this.useTileBitmask = true;
 			} else {
 				// use the tile XY numbers of the requested tile
 				this.fromBaseTileX = tile.x;
 				this.fromBaseTileY = tile.y;
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
+				this.useTileBitmask = false;
 			}
 
 			// calculate the blocks in the file which need to be read
