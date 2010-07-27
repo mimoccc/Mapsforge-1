@@ -3,9 +3,9 @@
  * Coordinates of Brandenburger Tor
  */
 var initMap = {
-  lon : 8.8,
-  lat : 53.1,
-  zoom : 14
+  lon : 13.41,
+  lat : 52.49,
+  zoom : 15
 };
 
 /**
@@ -35,6 +35,7 @@ function init() {
 	layerMarkers = new OpenLayers.Layer.Markers("Markers");
 	map.addLayer(layerMarkers);
 	
+	// This is the style definition of how vectors are displayed
 	var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults({
       fillColor: "#FFBBBB",
       fillOpacity: 0.5,
@@ -55,40 +56,31 @@ function init() {
     });
 	map.addControl(mf_dragcontrol);
 	mf_dragcontrol.activate();
+	
+  // TODO: OpenLayers.Control.GetFeature
+  // OpenLayers.Control.ArgParser & OpenLayers.Control.Permalink
+  
+  // This simply removes the routing popup when the left mouse is clicked.
+  var click = new OpenLayers.Control.Click();
+  map.addControl(click);
+  click.activate();
+
+  /* uncomment to add an overview map
+  overviewMap = new OpenLayers.Control.OverviewMap();
+  map.addControl(overviewMap);
+  overviewMap.activate();
+  */
 
   var centerLonLat = new OpenLayers.LonLat(initMap.lon, initMap.lat).tf();
   map.setCenter(centerLonLat, initMap.zoom);
 }
 
 var map; // complex object of type OpenLayers.Map
+var mf_dragcontrol;
+
+// These are the only 2 projections that are ever used in this project
 var projWSG84 = new OpenLayers.Projection("EPSG:4326");
 var projSpheMe = new OpenLayers.Projection("EPSG:900913");
-
-/**
- * Helper function for not writing the same transformation over and over again
- * 
- * @return this LonLat object in the projection of the OpenStreetMap layer
- */
-OpenLayers.LonLat.prototype.tf = function() {
-  if (this.tf_result == undefined) {
-    this.tf_result = this.clone().transform(projWSG84, projSpheMe);
-    this.tf_result.rtf_result = this;
-  }
-  return this.tf_result;
-};
-
-/**
- * Helper function for not writing the same transformation over and over again
- * 
- * @return this LonLat object in the WSG 1984 projection 
- */
-OpenLayers.LonLat.prototype.rtf = function() {
-  if (this.rtf_result == undefined) {
-    this.rtf_result = this.clone().transform(projSpheMe, projWSG84);
-    this.rtf_result.tf_result = this;
-  }
-  return this.rtf_result;
-};
 
 // The route object contains all the info relevant to the routing
 var route = {
@@ -97,9 +89,9 @@ var route = {
   end: {}
 };
 
-/**
+/************************************************************************************
  * Right click menu is created by this function
- */
+ ************************************************************************************/
 var menupopup;
 function mf_contextmenu(e) {
 
@@ -122,6 +114,36 @@ function mf_contextmenu(e) {
   map.addPopup(menupopup, true);
 };
 
+ // This control simply removes the context menu when the left mouse button is clicked.
+OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
+    defaultHandlerOptions: {
+        'single': true,
+        'double': false,
+        'pixelTolerance': 0,
+        'stopSingle': false,
+        'stopDouble': false
+    },
+
+    initialize: function(options) {
+        this.handlerOptions = OpenLayers.Util.extend(
+            {}, this.defaultHandlerOptions
+        );
+        OpenLayers.Control.prototype.initialize.apply(
+            this, arguments
+        );
+        this.handler = new OpenLayers.Handler.Click(
+            this, {
+                'click': this.trigger
+            }, this.handlerOptions
+        );
+    },
+
+    trigger: function(e) {
+      for ( var i = 0, len = map.popups.length; i < len; i++) {
+    		map.removePopup(map.popups[i]);
+    	}
+    }
+});
 
 /**
  * Sets the form parameter at the index.html
@@ -168,34 +190,71 @@ function newRequest() {
 	document.search.end.value = "";
 }
 
+
+/************************************************************************************
+ * Hangle dragging and handle it well
+ ************************************************************************************/
 route.drag = {}; // encapsulate the dragging stuff
 route.drag.isdragging = false;
 //route.drag.date = new Date;
 //route.drag.lastDrag = route.drag.date.getTime();
 function mf_dragpoint(feature, pixel) {
   route.drag.date = new Date;
-  // Enforce a minimum delay of 300 seconds between routing requests
-  // if ((route.drag.date.getTime() - route.drag.lastDrag > 300) && !(route.waitingForResponse) ) {
-  if (!(route.waitingForResponse) ) {
-    //route.drag.lastDrag = route.drag.date.getTime();
+  //console.log(route.drag.lastDrag);
+  // Enforce a minimum delay of 300 milliseconds between routing requests
+  if ( (route.drag.lastDrag == undefined ||
+          (route.drag.date.getTime() - route.drag.lastDrag > 300))
+      && !(route.waitingForResponse) ) {
+  //if (!(route.waitingForResponse) ) {
+    route.drag.lastDrag = route.drag.date.getTime();
   	route.drag.LonLat = map.getLonLatFromPixel(new OpenLayers.Pixel(pixel.x, pixel.y));
-    setValues(route.drag.LonLat.rtf().lon, route.drag.LonLat.rtf().lat, route.drag.LonLat.rtf().lon +", "+ route.drag.LonLat.rtf().lat, feature.attributes.mf);
+    setValues(
+      route.drag.LonLat.rtf().lon, // the transformed longitude
+      route.drag.LonLat.rtf().lat, // the transformed latitude
+      route.drag.LonLat.rtf().lon +", "+ route.drag.LonLat.rtf().lat, // The text that will be displayed
+      feature.attributes.mf // This can be "start", "via" or "end"
+    );
   }
 }
+
 function mf_dragstart(feature, pixel) {
   route.drag.isdragging = true;
   route.drag.which = feature.attributes.mf;
-}
-function mf_dragcomplete(feature, pixel) {
-  route.drag.which = null;
-  route.drag.isdragging = false;
-  redrawEndPoints();
-  //setTimeout("redrawEndPoints()", 50);
+  console.log("drag start: " + route.drag.which);
 }
 
-/**
- * Here the routing request is sent 
- */
+function mf_dragcomplete(feature, pixel) {
+  console.log("drag end: " + route.drag.which);
+  console.log(mf_dragcontrol);
+  route.drag.isdragging = false;
+  if (!route.waitingForResponse) {
+    redrawEndPoints();
+  }
+  route.drag.which = null;
+  // it seems like sometimes the dragevent doesn't really end by itself,
+  // so I force it here which seems to help
+  mf_dragcontrol.cancel();
+  
+}
+
+var startCircle;
+var endCircle;
+function redrawEndPoints() {
+    layerVectors.removeFeatures(startCircle);
+    layerVectors.removeFeatures(endCircle);
+    startCircle = new OpenLayers.Feature.Vector(route.start.point);
+    startCircle.attributes.mf = "start";
+    layerVectors.addFeatures(startCircle);
+    endCircle = new OpenLayers.Feature.Vector(route.end.point);
+    endCircle.attributes.mf = "end";
+    layerVectors.addFeatures(endCircle);
+}
+
+/************************************************************************************
+ *  Here the routing request is handled
+ ************************************************************************************/
+
+// send it
 function hhRoute() {
   if (route.start.lon === undefined || route.start.lon === "" || route.end.lon === undefined || route.end.lon === "" ) return ;
 	route.url = "/HHRoutingWebservice/?format=json&points=" + route.start.lon + "," + route.start.lat + ";" + route.end.lon + "," + route.end.lat;
@@ -207,9 +266,7 @@ function hhRoute() {
 	});
 }
 
-/**
- * Here the routing request response is dealt with
- */
+// deal with routing request response
 function hhRouteResponseHandler(response) {
   //console.log(response.responseText);
   if (response.responseText != "Error") {
@@ -265,22 +322,12 @@ function hhRouteResponseHandler(response) {
   route.waitingForResponse = false;
 }
 
-var startCircle;
-var endCircle;
-function redrawEndPoints() {
-    layerVectors.removeFeatures(startCircle);
-    layerVectors.removeFeatures(endCircle);
-    startCircle = new OpenLayers.Feature.Vector(route.start.point);
-    startCircle.attributes.mf = "start";
-    layerVectors.addFeatures(startCircle);
-    endCircle = new OpenLayers.Feature.Vector(route.end.point);
-    endCircle.attributes.mf = "end";
-    layerVectors.addFeatures(endCircle);
-}
-
-// This part takes care of the resizing of the map div, it's not really related to routing or openlayers
+/************************************************************************************
+ *  This part takes care of the resizing of the map div,
+ *  it's not really related to routing or openlayers
+ ************************************************************************************/
+ 
 var leftDivWidth;
-
 var resizeMapWindow = function resizeMap() {
 	windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 	windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
@@ -290,9 +337,17 @@ var resizeMapWindow = function resizeMap() {
 	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth);
 	document.getElementById("map").style.width = windowWidth - leftDivWidth;
 }
-
 window.onresize = resizeMapWindow;
 
+/************************************************************************************
+ *  Helper functions
+ ************************************************************************************/
+
+/**
+ * Finally a helper method for detecting empty objects
+ *
+ * @return true if the object is empty, false otherwise
+ */
 function isEmpty(obj) {
   for(var prop in obj) {
     if(obj.hasOwnProperty(prop))
@@ -300,3 +355,29 @@ function isEmpty(obj) {
   }
   return true;
 }
+
+/**
+ * Helper function for not writing the same transformation over and over again
+ *
+ * @return this LonLat object in the projection of the OpenStreetMap layer
+ */
+OpenLayers.LonLat.prototype.tf = function() {
+  if (this.tf_result == undefined) {
+    this.tf_result = this.clone().transform(projWSG84, projSpheMe);
+    this.tf_result.rtf_result = this;
+  }
+  return this.tf_result;
+};
+
+/**
+ * Helper function for not writing the same transformation over and over again
+ *
+ * @return this LonLat object in the WSG 1984 projection
+ */
+OpenLayers.LonLat.prototype.rtf = function() {
+  if (this.rtf_result == undefined) {
+    this.rtf_result = this.clone().transform(projSpheMe, projWSG84);
+    this.rtf_result.tf_result = this;
+  }
+  return this.rtf_result;
+};
