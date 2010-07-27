@@ -18,9 +18,12 @@ function init() {
 	map = new OpenLayers.Map("map", {
 		controls : [ new OpenLayers.Control.Navigation(),
 				new OpenLayers.Control.PanZoomBar(),
-				new OpenLayers.Control.LayerSwitcher(),
+				//new OpenLayers.Control.LayerSwitcher(),
 				new OpenLayers.Control.MousePosition(),
-				new OpenLayers.Control.Attribution() ],
+        //new OpenLayers.Control.Permalink(),
+        //new OpenLayers.Control.Permalink('permalink'),
+				//new OpenLayers.Control.Attribution()
+        ],
 		projection : projSpheMe,
 		displayProjection : projWSG84
 	});
@@ -29,6 +32,8 @@ function init() {
 		mf_contextmenu(e);
 		return false;
 	};
+
+  //map.events.on({'moveend': updateLink});
 
 	layerMapnik = new OpenLayers.Layer.OSM();
 	map.addLayer(layerMapnik);
@@ -60,6 +65,16 @@ function init() {
   // TODO: OpenLayers.Control.GetFeature
   // OpenLayers.Control.ArgParser & OpenLayers.Control.Permalink
   
+  permalink = new OpenLayers.Control.Permalink();
+  map.addControl(permalink);
+  permalink.activate();
+  map.events.register("moveend", map, updatePermaLink);
+  /*
+  argParser = new OpenLayers.Control.ArgParser();
+  map.addControl(argParser);
+  argParser.activate();
+  */
+  
   // This simply removes the routing popup when the left mouse is clicked.
   var click = new OpenLayers.Control.Click();
   map.addControl(click);
@@ -72,11 +87,34 @@ function init() {
   */
 
   var centerLonLat = new OpenLayers.LonLat(initMap.lon, initMap.lat).tf();
-  map.setCenter(centerLonLat, initMap.zoom);
+  if (!map.getCenter()) {
+    map.setCenter(centerLonLat, initMap.zoom);
+  }
+
+  var args = OpenLayers.Util.getParameters();
+  route.start.lat = args["route.start.lat"];
+  route.start.lon = args["route.start.lon"];
+  route.end.lat = args["route.end.lat"];
+  route.end.lon = args["route.end.lon"];
+  hhRoute();
+  
+}
+
+function updatePermaLink() {
+  if (permalink.element != undefined) {
+    if (route.start.lon != null && route.end.lat != null) {
+      permalink.element.href = permalink.element.href +
+        "&route.start.lat=" + route.start.lat +
+        "&route.start.lon=" + route.start.lon +
+        "&route.end.lat=" + route.end.lat +
+        "&route.end.lon=" + route.end.lon;
+    }
+  }
 }
 
 var map; // complex object of type OpenLayers.Map
 var mf_dragcontrol;
+var permalink;
 
 // These are the only 2 projections that are ever used in this project
 var projWSG84 = new OpenLayers.Projection("EPSG:4326");
@@ -166,6 +204,7 @@ function setValues(lon, lat, desc, status) {
 		map.removePopup(map.popups[i]);
 	}
 	hhRoute();
+	updatePermaLink();
 }
 
 /**
@@ -180,14 +219,18 @@ function newRequest() {
   if(route.line) layerVectors.removeFeatures(route.line);
   if(startCircle) layerVectors.removeFeatures(startCircle);
   if(endCircle) layerVectors.removeFeatures(endCircle);
+  f = ["start", "via", "end"];
+  for (x in f) {
+    x = f[x];
+    route[x].lon = null;
+    route[x].lat = null;
+    document.search[x].value = "";
+  }
   // Clear all fields in the html
   document.getElementById("resultAreaStart").innerHTML = "";
 	document.getElementById("resultAreaEnd").innerHTML = "";
 	document.getElementById("resultAreaStop").innerHTML = "";
 	document.getElementById("resultAreaInfo").innerHTML = "";
-	document.search.start.value = "";
-	document.search.via.value = "";
-	document.search.end.value = "";
 }
 
 
