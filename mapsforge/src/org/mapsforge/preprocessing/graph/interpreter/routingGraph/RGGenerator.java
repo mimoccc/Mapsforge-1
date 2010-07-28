@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.graph.interpreter.routingGraph;
 
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -29,6 +30,12 @@ import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 
+/**
+ * This class is the routing graph generator. here we get a list of ways from the graph
+ * generator service object and build a new routing graph of all these ways.
+ * 
+ * @author kunis
+ */
 public class RGGenerator {
 
 	private RGService service;
@@ -40,24 +47,32 @@ public class RGGenerator {
 		setDoubleSeenCount(0);
 	}
 
+	/**
+	 * This method get a filtered list of ways from the service an create the graph nodes an
+	 * edges
+	 * 
+	 * @param transport
+	 *            the transport configuration with the list of ways which the graph should
+	 *            contains
+	 */
 	public void generate(Transport transport) {
 
 		LinkedList<OsmWay_withNodes> ways = service.getWaysForTransport(transport);
 
 		/*
-		 * untersuche jeden wegknoten von allen wegen. die wegknoten die start oder endknoten
-		 * eines wegese sind, sowie all die knoten die ein wegknoten von mehr als einem weg sind
-		 * werden zu knoten im graphen und erhalten einen graphknotenid
+		 * here we check every way node of all ways. the first and last way nodes are nodes in
+		 * the graph. also this nodes that were hit by more then one way. all nodes that would
+		 * be graph nodes get a new graph node id
 		 */
 		Iterator<OsmWay_withNodes> it = ways.iterator();
 		OsmWay_withNodes way;
 		LinkedList<OsmNode> way_nodes;
 		int vertex_id = 0;
-		TLongIntHashMap graph_nodes = new TLongIntHashMap(); // enthält die id aller knoten die
-		// bereits knoten im graphen sind
-		TLongHashSet seen_nodes = new TLongHashSet(); // enthält alle wegknoten die
-		// bereits besucht wurden
-		LinkedList<RgVertex> vertices = new LinkedList<RgVertex>(); // liste aller graphknoten
+
+		TLongIntHashMap graph_nodes = new TLongIntHashMap(); // nodes that are already in the
+		// graph
+		TLongHashSet seen_nodes = new TLongHashSet(); // nodes that were seen
+		LinkedList<RgVertex> vertices = new LinkedList<RgVertex>(); // list of all graph nodes
 		long way_node_id;
 
 		System.out.println("suche und erstelle graphknoten");
@@ -75,11 +90,10 @@ public class RGGenerator {
 				way_node_id = way_node.getId();
 				// System.out.print(way_node_id + ";");
 
-				// prüfe ob der knoten schon einmal besucht wurde
+				// would be seen before
 				if (seen_nodes.contains(way_node_id)) {
 					/*
-					 * knoten wurde schon besucht, ist aber noch kein knoten im graphen, das
-					 * wird jetzt geändert
+					 * yes it would, but it isn't an graph node until yet
 					 */
 					if (!(graph_nodes.contains(way_node_id))) {
 						graph_nodes.put(way_node_id, vertex_id);
@@ -92,9 +106,8 @@ public class RGGenerator {
 				} else if (way_node_id == way_nodes.getFirst().getId()
 						|| way_node_id == way_nodes.getLast().getId()) {
 					/*
-					 * es handelt sich um einen knoten der noch nicht besucht wurde, jedoch ist
-					 * es der erste oder letzte knoten des weges und muss daher zum knoten im
-					 * graphen gemacht werden
+					 * is a node that wouldn't seen before. but it is the first or the last node
+					 * of a way. so it must be a graph node
 					 */
 					graph_nodes.put(way_node_id, vertex_id);
 					vertices.add(new RgVertex(vertex_id, way_node.getLongitude(), way_node
@@ -104,8 +117,7 @@ public class RGGenerator {
 				} else {
 					seen_nodes.add(way_node_id);
 				}
-				// egal ob neuer graphknoten oder nicht, der knoten wurde definitv besucht
-
+				// the node was checked, go to the next one
 			}
 		}
 
@@ -115,20 +127,15 @@ public class RGGenerator {
 		vertices = null;
 		way_nodes = null;
 		seen_nodes = null;
+
 		/*
-		 * dann müssen kanten zwischen den kreuzungen erzeugt werden, dabei muss beachtet
-		 * werden, dass es kreuzungen gibt wo es mehrer kanten gibt, die die selben beiden
-		 * punkte miteinander verbinden.
-		 * 
-		 * für kanten spielt auch eine entfernung eine rolle. diese muss berechnte werden
-		 * 
-		 * noch einmal jeden weg abgehen. für jeden wegknoten die länge zum vorgängerknoten
-		 * berechnen. handelt sich bei dem aktuellem wegnoten um eine kreuzung so muss eine
-		 * kante zischen der letzten bekannten kreuzung und dieser hinzugefügt werden. die
-		 * aktuelle kreuzung ist nun die letzt bekannte
+		 * create edges now. therefore handle every way again. for every way node calculate the
+		 * length to the previous node. is the current node a graph node create an edge to the
+		 * last graph node that would seen
 		 */
 
-		double test[] = {};
+		TDoubleArrayList longitudes = new TDoubleArrayList();
+		TDoubleArrayList latitudes = new TDoubleArrayList();
 		it = ways.iterator();
 		float edge_length;
 		int edge_id = 0;
@@ -141,7 +148,7 @@ public class RGGenerator {
 		// TLongObjectHashMap<TLongHashSet> existing_edges = new
 		// TLongObjectHashMap<TLongHashSet>();
 
-		System.out.println("erstelle kanten");
+		System.out.println("create edges");
 		while (it.hasNext()) {
 
 			current_way = it.next();
@@ -149,69 +156,47 @@ public class RGGenerator {
 			edge_length = 0;
 			for (OsmNode current_node : current_way.getNodes()) {
 
-				// lesen ersten oder letzten wegknoten, dieser ist immer eine knoten im graph
+				// read first or last node of this way, this is always a graph node
 				if (previous_node == null || previous_junction_node == null) {
-					// absicherung
+					// just a check
+					latitudes.clear();
+					longitudes.clear();
 					previous_junction_node = current_node;
 
 				} else {
-					// current_node hat einen vorgänger
+					// current_node has predecessor
 					// previous_junction_node_id = previous_junction_node.getId();
 					current_node_id = current_node.getId();
-					// berechne die länge vom vorgänger zur current_node
+					// calculate the length to the predecessor
 					edge_length += (float) previous_node.distance(current_node);
-					// current_node ist ein knoten im graphen
+					// current_node is no graph node
 					if (graph_nodes.contains(current_node_id)) {
-						// prüfen ob schon eine kante von diesem Knoten ausgeht
-						// if (existing_edges.contains(previous_junction_node_id)) {
-						// von diesem knoten gehen schon kanten aus, prüfen nun ob es auch
-						// schon eine kante zu dem aktuellen ziel gibt
-						// if (existing_edges.get(previous_junction_node_id).contains(
-						// current_node_id)) {
-						/*
-						 * es gibt schon eine kante zwischen previous_junction_node und
-						 * current_node TODO wir fügen nun einen zwischenknoten ein, damit der
-						 * graph keine mehrfachkanten enthält
-						 */
-						// }
-						/*
-						 * da es noch keine kante von der previous_junction_node zur
-						 * current_node gibt, können wir diese nun anlegen. wir speichern nun
-						 * den knoten als end_node in der list und legen weiter unten die
-						 * passende kante dazu an.
-						 */
-						// existing_edges.get(previous_junction_node_id).add(current_node_id);
 
-						// } else {
-						// es gibt noch keine kante von diesem knoten aus
-						// end_nodes_set = new TLongHashSet();
-						// end_nodes_set.add(current_node_id);
-						// existing_edges.put(previous_junction_node_id, end_nodes_set);
-						// }
-						// kante erzeugen
-
-						// TODO konstruktor anpassen, die wegknoten müssen unterwegs mit
-						// eingefügt werden
 						edges.add(new RgEdge(edge_id++, graph_nodes.get(previous_junction_node
-								.getId()), graph_nodes.get(current_node.getId()), test, test,
-								current_way, edge_length));
-						// knoten ist nun letzter kreuzungspunkt auf diesem weg
+								.getId()), graph_nodes.get(current_node.getId()), longitudes
+								.toArray(), latitudes.toArray(), current_way, edge_length));
+						// current node is now previous junction node
 						previous_junction_node = current_node;
+						latitudes.clear();
+						longitudes.clear();
 					}
 
-					// nur ein einfacher wegknoten ohne bedeutung für den graphen
+					// just a way node, add longitude and latitude the lists, so the edges has
+					// all way nodes
+					latitudes.add(current_node.getLatitude());
+					longitudes.add(current_node.getLongitude());
 
 				}
-				// knoten ist abgearbeitet
+				// next node
 				previous_node = current_node;
 			}
 		}
 
 		/*
-		 * nun müssen die graphnotes und die edges noch in der datenbank gespeichert werden
+		 * insert nodes an edges
 		 */
 
-		// service.insertHighwayLevels(transport.getUseableWays());
+		service.insertHighwayLevels(transport.getUseableWays());
 		System.out.println("insert edges");
 		service.insertEdgesIntoDB(edges);
 	}

@@ -20,19 +20,27 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * This class create a connection to the embedded sqlite database by using the jdbc wrapper.
+ * 
+ * @author kunis
+ */
 public class JDBCConnection {
 
 	private Connection con;
 
+	/**
+	 * The constructor to create a jdbc connection to the embedded sqlite database.
+	 */
 	public JDBCConnection() {
 		try {
 			Class.forName("org.sqlite.JDBC");
-			this.con = DriverManager.getConnection("jdbc:sqlite:conf.db");
+			// the sqlite .db file is placed at mapsforge\res\con\gui\
+			this.con = DriverManager.getConnection("jdbc:sqlite:sqlite_conf.db");
+			// 
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

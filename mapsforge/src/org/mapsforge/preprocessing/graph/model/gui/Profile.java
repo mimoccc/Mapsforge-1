@@ -17,7 +17,7 @@
 package org.mapsforge.preprocessing.graph.model.gui;
 
 
-public class Profil {
+public class Profile {
 
 	private String name;
 	private String url;
@@ -25,7 +25,7 @@ public class Profil {
 	private String heuristic;
 	private DatabaseProperties dbprops;
 
-	public Profil(String name, String url, Transport transport, String heuristic) {
+	public Profile(String name, String url, Transport transport, String heuristic) {
 		this.name = name;
 		this.url = url;
 		this.transport = transport;
@@ -33,7 +33,7 @@ public class Profil {
 		this.dbprops = null;
 	}
 
-	public Profil(String name, String url, Transport transport, String heuristic,
+	public Profile(String name, String url, Transport transport, String heuristic,
 			DatabaseProperties dbProbs) {
 		this.name = name;
 		this.url = url;

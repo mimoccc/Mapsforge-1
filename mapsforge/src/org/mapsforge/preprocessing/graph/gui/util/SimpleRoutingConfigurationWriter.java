@@ -20,47 +20,52 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.mapsforge.preprocessing.graph.model.gui.Profil;
+import org.mapsforge.preprocessing.graph.model.gui.Profile;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 import com.thoughtworks.xstream.XStream;
 
+/**
+ * This class create XML code of a profile and write this into a file.
+ * 
+ * @author kunis
+ */
 public class SimpleRoutingConfigurationWriter {
 
-	private Profil profil;
+	private Profile profil;
 
-	public SimpleRoutingConfigurationWriter(Profil p) {
+	/**
+	 * The constructor for the XML file creator.
+	 * 
+	 * @param p
+	 *            the profile which should be written into a file
+	 */
+	public SimpleRoutingConfigurationWriter(Profile p) {
 
 		this.profil = p;
 	}
 
-	public void createFile() throws Exception {
-		File configFile = new File("U:\\berlin.osm\\testprofil.profil");
+	/**
+	 * This method create the XML schema of the profile object and write it into a file.
+	 * 
+	 * @param configFile
+	 *            the file where the XML should be written.
+	 * @throws Exception
+	 *             raised if the file could not be written.
+	 */
+	public void writeProfil2File(File configFile) throws Exception {
 
-		if (!configFile.exists()) {
-			try {
-				configFile.createNewFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			// TODO file existiert bereits, es müsste abgefragt werden, ob die bestehende datei
-			// überschrieben werden soll oder nicht
-		}
-
-		writeProfil2File(configFile);
-	}
-
-	private void writeProfil2File(File configFile) throws Exception {
-
+		// the XStream is a library to create XML of an object
 		final XStream xs = new XStream();
 
-		xs.alias("profil", Profil.class);
+		// we must register the classes to create the attribute fields
+		xs.alias("profil", Profile.class);
 		xs.alias("highway", EHighwayLevel.class);
 
+		// create XML string
 		String xml = xs.toXML(profil);
 
+		// write XML into the file
 		try {
 			FileWriter fw = new FileWriter(configFile);
 			fw.write(xml);

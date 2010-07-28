@@ -16,8 +16,8 @@
  */
 package org.mapsforge.preprocessing.graph.interpreter;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -25,7 +25,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties;
-import org.mapsforge.preprocessing.graph.model.gui.Profil;
+import org.mapsforge.preprocessing.graph.model.gui.Profile;
 import org.mapsforge.preprocessing.graph.model.gui.Transport;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.mapsforge.preprocessing.util.HighwayLevelExtractor;
@@ -33,9 +33,17 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * This class deserialized the profile object of the configuration file. This would happened by
+ * using a SAX parser implementation. The profile object and his attributes can get bye getter
+ * methods.
+ * 
+ * @author kunis
+ * 
+ */
 public class SimpleRoutingConfigurationParser extends DefaultHandler {
 
-	private Profil profil;
+	private Profile profil;
 	private Transport transport;
 	private DatabaseProperties dbprops;
 	private String osmUrl;
@@ -45,12 +53,12 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	int maxSpeed, port;
 	HashSet<EHighwayLevel> highways = new HashSet<EHighwayLevel>();
 
-	public SimpleRoutingConfigurationParser(File file) {
+	public SimpleRoutingConfigurationParser(InputStream is) {
 
-		createParser(file);
+		createParser(is);
 	}
 
-	private void createParser(File file) {
+	private void createParser(InputStream is) {
 		DefaultHandler saxParser = this;
 
 		// get a factory
@@ -61,7 +69,7 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 			SAXParser sp = spf.newSAXParser();
 
 			// parse the file and also register this class for call backs
-			sp.parse(file.getAbsolutePath(), saxParser);
+			sp.parse(is, saxParser);
 
 		} catch (SAXException se) {
 			se.printStackTrace();
@@ -86,17 +94,15 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	}
 
 	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes)
-			throws SAXException {
+	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 
-		System.out.println("<" + qName + ">");
 		if (qName.toLowerCase().equals("profil") || qName.toLowerCase().equals("transport")) {
 			currentObject = qName.toLowerCase();
 		}
 	}
 
 	@Override
-	public void endElement(String uri, String localName, String qName) throws SAXException {
+	public void endElement(String uri, String localName, String qName) {
 		EHighwayLevel currenHwyLvl = null;
 
 		if (qName.toLowerCase().equals("profil")) {
@@ -104,7 +110,7 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 				System.err.println("This profil has some illegal values.");
 				System.exit(-1);
 			} else {
-				profil = new Profil(profilName, null, transport, null, dbprops);
+				profil = new Profile(profilName, null, transport, null, dbprops);
 			}
 			currentObject = null;
 		} else if (qName.toLowerCase().equals("transport")) {
@@ -129,7 +135,6 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 			if (currentObject.equals("profil")) {
 				profilName = characters;
 			} else if (currentObject.equals("transport")) {
-				System.out.print(characters);
 				transportName = characters;
 			}
 		} else if (qName.toLowerCase().equals("highway")) {
@@ -164,30 +169,25 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 		for (int i = start; i < start + length; i++) {
 			switch (ch[i]) {
 				case '\\':
-					System.out.println("\\\\");
+
 					break;
 				case '"':
-					System.out.println("\\\"");
+
 					break;
 				case '\n':
-					System.out.println("\\n");
+
 					break;
 				case '\r':
-					System.out.println("\\r");
+
 					break;
 				case '\t':
-					System.out.println("\\t");
+
 					break;
 				default:
 					characters += ch[i];
 					break;
 			}
 		}
-	}
-
-	public void parse() {
-		// TODO soll der parser per konstruktor oder per parse methode aufgerufen werden.
-		// je nach dem muss der konstruktor und diese methode angepasst werden
 	}
 
 	public void setTransport(Transport transport) {
@@ -206,26 +206,26 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 		return osmUrl;
 	}
 
-	public void setProfil(Profil profil) {
+	public void setProfil(Profile profil) {
 		this.profil = profil;
 	}
 
-	public Profil getProfil() {
+	public Profile getProfil() {
 		return profil;
 	}
 
 	public static void main(String[] args) {
-		File file = new File("U:\\berlin.osm\\testprofil.profil");
-		if (!file.exists() || !file.isFile() || !file.canRead()) {
-			System.out.println("Can not read file. Maybe istn't one.");
-			System.exit(-1);
-		}
-		SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(file);
-		System.out.println("profil name: " + parser.profil.getName());
-		System.out.println("transport name: " + parser.profil.getTransport().getName());
-		System.out.println("transport ways: "
-				+ parser.profil.getTransport().getUseableWaysSerialized());
 
+		/*
+		 * File file = new File("U:\\berlin.osm\\testprofil.profil"); if (!file.exists() ||
+		 * !file.isFile() || !file.canRead()) {
+		 * System.out.println("Can not read file. Maybe istn't one."); System.exit(-1); }
+		 * SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(file);
+		 * System.out.println("profil name: " + parser.profil.getName());
+		 * System.out.println("transport name: " + parser.profil.getTransport().getName());
+		 * System.out.println("transport ways: " +
+		 * parser.profil.getTransport().getUseableWaysSerialized());
+		 */
 	}
 
 	public void setDbprops(DatabaseProperties dbprops) {
@@ -235,4 +235,5 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	public DatabaseProperties getDbprops() {
 		return dbprops;
 	}
+
 }

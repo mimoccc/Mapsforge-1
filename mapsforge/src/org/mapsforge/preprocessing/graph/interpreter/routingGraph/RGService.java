@@ -18,6 +18,7 @@ package org.mapsforge.preprocessing.graph.interpreter.routingGraph;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -30,6 +31,14 @@ import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.HighwayLevelExtractor;
 
+/**
+ * The routing graph service class. Here is the connection to the database wrapper implemented.
+ * Furthermore the list of ways would be filtered by the transport configuration. so this part
+ * would be abstracted to the graph generation. So it not necessary if the ways get of the
+ * database or of an osm extractor class.
+ * 
+ * @author kunis
+ */
 public class RGService {
 
 	private OsmBaseService dbService;
@@ -38,13 +47,14 @@ public class RGService {
 		dbService = new OsmBaseService(conn);
 	}
 
-	/*
-	 * diese Klasse wird von dem Graphgenerierer angesporchen und liefert diesem die benötigten
-	 * Knoten und Kanten zur Grapherstellung. Das abrufen der Daten aus der Datenbank übernimmt
-	 * eine DBService, welcher von dieser Klasse angesprochen wird. Diese Klasse übernimmt das
-	 * Filtern des gesamten Wege anhand des Transportmittels.
+	/**
+	 * This method get all ways of the database and filter them.
+	 * 
+	 * @param transport
+	 *            the transport configuration where the graph should be filtered
+	 * 
+	 * @return a list of ways
 	 */
-
 	public LinkedList<OsmWay_withNodes> getWaysForTransport(Transport transport) {
 
 		LinkedList<OsmWay_withNodes> allWays = null;
@@ -65,8 +75,8 @@ public class RGService {
 			System.exit(-1);
 		} else {
 
+			// check for each way if the highway level can used by the transport
 			OsmWay_withNodes currentWay;
-			// Tag currentHighwayTag = new Tag("highway", "");
 			EHighwayLevel hwyLvl;
 			Iterator<OsmWay_withNodes> it = allWays.iterator();
 
@@ -86,6 +96,12 @@ public class RGService {
 		return useableWays;
 	}
 
+	/**
+	 * This method send a list of vertices to the database wrapper to insert them.
+	 * 
+	 * @param vertices
+	 *            the list of vertices that should added to the database
+	 */
 	public void insertVerticesIntoDB(LinkedList<RgVertex> vertices) {
 
 		try {
@@ -101,10 +117,37 @@ public class RGService {
 		}
 	}
 
+	/**
+	 * This method send a list of edges to the database wrapper to insert them.
+	 * 
+	 * @param edges
+	 *            the list of edges that should added to the database
+	 */
 	public void insertEdgesIntoDB(LinkedList<RgEdge> edges) {
 
 		try {
 			dbService.insertEdges(edges);
+		} catch (SQLException e) {
+			System.err
+					.println("Error: An error occurred while inserting the edges. Extracting would be canceled.");
+			e.printStackTrace();
+			e.getNextException().printStackTrace();
+			System.exit(-1);
+
+		}
+
+	}
+
+	/**
+	 * This method send all highway levels that would be needed for the graph to the database to
+	 * insert them.
+	 * 
+	 * @param useableWays
+	 *            the set of highway levels that should added to the db
+	 */
+	public void insertHighwayLevels(HashSet<EHighwayLevel> useableWays) {
+		try {
+			dbService.insertHighwayLevels(useableWays);
 		} catch (SQLException e) {
 			System.err
 					.println("Error: An error occurred while inserting the edges. Extracting would be canceled.");
@@ -141,18 +184,4 @@ public class RGService {
 		}
 
 	}
-
-	// public void insertHighwayLevels(HashSet<Tag> useableWays) {
-	// try {
-	// dbService.insertHighwayLevels(useableWays);
-	// } catch (SQLException e) {
-	// System.err
-	// .println("Error: An error occurred while inserting the edges. Extracting would be canceled.");
-	// e.printStackTrace();
-	// e.getNextException().printStackTrace();
-	// System.exit(-1);
-	//
-	// }
-	//
-	// }
 }

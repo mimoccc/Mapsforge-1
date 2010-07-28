@@ -14,11 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.interpreter;
+package org.mapsforge.preprocessing.graph.gui;
 
-import java.io.InputStream;
+/**
+ * This class is the main class for the GUI.
+ * 
+ * @author kunis
+ */
+public class GuiMain {
 
-public interface IInterpreter {
+	// this method print the usage to the prompt.
+	private static void usage() {
+		System.out.println("Usage: GuiMain");
+		System.exit(-1);
+	}
 
-	void startPreprocessing(InputStream xmlConfigFile);
+	/**
+	 * This method starts the GUI by creating a new MainFrame.
+	 * 
+	 * @param args
+	 *            no arguments expected
+	 */
+	public static void main(String[] args) {
+		if (args.length != 0) {
+			System.out.println("Error! Illegal number of arguments after GuiMain.");
+			usage();
+		}
+
+		MainFrame mf = new MainFrame();
+		mf.setVisible(true);
+	}
+
 }

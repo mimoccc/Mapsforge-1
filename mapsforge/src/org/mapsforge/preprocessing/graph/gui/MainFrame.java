@@ -19,6 +19,7 @@ package org.mapsforge.preprocessing.graph.gui;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Locale;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -29,44 +30,74 @@ import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.mapsforge.preprocessing.graph.gui.panels.ConfigurationFilePanel;
 import org.mapsforge.preprocessing.graph.gui.panels.DbPreferences;
-import org.mapsforge.preprocessing.graph.gui.panels.ProfilPanel;
+import org.mapsforge.preprocessing.graph.gui.panels.ProfilePanel;
 import org.mapsforge.preprocessing.graph.gui.panels.TransportPanel;
 import org.mapsforge.preprocessing.graph.gui.util.DatabaseService;
 import org.mapsforge.preprocessing.graph.gui.util.JDBCConnection;
 
-
+/**
+ * This class create the main window and starts all other functions that are needed for the GUI.
+ * 
+ * @author kunis
+ */
 public class MainFrame extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 3109971929230077879L;
 	private static DatabaseService dbs;
 
+	/**
+	 * This is the constructor of the main window. It creates the window and starts all
+	 * necessary methods.
+	 */
 	public MainFrame() {
 
 		super("Preprocessing Configuration");
+		// get a jdbc connection for the embedded database
 		dbs = new DatabaseService(new JDBCConnection().getConnection());
 		init();
 	}
 
+	/**
+	 * This method is the getter for a DatabaseService object which comprised the connection to
+	 * the embedded database.
+	 * 
+	 * @return a DatabaseService object
+	 */
 	public DatabaseService getDbService() {
 		return dbs;
 	}
 
+	/*
+	 * This method initialize the main window. That contains the composing of all components and
+	 * the adjustment of the visual appearance.
+	 */
 	protected void init() {
 
-		// In der Mitte des Bildschirms platzieren
+		// check if the database is initialized
+		dbs.init();
+
+		// set the local because this is another workaround for the bugged jfilechooser
+		Locale.setDefault(Locale.ENGLISH);
+		JComponent.setDefaultLocale(Locale.ENGLISH);
+
+		// set the window to the center of the screen
 		this
 				.setLocation(
 						(Toolkit.getDefaultToolkit().getScreenSize().width - this.getSize().width) / 4,
 						(Toolkit.getDefaultToolkit().getScreenSize().height - this.getSize().height) / 4);
 
+		// set the visual appearance
 		lookAndFeel();
+
+		// set close operation
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// add a tabbed pane to the window, here the several work steps are added
 		JTabbedPane mainPanel = new JTabbedPane();
 
+		// add an additional menu bar and menus
 		JMenuBar menuBar = new JMenuBar();
 		this.setJMenuBar(menuBar);
 
@@ -85,16 +116,23 @@ public class MainFrame extends JFrame {
 		dbPrefMenuItem.addActionListener(new openDbPreferences());
 		preferencesMenu.add(dbPrefMenuItem);
 
+		// create and add the several panels
+
 		JComponent transportPanel = new TransportPanel(dbs);
-		JComponent profilPanel = new ProfilPanel(dbs);
+		JComponent profilePanel = new ProfilePanel(dbs);
+		JComponent configurationFilePanel = new ConfigurationFilePanel(dbs);
 
 		mainPanel.addTab("transport configuration", transportPanel);
-		mainPanel.addTab("profil configuration", profilPanel);
+		mainPanel.addTab("profil configuration", profilePanel);
+		mainPanel.addTab("create configuration file", configurationFilePanel);
 
 		this.add(mainPanel);
 		this.pack();
 	}
 
+	/*
+	 * This method configure the visual appearance for the window.
+	 */
 	private void lookAndFeel() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -109,11 +147,20 @@ public class MainFrame extends JFrame {
 		}
 	}
 
+	/**
+	 * This is the main method of the main window. Herewith could it be started.
+	 * 
+	 * @param args
+	 *            no arguments would needed
+	 */
 	public static void main(String[] args) {
 		MainFrame mf = new MainFrame();
 		mf.setVisible(true);
 	}
 
+	/*
+	 * This is an action listener class to close the window by using the menu item exit.
+	 */
 	class exitAction implements ActionListener {
 
 		@Override
@@ -123,6 +170,10 @@ public class MainFrame extends JFrame {
 
 	}
 
+	/*
+	 * This is an action listener class to open the database preference window set up their
+	 * preferences.
+	 */
 	class openDbPreferences implements ActionListener {
 
 		public void actionPerformed(ActionEvent e) {

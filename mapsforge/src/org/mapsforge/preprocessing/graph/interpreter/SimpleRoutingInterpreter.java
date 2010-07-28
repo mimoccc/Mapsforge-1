@@ -17,61 +17,87 @@
 package org.mapsforge.preprocessing.graph.interpreter;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.mapsforge.preprocessing.graph.interpreter.osm2db.SimpleOSM2DBParser;
 import org.mapsforge.preprocessing.graph.interpreter.routingGraph.RGGenerator;
 import org.mapsforge.preprocessing.graph.interpreter.util.FileLoader;
-import org.mapsforge.preprocessing.graph.model.gui.Profil;
+import org.mapsforge.preprocessing.graph.model.gui.Profile;
 import org.mapsforge.preprocessing.util.DBConnection;
+import org.xml.sax.SAXException;
 
+/**
+ * The SimpleRoutingInterpreter is an implementation of an interpreter for the preproccesing of
+ * the routing. Here we parse the configuration file to get a profile of a preproccessing turn.
+ * This profile consist the information of the database, the used osm file and the information
+ * of the transport object.
+ * 
+ * @author kunis
+ * 
+ */
 public class SimpleRoutingInterpreter implements IInterpreter {
 
-	// interpretierung starten
-	public void startPreprocessing(File xmlConfigFile) {
+	/**
+	 * This method start the preprocessing for a given configuration file
+	 */
+	public void startPreprocessing(InputStream xmlConfigFile) {
 
 		// first we must parse the xml profile file
 		SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(
 				xmlConfigFile);
-		Profil profil = parser.getProfil();
+		Profile profile = parser.getProfil();
+
+		// debugging
+		System.out.println("name: " + profile.getDbProberties().getDbName() + "; host: "
+				+ profile.getDbProberties().getHost());
 
 		// now we create a database connection because that would needed later
 		Connection conn = null;
 		try {
-			conn = new DBConnection(profil.getDbProberties()).getConnection();
+			conn = new DBConnection(profile.getDbProberties()).getConnection();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out
 					.println("Can't connect to the Database. Maybe the Proberties are wrong.");
 			System.exit(-1);
 		}
+		// TODO check if file exists
+		File osm = getOsmFile(profile.getUrl());
+		System.out.println(osm.getAbsolutePath());
 
-		// TODO get the right osm file to parse it
-		File osm = getOsmFile(profil.getUrl());
-		//
-		// try {
-		// // parse osm file an insert into db
-		// new SimpleOSM2DBParser(conn, osm).parseFile();
-		// } catch (SAXException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (SQLException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
+		try {
+			// parse osm file an insert into db
+			new SimpleOSM2DBParser(conn, osm).parseFile();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 		// create new graph generator which generate the routing graph
 		RGGenerator generator = new RGGenerator(conn);
-		generator.generate(profil.getTransport());
+		generator.generate(profile.getTransport());
 	}
 
 	private File getOsmFile(String url) {
-		// TODO Auto-generated method stub
-		File osmFile = new FileLoader().getOsmFile(url);
+		File osmFile = null;
+		try {
+			osmFile = new FileLoader().getOsmFile(url);
+		} catch (Exception e) {
+
+			// System.err.println(e.getMessage());
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
+		if (osmFile == null) {
+			System.out.println("NULL");
+		}
 		return osmFile;
 	}
 
@@ -80,20 +106,29 @@ public class SimpleRoutingInterpreter implements IInterpreter {
 	}
 
 	public static void main(String[] args) {
-		// eingabe prüfen
 		if (args.length != 1) {
 			usage();
 		}
-		// TODO file überprüfen
-		File xmlConfigFile = new File("U:\\berlin.osm\\testprofil.profil");
-		/*
-		 * if (!xmlConfigFile.isFile() || !xmlConfigFile.getName().endsWith(".xml")) {
-		 * System.out.println("Path is no xml file."); usage(); System.exit(1); }
-		 */
+		File file = new File(args[0]);
 
-		// object erzeugen und file übergeben
-		SimpleRoutingInterpreter sri = new SimpleRoutingInterpreter();
-		sri.startPreprocessing(xmlConfigFile);
+		if (!file.isFile() || !file.getName().endsWith(".xml")) {
+			System.out.println("Path is no xml file.");
+			usage();
+			System.exit(1);
+		}
+
+		try {
+			InputStream xmlConfigFile = InterpreterMain.class.getResourceAsStream("/res/"
+					+ args[0]);
+			SimpleRoutingInterpreter sri = new SimpleRoutingInterpreter();
+			sri.startPreprocessing(xmlConfigFile);
+		} catch (IllegalArgumentException e) {
+			System.out.println();
+			System.out.println("Can not finde or open configuration file.");
+			System.out.println("The file must be stored in the resource folder.");
+			System.out.println("<application folder>/res/" + args[0]);
+
+		}
 	}
 
 }

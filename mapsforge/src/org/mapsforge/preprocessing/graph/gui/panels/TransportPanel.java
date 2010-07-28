@@ -55,32 +55,57 @@ import org.mapsforge.preprocessing.graph.model.gui.Transport;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.mapsforge.preprocessing.util.HighwayLevelExtractor;
 
+/**
+ * This is the class for the transport configuration panel.
+ * 
+ * @author kunis
+ */
 public class TransportPanel extends JPanel {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 7494776847583748626L;
+
+	/**
+	 * This is a jdbc connection to connect with the embedded database. This would be needed to
+	 * load and also store new or changed transport configurations.
+	 */
 	private DatabaseService dbs;
 
-	private JComboBox cb_ChooseTransport;
-	private JTextField tf_TransportName;
-	private JFormattedTextField ftf_TransportMaxSpeed;
-	private JList jl_TransportUseableWays;
-	private JList jl_AllUseableWays;
-	private DefaultListModel dlm_listModel;
+	private JComboBox cbChooseTransport;
+	private JTextField tfTransportName;
+	private JFormattedTextField ftfTransportMaxSpeed;
+	private JList jlTransportUsableWays;
+	private JList jlAllUsableWays;
+	private DefaultListModel dlmListModel;
 
+	/**
+	 * The constructor creates a main panel for this tab which is left-aligned. Here we add the
+	 * attribute and the manage panels where all the elements are contained.
+	 * 
+	 * @param dbs
+	 *            connection to the embedded database to load/store transport configurations
+	 */
 	public TransportPanel(DatabaseService dbs) {
 
 		this.dbs = dbs;
 		this.setLayout(new BorderLayout());
 
-		this.add(getAttributePanel(), BorderLayout.WEST);
-		this.add(getManagePanel(), BorderLayout.EAST);
+		JPanel panel = new JPanel(new BorderLayout());
+		this.add(panel, BorderLayout.WEST);
+
+		// add the panels with the elements
+		panel.add(getAttributePanel(), BorderLayout.WEST);
+		panel.add(getManagePanel(), BorderLayout.EAST);
+
+		// initialize the elements
 		setComboBoxChooseTransport();
 		setJListAllUseabaleWayTags();
 	}
 
+	/*
+	 * This method creates the attribute panel with the all the attribute elements for a
+	 * transport configuration. Here is also the event handling implemented, so that the the
+	 * requests would be forwarded to the corresponding methods.
+	 */
 	private JPanel getAttributePanel() {
 
 		JPanel panel = new JPanel(new GridBagLayout());
@@ -90,6 +115,7 @@ public class TransportPanel extends JPanel {
 		panel.setBorder(BorderFactory.createTitledBorder(null, "transport attributes",
 				TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font(
 						"Dialog", Font.PLAIN, 11), Color.BLACK));
+
 		// set constraints
 		constraints.insets = new Insets(5, 5, 0, 5);
 		constraints.anchor = GridBagConstraints.NORTH;
@@ -101,40 +127,42 @@ public class TransportPanel extends JPanel {
 		panel.add(new JLabel("maximum speed: "), constraints);
 
 		// create textfields
-		tf_TransportName = new JTextField();
-		ftf_TransportMaxSpeed = new JFormattedTextField(NumberFormat.getNumberInstance());
+		tfTransportName = new JTextField();
+		ftfTransportMaxSpeed = new JFormattedTextField(NumberFormat.getNumberInstance());
 
 		// add textfields to the second row
 		constraints.gridy = 1;
 		constraints.gridx = 0;
-		panel.add(tf_TransportName, constraints);
+		panel.add(tfTransportName, constraints);
 		constraints.gridx = 2;
-		panel.add(ftf_TransportMaxSpeed, constraints);
+		panel.add(ftfTransportMaxSpeed, constraints);
 
 		// add labels to the third row
 		constraints.gridy = 3;
 		constraints.gridx = 0;
 		panel.add(new JLabel("useabel ways:"), constraints);
 		constraints.gridx = 2;
-		panel.add(new JLabel("avaiable ways:"), constraints);
+		panel.add(new JLabel("available ways:"), constraints);
 
 		// create buttons and actions listeners
 		JButton b_RemoveTagFromTransport = new JButton(">>");
+		// this action listener is to remove the selected items of the usable ways
 		b_RemoveTagFromTransport.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				deleteTagsFromList(jl_TransportUseableWays.getSelectedValues());
+				deleteTagsFromList(jlTransportUsableWays.getSelectedValues());
 
 			}
 		});
 
+		// this action listener is to add the selected items from all ways to the usable ways
 		JButton b_AddTagToTransport = new JButton("<<");
 		b_AddTagToTransport.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addTagsToList(jl_AllUseableWays.getSelectedValues());
+				addTagsToList(jlAllUsableWays.getSelectedValues());
 
 			}
 		});
@@ -147,22 +175,21 @@ public class TransportPanel extends JPanel {
 		panel.add(b_RemoveTagFromTransport, constraints);
 
 		// create lists
-		jl_AllUseableWays = new JList();
-		jl_AllUseableWays.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		jl_AllUseableWays.setLayoutOrientation(JList.VERTICAL);
-		jl_AllUseableWays.setVisibleRowCount(1);
-		jl_AllUseableWays.setBackground(Color.WHITE);
-		JScrollPane allUseableWaysScrollPane = new JScrollPane(jl_AllUseableWays);
+		jlAllUsableWays = new JList();
+		jlAllUsableWays.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		jlAllUsableWays.setLayoutOrientation(JList.VERTICAL);
+		jlAllUsableWays.setVisibleRowCount(1);
+		jlAllUsableWays.setBackground(Color.WHITE);
+		JScrollPane allUseableWaysScrollPane = new JScrollPane(jlAllUsableWays);
 		allUseableWaysScrollPane.setPreferredSize(new Dimension(150, 60));
 
-		dlm_listModel = new DefaultListModel();
-		jl_TransportUseableWays = new JList(dlm_listModel);
-		jl_TransportUseableWays
-				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		jl_TransportUseableWays.setLayoutOrientation(JList.VERTICAL);
-		jl_TransportUseableWays.setVisibleRowCount(1);
-		jl_TransportUseableWays.setBackground(Color.WHITE);
-		JScrollPane transportUseableWaysScrollPane = new JScrollPane(jl_TransportUseableWays);
+		dlmListModel = new DefaultListModel();
+		jlTransportUsableWays = new JList(dlmListModel);
+		jlTransportUsableWays.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		jlTransportUsableWays.setLayoutOrientation(JList.VERTICAL);
+		jlTransportUsableWays.setVisibleRowCount(1);
+		jlTransportUsableWays.setBackground(Color.WHITE);
+		JScrollPane transportUseableWaysScrollPane = new JScrollPane(jlTransportUsableWays);
 		transportUseableWaysScrollPane.setPreferredSize(new Dimension(150, 60));
 
 		// change constraints
@@ -180,6 +207,10 @@ public class TransportPanel extends JPanel {
 		return panel;
 	}
 
+	/*
+	 * This method create the manage panel and their elements. the event handling for the
+	 * buttons is forwarded to the corresponding methods.
+	 */
 	private JPanel getManagePanel() {
 
 		JPanel panel = new JPanel(new GridBagLayout());
@@ -195,32 +226,37 @@ public class TransportPanel extends JPanel {
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 
 		// add combobox to the panel
-		cb_ChooseTransport = new JComboBox();
-		panel.add(cb_ChooseTransport, constraints);
+		panel.add(new JLabel("select an existing transport:"), constraints);
+		constraints.gridy = 1;
+		cbChooseTransport = new JComboBox();
+		panel.add(cbChooseTransport, constraints);
 
 		// add buttons to the panel
-		constraints.gridy = 1;
+		constraints.gridy = 2;
 		JButton bSaveTransport = new JButton("save existing configuration");
 		panel.add(bSaveTransport, constraints);
-		constraints.gridy = 2;
+		constraints.gridy = 3;
 		JButton bCreateTransport = new JButton("create a new configuration");
 		panel.add(bCreateTransport, constraints);
-		constraints.gridy = 3;
+		constraints.gridy = 4;
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.weighty = 1.0;
 		JButton bDeleteTransport = new JButton("delete existing configuration");
 		panel.add(bDeleteTransport, constraints);
 
 		// add action listener to the combobox
-		cb_ChooseTransport.addActionListener(new ActionListener() {
+		// this action listener is to show a the selected transport on the attribute panel
+		cbChooseTransport.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				showChoosenTransport((Transport) cb_ChooseTransport.getSelectedItem());
+				showChoosenTransport((Transport) cbChooseTransport.getSelectedItem());
 			}
 		});
 
 		// add action listeners to the buttons
+
+		// this action listener is to save a transport after clicking the save button
 		bSaveTransport.addActionListener(new ActionListener() {
 
 			@Override
@@ -229,6 +265,7 @@ public class TransportPanel extends JPanel {
 			}
 		});
 
+		// this action listener is to create a transport after clicking the create button
 		bCreateTransport.addActionListener(new ActionListener() {
 
 			@Override
@@ -237,6 +274,7 @@ public class TransportPanel extends JPanel {
 			}
 		});
 
+		// this action listener is to delete a transport after clicking the delete button
 		bDeleteTransport.addActionListener(new ActionListener() {
 
 			@Override
@@ -248,32 +286,44 @@ public class TransportPanel extends JPanel {
 		return panel;
 	}
 
-	/**
-	 * @param selectedValues
+	/*
+	 * This method adds all objects from the array selectedValues to the dl_listModel, which is
+	 * the model of the jl_TransportUseableWays. There are only this objects added, which are
+	 * not in the list before.
 	 */
 	private void addTagsToList(Object[] selectedValues) {
 
 		for (Object obj : selectedValues) {
-			if (dlm_listModel.lastIndexOf(obj) == -1) {
-				dlm_listModel.addElement(obj.toString());
+			if (dlmListModel.lastIndexOf(obj) == -1) {
+				dlmListModel.addElement(obj.toString());
 			} else {
+				// if the current element is already in the list, the would be informed
 				JOptionPane.showMessageDialog(this, "This tag is already in the list.",
 						"Information", JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 	}
 
+	/*
+	 * This method deletes all the selected of the jl_TransportUseableWays.
+	 */
 	private void deleteTagsFromList(Object[] selectedValues) {
 
 		for (Object obj : selectedValues) {
-			dlm_listModel.removeElement(obj);
+			dlmListModel.removeElement(obj);
 		}
 	}
 
+	/*
+	 * This method adds a new transport to the embedded database. If there are any Problems,
+	 * like the database connection get lost or the table did not exists, then an info panel
+	 * informed the user.
+	 */
 	private void createTransportInDB() {
 
 		Transport t = null;
 		try {
+			// call the method which parse the input
 			t = getTransportFromInput();
 			dbs.addTransport(t);
 		} catch (IllegalArgumentException e) {
@@ -281,12 +331,18 @@ public class TransportPanel extends JPanel {
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+		// update choice field
 		setComboBoxChooseTransport();
 	}
 
+	/*
+	 * This method update an existing configuration. If any error occurred the user would be
+	 * informed. After updating the panel elements would be updated.
+	 */
 	private void updateTransportToDB() {
 		Transport t = null;
 		try {
+			// call the method which parse the input
 			t = getTransportFromInput();
 			dbs.updateTransport(t);
 		} catch (IllegalArgumentException e) {
@@ -297,13 +353,23 @@ public class TransportPanel extends JPanel {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Fehler",
 					JOptionPane.ERROR_MESSAGE);
 		}
+
+		// update choice field and attribute fields
 		setComboBoxChooseTransport();
 		showChoosenTransport(t);
 
 	}
 
+	/*
+	 * This method delete an existing transport configuration. To get the right one, the current
+	 * name of attribute field for the transport name would be parsed an a look up into the
+	 * database would be started. If the transport configuration for this name exists the user
+	 * would be asked if he really want do delete this. Depending on his answer the action would
+	 * be done. The user would also be informed if no configuration with the given name exists.
+	 */
 	private void deleteTransportFromDB() {
-		String name = tf_TransportName.getText();
+		// get the name of the configuration which would deleted
+		String name = tfTransportName.getText();
 		if (name.equals(null) || name.equals("")) {
 			JOptionPane.showMessageDialog(this, "You insert no value for the transport name.",
 					"Error", JOptionPane.ERROR_MESSAGE);
@@ -312,6 +378,7 @@ public class TransportPanel extends JPanel {
 					"Are you sure to delete this transport configuration?",
 					"Delete Transport Configuration?", JOptionPane.YES_NO_OPTION);
 
+			// the user wants to delete this configuration
 			if (answer == 0) {
 				try {
 					dbs.deleteTransport(name);
@@ -324,16 +391,19 @@ public class TransportPanel extends JPanel {
 		}
 	}
 
+	/*
+	 * This method parse all attributes of the attributes fields and check their validness.
+	 */
 	private Transport getTransportFromInput() {
 		String name;
 		int maxspeed = -1;
 		ArrayList<String> ways = new ArrayList<String>();
-		name = tf_TransportName.getText();
+		name = tfTransportName.getText();
 		if (name.equals(null) || name.equals("")) {
 			throw new IllegalArgumentException("You insert no value for the transport name.");
 		}
 		try {
-			maxspeed = ((Number) ftf_TransportMaxSpeed.getValue()).intValue();
+			maxspeed = ((Number) ftfTransportMaxSpeed.getValue()).intValue();
 		} catch (Exception e) {
 			throw new IllegalArgumentException("You insert no value for the maximum speed.");
 		}
@@ -342,7 +412,7 @@ public class TransportPanel extends JPanel {
 			throw new IllegalArgumentException(
 					"You insert a invalid value for the maximum speed.");
 		}
-		Enumeration<?> e = dlm_listModel.elements();
+		Enumeration<?> e = dlmListModel.elements();
 		while (e.hasMoreElements()) {
 			ways.add(e.nextElement().toString());
 
@@ -352,9 +422,14 @@ public class TransportPanel extends JPanel {
 					"There are no ways added for this transport configuration.");
 		}
 
+		// the transport object could be created if all parameters are parsed and valid
 		return new Transport(name, maxspeed, StringListToHighwaySet(ways));
 	}
 
+	/*
+	 * This method gets a list of ways and check if they are valid highways. The ways are also
+	 * added to a set for better look up.
+	 */
 	private HashSet<EHighwayLevel> StringListToHighwaySet(ArrayList<String> ways) {
 		HashSet<EHighwayLevel> result = new HashSet<EHighwayLevel>();
 		EHighwayLevel hwyLvl = null;
@@ -366,28 +441,40 @@ public class TransportPanel extends JPanel {
 		return result;
 	}
 
+	/*
+	 * This method initialize the choose list at the manage panel.
+	 */
 	private void setComboBoxChooseTransport() {
 
-		cb_ChooseTransport.removeAllItems();
+		cbChooseTransport.removeAllItems();
 		ArrayList<Transport> al_transports = dbs.getAllTransports();
 
 		if (al_transports != null) {
-			cb_ChooseTransport.addItem(null);
+			cbChooseTransport.addItem(null);
 			for (Transport t : al_transports) {
-				cb_ChooseTransport.addItem(t);
+				cbChooseTransport.addItem(t);
 			}
 		}
 	}
 
+	/*
+	 * This method parse the config file which be located under mapsforge/res/conf/allWays.conf.
+	 * This file get a list of all valid values for the ways a transport can use. REGARD!
+	 * actually there are only highway tags in the enum EHighwayLevel inserted, so only ths way
+	 * are valid, too.
+	 */
 	private Vector<String> getListOfAllWays() throws IOException {
 
-		// parse file
+		// get the the path of this application
 		String uri = System.getProperty("user.dir");
-		File file = new File(uri + "\\res\\conf\\allWays.conf");
+		// System.out.println("pfad" + uri.toString()); \\res\\conf\\gui\\allWays.conf
+		File file = new File(uri + "\\allWays.conf");
 		BufferedReader br;
 		Vector<String> hwyLvls = new Vector<String>();
 		if (file.exists()) {
 
+			// parse the file and add all entries which are also in the enum EHighwayLevel (this
+			// temporary static)
 			br = new BufferedReader(new FileReader(file));
 			EHighwayLevel hwyLvl;
 			String input = br.readLine();
@@ -402,36 +489,39 @@ public class TransportPanel extends JPanel {
 			System.out.println("Can't finde a needed ressource. " + file.getPath());
 			System.exit(-1);
 		}
-
-		// hole für jeden eintrag den ehighwaylvl
-
-		// zum string machen und dem vector anhängen
-
 		return hwyLvls;
 	}
 
+	/*
+	 * This method filled the list with the parsed ways.
+	 */
 	private void setJListAllUseabaleWayTags() {
 		try {
-			jl_AllUseableWays.setListData(getListOfAllWays());
+			jlAllUsableWays.setListData(getListOfAllWays());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			// this exception should not occurs
 			e.printStackTrace();
+			System.exit(-1);
 		}
 	}
 
+	/*
+	 * This method show the attributes at the corresponding attribute fields of the chosen
+	 * transport configuration
+	 */
 	private void showChoosenTransport(Transport t) {
 
 		if (t == null) {
-			tf_TransportName.setText("");
-			ftf_TransportMaxSpeed.setValue(null);
-			dlm_listModel.clear();
+			tfTransportName.setText("");
+			ftfTransportMaxSpeed.setValue(null);
+			dlmListModel.clear();
 
 		} else {
-			tf_TransportName.setText(t.getName());
-			ftf_TransportMaxSpeed.setValue(t.getMaxSpeed());
-			dlm_listModel.clear();
+			tfTransportName.setText(t.getName());
+			ftfTransportMaxSpeed.setValue(t.getMaxSpeed());
+			dlmListModel.clear();
 			for (EHighwayLevel hwhLvl : t.getUseableWays()) {
-				dlm_listModel.addElement(hwhLvl.toString());
+				dlmListModel.addElement(hwhLvl.toString());
 			}
 		}
 

@@ -36,11 +36,29 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+/**
+ * An adapted implementation of the XML2PostgreSQL class
+ * 
+ * @see XML2PostgreSQL
+ * @author kunis
+ */
 public class SimpleOSM2DBParser {
 
 	private final File osm;
 	private final XMLReader xmlReader;
 
+	/**
+	 * The constructor of the parser.
+	 * 
+	 * @param conn
+	 *            a database connection
+	 * @param osm
+	 *            the osm file that should be parsed
+	 * @throws SAXException
+	 *             if the parsing failed
+	 * @throws SQLException
+	 *             if there are any problems with the database
+	 */
 	public SimpleOSM2DBParser(Connection conn, File osm) throws SAXException, SQLException {
 
 		this.osm = osm;
@@ -48,6 +66,14 @@ public class SimpleOSM2DBParser {
 		this.xmlReader.setContentHandler(new OsmHandler(conn));
 	}
 
+	/**
+	 * The start method of the parser.
+	 * 
+	 * @throws IOException
+	 *             maybe can not read the file
+	 * @throws SAXException
+	 *             an error while parsing
+	 */
 	public void parseFile() throws IOException, SAXException {
 		FileInputStream is = new FileInputStream(osm);
 		xmlReader.parse(new InputSource(is));
@@ -58,7 +84,7 @@ public class SimpleOSM2DBParser {
 
 		private final Logger logger = Logger.getLogger(XML2PostgreSQL.class.getName());
 
-		private static final int DEFAULT_BATCH_SIZE = 1000;
+		private static final int DEFAULT_BATCH_SIZE = 500;
 
 		private int batchSize;
 
@@ -224,6 +250,7 @@ public class SimpleOSM2DBParser {
 				} else if (qName.equals("way")) {
 					ways++;
 
+					// System.out.println(ways);
 					pstmtWays.setLong(1, currentWay);
 					pstmtWays.addBatch();
 
@@ -276,7 +303,6 @@ public class SimpleOSM2DBParser {
 				try {
 					Thread.sleep(10000);
 				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -297,7 +323,6 @@ public class SimpleOSM2DBParser {
 				logger.info("committing transaction...");
 				conn.commit();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 

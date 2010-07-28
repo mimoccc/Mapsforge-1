@@ -17,34 +17,33 @@
 package org.mapsforge.preprocessing.graph.interpreter.util;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
+/**
+ * The FileLoader to load the osm file of the file system.
+ * 
+ * @author kunis
+ */
 public class FileLoader {
 
 	public FileLoader() {
 	}
 
-	public File getOsmFile(String url) {
-		/*
-		 * vorerst sollen hier ein pfad angegeben werden wo sich die datei befindet, die
-		 * aufgerufen werden soll alternativa kann man auch nur die datei angeben und dann wird
-		 * in einem relativen pfad danach gesucht, also ein default ordner
-		 * 
-		 * später kann man überlegen ob an dieser stelle auch files von geofabrik geladen werden
-		 * soll
-		 */
+	public File getOsmFile(String url) throws FileNotFoundException {
+
+		if (url == "") {
+			throw new FileNotFoundException("No value for osm file.");
+		}
 		url = "U:\\berlin.osm\\berlin.osm";
-		/*
-		 * url = "http://download.geofabrik.de/osm/"; File p = new File(url); try { URL u =
-		 * p.toURI().toURL(); System.out.println(u.getProtocol()); } catch
-		 * (MalformedURLException e) { // TODO Auto-generated catch block e.printStackTrace(); }
-		 */
-		return new File(url);
-	}
 
-	public static void main(String[] args) {
-		FileLoader fl = new FileLoader();
-		File f = fl.getOsmFile("");
-		System.out.println(f.getPath());
-	}
+		// TODO have to check the file and do a good exception handling
 
+		File file = new File(url);
+		System.out.println(file.getAbsolutePath());
+		if (!file.exists()) {
+			throw new FileNotFoundException("OSM file does not exits.");
+		}
+		System.out.println("Test");
+		return file;
+	}
 }

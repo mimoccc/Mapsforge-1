@@ -37,17 +37,25 @@ import javax.swing.JTextField;
 import org.mapsforge.preprocessing.graph.gui.util.DatabaseService;
 import org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties;
 
+/**
+ * This is the class for the database preference window of the menu bar.
+ * 
+ * @author kunis
+ */
 public class DbPreferences extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 2481113734700551000L;
 
 	private DatabaseService dbs;
 	private JTextField tf_hostName, tf_database, tf_username, tf_password;
 	private JFormattedTextField ftf_port;
 
+	/**
+	 * The constructor to create a database configuration preference window.
+	 * 
+	 * @param dbs
+	 *            a database service object to connect to the embedded database
+	 */
 	public DbPreferences(DatabaseService dbs) {
 
 		super("Database Preferences");
@@ -61,6 +69,7 @@ public class DbPreferences extends JFrame {
 		init();
 	}
 
+	// Initialize the preference window
 	private void init() {
 
 		this.getContentPane().setLayout(new BorderLayout());
@@ -72,20 +81,23 @@ public class DbPreferences extends JFrame {
 		this.pack();
 	}
 
+	/*
+	 * This method draws all buttons on the panel
+	 */
 	private JPanel drawButtonPanel() {
 
 		JPanel panel = new JPanel(new FlowLayout());
 		// GridBagConstraints constraints = new GridBagConstraints();
 
 		JButton b_saveDbConfig = new JButton("Save Database Configuration");
-		JButton b_getDefaultDbConfig = new JButton("Restore Default Configuration");
+		JButton b_getDefaultDbConfig = new JButton("Restore Configuration");
 		panel.add(b_getDefaultDbConfig);
 		panel.add(b_saveDbConfig);
 
 		b_getDefaultDbConfig.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				restoreToDefaultDbConfig();
+				loadDbConfig();
 			}
 		});
 		b_saveDbConfig.addActionListener(new ActionListener() {
@@ -97,36 +109,39 @@ public class DbPreferences extends JFrame {
 		return panel;
 	}
 
+	/*
+	 * This method draws all components on the panel
+	 */
 	private JPanel drawInputPanel() {
 
 		JPanel panel = new JPanel(new GridBagLayout());
-		GridBagConstraints panelConstraints = new GridBagConstraints();
+		GridBagConstraints constraints = new GridBagConstraints();
 
-		panelConstraints.insets = new Insets(5, 5, 0, 5);
-		panelConstraints.anchor = GridBagConstraints.NORTH;
-		panelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.insets = new Insets(5, 5, 0, 5);
+		constraints.anchor = GridBagConstraints.NORTH;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
 
-		panelConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		constraints.gridwidth = GridBagConstraints.REMAINDER;
 		JLabel l_information = new JLabel(
 				"Here you can change the default database configuration.");
-		panel.add(l_information, panelConstraints);
+		panel.add(l_information, constraints);
 
-		panelConstraints.weightx = 0.2;
-		panelConstraints.gridwidth = GridBagConstraints.RELATIVE;
+		constraints.weightx = 0.2;
+		constraints.gridwidth = GridBagConstraints.RELATIVE;
 
-		panelConstraints.gridy = 1;
-		panel.add(new JLabel("host:"), panelConstraints);
-		panelConstraints.gridy = 2;
-		panel.add(new JLabel("port:"), panelConstraints);
-		panelConstraints.gridy = 3;
-		panel.add(new JLabel("database:"), panelConstraints);
-		panelConstraints.gridy = 4;
-		panel.add(new JLabel("username:"), panelConstraints);
-		panelConstraints.gridy = 5;
-		panel.add(new JLabel("password:"), panelConstraints);
+		constraints.gridy = 1;
+		panel.add(new JLabel("host:"), constraints);
+		constraints.gridy = 2;
+		panel.add(new JLabel("port:"), constraints);
+		constraints.gridy = 3;
+		panel.add(new JLabel("database:"), constraints);
+		constraints.gridy = 4;
+		panel.add(new JLabel("username:"), constraints);
+		constraints.gridy = 5;
+		panel.add(new JLabel("password:"), constraints);
 
-		panelConstraints.gridwidth = GridBagConstraints.REMAINDER;
-		panelConstraints.weightx = 1.0;
+		constraints.gridwidth = GridBagConstraints.REMAINDER;
+		constraints.weightx = 1.0;
 
 		tf_hostName = new JTextField();
 		ftf_port = new JFormattedTextField();
@@ -136,40 +151,45 @@ public class DbPreferences extends JFrame {
 
 		tf_hostName.setPreferredSize(new Dimension(100, 20));
 
-		panelConstraints.gridx = 1;
-		panelConstraints.gridy = 1;
-		panel.add(tf_hostName, panelConstraints);
+		constraints.gridx = 1;
+		constraints.gridy = 1;
+		panel.add(tf_hostName, constraints);
 
-		panelConstraints.gridy = 2;
-		panel.add(ftf_port, panelConstraints);
+		constraints.gridy = 2;
+		panel.add(ftf_port, constraints);
 
-		panelConstraints.gridy = 3;
-		panel.add(tf_database, panelConstraints);
+		constraints.gridy = 3;
+		panel.add(tf_database, constraints);
 
-		panelConstraints.gridy = 4;
-		panel.add(tf_username, panelConstraints);
+		constraints.gridy = 4;
+		panel.add(tf_username, constraints);
 
-		panelConstraints.gridy = 5;
-		panel.add(tf_password, panelConstraints);
+		constraints.gridy = 5;
+		panel.add(tf_password, constraints);
 
 		return panel;
 	}
 
+	// get the default database configuration to draw it to the panel
 	private void loadDbConfig() {
-		drawDbConfig(dbs.getDbConfig());
+		drawDbConfig(dbs.getDefaultDbConfig());
 	}
 
-	private void restoreToDefaultDbConfig() {
-		org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties dbProps = new DatabaseProperties(
-				"localhost", 5432, "osm_base", "postgres", "bachelor");
-		drawDbConfig(dbProps);
-		saveDbConfig();
-	}
+	// private void restoreToDefaultDbConfig() {
+	// org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties dbProps = new
+	// DatabaseProperties(
+	// "localhost", 5432, "osm_base", "postgres", "bachelor");
+	// drawDbConfig(dbProps);
+	// saveDbConfig();
+	// }
 
+	/*
+	 * This method draws the given props on the panel
+	 */
 	private void drawDbConfig(DatabaseProperties dbProps) {
 		if (dbProps == null) {
-			String message = ("Es wurde kein Datenbankkonfiguration gefunden.");
-			JOptionPane.showMessageDialog(this, message, "Fehler", JOptionPane.ERROR_MESSAGE);
+			String message = ("There isn't any database configuration.");
+			JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		tf_hostName.setText(dbProps.getHost());
@@ -179,6 +199,9 @@ public class DbPreferences extends JFrame {
 		ftf_port.setValue(dbProps.getPort());
 	}
 
+	/*
+	 * save the actual input to the database
+	 */
 	private void saveDbConfig() {
 
 		String host, dbname, username, password;
@@ -192,21 +215,21 @@ public class DbPreferences extends JFrame {
 			port = ((Number) ftf_port.getValue()).intValue();
 		} catch (Exception e) {
 
-			String message = ("Es wurde kein oder ein falscher Wert für den Port angegeben.");
-			JOptionPane.showMessageDialog(this, message, "Fehler", JOptionPane.ERROR_MESSAGE);
+			String message = ("There was insert an invaild value for the port.");
+			JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
 		}
 
 		if (host == "" || dbname == "" || username == "" || password == "") {
 
-			String message = ("Mindestens ein Feld enthält keinen gültigen Werts.");
-			JOptionPane.showMessageDialog(this, message, "Fehler", JOptionPane.ERROR_MESSAGE);
+			String message = ("Any of the input fields contians a invalid value.");
+			JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
 		} else {
 			DatabaseProperties dbProps = new DatabaseProperties(host, port, dbname, username,
 					password);
 			try {
 				dbs.addDatabaseConfig(dbProps);
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(), "Fehler",
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Error",
 						JOptionPane.ERROR_MESSAGE);
 			}
 		}

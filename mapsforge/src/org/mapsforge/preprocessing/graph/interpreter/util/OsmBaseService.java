@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -27,8 +28,13 @@ import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
-import org.mapsforge.preprocessing.util.DBConnection;
+import org.mapsforge.preprocessing.model.EHighwayLevel;
 
+/**
+ * This is the database wrapper implementation to communicate with the postgres database.
+ * 
+ * @author kunis
+ */
 public class OsmBaseService implements IOsmBaseService {
 
 	private static final int BATCH_SIZE = 1000;
@@ -63,7 +69,6 @@ public class OsmBaseService implements IOsmBaseService {
 		try {
 			clearTables();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -176,26 +181,16 @@ public class OsmBaseService implements IOsmBaseService {
 		return ways;
 	}
 
-	// just a test methode
-	private void insertHighwayLevels() throws SQLException {
-		System.out.println("Add hwy_lvl");
+	public void insertHighwayLevels(HashSet<EHighwayLevel> hwyLvls) throws SQLException {
 		PreparedStatement pstmt = conn.prepareStatement(SQL_INSERT_HIGHWAY_LEVELS);
-		pstmt.setInt(1, 0);
-		pstmt.setString(2, "test");
-		pstmt.addBatch();
+		for (EHighwayLevel hwyLvl : hwyLvls) {
+			pstmt.setInt(1, hwyLvl.ordinal());
+			pstmt.setString(2, hwyLvl.toString());
+			pstmt.addBatch();
+		}
+		pstmt.executeBatch();
 		conn.commit();
 	}
-
-	// public void insertHighwayLevels(HashSet<Tag> highwayTags) throws SQLException {
-	// PreparedStatement pstmt = conn.prepareStatement(SQL_INSERT_HIGHWAY_LEVELS);
-	// for (EHighwayLevel hwyLvl : hwyLvls) {
-	// pstmt.setInt(1, hwyLvl.ordinal());
-	// pstmt.setString(2, hwyLvl.toString());
-	// pstmt.addBatch();
-	// }
-	// pstmt.executeBatch();
-	// conn.commit();
-	// }
 
 	@Override
 	public void insertEdges(LinkedList<RgEdge> edges) throws SQLException {
@@ -205,7 +200,6 @@ public class OsmBaseService implements IOsmBaseService {
 		RgEdge currentEdge;
 		long insertEdgeCount = 0;
 
-		double[] test = { 0.1, 0.0, 0.2 };
 		Iterator<RgEdge> it = edges.iterator();
 
 		while (it.hasNext()) {
@@ -256,61 +250,16 @@ public class OsmBaseService implements IOsmBaseService {
 			pstmt.execute();
 			conn.commit();
 
-			/*
-			 * insertVertexCount++; if ((insertVertexCount) % BATCH_SIZE == 0) {
-			 * pstmt.executeBatch(); conn.commit(); }
-			 */
+			insertVertexCount++;
+			if ((insertVertexCount) % BATCH_SIZE == 0) {
+				pstmt.executeBatch();
+				conn.commit();
+			}
+
 		}
-		// pstmt.executeBatch();
+		pstmt.executeBatch();
 		conn.commit();
 		pstmt.close();
-
-	}
-
-	public static void main(String[] args) {
-		// tests for database functions
-
-		/*
-		 * DBConnection conn; long start = System.currentTimeMillis(); try { conn = new
-		 * DBConnection("U:\\berlin.osm\\preprocessing.properties"); OsmBaseService observice =
-		 * new OsmBaseService(conn.getConnection()); LinkedList<RGWay> ways =
-		 * observice.getAllWaysFromDB(); System.out.println("ways: " + ways.size()); int size =
-		 * 0; Iterator<RGWay> it = ways.iterator(); RGWay current; while (it.hasNext()) {
-		 * current = it.next(); if (current.getId() == 4040198) {
-		 * System.out.println("tag size: " + current.getTags().size());
-		 * System.out.println("way id: " + current.getId()); System.out.println("tags: " +
-		 * current.getTags().toString()); }
-		 * 
-		 * size = size > current.getTags().size() ? size : current.getTags().size(); }
-		 * System.out.println("maxsize: " + size);
-		 * 
-		 * } catch (Exception e) { // TODO Auto-generated catch block e.printStackTrace(); }
-		 * System.out.println("Generation process finished in " + (System.currentTimeMillis() -
-		 * start) / 1000 + "s");
-		 */
-
-		LinkedList<RgVertex> test = new LinkedList<RgVertex>();
-		for (int i = 0; i < 100; i++) {
-			test.add(new RgVertex(i, 100, 200, i + 1));
-		}
-
-		DBConnection conn = null;
-		// long start = System.currentTimeMillis();
-
-		try {
-			conn = new DBConnection("U:\\berlin.osm\\preprocessing.properties");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		OsmBaseService observice = new OsmBaseService(conn.getConnection());
-		try {
-			observice.insertVertices(test);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 	}
 }

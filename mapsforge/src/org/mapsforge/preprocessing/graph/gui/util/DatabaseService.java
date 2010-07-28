@@ -27,11 +27,17 @@ import java.util.NoSuchElementException;
 import java.util.regex.PatternSyntaxException;
 
 import org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties;
-import org.mapsforge.preprocessing.graph.model.gui.Profil;
+import org.mapsforge.preprocessing.graph.model.gui.Profile;
 import org.mapsforge.preprocessing.graph.model.gui.Transport;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.mapsforge.preprocessing.util.HighwayLevelExtractor;
 
+/**
+ * This class implements the IDatabaseService class and therefore it abstracts the sqlite
+ * database connection.
+ * 
+ * @author kunis
+ */
 public class DatabaseService implements IDatabaseService {
 
 	private static Connection con;
@@ -50,6 +56,12 @@ public class DatabaseService implements IDatabaseService {
 
 	public static void setCon(Connection con) {
 		DatabaseService.con = con;
+	}
+
+	// initialize the database. would be needed for the first start at a new system.
+	public void init() {
+
+		createTables();
 	}
 
 	@Override
@@ -90,7 +102,7 @@ public class DatabaseService implements IDatabaseService {
 		// no update, because this transport, doesn't exists
 		if (update == 0)
 			throw new NoSuchElementException(
-					"There did not existing any transport configuration with this name: "
+					"There isn't a transport configuration with the name "
 							+ transport.getName());
 
 	}
@@ -106,10 +118,11 @@ public class DatabaseService implements IDatabaseService {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+
+		// no delete because no transport with this name exists
 		if (delete == 0) {
 			throw new NoSuchElementException(
-					"There did not existing any transport configuration with this name: "
-							+ name + " enthalten.");
+					"There isn't a transport configuration with the name " + name + ".");
 		}
 	}
 
@@ -128,17 +141,19 @@ public class DatabaseService implements IDatabaseService {
 			rs = pstmt.executeQuery();
 
 			if (!rs.next()) {
-				throw new NoSuchElementException("There is no transport "
-						+ "object in the database with the name " + transportName);
+				throw new NoSuchElementException("There isn't a transport "
+						+ "object in the database with the name " + transportName + ".");
 			}
 
 			transportname = rs.getString("transportname");
 			speed = rs.getInt("maxspeed");
 			ways = rs.getString("useableways");
+
+			// an error that should not occurs
 			if (rs.next()) {
 				throw new NoSuchElementException(
-						"There are more then one transport objects in the database with the name "
-								+ transportName);
+						"There exists a few transport objects in the database with the name "
+								+ transportName + ".");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -175,24 +190,126 @@ public class DatabaseService implements IDatabaseService {
 		return transports;
 	}
 
-	/*
-	 * public DatabaseProperties getDefaultDbConfig() {
-	 * 
-	 * DatabaseProperties dbProps = null; String sql =
-	 * "SELECT * FROM DbConfigurations WHERE id=" + 0 + ";"; Statement stmt; ResultSet rs =
-	 * null; try { stmt = con.createStatement(); rs = stmt.executeQuery(sql);
-	 * 
-	 * String host, dbname, username, password; int port; while (rs.next()) { host =
-	 * rs.getString("host"); dbname = rs.getString("dbname"); username =
-	 * rs.getString("username"); password = rs.getString("password"); port = rs.getInt("port");
-	 * 
-	 * dbProps = new DatabaseProperties(host, port, dbname, username, password); } } catch
-	 * (SQLException e) { e.printStackTrace(); }
-	 * 
-	 * return dbProps; }
-	 */
+	@Override
+	public void addProfile(Profile profile) {
+		String sql = "INSERT INTO profile (profileName, url, transport, heuristic) VALUES ( ?, ?, ?, ?);";
+		PreparedStatement pstmt;
+		try {
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, profile.getName());
+			pstmt.setString(2, profile.getUrl());
+			pstmt.setString(3, profile.getTransport().getName());
+			pstmt.setString(4, profile.getHeuristic());
+			pstmt.execute();
+			pstmt.close();
+		} catch (SQLException e) {
+			throw new IllegalArgumentException(
+					"Can't create profile. There already exists one wiht this name.");
+		}
+	}
 
-	public DatabaseProperties getDbConfig() {
+	@Override
+	public void updateProfile(Profile p) {
+		String sql = "UPDATE Profile SET profilename = ?, url = ?, transport = ?, heuristic = ? WHERE profilename = ? ;";
+		int update = 0;
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, p.getName());
+			pstmt.setString(2, p.getUrl());
+			pstmt.setString(3, p.getTransport().getName());
+			pstmt.setString(4, p.getHeuristic());
+			pstmt.setString(5, p.getName());
+			update = pstmt.executeUpdate();
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		// no update, because this transport, doesn't exists
+		if (update == 0)
+			throw new NoSuchElementException("There isn't such a profile  " + p.getName() + ".");
+	}
+
+	@Override
+	public void deleteProfile(String name) {
+		String sql = "DELETE FROM Profile WHERE profilename = '" + name + "';";
+		Statement stmt;
+		int delete = 0;
+		try {
+			stmt = con.createStatement();
+			delete = stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if (delete == 0) {
+			throw new NoSuchElementException("There isn't such a profile  " + name + ".");
+		}
+
+	}
+
+	@Override
+	public ArrayList<Profile> getProfilesOfTransport(Transport transport) {
+		String sql = "SELECT * FROM profile WHERE transport = ? ;";
+		PreparedStatement pstmt;
+		ResultSet rs = null;
+		ArrayList<Profile> profiles = new ArrayList<Profile>();
+		try {
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, transport.getName());
+			rs = pstmt.executeQuery();
+			String transportname, profilname, url, heuristic;
+			Transport trans;
+			while (rs.next()) {
+				profilname = rs.getString("profilename");
+				url = rs.getString("url");
+				transportname = rs.getString("transport");
+				heuristic = rs.getString("heuristic");
+
+				trans = getTransport(transportname);
+
+				profiles.add(new Profile(profilname, url, trans, heuristic));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return profiles;
+	}
+
+	@Override
+	public ArrayList<Profile> getAllProfiles() {
+		String sql = "SELECT * FROM profile;";
+		Statement stmt;
+		ResultSet rs = null;
+		ArrayList<Profile> profiles = new ArrayList<Profile>();
+		try {
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(sql);
+			String transportname, profilname, url, heuristic;
+			Transport trans;
+			while (rs.next()) {
+				profilname = rs.getString("profilename");
+				url = rs.getString("url");
+				transportname = rs.getString("transport");
+				heuristic = rs.getString("heuristic");
+
+				trans = getTransport(transportname);
+
+				profiles.add(new Profile(profilname, url, trans, heuristic));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return profiles;
+	}
+
+	/**
+	 * This method get the default database configuration.
+	 * 
+	 * @return the default database configuration in a DatabaseProperties object
+	 */
+	public DatabaseProperties getDefaultDbConfig() {
 
 		DatabaseProperties dbProps = null;
 		String sql = "SELECT * FROM DbConfigurations WHERE id=" + 0 + ";";
@@ -220,29 +337,43 @@ public class DatabaseService implements IDatabaseService {
 		return dbProps;
 	}
 
-	@Override
-	public void addProfil(Profil profil) {
-		String sql = "INSERT INTO profil (profilname, url, transport, heuristic) VALUES ( ?, ?, ?, ?);";
-		PreparedStatement pstmt;
-		try {
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, profil.getName());
-			pstmt.setString(2, profil.getUrl());
-			pstmt.setString(3, profil.getTransport().getName());
-			pstmt.setString(4, profil.getHeuristic());
-			pstmt.execute();
-			pstmt.close();
-		} catch (SQLException e) {
-			throw new IllegalArgumentException(
-					"Es existiert bereits ein Profil mit dem angegeben Namen.");
-		}
-	}
+	// public DatabaseProperties getDbConfig() {
+	//
+	// DatabaseProperties dbProps = null;
+	// String sql = "SELECT * FROM DbConfigurations WHERE id=" + 0 + ";";
+	// Statement stmt;
+	// ResultSet rs = null;
+	// try {
+	// stmt = con.createStatement();
+	// rs = stmt.executeQuery(sql);
+	//
+	// String host, dbname, username, password;
+	// int port;
+	// while (rs.next()) {
+	// host = rs.getString("host");
+	// dbname = rs.getString("dbname");
+	// username = rs.getString("username");
+	// password = rs.getString("password");
+	// port = rs.getInt("port");
+	//
+	// dbProps = new DatabaseProperties(host, port, dbname, username, password);
+	// }
+	// } catch (SQLException e) {
+	// e.printStackTrace();
+	// }
+	//
+	// return dbProps;
+	// }
 
-	// eine methode zum initialisieren
+	/**
+	 * This method set the default database configurations.
+	 * 
+	 * @param dbProps
+	 *            the properties of the database
+	 */
 	public void setDefaultDatabaseConfig(DatabaseProperties dbProps) {
 
 		String sql = "INSERT INTO DbConfigurations (id,host,dbname,username,password,port) VALUES (?,?,?,?,?,?);";
-		int update = 0;
 		try {
 			PreparedStatement pstmt = con.prepareStatement(sql);
 			pstmt.setInt(1, 0);
@@ -251,7 +382,7 @@ public class DatabaseService implements IDatabaseService {
 			pstmt.setString(4, dbProps.getUsername());
 			pstmt.setString(5, dbProps.getPassword());
 			pstmt.setInt(6, dbProps.getPort());
-			update = pstmt.executeUpdate();
+			pstmt.executeUpdate();
 			pstmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -282,100 +413,6 @@ public class DatabaseService implements IDatabaseService {
 		}
 	}
 
-	public void updateProfil(Profil p) {
-		String sql = "UPDATE Profil SET profilname = ?, url = ?, transport = ?, heuristic = ? WHERE profilname = ? ;";
-		int update = 0;
-		try {
-			PreparedStatement pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, p.getName());
-			pstmt.setString(2, p.getUrl());
-			pstmt.setString(3, p.getTransport().getName());
-			pstmt.setString(4, p.getHeuristic());
-			pstmt.setString(5, p.getName());
-			update = pstmt.executeUpdate();
-			pstmt.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		// no update, because this transport, doesn't exists
-		if (update == 0)
-			throw new NoSuchElementException("There existing no such profil  " + p.getName());
-	}
-
-	public void deleteProfil(String name) {
-		String sql = "DELETE FROM Profil WHERE profilname = '" + name + "';";
-		Statement stmt;
-		int delete = 0;
-		try {
-			stmt = con.createStatement();
-			delete = stmt.executeUpdate(sql);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		if (delete == 0) {
-			throw new NoSuchElementException("There existing no such profil  " + name);
-		}
-
-	}
-
-	@Override
-	public ArrayList<Profil> getProfilesOfTransport(Transport transport) {
-		String sql = "SELECT * FROM profil WHERE transport = ? ;";
-		PreparedStatement pstmt;
-		ResultSet rs = null;
-		ArrayList<Profil> profiles = new ArrayList<Profil>();
-		try {
-			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, transport.getName());
-			rs = pstmt.executeQuery();
-			String transportname, profilname, url, heuristic;
-			Transport trans;
-			while (rs.next()) {
-				profilname = rs.getString("profilname");
-				url = rs.getString("url");
-				transportname = rs.getString("transport");
-				heuristic = rs.getString("heuristic");
-
-				trans = getTransport(transportname);
-
-				profiles.add(new Profil(profilname, url, trans, heuristic));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return profiles;
-	}
-
-	@Override
-	public ArrayList<Profil> getAllProfiles() {
-		String sql = "SELECT * FROM profil;";
-		Statement stmt;
-		ResultSet rs = null;
-		ArrayList<Profil> profiles = new ArrayList<Profil>();
-		try {
-			stmt = con.createStatement();
-			rs = stmt.executeQuery(sql);
-			String transportname, profilname, url, heuristic;
-			Transport trans;
-			while (rs.next()) {
-				profilname = rs.getString("profilname");
-				url = rs.getString("url");
-				transportname = rs.getString("transport");
-				heuristic = rs.getString("heuristic");
-
-				trans = getTransport(transportname);
-
-				profiles.add(new Profil(profilname, url, trans, heuristic));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return profiles;
-	}
-
 	private HashSet<EHighwayLevel> deserialized(String ways) {
 		HashSet<EHighwayLevel> hwyLvls = new HashSet<EHighwayLevel>();
 
@@ -400,15 +437,18 @@ public class DatabaseService implements IDatabaseService {
 		return hwyLvls;
 	}
 
+	/*
+	 * This is a private method to create all tables
+	 */
 	private void createTables() {
-		String trans, profil, dbConfig;
-		trans = "CREATE TABLE Transports (Transportname VARCHAR(30) PRIMARY KEY, Maxspeed INTEGER, Useableways STRING);";
-		profil = "CREATE TABLE Profil (Profilname VARCHAR(30) PRIMARY KEY, Url VARCHAR(55), Transport VARCHAR(30), Heuristic VARCHAR(30));";
-		dbConfig = "CREATE TABLE DbConfigurations(id INTEGER PRIMARY KEY, host VARCHAR(30), dbname VARCHAR(30), username VARCHAR(30), password VARCHAR(30), port INTEGER)";
+		String trans, profile, dbConfig;
+		trans = "CREATE TABLE IF NOT EXISTS Transports (Transportname VARCHAR(30) PRIMARY KEY, Maxspeed INTEGER, Useableways STRING);";
+		profile = "CREATE TABLE IF NOT EXISTS Profile (Profilename VARCHAR(30) PRIMARY KEY, Url VARCHAR(55), Transport VARCHAR(30), Heuristic VARCHAR(30));";
+		dbConfig = "CREATE TABLE IF NOT EXISTS DbConfigurations(id INTEGER PRIMARY KEY, host VARCHAR(30), dbname VARCHAR(30), username VARCHAR(30), password VARCHAR(30), port INTEGER)";
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate(trans);
-			stmt.executeUpdate(profil);
+			stmt.executeUpdate(profile);
 			stmt.executeUpdate(dbConfig);
 			stmt.close();
 		} catch (SQLException e) {
@@ -416,15 +456,18 @@ public class DatabaseService implements IDatabaseService {
 		}
 	}
 
+	/*
+	 * this method is to drop all tables
+	 */
 	private void dropTables() {
-		String trans, profil, dbConfig;
+		String trans, profile, dbConfig;
 		trans = "DROP TABLE Transports;";
-		profil = "DROP TABLE Profil;";
+		profile = "DROP TABLE Profile;";
 		dbConfig = "DROP TABLE DbConfigurations;";
 		try {
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate(trans);
-			stmt.executeUpdate(profil);
+			stmt.executeUpdate(profile);
 			stmt.executeUpdate(dbConfig);
 			stmt.close();
 		} catch (SQLException e) {
@@ -461,12 +504,12 @@ public class DatabaseService implements IDatabaseService {
 			dbs.addTransport(new Transport("Fahrrad", 10, set2));
 			dbs.addTransport(fahrrad);
 
-			dbs.addProfil(new Profil("Testprofil", "keineUrl", auto, "keineHeuristic"));
-			dbs.addProfil(new Profil("Testprofil2", "keineUrl", auto, "keineHeuristic"));
-			dbs.addProfil(new Profil("Testprofil3", "keineUrl", fahrrad, "keineHeuristic"));
+			dbs.addProfile(new Profile("Testprofil", "keineUrl", auto, "keineHeuristic"));
+			dbs.addProfile(new Profile("Testprofil2", "keineUrl", auto, "keineHeuristic"));
+			dbs.addProfile(new Profile("Testprofil3", "keineUrl", fahrrad, "keineHeuristic"));
 
-			ArrayList<Profil> profiles = dbs.getAllProfiles();
-			for (Profil p : profiles) {
+			ArrayList<Profile> profiles = dbs.getAllProfiles();
+			for (Profile p : profiles) {
 				System.out.println(p.getName());
 			}
 			DatabaseProperties dbProps = new DatabaseProperties("localhost", 5432, "osm_base",

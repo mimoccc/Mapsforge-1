@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.graph.interpreter;
 
-import java.io.File;
+import java.io.InputStream;
 
 import org.mapsforge.preprocessing.graph.GraphGenerator;
 import org.mapsforge.preprocessing.graph.XML2PostgreSQL;
@@ -24,20 +24,20 @@ import org.mapsforge.preprocessing.graph.XML2PostgreSQL;
 public class OldRoutingInterpreter implements IInterpreter {
 
 	@Override
-	public void startPreprocessing(File xmlConfigFile) {
-		
-			String osmUrl = "U:\\berlin.osm\\berlin.osm";
-			String probs = "U:\\berlin.osm\\preprocessing.properties";
-			String[] args1 = {osmUrl, probs};
-			try {
-				XML2PostgreSQL.main(args1);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// graph erstellen
-			String[] args2 = {probs};
-			GraphGenerator.main(args2);
-			// graph gewichten
+	public void startPreprocessing(InputStream xmlConfigFile) {
+
+		String osmUrl = "U:\\berlin.osm\\berlin.osm";
+		String probs = "U:\\berlin.osm\\preprocessing.properties";
+		String[] args1 = { osmUrl, probs };
+		try {
+			XML2PostgreSQL.main(args1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// graph erstellen
+		String[] args2 = { probs };
+		GraphGenerator.main(args2);
+		// graph gewichten
 	}
 }
