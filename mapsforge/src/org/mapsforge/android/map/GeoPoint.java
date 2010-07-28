@@ -136,9 +136,9 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Calculates the hash value of this GeoPoint.
+	 * Calculates the hash value of this object.
 	 * 
-	 * @return the hash value of this GeoPoint.
+	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;

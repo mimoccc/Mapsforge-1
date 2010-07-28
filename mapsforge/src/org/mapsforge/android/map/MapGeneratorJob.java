@@ -63,9 +63,9 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	}
 
 	/**
-	 * Calculates the hash value of this MapGeneratorJob.
+	 * Calculates the hash value of this object.
 	 * 
-	 * @return the hash value of this MapGeneratorJob.
+	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
 		final int prime = 31;

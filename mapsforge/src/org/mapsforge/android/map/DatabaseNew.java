@@ -23,7 +23,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * A database class for reading binary OSM files. Byte order is big-endian.
  */
-class DatabaseNew {
+public class DatabaseNew {
 	/**
 	 * The magic byte at the beginning of a valid binary map file.
 	 */
@@ -111,7 +111,7 @@ class DatabaseNew {
 	private RandomAccessFile inputFile;
 	private long inputFileSize;
 	private Rect mapBoundary;
-	private long mapDataDate;
+	private long mapDate;
 	private long mapFileBlocks;
 	private long mapFileBlocksHeight;
 	private long mapFileBlocksWidth;
@@ -134,7 +134,6 @@ class DatabaseNew {
 	private boolean[] nodeTagIds;
 	private long parentTileX;
 	private long parentTileY;
-	private DatabaseMapGenerator queryMapGenerator;
 	private boolean queryReadWayNames;
 	private int queryTileBitmask;
 	private byte queryZoomLevel;
@@ -186,14 +185,23 @@ class DatabaseNew {
 	private int zoomLevelDifference;
 
 	/**
+	 * Empty default constructor with limited visibility.
+	 */
+	DatabaseNew() {
+	}
+
+	/**
 	 * Reads a single block and calls the render functions on all map elements.
 	 * 
+	 * @param mapGenerator
+	 *            the MapGenerator callback which handles the extracted map elements.
 	 * @throws IndexOutOfBoundsException
 	 *             if the block contains invalid data.
 	 * @throws UnsupportedEncodingException
 	 *             if the string decoding fails.
 	 */
-	private void processBlock() throws IndexOutOfBoundsException, UnsupportedEncodingException {
+	private void processBlock(DatabaseMapGenerator mapGenerator)
+			throws IndexOutOfBoundsException, UnsupportedEncodingException {
 		if (DEBUG_FILE) {
 			// check read and the block signature
 			this.tempString = new String(this.readBuffer, this.bufferPosition,
@@ -326,7 +334,7 @@ class DatabaseNew {
 
 			// render the node
 			// TODO: send optional node fields to the MapGenerator
-			this.queryMapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
+			mapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
 					this.nodeLongitude, this.nodeName, this.nodeTagIds);
 		}
 
@@ -358,8 +366,7 @@ class DatabaseNew {
 				// check if the way is inside the requested tile
 				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
 					// skip the way and continue with the next one
-					// TODO: adjust the offset
-					this.bufferPosition += this.waySize - 6;
+					this.bufferPosition += this.waySize - 2;
 					continue;
 				}
 			} else {
@@ -520,9 +527,9 @@ class DatabaseNew {
 
 			// render the way
 			// TODO: send optional way fields to the MapGenerator
-			this.queryMapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags,
-					this.wayName, this.wayTagIds, this.wayTagBitmap,
-					this.wayNodesSequenceLength, this.wayNodesSequence, this.wayInnerWays);
+			mapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags, this.wayName,
+					this.wayTagIds, this.wayTagBitmap, this.wayNodesSequenceLength,
+					this.wayNodesSequence, this.wayInnerWays);
 		}
 	}
 
@@ -653,10 +660,10 @@ class DatabaseNew {
 		this.mapFileBlocks = this.mapFileBlocksWidth * this.mapFileBlocksHeight;
 
 		// get and check the date of the map data (8 bytes)
-		this.mapDataDate = Deserializer.toLong(this.readBuffer, this.bufferPosition);
+		this.mapDate = Deserializer.toLong(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 8;
-		if (this.mapDataDate < 0) {
-			Logger.d("invalid map data date: " + this.mapDataDate);
+		if (this.mapDate < 0) {
+			Logger.d("invalid map data date: " + this.mapDate);
 			return false;
 		}
 
@@ -737,7 +744,6 @@ class DatabaseNew {
 				this.queryZoomLevel = tile.zoomLevel;
 			}
 			this.queryReadWayNames = readWayNames;
-			this.queryMapGenerator = mapGenerator;
 
 			// calculate the base tiles that cover the area of the requested tile
 			if (tile.zoomLevel < this.baseZoomLevel) {
@@ -919,7 +925,7 @@ class DatabaseNew {
 					this.bufferPosition = 0;
 
 					// handle the current block data
-					processBlock();
+					processBlock(mapGenerator);
 				}
 			}
 		} catch (IOException e) {
@@ -934,6 +940,15 @@ class DatabaseNew {
 	 */
 	Rect getMapBoundary() {
 		return this.mapBoundary;
+	}
+
+	/**
+	 * Returns the center coordinates of the current map file.
+	 * 
+	 * @return the area coordinates in microdegrees.
+	 */
+	public GeoPoint getMapCenter() {
+		return this.mapBoundary.getCenter();
 	}
 
 	/**
@@ -1023,5 +1038,23 @@ class DatabaseNew {
 	 */
 	void stopCurrentQuery() {
 		this.stopCurrentQuery = true;
+	}
+
+	/**
+	 * Returns the comment text of the binary map file.
+	 * 
+	 * @return the comment text of the binary map file.
+	 */
+	public String getCommentText() {
+		return this.commentText;
+	}
+
+	/**
+	 * Returns the date of the map data in the binary map file.
+	 * 
+	 * @return the date of the map data.
+	 */
+	public long getMapDate() {
+		return this.mapDate;
 	}
 }

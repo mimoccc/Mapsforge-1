@@ -73,8 +73,7 @@ class Point implements Comparable<Point> {
 			this.other = (Point) obj;
 			if (this.x != this.other.x) {
 				return false;
-			}
-			if (this.y != this.other.y) {
+			} else if (this.y != this.other.y) {
 				return false;
 			}
 			return true;
@@ -87,9 +86,9 @@ class Point implements Comparable<Point> {
 	}
 
 	/**
-	 * Calculates the hash value of this Point.
+	 * Calculates the hash value of this object.
 	 * 
-	 * @return the hash value of this Point.
+	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
 		final int prime = 31;
@@ -97,5 +96,10 @@ class Point implements Comparable<Point> {
 		result = prime * result + Float.floatToIntBits(x);
 		result = prime * result + Float.floatToIntBits(y);
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		return this.x + "," + this.y;
 	}
 }
