@@ -1,4 +1,4 @@
---
+﻿--
 -- PostgreSQL database dump
 --
 
@@ -21,7 +21,7 @@ CREATE DATABASE osm_base WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE 
 
 ALTER DATABASE osm_base OWNER TO osm;
 
-\connect osm_base
+--\connect osm_base
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';

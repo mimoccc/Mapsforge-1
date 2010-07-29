@@ -192,7 +192,7 @@ public class DatabaseService implements IDatabaseService {
 
 	@Override
 	public void addProfile(Profile profile) {
-		String sql = "INSERT INTO profile (profileName, url, transport, heuristic) VALUES ( ?, ?, ?, ?);";
+		String sql = "INSERT INTO profile (profileName, osm, transport, heuristic) VALUES ( ?, ?, ?, ?);";
 		PreparedStatement pstmt;
 		try {
 			pstmt = con.prepareStatement(sql);
@@ -210,7 +210,7 @@ public class DatabaseService implements IDatabaseService {
 
 	@Override
 	public void updateProfile(Profile p) {
-		String sql = "UPDATE Profile SET profilename = ?, url = ?, transport = ?, heuristic = ? WHERE profilename = ? ;";
+		String sql = "UPDATE Profile SET profilename = ?, osm = ?, transport = ?, heuristic = ? WHERE profilename = ? ;";
 		int update = 0;
 		try {
 			PreparedStatement pstmt = con.prepareStatement(sql);
@@ -257,17 +257,17 @@ public class DatabaseService implements IDatabaseService {
 			pstmt = con.prepareStatement(sql);
 			pstmt.setString(1, transport.getName());
 			rs = pstmt.executeQuery();
-			String transportname, profilname, url, heuristic;
+			String transportname, profilname, osm, heuristic;
 			Transport trans;
 			while (rs.next()) {
 				profilname = rs.getString("profilename");
-				url = rs.getString("url");
+				osm = rs.getString("osm");
 				transportname = rs.getString("transport");
 				heuristic = rs.getString("heuristic");
 
 				trans = getTransport(transportname);
 
-				profiles.add(new Profile(profilname, url, trans, heuristic));
+				profiles.add(new Profile(profilname, osm, trans, heuristic));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -285,17 +285,17 @@ public class DatabaseService implements IDatabaseService {
 		try {
 			stmt = con.createStatement();
 			rs = stmt.executeQuery(sql);
-			String transportname, profilname, url, heuristic;
+			String transportname, profilname, osm, heuristic;
 			Transport trans;
 			while (rs.next()) {
 				profilname = rs.getString("profilename");
-				url = rs.getString("url");
+				osm = rs.getString("osm");
 				transportname = rs.getString("transport");
 				heuristic = rs.getString("heuristic");
 
 				trans = getTransport(transportname);
 
-				profiles.add(new Profile(profilname, url, trans, heuristic));
+				profiles.add(new Profile(profilname, osm, trans, heuristic));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -443,7 +443,7 @@ public class DatabaseService implements IDatabaseService {
 	private void createTables() {
 		String trans, profile, dbConfig;
 		trans = "CREATE TABLE IF NOT EXISTS Transports (Transportname VARCHAR(30) PRIMARY KEY, Maxspeed INTEGER, Useableways STRING);";
-		profile = "CREATE TABLE IF NOT EXISTS Profile (Profilename VARCHAR(30) PRIMARY KEY, Url VARCHAR(55), Transport VARCHAR(30), Heuristic VARCHAR(30));";
+		profile = "CREATE TABLE IF NOT EXISTS Profile (Profilename VARCHAR(30) PRIMARY KEY, Osm VARCHAR(55), Transport VARCHAR(30), Heuristic VARCHAR(30));";
 		dbConfig = "CREATE TABLE IF NOT EXISTS DbConfigurations(id INTEGER PRIMARY KEY, host VARCHAR(30), dbname VARCHAR(30), username VARCHAR(30), password VARCHAR(30), port INTEGER)";
 		try {
 			Statement stmt = con.createStatement();

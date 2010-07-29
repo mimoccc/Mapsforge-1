@@ -19,6 +19,8 @@ package org.mapsforge.preprocessing.graph.gui;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Locale;
 
 import javax.swing.JComponent;
@@ -94,9 +96,6 @@ public class MainFrame extends JFrame {
 		// set close operation
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		// add a tabbed pane to the window, here the several work steps are added
-		JTabbedPane mainPanel = new JTabbedPane();
-
 		// add an additional menu bar and menus
 		JMenuBar menuBar = new JMenuBar();
 		this.setJMenuBar(menuBar);
@@ -116,15 +115,28 @@ public class MainFrame extends JFrame {
 		dbPrefMenuItem.addActionListener(new openDbPreferences());
 		preferencesMenu.add(dbPrefMenuItem);
 
+		// add a tabbed pane to the window, here the several work steps are added
+		JTabbedPane mainPanel = new JTabbedPane();
+
 		// create and add the several panels
 
-		JComponent transportPanel = new TransportPanel(dbs);
-		JComponent profilePanel = new ProfilePanel(dbs);
-		JComponent configurationFilePanel = new ConfigurationFilePanel(dbs);
+		final JComponent transportPanel = new TransportPanel(dbs);
+		final JComponent profilePanel = new ProfilePanel(dbs);
+		final JComponent configurationFilePanel = new ConfigurationFilePanel(dbs);
+
+		// this mouse listener check the database for new transport configurations and profiles,
+		// that would be created at this season
+		mainPanel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				((ProfilePanel) profilePanel).initialize();
+				((ConfigurationFilePanel) configurationFilePanel).initialize();
+			}
+		});
 
 		mainPanel.addTab("transport configuration", transportPanel);
 		mainPanel.addTab("profil configuration", profilePanel);
-		mainPanel.addTab("create configuration file", configurationFilePanel);
+		mainPanel.add("create configuration file", configurationFilePanel);
 
 		this.add(mainPanel);
 		this.pack();

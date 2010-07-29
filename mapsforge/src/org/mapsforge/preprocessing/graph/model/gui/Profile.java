@@ -20,14 +20,14 @@ package org.mapsforge.preprocessing.graph.model.gui;
 public class Profile {
 
 	private String name;
-	private String url;
+	private String osm;
 	private Transport transport;
 	private String heuristic;
 	private DatabaseProperties dbprops;
 
 	public Profile(String name, String url, Transport transport, String heuristic) {
 		this.name = name;
-		this.url = url;
+		this.osm = url;
 		this.transport = transport;
 		this.heuristic = heuristic;
 		this.dbprops = null;
@@ -36,7 +36,7 @@ public class Profile {
 	public Profile(String name, String url, Transport transport, String heuristic,
 			DatabaseProperties dbProbs) {
 		this.name = name;
-		this.url = url;
+		this.osm = url;
 		this.transport = transport;
 		this.heuristic = heuristic;
 		this.setDbProberties(dbProbs);
@@ -55,7 +55,7 @@ public class Profile {
 	 * @return the url
 	 */
 	public String getUrl() {
-		return url;
+		return osm;
 	}
 
 	/**
@@ -87,7 +87,7 @@ public class Profile {
 	 *            the url to set
 	 */
 	public void setUrl(String url) {
-		this.url = url;
+		this.osm = url;
 	}
 
 	/**

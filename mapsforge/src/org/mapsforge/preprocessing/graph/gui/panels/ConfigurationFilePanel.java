@@ -77,6 +77,14 @@ public class ConfigurationFilePanel extends JPanel {
 		init();
 	}
 
+	/**
+	 * This method checks reload the profiles, maybe there would be created a new one during
+	 * this season.
+	 */
+	public void initialize() {
+		getProfiles();
+	}
+
 	/*
 	 * this method initialize the tab
 	 */
@@ -218,7 +226,7 @@ public class ConfigurationFilePanel extends JPanel {
 		// the class which create the file
 		SimpleRoutingConfigurationWriter writer = new SimpleRoutingConfigurationWriter(profile);
 		try {
-			writer.writeProfil2File(file);
+			writer.writeProfile2File(file);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);

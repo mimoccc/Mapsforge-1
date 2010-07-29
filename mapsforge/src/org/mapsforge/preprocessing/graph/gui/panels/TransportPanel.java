@@ -467,8 +467,7 @@ public class TransportPanel extends JPanel {
 
 		// get the the path of this application
 		String uri = System.getProperty("user.dir");
-		// System.out.println("pfad" + uri.toString()); \\res\\conf\\gui\\allWays.conf
-		File file = new File(uri + "\\allWays.conf");
+		File file = new File(uri + "\\res\\conf\\gui\\allWays.conf");
 		BufferedReader br;
 		Vector<String> hwyLvls = new Vector<String>();
 		if (file.exists()) {

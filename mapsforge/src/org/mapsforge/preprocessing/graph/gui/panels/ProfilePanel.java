@@ -88,6 +88,14 @@ public class ProfilePanel extends JPanel {
 		setComboBoxChooseProfile(null);
 	}
 
+	/**
+	 * This method checks reload the transports, maybe there would be created a new one during
+	 * this season.
+	 */
+	public void initialize() {
+		setComboBoxChooseTransport();
+	}
+
 	/*
 	 * This method create the manage panel and their elements. the event handling for the
 	 * buttons is forwarded to the corresponding methods.
@@ -420,16 +428,16 @@ public class ProfilePanel extends JPanel {
 		} else {
 			// there are no profiles for this transport or no profiles at all. so the user would
 			// be informed
-			String message;
-			if (transport == null) {
-				message = "There exists no profiles in the Database. Please create one at first.";
-			} else {
-				message = "There exists no profiles for the selected transport "
-						+ transport.getName() + ". Please create on at first.";
-			}
-
-			JOptionPane.showMessageDialog(this, message, "Information",
-					JOptionPane.INFORMATION_MESSAGE);
+			// the info message is annoying!!!
+			/*
+			 * String message; if (transport == null) { message =
+			 * "There exists no profiles in the Database. Please create one at first."; } else {
+			 * message = "There exists no profiles for the selected transport " +
+			 * transport.getName() + ". Please create on at first."; }
+			 * 
+			 * JOptionPane.showMessageDialog(this, message, "Information",
+			 * JOptionPane.INFORMATION_MESSAGE);
+			 */
 		}
 	}
 

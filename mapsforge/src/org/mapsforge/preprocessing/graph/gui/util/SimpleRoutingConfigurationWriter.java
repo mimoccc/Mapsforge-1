@@ -32,7 +32,7 @@ import com.thoughtworks.xstream.XStream;
  */
 public class SimpleRoutingConfigurationWriter {
 
-	private Profile profil;
+	private Profile profile;
 
 	/**
 	 * The constructor for the XML file creator.
@@ -42,7 +42,7 @@ public class SimpleRoutingConfigurationWriter {
 	 */
 	public SimpleRoutingConfigurationWriter(Profile p) {
 
-		this.profil = p;
+		this.profile = p;
 	}
 
 	/**
@@ -53,17 +53,17 @@ public class SimpleRoutingConfigurationWriter {
 	 * @throws Exception
 	 *             raised if the file could not be written.
 	 */
-	public void writeProfil2File(File configFile) throws Exception {
+	public void writeProfile2File(File configFile) throws Exception {
 
 		// the XStream is a library to create XML of an object
 		final XStream xs = new XStream();
 
 		// we must register the classes to create the attribute fields
-		xs.alias("profil", Profile.class);
+		xs.alias("profile", Profile.class);
 		xs.alias("highway", EHighwayLevel.class);
 
 		// create XML string
-		String xml = xs.toXML(profil);
+		String xml = xs.toXML(profile);
 
 		// write XML into the file
 		try {
