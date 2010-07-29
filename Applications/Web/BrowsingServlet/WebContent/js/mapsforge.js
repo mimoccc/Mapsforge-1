@@ -8,6 +8,10 @@ var initMap = {
   zoom : 15
 };
 
+// These are the URLs of the servlets which provide routing and geocoding
+var routingServiceURL  = "/HHRoutingWebservice/";
+var geoCodingURL = "/GeoCoder/";
+
 /**
  * Initialization of the OpenStreetMap map.
  */
@@ -18,28 +22,26 @@ function init() {
 	map = new OpenLayers.Map("map", {
 		controls : [ new OpenLayers.Control.Navigation(),
 				new OpenLayers.Control.PanZoomBar(),
-				//new OpenLayers.Control.LayerSwitcher(),
 				new OpenLayers.Control.MousePosition(),
-        //new OpenLayers.Control.Permalink(),
-        //new OpenLayers.Control.Permalink('permalink'),
-				//new OpenLayers.Control.Attribution()
-        ],
+				new OpenLayers.Control.Attribution()],
 		projection : projSpheMe,
 		displayProjection : projWSG84
 	});
-  // disable regular right click menu, call other function in stead
+
+  // disable regular right click menu, call our own context menu function instead
 	map.div.oncontextmenu = function cm(e) {
-		mf_contextmenu(e);
+		contextmenu(e);
 		return false;
 	};
+  // This simply removes the routing popup when the left mouse is clicked.
+  var click = new OpenLayers.Control.Click();
+  map.addControl(click);
+  click.activate();
 
-  //map.events.on({'moveend': updateLink});
-
+  // Here two Layers are added, OSM is the base Layer
 	layerMapnik = new OpenLayers.Layer.OSM();
 	map.addLayer(layerMapnik);
-	layerMarkers = new OpenLayers.Layer.Markers("Markers");
-	map.addLayer(layerMarkers);
-	
+
 	// This is the style definition of how vectors are displayed
 	var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults({
       fillColor: "#FFBBBB",
@@ -51,41 +53,27 @@ function init() {
 
 	layerVectors = new OpenLayers.Layer.Vector("Vectors", {styleMap:styleMap});
 	map.addLayer(layerVectors);
-	
+
 	// Super awesome drag controler allows dragging of start and end points
-  mf_dragcontrol = new OpenLayers.Control.DragFeature(layerVectors, {
+  dragcontrol = new OpenLayers.Control.DragFeature(layerVectors, {
       geometryTypes: ["OpenLayers.Geometry.Point"],
-      onDrag: mf_dragpoint,
-      onStart: mf_dragstart,
-      onComplete: mf_dragcomplete
+      onDrag: dragpoint,
+      onStart: dragstart,
+      onComplete: dragcomplete
     });
-	map.addControl(mf_dragcontrol);
-	mf_dragcontrol.activate();
-	
+	map.addControl(dragcontrol);
+	dragcontrol.activate();
+
   // TODO: OpenLayers.Control.GetFeature
-  // OpenLayers.Control.ArgParser & OpenLayers.Control.Permalink
-  
+
+  // Add a little "Permalink" button to the map
   permalink = new OpenLayers.Control.Permalink();
   map.addControl(permalink);
   permalink.activate();
+  // whenever the map is moved, the permalink is also updated
   map.events.register("moveend", map, updatePermaLink);
-  /*
-  argParser = new OpenLayers.Control.ArgParser();
-  map.addControl(argParser);
-  argParser.activate();
-  */
-  
-  // This simply removes the routing popup when the left mouse is clicked.
-  var click = new OpenLayers.Control.Click();
-  map.addControl(click);
-  click.activate();
 
-  /* uncomment to add an overview map
-  overviewMap = new OpenLayers.Control.OverviewMap();
-  map.addControl(overviewMap);
-  overviewMap.activate();
-  */
-
+  // set the center of the map, if it has not been set by the permalink control
   var centerLonLat = new OpenLayers.LonLat(initMap.lon, initMap.lat).tf();
   if (!map.getCenter()) {
     map.setCenter(centerLonLat, initMap.zoom);
@@ -94,27 +82,17 @@ function init() {
   var args = OpenLayers.Util.getParameters();
   route.start.lat = args["route.start.lat"];
   route.start.lon = args["route.start.lon"];
+  route.via.lat = args["route.via.lat"];
+  route.via.lon = args["route.via.lon"];
   route.end.lat = args["route.end.lat"];
   route.end.lon = args["route.end.lon"];
   hhRoute();
-  
-}
 
-function updatePermaLink() {
-  if (permalink.element != undefined) {
-    if (route.start.lon != null && route.end.lat != null) {
-      permalink.element.href = permalink.element.href +
-        "&route.start.lat=" + route.start.lat +
-        "&route.start.lon=" + route.start.lon +
-        "&route.end.lat=" + route.end.lat +
-        "&route.end.lon=" + route.end.lon;
-    }
-  }
 }
 
 var map; // complex object of type OpenLayers.Map
-var mf_dragcontrol;
-var permalink;
+var dragcontrol; // the drag control object
+var permalink; // the permalink contrik object
 
 // These are the only 2 projections that are ever used in this project
 var projWSG84 = new OpenLayers.Projection("EPSG:4326");
@@ -128,11 +106,11 @@ var route = {
 };
 
 /************************************************************************************
- * Right click menu is created by this function
+ * Right click menu is handled in this section
  ************************************************************************************/
 var menupopup;
-function mf_contextmenu(e) {
-
+// This function draws the context menu
+function contextmenu(e) {
   clickX = e.pageX - leftDivWidth + 10; // 10 because of padding
   clickY = e.pageY - 5; // 5 also because of padding
   clickLatLon = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY)).rtf();
@@ -143,7 +121,7 @@ function mf_contextmenu(e) {
   menuhtml = '<div id="popupmenu"><a onclick="setValues(' + newValues + '\'start\')">Set Start</a><br>'
            + '<a onclick="setValues(' + newValues + '\'via\')">Set Via</a><br>'
            + '<a onclick="setValues(' + newValues + '\'end\')">Set End</a></div>';
-  
+
   menupopup = new OpenLayers.Popup("menu",
                                clickLatLon.tf(),
                                new OpenLayers.Size(80,60),
@@ -183,28 +161,53 @@ OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
     }
 });
 
+
 /**
- * Sets the form parameter at the index.html
- * 
+ * Set the "permalink" to include the values of the route if applicable
+ */
+
+function updatePermaLink() {
+  if (permalink.element != undefined) {
+    if (route.start.lat != null && route.start.lon != null && route.end.lat != null && route.end.lon != null) {
+      params = permalink.createParams(); //OpenLayers.Util.getParameters();
+      params["route.start.lat"] = route.start.lat;
+      params["route.start.lon"] = route.start.lon;
+      params["route.end.lat"] = route.end.lat;
+      params["route.end.lon"] = route.end.lon;
+      if (route.via.lat != null && route.via.lon != null) {
+        params["route.via.lat"] = route.via.lat;
+        params["route.via.lon"] = route.via.lon;
+      }
+      permalink.element.href = '?' + OpenLayers.Util.getParameterString(params);
+    }
+  }
+}
+
+/**
+ * Sets the route parameters and requests a new route
+ *
  * @param lon
  *            longitude of the given coordinate
  * @param lat
  *            latitude of the given coordinate
  * @param desc
  *            textual description shown in the text field
- * @param status
- *            declares, which form parameters will be set
+ * @param station
+ *            declares, which parameters will be set, this can be "start", "via" or "end"
  */
-function setValues(lon, lat, desc, status) {
-  route[status].lon = lon;
-  route[status].lat = lat;
-  route[status].text = desc;
-	document.search[status].value = desc;
+function setValues(lon, lat, desc, station) {
+  route[station].lon = lon;
+  route[station].lat = lat;
+  route[station].text = desc;
+	//document.search[station].value = desc;
 	for ( var i = 0, len = map.popups.length; i < len; i++) {
 		map.removePopup(map.popups[i]);
 	}
 	hhRoute();
 	updatePermaLink();
+	if (!route.drag.isdragging) {
+	 reverseGeoCode(lat, lon, station);
+	}
 }
 
 /**
@@ -239,16 +242,12 @@ function newRequest() {
  ************************************************************************************/
 route.drag = {}; // encapsulate the dragging stuff
 route.drag.isdragging = false;
-//route.drag.date = new Date;
-//route.drag.lastDrag = route.drag.date.getTime();
-function mf_dragpoint(feature, pixel) {
+function dragpoint(feature, pixel) {
   route.drag.date = new Date;
-  //console.log(route.drag.lastDrag);
   // Enforce a minimum delay of 300 milliseconds between routing requests
   if ( (route.drag.lastDrag == undefined ||
           (route.drag.date.getTime() - route.drag.lastDrag > 300))
-      && !(route.waitingForResponse) ) {
-  //if (!(route.waitingForResponse) ) {
+          && !(route.waitingForResponse) ) {
     route.drag.lastDrag = route.drag.date.getTime();
   	route.drag.LonLat = map.getLonLatFromPixel(new OpenLayers.Pixel(pixel.x, pixel.y));
     setValues(
@@ -260,24 +259,22 @@ function mf_dragpoint(feature, pixel) {
   }
 }
 
-function mf_dragstart(feature, pixel) {
+function dragstart(feature, pixel) {
   route.drag.isdragging = true;
   route.drag.which = feature.attributes.mf;
-  console.log("drag start: " + route.drag.which);
 }
 
-function mf_dragcomplete(feature, pixel) {
-  console.log("drag end: " + route.drag.which);
-  console.log(mf_dragcontrol);
+function dragcomplete(feature, pixel) {
   route.drag.isdragging = false;
   if (!route.waitingForResponse) {
     redrawEndPoints();
   }
+  reverseGeoCode(route.drag.LonLat.rtf().lat, route.drag.LonLat.rtf().lon, route.drag.which);
   route.drag.which = null;
   // it seems like sometimes the dragevent doesn't really end by itself,
   // so I force it here which seems to help
-  mf_dragcontrol.cancel();
-  
+  dragcontrol.cancel();
+
 }
 
 var startCircle;
@@ -300,7 +297,7 @@ function redrawEndPoints() {
 // send it
 function hhRoute() {
   if (route.start.lon === undefined || route.start.lon === "" || route.end.lon === undefined || route.end.lon === "" ) return ;
-	route.url = "/HHRoutingWebservice/?format=json&points=" + route.start.lon + "," + route.start.lat + ";" + route.end.lon + "," + route.end.lat;
+	route.url = routingServiceURL + "?format=json&points=" + route.start.lon + "," + route.start.lat + ";" + route.end.lon + "," + route.end.lat;
   route.waitingForResponse = true;
 	OpenLayers.Request.GET( {
 		url : route.url,
@@ -310,7 +307,7 @@ function hhRoute() {
 }
 
 // deal with routing request response
-function hhRouteResponseHandler(response) {
+  function hhRouteResponseHandler(response) {
   //console.log(response.responseText);
   if (response.responseText != "Error") {
     data = eval('('+response.responseText+')');
@@ -366,10 +363,48 @@ function hhRouteResponseHandler(response) {
 }
 
 /************************************************************************************
+ *  Here the GeoCoding happens
+ ************************************************************************************/
+// send it
+var geoCodeStation;
+geoCode = function(name, station) {
+  if (name.length > 2) {
+    geoCodeStation = station;
+  	OpenLayers.Request.GET( {
+  		url : geoCodingURL + "?name=" + name,
+  		success : geoCodeResponseHandler,
+  		scope : this
+  	});
+	}
+};
+
+geoCodeResponseHandler = function(response){
+  data = eval('('+response.responseText+')');
+  route[geoCodeStation].lat = data[0].lat;
+  route[geoCodeStation].lon = data[0].lon;
+  hhRoute();
+}
+
+//reverse it
+reverseGeoCode = function(lat, lon, station) {
+  geoCodeStation = station;
+	OpenLayers.Request.GET( {
+		url : geoCodingURL + "?lat=" + lat + "&lon=" + lon,
+		success : reverseGeoCodeResponseHandler,
+		scope : this
+	});
+};
+
+reverseGeoCodeResponseHandler = function(response){
+  data = eval('('+response.responseText+')');
+  document.search[geoCodeStation].value = data.display_name;
+}
+
+/************************************************************************************
  *  This part takes care of the resizing of the map div,
  *  it's not really related to routing or openlayers
  ************************************************************************************/
- 
+
 var leftDivWidth;
 var resizeMapWindow = function resizeMap() {
 	windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
