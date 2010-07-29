@@ -1,76 +1,85 @@
+/*
+ * Copyright 2010 mapsforge.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.mapsforge.android.map;
 
-import java.util.ArrayList;
-
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
+import android.view.MotionEvent;
 
 /**
+ * Custom implementation of the ItemizedOverlay class from the google maps library.
+ * 
  * @author Sebastian Schlaak
  * @author Karsten Groll
  */
-public class ItemizedOverlay extends Overlay {
-	/**
-	 * Custom implementation of the ItemizedOverlay class from the Google Maps library.
-	 */
+public abstract class ItemizedOverlay extends Overlay {
 	private Drawable defaultMarker;
 	private Canvas bitmapWrapper;
 	private Bitmap bitmap;
 	private Bitmap shaddowBitmap;
 	private Bitmap tempBitmapForSwap;
-	private ArrayList<OverlayItem> overlayItems;
 	private Drawable itemMarker;
-	private Context context;
 	private Point itemPixelPositon;
 	private Point itemPosOnDisplay;
 	private Point displayPositonBeforeDrawing;
 	private Point displayPositonAfterDrawing;
 	private Matrix matrix;
+	private OverlayItem item;
 
 	/**
-	 * construct an Overlay
+	 * Construct an Overlay
 	 * 
 	 * @param defaultMarker
-	 *            The default drawable for each item in the overlay.
+	 *            the default drawable for each item in the overlay.
 	 * @param context
-	 *            The context.
+	 *            the context.
 	 */
-	public ItemizedOverlay(Drawable defaultMarker, Context context) {
+	public ItemizedOverlay(Drawable defaultMarker) {
 		this.defaultMarker = defaultMarker;
-		this.context = context;
 		setup();
 	}
 
 	private void setup() {
 		this.matrix = new Matrix();
-		this.overlayItems = new ArrayList<OverlayItem>();
 		this.start();
 	}
 
 	/**
+	 * Return the numbers of items.
 	 * 
 	 * @return numbers of items in this overlay.
 	 */
-	public int size() {
-		return this.overlayItems.size();
-	}
+	abstract public int size();
 
 	/**
 	 * Pause the Thread.
 	 * 
 	 * @param pauseInSeconds
-	 *            Time in seconds to sleep.
+	 *            time in seconds to sleep.
 	 */
 	public void pause(int pauseInSeconds) {
 		try {
 			Thread.sleep(pauseInSeconds * 1000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			interrupt();
+			Logger.e(new Exception("Not Implemented"));
 		}
 	}
 
@@ -78,15 +87,13 @@ public class ItemizedOverlay extends Overlay {
 	 * Add an overlayItem to this overlay.
 	 * 
 	 * @param overlayItem
-	 *            The overlay item.
+	 *            the new overlay item.
 	 */
-	public void addOverLay(OverlayItem overlayItem) {
-		this.overlayItems.add(overlayItem);
-	}
+	public abstract void addOverLay(OverlayItem overlayItem);
 
 	@Override
-	public boolean onTouchEvent(android.view.MotionEvent event, MapView mapView) {
-		OverlayItem item;
+	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+		// iterate over all overlay items
 		for (int i = 0; i < size(); i++) {
 			item = createItem(i);
 			if (hitTest(item, item.getMarker(), (int) event.getX(), (int) event.getY())) {
@@ -101,21 +108,19 @@ public class ItemizedOverlay extends Overlay {
 	 * Access and create the actual Items.
 	 * 
 	 * @param i
-	 *            The index of the item.
-	 * @return The overlay item.
+	 *            the index of the item.
+	 * @return the overlay item.
 	 */
-	protected OverlayItem createItem(int i) {
-		return this.overlayItems.get(i);
-	}
+	abstract protected OverlayItem createItem(int i);
 
 	/**
 	 * Adjusts a drawable of an item so that (0,0) is the center.
 	 * 
 	 * @param balloon
-	 *            The drawable to center.
+	 *            the drawable to center.
 	 * @param itemPosRelative
-	 *            The position of the item.
-	 * @return The adjusted drawable.
+	 *            the position of the item.
+	 * @return the adjusted drawable.
 	 */
 	protected Drawable boundCenter(Drawable balloon, Point itemPosRelative) {
 		balloon.setBounds((int) itemPosRelative.x - balloon.getIntrinsicWidth() / 2,
@@ -129,10 +134,10 @@ public class ItemizedOverlay extends Overlay {
 	 * Adjusts the drawable of an item so that (0,0) is the center of the bottom row.
 	 * 
 	 * @param balloon
-	 *            The drawable to center.
+	 *            the drawable to center.
 	 * @param itemPosRelative
-	 *            The position of the item.
-	 * @return The adjusted drawable
+	 *            the position of the item.
+	 * @return the adjusted drawable.
 	 */
 	protected Drawable boundCenterBottom(Drawable balloon, Point itemPosRelative) {
 		balloon.setBounds((int) itemPosRelative.x - balloon.getIntrinsicWidth() / 2,
@@ -145,17 +150,11 @@ public class ItemizedOverlay extends Overlay {
 	 * Handle a tap event.
 	 * 
 	 * @param index
-	 *            The position of the item.
+	 *            the position of the item.
 	 * 
 	 * @return true
 	 */
-	protected boolean onTap(int index) {
-		AlertDialog.Builder dialog = new AlertDialog.Builder(this.context);
-		dialog.setTitle(this.overlayItems.get(index).getTitle());
-		dialog.setMessage(this.overlayItems.get(index).getSnippet());
-		dialog.show();
-		return true;
-	}
+	abstract protected boolean onTap(int index);
 
 	@Override
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
@@ -170,17 +169,17 @@ public class ItemizedOverlay extends Overlay {
 	}
 
 	/**
-	 * Calulate if a given point is within the bounds of an item.
+	 * Calculate if a given point is within the bounds of an item.
 	 * 
 	 * @param item
-	 *            The item to test.
+	 *            the item to test.
 	 * @param marker
-	 *            The marker of the item.
+	 *            the marker of the item.
 	 * @param hitX
-	 *            The x-coordinate of the point.
+	 *            the x-coordinate of the point.
 	 * @param hitY
-	 *            The y-coordinate of the point.
-	 * @return true, if the point is within the bounds of the item.
+	 *            the y-coordinate of the point.
+	 * @return true if the point is within the bounds of the item.
 	 */
 	protected boolean hitTest(OverlayItem item, Drawable marker, int hitX, int hitY) {
 		Point eventPos = new Point(hitX, hitY);
@@ -211,8 +210,9 @@ public class ItemizedOverlay extends Overlay {
 
 	@Override
 	final protected void prepareOverlayBitmap(MapView mapView) {
-		if (!isPrepareOverlayIsNecessary())
-			return;
+		// if (!hasDisplayPostionChanged()) {
+		// return;
+		// }
 		saveDisplayPositionBeforeDrawing();
 		drawItemsOnShaddowBitmap();
 		saveDisplayPositionAfterDrawing();
@@ -221,10 +221,13 @@ public class ItemizedOverlay extends Overlay {
 		notifyMapViewToRedraw();
 	}
 
-	private boolean isPrepareOverlayIsNecessary() {
-		// return (this.displayPositonAfterDrawing == calculateDisplayPoint(new GeoPoint(
-		// this.mapView.latitude, this.mapView.longitude)));
-		return true;
+	private boolean hasDisplayPostionChanged() {
+		Point currentPositon = calculateDisplayPoint(new GeoPoint(this.mapView.latitude,
+				this.mapView.longitude));
+		if (displayPositonAfterDrawing == null) {
+			return true;
+		}
+		return (!this.displayPositonAfterDrawing.equals(currentPositon));
 	}
 
 	private void saveDisplayPositionBeforeDrawing() {

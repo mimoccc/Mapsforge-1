@@ -1,14 +1,14 @@
 package org.mapsforge.android.map;
 
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 /**
+ * This is the basic element of {@link Overlay}.
+ * 
  * @author Sebastian Schlaak
  * @author Karsten Groll
  */
 public class OverlayItem {
-	/** This is the basic element of {@link Overlay} **/
 
 	/**
 	 * State bitset bit. This feature is not yet implemented!
@@ -31,10 +31,6 @@ public class OverlayItem {
 	 */
 	protected GeoPoint point;
 	/**
-	 * Short text to describe the item.
-	 */
-
-	/**
 	 *The position relative to display
 	 */
 	protected Point posOnDisplay;
@@ -54,14 +50,14 @@ public class OverlayItem {
 	protected String title;
 
 	/**
-	 * Construct an overlay Item.
+	 * Construct an overlay item.
 	 * 
 	 * @param point
-	 *            Position of the item.
+	 *            position of the item.
 	 * @param title
-	 *            Title of the item.
+	 *            title of the item.
 	 * @param snippet
-	 *            Snippet-text of the item.
+	 *            snippet-text of the item.
 	 */
 	public OverlayItem(GeoPoint point, String title, String snippet) {
 		this.point = point;
@@ -81,7 +77,7 @@ public class OverlayItem {
 	/**
 	 * Returns the position of the item as {@link GeoPoint}.
 	 * 
-	 * @return The GeoPoint.
+	 * @return the GeoPoint.
 	 */
 	public GeoPoint getPoint() {
 		return this.point;
@@ -90,7 +86,7 @@ public class OverlayItem {
 	/**
 	 * Returns the snippet-text of the item.
 	 * 
-	 * @return The Snippet-text.
+	 * @return the Snippet-text.
 	 */
 	public String getSnippet() {
 		return this.snippet;
@@ -99,7 +95,7 @@ public class OverlayItem {
 	/**
 	 * Returns the title of the item.
 	 * 
-	 * @return The title.
+	 * @return the title.
 	 */
 	public String getTitle() {
 		return this.title;
@@ -108,10 +104,10 @@ public class OverlayItem {
 	/**
 	 * Returns the position of the item as map-routable {@link String}.
 	 * 
-	 * @return not yet implemented.
+	 * @return not yet implemented!
 	 */
 	public String routableAddress() {
-		Log.e("todo", "OverlayItem.routableAddress() is not yet implemented");
+		Logger.e(new Exception("Not Implemented"));
 		return null;
 	}
 
@@ -119,14 +115,13 @@ public class OverlayItem {
 	 * Sets the marker to draw this item on the {@link MapView}.
 	 * 
 	 * @param drawable
-	 *            The marker.
+	 *            the marker to draw.
 	 * 
 	 * @param stateBitset
-	 *            The state.
+	 *            not yet implemented!
 	 */
-
 	public void setMarker(Drawable drawable, int stateBitset) {
 		this.marker = drawable;
-		Log.e("todo", "OverlayItem.routableAddress() is not yet implemented");
+		Logger.e(new Exception("Not Implemented"));
 	}
 }
