@@ -45,14 +45,8 @@ body {
 }
 
 #menu_GroupDiv {
-  border-top: 1px solid #444;
-  border-left: 1px solid #444;
-  border-right: 1px solid #444;
-}
-
-#popupmenu {
-  border-bottom: 1px solid #444;
-  padding-bottom: 1px;
+  border: 1px solid #444;
+  height: 58px;
 }
 
 #turnByTurn {
