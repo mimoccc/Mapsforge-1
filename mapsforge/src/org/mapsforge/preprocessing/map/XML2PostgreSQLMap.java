@@ -63,7 +63,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 	private static final String DEFAULT_BATCH_SIZE = "50000";
 
-	private static final byte zoom = 14;
+	private static byte zoom;
 
 	private int batchSize;
 
@@ -109,6 +109,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_UPDATE_OPEN_WAYTYPE_FLAG = "UPDATE ways SET way_type = 0 WHERE id = ?";
 	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
 	private final String SQL_INSERT_WAY_TILE = "INSERT INTO ways_to_tiles (way_id,tile_x,tile_y,tile_bitmask,zoom_level) VALUES (?,?,?,?,?)";
+
+	private final String SQL_INSERT_POI_TILE_LESS = "INSERT INTO pois_to_tiles_less_data (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
+	private final String SQL_INSERT_WAY_TILE_LESS = "INSERT INTO ways_to_tiles_less_data (way_id,tile_x,tile_y,tile_bitmask,zoom_level) VALUES (?,?,?,?,?)";
+
 	// private final String SQL_DISTINCT_WAY_TILES =
 	// "SELECT DISTINCT tile_x,tile_y FROM ways_to_tiles";
 	// private final String SQL_SELECT_WAY_IDS =
@@ -145,6 +149,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private PreparedStatement pstmtWayNodeDiff;
 	private PreparedStatement pstmtUpdateWayInnerWayAmount;
 
+	private PreparedStatement pstmtPoisTilesLessData;
+	private PreparedStatement pstmtWaysTilesLessData;
+
 	// result sets
 	private ResultSet rsWayNodes;
 	private ResultSet rsInnerWays;
@@ -168,12 +175,23 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private Map<Tile, Short> waySubTiles;
 	private Set<Entry<Tile, Short>> wayTilesEntries;
 
-	public XML2PostgreSQLMap(String propertiesFile) throws Exception {
+	public XML2PostgreSQLMap(String propertiesFile, short baseZoom) throws Exception {
+
+		zoom = (byte) baseZoom;
 
 		Properties props = new Properties();
 		props.load(new FileInputStream(propertiesFile));
 
-		DBConnection dbConnection = new DBConnection(propertiesFile);
+		String db;
+
+		DBConnection dbConnection;
+
+		if (baseZoom < 10) {
+			dbConnection = new DBConnection(propertiesFile, props
+					.getProperty("db.database.little.zoom"));
+		} else {
+			dbConnection = new DBConnection(propertiesFile, props.getProperty("db.database"));
+		}
 
 		currentTags = new Vector<String>();
 		currentWayNodes = new Vector<Integer>();
@@ -226,7 +244,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						+ "name text,tags_amount smallint,tags text,layer smallint,"
 						+ "elevation integer,housenumber text)");
 
-		conn.createStatement().execute("ALTER TABLE pois_tmp OWNER TO sschroet");
+		conn.createStatement().execute("ALTER TABLE pois_tmp OWNER TO osm");
 
 		conn.createStatement().execute(
 				"ALTER TABLE ONLY pois_tmp ADD CONSTRAINT pois_tmp_pkey PRIMARY KEY (id)");
@@ -235,7 +253,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				"CREATE TEMPORARY TABLE waynodes_tmp (way_id bigint,"
 						+ "waynode_sequence smallint,latitude bigint,longitude bigint)");
 
-		conn.createStatement().execute("ALTER TABLE waynodes_tmp OWNER TO sschroet");
+		conn.createStatement().execute("ALTER TABLE waynodes_tmp OWNER TO osm");
 
 		conn
 				.createStatement()
@@ -279,6 +297,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		pstmtWayNodeDiff = conn.prepareStatement(SQL_WAY_NODE_DIFF);
 
 		pstmtUpdateWayInnerWayAmount = conn.prepareStatement(SQL_UPDATE_INNER_WAY_AMOUNT);
+
+		pstmtPoisTilesLessData = conn.prepareStatement(SQL_INSERT_POI_TILE_LESS);
+		pstmtWaysTilesLessData = conn.prepareStatement(SQL_INSERT_WAY_TILE_LESS);
 
 		logger.info("database connection setup done...");
 
@@ -328,8 +349,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMetadata.setInt(6, VERSION);
 			pstmtMetadata.setInt(7, zoom);
 			pstmtMetadata.setInt(8, Tile.TILE_SIZE);
-			pstmtMetadata.setShort(9, (short) 12);
-			pstmtMetadata.setShort(10, (short) 17);
+			pstmtMetadata.setShort(9, (short) (zoom - 2));
+			pstmtMetadata.setShort(10, (short) (zoom + 2));
 			pstmtMetadata.execute();
 
 			logger.info("metadata inserted");
@@ -340,6 +361,19 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMultipolygons.executeBatch();
 			pstmtUpdateWayType.executeBatch();
 			pstmtUpdateWayInnerWayAmount.executeBatch();
+
+			// if (zoom < 10) {
+			// conn
+			// .createStatement()
+			// .execute(
+			// "delete from pois p where exists (select id from pois pois join pois_to_tiles ptt on(pois.id = ptt.poi_id) where ptt.zoom_level > "
+			// + zoom + ")");
+			// conn
+			// .createStatement()
+			// .execute(
+			// "delete from ways w where exists (select id from ways ways join ways_to_tiles wtt on(ways.id = wtt.way_id) where wtt.zoom_level > "
+			// + zoom + ")");
+			// }
 
 			logger.info("create indices on tag tables");
 
@@ -429,6 +463,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtPoisTmp.executeBatch();
 					pstmtPoisTags.executeBatch();
 					pstmtPoisTiles.executeBatch();
+					pstmtPoisTilesLessData.executeBatch();
 					pstmtPoisTag.executeBatch();
 				} catch (SQLException e) {
 					System.err.println(pstmtPoisTmp);
@@ -451,6 +486,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtInsertWayNodes.executeBatch();
 					pstmtInsertWayNodesTmp.executeBatch();
 					pstmtWaysTiles.executeBatch();
+					pstmtWaysTilesLessData.executeBatch();
 					pstmtWayNodeDiff.executeBatch();
 					pstmtWayTag.executeBatch();
 					logger.info("last ways batched");
@@ -626,6 +662,22 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtPoisTiles.setLong(3, mainTileForPOI.y);
 					pstmtPoisTiles.setShort(4, currentNode.zoomLevel);
 					pstmtPoisTiles.addBatch();
+
+					// TODO: wie festmachen, dass daten für geringe zoomstufen?
+					if (currentNode.zoomLevel < 12) {
+						// TODO: fest gesetztes kleines zoom level dynamisch machen
+						mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
+								(double) currentNode.longitude / 1000000, zoom),
+								MercatorProjection.latitudeToTileY(
+										(double) currentNode.latitude / 1000000, (byte) 9),
+								(byte) 9);
+
+						pstmtPoisTilesLessData.setLong(1, currentNode.id);
+						pstmtPoisTilesLessData.setLong(2, mainTileForPOI.x);
+						pstmtPoisTilesLessData.setLong(3, mainTileForPOI.y);
+						pstmtPoisTilesLessData.setShort(4, currentNode.zoomLevel);
+						pstmtPoisTilesLessData.addBatch();
+					}
 				}
 
 				poisBatched = false;
@@ -634,6 +686,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtPoisTmp.executeBatch();
 					pstmtPoisTags.executeBatch();
 					pstmtPoisTiles.executeBatch();
+					pstmtPoisTilesLessData.executeBatch();
 					pstmtPoisTag.executeBatch();
 					logger
 							.info("executed batch for nodes " + (nodes - batchSize) + "-"
@@ -772,12 +825,38 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 						wayTilesEntries = waySubTiles.entrySet();
 						for (Entry<Tile, Short> entry : wayTilesEntries) {
-							pstmtWaysTiles.setLong(1, currentWay.id);
-							pstmtWaysTiles.setLong(2, entry.getKey().x);
-							pstmtWaysTiles.setLong(3, entry.getKey().y);
-							pstmtWaysTiles.setInt(4, entry.getValue());
-							pstmtWaysTiles.setShort(5, currentWay.zoomLevel);
-							pstmtWaysTiles.addBatch();
+							pstmtWaysTilesLessData.setLong(1, currentWay.id);
+							pstmtWaysTilesLessData.setLong(2, entry.getKey().x);
+							pstmtWaysTilesLessData.setLong(3, entry.getKey().y);
+							pstmtWaysTilesLessData.setInt(4, entry.getValue());
+							pstmtWaysTilesLessData.setShort(5, currentWay.zoomLevel);
+							pstmtWaysTilesLessData.addBatch();
+						}
+
+						// TODO: dynamisches zoom level!
+						if (currentWay.zoomLevel < 12) {
+							// create a geometry object for the way
+							geoWay = Utils.createWay(currentWay, wayNodes);
+
+							// calculate all tiles which are related to a way
+							wayTiles = Utils
+									.wayToTilesWay(geoWay, currentWay.wayType, (byte) 9);
+
+							// calculate all subtiles of the tiles which are related to the way
+							// and
+							// create the tile bitmask
+							waySubTiles = Utils.getTileBitMask(geoWay, wayTiles,
+									currentWay.wayType);
+
+							wayTilesEntries = waySubTiles.entrySet();
+							for (Entry<Tile, Short> entry : wayTilesEntries) {
+								pstmtWaysTiles.setLong(1, currentWay.id);
+								pstmtWaysTiles.setLong(2, entry.getKey().x);
+								pstmtWaysTiles.setLong(3, entry.getKey().y);
+								pstmtWaysTiles.setInt(4, entry.getValue());
+								pstmtWaysTiles.setShort(5, currentWay.zoomLevel);
+								pstmtWaysTiles.addBatch();
+							}
 						}
 
 						pstmtWays.setLong(1, currentWay.id);
@@ -809,6 +888,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtInsertWayNodesTmp.executeBatch();
 					pstmtWayNodeDiff.executeBatch();
 					pstmtWaysTiles.executeBatch();
+					pstmtWaysTilesLessData.executeBatch();
 					pstmtWayTag.executeBatch();
 					logger.info("executed batch for ways " + (ways - batchSize) + "-" + ways);
 				}
@@ -921,12 +1001,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	}
 
 	private static void usage() {
-		System.out.println("Usage: XML2PostgreSQLMap <osm-file> <properties-file>");
+		System.out
+				.println("Usage: XML2PostgreSQLMap <properties-file> <osm-file> <base-zoom-level>");
 	}
 
 	public static void main(String[] args) throws Exception {
 
-		if (args.length != 2) {
+		if (args.length != 3) {
 			usage();
 			System.exit(0);
 		}
@@ -940,7 +1021,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		DATE = file.lastModified();
 
-		DefaultHandler saxParser = new XML2PostgreSQLMap(args[1]);
+		DefaultHandler saxParser = new XML2PostgreSQLMap(args[0], Short.parseShort(args[2]));
 
 		// get a factory
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -950,7 +1031,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			SAXParser sp = spf.newSAXParser();
 
 			// parse the file and also register this class for call backs
-			sp.parse(args[0], saxParser);
+			sp.parse(args[1], saxParser);
 
 		} catch (SAXException se) {
 			se.printStackTrace();
