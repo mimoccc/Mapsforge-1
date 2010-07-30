@@ -17,159 +17,185 @@
 package org.mapsforge.core;
 
 /**
- * 
- * @author marc
+ * This immutable class represents a geological coordinate with a latitude and longitude value.
  */
 public class GeoCoordinate {
+	/**
+	 * The multiplication factor to convert from double to int.
+	 */
+	public static final double FACTOR_DOUBLE_TO_INT = 1000000;
 
-	public static final double EARTH_RADIUS = 6378137d;
-	public static final double DEG_RAD_FACTOR = 57.29578d;
+	/**
+	 * The largest possible latitude value.
+	 */
+	public static final double LATITUDE_MAX = 90;
 
-	private static final double FAC_DOUBLE_TO_INT = 1E7;
-	private static final double FAC_INT_TO_DOUBLE = 1 / 1E7;
+	/**
+	 * The smallest possible latitude value.
+	 */
+	public static final double LATITUDE_MIN = -90;
 
-	private Latitude latitude;
-	private Longitude longitude;
+	/**
+	 * The largest possible longitude value.
+	 */
+	public static final double LONGITUDE_MAX = 180;
 
-	public static final double FACTOR = 1.0d;
+	/**
+	 * The smallest possible longitude value.
+	 */
+	public static final double LONGITUDE_MIN = -180;
 
-	public GeoCoordinate(Latitude lat, Longitude lon) {
-		this.latitude = lat;
-		this.longitude = lon;
-	}
-
-	public GeoCoordinate(double lat, double lon) throws IllegalArgumentException {
-		this.latitude = new Latitude(lat);
-		this.longitude = new Longitude(lon);
-	}
-
-	public GeoCoordinate(int lat, int lon) throws IllegalArgumentException {
-		this.latitude = new Latitude(itod(lat));
-		this.longitude = new Longitude(itod(lon));
-	}
-
-	public GeoCoordinate(GeoCoordinate other) {
-		this.latitude = new Latitude(other.getLatitude().getDegree());
-		this.longitude = new Longitude(other.getLongitude().getDegree());
-	}
-
-	public int getLatitudeInt() {
-		return dtoi(latitude.getDegree());
-	}
-
-	public int getLongitudeInt() {
-		return dtoi(longitude.getDegree());
-	}
-
-	public Latitude getLatitude() {
-		return this.latitude;
-	}
-
-	public Longitude getLongitude() {
-		return this.longitude;
-	}
-
-	public double getMercatorX() {
-		return EARTH_RADIUS * this.longitude.getRadians();
-	}
-
-	public double getMercatorY() {
-		return EARTH_RADIUS * 
-			java.lang.Math.log(
-				java.lang.Math.tan(
-						java.lang.Math.PI/4 
-						+ 0.5 * this.latitude.getRadians()));
-	}
-
-	public void setLatitude(Latitude lat) {
-		this.latitude = lat;
-	}
-
-	public void setLongitude(Longitude lon) {
-		this.longitude = lon;
-	}
-
-	public double haversineDistance(GeoCoordinate gc) {
-
-		return 0d;
-	}
-
-	public boolean equals(GeoCoordinate c) {
-		return (c != null) && (getLatitude().getDegree() == c.getLatitude().getDegree())
-				&& (getLongitude().getDegree() == c.getLongitude().getDegree());
+	/**
+	 * Converts a coordinate from degrees to microdegrees.
+	 * 
+	 * @param coordinate
+	 *            the coordinate in degrees.
+	 * @return the coordinate in microdegrees.
+	 */
+	public static int doubleToInt(double coordinate) {
+		return (int) (coordinate * FACTOR_DOUBLE_TO_INT);
 	}
 
 	/**
-	 * Calculates the distance between this and the given coordinate
-	 * http://williams.best.vwh.net/avform.htm#Dist d=2*asin( sqrt( (sin((lat1-lat2)/2))^2 +
-	 * cos(lat1)*cos(lat2) * (sin((lon1-lon2)/2))^2 ) )
+	 * Converts a coordinate from microdegrees to degrees.
 	 * 
-	 * @param other
-	 * 
-	 * @return
+	 * @param coordinate
+	 *            the coordinate in microdegrees.
+	 * @return the coordinate in degrees.
 	 */
-	public double distance(GeoCoordinate other) {
-		if (other != null) {
-			return GeoCoordinate.sphericalDistance(this, other);
+	public static double intToDouble(int coordinate) {
+		return coordinate / FACTOR_DOUBLE_TO_INT;
+	}
+
+	/**
+	 * Checks the given latitude value and throws an exception if the value is out of range.
+	 * 
+	 * @param lat
+	 *            the latitude value that should be checked.
+	 * @return the latitude value.
+	 * @throws IllegalArgumentException
+	 *             if the latitude value is < LATITUDE_MIN or > LATITUDE_MAX.
+	 */
+	public static double validateLatitude(double lat) {
+		if (lat < LATITUDE_MIN) {
+			throw new IllegalArgumentException("invalid latitude value: " + lat);
+		} else if (lat > LATITUDE_MAX) {
+			throw new IllegalArgumentException("invalid latitude value: " + lat);
+		} else {
+			return lat;
 		}
-		return 0.0d;
 	}
 
-	// d=acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon1-lon2))
-	public static double sDistance(GeoCoordinate gc1, GeoCoordinate gc2) {
-
-		double ir1 = Math.sin(gc1.getLatitude().getRadians())
-				* Math.sin(gc2.getLatitude().getRadians());
-		double ir2 = Math.cos(gc1.getLatitude().getRadians())
-				* Math.cos(gc2.getLatitude().getRadians());
-		double ir3 = Math
-				.cos(gc1.getLongitude().getRadians() - gc2.getLongitude().getRadians());
-
-		double d = Math.acos(ir1 + ir2 * ir3);
-		return (float) (d * EARTH_RADIUS);
+	/**
+	 * Checks the given longitude value and throws an exception if the value is out of range.
+	 * 
+	 * @param lon
+	 *            the longitude value that should be checked.
+	 * @return the longitude value.
+	 * @throws IllegalArgumentException
+	 *             if the longitude value is < LONGITUDE_MIN or > LONGITUDE_MAX.
+	 */
+	public static double validateLongitude(double lon) {
+		if (lon < LONGITUDE_MIN) {
+			throw new IllegalArgumentException("invalid longitude value: " + lon);
+		} else if (lon > LONGITUDE_MAX) {
+			throw new IllegalArgumentException("invalid longitude value: " + lon);
+		} else {
+			return lon;
+		}
 	}
 
-	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2) {
-		double dLat = gc1.getLatitude().getRadians() - gc2.getLatitude().getRadians();
-		double dLon = gc1.getLongitude().getRadians() - gc2.getLongitude().getRadians();
+	/**
+	 * The internal latitude value.
+	 */
+	private final double latitude;
 
-		// intermediate result 1: (sin((lat1-lat2)/2))^2
-		double ir1 = Math.sin(dLat / 2.0d);
-		ir1 *= ir1;
-		// intermediate result 3: cos(lat1)*cos(lat2)
-		double ir2 = Math.cos(gc1.getLatitude().getRadians())
-				* Math.cos(gc2.getLatitude().getRadians());
-		// intermediate result 2: (sin((lon1-lon2)/2))^2
-		double ir3 = Math.sin(dLon / 2.0d);
-		ir3 *= ir3;
+	/**
+	 * The internal longitude value.
+	 */
+	private final double longitude;
 
-		return 2 * Math.asin(Math.sqrt(ir1 + ir2 * ir3)) * EARTH_RADIUS;
+	/**
+	 * Constructs a new GeoCoordinate with the given latitude and longitude values, measured in
+	 * degrees.
+	 * 
+	 * @param latitude
+	 *            the latitude value in degrees.
+	 * @param longitude
+	 *            the longitude value in degrees.
+	 * @throws IllegalArgumentException
+	 *             if the latitude or longitude value is invalid.
+	 */
+	public GeoCoordinate(double latitude, double longitude) throws IllegalArgumentException {
+		this.latitude = validateLatitude(latitude);
+		this.longitude = validateLongitude(longitude);
 	}
 
-	public static int dtoi(double d) {
-		return (int) Math.rint(d * FAC_DOUBLE_TO_INT);
+	/**
+	 * Constructs a new GeoCoordinate with the given latitude and longitude values, measured in
+	 * microdegrees.
+	 * 
+	 * @param latitudeE6
+	 *            the latitude value in microdegrees.
+	 * @param longitudeE6
+	 *            the longitude value in microdegrees.
+	 * @throws IllegalArgumentException
+	 *             if the latitude or longitude value is invalid.
+	 */
+	public GeoCoordinate(int latitudeE6, int longitudeE6) throws IllegalArgumentException {
+		this.latitude = validateLatitude(intToDouble(latitudeE6));
+		this.longitude = validateLongitude(intToDouble(longitudeE6));
 	}
 
-	public static double itod(int i) {
-		return FAC_INT_TO_DOUBLE * i;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof GeoCoordinate)) {
+			return false;
+		} else {
+			GeoCoordinate other = (GeoCoordinate) obj;
+			if (this.latitude != other.latitude) {
+				return false;
+			} else if (this.longitude != other.longitude) {
+				return false;
+			}
+			return true;
+		}
 	}
 
-	public static double sphericalDistance(int lon1, int lat1, int lon2, int lat2) {
-		return sphericalDistance(itod(lon1), itod(lat1), itod(lon2), itod(lat2));
+	/**
+	 * Returns the latitude value of this coordinate.
+	 * 
+	 * @return the latitude value of this coordinate.
+	 */
+	public double getLatitude() {
+		return this.latitude;
 	}
 
-	public static double sphericalDistance(double lon1, double lat1, double lon2, double lat2) {
-		double dLat = Math.toRadians(lat2 - lat1);
-		double dLon = Math.toRadians(lon2 - lon1);
-		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1))
-				* Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	/**
+	 * Returns the longitude value of this coordinate.
+	 * 
+	 * @return the longitude value of this coordinate.
+	 */
+	public double getLongitude() {
+		return this.longitude;
+	}
 
-		return c * EARTH_RADIUS;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(this.latitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(this.longitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "lat: " + this.latitude + ", lon: " + this.longitude;
+		return "latitude: " + this.latitude + ", longitude: " + this.longitude;
 	}
 }
