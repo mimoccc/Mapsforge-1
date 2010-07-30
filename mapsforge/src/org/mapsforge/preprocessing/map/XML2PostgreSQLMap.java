@@ -182,16 +182,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		Properties props = new Properties();
 		props.load(new FileInputStream(propertiesFile));
 
-		String db;
-
-		DBConnection dbConnection;
-
-		if (baseZoom < 10) {
-			dbConnection = new DBConnection(propertiesFile, props
-					.getProperty("db.database.little.zoom"));
-		} else {
-			dbConnection = new DBConnection(propertiesFile, props.getProperty("db.database"));
-		}
+		DBConnection dbConnection = new DBConnection(propertiesFile);
 
 		currentTags = new Vector<String>();
 		currentWayNodes = new Vector<Integer>();
