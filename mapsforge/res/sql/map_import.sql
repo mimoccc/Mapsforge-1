@@ -8,8 +8,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET escape_string_warning = off;
 
-SET search_path = public, pg_catalog;
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -19,10 +17,7 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE filtered_pois (
-    poi_id bigint,
-    tile_x integer,
-    tile_y integer,
-    zoom_level smallint
+    poi_id bigint
 );
 
 
@@ -33,11 +28,7 @@ ALTER TABLE public.filtered_pois OWNER TO osm;
 --
 
 CREATE TABLE filtered_ways (
-    way_id bigint,
-    tile_x integer,
-    tile_y integer,
-    tile_bitmask smallint,
-    zoom_level smallint
+    way_id bigint
 );
 
 
@@ -55,7 +46,9 @@ CREATE TABLE metadata (
     minlat integer,
     maxlon integer,
     zoom smallint,
-    tile_size smallint
+    tile_size smallint,
+    min_zoom_level smallint,
+    max_zoom_level smallint
 );
 
 
@@ -117,11 +110,28 @@ CREATE TABLE pois_to_tiles (
     tile_x integer,
     tile_y integer,
     zoom_level smallint,
-    size integer
+    size integer,
+    filter boolean DEFAULT false NOT NULL
 );
 
 
 ALTER TABLE public.pois_to_tiles OWNER TO osm;
+
+--
+-- Name: pois_to_tiles_less_data; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE TABLE pois_to_tiles_less_data (
+    poi_id bigint,
+    tile_x integer,
+    tile_y integer,
+    zoom_level smallint,
+    size integer,
+    filter boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.pois_to_tiles_less_data OWNER TO osm;
 
 --
 -- Name: waynodes; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
@@ -195,11 +205,40 @@ CREATE TABLE ways_to_tiles (
     tile_y integer,
     tile_bitmask smallint,
     zoom_level smallint,
-    size integer
+    size integer,
+    filter boolean DEFAULT false NOT NULL
 );
 
 
 ALTER TABLE public.ways_to_tiles OWNER TO osm;
+
+--
+-- Name: ways_to_tiles_less_data; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE TABLE ways_to_tiles_less_data (
+    way_id bigint,
+    tile_x integer,
+    tile_y integer,
+    tile_bitmask smallint,
+    zoom_level smallint,
+    size integer,
+    filter boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.ways_to_tiles_less_data OWNER TO osm;
+
+--
+-- Name: zoom_level; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE TABLE zoom_level (
+    zoom_level smallint
+);
+
+
+ALTER TABLE public.zoom_level OWNER TO osm;
 
 --
 -- Name: pk_poi_id; Type: CONSTRAINT; Schema: public; Owner: osm; Tablespace: 
@@ -226,6 +265,27 @@ ALTER TABLE ONLY waynodes_diff
 
 
 --
+-- Name: filtered_pois_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX filtered_pois_idx ON filtered_pois USING btree (poi_id);
+
+
+--
+-- Name: filtered_ways_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX filtered_ways_idx ON filtered_ways USING btree (way_id);
+
+
+--
+-- Name: multipolygons_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX multipolygons_idx ON multipolygons USING btree (outer_way_id);
+
+
+--
 -- Name: multipolygons_outer_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
 --
 
@@ -240,6 +300,20 @@ CREATE INDEX pois_tags_idx ON pois_tags USING btree (tag);
 
 
 --
+-- Name: pois_to_tiles_id_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX pois_to_tiles_id_idx ON pois_to_tiles USING btree (poi_id);
+
+
+--
+-- Name: pois_to_tiles_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX pois_to_tiles_idx ON pois_to_tiles USING btree (tile_x, tile_y);
+
+
+--
 -- Name: waynodes_id_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
 --
 
@@ -247,10 +321,38 @@ CREATE INDEX waynodes_id_idx ON waynodes USING btree (way_id);
 
 
 --
+-- Name: waynodes_id_sequence_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX waynodes_id_sequence_idx ON waynodes USING btree (way_id, waynode_sequence);
+
+
+--
 -- Name: ways_tags_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
 --
 
 CREATE INDEX ways_tags_idx ON ways_tags USING btree (tag);
+
+
+--
+-- Name: ways_to_tiles_id_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX ways_to_tiles_id_idx ON ways_to_tiles USING btree (way_id);
+
+
+--
+-- Name: ways_to_tiles_id_tile_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX ways_to_tiles_id_tile_idx ON ways_to_tiles USING btree (way_id, tile_x, tile_y);
+
+
+--
+-- Name: ways_to_tiles_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
+--
+
+CREATE INDEX ways_to_tiles_idx ON ways_to_tiles USING btree (tile_x, tile_y);
 
 
 --
@@ -267,6 +369,14 @@ ALTER TABLE ONLY multipolygons
 
 ALTER TABLE ONLY filtered_pois
     ADD CONSTRAINT fk_pois FOREIGN KEY (poi_id) REFERENCES pois(id);
+
+
+--
+-- Name: fk_pois_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
+--
+
+ALTER TABLE ONLY pois_to_tiles_less_data
+    ADD CONSTRAINT fk_pois_less_data FOREIGN KEY (poi_id) REFERENCES pois(id) ON DELETE CASCADE;
 
 
 --
@@ -294,6 +404,14 @@ ALTER TABLE ONLY filtered_ways
 
 
 --
+-- Name: fk_ways_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
+--
+
+ALTER TABLE ONLY ways_to_tiles_less_data
+    ADD CONSTRAINT fk_ways_less_data FOREIGN KEY (way_id) REFERENCES ways(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_waystotiles; Type: FK CONSTRAINT; Schema: public; Owner: osm
 --
 
@@ -302,12 +420,28 @@ ALTER TABLE ONLY ways_to_tiles
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: postgres
+-- Name: poi_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: osm
+--
+
+ALTER TABLE ONLY filtered_pois
+    ADD CONSTRAINT poi_id_fk FOREIGN KEY (poi_id) REFERENCES pois(id);
+
+
+--
+-- Name: way_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: osm
+--
+
+ALTER TABLE ONLY filtered_ways
+    ADD CONSTRAINT way_id_fk FOREIGN KEY (way_id) REFERENCES ways(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: osm
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
+REVOKE ALL ON SCHEMA public FROM osm;
+GRANT ALL ON SCHEMA public TO osm;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
