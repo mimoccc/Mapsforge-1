@@ -807,7 +807,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 						geoWay = Utils.createWay(currentWay, wayNodes);
 
 						// calculate all tiles which are related to a way
-						wayTiles = Utils.wayToTilesWay(geoWay, currentWay.wayType, zoom);
+						wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
+								currentWay.wayType, zoom);
 
 						// calculate all subtiles of the tiles which are related to the way and
 						// create the tile bitmask
@@ -830,8 +831,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							geoWay = Utils.createWay(currentWay, wayNodes);
 
 							// calculate all tiles which are related to a way
-							wayTiles = Utils
-									.wayToTilesWay(geoWay, currentWay.wayType, (byte) 9);
+							wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
+									currentWay.wayType, (byte) 9);
 
 							// calculate all subtiles of the tiles which are related to the way
 							// and

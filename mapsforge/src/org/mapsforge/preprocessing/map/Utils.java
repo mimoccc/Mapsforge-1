@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -35,7 +36,7 @@ class Utils {
 	private static final int[] tileBitMaskValues = new int[] { 32768, 16384, 2048, 1024, 8192,
 			4096, 512, 256, 128, 64, 8, 4, 32, 16, 2, 1 };
 
-	// private static final int[] tileBitMaskValues = new int[] { 8, 4, 2, 1 };
+	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
 	/**
 	 * Get the bounding box of a tile.
@@ -137,7 +138,7 @@ class Utils {
 	 * @return a set of tiles which contain the whole way or a part of the way
 	 * 
 	 */
-	static Set<Tile> wayToTilesWay(Geometry geoWay, int wayType, byte zoom) {
+	static Set<Tile> wayToTilesWay(Geometry geoWay, long wayId, int wayType, byte zoom) {
 		Set<Tile> wayTiles = new HashSet<Tile>();
 
 		Tile parentTile = null;
@@ -153,78 +154,83 @@ class Utils {
 			return wayTiles;
 		}
 
-		Geometry boundingBox = geoWay.getEnvelope();
-		Coordinate[] bBoxCoords = boundingBox.getCoordinates();
+		try {
+			Geometry boundingBox = geoWay.getEnvelope();
+			Coordinate[] bBoxCoords = boundingBox.getCoordinates();
 
-		if (bBoxCoords.length == 1) {
+			if (bBoxCoords.length == 1) {
+				return wayTiles;
+			}
+
+			if (bBoxCoords.length == 2) {
+				int compare = bBoxCoords[0].compareTo(bBoxCoords[1]);
+
+				if (compare == 1) {
+					max = bBoxCoords[0];
+					min = bBoxCoords[1];
+				} else if (compare == 0) {
+					max = bBoxCoords[0];
+					min = bBoxCoords[0];
+				} else {
+					max = bBoxCoords[1];
+					min = bBoxCoords[0];
+				}
+
+			} else {
+				min = bBoxCoords[3];
+				max = bBoxCoords[1];
+			}
+
+			// get the minimal and maximal tile coordinates
+			minTileX = (int) MercatorProjection.longitudeToTileX(min.y, zoom);
+			minTileY = (int) MercatorProjection.latitudeToTileY(min.x, zoom);
+
+			maxTileX = (int) MercatorProjection.longitudeToTileX(max.y, zoom);
+			maxTileY = (int) MercatorProjection.latitudeToTileY(max.x, zoom);
+
+			// calculate the tile coordinates and the corresponding bounding boxes
+			Map<Coordinate, Geometry> tiles = new HashMap<Coordinate, Geometry>();
+			for (long i = minTileX; i <= maxTileX; i++) {
+				for (long j = minTileY; j <= maxTileY; j++) {
+					tiles.put(new Coordinate(i, j), geoFac.createPolygon(Utils.getBoundingBox(
+							i, j, zoom), null));
+				}
+			}
+
+			// check for every tile in the set if the tile contains the given way
+
+			Set<Entry<Coordinate, Geometry>> set = tiles.entrySet();
+			for (Entry<Coordinate, Geometry> e : set) {
+				Coordinate c = e.getKey();
+				// logger.info("tilecoordinates: " + c.x + " " + c.y);
+				Geometry currentTile = e.getValue();
+				if (wayType == 1) {
+					if (geoWay.crosses(currentTile) || geoWay.within(currentTile)
+							|| geoWay.intersects(currentTile) || currentTile.contains(geoWay)
+							|| currentTile.contains(geoWay) || currentTile.intersects(geoWay)) {
+						// logger.info("crosses -1");
+						parentTile = new Tile((long) c.x, (long) c.y, zoom);
+						// logger.info("parentTile: " + parentTile.toString());
+						wayTiles.add(parentTile);
+						// wayTiles.put(new Tile((long) c.x, (long) c.y, zoom), (short) 0);
+					}
+				}
+				if (wayType != 1) {
+					if (currentTile.within(geoWay) || currentTile.intersects(geoWay)
+							|| currentTile.contains(geoWay) || geoWay.contains(currentTile)
+							|| geoWay.crosses(currentTile)) {
+						// logger.info("crosses -2");
+						parentTile = new Tile((long) c.x, (long) c.y, zoom);
+						// logger.info("parentTile: " + parentTile.toString());
+						wayTiles.add(parentTile);
+					}
+				}
+			}
+			return wayTiles;
+		} catch (NullPointerException e) {
+			logger.info("NullPointerException while accessing geometry for way: " + wayId);
 			return wayTiles;
 		}
-
-		if (bBoxCoords.length == 2) {
-			int compare = bBoxCoords[0].compareTo(bBoxCoords[1]);
-
-			if (compare == 1) {
-				max = bBoxCoords[0];
-				min = bBoxCoords[1];
-			} else if (compare == 0) {
-				max = bBoxCoords[0];
-				min = bBoxCoords[0];
-			} else {
-				max = bBoxCoords[1];
-				min = bBoxCoords[0];
-			}
-
-		} else {
-			min = bBoxCoords[3];
-			max = bBoxCoords[1];
-		}
-
-		// get the minimal and maximal tile coordinates
-		minTileX = (int) MercatorProjection.longitudeToTileX(min.y, zoom);
-		minTileY = (int) MercatorProjection.latitudeToTileY(min.x, zoom);
-
-		maxTileX = (int) MercatorProjection.longitudeToTileX(max.y, zoom);
-		maxTileY = (int) MercatorProjection.latitudeToTileY(max.x, zoom);
-
-		// calculate the tile coordinates and the corresponding bounding boxes
-		Map<Coordinate, Geometry> tiles = new HashMap<Coordinate, Geometry>();
-		for (long i = minTileX; i <= maxTileX; i++) {
-			for (long j = minTileY; j <= maxTileY; j++) {
-				tiles.put(new Coordinate(i, j), geoFac.createPolygon(Utils.getBoundingBox(i, j,
-						zoom), null));
-			}
-		}
-
-		// check for every tile in the set if the tile contains the given way
-
-		Set<Entry<Coordinate, Geometry>> set = tiles.entrySet();
-		for (Entry<Coordinate, Geometry> e : set) {
-			Coordinate c = e.getKey();
-			// System.out.println("tilecoordinates: " + c.x + " " + c.y);
-			Geometry currentTile = e.getValue();
-			if (wayType == 1) {
-				if (geoWay.crosses(currentTile) || geoWay.within(currentTile)
-						|| geoWay.intersects(currentTile) || currentTile.contains(geoWay)
-						|| currentTile.contains(geoWay) || currentTile.intersects(geoWay)) {
-					// System.out.println("crosses -1");
-					parentTile = new Tile((long) c.x, (long) c.y, zoom);
-					// System.out.println("parentTile: " + parentTile.toString());
-					wayTiles.add(parentTile);
-					// wayTiles.put(new Tile((long) c.x, (long) c.y, zoom), (short) 0);
-				}
-			}
-			if (wayType != 1) {
-				if (currentTile.within(geoWay) || currentTile.intersects(geoWay)
-						|| currentTile.contains(geoWay) || geoWay.contains(currentTile)
-						|| geoWay.crosses(currentTile)) {
-					// System.out.println("crosses -2");
-					parentTile = new Tile((long) c.x, (long) c.y, zoom);
-					// System.out.println("parentTile: " + parentTile.toString());
-					wayTiles.add(parentTile);
-				}
-			}
-		}
-		return wayTiles;
 	}
 
 	/**

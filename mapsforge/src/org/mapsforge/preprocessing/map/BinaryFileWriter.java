@@ -234,8 +234,8 @@ public class BinaryFileWriter {
 
 				// *** TEMP ***//
 
-				minZoom = (short) ((short) zoom_level - 2);
-				maxZoom = (short) ((short) zoom_level + 2);
+				minZoom = (short) (zoom_level - 2);
+				maxZoom = (short) (zoom_level + 2);
 
 				// *** TEMP ***//
 
@@ -886,6 +886,7 @@ public class BinaryFileWriter {
 		}
 
 		try {
+
 			raf = new RandomAccessFile(targetFile, "rw");
 
 			BinaryFileWriter bfw = new BinaryFileWriter(propertiesFile);

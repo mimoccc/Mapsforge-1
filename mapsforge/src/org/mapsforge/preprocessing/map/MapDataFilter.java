@@ -39,7 +39,7 @@ public class MapDataFilter {
 
 	private int batchSize;
 
-	private static String filterName;
+	// private static String filterName;
 
 	private Connection conn;
 
@@ -238,7 +238,7 @@ public class MapDataFilter {
 		try {
 			MapDataFilter mapFilter = new MapDataFilter(args[0]);
 
-			filterName = args[1];
+			// filterName = args[1];
 
 			mapFilter.filter();
 
