@@ -48,9 +48,9 @@ public class BinaryFileWriter {
 	private final String SQL_GET_METADATA = "SELECT * FROM metadata";
 
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND tile_y = ? AND pt.zoom_level <= ?";
+			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND tile_y = ? AND wt.zoom_level <= ?";
+			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
 
 	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level z LEFT OUTER JOIN "
 			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles pt JOIN filtered_pois fp ON (pt.poi_id = fp.poi_id) "
@@ -60,9 +60,9 @@ public class BinaryFileWriter {
 			+ "WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
 
 	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND tile_y = ? AND pt.zoom_level >= ?";
+			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
 	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND tile_y = ? AND wt.zoom_level >= ?";
+			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
 
 	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM filtered_pois fp JOIN pois_to_tiles ptt ON (fp.poi_id = ptt.poi_id) JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
@@ -231,6 +231,13 @@ public class BinaryFileWriter {
 				tilePixel = rsBBoxCorners.getShort("tile_size");
 				minZoom = rsBBoxCorners.getShort("min_zoom_level");
 				maxZoom = rsBBoxCorners.getShort("max_zoom_level");
+
+				// *** TEMP ***//
+
+				minZoom = (short) ((short) zoom_level - 2);
+				maxZoom = (short) ((short) zoom_level + 2);
+
+				// *** TEMP ***//
 
 				// calculate corner tiles of the bounding box of the given area
 				upperLeft = new Tile(MercatorProjection.longitudeToTileX(
