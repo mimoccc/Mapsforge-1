@@ -39,6 +39,8 @@ public class MapDataFilter {
 
 	private int batchSize;
 
+	private static String filterName;
+
 	private Connection conn;
 
 	private Map<String, Byte> nodeFilterMap;
@@ -48,18 +50,12 @@ public class MapDataFilter {
 	private final String SQL_SELECT_POIS = "SELECT poi_id FROM pois_tags WHERE tag = ?";
 	private final String SQL_SELECT_WAYS = "SELECT way_id FROM ways_tags WHERE tag = ?";
 
-	private final String SQL_SELECT_POIS_TO_TILES = "SELECT poi_id,tile_x,tile_y,zoom_level FROM pois_to_tiles WHERE poi_id = ?";
-	private final String SQL_SELECT_WAYS_TO_TILES = "SELECT * FROM ways_to_tiles WHERE way_id = ?";
-
-	private final String SQL_INSERT_FILTER_POI = "INSERT INTO filtered_pois (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
-	private final String SQL_INSERT_FILTER_WAY = "INSERT INTO filtered_ways (way_id,tile_x,tile_y,tile_bitmask,zoom_level) VALUES (?,?,?,?,?)";
+	private final String SQL_INSERT_FILTER_POI = "INSERT INTO filtered_pois (poi_id) VALUES (?)";
+	private final String SQL_INSERT_FILTER_WAY = "INSERT INTO filtered_ways (way_id) VALUES (?)";
 
 	// prepared statements
 	private final PreparedStatement pstmtSelectPois;
 	private final PreparedStatement pstmtSelectWays;
-
-	private final PreparedStatement pstmtSelectPoisToTiles;
-	private final PreparedStatement pstmtSelectWaysToTiles;
 
 	private final PreparedStatement pstmtInsertFilteredPois;
 	private final PreparedStatement pstmtInsertFilteredWays;
@@ -68,10 +64,11 @@ public class MapDataFilter {
 	private ResultSet rsPois;
 	private ResultSet rsWays;
 
-	private ResultSet rsPoisTiles;
-	private ResultSet rsWaysTiles;
+	private long startTime;
 
 	public MapDataFilter(String propertiesFile) throws Exception {
+
+		startTime = System.currentTimeMillis();
 
 		// setup database connection
 
@@ -83,13 +80,34 @@ public class MapDataFilter {
 		batchSize = Integer.parseInt(props.getProperty("xml2postgresql.batchSize",
 				DEFAULT_BATCH_SIZE));
 
+		// batchSize = Integer.parseInt(DEFAULT_BATCH_SIZE);
+
 		conn = dbConnection.getConnection();
 
 		conn.setAutoCommit(false);
 
+		// conn.createStatement().execute("CREATE TABLE filtered_pois_ids (poi_id bigint)");
+		// conn.createStatement().execute("CREATE TABLE filtered_ways_ids (way_id bigint)");
+
+		conn.createStatement().execute("TRUNCATE TABLE filtered_pois CASCADE");
+		conn.createStatement().execute("TRUNCATE TABLE filtered_ways CASCADE");
+
+		conn.createStatement().execute("DROP INDEX IF EXISTS filtered_pois_idx");
+		conn.createStatement().execute("DROP INDEX IF EXISTS filtered_ways_idx");
+
+		conn.createStatement().execute("ALTER TABLE filtered_pois DROP CONSTRAINT poi_id_fk");
+		conn.createStatement().execute("ALTER TABLE filtered_ways DROP CONSTRAINT way_id_fk");
+
+		conn.commit();
+
 		conn.createStatement().execute("SET CONSTRAINTS ALL DEFERRED");
 
 		logger.info("database connection setup done");
+
+		// conn.createStatement().execute(
+		// "CREATE TABLE " + filterName + "_pois(poi_id bigint not null)");
+		// conn.createStatement().execute(
+		// "CREATE TABLE " + filterName + "_ways(way_id bigint not null)");
 
 		nodeFilterMap = Filter.getNodeFilter();
 		wayFilterMap = Filter.getWayFilter();
@@ -97,11 +115,14 @@ public class MapDataFilter {
 		pstmtSelectPois = conn.prepareStatement(SQL_SELECT_POIS);
 		pstmtSelectWays = conn.prepareStatement(SQL_SELECT_WAYS);
 
-		pstmtSelectPoisToTiles = conn.prepareStatement(SQL_SELECT_POIS_TO_TILES);
-		pstmtSelectWaysToTiles = conn.prepareStatement(SQL_SELECT_WAYS_TO_TILES);
-
 		pstmtInsertFilteredPois = conn.prepareStatement(SQL_INSERT_FILTER_POI);
 		pstmtInsertFilteredWays = conn.prepareStatement(SQL_INSERT_FILTER_WAY);
+
+		// pstmtInsertFilteredPois = conn.prepareStatement("INSERT INTO " + filterName
+		// + "_pois (poi_id) VALUES (?)");
+		// pstmtInsertFilteredWays = conn.prepareStatement("INSERT INTO " + filterName
+		// + "_ways (way_id) VALUES (?)");
+
 	}
 
 	public void filter() {
@@ -112,7 +133,7 @@ public class MapDataFilter {
 		int waysC = 0;
 		try {
 			// get all pois which have one of the tags specified by the filter
-			logger.info("get all relevant pois");
+			logger.info("get all relevant poi ids");
 			for (Entry<String, Byte> tagEntry : nodeFilterMap.entrySet()) {
 				tag = tagEntry.getKey();
 				pstmtSelectPois.setString(1, tag);
@@ -124,18 +145,13 @@ public class MapDataFilter {
 
 			// all relevant records of the pois_to_tiles table are copied into the filtered_pois
 			// table
-			logger.info("copy relevant poi records into filter table");
+			logger.info("copy relevant " + pois.size() + " poi records into filter table");
+			// logger.info("update relevant " + pois.size() + " poi records into filter table");
 			for (Long id : pois) {
 				poisC++;
-				pstmtSelectPoisToTiles.setLong(1, id);
-				rsPoisTiles = pstmtSelectPoisToTiles.executeQuery();
-				while (rsPoisTiles.next()) {
-					pstmtInsertFilteredPois.setLong(1, rsPoisTiles.getLong("poiid"));
-					pstmtInsertFilteredPois.setInt(2, rsPoisTiles.getInt("tilex"));
-					pstmtInsertFilteredPois.setInt(3, rsPoisTiles.getInt("tiley"));
-					pstmtInsertFilteredPois.setInt(4, rsPoisTiles.getInt("zoomlevel"));
-					pstmtInsertFilteredPois.addBatch();
-				}
+				pstmtInsertFilteredPois.setLong(1, id);
+				pstmtInsertFilteredPois.addBatch();
+
 				if (poisC % batchSize == 0) {
 					pstmtInsertFilteredPois.executeBatch();
 					logger.info("executed batch for pois insert " + (poisC - batchSize) + "-"
@@ -144,7 +160,7 @@ public class MapDataFilter {
 			}
 
 			// get all ways which have one of the tags specified by the filter
-			logger.info("get all relevant ways");
+			logger.info("get all relevant way ids");
 			for (Entry<String, Byte> tagEntry : wayFilterMap.entrySet()) {
 				tag = tagEntry.getKey();
 				pstmtSelectWays.setString(1, tag);
@@ -156,22 +172,15 @@ public class MapDataFilter {
 
 			// all relevant records of the ways_to_tiles table are copied into the filtered_ways
 			// table
-			logger.info("copy relevant way records into filter table");
+			logger.info("copy relevant " + ways.size() + " way records into filter table");
 			for (Long id : ways) {
 				waysC++;
-				pstmtSelectWaysToTiles.setLong(1, id);
-				rsWaysTiles = pstmtSelectWaysToTiles.executeQuery();
-				while (rsWaysTiles.next()) {
-					pstmtInsertFilteredWays.setLong(1, rsWaysTiles.getLong("wayid"));
-					pstmtInsertFilteredWays.setInt(2, rsWaysTiles.getInt("tilex"));
-					pstmtInsertFilteredWays.setInt(3, rsWaysTiles.getInt("tiley"));
-					pstmtInsertFilteredWays.setInt(4, rsWaysTiles.getInt("tilebitmask"));
-					pstmtInsertFilteredWays.setInt(5, rsWaysTiles.getInt("zoomlevel"));
-					pstmtInsertFilteredWays.addBatch();
-				}
+				pstmtInsertFilteredWays.setLong(1, id);
+				pstmtInsertFilteredWays.addBatch();
+
 				if (waysC % batchSize == 0) {
 					pstmtInsertFilteredPois.executeBatch();
-					logger.info("executed batch for pois insert " + (waysC - batchSize) + "-"
+					logger.info("executed batch for ways insert " + (waysC - batchSize) + "-"
 							+ waysC);
 				}
 			}
@@ -182,15 +191,25 @@ public class MapDataFilter {
 
 			logger.info("create indices on filter tables");
 			conn.createStatement().execute(
-					"CREATE INDEX filtered_pois_idx ON filtered_pois (tilex,tiley)");
+					"CREATE INDEX filtered_pois_idx ON filtered_pois(poi_id)");
 			conn.createStatement().execute(
-					"CREATE INDEX filtered_ways_idx ON filtered_ways (tilex,tiley)");
-
+					"CREATE INDEX filtered_ways_idx ON filtered_ways(way_id)");
+			conn
+					.createStatement()
+					.execute(
+							"ALTER TABLE filtered_pois ADD CONSTRAINT poi_id_fk FOREIGN KEY (poi_id) REFERENCES pois(id)");
+			conn
+					.createStatement()
+					.execute(
+							"ALTER TABLE filtered_ways ADD CONSTRAINT way_id_fk FOREIGN KEY (way_id) REFERENCES ways(id)");
 			conn.commit();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		logger
+				.info("processing took " + (System.currentTimeMillis() - startTime) / 1000
+						+ "s.");
 	}
 
 	@Override
@@ -200,11 +219,11 @@ public class MapDataFilter {
 	}
 
 	private static void usage() {
-		System.out.println("Usage: MapDataFilter <properties-file>");
+		System.out.println("Usage: MapDataFilter <properties-file> <filter_name>");
 	}
 
 	public static void main(String[] args) {
-		if (args.length != 1) {
+		if (args.length < 2 || args.length > 2) {
 			usage();
 			System.exit(0);
 		}
@@ -218,6 +237,8 @@ public class MapDataFilter {
 
 		try {
 			MapDataFilter mapFilter = new MapDataFilter(args[0]);
+
+			filterName = args[1];
 
 			mapFilter.filter();
 
