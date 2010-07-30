@@ -16,9 +16,9 @@
  */
 package org.mapsforge.preprocessing.map;
 
-class Tile implements Comparable<Tile> {
+public class Tile implements Comparable<Tile> {
 	static final byte TILE_BYTES_PER_PIXEL = 2;
-	static final short TILE_SIZE = 256;
+	public static final short TILE_SIZE = 256;
 	private final int hashCode;
 	final long pixelX;
 	final long pixelY;

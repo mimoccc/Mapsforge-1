@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.routing.core;
+package org.mapsforge.core;
 
-public interface IProperty {
+public class Constants {
 
-	/**
-	 * this is the enforcement of the method. Since this is already implemented in the enum base
-	 * class in java, there is no need to implement it in the enum provided by the client code.
-	 * 
-	 * @return the name of the element as described in {@link java.lang.Enum#name()}.
-	 */
-	String name();
+	public static final String TAG_HIGHWAY = "highway";
+	public static final String TAG_ONEWAY = "oneway";
+	public static final String TAG_MAXSPEED = "maxspeed";
+	public static final String TAG_STREETNAME = "name";
+
+	public static final String TAG_TRAFFIC_SIGNAL = "traffic_signals";
+	public static final String TAG_STOP_SIGN = "stop";
 
 }

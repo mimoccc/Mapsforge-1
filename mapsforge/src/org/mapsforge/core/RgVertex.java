@@ -14,20 +14,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing;
+package org.mapsforge.core;
 
-public class Node implements INode {
+/**
+ * @author Frank Viernau
+ */
+public class RgVertex {
 
-	private int id;
+	private final int id;
+	private final double longitude, latitude;
+	private final long osmNodeId;
 
-	public Node(int id) {
-		super();
+	public RgVertex(int id, double longitude, double latitude, long osmNodeId) {
 		this.id = id;
+		this.longitude = longitude;
+		this.latitude = latitude;
+		this.osmNodeId = osmNodeId;
 	}
 
-	@Override
-	public int id() {
+	public int getId() {
 		return id;
 	}
 
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public long getOsmNodeId() {
+		return osmNodeId;
+	}
+
+	public boolean isDummy() {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "v: id=" + id + ", coord=(" + longitude + ", " + latitude + ")";
+	}
 }

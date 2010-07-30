@@ -14,10 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing;
+package org.mapsforge.core;
 
-public interface Identifieable {
+public class WayNode {
+	public Node node;
+	public long wayID;
+	public int sequenceID;
 
-	public int id();
+	public WayNode(Node node, long wayID, int sequenceID) {
+		super();
 
+		this.node = node;
+		this.wayID = wayID;
+		this.sequenceID = sequenceID;
+	}
 }

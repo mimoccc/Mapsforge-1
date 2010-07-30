@@ -14,28 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.geoCoding;
+package org.mapsforge.core;
 
-import java.util.List;
+public class Rect {
 
-/**
- * Interface for the geocoding service.
- * 
- * @author nemo & bogumil
- * 
- * @see GeoCoderGoogle
- * @see GeoCoderGeoNames
- */
-public interface IGeoCoder {
-
-	/**
-	 * Returns a list of possible locations, witch match the request String.
-	 * 
-	 * @param request
-	 *            some map informations.
-	 * @param max
-	 *            maximal number of results
-	 * @return List of Points, with 0 <= length(List) <= max.
-	 */
-	public List<GeoCoderNode> search(String request, int max);
 }
