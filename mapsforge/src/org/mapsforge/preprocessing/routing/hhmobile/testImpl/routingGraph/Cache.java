@@ -16,11 +16,11 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
-public interface ICache {
+public interface Cache<I extends CacheItem> {
 
-	public Block getBlock(int blockId);
+	public I getItem(int id);
 
-	public void putBlock(Block block);
+	public void putItem(I item);
 
 	public void clear();
 

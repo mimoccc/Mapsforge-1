@@ -22,7 +22,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGrap
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayInputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
 
-class Block {
+class Block implements CacheItem {
 
 	private final BitArrayInputStream stream;
 
@@ -247,10 +247,12 @@ class Block {
 		// }
 	}
 
-	public int getBlockId() {
+	@Override
+	public int getId() {
 		return bId;
 	}
 
+	@Override
 	public int getSizeBytes() {
 		return data.length;
 	}

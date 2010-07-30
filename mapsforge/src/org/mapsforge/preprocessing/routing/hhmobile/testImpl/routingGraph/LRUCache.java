@@ -20,17 +20,17 @@ import gnu.trove.list.TLinkable;
 import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class LRUCache implements ICache {
+public class LRUCache<I extends CacheItem> implements Cache<I> {
 
-	private final TLinkedList<CacheItem> list;
-	private final TIntObjectHashMap<CacheItem> map;
+	private final TLinkedList<ListNode<I>> list;
+	private final TIntObjectHashMap<ListNode<I>> map;
 	private int sizeBytesThreshold, sizeBytes;
 	private int numCacheMisses;
 	private int numBytesRead;
 
 	public LRUCache(int sizeBytesThreshold) {
-		this.list = new TLinkedList<CacheItem>();
-		this.map = new TIntObjectHashMap<CacheItem>();
+		this.list = new TLinkedList<ListNode<I>>();
+		this.map = new TIntObjectHashMap<ListNode<I>>();
 		this.sizeBytesThreshold = sizeBytesThreshold;
 		this.sizeBytes = 0;
 		this.numCacheMisses = 0;
@@ -55,60 +55,60 @@ public class LRUCache implements ICache {
 	}
 
 	@Override
-	public Block getBlock(int blockId) {
-		CacheItem item = map.get(blockId);
-		if (item != null) {
-			list.remove(item);
-			list.addFirst(item);
-			return item.block;
+	public I getItem(int id) {
+		ListNode<I> ci = map.get(id);
+		if (ci != null) {
+			list.remove(ci);
+			list.addFirst(ci);
+			return ci.item;
 		}
 		numCacheMisses++;
 		return null;
 	}
 
 	@Override
-	public void putBlock(Block block) {
-		CacheItem item = new CacheItem(block);
-		list.addFirst(item);
-		map.put(block.getBlockId(), item);
-		sizeBytes += block.getSizeBytes();
+	public void putItem(I item) {
+		ListNode<I> ci = new ListNode<I>(item);
+		list.addFirst(ci);
+		map.put(item.getId(), ci);
+		sizeBytes += item.getSizeBytes();
 		while (sizeBytes > sizeBytesThreshold) {
-			CacheItem last = list.removeLast();
-			map.remove(last.block.getBlockId());
-			sizeBytes -= last.block.getSizeBytes();
+			ListNode<I> last = list.removeLast();
+			map.remove(last.item.getId());
+			sizeBytes -= last.item.getSizeBytes();
 		}
-		this.numBytesRead += block.getSizeBytes();
+		this.numBytesRead += item.getSizeBytes();
 	}
 
-	private static class CacheItem implements TLinkable<CacheItem> {
+	private static class ListNode<I> implements TLinkable<ListNode<I>> {
 		private static final long serialVersionUID = 1L;
-		final Block block;
-		CacheItem next;
-		CacheItem prev;
+		final I item;
+		ListNode<I> next;
+		ListNode<I> prev;
 
-		public CacheItem(Block block) {
-			this.block = block;
+		public ListNode(I item) {
+			this.item = item;
 			this.next = null;
 			this.prev = null;
 		}
 
 		@Override
-		public CacheItem getNext() {
+		public ListNode<I> getNext() {
 			return this.next;
 		}
 
 		@Override
-		public CacheItem getPrevious() {
+		public ListNode<I> getPrevious() {
 			return this.prev;
 		}
 
 		@Override
-		public void setNext(CacheItem next) {
+		public void setNext(ListNode<I> next) {
 			this.next = next;
 		}
 
 		@Override
-		public void setPrevious(CacheItem prev) {
+		public void setPrevious(ListNode<I> prev) {
 			this.prev = prev;
 		}
 	}

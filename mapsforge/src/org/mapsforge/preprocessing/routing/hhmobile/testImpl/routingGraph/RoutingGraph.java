@@ -33,13 +33,15 @@ public class RoutingGraph {
 
 	private final int numLevels;
 	private final BlockReader blockReader;
-	private final ICache cache;
+	private final Cache<Block> cache;
 	private final int shiftClusterId;
 	private final int bitMask;
 	private final Random rnd = new Random(1222);
 	public int[] numBlockReads;
+	public int ioTime;
+	public int shiftTime;
 
-	public RoutingGraph(File file, ICache cache) throws IOException {
+	public RoutingGraph(File file, Cache<Block> cache) throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(file, "r");
 
 		BinaryFileHeader fileHeader = new BinaryFileHeader(read(raf, 0,
@@ -66,6 +68,8 @@ public class RoutingGraph {
 		this.bitMask = getBitmask(shiftClusterId);
 
 		this.numBlockReads = new int[numLevels];
+		this.ioTime = 0;
+		this.shiftTime = 0;
 	}
 
 	public int numLevels() {
@@ -84,14 +88,19 @@ public class RoutingGraph {
 
 	public Vertex getVertex(int vertexId) throws IOException {
 		int blockId = getBlockId(vertexId);
-		Block block = cache.getBlock(blockId);
+		Block block = cache.getItem(blockId);
 		if (block == null) {
+			long time = System.currentTimeMillis();
 			block = blockReader.readBlock(blockId);
+			ioTime += System.currentTimeMillis() - time;
 			numBlockReads[block.getLevel()]++;
-			cache.putBlock(block);
+			cache.putItem(block);
 		}
 		int vertexOffset = getVertexOffset(vertexId);
-		return block.getVertex(vertexOffset);
+		long time = System.currentTimeMillis();
+		Vertex v = block.getVertex(vertexOffset);
+		shiftTime += System.currentTimeMillis() - time;
+		return v;
 	}
 
 	public int getBlockId(int vertexId) {
@@ -121,7 +130,8 @@ public class RoutingGraph {
 	public static void main(String[] args) throws IOException {
 		String map = "berlin";
 
-		RoutingGraph router = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
+		RoutingGraph router = new RoutingGraph(new File(map + ".mobile_hh"),
+				new DummyCache<Block>());
 		Vertex s = router.getRandomVertex(0);
 		Vertex t = router.getRandomVertex(0);
 		System.out.println(s);

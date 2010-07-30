@@ -16,29 +16,10 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+public interface CacheItem {
 
-public class DummyCache<I extends CacheItem> implements Cache<I> {
+	public int getId();
 
-	private TIntObjectHashMap<I> map;
-
-	public DummyCache() {
-		this.map = new TIntObjectHashMap<I>();
-	}
-
-	@Override
-	public I getItem(int id) {
-		return map.get(id);
-	}
-
-	@Override
-	public void putItem(I item) {
-		map.put(item.getId(), item);
-	}
-
-	@Override
-	public void clear() {
-		map.clear();
-	}
+	public int getSizeBytes();
 
 }
