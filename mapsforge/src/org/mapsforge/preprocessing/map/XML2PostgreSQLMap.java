@@ -341,7 +341,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMetadata.setInt(7, zoom);
 			pstmtMetadata.setInt(8, Tile.TILE_SIZE);
 			pstmtMetadata.setShort(9, (short) (zoom - 2));
-			pstmtMetadata.setShort(10, (short) (zoom + 2));
+			pstmtMetadata.setShort(10, (short) (zoom + 3));
 			pstmtMetadata.execute();
 
 			logger.info("metadata inserted");
@@ -658,10 +658,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					if (currentNode.zoomLevel < 12) {
 						// TODO: fest gesetztes kleines zoom level dynamisch machen
 						mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
-								(double) currentNode.longitude / 1000000, zoom),
+								(double) currentNode.longitude / 1000000, (byte) 8),
 								MercatorProjection.latitudeToTileY(
-										(double) currentNode.latitude / 1000000, (byte) 9),
-								(byte) 9);
+										(double) currentNode.latitude / 1000000, (byte) 8),
+								(byte) 8);
 
 						pstmtPoisTilesLessData.setLong(1, currentNode.id);
 						pstmtPoisTilesLessData.setLong(2, mainTileForPOI.x);
@@ -817,12 +817,12 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 						wayTilesEntries = waySubTiles.entrySet();
 						for (Entry<Tile, Short> entry : wayTilesEntries) {
-							pstmtWaysTilesLessData.setLong(1, currentWay.id);
-							pstmtWaysTilesLessData.setLong(2, entry.getKey().x);
-							pstmtWaysTilesLessData.setLong(3, entry.getKey().y);
-							pstmtWaysTilesLessData.setInt(4, entry.getValue());
-							pstmtWaysTilesLessData.setShort(5, currentWay.zoomLevel);
-							pstmtWaysTilesLessData.addBatch();
+							pstmtWaysTiles.setLong(1, currentWay.id);
+							pstmtWaysTiles.setLong(2, entry.getKey().x);
+							pstmtWaysTiles.setLong(3, entry.getKey().y);
+							pstmtWaysTiles.setInt(4, entry.getValue());
+							pstmtWaysTiles.setShort(5, currentWay.zoomLevel);
+							pstmtWaysTiles.addBatch();
 						}
 
 						// TODO: dynamisches zoom level!
@@ -832,7 +832,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 							// calculate all tiles which are related to a way
 							wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
-									currentWay.wayType, (byte) 9);
+									currentWay.wayType, (byte) 8);
 
 							// calculate all subtiles of the tiles which are related to the way
 							// and
@@ -842,12 +842,12 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 							wayTilesEntries = waySubTiles.entrySet();
 							for (Entry<Tile, Short> entry : wayTilesEntries) {
-								pstmtWaysTiles.setLong(1, currentWay.id);
-								pstmtWaysTiles.setLong(2, entry.getKey().x);
-								pstmtWaysTiles.setLong(3, entry.getKey().y);
-								pstmtWaysTiles.setInt(4, entry.getValue());
-								pstmtWaysTiles.setShort(5, currentWay.zoomLevel);
-								pstmtWaysTiles.addBatch();
+								pstmtWaysTilesLessData.setLong(1, currentWay.id);
+								pstmtWaysTilesLessData.setLong(2, entry.getKey().x);
+								pstmtWaysTilesLessData.setLong(3, entry.getKey().y);
+								pstmtWaysTilesLessData.setInt(4, entry.getValue());
+								pstmtWaysTilesLessData.setShort(5, currentWay.zoomLevel);
+								pstmtWaysTilesLessData.addBatch();
 							}
 						}
 
