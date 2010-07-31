@@ -16,41 +16,221 @@
  */
 package org.mapsforge.core;
 
-import static org.mapsforge.preprocessing.util.Constants.TAG_STOP_SIGN;
-import static org.mapsforge.preprocessing.util.Constants.TAG_TRAFFIC_SIGNAL;
+import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+/**
+ * This immutable class represents a single node from the OpenStreetMap data. All mandatory
+ * fields are final.
+ */
+public class Node implements Comparable<Node> {
+	private int elevation;
+	private String houseNumber;
+	private final long id;
+	private final double latitude;
+	private byte layer;
+	private final double longitude;
+	private String name;
+	private LinkedList<String> tags;
 
-public class Node {
-
-	public long id;
-	public double latitude;
-	public double longitude;
-	public String highwayTags;
-
-	public Node() {
-		super();
-	}
-
-	public Node(long id, double latitude, double longitude, String nodeTags) {
-		super();
+	/**
+	 * Constructs a new Node with the given parameters.
+	 * 
+	 * @param id
+	 *            the node ID.
+	 * @param latitude
+	 *            the node latitude.
+	 * @param longitude
+	 *            the node longitude.
+	 */
+	public Node(long id, double latitude, double longitude) {
 		this.id = id;
 		this.latitude = latitude;
 		this.longitude = longitude;
-		this.highwayTags = nodeTags;
 	}
 
-	public boolean hasTrafficLight() {
-		return highwayTags != null && highwayTags.contains(TAG_TRAFFIC_SIGNAL);
+	@Override
+	public int compareTo(Node node) {
+		if (this.id > node.id) {
+			return 1;
+		} else if (this.id < node.id) {
+			return -1;
+		}
+		return 0;
 	}
 
-	public boolean hasStopSign() {
-		return highwayTags != null && highwayTags.contains(TAG_STOP_SIGN);
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof Node)) {
+			return false;
+		} else {
+			Node other = (Node) obj;
+			if (this.elevation != other.elevation) {
+				return false;
+			} else if (this.houseNumber == null && other.houseNumber != null) {
+				return false;
+			} else if (!this.houseNumber.equals(other.houseNumber)) {
+				return false;
+			} else if (this.id != other.id) {
+				return false;
+			} else if (this.latitude != other.latitude) {
+				return false;
+			} else if (this.layer != other.layer) {
+				return false;
+			} else if (this.longitude != other.longitude) {
+				return false;
+			} else if (this.name == null && other.name != null) {
+				return false;
+			} else if (!this.name.equals(other.name)) {
+				return false;
+			} else if (this.tags == null && other.tags != null) {
+				return false;
+			} else if (!this.tags.equals(other.tags)) {
+				return false;
+			}
+			return true;
+		}
 	}
 
-	public double distance(Node other) {
-		GeoCoordinate A = new GeoCoordinate(latitude, longitude);
-		GeoCoordinate B = new GeoCoordinate(other.latitude, other.longitude);
-		return A.distance(B);
+	/**
+	 * Returns the elevation of this node.
+	 * 
+	 * @return the elevation of this node.
+	 */
+	public int getElevation() {
+		return this.elevation;
+	}
+
+	/**
+	 * Returns the house number of this node.
+	 * 
+	 * @return the house number of this node.
+	 */
+	public String getHouseNumber() {
+		return this.houseNumber;
+	}
+
+	/**
+	 * Returns the ID of this node.
+	 * 
+	 * @return the ID of this node.
+	 */
+	public long getId() {
+		return this.id;
+	}
+
+	/**
+	 * Returns the latitude of this node.
+	 * 
+	 * @return the latitude of this node.
+	 */
+	public double getLatitude() {
+		return this.latitude;
+	}
+
+	/**
+	 * Returns the layer of this node.
+	 * 
+	 * @return the layer of this node.
+	 */
+	public byte getLayer() {
+		return this.layer;
+	}
+
+	/**
+	 * Returns the longitude of this node.
+	 * 
+	 * @return the longitude of this node.
+	 */
+	public double getLongitude() {
+		return this.longitude;
+	}
+
+	/**
+	 * Returns the name of this node.
+	 * 
+	 * @return the name of this node.
+	 */
+	public String getName() {
+		return this.name;
+	}
+
+	/**
+	 * Returns the tags of this node.
+	 * 
+	 * @return the tags of this node.
+	 */
+	public LinkedList<String> getTags() {
+		return this.tags;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + this.elevation;
+		result = prime * result
+				+ ((this.houseNumber == null) ? 0 : this.houseNumber.hashCode());
+		result = prime * result + (int) (this.id ^ (this.id >>> 32));
+		long temp;
+		temp = Double.doubleToLongBits(this.latitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + this.layer;
+		temp = Double.doubleToLongBits(this.longitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
+		result = prime * result + ((this.tags == null) ? 0 : this.tags.hashCode());
+		return result;
+	}
+
+	/**
+	 * Sets the elevation of this node.
+	 * 
+	 * @param elevation
+	 *            the elevation of this node.
+	 */
+	public void setElevation(int elevation) {
+		this.elevation = elevation;
+	}
+
+	/**
+	 * Sets the house number of this node.
+	 * 
+	 * @param houseNumber
+	 *            the house number of this node.
+	 */
+	public void setHouseNumber(String houseNumber) {
+		this.houseNumber = houseNumber;
+	}
+
+	/**
+	 * Sets the layer of this node.
+	 * 
+	 * @param layer
+	 *            the layer of this node.
+	 */
+	public void setLayer(byte layer) {
+		this.layer = layer;
+	}
+
+	/**
+	 * Sets the name of this node.
+	 * 
+	 * @param name
+	 *            the name of this node.
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * Sets the tags of this node.
+	 * 
+	 * @param tags
+	 *            the tags of this node.
+	 */
+	public void setTags(LinkedList<String> tags) {
+		this.tags = tags;
 	}
 }

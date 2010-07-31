@@ -19,7 +19,7 @@ package org.mapsforge.core;
 /**
  * This immutable class represents a geological coordinate with a latitude and longitude value.
  */
-public class GeoCoordinate {
+public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	/**
 	 * The multiplication factor to convert from double to int.
 	 */
@@ -145,6 +145,17 @@ public class GeoCoordinate {
 	public GeoCoordinate(int latitudeE6, int longitudeE6) throws IllegalArgumentException {
 		this.latitude = validateLatitude(intToDouble(latitudeE6));
 		this.longitude = validateLongitude(intToDouble(longitudeE6));
+	}
+
+	@Override
+	public int compareTo(GeoCoordinate geoCoordinate) {
+		if (this.latitude > geoCoordinate.latitude || this.longitude > geoCoordinate.longitude) {
+			return 1;
+		} else if (this.latitude < geoCoordinate.latitude
+				|| this.longitude < geoCoordinate.longitude) {
+			return -1;
+		}
+		return 0;
 	}
 
 	@Override
