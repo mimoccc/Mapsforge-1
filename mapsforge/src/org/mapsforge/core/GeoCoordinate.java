@@ -17,7 +17,7 @@
 package org.mapsforge.core;
 
 /**
- * This immutable class represents a geological coordinate with a latitude and longitude value.
+ * This immutable class represents a geographic coordinate with a latitude and longitude value.
  */
 public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	/**

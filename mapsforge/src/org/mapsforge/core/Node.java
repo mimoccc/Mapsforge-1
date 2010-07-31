@@ -19,8 +19,8 @@ package org.mapsforge.core;
 import java.util.LinkedList;
 
 /**
- * This immutable class represents a single node from the OpenStreetMap data. All mandatory
- * fields are final.
+ * This class represents a node from the OpenStreetMap data. All mandatory fields are final. All
+ * other fields may be set via their corresponding set method.
  */
 public class Node implements Comparable<Node> {
 	private int elevation;
@@ -103,7 +103,7 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * Returns the house number of this node.
+	 * Returns the house number of this node. This may be null if no house number was set.
 	 * 
 	 * @return the house number of this node.
 	 */
@@ -148,7 +148,7 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * Returns the name of this node.
+	 * Returns the name of this node. This may be null if no name was set.
 	 * 
 	 * @return the name of this node.
 	 */
@@ -157,7 +157,7 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * Returns the tags of this node.
+	 * Returns the tags of this node. This may be null if no tags were set.
 	 * 
 	 * @return the tags of this node.
 	 */
@@ -232,5 +232,11 @@ public class Node implements Comparable<Node> {
 	 */
 	public void setTags(LinkedList<String> tags) {
 		this.tags = tags;
+	}
+
+	@Override
+	public String toString() {
+		return "ID: " + this.id + ", latitude: " + this.latitude + ", longitude: "
+				+ this.longitude;
 	}
 }
