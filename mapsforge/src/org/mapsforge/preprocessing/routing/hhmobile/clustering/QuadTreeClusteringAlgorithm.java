@@ -27,6 +27,8 @@ import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class QuadTreeClusteringAlgorithm {
 
+	public static final String ALGORITHM_NAME = "quad_tree";
+
 	public static final int HEURISTIC_CENTER = 0;
 	public static final int HEURISTIC_MEDIAN = 1;
 	public static final int HEURISTIC_AVERAGE = 2;

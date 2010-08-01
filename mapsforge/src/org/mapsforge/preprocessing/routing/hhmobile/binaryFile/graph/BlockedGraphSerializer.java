@@ -16,13 +16,10 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
@@ -31,10 +28,8 @@ import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
-import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
 public class BlockedGraphSerializer {
 
@@ -70,37 +65,13 @@ public class BlockedGraphSerializer {
 
 		int[] blockSize = new int[mapping.size()];
 		for (int i = 0; i < mapping.size(); i++) {
-			if (i == 123)
-				DEBUG = true;
-			else {
-				DEBUG = false;
-			}
 			blockSize[i] = serializeBlock(BUFFER, mapping.getCluster(i), mapping, cUtil, header);
 			out.write(BUFFER, 0, blockSize[i]);
 			Utils.setZero(BUFFER, 0, blockSize[i]);
 		}
 
-		TIntIntHashMap i2e = new TIntIntHashMap();
-		TIntIntHashMap e2i = new TIntIntHashMap();
-		for (int i = 0; i < levelGraph.numLevels(); i++) {
-			for (Iterator<LevelVertex> iter = levelGraph.getLevel(i).getVertices(); iter
-					.hasNext();) {
-				LevelVertex v = iter.next();
-				int blockId = mapping.getBlockId(clustering[i].getCluster(v.getId()));
-				int vertexOffset = cUtil.getClusterVertexOffset(v.getId(), i);
-				int externalId = getVertexId(header, blockId, vertexOffset);
-				i2e.put(v.getId(), externalId);
-				e2i.put(externalId, v.getId());
-			}
-		}
-		Serializer.serialize(new File("i2e"), i2e);
-		Serializer.serialize(new File("e2i"), e2i);
 		out.close();
 		return blockSize;
-	}
-
-	private static int getVertexId(BlockedGraphHeader graphHeader, int blockId, int vertexOffset) {
-		return (blockId << graphHeader.bpVertexCount) | vertexOffset;
 	}
 
 	private static BlockedGraphHeader computeHeader(ClusteringUtil cUtil) {

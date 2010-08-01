@@ -40,6 +40,8 @@ import org.mapsforge.preprocessing.util.DBConnection;
 
 public class KCenterClusteringAlgorithm {
 
+	public static final String ALGORITHM_NAME = "k_center";
+
 	private static final int MSG_INT_BUILD_CLUSTERS = 100000;
 	private static final int MSG_INT_SAMPLE_DOWN = 1000;
 

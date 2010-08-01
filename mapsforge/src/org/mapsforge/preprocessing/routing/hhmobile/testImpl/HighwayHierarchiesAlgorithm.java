@@ -64,8 +64,11 @@ public class HighwayHierarchiesAlgorithm {
 				INITIAL_DIJKSTRA_MAP_SIZE);
 	}
 
-	public int getShortestPath(int sourceId, int targetId, LinkedList<Vertex> shortestPathBuff)
+	public int getShortestPath(int sourceId, int targetId, LinkedList<Edge> shortestPathBuff)
 			throws IOException {
+		Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
+		System.out.println("\ngetShortestPath " + sourceId + " -> " + targetId);
+		long startTime = System.currentTimeMillis();
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discovered[FWD].clear();
@@ -125,14 +128,31 @@ public class HighwayHierarchiesAlgorithm {
 			direction = (direction + 1) % 2;
 		}
 		if (searchScopeHitId != -1) {
-			// expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
-			// .get(searchScopeHitId), shortestPathBuff);
-		}
+			System.out.println("got shortest distance " + distance + " "
+					+ (System.currentTimeMillis() - startTime) + "ms");
+			startTime = System.currentTimeMillis();
+			System.out.println("settled : " + Utils.arrToString(numSettled[0]) + " | "
+					+ Utils.arrToString(numSettled[1]));
+			System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
+			System.out.println("ioTime : " + graph.ioTime + "ms");
+			System.out.println("shiftTime : " + graph.shiftTime + "ms");
+			Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
 
-		System.out.println("settled : " + Utils.arrToString(numSettled[0]) + " | "
-				+ Utils.arrToString(numSettled[1]));
-		System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
-		Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
+			graph.ioTime = 0;
+			graph.shiftTime = 0;
+
+			System.out.print("expanding shortcuts...");
+			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
+					.get(searchScopeHitId), shortestPathBuff);
+			System.out.println((System.currentTimeMillis() - startTime) + "ms");
+			System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
+			System.out.println("ioTime : " + graph.ioTime + "ms");
+			System.out.println("shiftTime : " + graph.shiftTime + "ms");
+
+			graph.ioTime = 0;
+			graph.shiftTime = 0;
+			Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
+		}
 		return distance;
 	}
 
@@ -187,7 +207,7 @@ public class HighwayHierarchiesAlgorithm {
 		return result;
 	}
 
-	private void expandEdges(HHHeapItem fwd, HHHeapItem bwd, LinkedList<Vertex> buff)
+	private void expandEdges(HHHeapItem fwd, HHHeapItem bwd, LinkedList<Edge> buff)
 			throws IOException {
 		while (fwd.eSrcId != -1) {
 			expandEdgeRec(fwd.eSrcId, fwd.eTgtId, buff, true);
@@ -199,21 +219,20 @@ public class HighwayHierarchiesAlgorithm {
 		}
 	}
 
-	private void expandEdgeRec(int src, int tgt, LinkedList<Vertex> buff, boolean fwd)
+	private void expandEdgeRec(int src, int tgt, LinkedList<Edge> buff, boolean fwd)
 			throws IOException {
 		Vertex s = graph.getVertex(src);
 		Vertex t = graph.getVertex(tgt);
 		// System.out.println("expand edge " + s.getId() + " " + t.getId() + " " + s.getLvl()
 		// + " " + t.getLvl());
-		Edge e = extractEdge(s, t);
+		Edge e = extractEdge(s, t, fwd);
 		if (s.getIdSubj() == -1) {
 			// edge level == 0
 			if (fwd) {
-				buff.addFirst(t);
-				buff.addFirst(s);
+				buff.addFirst(e);
 			} else {
-				buff.addLast(t);
-				buff.addLast(s);
+				e = extractEdge(t, s, true);
+				buff.addLast(e);
 			}
 		} else if (!e.isShortcut()) {
 			// jump directly to level 0
@@ -265,12 +284,13 @@ public class HighwayHierarchiesAlgorithm {
 		}
 	}
 
-	private Edge extractEdge(Vertex s, Vertex t) {
+	private Edge extractEdge(Vertex s, Vertex t, boolean fwd) {
 		Edge[] adjEdges = s.getOutboundEdges();
 		int minWeight = Integer.MAX_VALUE;
 		int idx = -1;
 		for (int i = 0; i < adjEdges.length; i++) {
-			if (adjEdges[i].getTargetId() == t.getId() && adjEdges[i].getWeight() < minWeight) {
+			if (adjEdges[i].getTargetId() == t.getId() && adjEdges[i].getWeight() < minWeight
+					&& ((fwd && adjEdges[i].isForward()) || (!fwd && adjEdges[i].isBackward()))) {
 				minWeight = adjEdges[i].getWeight();
 				idx = i;
 			}
@@ -428,10 +448,10 @@ public class HighwayHierarchiesAlgorithm {
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		String map = "germany";
-		int n = 30;
+		String map = "berlin";
+		int n = 10;
 
-		LRUCache cache = new LRUCache(16384 * 1024);
+		LRUCache cache = new LRUCache(1000 * 1024);
 		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), cache);
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
@@ -439,8 +459,8 @@ public class HighwayHierarchiesAlgorithm {
 
 		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.BLACK,
 				Color.WHITE);
-		LinkedList<Vertex> sp1 = new LinkedList<Vertex>();
-		LinkedList<Vertex> sp2 = new LinkedList<Vertex>();
+		LinkedList<Edge> sp1 = new LinkedList<Edge>();
+		LinkedList<Edge> sp2 = new LinkedList<Edge>();
 
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
@@ -455,11 +475,19 @@ public class HighwayHierarchiesAlgorithm {
 			// if (d1 != d2) {
 			// System.out.println(d1 + " != " + d2);
 			// }
-
-			for (Vertex v : sp1) {
-				renderer.addCircle(new GeoCoordinate(v.getLat(), v.getLon()), Color.RED);
+			int j = 1;
+			GeoCoordinate[] coords = new GeoCoordinate[sp1.size() + 1];
+			coords[0] = new GeoCoordinate(s.getLat(), s.getLon());
+			for (Edge e : sp1) {
+				coords[j] = new GeoCoordinate(graph.getVertex(e.getTargetId()).getLat(), graph
+						.getVertex(e.getTargetId()).getLon());
+				if (coords[j].getLongitudeInt() == coords[j - 1].getLongitudeInt()
+						&& coords[j].getLatitudeInt() == coords[j - 1].getLatitudeInt()) {
+					System.out.println("error " + j);
+				}
+				j++;
 			}
-
+			renderer.addMultiLine(coords, Color.RED);
 			//
 			renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
 			renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
