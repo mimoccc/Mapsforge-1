@@ -656,13 +656,39 @@ public final class HHComputation {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+		} else if (args.length == 14) {
+			try {
+				int h = Integer.parseInt(args[0]);
+				double c = Double.parseDouble(args[1]);
+				int hopLimit = Integer.parseInt(args[2]);
+				int numThreads = Integer.parseInt(args[3]);
+				Connection inputDb = DBConnection.getJdbcConnectionPg(args[4], Integer
+						.parseInt(args[5]), args[6], args[7], args[8]);
+				Connection outputDb = DBConnection.getJdbcConnectionPg(args[9], Integer
+						.parseInt(args[10]), args[11], args[12], args[13]);
+
+				RgDAO rgDao = new RgDAO(inputDb);
+				IRgWeightFunction<RgEdge> wFunc = new RgWeightFunctionTime(
+						new DEHighwayLevel2Speed());
+				doPreprocessing(rgDao, wFunc, h, hopLimit, c, 0, false, numThreads, outputDb);
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		} else {
 			usage();
 		}
 	}
 
 	private static void usage() {
-		System.out.println("HHComputation <properties-file>");
+		System.out.println("HHComputation <properties-file>\n");
+		System.out
+				.println("HHComputation <h> <c> <hopLimit> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass> ");
+
 	}
 
 	private static Connection getInputDbConnection(Properties props) throws SQLException,
