@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering.Cluster;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClustering.KCenterCluster;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IVertex;
@@ -107,7 +107,7 @@ public class KCenterClusteringAlgorithm {
 
 		// initialize heap and enqueue centers
 		BinaryMinHeap<HeapItem, Integer> queue = new BinaryMinHeap<HeapItem, Integer>(10000);
-		for (Cluster c : clustering.getClusters()) {
+		for (KCenterCluster c : clustering.getClusters()) {
 			HeapItem item = new HeapItem(c.getCenterVertex(), 0, c.getCenterVertex());
 			queue.insert(item);
 			enqueuedVertices.put(c.getCenterVertex(), item);
@@ -163,7 +163,7 @@ public class KCenterClusteringAlgorithm {
 			int heuristik) {
 		int count = 0;
 		while (k_ - count > k) {
-			Cluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
+			KCenterCluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
 			removeClusterAndRearrange(graph, clustering, cluster);
 			count++;
 			if (count % MSG_INT_SAMPLE_DOWN == 0) {
@@ -177,9 +177,9 @@ public class KCenterClusteringAlgorithm {
 	}
 
 	private static void removeClusterAndRearrange(IGraph graph, KCenterClustering clustering,
-			Cluster cluster) {
+			KCenterCluster cluster) {
 		// remove the cluster
-		Cluster[] adjClusters = getAdjacentClusters(graph, clustering, cluster);
+		KCenterCluster[] adjClusters = getAdjacentClusters(graph, clustering, cluster);
 		int clusterSize = cluster.size();
 		clustering.removeCluster(cluster);
 
@@ -190,7 +190,7 @@ public class KCenterClusteringAlgorithm {
 
 		// initialize heap and enqueue centers
 		BinaryMinHeap<HeapItem, Integer> queue = new BinaryMinHeap<HeapItem, Integer>(10000);
-		for (Cluster c : adjClusters) {
+		for (KCenterCluster c : adjClusters) {
 			HeapItem item = new HeapItem(c.getCenterVertex(), 0, c.getCenterVertex());
 			queue.insert(item);
 			enqueuedVertices.put(c.getCenterVertex(), item);
@@ -238,38 +238,38 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private static Cluster[] getAdjacentClusters(IGraph graph, KCenterClustering clustering,
-			Cluster cluster) {
-		THashSet<Cluster> set = new THashSet<Cluster>();
+	private static KCenterCluster[] getAdjacentClusters(IGraph graph, KCenterClustering clustering,
+			KCenterCluster cluster) {
+		THashSet<KCenterCluster> set = new THashSet<KCenterCluster>();
 		for (int v : cluster.getVertices()) {
 			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
-				Cluster c = clustering.getCluster(e.getTarget().getId());
+				KCenterCluster c = clustering.getCluster(e.getTarget().getId());
 				if (c != null && !c.equals(cluster)) {
 					set.add(c);
 				}
 			}
 		}
-		Cluster[] adjClusters = new Cluster[set.size()];
+		KCenterCluster[] adjClusters = new KCenterCluster[set.size()];
 		set.toArray(adjClusters);
 		return adjClusters;
 	}
 
-	private static Cluster chooseClusterForRemoval(IGraph graph, KCenterClustering clustering,
+	private static KCenterCluster chooseClusterForRemoval(IGraph graph, KCenterClustering clustering,
 			int heuristik) {
 		switch (heuristik) {
 			case HEURISTIC_MIN_RADIUS:
-				return getMinCluster(clustering, new Comparator<Cluster>() {
+				return getMinCluster(clustering, new Comparator<KCenterCluster>() {
 
 					@Override
-					public int compare(Cluster c1, Cluster c2) {
+					public int compare(KCenterCluster c1, KCenterCluster c2) {
 						return c1.getRadius() - c2.getRadius();
 					}
 				});
 			case HEURISTIC_MIN_SIZE:
-				return getMinCluster(clustering, new Comparator<Cluster>() {
+				return getMinCluster(clustering, new Comparator<KCenterCluster>() {
 
 					@Override
-					public int compare(Cluster c1, Cluster c2) {
+					public int compare(KCenterCluster c1, KCenterCluster c2) {
 						return c1.size() - c2.size();
 					}
 				});
@@ -278,9 +278,9 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private static Cluster getMinCluster(KCenterClustering clustering, Comparator<Cluster> comp) {
-		Cluster min = clustering.getClusters().iterator().next();
-		for (Cluster c : clustering.getClusters()) {
+	private static KCenterCluster getMinCluster(KCenterClustering clustering, Comparator<KCenterCluster> comp) {
+		KCenterCluster min = clustering.getClusters().iterator().next();
+		for (KCenterCluster c : clustering.getClusters()) {
 			if (comp.compare(c, min) < 0) {
 				min = c;
 			}

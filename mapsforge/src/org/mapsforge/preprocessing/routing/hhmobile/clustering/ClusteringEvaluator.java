@@ -61,7 +61,7 @@ public class ClusteringEvaluator {
 
 		// verify
 		int count = 0;
-		for (ICluster c : quadClustering.getClusters()) {
+		for (Cluster c : quadClustering.getClusters()) {
 			count += c.size();
 		}
 		System.out.println("VERIFY " + count + ":" + levelGraph.getLevel(lvl).numVertices());
@@ -82,13 +82,13 @@ public class ClusteringEvaluator {
 		evaluateClustering(quadClustering, graph);
 	}
 
-	private static void renderClustering(IRouter router, IClustering clustering) {
+	private static void renderClustering(IRouter router, Clustering clustering) {
 		RendererV2 renderer1 = new RendererV2(1024, 768, router, Color.white, Color.black);
 		renderer1.setClustering(clustering);
 
 	}
 
-	private static void evaluateClustering(IClustering clustering, IGraph graph) {
+	private static void evaluateClustering(Clustering clustering, IGraph graph) {
 		int[] countV, countInternalE, countExternalE, countVE, percentInternalE;
 		countV = new int[clustering.size()];
 		countInternalE = new int[clustering.size()];
@@ -97,7 +97,7 @@ public class ClusteringEvaluator {
 		percentInternalE = new int[clustering.size()];
 		// compute counts
 		int i = 0;
-		for (ICluster c : clustering.getClusters()) {
+		for (Cluster c : clustering.getClusters()) {
 			countV[i] = c.size();
 			countVE[i] = c.size();
 			countInternalE[i] = 0;

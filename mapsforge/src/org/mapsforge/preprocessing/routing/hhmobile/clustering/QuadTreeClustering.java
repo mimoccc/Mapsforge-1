@@ -21,7 +21,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Collection;
 
-public class QuadTreeClustering implements IClustering {
+public class QuadTreeClustering implements Clustering {
 
 	private static final long serialVersionUID = 1L;
 
@@ -62,7 +62,7 @@ public class QuadTreeClustering implements IClustering {
 		return clusters.size();
 	}
 
-	public class QuadTreeCluster implements ICluster {
+	public class QuadTreeCluster implements Cluster {
 
 		private static final long serialVersionUID = 1L;
 

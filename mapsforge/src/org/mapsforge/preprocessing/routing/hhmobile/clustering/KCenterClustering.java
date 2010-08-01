@@ -22,17 +22,17 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Collection;
 
-public class KCenterClustering implements IClustering {
+public class KCenterClustering implements Clustering {
 
 	private static final long serialVersionUID = 1L;
 
-	private final TIntObjectHashMap<Cluster> clusters;
+	private final TIntObjectHashMap<KCenterCluster> clusters;
 	private final int[] clusterIds;
 
 	private int nextClusterId;
 
 	public KCenterClustering(int maxVertexId) {
-		this.clusters = new TIntObjectHashMap<Cluster>();
+		this.clusters = new TIntObjectHashMap<KCenterCluster>();
 		this.clusterIds = new int[maxVertexId + 1];
 		this.nextClusterId = 0;
 
@@ -41,15 +41,15 @@ public class KCenterClustering implements IClustering {
 		}
 	}
 
-	public Cluster addCluster(int centerVertex) {
+	public KCenterCluster addCluster(int centerVertex) {
 		int clusterId = nextClusterId++;
-		Cluster c = new Cluster(centerVertex, clusterId);
+		KCenterCluster c = new KCenterCluster(centerVertex, clusterId);
 		clusters.put(clusterId, c);
 		return c;
 	}
 
 	@Override
-	public Cluster getCluster(int vertexId) {
+	public KCenterCluster getCluster(int vertexId) {
 		if (vertexId < clusterIds.length) {
 			return clusters.get(clusterIds[vertexId]);
 		}
@@ -57,11 +57,11 @@ public class KCenterClustering implements IClustering {
 	}
 
 	@Override
-	public Collection<Cluster> getClusters() {
+	public Collection<KCenterCluster> getClusters() {
 		return clusters.valueCollection();
 	}
 
-	public void removeCluster(Cluster c) {
+	public void removeCluster(KCenterCluster c) {
 		for (TIntIterator iter = c.vertices.iterator(); iter.hasNext();) {
 			int v = iter.next();
 			clusterIds[v] = -1;
@@ -78,7 +78,7 @@ public class KCenterClustering implements IClustering {
 		return clusters.size();
 	}
 
-	public class Cluster implements ICluster {
+	public class KCenterCluster implements Cluster {
 
 		private static final long serialVersionUID = 1L;
 
@@ -87,7 +87,7 @@ public class KCenterClustering implements IClustering {
 		private int radius;
 		private int clusterId;
 
-		private Cluster(int centerVertex, int id) {
+		private KCenterCluster(int centerVertex, int id) {
 			this.vertices = new TIntArrayList();
 			this.centerVertex = centerVertex;
 			this.clusterId = id;

@@ -18,7 +18,7 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 
 import java.io.Serializable;
 
-public interface ICluster extends Serializable {
+public interface Cluster extends Serializable {
 
 	public boolean containsVertex(int vertexId);
 

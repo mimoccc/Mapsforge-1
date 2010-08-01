@@ -19,11 +19,11 @@ package org.mapsforge.preprocessing.routing.hhmobile.clustering;
 import java.io.Serializable;
 import java.util.Collection;
 
-public interface IClustering extends Serializable {
+public interface Clustering extends Serializable {
 
-	public ICluster getCluster(int vertexId);
+	public Cluster getCluster(int vertexId);
 
-	public Collection<? extends ICluster> getClusters();
+	public Collection<? extends Cluster> getClusters();
 
 	public int size();
 

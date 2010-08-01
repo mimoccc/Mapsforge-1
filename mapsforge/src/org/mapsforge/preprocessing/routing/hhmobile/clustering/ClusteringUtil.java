@@ -32,21 +32,21 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
 public class ClusteringUtil {
 
-	private final IClustering[] clustering;
+	private final Clustering[] clustering;
 	private final Level[] graphLevel;
-	private final TObjectIntHashMap<ICluster> clusterLevels;
+	private final TObjectIntHashMap<Cluster> clusterLevels;
 	private final TIntIntHashMap[] vertexIdToClusterOffset;
 	private final int[] lvlMaxVerticesPerCluster, lvlMaxEdgesPerCluster, lvlMaxNeighborhood;
 
-	public ClusteringUtil(IClustering[] clustering, LevelGraph levelGraph) {
+	public ClusteringUtil(Clustering[] clustering, LevelGraph levelGraph) {
 		this.clustering = clustering;
 		this.graphLevel = levelGraph.getLevels();
-		this.clusterLevels = new TObjectIntHashMap<ICluster>();
+		this.clusterLevels = new TObjectIntHashMap<Cluster>();
 		this.vertexIdToClusterOffset = new TIntIntHashMap[clustering.length];
 
 		for (int lvl = 0; lvl < clustering.length; lvl++) {
 			vertexIdToClusterOffset[lvl] = new TIntIntHashMap(graphLevel[lvl].numVertices());
-			for (ICluster c : clustering[lvl].getClusters()) {
+			for (Cluster c : clustering[lvl].getClusters()) {
 				clusterLevels.put(c, lvl);
 				int[] clusterVertices = c.getVertices();
 				for (int offset = 0; offset < clusterVertices.length; offset++) {
@@ -64,7 +64,7 @@ public class ClusteringUtil {
 			lvlMaxVerticesPerCluster[lvl] = 0;
 			lvlMaxEdgesPerCluster[lvl] = 0;
 			lvlMaxNeighborhood[lvl] = 0;
-			for (ICluster c : clustering[lvl].getClusters()) {
+			for (Cluster c : clustering[lvl].getClusters()) {
 				lvlMaxVerticesPerCluster[lvl] = Math.max(lvlMaxVerticesPerCluster[lvl], c
 						.size());
 				int edgesInCluster = 0;
@@ -119,7 +119,7 @@ public class ClusteringUtil {
 		return clustering[lvl].size();
 	}
 
-	public int getClusterLevel(ICluster c) {
+	public int getClusterLevel(Cluster c) {
 		return clusterLevels.get(c);
 	}
 
@@ -127,14 +127,14 @@ public class ClusteringUtil {
 		return vertexIdToClusterOffset[lvl].get(vertexId);
 	}
 
-	public ICluster getCluster(int vertexId, int lvl) {
+	public Cluster getCluster(int vertexId, int lvl) {
 		if (lvl < clustering.length) {
 			return clustering[lvl].getCluster(vertexId);
 		}
 		return null;
 	}
 
-	public LinkedList<LevelVertex> getClusterVertices(ICluster c) {
+	public LinkedList<LevelVertex> getClusterVertices(Cluster c) {
 		LinkedList<LevelVertex> list = new LinkedList<LevelVertex>();
 		int lvl = clusterLevels.get(c);
 		for (int v : c.getVertices()) {
@@ -143,7 +143,7 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<LevelEdge> getClusterEdges(ICluster c) {
+	public LinkedList<LevelEdge> getClusterEdges(Cluster c) {
 		LinkedList<LevelEdge> list = new LinkedList<LevelEdge>();
 		int lvl = clusterLevels.get(c);
 		for (int v : c.getVertices()) {
@@ -154,12 +154,12 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<LevelEdge> getClusterInternalEdges(ICluster c) {
+	public LinkedList<LevelEdge> getClusterInternalEdges(Cluster c) {
 		LinkedList<LevelEdge> list = new LinkedList<LevelEdge>();
 		int lvl = clusterLevels.get(c);
 		for (int v : c.getVertices()) {
 			for (LevelEdge e : graphLevel[lvl].getVertex(v).getOutboundEdges()) {
-				ICluster c_ = clustering[lvl].getCluster(e.getTarget().getId());
+				Cluster c_ = clustering[lvl].getCluster(e.getTarget().getId());
 				if (c_.equals(c)) {
 					list.add(e);
 				}
@@ -168,12 +168,12 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<LevelEdge> getClusterExternalEdges(ICluster c) {
+	public LinkedList<LevelEdge> getClusterExternalEdges(Cluster c) {
 		LinkedList<LevelEdge> list = new LinkedList<LevelEdge>();
 		int lvl = clusterLevels.get(c);
 		for (int v : c.getVertices()) {
 			for (LevelEdge e : graphLevel[lvl].getVertex(v).getOutboundEdges()) {
-				ICluster c_ = clustering[lvl].getCluster(e.getTarget().getId());
+				Cluster c_ = clustering[lvl].getCluster(e.getTarget().getId());
 				if (!c_.equals(c)) {
 					list.add(e);
 				}
@@ -182,7 +182,7 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public int getClusterMaxEdgeWeight(ICluster c) {
+	public int getClusterMaxEdgeWeight(Cluster c) {
 		int max = 0;
 		for (LevelEdge e : getClusterEdges(c)) {
 			max = Math.max(max, e.getWeight());
@@ -190,7 +190,7 @@ public class ClusteringUtil {
 		return max;
 	}
 
-	public BoundingBox getClusterBoundingBox(ICluster c) {
+	public BoundingBox getClusterBoundingBox(Cluster c) {
 		int minLon = Integer.MAX_VALUE;
 		int minLat = Integer.MAX_VALUE;
 		int maxLon = Integer.MIN_VALUE;
@@ -207,65 +207,65 @@ public class ClusteringUtil {
 		return new BoundingBox(minLon, minLat, maxLon, maxLat);
 	}
 
-	public LinkedList<ICluster> getAdjacentClusters(ICluster c) {
+	public LinkedList<Cluster> getAdjacentClusters(Cluster c) {
 		int lvl = clusterLevels.get(c);
-		THashSet<ICluster> set = new THashSet<ICluster>();
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (LevelEdge e : getClusterEdges(c)) {
 			int tgt = e.getTarget().getId();
-			ICluster c_ = clustering[lvl].getCluster(tgt);
+			Cluster c_ = clustering[lvl].getCluster(tgt);
 			if (c_ != null && !c_.equals(c)) {
 				set.add(c_);
 			}
 		}
-		LinkedList<ICluster> list = new LinkedList<ICluster>();
+		LinkedList<Cluster> list = new LinkedList<Cluster>();
 		list.addAll(set);
 		return list;
 	}
 
-	public LinkedList<ICluster> getSubjacentClusters(ICluster c) {
+	public LinkedList<Cluster> getSubjacentClusters(Cluster c) {
 		int lvl = clusterLevels.get(c);
 		if (lvl == 0) {
-			return new LinkedList<ICluster>();
+			return new LinkedList<Cluster>();
 		}
-		THashSet<ICluster> set = new THashSet<ICluster>();
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : c.getVertices()) {
-			ICluster c_ = clustering[lvl - 1].getCluster(v);
+			Cluster c_ = clustering[lvl - 1].getCluster(v);
 			if (c_ != null && !c_.equals(c)) {
 				set.add(c_);
 			}
 		}
-		LinkedList<ICluster> list = new LinkedList<ICluster>();
+		LinkedList<Cluster> list = new LinkedList<Cluster>();
 		list.addAll(set);
 		return list;
 	}
 
-	public LinkedList<ICluster> getOverlyingClusters(ICluster c) {
+	public LinkedList<Cluster> getOverlyingClusters(Cluster c) {
 		int lvl = clusterLevels.get(c);
 		if (lvl == graphLevel.length - 1) {
-			return new LinkedList<ICluster>();
+			return new LinkedList<Cluster>();
 		}
-		THashSet<ICluster> set = new THashSet<ICluster>();
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : c.getVertices()) {
-			ICluster c_ = clustering[lvl + 1].getCluster(v);
+			Cluster c_ = clustering[lvl + 1].getCluster(v);
 			if (c_ != null && !c_.equals(c)) {
 				set.add(c_);
 			}
 		}
-		LinkedList<ICluster> list = new LinkedList<ICluster>();
+		LinkedList<Cluster> list = new LinkedList<Cluster>();
 		list.addAll(set);
 		return list;
 	}
 
-	public LinkedList<ICluster> getLevelZeroClustersForVertices(ICluster c) {
+	public LinkedList<Cluster> getLevelZeroClustersForVertices(Cluster c) {
 		int lvl = clusterLevels.get(c);
-		LinkedList<ICluster> list = new LinkedList<ICluster>();
+		LinkedList<Cluster> list = new LinkedList<Cluster>();
 		if (lvl == 0) {
 			list.add(c);
 			return list;
 		}
-		THashSet<ICluster> set = new THashSet<ICluster>();
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : c.getVertices()) {
-			ICluster c_ = clustering[0].getCluster(v);
+			Cluster c_ = clustering[0].getCluster(v);
 			if (c_ != null && !c_.equals(c)) {
 				set.add(c_);
 			}
@@ -274,17 +274,17 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<ICluster> getLevelZeroClustersForExternalEdgeTargets(ICluster c) {
+	public LinkedList<Cluster> getLevelZeroClustersForExternalEdgeTargets(Cluster c) {
 		int lvl = clusterLevels.get(c);
-		LinkedList<ICluster> list = new LinkedList<ICluster>();
+		LinkedList<Cluster> list = new LinkedList<Cluster>();
 		if (lvl == 0) {
 			list.add(c);
 			return list;
 		}
-		THashSet<ICluster> set = new THashSet<ICluster>();
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : c.getVertices()) {
 			for (LevelEdge e : graphLevel[lvl].getVertex(v).getOutboundEdges()) {
-				ICluster c_ = clustering[0].getCluster(e.getTarget().getId());
+				Cluster c_ = clustering[0].getCluster(e.getTarget().getId());
 				if (c_ != null && !c_.equals(c)) {
 					set.add(c_);
 				}
@@ -294,12 +294,12 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public LinkedList<LevelVertex> getClusterExternalReferencedVertices(ICluster c) {
+	public LinkedList<LevelVertex> getClusterExternalReferencedVertices(Cluster c) {
 		int lvl = clusterLevels.get(c);
 		LinkedList<LevelVertex> list = new LinkedList<LevelVertex>();
 		for (LevelEdge e : getClusterEdges(c)) {
 			LevelVertex target = e.getTarget();
-			ICluster c_ = clustering[lvl].getCluster(target.getId());
+			Cluster c_ = clustering[lvl].getCluster(target.getId());
 			if (c_ != null && !c.equals(c_)) {
 				list.add(target);
 			}
@@ -307,7 +307,7 @@ public class ClusteringUtil {
 		return list;
 	}
 
-	public static int getGlobalNumClusters(IClustering[] clustering) {
+	public static int getGlobalNumClusters(Clustering[] clustering) {
 		int sum = 0;
 		for (int i = 0; i < clustering.length; i++) {
 			sum += clustering[i].size();
