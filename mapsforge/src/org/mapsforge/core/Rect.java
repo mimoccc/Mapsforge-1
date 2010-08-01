@@ -51,6 +51,11 @@ public class Rect {
 		return overlaps(minLon, maxLon, minLat, maxLat, r.minLon, r.maxLon, r.minLat, r.maxLat);
 	}
 
+	@Override
+	public String toString() {
+		return "[ (" + minLon + "," + minLat + ") (" + maxLon + "," + maxLat + ") ]";
+	}
+
 	/**
 	 * Check if two rectangles overlap.
 	 * 
@@ -78,10 +83,4 @@ public class Rect {
 				|| minLat2 > maxLat1;
 		return !noOverlap;
 	}
-
-	@Override
-	public String toString() {
-		return "[ (" + minLon + "," + minLat + ") (" + maxLon + "," + maxLat + ") ]";
-	}
-
 }
