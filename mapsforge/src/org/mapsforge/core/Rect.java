@@ -18,4 +18,29 @@ package org.mapsforge.core;
 
 public class Rect {
 
+	public final int minLon, maxLon, minLat, maxLat;
+
+	public Rect(int minLon, int maxLon, int minLat, int maxLat) {
+		this.minLon = minLon;
+		this.maxLon = maxLon;
+		this.minLat = minLat;
+		this.maxLat = maxLat;
+	}
+
+	public boolean overlaps(Rect r) {
+		return overlaps(minLon, maxLon, minLat, maxLat, r.minLon, r.maxLon, r.minLat, r.maxLat);
+	}
+
+	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1,
+			int minLon2, int maxLon2, int minLat2, int maxLat2) {
+		boolean noOverlap = minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2
+				|| minLat2 > maxLat1;
+		return !noOverlap;
+	}
+
+	@Override
+	public String toString() {
+		return "[ (" + minLon + "," + minLat + ") (" + maxLon + "," + maxLat + ") ]";
+	}
+
 }
