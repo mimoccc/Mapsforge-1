@@ -29,9 +29,9 @@ import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
 /**
- * This class implements a static RTree for indexing two dimensional rectangles. Packing is done
- * using the 'SortTileRecursive' (STR) algorithm which gives an optimal space utilization and
- * local clustering. Data can be retrieved by an overlaps query against a given rectangle.
+ * This class implements a static r-tree for indexing two dimensional rectangles. Packing is
+ * done using the 'SortTileRecursive' (STR) algorithm which gives an optimal space utilization
+ * and local clustering. Data can be retrieved by an overlaps query against a given rectangle.
  */
 public class StaticRTree {
 
@@ -42,7 +42,19 @@ public class StaticRTree {
 	private final int blockSizeBytes;
 	private final long startAddr;
 	private final RtreeNode root;
+	private final byte[] readBuff;
 
+	/**
+	 * Instantiate an RTree stored in a file.
+	 * 
+	 * @param file
+	 *            File where the RTree is stored.
+	 * @param startAddr
+	 *            byte index of the 1st byte of the r-tree within the given file.
+	 * @throws IOException
+	 *             if there was an error reading file, or the given location does not contain a
+	 *             valid r-tree.
+	 */
 	public StaticRTree(File file, long startAddr) throws IOException {
 		this.startAddr = startAddr;
 		this.raf = new RandomAccessFile(file, "r");
@@ -58,12 +70,36 @@ public class StaticRTree {
 		}
 		this.blockSizeBytes = raf.readInt();
 		this.root = readNode(1);
+		this.readBuff = new byte[blockSizeBytes];
 	}
 
+	/**
+	 * Get integers values associated with the indexed rectangles overlapping the given
+	 * rectangle.
+	 * 
+	 * @param r
+	 *            the rectangle to be queried against.
+	 * @return integers associated with all matching rectangles.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	public LinkedList<Integer> overlaps(Rect r) throws IOException {
 		return overlaps(r.minLon, r.maxLon, r.minLat, r.maxLat);
 	}
 
+	/**
+	 * @param minLon
+	 *            longitude bound of the rectangle.
+	 * @param maxLon
+	 *            longitude bound of the rectangle.
+	 * @param minLat
+	 *            latitude bound of the rectangle.
+	 * @param maxLat
+	 *            latitude bound of the rectangle.
+	 * @return integers associated with all matching rectangles.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	public LinkedList<Integer> overlaps(int minLon, int maxLon, int minLat, int maxLat)
 			throws IOException {
 		LinkedList<Integer> buff = new LinkedList<Integer>();
@@ -71,6 +107,24 @@ public class StaticRTree {
 		return buff;
 	}
 
+	/**
+	 * Recursive overlaps query implementation.
+	 * 
+	 * @param minLon
+	 *            longitude bound of the rectangle.
+	 * @param maxLon
+	 *            longitude bound of the rectangle.
+	 * @param minLat
+	 *            latitude bound of the rectangle.
+	 * @param maxLat
+	 *            latitude bound of the rectangle.
+	 * @param node
+	 *            the current node to be processed.
+	 * @param buff
+	 *            the result is added to this list.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	private void overlaps(int minLon, int maxLon, int minLat, int maxLat, RtreeNode node,
 			LinkedList<Integer> buff) throws IOException {
 		if (node.isLeaf) {
@@ -90,23 +144,68 @@ public class StaticRTree {
 		}
 	}
 
+	/**
+	 * Reads a node from secondary storage.
+	 * 
+	 * @param id
+	 *            The id of the given node (root node has id 1).
+	 * @return the desired node representation.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	private RtreeNode readNode(int id) throws IOException {
-		byte[] b = new byte[blockSizeBytes];
 		raf.seek(startAddr + (blockSizeBytes * id));
-		raf.readFully(b);
-		return new RtreeNode(b);
+		raf.readFully(readBuff);
+		return new RtreeNode(readBuff);
 	}
 
+	/**
+	 * SortTileRecursive(STR) Algorithm for static r-tree packing. All given arrays must be of
+	 * equal length.
+	 * 
+	 * @param minLon
+	 *            longitude bound of the rectangle.
+	 * @param maxLon
+	 *            longitude bound of the rectangle.
+	 * @param minLat
+	 *            latitude bound of the rectangle.
+	 * @param maxLat
+	 *            latitude bound of the rectangle.
+	 * @param pointer
+	 *            each rectangle is associated with one pointer.
+	 * @param blockSizeBytes
+	 *            number of bytes per node (should be equal to file system block size).
+	 * @param targetFile
+	 *            the file the r-tree will be stored to.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	public static void packSortTileRecursive(final int[] minLon, final int[] maxLon,
 			final int[] minLat, final int[] maxLat, final int[] pointer, int blockSizeBytes,
 			File targetFile) throws IOException {
-		IndexSortableNodeEntries rectangles = new IndexSortableNodeEntries(minLon, maxLon, minLat, maxLat,
-				pointer);
+		IndexSortableNodeEntries rectangles = new IndexSortableNodeEntries(minLon, maxLon,
+				minLat, maxLat, pointer);
 		RandomAccessFile raf = new RandomAccessFile(targetFile, "rw");
 		packSTR(rectangles, blockSizeBytes, raf, 1, true);
 		raf.close();
 	}
 
+	/**
+	 * Recursive STR packing, each recursion processes one level of the tree.
+	 * 
+	 * @param rectangles
+	 *            rectangles to be indexed on the current level.
+	 * @param blockSizeBytes
+	 *            number of bytes per node.
+	 * @param raf
+	 *            used to write the r-tree to.
+	 * @param nodeId
+	 *            next node id to be assigned. (should always be 1).
+	 * @param isLeaf
+	 *            true if the current level is a leaf level.
+	 * @throws IOException
+	 *             on error accessing file.
+	 */
 	private static void packSTR(IndexSortableNodeEntries rectangles, int blockSizeBytes,
 			RandomAccessFile raf, int nodeId, boolean isLeaf) throws IOException {
 		// number of rectangles
@@ -119,8 +218,8 @@ public class StaticRTree {
 		int s = (int) Math.ceil(Math.sqrt(n));
 
 		// rectangles for recursive call
-		IndexSortableNodeEntries parentEntries = new IndexSortableNodeEntries(new int[n], new int[n],
-				new int[n], new int[n], new int[n]);
+		IndexSortableNodeEntries parentEntries = new IndexSortableNodeEntries(new int[n],
+				new int[n], new int[n], new int[n], new int[n]);
 		int parentEntryIdx = 0;
 
 		// sort all rectangles by x-coordinate (longitude)
@@ -199,10 +298,21 @@ public class StaticRTree {
 		}
 	}
 
+	/**
+	 * A node representation used only during runtime, not during r-tree construction.
+	 */
 	private static class RtreeNode {
 		final boolean isLeaf;
 		final int[] minLon, maxLon, minLat, maxLat, pointer;
 
+		/**
+		 * Constructs a Tree Node based on the given data representing the tree node.
+		 * 
+		 * @param b
+		 *            data where the tree node is stored.
+		 * @throws IOException
+		 *             on error accessing file.
+		 */
 		public RtreeNode(byte[] b) throws IOException {
 			DataInputStream stream = new DataInputStream(new ByteArrayInputStream(b));
 
@@ -224,11 +334,30 @@ public class StaticRTree {
 		}
 	}
 
+	/**
+	 * The QuickSort algorithm used requires to implement the IndexedSortable interface. This
+	 * class exists only for this purpose, and is used during recursive tree construction for
+	 * holding all entries of the current tree level.
+	 */
 	private static class IndexSortableNodeEntries implements IndexedSortable {
 
 		final int[] minLon, maxLon, minLat, maxLat, pointer, centerLon, centerLat;
 		private boolean sortByLongitude;
 
+		/**
+		 * All given arrays must be of same length.
+		 * 
+		 * @param minLon
+		 *            rectangle bound.
+		 * @param maxLon
+		 *            rectangle bound.
+		 * @param minLat
+		 *            rectangle bound.
+		 * @param maxLat
+		 *            rectangle bound.
+		 * @param pointer
+		 *            integer associated with the rectangle.
+		 */
 		public IndexSortableNodeEntries(int[] minLon, int[] maxLon, int[] minLat, int[] maxLat,
 				int[] pointer) {
 			// check input
@@ -254,6 +383,13 @@ public class StaticRTree {
 			this.sortByLongitude = true;
 		}
 
+		/**
+		 * Set to true for sorting by comparing the longitude. Set to false for sorting by
+		 * comparing latitude.
+		 * 
+		 * @param b
+		 *            switch.
+		 */
 		private void setSortByLongitude(boolean b) {
 			this.sortByLongitude = b;
 		}
@@ -277,6 +413,9 @@ public class StaticRTree {
 			return centerLat[i] - centerLat[j];
 		}
 
+		/**
+		 * Set the centers of the given rectangles based on their bounding coordinates.
+		 */
 		public void updateCenters() {
 			for (int i = 0; i < centerLon.length; i++) {
 				centerLon[i] = (minLon[i] + maxLon[i]) / 2;
@@ -284,6 +423,9 @@ public class StaticRTree {
 			}
 		}
 
+		/**
+		 * @return number of rectangles.
+		 */
 		public int size() {
 			return minLon.length;
 		}

@@ -20,6 +20,19 @@ public class Rect {
 
 	public final int minLon, maxLon, minLat, maxLat;
 
+	/**
+	 * Constructs a rectangle, it is not checked if given values are valid coordinates and also
+	 * if the minimum values are less equal compared to the respective maximum value.
+	 * 
+	 * @param minLon
+	 *            bound of the rectangle.
+	 * @param maxLon
+	 *            bound of the rectangle.
+	 * @param minLat
+	 *            bound of the rectangle.
+	 * @param maxLat
+	 *            bound of the rectangle.
+	 */
 	public Rect(int minLon, int maxLon, int minLat, int maxLat) {
 		this.minLon = minLon;
 		this.maxLon = maxLon;
@@ -27,10 +40,38 @@ public class Rect {
 		this.maxLat = maxLat;
 	}
 
+	/**
+	 * Check if this rectangle. overlaps another rectangle.
+	 * 
+	 * @param r
+	 *            other rectangle to be tested against overlap.
+	 * @return true if rectangles overlap.
+	 */
 	public boolean overlaps(Rect r) {
 		return overlaps(minLon, maxLon, minLat, maxLat, r.minLon, r.maxLon, r.minLat, r.maxLat);
 	}
 
+	/**
+	 * Check if two rectangles overlap.
+	 * 
+	 * @param minLon1
+	 *            bound of rectangle 1.
+	 * @param maxLon1
+	 *            bound of rectangle 1.
+	 * @param minLat1
+	 *            bound of rectangle 1.
+	 * @param maxLat1
+	 *            bound of rectangle 1.
+	 * @param minLon2
+	 *            bound of rectangle 2.
+	 * @param maxLon2
+	 *            bound of rectangle 2.
+	 * @param minLat2
+	 *            bound of rectangle 2.
+	 * @param maxLat2
+	 *            bound of rectangle 2.
+	 * @return true if rectangles overlap.
+	 */
 	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1,
 			int minLon2, int maxLon2, int minLat2, int maxLat2) {
 		boolean noOverlap = minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2
