@@ -26,9 +26,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 
-/**
- * @author Frank Viernau
- */
 public class Serializer {
 
 	public static void serialize(OutputStream oStream, Serializable s) throws IOException {

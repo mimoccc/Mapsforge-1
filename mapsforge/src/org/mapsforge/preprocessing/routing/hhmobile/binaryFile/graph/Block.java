@@ -203,13 +203,13 @@ class Block {
 					vOffsVertexSubj[i] = cUtil.getClusterVertexOffset(v.getId(), lvl - 1);
 				}
 				if (i < numVerticesHavingHigherLevel) {
-					vOffsBlockOverly[i] = clusterToBlockOffsOverly.get(cUtil.getCluster(
-							v.getId(), lvl + 1));
+					vOffsBlockOverly[i] = clusterToBlockOffsOverly.get(cUtil.getCluster(v
+							.getId(), lvl + 1));
 					vOffsVertexOverly[i] = cUtil.getClusterVertexOffset(v.getId(), lvl + 1);
 				}
 				if (this.lvl > 0) {
-					vOffsBlockLvlZero[i] = clusterToBlockOffsLvlZero.get(cUtil.getCluster(
-							v.getId(), 0));
+					vOffsBlockLvlZero[i] = clusterToBlockOffsLvlZero.get(cUtil.getCluster(v
+							.getId(), 0));
 					vOffsVertexLvlZero[i] = cUtil.getClusterVertexOffset(v.getId(), 0);
 				}
 
@@ -217,8 +217,8 @@ class Block {
 					vNeighborhood[i] = v.getNeighborhood();
 				}
 				if (lvl == 0) {
-					vLongitude[i] = v.getCoordinate().getLongitudeInt();
-					vLatitude[i] = v.getCoordinate().getLatitudeInt();
+					vLongitude[i] = v.getCoordinate().getLongitudeE6();
+					vLatitude[i] = v.getCoordinate().getLatitudeE6();
 				}
 
 				i++;

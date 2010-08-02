@@ -20,10 +20,10 @@ import java.util.Iterator;
 
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClustering.QuadTreeCluster;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.IVertex;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class QuadTreeClusteringAlgorithm {
 
@@ -54,12 +54,6 @@ public class QuadTreeClusteringAlgorithm {
 		System.out.println("computing quad-clustering (|V|=" + graph.numVertices()
 				+ ", threshold=" + threshold + ", heuristic=" + HEURISTIC_NAMES[heuristik]
 				+ ")");
-
-		// due to reordering we also store and reorder vertexIds to keep the mapping
-		// int[] vertexId = new int[lon.length];
-		// for (int i = 0; i < vertexId.length; i++) {
-		// vertexId[i] = i;
-		// }
 		int[] vertexId = new int[graph.numVertices()];
 		int[] lon_ = new int[graph.numVertices()];
 		int[] lat_ = new int[graph.numVertices()];
@@ -84,8 +78,8 @@ public class QuadTreeClusteringAlgorithm {
 		if ((r - l) > threshold) {
 			// subdivide
 			GeoCoordinate splitCoord = getSplitCoordinate(vertexId, lon, lat, l, r, heuristic);
-			int splitLon = splitCoord.getLongitudeInt();
-			int splitLat = splitCoord.getLatitudeInt();
+			int splitLon = splitCoord.getLongitudeE6();
+			int splitLat = splitCoord.getLatitudeE6();
 			SortableVertices s = new SortableVertices(vertexId, lon, lat);
 
 			// 1st quadrant
@@ -178,8 +172,8 @@ public class QuadTreeClusteringAlgorithm {
 		double sumLat = 0d;
 
 		for (int i = l; i < r; i++) {
-			sumLon += GeoCoordinate.itod(lon[i]);
-			sumLat += GeoCoordinate.itod(lat[i]);
+			sumLon += GeoCoordinate.intToDouble(lon[i]);
+			sumLat += GeoCoordinate.intToDouble(lat[i]);
 		}
 
 		double longitude = sumLon / (r - l);
@@ -211,10 +205,6 @@ public class QuadTreeClusteringAlgorithm {
 
 		public SortableVertices(int[] vertexId, int[] lon, int[] lat) {
 			this.data = new int[][] { vertexId, lon, lat };
-			sortDim = 0;
-		}
-
-		public void setSortByVertexId() {
 			sortDim = 0;
 		}
 

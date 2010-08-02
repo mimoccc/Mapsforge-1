@@ -21,12 +21,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 public class LevelGraph implements Serializable {
 
@@ -77,8 +77,8 @@ public class LevelGraph implements Serializable {
 		int offset = 0;
 		for (Iterator<HHVertex> iter = reader.getVertices(); iter.hasNext();) {
 			HHVertex v = iter.next();
-			vLon[offset] = GeoCoordinate.dtoi(v.longitude);
-			vLat[offset] = GeoCoordinate.dtoi(v.latitude);
+			vLon[offset] = GeoCoordinate.doubleToInt(v.longitude);
+			vLat[offset] = GeoCoordinate.doubleToInt(v.latitude);
 			offset++;
 		}
 

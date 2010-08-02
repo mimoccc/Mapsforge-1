@@ -74,11 +74,9 @@ public class GeoCoordinate {
 	}
 
 	public double getMercatorY() {
-		return EARTH_RADIUS * 
-			java.lang.Math.log(
-				java.lang.Math.tan(
-						java.lang.Math.PI/4 
-						+ 0.5 * this.latitude.getRadians()));
+		return EARTH_RADIUS
+				* java.lang.Math.log(java.lang.Math.tan(java.lang.Math.PI / 4 + 0.5
+						* this.latitude.getRadians()));
 	}
 
 	public void setLatitude(Latitude lat) {

@@ -197,8 +197,8 @@ public class ClusteringUtil {
 		int maxLat = Integer.MIN_VALUE;
 
 		for (LevelVertex v : getClusterVertices(c)) {
-			int lon = v.getCoordinate().getLongitudeInt();
-			int lat = v.getCoordinate().getLatitudeInt();
+			int lon = v.getCoordinate().getLongitudeE6();
+			int lat = v.getCoordinate().getLatitudeE6();
 			minLon = Math.min(minLon, lon);
 			minLat = Math.min(minLat, lat);
 			maxLon = Math.max(maxLon, lon);

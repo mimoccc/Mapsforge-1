@@ -108,6 +108,7 @@ public class BinaryFileWriter {
 		File fGraphHeader = new File(targetFile.getAbsolutePath() + ".blocksHeader");
 		File fClusterBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
 		File fBlockPointerIdx = new File(targetFile.getAbsolutePath() + ".blockIdx");
+		File fRTree = new File(targetFile.getAbsolutePath() + ".rtree");
 
 		// write graphHeader and clusterBlocks
 		int[] blockSize = BlockedGraphSerializer.writeBlockedGraph(fGraphHeader,
@@ -164,6 +165,17 @@ public class BinaryFileWriter {
 		fBlockPointerIdx.delete();
 	}
 
+	/**
+	 * Writes the content of the given file to the output stream.
+	 * 
+	 * @param f
+	 *            the file to be written.
+	 * @param oStream
+	 *            the stream to write to.
+	 * @return number of bytes written.
+	 * @throws IOException
+	 *             on write errors.
+	 */
 	private static long writeFile(File f, OutputStream oStream) throws IOException {
 		byte[] buff = new byte[BUFFER_SIZE];
 		BufferedInputStream in = new BufferedInputStream(new FileInputStream(f));
@@ -178,8 +190,7 @@ public class BinaryFileWriter {
 		return offset;
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException,
-			SQLException {
+	public static void main(String[] args) throws IOException {
 		Properties props = new Properties();
 		props.load(new FileInputStream("res/conf/hhMobile.properties"));
 		writeBinaryFile(props);

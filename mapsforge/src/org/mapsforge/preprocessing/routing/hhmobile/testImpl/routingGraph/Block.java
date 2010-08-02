@@ -201,50 +201,6 @@ class Block implements CacheItem {
 		offset += byteAlign(numEdgesExt);
 		this.startAddrEExtIsCore = offset;
 		offset += byteAlign(numEdgesExt);
-
-		// System.out.println("startAddrBlockAdj = " + startAddrBlockAdj);
-		// System.out.println("startAddrBlockSubj = " + startAddrBlockSubj);
-		// System.out.println("startAddrBlockOverly = " + startAddrBlockOverly);
-		// System.out.println("startAddrBlockLevelZero = " + startAddrBlockLevelZero);
-		// System.out.println();
-		// System.out.println("startAddrVOffsBlockSubj = " + startAddrVOffsBlockSubj);
-		// System.out.println("startAddrVOffsVertexSubj = " + startAddrVOffsVertexSubj);
-		// System.out.println("startAddrVOffsBlockOverly = " + startAddrVOffsBlockOverly);
-		// System.out.println("startAddrVOffsVertexOverly = " + startAddrVOffsVertexOverly);
-		// System.out.println("startAddrVOffsBlockLvlZero = " + startAddrVOffsBlockLvlZero);
-		// System.out.println("startAddrVOffsVertexLvlZero = " + startAddrVOffsVertexLvlZero);
-		// System.out.println();
-		// System.out.println("startAddrVNeighborhood = " + startAddrVNeighborhood);
-		// System.out.println("startAddrVLongitude = " + startAddrVLongitude);
-		// System.out.println("startAddrVLatitude = " + startAddrVLatitude);
-		// System.out.println("startAddrVOffsIntEdge = " + startAddrVOffsIntEdge);
-		// System.out.println("startAddrVOffsExtEdge = " + startAddrVOffsExtEdge);
-		// System.out.println();
-		// System.out.println("startAddrEIntTargetOffset = " + startAddrEIntTargetOffset);
-		// System.out.println("startAddrEIntWeight = " + startAddrEIntWeight);
-		// System.out.println("startAddrEIntIsShortcut = " + startAddrEIntIsShortcut);
-		// System.out.println("startAddrEIntIsForward = " + startAddrEIntIsForward);
-		// System.out.println("startAddrEIntIsBackward = " + startAddrEIntIsBackward);
-		// System.out.println("startAddrEIntIsCore = " + startAddrEIntIsCore);
-		// System.out.println();
-		// System.out.println("startAddrEExtTargetOffsBlockAdj = "
-		// + startAddrEExtTargetOffsBlockAdj);
-		// System.out.println("startAddrEExtTargetOffsVertexAdj = "
-		// + startAddrEExtTargetOffsVertexAdj);
-		// System.out.println("startAddrEExtTargetOffsBlockLvlZero = "
-		// + startAddrEExtTargetOffsBlockLvlZero);
-		// System.out.println("startAddrEExtTargetOffsVertexLvlZero = "
-		// + startAddrEExtTargetOffsVertexLvlZero);
-		// System.out.println("startAddrEExtWeight = " + startAddrEExtWeight);
-		// System.out.println("startAddrEExtIsShortcut = " + startAddrEExtIsShortcut);
-		// System.out.println("startAddrEExtIsForward = " + startAddrEExtIsForward);
-		// System.out.println("startAddrEExtIsBackward = " + startAddrEExtIsBackward);
-		// System.out.println("startAddrEExtIsCore = " + startAddrEExtIsCore);
-		//
-		// System.out.println((offset / 8) + " " + data.length);
-		// for (int i = 0; i < numVertices; i++) {
-		// System.out.println(vNeighborhood(i));
-		// }
 	}
 
 	@Override
