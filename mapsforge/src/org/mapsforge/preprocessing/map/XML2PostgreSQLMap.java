@@ -557,42 +557,48 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					tag = tagIterator.next();
 					splittedTags = tag.split("=");
 
-					// special tags like elevation, housenumber, name and layer are stored in
-					// separate fields in the database
-					if (splittedTags[0].equals("ele")) {
-						try {
-							currentNode.elevation = (int) Double.parseDouble(splittedTags[1]);
-							if (currentNode.elevation > 32000) {
-								currentNode.elevation = 32000;
+					if (splittedTags.length == 2) {
+						// special tags like elevation, housenumber, name and layer are stored
+						// in
+						// separate fields in the database
+						if (splittedTags[0].equals("ele")) {
+							try {
+								currentNode.elevation = (int) Double
+										.parseDouble(splittedTags[1]);
+								if (currentNode.elevation > 32000) {
+									currentNode.elevation = 32000;
+								}
+							} catch (NumberFormatException e) {
+								currentNode.elevation = 0;
 							}
-						} catch (NumberFormatException e) {
-							currentNode.elevation = 0;
-						}
-					} else if (splittedTags[0].equals("addr:housenumber")) {
-						currentNode.housenumber = splittedTags[1];
-					} else if (splittedTags[0].equals("name")) {
-						currentNode.name = splittedTags[1];
-					} else if (splittedTags[0].equals("layer")) {
-						try {
-							currentNode.layer = Integer.parseInt(splittedTags[1]);
-							if (currentNode.layer >= -5 && currentNode.layer <= 5)
-								currentNode.layer += 5;
-							else
+						} else if (splittedTags[0].equals("addr:housenumber")) {
+							currentNode.housenumber = splittedTags[1];
+						} else if (splittedTags[0].equals("name")) {
+							currentNode.name = splittedTags[1];
+						} else if (splittedTags[0].equals("layer")) {
+							try {
+								currentNode.layer = Integer.parseInt(splittedTags[1]);
+								if (currentNode.layer >= -5 && currentNode.layer <= 5)
+									currentNode.layer += 5;
+								else
+									currentNode.layer = 5;
+							} catch (NumberFormatException e) {
 								currentNode.layer = 5;
-						} catch (NumberFormatException e) {
-							currentNode.layer = 5;
-						}
-					} else if (poiTagWhiteList.containsKey(tag)) {
-						// if current tag is in the white list, add it to the temporary tag list
-						currentNode.zoomLevel = poiTagWhiteList.get(tag);
-						if (currentNode.zoomLevel == 127) {
-							// FIXME should zoom level of elements with 127 bet set to base zoom
-							// level or to maxZoom?
-							currentNode.zoomLevel = 17;
-						}
-						tempTags.add(tag);
+							}
+						} else if (poiTagWhiteList.containsKey(tag)) {
+							// if current tag is in the white list, add it to the temporary tag
+							// list
+							currentNode.zoomLevel = poiTagWhiteList.get(tag);
+							if (currentNode.zoomLevel == 127) {
+								// FIXME should zoom level of elements with 127 bet set to base
+								// zoom
+								// level or to maxZoom?
+								currentNode.zoomLevel = 17;
+							}
+							tempTags.add(tag);
 
-						node_tags++;
+							node_tags++;
+						}
 					}
 					tagSize--;
 				}
@@ -698,31 +704,35 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					tag = tagIterator.next();
 					splittedTags = tag.split("=");
 
-					// special tags like elevation, housenumber, name and layer are stored in
-					// separate fields in the database
-					if (splittedTags[0].equals("name")) {
-						currentWay.name = splittedTags[1];
-					} else if (splittedTags[0].equals("layer")) {
-						try {
-							currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]));
-							if (currentWay.layer >= -5 && currentWay.layer <= 5)
-								currentWay.layer += 5;
-							else
+					if (splittedTags.length == 2) {
+						// special tags like elevation, housenumber, name and layer are stored
+						// in
+						// separate fields in the database
+						if (splittedTags[0].equals("name")) {
+							currentWay.name = splittedTags[1];
+						} else if (splittedTags[0].equals("layer")) {
+							try {
+								currentWay.layer = (byte) (Integer.parseInt(splittedTags[1]));
+								if (currentWay.layer >= -5 && currentWay.layer <= 5)
+									currentWay.layer += 5;
+								else
+									currentWay.layer = 5;
+							} catch (NumberFormatException e) {
 								currentWay.layer = 5;
-						} catch (NumberFormatException e) {
-							currentWay.layer = 5;
-						}
-					} else if (wayTagWhiteList.containsKey(tag)) {
-						// if current tag is in the white list, add it to the temporary tag list
-						currentWay.zoomLevel = wayTagWhiteList.get(tag);
-						// FIXME should zoom level of elements with 127 be set to base zoom
-						// level or to maxZoom?
-						if (currentWay.zoomLevel == 127) {
-							currentWay.zoomLevel = 17;
-						}
-						tempTags.add(tag);
+							}
+						} else if (wayTagWhiteList.containsKey(tag)) {
+							// if current tag is in the white list, add it to the temporary tag
+							// list
+							currentWay.zoomLevel = wayTagWhiteList.get(tag);
+							// FIXME should zoom level of elements with 127 be set to base zoom
+							// level or to maxZoom?
+							if (currentWay.zoomLevel == 127) {
+								currentWay.zoomLevel = 17;
+							}
+							tempTags.add(tag);
 
-						way_tags++;
+							way_tags++;
+						}
 					}
 					tagSize--;
 				}
