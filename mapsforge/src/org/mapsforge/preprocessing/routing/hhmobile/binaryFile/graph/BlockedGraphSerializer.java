@@ -23,9 +23,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Cluster;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ClusteringUtil;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
@@ -39,7 +39,7 @@ public class BlockedGraphSerializer {
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
 
 	public static int[] writeBlockedGraph(File fHeader, File fClusterBlocks,
-			LevelGraph levelGraph, IClustering[] clustering) throws IOException {
+			LevelGraph levelGraph, Clustering[] clustering) throws IOException {
 
 		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
 		BlockedGraphHeader header = computeHeader(cUtil);
@@ -76,8 +76,8 @@ public class BlockedGraphSerializer {
 
 	private static BlockedGraphHeader computeHeader(ClusteringUtil cUtil) {
 		byte bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getGlobalNumClusters() - 1);
-		byte bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
-				.getGlobalMaxVerticesPerCluster());
+		byte bitsPerVertexOffset = Utils.numBitsToEncode(0,
+				cUtil.getGlobalMaxVerticesPerCluster());
 		byte bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil.getGlobalMaxEdgesPerCluster());
 		byte bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.getGlobalMaxNeighborhood());
 		byte numGraphLevels = (byte) cUtil.getGlobalNumLevels();
@@ -111,11 +111,11 @@ public class BlockedGraphSerializer {
 		}, 0, mapping.size());
 	}
 
-	private static void sortClusterVertices(LevelGraph levelGraph, IClustering[] clustering) {
+	private static void sortClusterVertices(LevelGraph levelGraph, Clustering[] clustering) {
 		QuickSort quicksort = new QuickSort();
 		for (int lvl = 0; lvl < clustering.length; lvl++) {
 			Level graph = levelGraph.getLevel(lvl);
-			for (final ICluster c : clustering[lvl].getClusters()) {
+			for (final Cluster c : clustering[lvl].getClusters()) {
 				final int[] vertexIds = c.getVertices();
 				final int[] nh = new int[vertexIds.length];
 				final int[] level = new int[vertexIds.length];
@@ -145,7 +145,7 @@ public class BlockedGraphSerializer {
 		}
 	}
 
-	private static int serializeBlock(byte[] buff, ICluster cluster,
+	private static int serializeBlock(byte[] buff, Cluster cluster,
 			ClusterBlockMapping mapping, ClusteringUtil cUtil, BlockedGraphHeader enc)
 			throws IOException {
 

@@ -45,8 +45,8 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Cluster;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
@@ -81,8 +81,8 @@ public class RendererV2 {
 
 	private final IRouter router;
 	private final HashMap<IEdge[], Color> routes;
-	private IClustering clustering;
-	private HashMap<ICluster, Color> clusterColors;
+	private Clustering clustering;
+	private HashMap<Cluster, Color> clusterColors;
 	private final HashMap<GeoCoordinate, Color> circles;
 	private final LinkedList<GeoCoordinate> circlesList;
 
@@ -191,7 +191,7 @@ public class RendererV2 {
 		}
 	}
 
-	public void setClustering(IClustering clustering) {
+	public void setClustering(Clustering clustering) {
 		this.clustering = clustering;
 		if (clustering != null) {
 			clusterColors = getClusterColors();
@@ -202,8 +202,8 @@ public class RendererV2 {
 
 	// private void drawClustering() {
 	// if (clustering != null) {
-	// HashMap<ICluster, Color> colors = getClusterColors();
-	// for (ICluster c : colors.keySet()) {
+	// HashMap<Cluster, Color> colors = getClusterColors();
+	// for (Cluster c : colors.keySet()) {
 	// for (int v : c.getVertices()) {
 	// for (IEdge e : router.getVertex(v).getOutboundEdges()) {
 	// if (clustering.getCluster(e.getSource().getId()) == clustering
@@ -215,12 +215,12 @@ public class RendererV2 {
 	// }
 	// }
 
-	private HashMap<ICluster, Color> getClusterColors() {
-		HashMap<ICluster, Color> colors = new HashMap<ICluster, Color>();
+	private HashMap<Cluster, Color> getClusterColors() {
+		HashMap<Cluster, Color> colors = new HashMap<Cluster, Color>();
 
-		for (ICluster cluster : clustering.getClusters()) {
+		for (Cluster cluster : clustering.getClusters()) {
 			HashSet<Color> adjColors = new HashSet<Color>();
-			for (ICluster adj : getAdjClusters(cluster)) {
+			for (Cluster adj : getAdjClusters(cluster)) {
 				Color cAdj = colors.get(adj);
 				if (cAdj != null) {
 					adjColors.add(cAdj);
@@ -236,17 +236,17 @@ public class RendererV2 {
 		return colors;
 	}
 
-	private ICluster[] getAdjClusters(ICluster cluster) {
-		THashSet<ICluster> set = new THashSet<ICluster>();
+	private Cluster[] getAdjClusters(Cluster cluster) {
+		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : cluster.getVertices()) {
 			for (IEdge e : router.getVertex(v).getOutboundEdges()) {
-				ICluster c = clustering.getCluster(e.getTarget().getId());
+				Cluster c = clustering.getCluster(e.getTarget().getId());
 				if (c != null && !c.equals(cluster)) {
 					set.add(c);
 				}
 			}
 		}
-		ICluster[] adjClusters = new ICluster[set.size()];
+		Cluster[] adjClusters = new Cluster[set.size()];
 		set.toArray(adjClusters);
 		return adjClusters;
 	}
@@ -258,8 +258,8 @@ public class RendererV2 {
 			for (IEdge e : v.getOutboundEdges()) {
 				drawEdge(e, fgColor);
 				if (clustering != null) {
-					ICluster c1 = clustering.getCluster(e.getSource().getId());
-					ICluster c2 = clustering.getCluster(e.getTarget().getId());
+					Cluster c1 = clustering.getCluster(e.getSource().getId());
+					Cluster c2 = clustering.getCluster(e.getTarget().getId());
 					if (c1 != null && c1 == c2) {
 						drawEdge(e, clusterColors.get(c1), 1);
 					} else {

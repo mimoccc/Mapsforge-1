@@ -142,8 +142,8 @@ public class HighwayHierarchiesAlgorithm {
 			graph.shiftTime = 0;
 
 			System.out.print("expanding shortcuts...");
-			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
-					.get(searchScopeHitId), shortestPathBuff);
+			expandEdges(discovered[FWD].get(searchScopeHitId),
+					discovered[BWD].get(searchScopeHitId), shortestPathBuff);
 			System.out.println((System.currentTimeMillis() - startTime) + "ms");
 			System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
 			System.out.println("ioTime : " + graph.ioTime + "ms");
@@ -187,9 +187,9 @@ public class HighwayHierarchiesAlgorithm {
 
 			HHHeapItem vItem = discovered[direction].get(e.getTargetIdLvlZero());
 			if (vItem == null) {
-				vItem = new HHHeapItem(uItem.distance + e.getWeight(), lvl, gap_, e
-						.getTargetId(), e.getTargetIdLvlZero(), u.getIdLvlZero(), u.getId(), e
-						.getTargetId());
+				vItem = new HHHeapItem(uItem.distance + e.getWeight(), lvl, gap_,
+						e.getTargetId(), e.getTargetIdLvlZero(), u.getIdLvlZero(), u.getId(),
+						e.getTargetId());
 				discovered[direction].put(e.getTargetIdLvlZero(), vItem);
 				queue[direction].insert(vItem);
 			} else if (vItem.compareTo(uItem.distance + e.getWeight(), lvl, gap_) > 0) {
@@ -306,7 +306,7 @@ public class HighwayHierarchiesAlgorithm {
 		public int distance;
 		public int level;
 		public int gap;
-		// 
+		//
 		public int id;
 		public int idLvlZero;
 
@@ -487,7 +487,7 @@ public class HighwayHierarchiesAlgorithm {
 				}
 				j++;
 			}
-			renderer.addMultiLine(coords, Color.RED);
+			// renderer.addMultiLine(coords, Color.RED);
 			//
 			renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
 			renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);

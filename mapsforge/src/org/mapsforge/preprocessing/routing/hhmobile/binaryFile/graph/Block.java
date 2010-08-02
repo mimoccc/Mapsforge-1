@@ -20,8 +20,8 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.LinkedList;
 
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Cluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.ClusteringUtil;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.ICluster;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BoundingBox;
@@ -110,7 +110,7 @@ class Block {
 	public final boolean[] eExtIsBackward;
 	public final boolean[] eExtIsCore;
 
-	public Block(ICluster cluster, ClusterBlockMapping mapping, ClusteringUtil cUtil) {
+	public Block(Cluster cluster, ClusterBlockMapping mapping, ClusteringUtil cUtil) {
 
 		LinkedList<LevelVertex> vertices = cUtil.getClusterVertices(cluster);
 
@@ -121,20 +121,20 @@ class Block {
 
 		// -------- BLOCK ID'S OF ALL REFERENCED BLOCKS --------
 
-		TObjectIntHashMap<ICluster> clusterToBlockOffsAdj = new TObjectIntHashMap<ICluster>();
-		TObjectIntHashMap<ICluster> clusterToBlockOffsSubj = new TObjectIntHashMap<ICluster>();
-		TObjectIntHashMap<ICluster> clusterToBlockOffsOverly = new TObjectIntHashMap<ICluster>();
-		TObjectIntHashMap<ICluster> clusterToBlockOffsLvlZero = new TObjectIntHashMap<ICluster>();
+		TObjectIntHashMap<Cluster> clusterToBlockOffsAdj = new TObjectIntHashMap<Cluster>();
+		TObjectIntHashMap<Cluster> clusterToBlockOffsSubj = new TObjectIntHashMap<Cluster>();
+		TObjectIntHashMap<Cluster> clusterToBlockOffsOverly = new TObjectIntHashMap<Cluster>();
+		TObjectIntHashMap<Cluster> clusterToBlockOffsLvlZero = new TObjectIntHashMap<Cluster>();
 
 		{
 			// adjacent
-			LinkedList<ICluster> clusterAdj = cUtil.getAdjacentClusters(cluster);
+			LinkedList<Cluster> clusterAdj = cUtil.getAdjacentClusters(cluster);
 			this.blockAdj = mapping.getBlockIds(clusterAdj);
 			clusterToBlockOffsAdj = mapClustersToListOffset(clusterAdj);
 
 			// subjacent
 			if (this.lvl > 1) {
-				LinkedList<ICluster> clusterSubj = cUtil.getSubjacentClusters(cluster);
+				LinkedList<Cluster> clusterSubj = cUtil.getSubjacentClusters(cluster);
 				this.blockSubj = mapping.getBlockIds(clusterSubj);
 				clusterToBlockOffsSubj = mapClustersToListOffset(clusterSubj);
 			} else {
@@ -143,7 +143,7 @@ class Block {
 
 			// overly
 			if (this.lvl < cUtil.getGlobalNumLevels() - 1) {
-				LinkedList<ICluster> clusterOverly = cUtil.getOverlyingClusters(cluster);
+				LinkedList<Cluster> clusterOverly = cUtil.getOverlyingClusters(cluster);
 				this.blockOverly = mapping.getBlockIds(clusterOverly);
 				clusterToBlockOffsOverly = mapClustersToListOffset(clusterOverly);
 			} else {
@@ -152,7 +152,7 @@ class Block {
 
 			// level zero
 			if (this.lvl > 0) {
-				LinkedList<ICluster> clusterLvlZero = cUtil
+				LinkedList<Cluster> clusterLvlZero = cUtil
 						.getLevelZeroClustersForExternalEdgeTargets(cluster);
 				clusterLvlZero.addAll(cUtil.getLevelZeroClustersForVertices(cluster));
 				Utils.removeDuplicates(clusterLvlZero);
@@ -203,13 +203,13 @@ class Block {
 					vOffsVertexSubj[i] = cUtil.getClusterVertexOffset(v.getId(), lvl - 1);
 				}
 				if (i < numVerticesHavingHigherLevel) {
-					vOffsBlockOverly[i] = clusterToBlockOffsOverly.get(cUtil.getCluster(v
-							.getId(), lvl + 1));
+					vOffsBlockOverly[i] = clusterToBlockOffsOverly.get(cUtil.getCluster(
+							v.getId(), lvl + 1));
 					vOffsVertexOverly[i] = cUtil.getClusterVertexOffset(v.getId(), lvl + 1);
 				}
 				if (this.lvl > 0) {
-					vOffsBlockLvlZero[i] = clusterToBlockOffsLvlZero.get(cUtil.getCluster(v
-							.getId(), 0));
+					vOffsBlockLvlZero[i] = clusterToBlockOffsLvlZero.get(cUtil.getCluster(
+							v.getId(), 0));
 					vOffsVertexLvlZero[i] = cUtil.getClusterVertexOffset(v.getId(), 0);
 				}
 
@@ -336,8 +336,8 @@ class Block {
 		int lvl = v.getLevel();
 		for (LevelEdge e : v.getOutboundEdges()) {
 			int dst = e.getTarget().getId();
-			ICluster c = cUtil.getCluster(src, lvl);
-			ICluster c_ = cUtil.getCluster(dst, lvl);
+			Cluster c = cUtil.getCluster(src, lvl);
+			Cluster c_ = cUtil.getCluster(dst, lvl);
 			if (!c.equals(c_)) {
 				count++;
 			}
@@ -345,7 +345,7 @@ class Block {
 		return count;
 	}
 
-	public static int[] getInternalEdgeOffsets(ICluster c, ClusteringUtil cUtil) {
+	public static int[] getInternalEdgeOffsets(Cluster c, ClusteringUtil cUtil) {
 		LinkedList<LevelVertex> list = cUtil.getClusterVertices(c);
 		int[] offsets = new int[list.size() + 1];
 		offsets[0] = 0;
@@ -359,7 +359,7 @@ class Block {
 		return offsets;
 	}
 
-	public static int[] getExternalEdgeOffsets(ICluster c, ClusteringUtil cUtil) {
+	public static int[] getExternalEdgeOffsets(Cluster c, ClusteringUtil cUtil) {
 		LinkedList<LevelVertex> list = cUtil.getClusterVertices(c);
 		int[] offsets = new int[list.size() + 1];
 		offsets[0] = 0;
@@ -371,11 +371,11 @@ class Block {
 		return offsets;
 	}
 
-	public static TObjectIntHashMap<ICluster> mapClustersToListOffset(
-			LinkedList<ICluster> clusters) {
+	public static TObjectIntHashMap<Cluster> mapClustersToListOffset(
+			LinkedList<Cluster> clusters) {
 		int i = 0;
-		TObjectIntHashMap<ICluster> map = new TObjectIntHashMap<ICluster>();
-		for (ICluster c : clusters) {
+		TObjectIntHashMap<Cluster> map = new TObjectIntHashMap<Cluster>();
+		for (Cluster c : clusters) {
 			map.put(c, i++);
 		}
 		return map;

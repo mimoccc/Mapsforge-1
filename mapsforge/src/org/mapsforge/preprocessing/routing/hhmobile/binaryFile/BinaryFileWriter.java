@@ -29,7 +29,7 @@ import java.util.Properties;
 
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphSerializer;
-import org.mapsforge.preprocessing.routing.hhmobile.clustering.IClustering;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
@@ -69,7 +69,7 @@ public class BinaryFileWriter {
 
 			// compute clustering
 			System.out.println("compute clustering");
-			IClustering[] clustering;
+			Clustering[] clustering;
 			if (clusteringAlgorithm.equals(QuadTreeClusteringAlgorithm.ALGORITHM_NAME)) {
 				clustering = QuadTreeClusteringAlgorithm.computeClustering(graph.getLevels(),
 						graph.getVertexLongitudes(), graph.getVertexLatitudes(),
@@ -101,7 +101,7 @@ public class BinaryFileWriter {
 		}
 	}
 
-	private static void writeBinaryFile(LevelGraph levelGraph, IClustering[] clustering,
+	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
 			File targetFile, String comment, int indexGroupSizeThreshold) throws IOException {
 
 		// temporary files
