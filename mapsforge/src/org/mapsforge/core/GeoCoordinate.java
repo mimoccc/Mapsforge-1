@@ -20,6 +20,12 @@ package org.mapsforge.core;
  * This immutable class represents a geographic coordinate with a latitude and longitude value.
  */
 public class GeoCoordinate implements Comparable<GeoCoordinate> {
+
+	/**
+	 * Radius of earth is required for distance computation.
+	 */
+	public static final double EARTH_RADIUS = 6378137d;
+
 	/**
 	 * The multiplication factor to convert from double to int.
 	 */
@@ -103,6 +109,47 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 		} else {
 			return lon;
 		}
+	}
+
+	/**
+	 * Distance based on the assumption that the earth is a sphere.
+	 * 
+	 * @param lon1
+	 *            longitude of 1st coordinate.
+	 * @param lat1
+	 *            latitude of 1st coordinate.
+	 * @param lon2
+	 *            longitude of 2nd coordinate.
+	 * @param lat2
+	 *            latitude of 2nd coordinate.
+	 * @return distance in meters.
+	 */
+	public static double sphericalDistance(int lon1, int lat1, int lon2, int lat2) {
+		return sphericalDistance(intToDouble(lon1), intToDouble(lat1), intToDouble(lon2),
+				intToDouble(lat2));
+	}
+
+	/**
+	 * Distance based on the assumption that the earth is a sphere.
+	 * 
+	 * @param lon1
+	 *            longitude of 1st coordinate.
+	 * @param lat1
+	 *            latitude of 1st coordinate.
+	 * @param lon2
+	 *            longitude of 2nd coordinate.
+	 * @param lat2
+	 *            latitude of 2nd coordinate.
+	 * @return distance in meters.
+	 */
+	public static double sphericalDistance(double lon1, double lat1, double lon2, double lat2) {
+		double dLat = Math.toRadians(lat2 - lat1);
+		double dLon = Math.toRadians(lon2 - lon1);
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1))
+				* Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return c * EARTH_RADIUS;
 	}
 
 	/**

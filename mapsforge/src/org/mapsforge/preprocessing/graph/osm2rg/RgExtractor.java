@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.Properties;
 
 import org.mapsforge.core.DBConnection;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmNodeListener;
@@ -39,7 +40,6 @@ import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmXmlParser;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.xml.sax.SAXException;
 
 /**
