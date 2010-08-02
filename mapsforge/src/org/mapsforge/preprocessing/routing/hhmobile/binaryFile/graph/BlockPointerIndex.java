@@ -26,6 +26,16 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayInputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
+/**
+ * This class implements a run length encoded index of pointers, pointing to variable length
+ * blocks. Pointers have to be sorted by ascending block sizes. This reduces the problem to
+ * compress a sorted array of integer values. The compression rate is just a constant factor but
+ * since the ram is very sparse on smart phones, this saves relatively much of ram. It is traded
+ * off with runtime, on the one hand caused by the required shift operations, on the other hand
+ * a constant amount of pointers has to be read, to access a single pointer entry. The overhead
+ * is constant an can be limited by group size. Additionally a method is provided which
+ * determines the optimal group size with regard to a given threshold.
+ */
 public final class BlockPointerIndex {
 
 	private final static int MIN_G_SIZE = 5;
@@ -43,6 +53,21 @@ public final class BlockPointerIndex {
 	// encoded succeeding block size differences (first of a group is zero)
 	private final byte[] encBlockSize;
 
+	/**
+	 * Constructs an index for given group size and block sizes. The block sizes must be sorted
+	 * ascending. It is assumed that the first pointer points to address 0, while addressing
+	 * blockSize[0] bytes. The i st pointer points to the end address of the i-1 st pointer. The
+	 * Index is separated in groups of constant size where each group is individually encoded.
+	 * This especially addresses the characteristics of block sizes computed by the k-center
+	 * algorithm. The block sizes are normal distributed so many of the blocks are encoded
+	 * efficiently. The parameter gSize determines the size of the groups of pointers and thus
+	 * also limit the runtime overhead.
+	 * 
+	 * @param blockSize
+	 *            sorted ascending, the block size at array index i belongs to block with id i.
+	 * @param gSize
+	 *            pointer are grouped in groups of size gSize.
+	 */
 	public BlockPointerIndex(int[] blockSize, int gSize) {
 		this.gSize = gSize;
 		this.numBlocks = blockSize.length;
@@ -60,6 +85,14 @@ public final class BlockPointerIndex {
 				gFirstBlockSize);
 	}
 
+	/**
+	 * Constructs and index based on the serialization.
+	 * 
+	 * @param buff
+	 *            serialized index.
+	 * @throws IOException
+	 *             thrown if something is wrong with the byte array.
+	 */
 	public BlockPointerIndex(byte[] buff) throws IOException {
 		ByteArrayInputStream iStream = new ByteArrayInputStream(buff);
 		DataInputStream in = new DataInputStream(iStream);
@@ -84,6 +117,16 @@ public final class BlockPointerIndex {
 		in.read(encBlockSize);
 	}
 
+	/**
+	 * Determines the optimal group size limited by the given parameter maxGSize, by building
+	 * the index for each possible group size and choosing the less space consuming one.
+	 * 
+	 * @param blockSize
+	 *            size of the blocks to be indexed, sorted ascending.
+	 * @param maxGSize
+	 *            limit on size of the pointer groups.
+	 * @return the space optimal index concerning the given parameters.
+	 */
 	public static BlockPointerIndex getSpaceOptimalIndex(int[] blockSize, int maxGSize) {
 		maxGSize = Math.min(blockSize.length, maxGSize);
 		int[] indexSize = new int[maxGSize - MIN_G_SIZE + 1];
@@ -97,6 +140,14 @@ public final class BlockPointerIndex {
 		return new BlockPointerIndex(blockSize, optGSize);
 	}
 
+	/**
+	 * Writes this index to a stream.
+	 * 
+	 * @param oStream
+	 *            stream to write to.
+	 * @throws IOException
+	 *             on write error.
+	 */
 	public void serialize(OutputStream oStream) throws IOException {
 		DataOutputStream out = new DataOutputStream(oStream);
 
@@ -117,6 +168,13 @@ public final class BlockPointerIndex {
 		out.flush();
 	}
 
+	/**
+	 * Reads the pointer with the given id.
+	 * 
+	 * @param blockId
+	 *            id of the pointer.
+	 * @return pointer identified by the given id or bull if id is out of range.
+	 */
 	public BlockPointer getPointer(int blockId) {
 		try {
 			final int groupIdx = blockId / gSize;
@@ -133,15 +191,21 @@ public final class BlockPointerIndex {
 			}
 			return new BlockPointer(blockStartAddr, blockSize);
 		} catch (IOException e) {
-			throw new RuntimeException("Got impossible error!");
+			return null;
 		}
 
 	}
 
+	/**
+	 * @return number of pointers in index.
+	 */
 	public int size() {
 		return numBlocks;
 	}
 
+	/**
+	 * @return number of bytes consumed in ram.
+	 */
 	public int byteSize() {
 		return 8 // gSize, numBlocks
 				+ 4 // g*[].length
@@ -155,6 +219,21 @@ public final class BlockPointerIndex {
 		return "BlockPointerIndex(size=" + size() + ")";
 	}
 
+	/**
+	 * 
+	 * @param gEncBits
+	 *            number of bits used for encoding a single entry. gEncBits[i] determines the
+	 *            number of bits per entry used for the i th group.
+	 * @param blockSize
+	 *            sizes sorted ascending.
+	 * @param gSize
+	 *            number of pointers per group.
+	 * @param gBlockEncOffsBuff
+	 *            the start addresses of each group are written here.
+	 * @param gFirstBlockSizeBuff
+	 *            the sizes of the first pointer of each group are put here.
+	 * @return run length encoded block sizes.
+	 */
 	private static byte[] encodeBlockSizes(byte[] gEncBits, int[] blockSize, int gSize,
 			int[] gBlockEncOffsBuff, int[] gFirstBlockSizeBuff) {
 		try {
@@ -187,6 +266,14 @@ public final class BlockPointerIndex {
 		}
 	}
 
+	/**
+	 * Computes the number of bits required for encoding an entry of the respective group.
+	 * 
+	 * @param gMaxDiff
+	 *            gMaxDiff[i] contains the maximum difference of two succeeding entries of the i
+	 *            th group.
+	 * @return number of bits to encode for each group.
+	 */
 	private static byte[] getGroupEncBits(int[] gMaxDiff) {
 		byte[] gEncBits = new byte[gMaxDiff.length];
 		for (int i = 0; i < gMaxDiff.length; i++) {
@@ -195,6 +282,13 @@ public final class BlockPointerIndex {
 		return gEncBits;
 	}
 
+	/**
+	 * Computes start addresses of each group.
+	 * 
+	 * @param gByteSize
+	 *            gByteSize[i] determines the number of bytes to encode the i th group.
+	 * @return start addresses of each group.
+	 */
 	private static long[] getGroupStartAddr(long[] gByteSize) {
 		long[] gStartAddr = new long[gByteSize.length];
 		gStartAddr[0] = 0;
@@ -204,6 +298,15 @@ public final class BlockPointerIndex {
 		return gStartAddr;
 	}
 
+	/**
+	 * Number of bytes required for encoding each group.
+	 * 
+	 * @param blockSize
+	 *            block sizes sorted ascending.
+	 * @param gSize
+	 *            number of entries per group.
+	 * @return number of bytes required for each group.
+	 */
 	private static long[] getGroupByteSize(int[] blockSize, int gSize) {
 		int numG = getNumGroups(blockSize.length, gSize);
 		long[] gByteSize = new long[numG];
@@ -214,6 +317,15 @@ public final class BlockPointerIndex {
 		return gByteSize;
 	}
 
+	/**
+	 * Computes the maximum difference of succeeding entries for each group.
+	 * 
+	 * @param blockSize
+	 *            block sizes sorted ascending.
+	 * @param gSize
+	 *            number of entries per group.
+	 * @return maximum difference within each group.
+	 */
 	private static int[] getGroupMaxSucceedingBlockSizeDiff(int[] blockSize, int gSize) {
 		int numG = getNumGroups(blockSize.length, gSize);
 		int[] maxDiffs = new int[numG];
@@ -224,6 +336,17 @@ public final class BlockPointerIndex {
 		return maxDiffs;
 	}
 
+	/**
+	 * Helper function for getGroupMaxSucceedingBlockSizeDiff.
+	 * 
+	 * @param arr
+	 *            the values.
+	 * @param start
+	 *            start index.
+	 * @param end
+	 *            end index.
+	 * @return maximum difference of succeeding array entries within the given bounds.
+	 */
 	private static int maxSucceedingDiff(int[] arr, int start, int end) {
 		int maxDiff = 0;
 		for (int i = start + 1; i < end; i++) {
@@ -232,6 +355,15 @@ public final class BlockPointerIndex {
 		return maxDiff;
 	}
 
+	/**
+	 * Computes the number of groups.
+	 * 
+	 * @param numBlocks
+	 *            number of entries to index.
+	 * @param gSize
+	 *            entries per group.
+	 * @return number of groups to index.
+	 */
 	private static int getNumGroups(int numBlocks, int gSize) {
 		int numG = (int) Math.ceil(((double) numBlocks) / ((double) gSize));
 		return numG;
