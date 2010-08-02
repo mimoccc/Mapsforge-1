@@ -240,6 +240,24 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 		return this.longitude;
 	}
 
+	/**
+	 * Returns the latitude value in microdegrees of this coordinate.
+	 * 
+	 * @return the latitude value in microdegrees of this coordinate.
+	 */
+	public int getLatitudeE6() {
+		return doubleToInt(this.latitude);
+	}
+
+	/**
+	 * Returns the longitude value in microdegrees of this coordinate.
+	 * 
+	 * @return the longitude value in microdegrees of this coordinate.
+	 */
+	public int getLongitudeE6() {
+		return doubleToInt(this.longitude);
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Edge;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.LRUCache;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.RoutingGraph;
@@ -31,7 +32,6 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
 //check for duplicate ids
@@ -481,8 +481,8 @@ public class HighwayHierarchiesAlgorithm {
 			for (Edge e : sp1) {
 				coords[j] = new GeoCoordinate(graph.getVertex(e.getTargetId()).getLat(), graph
 						.getVertex(e.getTargetId()).getLon());
-				if (coords[j].getLongitudeInt() == coords[j - 1].getLongitudeInt()
-						&& coords[j].getLatitudeInt() == coords[j - 1].getLatitudeInt()) {
+				if (coords[j].getLongitudeE6() == coords[j - 1].getLongitudeE6()
+						&& coords[j].getLatitudeE6() == coords[j - 1].getLatitudeE6()) {
 					System.out.println("error " + j);
 				}
 				j++;

@@ -26,10 +26,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 public class RgEdgeNames implements Serializable {
 
@@ -58,7 +58,8 @@ public class RgEdgeNames implements Serializable {
 		Serializer.serialize(oStream, this);
 	}
 
-	public static RgEdgeNames deserialize(InputStream iStream) throws IOException, ClassNotFoundException {
+	public static RgEdgeNames deserialize(InputStream iStream) throws IOException,
+			ClassNotFoundException {
 		return Serializer.deserialize(iStream);
 	}
 
@@ -86,14 +87,15 @@ public class RgEdgeNames implements Serializable {
 
 		String[] names = new String[counter];
 		for (Object s : namesMap.keys()) {
-			String s1 = (String)s;
+			String s1 = (String) s;
 			names[namesMap.get(s)] = s1;
 		}
 		return new RgEdgeNames(names, index);
 	}
 
 	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base", "osm", "osm");
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
+				"osm", "osm");
 		RgEdgeNames edgeNames = importFromDb(conn);
 		for (int i = 0; i < edgeNames.size(); i++) {
 			System.out.println(edgeNames.getName(i));

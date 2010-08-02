@@ -25,8 +25,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
 /**
@@ -139,19 +139,19 @@ public class HHDbReader {
 		ResultSet rs = conn.createStatement().executeQuery(SQL_SELECT_LEVEL_STATS);
 		while (rs.next()) {
 			int lvl = rs.getInt("lvl");
-			stats[lvl] = new HHLevelStats(lvl, rs.getInt("num_edges"), rs
-					.getInt("num_vertices"), rs.getInt("num_core_edges"), rs
-					.getInt("num_core_vertices"));
+			stats[lvl] = new HHLevelStats(lvl, rs.getInt("num_edges"),
+					rs.getInt("num_vertices"), rs.getInt("num_core_edges"),
+					rs.getInt("num_core_vertices"));
 		}
 		rs.close();
 
 		rs = conn.createStatement().executeQuery(SQL_SELECT_GRAPH_PROPERTIES);
 		if (rs.next()) {
 			HHGraphProperties props = new HHGraphProperties(new Date(rs.getTimestamp(
-					"creation_date").getTime()), rs.getString("transport"), rs.getInt("h"), rs
-					.getInt("vertex_threshold"), rs.getInt("hoplimit"), rs
-					.getInt("num_threads"), rs.getDouble("c"), rs.getDouble("comp_time_mins"),
-					rs.getBoolean("downgraded_edges"), stats);
+					"creation_date").getTime()), rs.getString("transport"), rs.getInt("h"),
+					rs.getInt("vertex_threshold"), rs.getInt("hoplimit"),
+					rs.getInt("num_threads"), rs.getDouble("c"),
+					rs.getDouble("comp_time_mins"), rs.getBoolean("downgraded_edges"), stats);
 			return props;
 		}
 		return null;
@@ -184,8 +184,8 @@ public class HHDbReader {
 				public HHVertex next() {
 					try {
 						if (rs.next()) {
-							return new HHVertex(rs.getInt("id"), rs.getDouble("lon"), rs
-									.getDouble("lat"));
+							return new HHVertex(rs.getInt("id"), rs.getDouble("lon"),
+									rs.getDouble("lat"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
@@ -310,11 +310,11 @@ public class HHDbReader {
 				public HHEdgeLvl next() {
 					try {
 						if (rs.next()) {
-							return new HHEdgeLvl(rs.getInt("id"), rs.getInt("source_id"), rs
-									.getInt("target_id"), rs.getInt("weight"), rs
-									.getInt("min_lvl"), rs.getInt("max_lvl"), rs
-									.getBoolean("fwd"), rs.getBoolean("bwd"), rs
-									.getBoolean("shortcut"), rs.getInt("lvl"));
+							return new HHEdgeLvl(rs.getInt("id"), rs.getInt("source_id"),
+									rs.getInt("target_id"), rs.getInt("weight"),
+									rs.getInt("min_lvl"), rs.getInt("max_lvl"),
+									rs.getBoolean("fwd"), rs.getBoolean("bwd"),
+									rs.getBoolean("shortcut"), rs.getInt("lvl"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
@@ -356,11 +356,11 @@ public class HHDbReader {
 				public HHEdge next() {
 					try {
 						if (rs.next()) {
-							return new HHEdge(rs.getInt("id"), rs.getInt("source_id"), rs
-									.getInt("target_id"), rs.getInt("weight"), rs
-									.getInt("min_lvl"), rs.getInt("max_lvl"), rs
-									.getBoolean("fwd"), rs.getBoolean("bwd"), rs
-									.getBoolean("shortcut"));
+							return new HHEdge(rs.getInt("id"), rs.getInt("source_id"),
+									rs.getInt("target_id"), rs.getInt("weight"),
+									rs.getInt("min_lvl"), rs.getInt("max_lvl"),
+									rs.getBoolean("fwd"), rs.getBoolean("bwd"),
+									rs.getBoolean("shortcut"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();

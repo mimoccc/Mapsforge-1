@@ -45,9 +45,9 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.Cluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -120,8 +120,8 @@ public class RendererV2 {
 		this.metersPerPixel = ZOOM_LEVELS[zoomLevel];
 
 		// project center
-		double[] tmp = new double[] { GeoCoordinate.itod(center.getLongitudeInt()),
-				GeoCoordinate.itod(center.getLatitudeInt()) };
+		double[] tmp = new double[] { GeoCoordinate.intToDouble(center.getLongitudeE6()),
+				GeoCoordinate.intToDouble(center.getLatitudeE6()) };
 		PROJ.transform(tmp, 0, tmp, 0, 1);
 		double cx = tmp[0];
 		double cy = tmp[1];
@@ -135,10 +135,10 @@ public class RendererV2 {
 		GeoCoordinate minC = screenToGeo(0, 0);
 		GeoCoordinate maxC = screenToGeo((int) screenW, (int) screenH);
 
-		this.minLon = minC.getLongitudeInt();
-		this.minLat = minC.getLatitudeInt();
-		this.maxLon = maxC.getLongitudeInt();
-		this.maxLat = maxC.getLatitudeInt();
+		this.minLon = minC.getLongitudeE6();
+		this.minLat = minC.getLatitudeE6();
+		this.maxLon = maxC.getLongitudeE6();
+		this.maxLat = maxC.getLatitudeE6();
 
 		// update screen
 		drawRenderContent();
@@ -273,10 +273,10 @@ public class RendererV2 {
 	}
 
 	private void drawEdge(IEdge e, Color c) {
-		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate().getLongitudeInt(), e
-				.getSource().getCoordinate().getLatitudeInt());
-		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate().getLongitudeInt(), e
-				.getTarget().getCoordinate().getLatitudeInt());
+		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate().getLongitudeE6(), e
+				.getSource().getCoordinate().getLatitudeE6());
+		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate().getLongitudeE6(), e
+				.getTarget().getCoordinate().getLatitudeE6());
 		canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c);
 	}
 
@@ -308,12 +308,13 @@ public class RendererV2 {
 	}
 
 	private ScreenCoordinate geoToScreen(GeoCoordinate c) {
-		return geoToScreen(c.getLongitudeInt(), c.getLatitudeInt());
+		return geoToScreen(c.getLongitudeE6(), c.getLatitudeE6());
 	}
 
 	private ScreenCoordinate geoToScreen(int lon, int lat) {
 		// projection to carthesian coordinate (x, y)
-		double[] tmp = new double[] { GeoCoordinate.itod(lon), GeoCoordinate.itod(lat) };
+		double[] tmp = new double[] { GeoCoordinate.intToDouble(lon),
+				GeoCoordinate.intToDouble(lat) };
 		PROJ.transform(tmp, 0, tmp, 0, 1);
 		double x = tmp[0];
 		double y = tmp[1];
@@ -556,8 +557,8 @@ public class RendererV2 {
 			public void mouseMoved(MouseEvent e) {
 				Point p = e.getPoint();
 				GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
-				canvas.setToolTipText("(" + df.format(c.getLatitude().getDegree()) + ","
-						+ df.format(c.getLongitude().getDegree()) + ")");
+				canvas.setToolTipText("(" + df.format(c.getLatitude()) + ","
+						+ df.format(c.getLongitude()) + ")");
 			}
 		}
 

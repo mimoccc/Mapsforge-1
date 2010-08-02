@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BinaryFileHeader;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphHeader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
 public class RoutingGraph {

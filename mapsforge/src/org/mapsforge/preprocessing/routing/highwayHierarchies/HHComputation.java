@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgWeightFunctionDistance;
@@ -47,7 +48,6 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHD
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArraySynchronized;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 
@@ -125,8 +125,8 @@ public final class HHComputation {
 		// write vertices
 		for (Iterator<V> iter = rgDao.getVertices().iterator(); iter.hasNext();) {
 			IRgVertex v = iter.next();
-			writer.writeVertex(result.originalVertexIdsToAssignedVertexId[v.getId()], v
-					.getLongitude(), v.getLatitude());
+			writer.writeVertex(result.originalVertexIdsToAssignedVertexId[v.getId()],
+					v.getLongitude(), v.getLatitude());
 		}
 		writer.flush();
 
@@ -142,9 +142,9 @@ public final class HHComputation {
 		// write edges
 		for (int i = 0; i < graph.numEdgeEntries(); i++) {
 			HHDynamicEdge e = graph.getEdge(i);
-			writer.writeEdge(e.getId(), e.getSource().getId(), e.getTarget().getId(), e
-					.getWeight(), e.getMinLevel(), e.getMaxLevel(), e.isForward(), e
-					.isBackward(), e.isShortcut());
+			writer.writeEdge(e.getId(), e.getSource().getId(), e.getTarget().getId(),
+					e.getWeight(), e.getMinLevel(), e.getMaxLevel(), e.isForward(),
+					e.isBackward(), e.isShortcut());
 		}
 		writer.flush();
 
@@ -201,8 +201,8 @@ public final class HHComputation {
 			 * COMPUTE LEVEL ONE
 			 */
 			ThreadedNeighborhoodComputation.computeNeighborhoods(graph, 0, H, NUM_THREADS);
-			BitArraySynchronized highwayEdges = new BitArraySynchronized(graph
-					.getEdgeIdUpperBound());
+			BitArraySynchronized highwayEdges = new BitArraySynchronized(
+					graph.getEdgeIdUpperBound());
 			ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, 0, highwayEdges,
 					NUM_THREADS, true);
 			ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, 0, highwayEdges,
@@ -252,10 +252,10 @@ public final class HHComputation {
 
 				// remove non highway edges
 				highwayEdges = new BitArraySynchronized(graph.getEdgeIdUpperBound());
-				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, graph
-						.numLevels() - 1, highwayEdges, NUM_THREADS, true);
-				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, graph
-						.numLevels() - 1, highwayEdges, NUM_THREADS, false);
+				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph,
+						graph.numLevels() - 1, highwayEdges, NUM_THREADS, true);
+				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph,
+						graph.numLevels() - 1, highwayEdges, NUM_THREADS, false);
 				for (Iterator<HHDynamicVertex> iter = graph.getVertices(graph.numLevels() - 1); iter
 						.hasNext();) {
 					HHDynamicVertex v = iter.next();
@@ -289,8 +289,8 @@ public final class HHComputation {
 						.hasNext();) {
 					HHDynamicVertex v = iter.next();
 					if (v.getMaxLevel() == graph.numLevels() - 1) {
-						v.setNeighborhood(v.getNeighborhood(graph.numLevels() - 1), graph
-								.numLevels() - 2);
+						v.setNeighborhood(v.getNeighborhood(graph.numLevels() - 1),
+								graph.numLevels() - 2);
 					} else {
 						v.setNeighborhood(INFINITY_1, graph.numLevels() - 2);
 					}
@@ -363,11 +363,10 @@ public final class HHComputation {
 
 	private static void addLevelInfo(HHDynamicGraph graph, LinkedList<HHLevelStats> levelInfo) {
 		levelInfo
-				.add(new HHLevelStats(graph.numLevels() - 2, graph
-						.numEdges(graph.numLevels() - 2), graph
-						.numVertices(graph.numLevels() - 2), graph
-						.numEdges(graph.numLevels() - 1), graph
-						.numVertices(graph.numLevels() - 1)));
+				.add(new HHLevelStats(graph.numLevels() - 2,
+						graph.numEdges(graph.numLevels() - 2), graph.numVertices(graph
+								.numLevels() - 2), graph.numEdges(graph.numLevels() - 1), graph
+								.numVertices(graph.numLevels() - 1)));
 	}
 
 	private static boolean verifyInputGraph(HHDynamicGraph graph) {
@@ -432,16 +431,16 @@ public final class HHComputation {
 			for (HHDynamicEdge e : v.getOutboundEdges(lvl)) {
 				if (e.isForward()) {
 					if (dFwd.containsKey(e.getTarget().getId())) {
-						dFwd.put(e.getTarget().getId(), Math.min(e.getWeight(), dFwd.get(e
-								.getTarget().getId())));
+						dFwd.put(e.getTarget().getId(),
+								Math.min(e.getWeight(), dFwd.get(e.getTarget().getId())));
 					} else {
 						dFwd.put(e.getTarget().getId(), e.getWeight());
 					}
 				}
 				if (e.isBackward()) {
 					if (dBwd.containsKey(e.getTarget().getId())) {
-						dBwd.put(e.getTarget().getId(), Math.min(e.getWeight(), dBwd.get(e
-								.getTarget().getId())));
+						dBwd.put(e.getTarget().getId(),
+								Math.min(e.getWeight(), dBwd.get(e.getTarget().getId())));
 					} else {
 						dBwd.put(e.getTarget().getId(), e.getWeight());
 					}
@@ -495,8 +494,9 @@ public final class HHComputation {
 						continue;
 					}
 					HHDynamicEdge e = graph.addEdge(in.getSource().getId(), out.getTarget()
-							.getId(), in.getWeight() + out.getWeight(), in.isForward()
-							&& out.isForward(), in.isBackward() && out.isBackward(), lvl);
+							.getId(), in.getWeight() + out.getWeight(),
+							in.isForward() && out.isForward(),
+							in.isBackward() && out.isBackward(), lvl);
 					if (!e.isForward() && !e.isBackward()) {
 						System.out.println("error");
 					}
@@ -594,100 +594,118 @@ public final class HHComputation {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException, FileNotFoundException,
+			IOException {
+
+		// parameters
+		int h;
+		double c;
+		int hopLimit;
+		int vertexThreshold;
+		boolean downgradeEdges;
+		String weightFunction;
+		int numThreads;
+		Connection inputDb, outputDb;
+		File outputFile;
+
+		// initialize parameters
 		if (args.length == 1) {
-			try {
-				Properties props = new Properties();
-				props.load(new FileInputStream(args[0]));
+			// get parameters from properties file
+			Properties props = new Properties();
+			props.load(new FileInputStream(args[0]));
 
-				// lookup input and output database database
-				Connection inputDb = getInputDbConnection(props);
-				Connection outputDb = getOutputDbConnection(props);
+			inputDb = getInputDbConnection(props);
+			outputDb = getOutputDbConnection(props);
 
-				// init params
-				int h = Integer.parseInt(props.getProperty("preprocessing.param.h"));
-				int hopLimit = Integer.parseInt(props
-						.getProperty("preprocessing.param.hopLimit"));
-				double c = Double.parseDouble(props.getProperty("preprocessing.param.c"));
-				int vertexThreshold = Integer.parseInt(props
-						.getProperty("preprocessing.param.vertexThreshold"));
-				boolean downgradeEdges = Boolean.parseBoolean(props
-						.getProperty("preprocessing.param.downgradeEdges"));
-				int numThreads = Integer.parseInt(props
-						.getProperty("preprocessing.param.numThreads"));
+			h = Integer.parseInt(props.getProperty("preprocessing.param.h"));
+			hopLimit = Integer.parseInt(props.getProperty("preprocessing.param.hopLimit"));
+			c = Double.parseDouble(props.getProperty("preprocessing.param.c"));
+			vertexThreshold = Integer.parseInt(props
+					.getProperty("preprocessing.param.vertexThreshold"));
+			downgradeEdges = Boolean.parseBoolean(props
+					.getProperty("preprocessing.param.downgradeEdges"));
+			numThreads = Integer.parseInt(props.getProperty("preprocessing.param.numThreads"));
+			outputFile = new File(props.getProperty("output.file"));
 
-				RgDAO rgDao = new RgDAO(inputDb);
-				String weightParam = props.getProperty("preprocessing.param.weightFunction");
-				IRgWeightFunction<RgEdge> wFunc;
-				if (weightParam != null && weightParam.equals("DISTANCE")) {
-					System.out.println("weight = DISTANCE");
-					wFunc = new RgWeightFunctionDistance();
-				} else {
-					System.out.println("weight = TIME");
-					wFunc = new RgWeightFunctionTime(new DEHighwayLevel2Speed());
-				}
-
-				doPreprocessing(rgDao, wFunc, h, hopLimit, c, vertexThreshold, downgradeEdges,
-						numThreads, outputDb);
-
-				// and write result to db
-
-				// from db to java classes
-				System.out.println("creating java data structures ");
-				System.out.println(" fetch from database");
-				RouterImpl router = RouterImpl.getFromDb(outputDb);
-				String file = props.getProperty("output.file");
-				File f = new File(file);
-				File dir = new File(f.getAbsolutePath().substring(0,
-						f.getAbsolutePath().lastIndexOf(File.separatorChar))
-						+ File.separatorChar);
-				dir.mkdirs();
-				System.out.println(" writing serialization");
-				router.serialize(new FileOutputStream(f));
-				System.out.println("finished.");
-
-			} catch (NumberFormatException e) {
-				System.out.println("invalid properties file!");
-				e.printStackTrace();
-			} catch (FileNotFoundException e) {
-				System.out.println("properties file not found!");
-			} catch (IOException e) {
-				System.out.println("could not read properties file!");
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			weightFunction = props.getProperty("preprocessing.param.weightFunction");
 		} else if (args.length == 14) {
-			try {
-				int h = Integer.parseInt(args[0]);
-				double c = Double.parseDouble(args[1]);
-				int hopLimit = Integer.parseInt(args[2]);
-				int numThreads = Integer.parseInt(args[3]);
-				Connection inputDb = DBConnection.getJdbcConnectionPg(args[4], Integer
-						.parseInt(args[5]), args[6], args[7], args[8]);
-				Connection outputDb = DBConnection.getJdbcConnectionPg(args[9], Integer
-						.parseInt(args[10]), args[11], args[12], args[13]);
-
-				RgDAO rgDao = new RgDAO(inputDb);
-				IRgWeightFunction<RgEdge> wFunc = new RgWeightFunctionTime(
-						new DEHighwayLevel2Speed());
-				doPreprocessing(rgDao, wFunc, h, hopLimit, c, 0, false, numThreads, outputDb);
-			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
+			// get parameters from command line
+			// this can be removed in near future : currently in use by scripts which will be
+			// changed later on.
+			h = Integer.parseInt(args[0]);
+			c = Double.parseDouble(args[1]);
+			hopLimit = Integer.parseInt(args[2]);
+			vertexThreshold = 0;
+			downgradeEdges = false;
+			weightFunction = "TIME";
+			numThreads = Integer.parseInt(args[3]);
+			inputDb = DBConnection.getJdbcConnectionPg(args[4], Integer.parseInt(args[5]),
+					args[6], args[7], args[8]);
+			outputDb = DBConnection.getJdbcConnectionPg(args[9], Integer.parseInt(args[10]),
+					args[11], args[12], args[13]);
+			outputFile = null;
+		} else if (args.length == 18) {
+			// get parameters from command line
+			h = Integer.parseInt(args[0]);
+			c = Double.parseDouble(args[1]);
+			hopLimit = Integer.parseInt(args[2]);
+			vertexThreshold = Integer.parseInt(args[3]);
+			downgradeEdges = Boolean.parseBoolean(args[4]);
+			weightFunction = args[5];
+			numThreads = Integer.parseInt(args[6]);
+			inputDb = DBConnection.getJdbcConnectionPg(args[7], Integer.parseInt(args[8]),
+					args[9], args[10], args[11]);
+			outputDb = DBConnection.getJdbcConnectionPg(args[12], Integer.parseInt(args[13]),
+					args[14], args[15], args[16]);
+			outputFile = new File(args[17]);
 		} else {
 			usage();
+			return;
+		}
+
+		// initialize weight function
+		IRgWeightFunction<RgEdge> wFunc;
+		if (weightFunction != null && weightFunction.equals("DISTANCE")) {
+			wFunc = new RgWeightFunctionDistance();
+		} else {
+			wFunc = new RgWeightFunctionTime(new DEHighwayLevel2Speed());
+		}
+
+		// read input database and write to output database
+		RgDAO rgDao = new RgDAO(inputDb);
+		doPreprocessing(rgDao, wFunc, h, hopLimit, c, vertexThreshold, downgradeEdges,
+				numThreads, outputDb);
+
+		// read highway hierarchies from database and create java binary file
+		if (outputFile != null) {
+			System.out.println("create binary file...");
+			File dir = new File(outputFile.getAbsolutePath().substring(0,
+					outputFile.getAbsolutePath().lastIndexOf(File.separatorChar))
+					+ File.separatorChar);
+			dir.mkdirs();
+			RouterImpl router = RouterImpl.getFromDb(outputDb);
+			router.serialize(new FileOutputStream(outputFile));
+			System.out.println("finished.");
 		}
 	}
 
 	private static void usage() {
 		System.out.println("HHComputation <properties-file>\n");
 		System.out
-				.println("HHComputation <h> <c> <hopLimit> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass> ");
+				.println("HHComputation <h> <c> <hopLimit> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass>\n");
+		System.out
+				.println("HHComputation <h> <c> <hopLimit> <vertexThreshold> <downgradeEdges> <weightFunction> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass> <output.file>\n");
+
+		System.out.println(" <h> neighborhood - [60, 150]");
+		System.out.println(" <c> contraction factor - [1.0, 2.0]");
+		System.out.println(" <hopLimit> eges per shortcut - [5, 15]");
+		System.out
+				.println(" <vertexThreshold> create distance table if level has less vertices - [0 .. 10000]");
+		System.out
+				.println(" <downgrade edges> edges leaving core are downgraded(faster) [true|false]");
+		System.out.println(" <weight function> [DISTANCE|TIME]");
+		System.out.println(" <numThreads> [1, ?]");
+		System.out.println(" <output.file> server side binary file");
 
 	}
 

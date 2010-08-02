@@ -19,7 +19,7 @@ package org.mapsforge.server.routing;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.core.GeoCoordinate;
 
 public interface IRouter {
 

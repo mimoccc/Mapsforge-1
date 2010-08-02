@@ -163,8 +163,8 @@ class HHEdgeExpanderRecursive implements Serializable {
 					bwd = false;
 				}
 				int searchLvl = Math.max(0, eMinLvl[e.getId()] - 1);
-				LinkedList<Integer> hopsIndices = DijkstraAlgorithm.shortestPathHopIndices(e
-						.getSource(), e.getTarget(), fwd, bwd, searchLvl, eMinLvl);
+				LinkedList<Integer> hopsIndices = DijkstraAlgorithm.shortestPathHopIndices(
+						e.getSource(), e.getTarget(), fwd, bwd, searchLvl, eMinLvl);
 				for (int hopIdx : hopsIndices) {
 					if (hopIdx < ESCAPE_VALUE_HOPS) {
 						hops.add(hopIdx);

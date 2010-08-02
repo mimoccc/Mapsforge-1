@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -135,16 +135,15 @@ public class RouterImpl implements IRouter {
 
 	@Override
 	public HHEdge[] getNearestEdges(GeoCoordinate coord) {
-		int rgEdgeId = edgeIndex
-				.getNearestEdge(coord.getLongitudeInt(), coord.getLatitudeInt());
+		int rgEdgeId = edgeIndex.getNearestEdge(coord.getLongitudeE6(), coord.getLatitudeE6());
 		EdgeMapping[] mapping = mapper.mapFromRgEdgeId(rgEdgeId);
 		return getEdgesFromMapping(mapping);
 	}
 
 	@Override
 	public IVertex getNearestVertex(GeoCoordinate coord) {
-		int id = vertexIndex.getNearestNeighborIdx(coord.getLongitudeInt(), coord
-				.getLatitudeInt());
+		int id = vertexIndex.getNearestNeighborIdx(coord.getLongitudeE6(),
+				coord.getLatitudeE6());
 		return new HHVertex(routingGraph.getVertex(id));
 	}
 
@@ -307,19 +306,20 @@ public class RouterImpl implements IRouter {
 		public IVertex getTarget() {
 			return new HHVertex(e.getTarget());
 		}
-		
+
+		@Override
 		public GeoCoordinate[] getAllWaypoints() {
 			int s = getWaypoints().length + 2;
 			GeoCoordinate[] result = new GeoCoordinate[s];
 			result[0] = this.getSource().getCoordinate();
 			GeoCoordinate[] inbetween = this.getWaypoints();
 			for (int i = 1; i <= inbetween.length; i++) {
-				result[i] = inbetween[i-1];
+				result[i] = inbetween[i - 1];
 			}
-			result[s-1] = this.getTarget().getCoordinate();
+			result[s - 1] = this.getTarget().getCoordinate();
 			return result;
 		}
-		
+
 		@Override
 		public GeoCoordinate[] getWaypoints() {
 			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
@@ -383,13 +383,15 @@ public class RouterImpl implements IRouter {
 
 	public static void main(String[] args) {
 		IRouter router = RouterFactory.getRouter();
-		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09468, 8.80808)).getId());
-		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09579, 8.80461)).getId());
+		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09468, 8.80808))
+				.getId());
+		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09579, 8.80461))
+				.getId());
 
-		//IEdge[] sp = router.getShortestPath(1896, 7873);
-		//IEdge[] sp = router.getShortestPath(10262, 119);
+		// IEdge[] sp = router.getShortestPath(1896, 7873);
+		// IEdge[] sp = router.getShortestPath(10262, 119);
 		IEdge[] sp = router.getShortestPath(8446, 5093);
-		
+
 		System.out.println(sp.length);
 
 		for (IEdge e : sp) {

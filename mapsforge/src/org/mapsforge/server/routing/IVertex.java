@@ -16,7 +16,7 @@
  */
 package org.mapsforge.server.routing;
 
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.core.GeoCoordinate;
 
 public interface IVertex {
 

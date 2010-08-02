@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.DummyCache;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Edge;
 import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.RoutingGraph;
@@ -30,7 +31,6 @@ import org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph.Vertex
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.mapsforge.server.routing.RouterFactory;
 
 public class DijkstraAlgorithm {

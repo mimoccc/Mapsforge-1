@@ -30,9 +30,9 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
@@ -291,10 +291,10 @@ public class HHStaticGraph implements Serializable {
 	// HHDbReader(DbConnection.getBerlinDbConn()));
 	// // g.serialize(new File("x"));
 	// HHStaticGraph g = HHStaticGraph.getFromSerialization(new File("x"));
-	//		
+	//
 	// HHAlgorithm a = new HHAlgorithm();
 	// Random rnd = new Random(20111981);
-	//		
+	//
 	// int num = 10;
 	// int[] sources = new int[num];
 	// int[] targets = new int[num];
@@ -302,7 +302,7 @@ public class HHStaticGraph implements Serializable {
 	// sources[i] = rnd.nextInt(g.numVertices());
 	// targets[i] = rnd.nextInt(g.numVertices());
 	// }
-	//		
+	//
 	// long startTime = System.currentTimeMillis();
 	// for(int i=0;i<num;i++) {
 	// HHStaticVertex s = g.getVertex(sources[i]);
@@ -311,14 +311,14 @@ public class HHStaticGraph implements Serializable {
 	// }
 	// long time = System.currentTimeMillis() - startTime;
 	// System.out.println("hh object layer " + time + "ms");
-	//		
+	//
 	// startTime = System.currentTimeMillis();
 	// for(int i=0;i<num;i++) {
 	// int d = a.shortestDistanceFast(g, sources[i], targets[i]);
 	// }
 	// time = System.currentTimeMillis() - startTime;
 	// System.out.println("hh primitiv layer " + time + "ms");
-	//		
+	//
 	// startTime = System.currentTimeMillis();
 	// for(int i=0;i<num;i++) {
 	// int d = a.shortestDistanceLowLevel(g, sources[i], targets[i]);

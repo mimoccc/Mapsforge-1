@@ -24,12 +24,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 class EdgeMapper implements Serializable {
 
@@ -59,10 +59,10 @@ class EdgeMapper implements Serializable {
 			return null;
 		}
 		return new EdgeMapping[] {
-				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId, reversed
-						.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
-				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId, reversed
-						.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
+				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
+						reversed.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
+				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
+						reversed.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
 	}
 
 	public void serialize(OutputStream oStream) throws IOException {

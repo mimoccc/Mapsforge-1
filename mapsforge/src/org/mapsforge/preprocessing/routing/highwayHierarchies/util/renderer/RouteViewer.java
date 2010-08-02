@@ -35,11 +35,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.jdesktop.swingx.JXMapKit;
-import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.JXMapKit.DefaultProviders;
+import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -130,8 +130,9 @@ public class RouteViewer {
 					routeSource = mapKit.getMainMap().convertPointToGeoPosition(position);
 					if (routeDestination != null && routeSource != null) {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
-								routeSource.getLongitude()), new GeoCoordinate(routeDestination
-								.getLatitude(), routeDestination.getLongitude()));
+								routeSource.getLongitude()),
+								new GeoCoordinate(routeDestination.getLatitude(),
+										routeDestination.getLongitude()));
 						;
 						routeSource = null;
 						routeDestination = null;
@@ -158,8 +159,9 @@ public class RouteViewer {
 					routeDestination = mapKit.getMainMap().convertPointToGeoPosition(position);
 					if (routeDestination != null && routeSource != null) {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
-								routeSource.getLongitude()), new GeoCoordinate(routeDestination
-								.getLatitude(), routeDestination.getLongitude()));
+								routeSource.getLongitude()),
+								new GeoCoordinate(routeDestination.getLatitude(),
+										routeDestination.getLongitude()));
 						;
 						routeSource = null;
 						routeDestination = null;
@@ -217,16 +219,16 @@ public class RouteViewer {
 						coords[i++] = c;
 					}
 					for (int j = 1; j < coords.length; j++) {
-						double[] cs = new double[] { coords[j - 1].getLatitude().getDegree(),
-								coords[j - 1].getLongitude().getDegree() };
-						double[] ct = new double[] { coords[j].getLatitude().getDegree(),
-								coords[j].getLongitude().getDegree() };
-						Point2D s = mapKit.getMainMap().getTileFactory().geoToPixel(
-								new GeoPosition(cs), mapKit.getMainMap().getZoom());
-						Point2D t = mapKit.getMainMap().getTileFactory().geoToPixel(
-								new GeoPosition(ct), mapKit.getMainMap().getZoom());
-						g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(), (int) t
-								.getY());
+						double[] cs = new double[] { coords[j - 1].getLatitude(),
+								coords[j - 1].getLongitude() };
+						double[] ct = new double[] { coords[j].getLatitude(),
+								coords[j].getLongitude() };
+						Point2D s = mapKit.getMainMap().getTileFactory()
+								.geoToPixel(new GeoPosition(cs), mapKit.getMainMap().getZoom());
+						Point2D t = mapKit.getMainMap().getTileFactory()
+								.geoToPixel(new GeoPosition(ct), mapKit.getMainMap().getZoom());
+						g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
+								(int) t.getY());
 					}
 				}
 
@@ -242,17 +244,22 @@ public class RouteViewer {
 							coords[i++] = c;
 						}
 						for (int j = 1; j < coords.length; j++) {
-							double[] cs = new double[] {
-									coords[j - 1].getLatitude().getDegree(),
-									coords[j - 1].getLongitude().getDegree() };
-							double[] ct = new double[] { coords[j].getLatitude().getDegree(),
-									coords[j].getLongitude().getDegree() };
-							Point2D s = mapKit.getMainMap().getTileFactory().geoToPixel(
-									new GeoPosition(cs), mapKit.getMainMap().getZoom());
-							Point2D t = mapKit.getMainMap().getTileFactory().geoToPixel(
-									new GeoPosition(ct), mapKit.getMainMap().getZoom());
-							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(), (int) t
-									.getY());
+							double[] cs = new double[] { coords[j - 1].getLatitude(),
+									coords[j - 1].getLongitude() };
+							double[] ct = new double[] { coords[j].getLatitude(),
+									coords[j].getLongitude() };
+							Point2D s = mapKit
+									.getMainMap()
+									.getTileFactory()
+									.geoToPixel(new GeoPosition(cs),
+											mapKit.getMainMap().getZoom());
+							Point2D t = mapKit
+									.getMainMap()
+									.getTileFactory()
+									.geoToPixel(new GeoPosition(ct),
+											mapKit.getMainMap().getZoom());
+							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
+									(int) t.getY());
 						}
 					}
 				}

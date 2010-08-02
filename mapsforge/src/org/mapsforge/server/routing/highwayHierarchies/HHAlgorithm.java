@@ -125,10 +125,10 @@ class HHAlgorithm {
 		discoveredVertices[BWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
-		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0, target
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
+		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0,
+				target.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		queue[BWD].insert(t);
 		discoveredVertices[FWD].put(source.getId(), s);
@@ -254,10 +254,10 @@ class HHAlgorithm {
 		discoveredVertices[BWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
-		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0, target
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
+		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0,
+				target.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		queue[BWD].insert(t);
 		discoveredVertices[FWD].put(source.getId(), s);
@@ -386,10 +386,10 @@ class HHAlgorithm {
 		discoveredVertices[BWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
-		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0, target
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
+		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0,
+				target.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		queue[BWD].insert(t);
 		discoveredVertices[FWD].put(source.getId(), s);
@@ -499,10 +499,10 @@ class HHAlgorithm {
 		discoveredVertices[BWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
-		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0, target
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
+		DiscoveredVertex t = new DiscoveredVertex(target, null, null, new HeapKey(0, 0,
+				target.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		queue[BWD].insert(t);
 		discoveredVertices[FWD].put(source.getId(), s);
@@ -667,8 +667,8 @@ class HHAlgorithm {
 		discoveredVertices[FWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		discoveredVertices[FWD].put(source.getId(), s);
 
@@ -711,8 +711,8 @@ class HHAlgorithm {
 		discoveredVertices[FWD].clear();
 
 		// enqueue source and target
-		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0, source
-				.getNeighborhood(0)));
+		DiscoveredVertex s = new DiscoveredVertex(source, null, null, new HeapKey(0, 0,
+				source.getNeighborhood(0)));
 		queue[FWD].insert(s);
 		discoveredVertices[FWD].put(source.getId(), s);
 		while (!queue[FWD].isEmpty()) {

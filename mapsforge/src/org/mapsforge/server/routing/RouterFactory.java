@@ -28,8 +28,8 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 
 public class RouterFactory {

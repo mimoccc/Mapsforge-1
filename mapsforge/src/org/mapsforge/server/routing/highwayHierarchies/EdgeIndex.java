@@ -28,10 +28,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
-import org.mapsforge.preprocessing.util.DBConnection;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 final class EdgeIndex {
 
@@ -84,8 +84,8 @@ final class EdgeIndex {
 			double[] lon_ = e.getLongitudes();
 			double[] lat_ = e.getLatitudes();
 			for (int i = 1; i < lon_.length - 1; i++) {
-				lon[offset] = GeoCoordinate.dtoi(lon_[i]);
-				lat[offset] = GeoCoordinate.dtoi(lat_[i]);
+				lon[offset] = GeoCoordinate.doubleToInt(lon_[i]);
+				lat[offset] = GeoCoordinate.doubleToInt(lat_[i]);
 				edgeIds[offset] = e.getId();
 				offset++;
 			}
@@ -148,7 +148,7 @@ final class EdgeIndex {
 			System.out.print("\n");
 		}
 
-		System.out.println(edgeWaypoints.getNearestEdge(GeoCoordinate.dtoi(13.3039767),
-				GeoCoordinate.dtoi(52.6008858)));
+		System.out.println(edgeWaypoints.getNearestEdge(GeoCoordinate.doubleToInt(13.3039767),
+				GeoCoordinate.doubleToInt(52.6008858)));
 	}
 }

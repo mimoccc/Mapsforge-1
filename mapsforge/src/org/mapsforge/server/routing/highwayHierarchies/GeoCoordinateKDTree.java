@@ -28,13 +28,13 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.mapsforge.core.DBConnection;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.util.DBConnection;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
 
 class GeoCoordinateKDTree implements Serializable {
 
@@ -240,8 +240,8 @@ class GeoCoordinateKDTree implements Serializable {
 
 		for (Iterator<HHVertex> iter = reader.getVertices(); iter.hasNext();) {
 			HHVertex v = iter.next();
-			lon[v.id] = GeoCoordinate.dtoi(v.longitude);
-			lat[v.id] = GeoCoordinate.dtoi(v.latitude);
+			lon[v.id] = GeoCoordinate.doubleToInt(v.longitude);
+			lat[v.id] = GeoCoordinate.doubleToInt(v.latitude);
 		}
 
 		GeoCoordinateKDTree index = new GeoCoordinateKDTree(lon, lat);
@@ -260,8 +260,8 @@ class GeoCoordinateKDTree implements Serializable {
 		int i = 0;
 		for (Iterator<RgVertex> iter = rg.getVertices().iterator(); iter.hasNext();) {
 			RgVertex v = iter.next();
-			lon[i] = GeoCoordinate.dtoi(v.getLongitude());
-			lat[i++] = GeoCoordinate.dtoi(v.getLatitude());
+			lon[i] = GeoCoordinate.doubleToInt(v.getLongitude());
+			lat[i++] = GeoCoordinate.doubleToInt(v.getLatitude());
 		}
 		GeoCoordinateKDTree tree = new GeoCoordinateKDTree(lon, lat);
 
@@ -276,7 +276,7 @@ class GeoCoordinateKDTree implements Serializable {
 		long time = System.currentTimeMillis() - startTime;
 		System.out.println(time + "ms");
 
-		System.out.println(tree.getNearestNeighborIdx(GeoCoordinate.dtoi(13.468122),
-				GeoCoordinate.dtoi(52.505740)));
+		System.out.println(tree.getNearestNeighborIdx(GeoCoordinate.doubleToInt(13.468122),
+				GeoCoordinate.doubleToInt(52.505740)));
 	}
 }
