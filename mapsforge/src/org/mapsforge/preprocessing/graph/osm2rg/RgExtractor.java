@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmNodeListener;
@@ -38,7 +39,6 @@ import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmXmlParser;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.util.GeoCoordinate;
 import org.xml.sax.SAXException;
 
@@ -311,28 +311,21 @@ public class RgExtractor {
 			try {
 				Properties props = new Properties();
 				props.load(new FileInputStream(args[0]));
-				String dbHost = props.getProperty("output.db.host");
-				int dbPort = Integer.parseInt(props.getProperty("output.db.port"));
-				String dbName = props.getProperty("output.db.name");
-				String dbUseranme = props.getProperty("output.db.username");
-				String dbPassword = props.getProperty("output.db.password");
+				String dbHost = props.getProperty("osm2rg.output.db.host");
+				int dbPort = Integer.parseInt(props.getProperty("osm2rg.output.db.port"));
+				String dbName = props.getProperty("osm2rg.output.db.name");
+				String dbUseranme = props.getProperty("osm2rg.output.db.username");
+				String dbPassword = props.getProperty("osm2rg.output.db.password");
+				String[] waysWhitelist = props.getProperty("osm2rg.whitelist.ways.highwaylvl")
+						.split(",");
 				Connection outputDb = new DBConnection(dbHost, dbName, dbUseranme, dbPassword,
 						dbPort).getConnection();
-				File osmFile = new File(props.getProperty("input.osm.file"));
+				File osmFile = new File(props.getProperty("osm2rg.input.file"));
 
 				HashSet<EHighwayLevel> hwyLevels = new HashSet<EHighwayLevel>();
-				hwyLevels.add(EHighwayLevel.motorway);
-				hwyLevels.add(EHighwayLevel.motorway_link);
-				hwyLevels.add(EHighwayLevel.trunk);
-				hwyLevels.add(EHighwayLevel.trunk_link);
-				hwyLevels.add(EHighwayLevel.primary);
-				hwyLevels.add(EHighwayLevel.primary_link);
-				hwyLevels.add(EHighwayLevel.secondary);
-				hwyLevels.add(EHighwayLevel.tertiary);
-				hwyLevels.add(EHighwayLevel.residential);
-				hwyLevels.add(EHighwayLevel.road);
-				hwyLevels.add(EHighwayLevel.unknown);
-				hwyLevels.add(EHighwayLevel.living_street);
+				for (String hwyLvl : waysWhitelist) {
+					hwyLevels.add(EHighwayLevel.valueOf(hwyLvl));
+				}
 
 				RgExtractor.extractGraph(osmFile, hwyLevels, outputDb);
 
