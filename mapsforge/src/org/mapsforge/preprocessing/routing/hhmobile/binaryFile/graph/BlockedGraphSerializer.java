@@ -76,8 +76,8 @@ public class BlockedGraphSerializer {
 
 	private static BlockedGraphHeader computeHeader(ClusteringUtil cUtil) {
 		byte bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getGlobalNumClusters() - 1);
-		byte bitsPerVertexOffset = Utils.numBitsToEncode(0,
-				cUtil.getGlobalMaxVerticesPerCluster());
+		byte bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
+				.getGlobalMaxVerticesPerCluster());
 		byte bitsPerEdgeCount = Utils.numBitsToEncode(0, cUtil.getGlobalMaxEdgesPerCluster());
 		byte bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.getGlobalMaxNeighborhood());
 		byte numGraphLevels = (byte) cUtil.getGlobalNumLevels();

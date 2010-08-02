@@ -24,36 +24,36 @@ public class DEHighwayLevel2Speed implements IHighwayLevel2Speed {
 	@Override
 	public int speed(EHighwayLevel highwayLevel) {
 		switch (highwayLevel) {
-		case motorway:
-			return 120;
-		case motorway_link:
-			return 60;
-		case trunk:
-			return 120;
-		case trunk_link:
-			return 60;
-		case primary:
-			return 80;
-		case primary_link:
-			return 50;
-		case secondary:
-			return 60;
-		case tertiary:
-			return 60;
-		case residential:
-			return 50;
-		case road:
-			return 50;
-		case living_street:
-			return 6;
-		case cycleway:
-			return 25;
+			case motorway:
+				return 120;
+			case motorway_link:
+				return 90;
+			case trunk:
+				return 100;
+			case trunk_link:
+				return 60;
+			case primary:
+				return 80;
+			case primary_link:
+				return 50;
+			case secondary:
+				return 60;
+			case tertiary:
+				return 50;
+			case residential:
+				return 30;
+			case road:
+				return 40;
+			case living_street:
+				return 6;
+			case cycleway:
+				return 25;
 
-		case raceway:
-			return 300;
+			case raceway:
+				return 300;
 
-		default:
-			return 6;
+			default:
+				return 6;
 		}
 	}
 }

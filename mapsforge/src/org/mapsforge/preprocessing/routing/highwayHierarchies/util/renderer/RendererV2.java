@@ -84,6 +84,7 @@ public class RendererV2 {
 	private Clustering clustering;
 	private HashMap<Cluster, Color> clusterColors;
 	private final HashMap<GeoCoordinate, Color> circles;
+	private final HashMap<GeoCoordinate[], Color> multilines;
 	private final LinkedList<GeoCoordinate> circlesList;
 
 	private int zoomLevel;
@@ -106,6 +107,7 @@ public class RendererV2 {
 		this.routes = new HashMap<IEdge[], Color>();
 		this.circles = new HashMap<GeoCoordinate, Color>();
 		this.circlesList = new LinkedList<GeoCoordinate>();
+		this.multilines = new HashMap<GeoCoordinate[], Color>();
 		this.canvas = new BufferedCanvas(width, height);
 
 		canvas.clear(bgColor);
@@ -148,6 +150,7 @@ public class RendererV2 {
 		canvas.clear(bgColor);
 		drawGraph();
 		drawRoutes();
+		drawMultiLines();
 		drawCircles();
 		canvas.update();
 	}
@@ -179,6 +182,10 @@ public class RendererV2 {
 		}
 	}
 
+	public void addMultiLine(GeoCoordinate[] coords, Color c) {
+		multilines.put(coords, c);
+	}
+
 	public void addCircle(GeoCoordinate coord, Color c) {
 		circles.put(coord, c);
 		circlesList.add(coord);
@@ -187,6 +194,13 @@ public class RendererV2 {
 	public void clearRoutes() {
 		synchronized (routes) {
 			routes.clear();
+			drawRenderContent();
+		}
+	}
+
+	public void clearMultiLines() {
+		synchronized (multilines) {
+			multilines.clear();
 			drawRenderContent();
 		}
 	}
@@ -304,6 +318,17 @@ public class RendererV2 {
 			Color c = circles.get(coord);
 			ScreenCoordinate sc = geoToScreen(coord);
 			canvas.drawCircle(sc.x, sc.y, c, 3);
+		}
+	}
+
+	private void drawMultiLines() {
+		for (GeoCoordinate[] coords : multilines.keySet()) {
+			Color c = multilines.get(coords);
+			for (int i = 1; i < coords.length; i++) {
+				ScreenCoordinate sc1 = geoToScreen(coords[i - 1]);
+				ScreenCoordinate sc2 = geoToScreen(coords[i]);
+				canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, 2);
+			}
 		}
 	}
 

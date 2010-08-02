@@ -26,7 +26,7 @@ import javax.swing.JComponent;
 /**
  * @author Frank Viernau
  */
-class BufferedCanvas extends JComponent {
+public class BufferedCanvas extends JComponent {
 
 	private static final long serialVersionUID = -2216749283414845797L;
 
