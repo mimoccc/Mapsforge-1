@@ -286,10 +286,6 @@ public class RgExtractor {
 		}
 	}
 
-	private static String usage() {
-		return "osm2rg <properties file>";
-	}
-
 	private static double[] reverseDoubleArray(double[] array) {
 		double[] tmp = new double[array.length];
 		for (int i = 0; i < array.length; i++) {
@@ -306,41 +302,55 @@ public class RgExtractor {
 		return c / COORDINATE_FAC;
 	}
 
-	public static void main(String[] args) throws IOException, SAXException {
+	private static String usage() {
+		return "osm2rg <properties file> \n"
+				+ "osm2rg <db.host> <db.port> <db.name> <db.user> <db.pass> <comma separated ways whitelist> <input.file>";
+	}
+
+	public static void main(String[] args) throws IOException, SAXException, SQLException {
+
+		// the parameters
+		String dbHost, dbName, dbUser, dbPass;
+		String[] waysWhiteList;
+		File inputFile;
+		int dbPort;
+
+		// initialize parameters
 		if (args.length == 1) {
-			try {
-				Properties props = new Properties();
-				props.load(new FileInputStream(args[0]));
-				String dbHost = props.getProperty("osm2rg.output.db.host");
-				int dbPort = Integer.parseInt(props.getProperty("osm2rg.output.db.port"));
-				String dbName = props.getProperty("osm2rg.output.db.name");
-				String dbUseranme = props.getProperty("osm2rg.output.db.username");
-				String dbPassword = props.getProperty("osm2rg.output.db.password");
-				String[] waysWhitelist = props.getProperty("osm2rg.whitelist.ways.highwaylvl")
-						.split(",");
-				Connection outputDb = new DBConnection(dbHost, dbName, dbUseranme, dbPassword,
-						dbPort).getConnection();
-				File osmFile = new File(props.getProperty("osm2rg.input.file"));
-
-				HashSet<EHighwayLevel> hwyLevels = new HashSet<EHighwayLevel>();
-				for (String hwyLvl : waysWhitelist) {
-					hwyLevels.add(EHighwayLevel.valueOf(hwyLvl));
-				}
-
-				RgExtractor.extractGraph(osmFile, hwyLevels, outputDb);
-
-				outputDb.close();
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			} catch (SQLException e) {
-				e.printStackTrace();
-				while (e.getNextException() != null) {
-					e = e.getNextException();
-					e.printStackTrace();
-				}
-			}
+			// get parameters form properties file
+			Properties props = new Properties();
+			props.load(new FileInputStream(args[0]));
+			dbHost = props.getProperty("osm2rg.output.db.host");
+			dbPort = Integer.parseInt(props.getProperty("osm2rg.output.db.port"));
+			dbName = props.getProperty("osm2rg.output.db.name");
+			dbUser = props.getProperty("osm2rg.output.db.username");
+			dbPass = props.getProperty("osm2rg.output.db.password");
+			waysWhiteList = props.getProperty("osm2rg.whitelist.ways.highwaylvl").split(",");
+			inputFile = new File(props.getProperty("osm2rg.input.file"));
+		} else if (args.length == 7) {
+			// get parameter from command line
+			dbHost = args[0];
+			dbPort = Integer.parseInt(args[1]);
+			dbName = args[2];
+			dbUser = args[3];
+			dbPass = args[4];
+			waysWhiteList = args[5].split(",");
+			inputFile = new File(args[6]);
 		} else {
 			System.out.println(usage());
+			return;
 		}
+
+		// extract the routing graph
+
+		HashSet<EHighwayLevel> hwyLevels = new HashSet<EHighwayLevel>();
+		for (String hwyLvl : waysWhiteList) {
+			hwyLevels.add(EHighwayLevel.valueOf(hwyLvl));
+		}
+		Connection outputDb = new DBConnection(dbHost, dbName, dbUser, dbPass, dbPort)
+				.getConnection();
+		RgExtractor.extractGraph(inputFile, hwyLevels, outputDb);
+
+		outputDb.close();
 	}
 }
