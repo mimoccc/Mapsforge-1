@@ -28,7 +28,7 @@ public class MercatorProjection {
 	 *            in radians
 	 * @return longitude in meters in spherical mercator projection
 	 */
-	public double longitudeToMetersX(double longitude) {
+	public static double longitudeToMetersX(double longitude) {
 		return WGS84.EQUATORIALRADIUS * longitude;
 	}
 
@@ -37,7 +37,7 @@ public class MercatorProjection {
 	 *            in radians
 	 * @return latitude in meters in spherical mercator projection
 	 */
-	public double latitudeToMetersY(double latitude) {
+	public static double latitudeToMetersY(double latitude) {
 		return WGS84.EQUATORIALRADIUS
 				* java.lang.Math
 						.log(java.lang.Math.tan(java.lang.Math.PI / 4 + 0.5 * latitude));
