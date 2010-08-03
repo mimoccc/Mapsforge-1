@@ -159,13 +159,6 @@ public final class HHComputation {
 		System.out.println("\n" + result);
 		double minutes = (System.currentTimeMillis() - hierarchyComputationStart) / 60000d;
 		System.out.println("finished in " + df.format(minutes) + " minutes.");
-
-		try {
-			graph.serialize(new File("berlin.hhDynamicGraph"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public static HierarchyComputationResult computeHierarchy(HHDynamicGraph graph) {
