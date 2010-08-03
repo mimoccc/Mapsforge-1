@@ -22,6 +22,27 @@ import org.mapsforge.preprocessing.map.Tile;
  * A static class that implements spherical mercator projection.
  */
 public class MercatorProjection {
+
+	/**
+	 * @param longitude
+	 *            in radians
+	 * @return longitude in meters in spherical mercator projection
+	 */
+	public double longitudeToMetersX(double longitude) {
+		return WGS84.EQUATORIALRADIUS * longitude;
+	}
+
+	/**
+	 * @param latitude
+	 *            in radians
+	 * @return latitude in meters in spherical mercator projection
+	 */
+	public double latitudeToMetersY(double latitude) {
+		return WGS84.EQUATORIALRADIUS
+				* java.lang.Math
+						.log(java.lang.Math.tan(java.lang.Math.PI / 4 + 0.5 * latitude));
+	}
+
 	/**
 	 * Calculate the distance on the ground that is represented by a single pixel on the map.
 	 * 

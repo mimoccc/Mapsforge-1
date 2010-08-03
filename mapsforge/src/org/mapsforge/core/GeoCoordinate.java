@@ -194,6 +194,13 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 		this.longitude = validateLongitude(intToDouble(longitudeE6));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 * 
+	 * I don't see how this makes any sense. Can we not remove it?
+	 */
 	@Override
 	public int compareTo(GeoCoordinate geoCoordinate) {
 		if (this.latitude > geoCoordinate.latitude || this.longitude > geoCoordinate.longitude) {
@@ -238,6 +245,32 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 */
 	public double getLongitude() {
 		return this.longitude;
+	}
+
+	/**
+	 * Calculate the spherical distance from this GeoCoordinate to another
+	 * 
+	 * Use vincentyDistance for more accuracy but less performance
+	 * 
+	 * @param other
+	 *            The GeoCoordinate to calculate the distance to
+	 * @return the distance in meters as a double
+	 */
+	public double distance(GeoCoordinate other) {
+		return WGS84.sphericalDistance(this, other);
+	}
+
+	/**
+	 * Calculate the spherical distance from this GeoCoordinate to another
+	 * 
+	 * Use "distance" for faster computation with less accuracy
+	 * 
+	 * @param other
+	 *            The GeoCoordinate to calculate the distance to
+	 * @return the distance in meters as a double
+	 */
+	public double vincentyDistance(GeoCoordinate other) {
+		return WGS84.vincentyDistance(this, other);
 	}
 
 	/**
