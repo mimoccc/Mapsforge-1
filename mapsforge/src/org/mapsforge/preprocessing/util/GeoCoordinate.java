@@ -25,8 +25,8 @@ public class GeoCoordinate {
 	public static final double EARTH_RADIUS = 6378137d;
 	public static final double DEG_RAD_FACTOR = 57.29578d;
 
-	private static final double FAC_DOUBLE_TO_INT = 1E7;
-	private static final double FAC_INT_TO_DOUBLE = 1 / 1E7;
+	private static final double FAC_DOUBLE_TO_INT = 1E6;
+	private static final double FAC_INT_TO_DOUBLE = 1 / 1E6;
 
 	private Latitude latitude;
 	private Longitude longitude;

@@ -55,7 +55,7 @@ import org.xml.sax.SAXException;
 public class RgExtractor {
 
 	private static final int MSG_INT = 100000;
-	private static final double COORDINATE_FAC = 1E7d;
+	private static final double COORDINATE_FAC = 1E6d;
 	private static final DecimalFormat df = new DecimalFormat("##.#");
 
 	public static void extractGraph(File osmFile, HashSet<EHighwayLevel> hwyLvlss,
