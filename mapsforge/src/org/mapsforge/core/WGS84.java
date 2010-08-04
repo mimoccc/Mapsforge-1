@@ -23,46 +23,20 @@ package org.mapsforge.core;
  * @author Eike
  */
 public class WGS84 {
+	/**
+	 * Equatorial radius of earth is required for distance computation.
+	 */
 	public static final double EQUATORIALRADIUS = 6378137.0;
-	public static final double POLARRADIUS = 6356752.3142;
-	public static final double INVERSEFLATTENING = 298.257223563;
 
 	/**
-	 * Calculate the spherical distance between two GeoCoordinates in meters using the Haversine
-	 * formula
-	 * 
-	 * This calculation is done using the assumption, that the earth is a sphere, it is not
-	 * though. If you need a higher precision and can afford a longer execution time you might
-	 * want to use vincentyDistance
-	 * 
-	 * @param gc1
-	 *            first GeoCoordinate
-	 * @param gc2
-	 *            second GeoCoordinate
-	 * @return distance in meters as a double
-	 * @throws IllegalArgumentException
-	 *             if one of the arguments is null
+	 * Polar radius of earth is required for distance computation.
 	 */
-	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2)
-			throws IllegalArgumentException {
-		if (gc1 == null || gc2 == null)
-			throw new IllegalArgumentException(
-					"The GeoCoordinates for distance calculations may not be null.");
-		double dLat = Math.toRadians(gc1.getLatitude()) - Math.toRadians(gc2.getLatitude());
-		double dLon = Math.toRadians(gc1.getLongitude()) - Math.toRadians(gc2.getLongitude());
+	public static final double POLARRADIUS = 6356752.3142;
 
-		// intermediate result 1: (sin((lat1-lat2)/2))^2
-		double ir1 = Math.sin(dLat / 2.0d);
-		ir1 *= ir1;
-		// intermediate result 3: cos(lat1)*cos(lat2)
-		double ir2 = Math.cos(Math.toRadians(gc1.getLatitude()))
-				* Math.cos(Math.toRadians(gc2.getLatitude()));
-		// intermediate result 2: (sin((lon1-lon2)/2))^2
-		double ir3 = Math.sin(dLon / 2.0d);
-		ir3 *= ir3;
-
-		return 2 * Math.asin(Math.sqrt(ir1 + ir2 * ir3)) * EQUATORIALRADIUS;
-	}
+	/**
+	 * The flattening factor of the earth's ellipsoid is required for distance computation.
+	 */
+	public static final double INVERSEFLATTENING = 298.257223563;
 
 	/**
 	 * Calculates geodetic distance between two GeoCoordinates using Vincenty inverse formula
