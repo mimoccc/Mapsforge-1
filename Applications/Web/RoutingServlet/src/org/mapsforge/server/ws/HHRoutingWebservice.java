@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -12,7 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.*;
-import org.mapsforge.preprocessing.util.GeoCoordinate;
+import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.RouterFactory;
@@ -57,6 +57,7 @@ public class HHRoutingWebservice extends HttpServlet {
 			ArrayList<Integer> pointIds = parseInputString(request.getParameter("points"));
 			// ToDo: handle any number of stops along the way
 			// for now its just source and destination
+
 			IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
 			//IEdge[] routeEdges = router.getShortestPath(2, 6921);
 			JSONObject json = getGeoJson(routeEdges);
@@ -79,6 +80,7 @@ public class HHRoutingWebservice extends HttpServlet {
 	}
 	
 	/**
+	 * This function turns the provided Streets (IEdge) into a JSONObject
 	 * @param c the coordinate which is to be added
 	 * @param a the JSONArray to which the coordinate is added
 	 */
@@ -91,6 +93,7 @@ public class HHRoutingWebservice extends HttpServlet {
 			JSONArray jsonfeatures = new JSONArray();
 			json.put("type", "FeatureCollection");
 			json.put("features", jsonfeatures);
+			double lastAngle = -360d;
 			for (int i = 0; i < routeEdges.length; i++) {
 				IEdge currentStreetEdge = routeEdges[i];
 				// This Object keeps the meta-info of the current street
@@ -113,26 +116,30 @@ public class HHRoutingWebservice extends HttpServlet {
 						((lastStreetEdge.getName() != null && currentStreetEdge.getName() != null && lastStreetEdge.getName().equals(currentStreetEdge.getName())) || 
 						(lastStreetEdge.getName() == null && currentStreetEdge.getName() == null));
 
-				boolean isUturn = false; //delta > 157 && delta < 202;
+				boolean isUturn = false; 
 				if (lastStreetJSON != null) {
-					int lastAngle = lastStreetJSON.getJSONObject("properties").optInt("Angle"); //.optInt("Angle");
-					// TODO: delta ca gleich lastAngle
-					double anglesum = (lastAngle + delta) % 360;
-					if (i > 1 && (170 <= anglesum && anglesum <= 190)) {
-						IEdge secondLastStreetEdge = routeEdges[i-2];
-						if (currentStreetEdge.getName() != null &&
-								secondLastStreetEdge.getName() != null &&
-								secondLastStreetEdge.getName()
-								.equals(currentStreetEdge.getName())) {
-							isUturn = true;
+//					int lastAngle = lastStreetJSON.getJSONObject("properties").optInt("Angle"); 
+					if (lastAngle != -360) {
+						double anglesum = (lastAngle + delta) % 360;
+						if (i > 1 && (170 <= anglesum && anglesum <= 190)) {
+							IEdge secondLastStreetEdge = routeEdges[i-2];
+							if (currentStreetEdge.getName() != null &&
+									secondLastStreetEdge.getName() != null &&
+									secondLastStreetEdge.getName()
+									.equals(currentStreetEdge.getName())) {
+								isUturn = true;
+								delta = 180.0;
+							}
 						}
 					}
 				}
+				lastAngle = delta;
 
 				GeoCoordinate[] streetCoordinates = currentStreetEdge.getAllWaypoints();
 				// This is the JSON array which holds the geometry coordinates of an individual street
 				JSONArray streetCoordinatesAsJson = new JSONArray();	
 				
+				/**/
 				// If the street is already in the features array, its coordinates will be used
 				if (!isUturn && sameStreetAsBefore) {
 					streetCoordinatesAsJson = lastStreetJSON.getJSONObject("geometry").getJSONArray("coordinates");
@@ -140,7 +147,6 @@ public class HHRoutingWebservice extends HttpServlet {
 				}
 				
 				// This if clause checks for 2-lane streets where the uTurn is done 
-				// by crossing another street
 				if (isUturn && !sameStreetAsBefore) {
 					streetCoordinatesAsJson = lastStreetJSON.getJSONObject("geometry").getJSONArray("coordinates");
 					streetProperties = lastStreetJSON.getJSONObject("properties");
@@ -148,23 +154,28 @@ public class HHRoutingWebservice extends HttpServlet {
 					streetProperties.put("Name", currentStreetEdge.getName());
 					streetProperties.put("Angle", 180);
 				}
-				
-				// This loop adds the geocoordinates of the current edge to the appropriate json array
+				/* TODO: 
+				 * Check if this street is very short, it may be part of a large 2 lane intersection
+				 * if so, it should be displayed as part of the street which is a continuation of  
+				 * */
+								
+				// This loop adds the geocoordinates of the current edge to the geojson array
+				int streetLength = 0;
 				for (int j = 0; j < streetCoordinates.length; j++) {
 					GeoCoordinate sc = streetCoordinates[j];
 					streetCoordinatesAsJson.put(new JSONArray()
-						.put(sc.getLongitude().getDegree())
-						.put(sc.getLatitude().getDegree())
+						.put(sc.getLongitude())
+						.put(sc.getLatitude())
 					);
 					if (j > 0) {
-						streetProperties.put("Length", 
-								streetCoordinates[j-1].distance(sc) + 
-								streetProperties.optInt("Length"));
+						streetLength += java.lang.Math.round(streetCoordinates[j-1].sphericalDistance(sc)); 
 					}
 				}
+				streetProperties.put("Length", streetLength + streetProperties.optInt("Length"));
 
 				// This section creates a new feature i.e. a new street
-				if (!isUturn && !sameStreetAsBefore) {
+				// also if a U-Turn is done on the exact same street a new street is created
+				if ((!isUturn && !sameStreetAsBefore) || (isUturn && sameStreetAsBefore)) {
 					streetProperties.put("Angle", delta);
 					jsonfeatures.put(new JSONObject()
 						.put("type", "Feature")
@@ -199,27 +210,27 @@ public class HHRoutingWebservice extends HttpServlet {
 			GeoCoordinate lastCoordinate = lastStreetEdge.getAllWaypoints()
 					[lastStreetEdge.getAllWaypoints().length-2];
 			// Take a coordinate further away from the crossing if it's too close
-			if (lastCoordinate.distance(crossingCoordinate) < 10 && lastStreetEdge.getAllWaypoints().length > 2) {
+			if (lastCoordinate.sphericalDistance(crossingCoordinate) < 10 && lastStreetEdge.getAllWaypoints().length > 2) {
 				lastCoordinate = lastStreetEdge.getAllWaypoints()
 					[lastStreetEdge.getAllWaypoints().length-3];
 			}
 			// Here comes the first coordinate after the crossing
 			GeoCoordinate firstCoordinate = currentStreetEdge.getAllWaypoints()[1];
-			if (firstCoordinate.distance(crossingCoordinate) < 10 && currentStreetEdge.getAllWaypoints().length > 2) {
+			if (firstCoordinate.sphericalDistance(crossingCoordinate) < 10 && currentStreetEdge.getAllWaypoints().length > 2) {
 				firstCoordinate = currentStreetEdge.getAllWaypoints()[2];
-			}
+			}			
 			// calculate angles of the incoming street
-			
-			// TODO: Check for streets which are not really streets, but part of a crossing
-			// in which case they are very short and turn occurs
-			
-			double deltaY = crossingCoordinate.getMercatorY() - lastCoordinate.getMercatorY();
-			double deltaX = crossingCoordinate.getMercatorX() - lastCoordinate.getMercatorX();
+			double deltaY = MercatorProjection.latitudeToMetersY(crossingCoordinate.getLatitude()) 
+					- MercatorProjection.latitudeToMetersY(lastCoordinate.getLatitude());
+			double deltaX = MercatorProjection.longitudeToMetersX(crossingCoordinate.getLongitude()) 
+					- MercatorProjection.longitudeToMetersX(lastCoordinate.getLongitude());
 			double alpha = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
 			if (deltaY < 0) alpha += 180; // this compensates for the atan result being between -90 and +90 deg
 			// calculate angles of the outgoing street
-			deltaY = firstCoordinate.getMercatorY() - crossingCoordinate.getMercatorY();
-			deltaX = firstCoordinate.getMercatorX() - crossingCoordinate.getMercatorX();
+			deltaY = MercatorProjection.latitudeToMetersY(firstCoordinate.getLatitude()) 
+					- MercatorProjection.latitudeToMetersY(crossingCoordinate.getLatitude());
+			deltaX = MercatorProjection.longitudeToMetersX(firstCoordinate.getLongitude()) 
+					- MercatorProjection.longitudeToMetersX(crossingCoordinate.getLongitude());
 			double beta = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
 			if (deltaY < 0) beta += 180; // this compensates for the atan result being between -90 and +90 deg
 			// the angle difference is angle of the turn, 
@@ -242,29 +253,33 @@ public class HHRoutingWebservice extends HttpServlet {
 	private ArrayList<Integer> parseInputString(String points) {
 		String[] alternatingCoordinates = points.split("[;,]");
 		ArrayList<Integer> pp = new ArrayList<Integer>();
-		for (int i = 0; i < alternatingCoordinates.length; i += 2) {
-			int id = router.getNearestVertex(new GeoCoordinate(
-					Double.valueOf(alternatingCoordinates[i+1]), 
-					Double.valueOf(alternatingCoordinates[i])
-				)).getId();
+		for (int i = 0; i < alternatingCoordinates.length - (alternatingCoordinates.length%2); i += 2) {
+			double lon = Double.valueOf(alternatingCoordinates[i]);
+			double lat = Double.valueOf(alternatingCoordinates[i+1]);
+			int id = router.getNearestVertex(new GeoCoordinate(lat, lon)).getId();
 			pp.add(id);
 		}
 		return pp;
 	}	
 	
+	/**
+	 * This method is used for debugging only
+	 * @param args
+	 */
 	public static void main(String[] args) {		
 		HHRoutingWebservice hhrs = new HHRoutingWebservice();
-		router = RouterFactory.getRouter("C:/uni/apache-tomcat-6.0.26/webapps/HHRoutingWebservice/WEB-INF/routerFactory.properties");
-		ArrayList<Integer> pointIds = hhrs.parseInputString("8.7914813041691,53.095245681407;8.79058008194,53.094910668955");
+		//router = RouterFactory.getRouter("C:/uni/apache-tomcat-6.0.26/webapps/HHRoutingWebservice/WEB-INF/routerFactory.properties");
+		router = RouterFactory.getRouter("WebContent/WEB-INF/routerFactory.properties");
+		ArrayList<Integer> pointIds = hhrs.parseInputString("8.7826388545226,53.066696341606;8.7753169767347,53.062582199353");
+		//ArrayList<Integer> pointIds = hhrs.parseInputString("8.7873039113617,53.099872678854;8.7889815950041,53.097440456826");
+		
 		// ToDo: handle any number of stops along the way
 		// for now its just source and destination
 		IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
 		JSONObject json = hhrs.getGeoJson(routeEdges);
 		try {
-			//System.out.println(json.toString(2));
-			System.out.println("");
+			System.out.println(json.toString(2));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
