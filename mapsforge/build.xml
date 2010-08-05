@@ -14,7 +14,7 @@
 	<property name="mapsforge.advancemapviewer.lib.dir"
 	          value="${basedir}/../AdvancedMapViewer/lib" />
 	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
-
+	
 	<!-- Path to the properties file that includes the keystore parameters -->
 	<property file="../mapsforge-keystore.properties" />
 
@@ -69,7 +69,7 @@
 		<eclipse.refreshLocal resource="DemoMapViewer/lib" depth="infinite" />
 	</target>
 
-
+	
 	<!-- Build, sign and verify the JAR file for mapsforge-map -->
 	<target name="mapsforge-map.jar create">
 		<mkdir dir="dist" />
@@ -119,4 +119,36 @@
 		        </manifest>
 			</jar>
 	</target>
+
+
+	<property name="mapsforge.routingservlet.lib.dir"
+	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
+
+	<!-- Copy the newly created routing JAR file to the routing servlet project -->
+	<target name="mapsforge-routing.jar copy" depends="mapsforge-routing.jar create">
+		<mkdir dir="${mapsforge.routingservlet.lib.dir}" />
+		<copy file="dist/mapsforge-routing-${mapsforge.version}.jar"
+		      todir="${mapsforge.routingservlet.lib.dir}" />
+		<eclipse.refreshLocal resource="HHRoutingWebservice" depth="infinite" />
+	</target>
+
+	<target name="build highway highrarchies routing file">
+		<java fork="true" classname="org.mapsforge.preprocessing.graph.osm2rg.RgExtractor">
+			<arg value="${basedir}/res/conf/osm2rg.properties" />         
+			<classpath>
+				<pathelement location="${mapsforge.bin}"/>
+				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar"/>
+				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar"/>
+			</classpath>
+		</java>
+		<java fork="true" classname="org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation">
+			<arg value="${basedir}/res/conf/hhPreprocessing.properties" />         
+			<classpath>
+				<pathelement location="${mapsforge.bin}"/>
+				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar"/>
+				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar"/>
+			</classpath>
+		</java>
+	</target>
+	
 </project>
