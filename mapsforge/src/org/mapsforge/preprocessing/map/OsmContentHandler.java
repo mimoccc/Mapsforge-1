@@ -50,6 +50,7 @@ class OsmContentHandler implements ContentHandler {
 
 	@Override
 	public void characters(char[] ch, int start, int length) {
+		// ignore
 	}
 
 	@Override
@@ -84,22 +85,27 @@ class OsmContentHandler implements ContentHandler {
 
 	@Override
 	public void endPrefixMapping(String prefix) {
+		// ignore
 	}
 
 	@Override
 	public void ignorableWhitespace(char[] ch, int start, int length) {
+		// ignore
 	}
 
 	@Override
 	public void processingInstruction(String target, String data) {
+		// ignore
 	}
 
 	@Override
 	public void setDocumentLocator(Locator locator) {
+		// ignore
 	}
 
 	@Override
 	public void skippedEntity(String name) {
+		// ignore
 	}
 
 	@Override
@@ -132,6 +138,7 @@ class OsmContentHandler implements ContentHandler {
 
 	@Override
 	public void startPrefixMapping(String prefix, String uri) {
+		// ignore
 	}
 
 	private void endNdElement() {

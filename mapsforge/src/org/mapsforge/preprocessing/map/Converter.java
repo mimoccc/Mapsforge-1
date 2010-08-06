@@ -34,6 +34,11 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+/**
+ * A class to convert .osm files to the old binary map format.
+ * 
+ * This class is out of date and will not be improved any more!
+ */
 public class Converter {
 	private static final short BITMAP_AMENITY = 32;
 	private static final short BITMAP_BUILDING = 2;
@@ -63,6 +68,12 @@ public class Converter {
 	private static Map<String, Byte> wayTagLookupTable;
 	private static TreeMap<String, Byte> wayTagWhitelist;
 
+	/**
+	 * Main program of the converter.
+	 * 
+	 * @param args
+	 *            command line parameters.
+	 */
 	public static void main(String[] args) {
 		try {
 			boolean assertsEnabled = false;
@@ -399,12 +410,13 @@ public class Converter {
 		waySizeInBytes += 1;
 
 		// some bytes for the way name
-		if (way.name != null && way.name.length() > 0) {
-			try {
+		try {
+			if (way.name != null && way.name.length() > 0
+					&& way.name.getBytes("UTF-8").length < Byte.MAX_VALUE) {
 				waySizeInBytes += way.name.getBytes("UTF-8").length;
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
 			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
 		}
 
 		// 1 byte for each tag id
@@ -616,7 +628,8 @@ public class Converter {
 	private static void writeWay(MapElementWay way) {
 		try {
 			// write the length of the way name
-			if (way.name != null && way.name.length() > 0) {
+			if (way.name != null && way.name.length() > 0
+					&& way.name.getBytes("UTF-8").length < Byte.MAX_VALUE) {
 				assert (way.name.getBytes("UTF-8").length > 0 && way.name.getBytes("UTF-8").length < Byte.MAX_VALUE);
 				fileOutputStream.write((byte) way.name.getBytes("UTF-8").length);
 			} else {

@@ -188,6 +188,7 @@ public class DatabaseNew {
 	 * Empty default constructor with limited visibility.
 	 */
 	DatabaseNew() {
+		// do nothing
 	}
 
 	/**
