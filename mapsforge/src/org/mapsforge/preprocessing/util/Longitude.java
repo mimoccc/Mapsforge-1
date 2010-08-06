@@ -16,7 +16,6 @@
  */
 package org.mapsforge.preprocessing.util;
 
-import org.mapsforge.server.core.geoinfo.IPoint;
 
 /**
  * Die Longitude (geographische Länge) liegt zwischen -180° (westlich des Nullmeridians) und
@@ -34,8 +33,9 @@ import org.mapsforge.server.core.geoinfo.IPoint;
  */
 public class Longitude {
 
-	public static final double MAX_VALUE = 180d * IPoint.DEGREE_TO_INT_FACTOR;
-	public static final double MIN_VALUE = -180d * IPoint.DEGREE_TO_INT_FACTOR;
+	public static final double MAX_VALUE = 180d * org.mapsforge.core.GeoCoordinate.FACTOR_DOUBLE_TO_INT;
+	public static final double MIN_VALUE = -180d
+			* org.mapsforge.core.GeoCoordinate.FACTOR_DOUBLE_TO_INT;
 
 	private double degree = 0.0d;
 

@@ -26,9 +26,8 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.mapsforge.preprocessing.graph.XML2PostgreSQL;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.model.Node;
-import org.mapsforge.server.core.geoinfo.IPoint;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -39,7 +38,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
 /**
  * An adapted implementation of the XML2PostgreSQL class
  * 
- * @see XML2PostgreSQL
  * @author kunis
  */
 public class SimpleOSM2DBParser {
@@ -82,7 +80,7 @@ public class SimpleOSM2DBParser {
 
 	private class OsmHandler extends DefaultHandler {
 
-		private final Logger logger = Logger.getLogger(XML2PostgreSQL.class.getName());
+		private final Logger logger = Logger.getLogger(SimpleOSM2DBParser.class.getName());
 
 		private static final int DEFAULT_BATCH_SIZE = 500;
 
@@ -182,7 +180,7 @@ public class SimpleOSM2DBParser {
 
 		@Override
 		public void startElement(String uri, String localName, String qName,
-				Attributes attributes) throws SAXException {
+				Attributes attributes) {
 			if (qName.equals("node")) {
 				currentNode = new Node();
 				currentTags.clear();
@@ -210,17 +208,16 @@ public class SimpleOSM2DBParser {
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
+		public void endElement(String uri, String localName, String qName) {
 			try {
 				if (qName.equals("node")) {
 					nodes++;
 					pstmtNodes.setLong(1, currentNode.id);
 					// pstmtNodes.setDouble(2, currentNode.latitude);
 					// pstmtNodes.setDouble(3, currentNode.longitude);
-					pstmtNodes.setInt(2,
-							(int) (currentNode.latitude * IPoint.DEGREE_TO_INT_FACTOR));
-					pstmtNodes.setInt(3,
-							(int) (currentNode.longitude * IPoint.DEGREE_TO_INT_FACTOR));
+					pstmtNodes.setInt(2, GeoCoordinate.doubleToInt(currentNode.latitude));
+
+					pstmtNodes.setInt(3, GeoCoordinate.doubleToInt(currentNode.longitude));
 
 					pstmtNodes.addBatch();
 

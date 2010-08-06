@@ -16,7 +16,6 @@
  */
 package org.mapsforge.preprocessing.util;
 
-import org.mapsforge.server.core.geoinfo.IPoint;
 
 /**
  * Die Latitude (geographische Breite) liegt zwischen -90° (südlich des Aequators) und +90°
@@ -30,8 +29,9 @@ import org.mapsforge.server.core.geoinfo.IPoint;
  */
 public class Latitude {
 
-	public static final double MAX_VALUE = 90d * IPoint.DEGREE_TO_INT_FACTOR;
-	public static final double MIN_VALUE = -90d * IPoint.DEGREE_TO_INT_FACTOR;
+	public static final double MAX_VALUE = 90d * org.mapsforge.core.GeoCoordinate.FACTOR_DOUBLE_TO_INT;
+	public static final double MIN_VALUE = -90d
+			* org.mapsforge.core.GeoCoordinate.FACTOR_DOUBLE_TO_INT;
 
 	private double degree = 0.0d;
 
