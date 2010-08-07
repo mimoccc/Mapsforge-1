@@ -19,6 +19,7 @@ package org.mapsforge.android.map;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 /**
  * A database class for reading binary OSM files. Byte order is big-endian.
@@ -47,7 +48,7 @@ public class DatabaseNew {
 	/**
 	 * The size of the fixed header in a binary map file.
 	 */
-	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 40;
+	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 38;
 
 	/**
 	 * The size of the index cache which limits the number of cached index blocks.
@@ -99,7 +100,7 @@ public class DatabaseNew {
 	private boolean[] defaultNodeTagIds;
 	private boolean[] defaultWayTagIds;
 	private short elementCounter;
-	private long firstWayOffset;
+	private int firstWayOffset;
 	private long fromBaseTileX;
 	private long fromBaseTileY;
 	private long fromBlockX;
@@ -183,6 +184,9 @@ public class DatabaseNew {
 	private boolean[] wayTagIds;
 	private short wayTileBitmask;
 	private int zoomLevelDifference;
+	private byte numberOfMapFiles;
+	private ArrayList<MapFileData> subMapFiles;
+	private long startAddress;
 
 	/**
 	 * Empty default constructor with limited visibility.
@@ -227,11 +231,9 @@ public class DatabaseNew {
 		// move the pointer to the end of the tile entries table
 		this.bufferPosition += this.tileEntriesTableSize - this.tileEntriesTableOffset - 4;
 
-		// read the offset to the first stored way in the block (8 bytes)
-		this.firstWayOffset = Deserializer.toLong(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 8;
-		// FIXME: remove this hack, the first way pointer should be relative not absolute
-		this.firstWayOffset = this.firstWayOffset - this.currentBlockPointer;
+		// read the offset to the first stored way in the block (4 bytes)
+		this.firstWayOffset = Deserializer.toInt(this.readBuffer, this.bufferPosition);
+		this.bufferPosition += 4;
 		if (this.firstWayOffset > this.readBuffer.length) {
 			Logger.d("invalid firstWayOffset: " + this.firstWayOffset);
 			return;
@@ -340,7 +342,7 @@ public class DatabaseNew {
 		}
 
 		// finished reading nodes, now move the pointer to the first way
-		this.bufferPosition = (int) this.firstWayOffset;
+		this.bufferPosition = this.firstWayOffset;
 
 		// read ways
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
@@ -568,11 +570,12 @@ public class DatabaseNew {
 			return false;
 		}
 
-		// get and check the base zoom level (1 byte)
-		this.baseZoomLevel = this.readBuffer[this.bufferPosition];
+		// get and check the number of contained map files (1 byte)
+		this.numberOfMapFiles = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
-		if (this.baseZoomLevel < 0 || this.baseZoomLevel > 20) {
-			Logger.d("invalid base zooom level: " + this.baseZoomLevel);
+		Logger.d("numberOfMapFiles: " + this.numberOfMapFiles);
+		if (this.numberOfMapFiles < 0) {
+			Logger.d("invalid number of map files: " + this.numberOfMapFiles);
 			return false;
 		}
 
@@ -581,29 +584,6 @@ public class DatabaseNew {
 		this.bufferPosition += 2;
 		if (this.tilePixelSize < 0) {
 			Logger.d("invalid tilePixelSize: " + this.tilePixelSize);
-			return false;
-		}
-
-		// get and check the minimum tile zoom level (1 byte)
-		this.tileZoomLevelMin = this.readBuffer[this.bufferPosition];
-		this.bufferPosition += 1;
-		if (this.tileZoomLevelMin < 0 || this.baseZoomLevel > 20) {
-			Logger.d("invalid minimum tile zoom level: " + this.tileZoomLevelMin);
-			return false;
-		}
-
-		// get and check the maximum tile zoom level (1 byte)
-		this.tileZoomLevelMax = this.readBuffer[this.bufferPosition];
-		this.bufferPosition += 1;
-		if (this.tileZoomLevelMax < 0 || this.tileZoomLevelMax > 20) {
-			Logger.d("invalid maximum tile zoom level: " + this.tileZoomLevelMax);
-			return false;
-		}
-
-		// check for valid minimum and maximum tile zoom levels
-		if (this.tileZoomLevelMin > this.tileZoomLevelMax) {
-			Logger.d("invalid minimum and maximum zoom levels: " + this.tileZoomLevelMin
-					+ " - " + this.tileZoomLevelMax);
 			return false;
 		}
 
@@ -691,13 +671,72 @@ public class DatabaseNew {
 			this.commentText = new String(this.readBuffer, this.bufferPosition,
 					this.stringLength, "UTF-8");
 			this.bufferPosition += this.stringLength;
+		} else if (this.stringLength == 0) {
+			this.commentText = null;
 		} else {
 			Logger.d("invalid stringLength: " + this.stringLength);
 			this.commentText = null;
 		}
 
-		// save the end address of the header where the index starts
-		this.indexStartAddress = FIXED_HEADER_SIZE + this.stringLength;
+		// get and check the details for all contained map files
+		this.readBuffer = new byte[this.numberOfMapFiles * 8];
+		if (this.inputFile.read(this.readBuffer, 0, this.readBuffer.length) != this.readBuffer.length) {
+			Logger.d("reading the contained map files data has failed");
+			return false;
+		}
+		this.bufferPosition = 0;
+
+		this.subMapFiles = new ArrayList<MapFileData>(this.numberOfMapFiles);
+		for (this.tempByte = 0; this.tempByte < this.numberOfMapFiles; ++this.tempByte) {
+			// get and check the base zoom level (1 byte)
+			this.baseZoomLevel = this.readBuffer[this.bufferPosition];
+			this.bufferPosition += 1;
+			Logger.d("baseZoomLevel: " + this.baseZoomLevel);
+			if (this.baseZoomLevel < 0 || this.baseZoomLevel > 20) {
+				Logger.d("invalid base zooom level: " + this.baseZoomLevel);
+				return false;
+			}
+
+			// get and check the minimum tile zoom level (1 byte)
+			this.tileZoomLevelMin = this.readBuffer[this.bufferPosition];
+			this.bufferPosition += 1;
+			Logger.d("tileZoomLevelMin: " + this.tileZoomLevelMin);
+			if (this.tileZoomLevelMin < 0 || this.tileZoomLevelMin > 20) {
+				Logger.d("invalid minimum tile zoom level: " + this.tileZoomLevelMin);
+				return false;
+			}
+
+			// get and check the maximum tile zoom level (1 byte)
+			this.tileZoomLevelMax = this.readBuffer[this.bufferPosition];
+			this.bufferPosition += 1;
+			Logger.d("tileZoomLevelMax: " + this.tileZoomLevelMax);
+			if (this.tileZoomLevelMax < 0 || this.tileZoomLevelMax > 20) {
+				Logger.d("invalid maximum tile zoom level: " + this.tileZoomLevelMax);
+				return false;
+			}
+
+			// check for valid minimum and maximum tile zoom levels
+			if (this.tileZoomLevelMin > this.tileZoomLevelMax) {
+				Logger.d("invalid minimum and maximum zoom levels: " + this.tileZoomLevelMin
+						+ " - " + this.tileZoomLevelMax);
+				return false;
+			}
+
+			// add the current map file to the list
+			this.subMapFiles.add(new MapFileData(this.baseZoomLevel, this.tileZoomLevelMin,
+					this.tileZoomLevelMax));
+		}
+
+		for (this.tempByte = 0; this.tempByte < this.numberOfMapFiles; ++this.tempByte) {
+			// get and check the start address of the map file (5 bytes)
+			this.startAddress = Deserializer.fiveBytesToLong(this.readBuffer,
+					this.bufferPosition);
+			this.bufferPosition += 5;
+
+			// save the start address of the map file
+			Logger.d("startAddress: " + this.startAddress);
+			this.subMapFiles.get(this.tempByte).startAddress = this.startAddress;
+		}
 
 		return true;
 	}
@@ -1057,5 +1096,18 @@ public class DatabaseNew {
 	 */
 	public long getMapDate() {
 		return this.mapDate;
+	}
+
+	private class MapFileData {
+		final byte baseZoomLevel;
+		final byte tileZoomLevelMin;
+		final byte tileZoomLevelMax;
+		long startAddress;
+
+		MapFileData(byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax) {
+			this.baseZoomLevel = baseZoomLevel;
+			this.tileZoomLevelMin = tileZoomLevelMin;
+			this.tileZoomLevelMax = tileZoomLevelMax;
+		}
 	}
 }
