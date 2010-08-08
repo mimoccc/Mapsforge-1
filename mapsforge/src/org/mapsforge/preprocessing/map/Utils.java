@@ -229,6 +229,7 @@ class Utils {
 			return wayTiles;
 		} catch (NullPointerException e) {
 			logger.info("NullPointerException while accessing geometry for way: " + wayId);
+			e.printStackTrace();
 			return wayTiles;
 		}
 	}
@@ -274,7 +275,7 @@ class Utils {
 	 *            multipolygon
 	 * @return a map containing tiles and the calculated tile bitmask
 	 */
-	static Map<Tile, Short> getTileBitMask(Geometry geoWay, Set<Tile> wayTiles, int wayType) {
+	static Map<Tile, Short> getTileBitMask(Geometry geoWay, Set<Tile> wayTiles, short wayType) {
 		Map<Tile, Short> result = new HashMap<Tile, Short>();
 		short tileCounter;
 		short bitmap;
