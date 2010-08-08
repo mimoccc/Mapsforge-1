@@ -65,7 +65,14 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 	private static final String DEFAULT_BATCH_SIZE_WAY = "5000";
 
-	private static byte zoom;
+	private static byte zoom_high;
+	private static byte zoom_low;
+
+	private static byte minZoomHigh;
+	private static byte maxZoomHigh;
+
+	private static byte minZoomLow;
+	private static byte maxZoomLow;
 
 	private int poiBatchSize;
 
@@ -107,9 +114,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_INSERT_WAYNODES = "INSERT INTO waynodes (way_id, waynode_sequence, latitude, longitude) VALUES (?,?,?,?)";
 	private final String SQL_INSERT_WAYNODES_TMP = "INSERT INTO waynodes_tmp (way_id, waynode_sequence, latitude, longitude) VALUES (?,?,?,?)";
 	private final String SQL_SELECT_INNERWAYNODES = "SELECT latitude,longitude FROM waynodes_tmp WHERE way_id = ?";
+	private final String SQL_INSERT_METADATA = "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom,zoom_low,tile_size,min_zoom_level,max_zoom_level,min_zoom_level_low,max_zoom_level_low) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	// private final String SQL_INSERT_METADATA =
-	// "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom,zoom_low,tile_size,min_zoom_level,max_zoom_level,min_zoom_level_low,max_zoom_level_low) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-	private final String SQL_INSERT_METADATA = "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom_low,zoom,tile_size,min_zoom_level,max_zoom_level) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+	// "INSERT INTO metadata (maxlat,minlon,minlat,maxlon,date,import_version,zoom_low,zoom,tile_size,min_zoom_level,max_zoom_level) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 	private final String SQL_UPDATE_WAYTYPE_FLAG = "UPDATE ways SET way_type = 3 WHERE id = ?";
 	private final String SQL_UPDATE_OPEN_WAYTYPE_FLAG = "UPDATE ways SET way_type = 0 WHERE id = ?";
 	private final String SQL_INSERT_POI_TILE = "INSERT INTO pois_to_tiles (poi_id,tile_x,tile_y,zoom_level) VALUES (?,?,?,?)";
@@ -172,7 +179,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 	XML2PostgreSQLMap(String propertiesFile, short baseZoom) throws Exception {
 
-		zoom = (byte) baseZoom;
+		zoom_high = (byte) baseZoom;
+		minZoomHigh = (byte) (zoom_high - 2);
+		maxZoomHigh = (byte) (zoom_high + 3);
+
+		zoom_low = (byte) (zoom_high - 6);
+		minZoomLow = (byte) (zoom_low - 2);
+		maxZoomLow = (byte) (zoom_low + 3);
 
 		Properties props = new Properties();
 		props.load(new FileInputStream(propertiesFile));
@@ -323,13 +336,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMetadata.setInt(4, maxlon);
 			pstmtMetadata.setLong(5, DATE);
 			pstmtMetadata.setInt(6, VERSION);
-			pstmtMetadata.setShort(7, (short) (zoom - 6));
-			pstmtMetadata.setShort(8, zoom);
+			pstmtMetadata.setShort(7, zoom_low);
+			pstmtMetadata.setShort(8, zoom_high);
 			pstmtMetadata.setInt(9, Tile.TILE_SIZE);
-			pstmtMetadata.setShort(10, (short) (zoom - 2));
-			pstmtMetadata.setShort(11, (short) (zoom + 3));
-			// pstmtMetadata.setShort(10, (short) (zoom - 8));
-			// pstmtMetadata.setShort(11, (short) (zoom - 3));
+			pstmtMetadata.setShort(10, minZoomHigh);
+			pstmtMetadata.setShort(11, maxZoomHigh);
+			pstmtMetadata.setShort(10, minZoomLow);
+			pstmtMetadata.setShort(11, maxZoomLow);
 			pstmtMetadata.execute();
 
 			logger.info("metadata inserted");
@@ -340,19 +353,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMultipolygons.executeBatch();
 			pstmtUpdateWayType.executeBatch();
 			pstmtUpdateWayInnerWayAmount.executeBatch();
-
-			// if (zoom < 10) {
-			// conn
-			// .createStatement()
-			// .execute(
-			// "delete from pois p where exists (select id from pois pois join pois_to_tiles ptt on(pois.id = ptt.poi_id) where ptt.zoom_level > "
-			// + zoom + ")");
-			// conn
-			// .createStatement()
-			// .execute(
-			// "delete from ways w where exists (select id from ways ways join ways_to_tiles wtt on(ways.id = wtt.way_id) where wtt.zoom_level > "
-			// + zoom + ")");
-			// }
 
 			logger.info("create indices on tag tables");
 
@@ -562,9 +562,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							} catch (NumberFormatException e) {
 								currentNode.elevation = 0;
 							}
-						} else if (splittedTags[0].equals("addr:housenumber")) {
+						} else if (splittedTags[0].equals("addr:housenumber")
+								&& splittedTags[1].getBytes().length <= 128) {
 							currentNode.housenumber = splittedTags[1];
-						} else if (splittedTags[0].equals("name")) {
+						} else if (splittedTags[0].equals("name")
+								&& splittedTags[1].getBytes().length <= 128) {
 							currentNode.name = splittedTags[1];
 						} else if (splittedTags[0].equals("layer")) {
 							try {
@@ -580,11 +582,11 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							// if current tag is in the white list, add it to the temporary tag
 							// list
 							currentNode.zoomLevel = poiTagWhiteList.get(tag);
-							if (currentNode.zoomLevel == 127) {
+							if (currentNode.zoomLevel == Byte.MAX_VALUE) {
 								// FIXME should zoom level of elements with 127 bet set to base
 								// zoom
 								// level or to maxZoom?
-								currentNode.zoomLevel = 17;
+								currentNode.zoomLevel = maxZoomHigh;
 							}
 							tempTags.add(tag);
 
@@ -641,9 +643,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 					// calculate the tile in which the poi is located
 					Tile mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
-							(double) currentNode.longitude / 1000000, zoom), MercatorProjection
-							.latitudeToTileY((double) currentNode.latitude / 1000000, zoom),
-							zoom);
+							(double) currentNode.longitude / 1000000, zoom_high),
+							MercatorProjection.latitudeToTileY(
+									(double) currentNode.latitude / 1000000, zoom_high),
+							zoom_high);
 
 					pstmtPoisTiles.setLong(1, currentNode.id);
 					pstmtPoisTiles.setLong(2, mainTileForPOI.x);
@@ -652,13 +655,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtPoisTiles.addBatch();
 
 					// TODO: flexible zoom level
-					if (currentNode.zoomLevel < 12) { // minzoom of higher base zoom
+					if (currentNode.zoomLevel < minZoomHigh) { // minzoom of higher base zoom
 						// TODO: flexible zoom level
 						mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
-								(double) currentNode.longitude / 1000000, (byte) 8),
+								(double) currentNode.longitude / 1000000, zoom_low),
 								MercatorProjection.latitudeToTileY(
-										(double) currentNode.latitude / 1000000, (byte) 8),
-								(byte) 8); // lower base zoom
+										(double) currentNode.latitude / 1000000, zoom_low),
+								zoom_low); // lower base zoom
 
 						pstmtPoisTilesLessData.setLong(1, currentNode.id);
 						pstmtPoisTilesLessData.setLong(2, mainTileForPOI.x);
@@ -694,10 +697,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					splittedTags = tag.split("=");
 
 					if (splittedTags.length == 2) {
-						// special tags like elevation, housenumber, name and layer are stored
-						// in
-						// separate fields in the database
-						if (splittedTags[0].equals("name")) {
+						// special tags like name and layer are stored in separate fields in the
+						// database
+						if (splittedTags[0].equals("name")
+								&& splittedTags[1].getBytes().length <= 128) {
 							currentWay.name = splittedTags[1];
 						} else if (splittedTags[0].equals("layer")) {
 							try {
@@ -715,8 +718,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							currentWay.zoomLevel = wayTagWhiteList.get(tag);
 							// FIXME should zoom level of elements with 127 be set to base zoom
 							// level or to maxZoom?
-							if (currentWay.zoomLevel == 127) {
-								currentWay.zoomLevel = 17;
+							if (currentWay.zoomLevel == Byte.MAX_VALUE) {
+								currentWay.zoomLevel = maxZoomHigh;
 							}
 							tempTags.add(tag);
 
@@ -848,7 +851,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 							// calculate all tiles which are related to a way
 							wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
-									currentWay.wayType, zoom);
+									currentWay.wayType, zoom_high);
 
 							// calculate all subtiles of the tiles which are related to the way
 							// and
@@ -867,13 +870,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							}
 
 							// TODO: minzoom of higher base zoom
-							if (currentWay.zoomLevel < 12) {
+							if (currentWay.zoomLevel < minZoomHigh) {
 								// create a geometry object for the way
 								geoWay = Utils.createWay(currentWay, wayNodes);
 
 								// calculate all tiles which are related to a way
 								wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
-										currentWay.wayType, (byte) 8); // lower base zoom
+										currentWay.wayType, zoom_low); // lower base zoom
 
 								// calculate all subtiles of the tiles which are related to the
 								// way
