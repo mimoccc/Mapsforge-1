@@ -18,7 +18,7 @@ package org.mapsforge.preprocessing.map;
 
 import java.util.TreeMap;
 
-public class Filter {
+class Filter {
 	static TreeMap<String, Byte> getNodeFilter() {
 		TreeMap<String, Byte> filter = new TreeMap<String, Byte>();
 

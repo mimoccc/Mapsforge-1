@@ -16,8 +16,16 @@
  */
 package org.mapsforge.preprocessing.map;
 
+/**
+ * This class represents a map tile. All mandatory fields are final.
+ * 
+ */
 public class Tile implements Comparable<Tile> {
 	static final byte TILE_BYTES_PER_PIXEL = 2;
+
+	/**
+	 * The tile size in pixel.
+	 */
 	public static final short TILE_SIZE = 256;
 	private final int hashCode;
 	final long pixelX;
