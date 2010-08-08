@@ -19,7 +19,6 @@ package org.mapsforge.android.map;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 
 /**
  * A database class for reading binary OSM files. Byte order is big-endian.
@@ -36,14 +35,9 @@ public class DatabaseNew {
 	private static final int BINARY_OSM_VERSION = 1;
 
 	/**
-	 * The divisor for converting coordinates stored as integers to double values.
-	 */
-	private static final double COORDINATES_DIVISOR = 1000000;
-
-	/**
 	 * The flag to indicate, if the binary map file contains debug signatures.
 	 */
-	private static final boolean DEBUG_FILE = false;
+	private static final boolean DEBUG_FILE = !false;
 
 	/**
 	 * The size of the fixed header in a binary map file.
@@ -51,7 +45,7 @@ public class DatabaseNew {
 	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 38;
 
 	/**
-	 * The size of the index cache which limits the number of cached index blocks.
+	 * The size of the index cache for each contained map file.
 	 */
 	private static final int INDEX_CACHE_SIZE = 32;
 
@@ -79,17 +73,12 @@ public class DatabaseNew {
 	 * The length of the debug signature at the beginning of each way.
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
-
 	private byte baseZoomLevel;
 	private long blockNumber;
 	private int boundaryBottom;
-	private long boundaryBottomTile;
 	private int boundaryLeft;
-	private long boundaryLeftTile;
 	private int boundaryRight;
-	private long boundaryRightTile;
 	private int boundaryTop;
-	private long boundaryTopTile;
 	private int bufferPosition;
 	private String commentText;
 	private long currentBlockPointer;
@@ -105,7 +94,6 @@ public class DatabaseNew {
 	private long fromBaseTileY;
 	private long fromBlockX;
 	private long fromBlockY;
-	private long indexStartAddress;
 	private int[] innerWay;
 	private short innerWayNodesSequenceLength;
 	private short innerWayNumberOfWayNodes;
@@ -113,10 +101,12 @@ public class DatabaseNew {
 	private long inputFileSize;
 	private Rect mapBoundary;
 	private long mapDate;
-	private long mapFileBlocks;
-	private long mapFileBlocksHeight;
-	private long mapFileBlocksWidth;
+	private MapFile mapFile;
+	private MapFile[] mapFilesList;
+	private MapFile[] mapFilesLookupTable;
 	private long maximumTileSize;
+	private byte maximumZoomLevel;
+	private byte minimumZoomLevel;
 	private long nextBlockPointer;
 	private short nodeElevation;
 	private byte nodeFeatureByte;
@@ -133,12 +123,14 @@ public class DatabaseNew {
 	private byte nodeSpecialByte;
 	private byte nodeTagId;
 	private boolean[] nodeTagIds;
+	private byte numberOfMapFiles;
 	private long parentTileX;
 	private long parentTileY;
 	private boolean queryReadWayNames;
 	private int queryTileBitmask;
-	private byte queryZoomLevel;
+	private int queryZoomLevel;
 	private byte[] readBuffer;
+	private long startAddress;
 	private boolean stopCurrentQuery;
 	private short stringLength;
 	private long subtileX;
@@ -148,10 +140,7 @@ public class DatabaseNew {
 	private short tempShort;
 	private String tempString;
 	private int tileEntriesTableOffset;
-	private int tileEntriesTableSize;
 	private short tilePixelSize;
-	private byte tileZoomLevelMax;
-	private byte tileZoomLevelMin;
 	private long toBaseTileX;
 	private long toBaseTileY;
 	private long toBlockX;
@@ -184,15 +173,41 @@ public class DatabaseNew {
 	private boolean[] wayTagIds;
 	private short wayTileBitmask;
 	private int zoomLevelDifference;
-	private byte numberOfMapFiles;
-	private ArrayList<MapFileData> subMapFiles;
-	private long startAddress;
+	private byte zoomLevelMax;
+	private byte zoomLevelMin;
 
 	/**
 	 * Empty default constructor with limited visibility.
 	 */
 	DatabaseNew() {
 		// do nothing
+	}
+
+	/**
+	 * Returns the comment text of the binary map file.
+	 * 
+	 * @return the comment text of the binary map file.
+	 */
+	public String getCommentText() {
+		return this.commentText;
+	}
+
+	/**
+	 * Returns the center coordinates of the current map file.
+	 * 
+	 * @return the area coordinates in microdegrees.
+	 */
+	public GeoPoint getMapCenter() {
+		return this.mapBoundary.getCenter();
+	}
+
+	/**
+	 * Returns the date of the map data in the binary map file.
+	 * 
+	 * @return the date of the map data.
+	 */
+	public long getMapDate() {
+		return this.mapDate;
 	}
 
 	/**
@@ -219,7 +234,7 @@ public class DatabaseNew {
 		}
 
 		// calculate the offset in the tile entries table and move the pointer
-		this.tileEntriesTableOffset = (this.queryZoomLevel - this.tileZoomLevelMin) * 4;
+		this.tileEntriesTableOffset = (this.queryZoomLevel - this.mapFile.zoomLevelMin) * 4;
 		this.bufferPosition += this.tileEntriesTableOffset;
 
 		// read the amount of way and nodes on the current zoomLevel level
@@ -229,7 +244,8 @@ public class DatabaseNew {
 		this.bufferPosition += 2;
 
 		// move the pointer to the end of the tile entries table
-		this.bufferPosition += this.tileEntriesTableSize - this.tileEntriesTableOffset - 4;
+		this.bufferPosition += this.mapFile.tileEntriesTableSize - this.tileEntriesTableOffset
+				- 4;
 
 		// read the offset to the first stored way in the block (4 bytes)
 		this.firstWayOffset = Deserializer.toInt(this.readBuffer, this.bufferPosition);
@@ -574,7 +590,7 @@ public class DatabaseNew {
 		this.numberOfMapFiles = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
 		Logger.d("numberOfMapFiles: " + this.numberOfMapFiles);
-		if (this.numberOfMapFiles < 0) {
+		if (this.numberOfMapFiles < 1) {
 			Logger.d("invalid number of map files: " + this.numberOfMapFiles);
 			return false;
 		}
@@ -582,7 +598,7 @@ public class DatabaseNew {
 		// get and check the tile pixel size (2 bytes)
 		this.tilePixelSize = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
-		if (this.tilePixelSize < 0) {
+		if (this.tilePixelSize < 1) {
 			Logger.d("invalid tilePixelSize: " + this.tilePixelSize);
 			return false;
 		}
@@ -623,23 +639,6 @@ public class DatabaseNew {
 		this.mapBoundary = new Rect(this.boundaryLeft, this.boundaryTop, this.boundaryRight,
 				this.boundaryBottom);
 
-		// calculate the XY numbers of the boundary tiles
-		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(this.boundaryLeft
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTopTile = MercatorProjection.latitudeToTileY(this.boundaryTop
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryRightTile = MercatorProjection.longitudeToTileX(this.boundaryRight
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(this.boundaryBottom
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-
-		// calculate the horizontal and vertical amount of blocks in the file
-		this.mapFileBlocksWidth = this.boundaryRightTile - this.boundaryLeftTile + 1;
-		this.mapFileBlocksHeight = this.boundaryBottomTile - this.boundaryTopTile + 1;
-
-		// calculate the total amount of blocks in the file
-		this.mapFileBlocks = this.mapFileBlocksWidth * this.mapFileBlocksHeight;
-
 		// get and check the date of the map data (8 bytes)
 		this.mapDate = Deserializer.toLong(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 8;
@@ -652,7 +651,7 @@ public class DatabaseNew {
 		this.maximumTileSize = Deserializer.fiveBytesToLong(this.readBuffer,
 				this.bufferPosition);
 		this.bufferPosition += 5;
-		if (this.maximumTileSize < 0) {
+		if (this.maximumTileSize < 1) {
 			Logger.d("invalid maximum tile size: " + this.maximumTileSize);
 			return false;
 		}
@@ -675,18 +674,23 @@ public class DatabaseNew {
 			this.commentText = null;
 		} else {
 			Logger.d("invalid stringLength: " + this.stringLength);
-			this.commentText = null;
+			return false;
 		}
 
 		// get and check the details for all contained map files
 		this.readBuffer = new byte[this.numberOfMapFiles * 8];
 		if (this.inputFile.read(this.readBuffer, 0, this.readBuffer.length) != this.readBuffer.length) {
-			Logger.d("reading the contained map files data has failed");
+			Logger.d("reading map files data has failed");
 			return false;
 		}
 		this.bufferPosition = 0;
 
-		this.subMapFiles = new ArrayList<MapFileData>(this.numberOfMapFiles);
+		// create the list of all contained map files
+		this.mapFilesList = new MapFile[this.numberOfMapFiles];
+		this.minimumZoomLevel = Byte.MAX_VALUE;
+		this.maximumZoomLevel = Byte.MIN_VALUE;
+
+		// read the information for each contained map file
 		for (this.tempByte = 0; this.tempByte < this.numberOfMapFiles; ++this.tempByte) {
 			// get and check the base zoom level (1 byte)
 			this.baseZoomLevel = this.readBuffer[this.bufferPosition];
@@ -697,34 +701,44 @@ public class DatabaseNew {
 				return false;
 			}
 
-			// get and check the minimum tile zoom level (1 byte)
-			this.tileZoomLevelMin = this.readBuffer[this.bufferPosition];
+			// get and check the minimum zoom level (1 byte)
+			this.zoomLevelMin = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			Logger.d("tileZoomLevelMin: " + this.tileZoomLevelMin);
-			if (this.tileZoomLevelMin < 0 || this.tileZoomLevelMin > 20) {
-				Logger.d("invalid minimum tile zoom level: " + this.tileZoomLevelMin);
+			Logger.d("tileZoomLevelMin: " + this.zoomLevelMin);
+			if (this.zoomLevelMin < 0 || this.zoomLevelMin > 20) {
+				Logger.d("invalid minimum zoom level: " + this.zoomLevelMin);
 				return false;
 			}
 
-			// get and check the maximum tile zoom level (1 byte)
-			this.tileZoomLevelMax = this.readBuffer[this.bufferPosition];
+			// get and check the maximum zoom level (1 byte)
+			this.zoomLevelMax = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
-			Logger.d("tileZoomLevelMax: " + this.tileZoomLevelMax);
-			if (this.tileZoomLevelMax < 0 || this.tileZoomLevelMax > 20) {
-				Logger.d("invalid maximum tile zoom level: " + this.tileZoomLevelMax);
+			Logger.d("tileZoomLevelMax: " + this.zoomLevelMax);
+			if (this.zoomLevelMax < 0 || this.zoomLevelMax > 20) {
+				Logger.d("invalid maximum zoom level: " + this.zoomLevelMax);
 				return false;
 			}
 
-			// check for valid minimum and maximum tile zoom levels
-			if (this.tileZoomLevelMin > this.tileZoomLevelMax) {
-				Logger.d("invalid minimum and maximum zoom levels: " + this.tileZoomLevelMin
-						+ " - " + this.tileZoomLevelMax);
+			// check for valid minimum and maximum zoom levels
+			if (this.zoomLevelMin > this.zoomLevelMax) {
+				Logger.d("invalid minimum and maximum zoom levels: " + this.zoomLevelMin
+						+ " - " + this.zoomLevelMax);
 				return false;
 			}
 
-			// add the current map file to the list
-			this.subMapFiles.add(new MapFileData(this.baseZoomLevel, this.tileZoomLevelMin,
-					this.tileZoomLevelMax));
+			// add the current map file to the map files list
+			// TODO: read the size of the map file
+			this.mapFilesList[this.tempByte] = new MapFile(this.inputFile.length(),
+					this.baseZoomLevel, this.zoomLevelMin, this.zoomLevelMax, this.boundaryTop,
+					this.boundaryLeft, this.boundaryBottom, this.boundaryRight);
+
+			// update the minimum and maximum zoom level information
+			if (this.zoomLevelMin < this.minimumZoomLevel) {
+				this.minimumZoomLevel = this.zoomLevelMin;
+			}
+			if (this.zoomLevelMax > this.maximumZoomLevel) {
+				this.maximumZoomLevel = this.zoomLevelMax;
+			}
 		}
 
 		for (this.tempByte = 0; this.tempByte < this.numberOfMapFiles; ++this.tempByte) {
@@ -735,7 +749,20 @@ public class DatabaseNew {
 
 			// save the start address of the map file
 			Logger.d("startAddress: " + this.startAddress);
-			this.subMapFiles.get(this.tempByte).startAddress = this.startAddress;
+			if (DEBUG_FILE) {
+				this.startAddress += SIGNATURE_LENGTH_INDEX;
+			}
+			this.mapFilesList[this.tempByte].startAddress = this.startAddress;
+		}
+
+		// create and fill the lookup table for the map files
+		this.mapFilesLookupTable = new MapFile[this.maximumZoomLevel];
+		for (this.tempInt = 0; this.tempInt < this.numberOfMapFiles; ++this.tempInt) {
+			this.mapFile = this.mapFilesList[this.tempInt];
+			for (this.tempByte = this.mapFile.zoomLevelMin; this.tempByte < this.mapFile.zoomLevelMax; ++this.tempByte) {
+				Logger.d("lookup entry: " + this.tempByte);
+				this.mapFilesLookupTable[this.tempByte] = this.mapFile;
+			}
 		}
 
 		return true;
@@ -776,27 +803,35 @@ public class DatabaseNew {
 			this.stopCurrentQuery = false;
 
 			// limit the zoom level of the requested tile for this query
-			if (tile.zoomLevel < this.tileZoomLevelMin) {
-				this.queryZoomLevel = this.tileZoomLevelMin;
-			} else if (tile.zoomLevel > this.tileZoomLevelMax) {
-				this.queryZoomLevel = this.tileZoomLevelMax;
+			if (tile.zoomLevel > this.maximumZoomLevel) {
+				this.queryZoomLevel = this.maximumZoomLevel;
+			} else if (tile.zoomLevel < this.minimumZoomLevel) {
+				this.queryZoomLevel = this.minimumZoomLevel;
 			} else {
 				this.queryZoomLevel = tile.zoomLevel;
 			}
+
+			// get and check the map file for the query zoom level
+			this.mapFile = this.mapFilesLookupTable[this.queryZoomLevel];
+			if (this.mapFile == null) {
+				Logger.d("no map file for zoom level: " + tile.zoomLevel);
+				return;
+			}
+
 			this.queryReadWayNames = readWayNames;
 
 			// calculate the base tiles that cover the area of the requested tile
-			if (tile.zoomLevel < this.baseZoomLevel) {
+			if (tile.zoomLevel < this.mapFile.baseZoomLevel) {
 				// calculate the XY numbers of the upper left and lower right subtiles
-				this.zoomLevelDifference = this.baseZoomLevel - tile.zoomLevel;
+				this.zoomLevelDifference = this.mapFile.baseZoomLevel - tile.zoomLevel;
 				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
 				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
 				this.useTileBitmask = false;
-			} else if (tile.zoomLevel > this.baseZoomLevel) {
+			} else if (tile.zoomLevel > this.mapFile.baseZoomLevel) {
 				// calculate the XY numbers of the parent base tile
-				this.zoomLevelDifference = tile.zoomLevel - this.baseZoomLevel;
+				this.zoomLevelDifference = tile.zoomLevel - this.mapFile.baseZoomLevel;
 				this.fromBaseTileX = tile.x >> this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y >> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
@@ -900,12 +935,12 @@ public class DatabaseNew {
 			}
 
 			// calculate the blocks in the file which need to be read
-			this.fromBlockX = Math.max(this.fromBaseTileX - this.boundaryLeftTile, 0);
-			this.fromBlockY = Math.max(this.fromBaseTileY - this.boundaryTopTile, 0);
-			this.toBlockX = Math.min(this.toBaseTileX - this.boundaryLeftTile,
-					this.mapFileBlocksWidth - 1);
-			this.toBlockY = Math.min(this.toBaseTileY - this.boundaryTopTile,
-					this.mapFileBlocksHeight - 1);
+			this.fromBlockX = Math.max(this.fromBaseTileX - this.mapFile.boundaryLeftTile, 0);
+			this.fromBlockY = Math.max(this.fromBaseTileY - this.mapFile.boundaryTopTile, 0);
+			this.toBlockX = Math.min(this.toBaseTileX - this.mapFile.boundaryLeftTile,
+					this.mapFile.blocksWidth - 1);
+			this.toBlockY = Math.min(this.toBaseTileY - this.mapFile.boundaryTopTile,
+					this.mapFile.blocksHeight - 1);
 
 			// read all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
@@ -916,28 +951,28 @@ public class DatabaseNew {
 					}
 
 					// calculate the actual block number of the needed block in the file
-					this.blockNumber = this.currentRow * this.mapFileBlocksWidth
+					this.blockNumber = this.currentRow * mapFile.blocksWidth
 							+ this.currentColumn;
 
 					// get and check the pointer to the current block
-					this.currentBlockPointer = this.databaseIndexCache
-							.getAddress(this.blockNumber);
+					this.currentBlockPointer = this.databaseIndexCache.getAddress(this.mapFile,
+							this.blockNumber);
 					if (this.currentBlockPointer < 0
-							|| this.currentBlockPointer > this.inputFileSize) {
+							|| this.currentBlockPointer > this.mapFile.mapFileSize) {
 						Logger.d("invalid currentBlockPointer: " + this.currentBlockPointer);
 						return;
 					}
 
 					// check if the current block is the last block in the file
-					if (this.blockNumber + 1 == this.mapFileBlocks) {
+					if (this.blockNumber + 1 == this.mapFile.numberOfBlocks) {
 						// set the pointer to the next block to the end of the file
-						this.nextBlockPointer = this.inputFile.length();
+						this.nextBlockPointer = this.mapFile.mapFileSize;
 					} else {
 						// get and check the pointer to the next block
-						this.nextBlockPointer = this.databaseIndexCache
-								.getAddress(this.blockNumber + 1);
+						this.nextBlockPointer = this.databaseIndexCache.getAddress(
+								this.mapFile, this.blockNumber + 1);
 						if (this.nextBlockPointer < 0
-								|| this.nextBlockPointer > this.inputFileSize) {
+								|| this.nextBlockPointer > this.mapFile.mapFileSize) {
 							Logger.d("invalid nextBlockPointer: " + this.nextBlockPointer);
 							return;
 						}
@@ -983,15 +1018,6 @@ public class DatabaseNew {
 	}
 
 	/**
-	 * Returns the center coordinates of the current map file.
-	 * 
-	 * @return the area coordinates in microdegrees.
-	 */
-	public GeoPoint getMapCenter() {
-		return this.mapBoundary.getCenter();
-	}
-
-	/**
 	 * Opens a map file and checks for valid header data.
 	 * 
 	 * @param fileName
@@ -1009,43 +1035,14 @@ public class DatabaseNew {
 				return false;
 			}
 
-			if (DEBUG_FILE) {
-				// the beginning of the index is marked with a signature
-				this.indexStartAddress += SIGNATURE_LENGTH_INDEX;
-
-				// read the index signature
-				this.readBuffer = new byte[SIGNATURE_LENGTH_INDEX];
-				if (this.inputFile.read(this.readBuffer, 0, SIGNATURE_LENGTH_INDEX) != SIGNATURE_LENGTH_INDEX) {
-					Logger.d("reading the index signature has failed");
-					return false;
-				}
-				this.bufferPosition = 0;
-
-				// check the index signature
-				this.tempString = new String(this.readBuffer, this.bufferPosition,
-						SIGNATURE_LENGTH_INDEX, "UTF-8");
-				this.bufferPosition += SIGNATURE_LENGTH_INDEX;
-				if (!this.tempString.equals("+++IndexStart+++")) {
-					Logger.d("invalid index signature: " + this.tempString);
-					return false;
-				}
-			}
+			// create the DatabaseIndexCache
+			this.databaseIndexCache = new DatabaseIndexCacheNew(inputFile, INDEX_CACHE_SIZE);
 
 			// create a read buffer that is big enough even for the largest tile
 			this.readBuffer = new byte[(int) this.maximumTileSize];
 
-			// get the size of the file
-			this.inputFileSize = this.inputFile.length();
-
-			// create the DatabaseIndexCache
-			this.databaseIndexCache = new DatabaseIndexCacheNew(this.inputFile,
-					this.mapFileBlocks, this.indexStartAddress, INDEX_CACHE_SIZE);
-
 			// create an array for the way nodes coordinates
 			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
-
-			// calculate the size of the tile entries table
-			this.tileEntriesTableSize = 2 * (this.tileZoomLevelMax - this.tileZoomLevelMin + 1) * 2;
 
 			// create the tag arrays
 			this.defaultNodeTagIds = new boolean[Byte.MAX_VALUE];
@@ -1078,36 +1075,5 @@ public class DatabaseNew {
 	 */
 	void stopCurrentQuery() {
 		this.stopCurrentQuery = true;
-	}
-
-	/**
-	 * Returns the comment text of the binary map file.
-	 * 
-	 * @return the comment text of the binary map file.
-	 */
-	public String getCommentText() {
-		return this.commentText;
-	}
-
-	/**
-	 * Returns the date of the map data in the binary map file.
-	 * 
-	 * @return the date of the map data.
-	 */
-	public long getMapDate() {
-		return this.mapDate;
-	}
-
-	private class MapFileData {
-		final byte baseZoomLevel;
-		final byte tileZoomLevelMin;
-		final byte tileZoomLevelMax;
-		long startAddress;
-
-		MapFileData(byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax) {
-			this.baseZoomLevel = baseZoomLevel;
-			this.tileZoomLevelMin = tileZoomLevelMin;
-			this.tileZoomLevelMax = tileZoomLevelMax;
-		}
 	}
 }
