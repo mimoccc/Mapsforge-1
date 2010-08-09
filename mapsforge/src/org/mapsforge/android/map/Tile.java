@@ -94,6 +94,11 @@ class Tile implements Comparable<Tile> {
 		return this.hashCode;
 	}
 
+	@Override
+	public String toString() {
+		return this.zoomLevel + "/" + this.x + "/" + this.y;
+	}
+
 	/**
 	 * Calculates the hash value of this object.
 	 * 

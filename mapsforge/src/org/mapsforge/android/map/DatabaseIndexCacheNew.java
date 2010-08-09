@@ -72,8 +72,8 @@ class DatabaseIndexCacheNew {
 		private int calculateHashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + (int) (this.blockNumber ^ (this.blockNumber >>> 32));
 			result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+			result = prime * result + (int) (this.blockNumber ^ (this.blockNumber >>> 32));
 			return result;
 		}
 	}
@@ -179,7 +179,7 @@ class DatabaseIndexCacheNew {
 				// cache miss, create a new index block
 				this.cacheBlock = new byte[SIZE_OF_CACHE_BLOCK];
 				// seek to the correct index block in the file and read it
-				this.inputFile.seek(mapFile.startAddress + this.cacheBlockNumber
+				this.inputFile.seek(mapFile.indexStartAddress + this.cacheBlockNumber
 						* SIZE_OF_CACHE_BLOCK);
 				if (this.inputFile.read(this.cacheBlock, 0, SIZE_OF_CACHE_BLOCK) != SIZE_OF_CACHE_BLOCK) {
 					throw new IOException();

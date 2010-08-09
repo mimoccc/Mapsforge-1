@@ -32,28 +32,45 @@ class MapFile {
 	final long boundaryLeftTile;
 	final long boundaryRightTile;
 	final long boundaryTopTile;
+	final long indexStartAddress;
 	final long mapFileSize;
 	final long numberOfBlocks;
-	long startAddress;
 	final int tileEntriesTableSize;
 	final byte zoomLevelMax;
 	final byte zoomLevelMin;
 
-	MapFile(long mapFileSize, byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax,
-			long boundaryTop, long boundaryLeft, long boundaryBottom, long boundaryRight) {
+	/**
+	 * Creates a new immutable set of parameters for a MapFile.
+	 * 
+	 * @param indexStartAddress
+	 *            the start address of the index.
+	 * @param mapFileSize
+	 *            the size of the map file.
+	 * @param baseZoomLevel
+	 *            the base zoom level of the map file.
+	 * @param tileZoomLevelMin
+	 *            the minimum zoom level of the map file.
+	 * @param tileZoomLevelMax
+	 *            the maximum zoom level of the map file.
+	 * @param mapBoundary
+	 *            the boundary of the map file.
+	 */
+	MapFile(long indexStartAddress, long mapFileSize, byte baseZoomLevel,
+			byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
+		this.indexStartAddress = indexStartAddress;
 		this.mapFileSize = mapFileSize;
 		this.baseZoomLevel = baseZoomLevel;
 		this.zoomLevelMin = tileZoomLevelMin;
 		this.zoomLevelMax = tileZoomLevelMax;
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTopTile = MercatorProjection.latitudeToTileY(boundaryTop
+		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.top
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(boundaryLeft
+		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(mapBoundary.left
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(boundaryBottom
+		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(mapBoundary.bottom
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryRightTile = MercatorProjection.longitudeToTileX(boundaryRight
+		this.boundaryRightTile = MercatorProjection.longitudeToTileX(mapBoundary.right
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 
 		// calculate the horizontal and vertical amount of blocks in this map file
