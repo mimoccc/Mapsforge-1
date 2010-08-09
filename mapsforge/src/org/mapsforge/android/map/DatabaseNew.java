@@ -58,7 +58,7 @@ public class DatabaseNew {
 	/**
 	 * The size of the header data for each contained map file in bytes.
 	 */
-	private static final int MAP_FILE_HEADER_SIZE = 12;
+	private static final int MAP_FILE_HEADER_SIZE = 13;
 
 	/**
 	 * The length of the debug signature at the beginning of each block.
@@ -113,7 +113,7 @@ public class DatabaseNew {
 	private Rect mapBoundary;
 	private long mapDate;
 	private MapFile mapFile;
-	private int mapFileSize;
+	private long mapFileSize;
 	private MapFile[] mapFilesList;
 	private MapFile[] mapFilesLookupTable;
 	private long maximumBlockSize;
@@ -240,7 +240,7 @@ public class DatabaseNew {
 				Logger.d("invalid block signature: " + this.tempString);
 				return;
 			}
-			Logger.d("valid block signature: " + this.tempString);
+			// Logger.d("valid block signature: " + this.tempString);
 		}
 
 		// calculate the offset in the tile entries table and move the pointer
@@ -762,9 +762,10 @@ public class DatabaseNew {
 				this.indexStartAddress += SIGNATURE_LENGTH_INDEX;
 			}
 
-			// get and check the size of the map file (4 bytes)
-			this.mapFileSize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 4;
+			// get and check the size of the map file (5 bytes)
+			this.mapFileSize = Deserializer.fiveBytesToLong(this.readBuffer,
+					this.bufferPosition);
+			this.bufferPosition += 5;
 			Logger.d("map file size: " + this.mapFileSize);
 			if (this.mapFileSize < 1) {
 				Logger.d("invalid map file size: " + this.mapFileSize);
@@ -991,9 +992,10 @@ public class DatabaseNew {
 					if (this.currentBlockPointer < 1
 							|| this.currentBlockPointer > this.mapFile.mapFileSize) {
 						Logger.d("invalid current block pointer: " + this.currentBlockPointer);
+						Logger.d("mapFileSize: " + this.mapFile.mapFileSize);
 						return;
 					}
-					Logger.d("  currentBlockPointer: " + this.currentBlockPointer);
+					// Logger.d("  currentBlockPointer: " + this.currentBlockPointer);
 
 					// check if the current block is the last block in the file
 					if (this.blockNumber + 1 == this.mapFile.numberOfBlocks) {
@@ -1006,6 +1008,7 @@ public class DatabaseNew {
 						if (this.nextBlockPointer < 1
 								|| this.nextBlockPointer > this.mapFile.mapFileSize) {
 							Logger.d("invalid next block pointer: " + this.nextBlockPointer);
+							Logger.d("mapFileSize: " + this.mapFile.mapFileSize);
 							return;
 						}
 					}
@@ -1022,15 +1025,13 @@ public class DatabaseNew {
 						Logger.d("invalid current block size: " + this.currentBlockSize);
 						return;
 					}
-					Logger.d("  currentBlockSize: " + this.currentBlockSize);
-					Logger.d("  fileSize: " + this.fileSize);
+					// Logger.d("  currentBlockSize: " + this.currentBlockSize);
 
 					// check that the read buffer is large enough
 					if (this.currentBlockSize > this.readBuffer.length) {
 						Logger.d("invalid buffer size:" + this.readBuffer.length);
 						return;
 					}
-					Logger.d("  readBuffer.length: " + this.readBuffer.length);
 
 					// go to the current block and read the data into the buffer
 					this.inputFile.seek(this.currentBlockPointer);

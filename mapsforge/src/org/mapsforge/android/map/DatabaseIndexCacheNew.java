@@ -157,10 +157,8 @@ class DatabaseIndexCacheNew {
 	 * @param blockNumber
 	 *            the number of the block in the map file.
 	 * @return the block address or -1 if the block number is invalid.
-	 * @throws IOException
-	 *             if an error occurs while reading the map file.
 	 */
-	long getAddress(MapFile mapFile, long blockNumber) throws IOException {
+	long getAddress(MapFile mapFile, long blockNumber) {
 		try {
 			// check if the block number is out of bounds
 			if (blockNumber >= mapFile.numberOfBlocks) {
@@ -182,7 +180,7 @@ class DatabaseIndexCacheNew {
 				this.inputFile.seek(mapFile.indexStartAddress + this.cacheBlockNumber
 						* SIZE_OF_CACHE_BLOCK);
 				if (this.inputFile.read(this.cacheBlock, 0, SIZE_OF_CACHE_BLOCK) != SIZE_OF_CACHE_BLOCK) {
-					throw new IOException();
+					return -1;
 				}
 				// put the index block in the map
 				this.map.put(this.cacheEntryKey, this.cacheBlock);
@@ -194,8 +192,8 @@ class DatabaseIndexCacheNew {
 			// return the real address
 			return Deserializer.fiveBytesToLong(this.cacheBlock, this.addressInCacheBlock);
 		} catch (IOException e) {
-			e.printStackTrace();
-			throw e;
+			Logger.e(e);
+			return -1;
 		}
 	}
 }
