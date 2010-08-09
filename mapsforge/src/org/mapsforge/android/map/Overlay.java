@@ -22,7 +22,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 
 /**
- * This class is representing an overlay which may be displayed over the mapview.
+ * This class represents an overlay which may be displayed over the {@link #mapView}
  * 
  * @author Karsten Groll
  * @author Sebastian Schlaak
@@ -135,7 +135,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handle a trackball event.
+	 * Handles a trackball event.
 	 * 
 	 * @param event
 	 *            the event.
@@ -157,7 +157,7 @@ public abstract class Overlay extends Thread {
 
 	/**
 	 * 
-	 * Init the overlay-bitmap and the related canvas.
+	 * Inits the overlay-bitmap and the related canvas.
 	 * 
 	 * @param width
 	 *            the width of the bitmap.
@@ -167,7 +167,7 @@ public abstract class Overlay extends Thread {
 	protected abstract void createOverlayBitmapsAndCanvas(int width, int height);
 
 	/**
-	 * Return true if mapview is set.
+	 * Returns true if mapview is set.
 	 * 
 	 * @return true if mapview is set.
 	 */
@@ -182,7 +182,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Set a reference to the mapview.
+	 * Sets a reference to the mapview.
 	 * 
 	 * @param mapView
 	 *            a reference to the mapview class.
@@ -193,7 +193,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Return the matrix of this overlay.
+	 * Returns the matrix of this overlay.
 	 * 
 	 * @return the matrix of this overlay.
 	 */

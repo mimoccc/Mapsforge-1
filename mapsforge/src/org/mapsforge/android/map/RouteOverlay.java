@@ -16,64 +16,146 @@
  */
 package org.mapsforge.android.map;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.util.Log;
+
+/**
+ * This overlay is intended for visualizing routes. A route is a collection of waypoints forming
+ * a line.
+ * 
+ * @author Karsten Groll
+ * 
+ */
 
 public class RouteOverlay extends Overlay {
-
+	/** The bitmap the route is drawn onto. */
+	private Bitmap shadowBmp;
+	/** Temporary bitmap used for switching bmp and shadowBmp. */
+	private Bitmap tmpBmp;
+	/** Matrix used for translating the overlay. */
 	private Matrix matrix;
+	/** Canvas used for drawing onto {@link #shadowBmp}. */
+	private Canvas canvas;
+	/** Map's x-position before rendering. */
+	private double xPosBefore;
+	/** Map's y-position before rendering. */
+	private double yPosBefore;
+	/** Map's x-position after rendering. */
+	private double xPosAfter;
+	/** Map's y-position after rendering. */
+	private double yPosAfter;
+	/** Paint used for styling the path. */
+	private Paint paint;
+	/** Array holding the waypoints. */
+	private double routeData[][];
+	/** Path holding the waypoints pixel coordinates. */
 	private Path path;
-	private Path tmpPath;
-	private static Paint paint;
-	private static String TAG = "RouteOverlay";
-	private byte zoomLevel;
 
-	// Last known positions of the views (0,0) position
-	// (used for determining how far the map has been moved)
-	private double lastX;
-	private double lastY;
-	// The route
-	private double[][] routeData;
-
-	{
-		paint = new Paint();
-		paint.setColor(Color.BLUE);
-		paint.setAlpha(100);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeJoin(Paint.Join.ROUND);
-		paint.setStrokeCap(Paint.Cap.ROUND);
-		paint.setStrokeWidth(5);
-	}
-
+	/**
+	 * Constructor
+	 */
 	public RouteOverlay() {
-		super();
-		Log.d(TAG, "RouteOverlay has been created");
-
 		this.matrix = new Matrix();
-		this.matrix.reset();
-		this.path = new Path();
+		this.canvas = new Canvas();
 
-		this.zoomLevel = 0;
-		this.lastX = 0;
-		this.lastY = 0;
+		this.paint = new Paint();
+		this.paint.setColor(Color.BLUE);
+		this.paint.setAlpha(100);
+		this.paint.setStyle(Paint.Style.STROKE);
+		this.paint.setStrokeJoin(Paint.Join.ROUND);
+		this.paint.setStrokeCap(Paint.Cap.ROUND);
+		this.paint.setStrokeWidth(5);
+		this.path = new Path();
 
 		this.start();
 	}
 
 	@Override
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		// Log.d(TAG, "draw");
-		// canvas.drawBitmap(this.bmp, mapView.matrix, paint);
-		synchronized (this.path) {
-			canvas.drawPath(this.path, RouteOverlay.paint);
+		canvas.drawBitmap(this.bmp, this.matrix, null);
+		// Log.d("test", this.matrix.toShortString());
+	}
+
+	@Override
+	protected void prepareOverlayBitmap(MapView mapView) {
+		if (this.routeData == null) {
+			return;
 		}
+
+		// Tell the canvas to use a new bmp
+		this.canvas.setBitmap(this.shadowBmp);
+		// Erase the bmp's content
+		this.shadowBmp.eraseColor(Color.TRANSPARENT);
+
+		// Save current position
+		this.xPosBefore = mapView.mapViewPixelX;
+		this.yPosBefore = mapView.mapViewPixelY;
+
+		// Create our path
+		this.path.reset();
+		this.matrix.reset();
+
+		float x1, y1, x2, y2;
+		double dx = mapView.mapViewPixelX;
+		double dy = mapView.mapViewPixelY;
+
+		x1 = (float) (MercatorProjection.longitudeToPixelX(routeData[0][1], mapView.zoomLevel) - dx);
+		y1 = (float) (MercatorProjection.latitudeToPixelY(routeData[0][0], mapView.zoomLevel) - dy);
+		this.path.moveTo(x1, y1);
+		for (int i = 1; i < routeData.length; i++) {
+			x2 = (float) (MercatorProjection.longitudeToPixelX(routeData[i][1],
+					mapView.zoomLevel) - dx);
+			y2 = (float) (MercatorProjection.latitudeToPixelY(routeData[i][0],
+					mapView.zoomLevel) - dy);
+
+			this.path.lineTo(x2, y2);
+
+			x1 = x2;
+			y1 = y2;
+		}
+
+		// Draw the path
+		this.canvas.drawPath(this.path, this.paint);
+
+		// Save current position (again)
+		this.xPosAfter = mapView.mapViewPixelX;
+		this.yPosAfter = mapView.mapViewPixelY;
+
+		synchronized (this.bmp) {
+			// this.matrix.reset();
+
+			// Calculate how many pixels the mapview has been shifted since the beginning of the
+			// calculation and fix the matrix according to it
+			this.matrix.postTranslate((float) (this.xPosBefore - this.xPosAfter),
+					(float) (this.yPosBefore - this.yPosAfter));
+			// Swap bitmaps
+			this.tmpBmp = this.bmp;
+			this.bmp = this.shadowBmp;
+			this.shadowBmp = this.bmp;
+		}
+
+		// Force redraw
+		mapView.postInvalidate();
+
+	}
+
+	@Override
+	protected void createOverlayBitmapsAndCanvas(int width, int height) {
+		this.bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		this.shadowBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+	}
+
+	@Override
+	protected Matrix getMatrix() {
+		return this.matrix;
 	}
 
 	/**
+	 * Sets the route data (Array of waypoints).
 	 * 
 	 * @param routeData
 	 *            Array containing of arrays containing the route data. Structure
@@ -82,78 +164,8 @@ public class RouteOverlay extends Overlay {
 	 * {{lat1, lon1}, {lat2, lon2}, ...}
 	 * </pre>
 	 */
-	public void setPath(double[][] routeData) {
-		this.routeData = routeData;
+	public void setRouteData(double[][] routeData) {
+		this.routeData = routeData.clone();
 	}
 
-	@Override
-	protected void createOverlayBitmapsAndCanvas(int width, int height) {
-		Log.d(TAG, "createOverlayBitmaps");
-	}
-
-	@Override
-	protected Matrix getMatrix() {
-		return this.matrix;
-	}
-
-	@Override
-	protected void setMapViewAndCreateOverlayBitmaps(MapView mapView) {
-		this.mapView = mapView;
-		this.lastX = mapView.mapViewPixelX;
-		this.lastY = mapView.mapViewPixelY;
-	}
-
-	@Override
-	protected void prepareOverlayBitmap(MapView mapView) {
-		Log.d(TAG, "preparing overlay bitmap");
-
-		// Current position of the view's (0,0) coordinate
-		double dx = mapView.mapViewPixelX;
-		double dy = mapView.mapViewPixelY;
-
-		// Recalculate coordinates if zoomlevel has changed
-		if (this.zoomLevel != mapView.zoomLevel) {
-			Log.d(TAG, "zoomlevel has changed");
-
-			if (this.routeData == null) {
-				return;
-			}
-
-			this.tmpPath = new Path();
-			this.zoomLevel = mapView.zoomLevel;
-
-			for (int i = 0; i < routeData.length - 1; i++) {
-				this.tmpPath.moveTo((float) (MercatorProjection.longitudeToPixelX(
-						routeData[i][1], mapView.zoomLevel) - dx), (float) (MercatorProjection
-						.latitudeToPixelY(routeData[i][0], mapView.zoomLevel) - dy));
-
-				this.tmpPath.lineTo((float) (MercatorProjection.longitudeToPixelX(
-						routeData[i + 1][1], mapView.zoomLevel) - dx),
-						(float) (MercatorProjection.latitudeToPixelY(routeData[i + 1][0],
-								mapView.zoomLevel) - dy));
-			}
-		} else { // Translate coordinates according to the distance the map was moved by
-
-			this.matrix.reset();
-			// this.matrix.postTranslate(-5f, 0.0f);
-			this.matrix.postTranslate((float) (this.lastX - dx), (float) (this.lastY - dy));
-			Log.d(TAG, "dx: " + (float) (this.lastX - dx));
-			this.path.transform(this.matrix);
-
-		}
-
-		this.lastX = dx;
-		this.lastY = dy;
-
-		// for (int i = 0; i < 200; i++) {
-		// this.tmpPath.moveTo(i, i);
-		// this.tmpPath.lineTo(i + 1, i + 1);
-		// }
-
-		synchronized (this.path) {
-			this.path = this.tmpPath;
-		}
-
-		this.mapView.postInvalidate();
-	}
 }
