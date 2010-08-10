@@ -24,12 +24,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import org.mapsforge.preprocessing.util.DBConnection;
+
+import com.vividsolutions.jts.geom.Coordinate;
 
 /**
  * 
@@ -47,15 +50,37 @@ public class BinaryFileWriter {
 	// sql queries
 	private final String SQL_GET_METADATA = "SELECT * FROM metadata";
 
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt JOIN filtered_pois fp "
+			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt JOIN filtered_ways fw "
+			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
+
+	private final String SQL_GET_ZOOM_TABLE_FOR_POIS_LOW_ZOOM = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level_low z LEFT OUTER JOIN "
+			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles_less_data pt JOIN filtered_pois fp ON (pt.poi_id = fp.poi_id) "
+			+ "WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
+	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS_LOW_ZOOM = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level_low z LEFT OUTER JOIN "
+			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles_less_data wt JOIN filtered_ways fw ON (wt.way_id = fw.way_id) "
+			+ "WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
+
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt JOIN filtered_pois fp "
+			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt JOIN filtered_ways fw "
+			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
+
+	private final String SQL_GET_POIS_FOR_TILE_LOW_ZOOM = "SELECT pois.*,ptt.zoom_level FROM filtered_pois fp JOIN pois_to_tiles_less_data ptt ON (fp.poi_id = ptt.poi_id) JOIN pois pois "
+			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
+	private final String SQL_GET_WAYS_FOR_TILE_LOW_ZOOM = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM filtered_ways fw JOIN ways_to_tiles_less_data wtt ON (fw.way_id = wtt.way_id) "
+			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
+
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt JOIN filtered_pois fp "
 			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt JOIN filtered_ways fw "
 			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
 
-	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level z LEFT OUTER JOIN "
+	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level_high z LEFT OUTER JOIN "
 			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles pt JOIN filtered_pois fp ON (pt.poi_id = fp.poi_id) "
 			+ "WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
-	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level z LEFT OUTER JOIN "
+	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level_high z LEFT OUTER JOIN "
 			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles wt JOIN filtered_ways fw ON (wt.way_id = fw.way_id) "
 			+ "WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
 
@@ -68,10 +93,23 @@ public class BinaryFileWriter {
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM filtered_ways fw JOIN ways_to_tiles wtt ON (fw.way_id = wtt.way_id) "
 			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
+
 	private final String SQL_GET_WAYNODES = "SELECT latitude,longitude FROM waynodes WHERE way_id = ? ORDER BY waynode_sequence";
 	private final String SQL_GET_INNER_WAY_NODES = "SELECT latitude,longitude FROM multipolygons WHERE outer_way_id = ? AND inner_way_sequence = ? order by waynode_sequence";
 
 	// prepared statements
+	private PreparedStatement pstmtPoisCountMinZoomLow;
+	private PreparedStatement pstmtWaysCountMinZoomLow;
+
+	private PreparedStatement pstmtPoisCountMaxZoomLow;
+	private PreparedStatement pstmtWaysCountMaxZoomLow;
+
+	private PreparedStatement pstmtPoisZoomTableLow;
+	private PreparedStatement pstmtWaysZoomTableLow;
+
+	private PreparedStatement pstmtPoisForTileLow;
+	private PreparedStatement pstmtWaysForTileLow;
+
 	private PreparedStatement pstmtPoisCountMinZoom;
 	private PreparedStatement pstmtWaysCountMinZoom;
 
@@ -105,15 +143,22 @@ public class BinaryFileWriter {
 	private ResultSet rsWaynodes;
 	private ResultSet rsMultipolygons;
 
-	private Tile upperLeft;
-	private Tile bottomRight;
+	private Tile upperLeftHigh;
+	private Tile bottomRightHigh;
+
+	private Tile upperLeftLow;
+	private Tile bottomRightLow;
 
 	private static String propertiesFile;
 	private static String targetFile;
 
 	private static String mapFileComment = "";
 
-	private short zoom_level;
+	// TODO: make sub file amount flexible
+	private static short fileAmount;
+
+	private short zoom_level_low;
+	private short zoom_level_high;
 
 	private Connection conn;
 
@@ -126,6 +171,8 @@ public class BinaryFileWriter {
 
 	private static short minZoom;
 	private static short maxZoom;
+	private static short minZoomLow;
+	private static short maxZoomLow;
 
 	// bitmap flags for pois and ways
 	private static final short BITMAP_NAME = 128;
@@ -154,7 +201,21 @@ public class BinaryFileWriter {
 
 	long previousTilePosition = 0;
 
-	public BinaryFileWriter(String propertiesFile) {
+	private long startLowerZoom;
+	private long startHigherZoom;
+
+	private long subFileSizeLowZoom;
+	private long subFileSizeHighZoom;
+
+	private long endLowerZoom;
+	private long endHigherZoom;
+
+	private long startPosition;
+	private byte[] startPositionInFiveBytes;
+
+	private int biggestTileSize = 0;
+
+	BinaryFileWriter(String propertiesFile) {
 		try {
 			startTime = System.currentTimeMillis();
 
@@ -164,12 +225,21 @@ public class BinaryFileWriter {
 			DBConnection dbConnection = new DBConnection(propertiesFile);
 			conn = dbConnection.getConnection();
 
-			conn.setAutoCommit(false);
+			pstmtPoisCountMinZoomLow = conn
+					.prepareStatement(SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM);
+			pstmtWaysCountMinZoomLow = conn
+					.prepareStatement(SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM);
 
-			// conn.createStatement().execute("TRUNCATE TABLE filtered_pois CASCADE");
-			// conn.createStatement().execute("TRUNCATE TABLE filtered_ways CASCADE");
+			pstmtPoisCountMaxZoomLow = conn
+					.prepareStatement(SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM);
+			pstmtWaysCountMaxZoomLow = conn
+					.prepareStatement(SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM);
 
-			// conn.commit();
+			pstmtPoisZoomTableLow = conn.prepareStatement(SQL_GET_ZOOM_TABLE_FOR_POIS_LOW_ZOOM);
+			pstmtWaysZoomTableLow = conn.prepareStatement(SQL_GET_ZOOM_TABLE_FOR_WAYS_LOW_ZOOM);
+
+			pstmtPoisForTileLow = conn.prepareStatement(SQL_GET_POIS_FOR_TILE_LOW_ZOOM);
+			pstmtWaysForTileLow = conn.prepareStatement(SQL_GET_WAYS_FOR_TILE_LOW_ZOOM);
 
 			pstmtPoisCountMinZoom = conn.prepareStatement(SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS);
 			pstmtWaysCountMinZoom = conn.prepareStatement(SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS);
@@ -203,7 +273,72 @@ public class BinaryFileWriter {
 			conn.close();
 	}
 
-	private void writeHeaderAndIndex() {
+	private void writeBinaryFile() {
+		try {
+			writeHeaderForWholeFile();
+
+			// begin of the part for lower zoom level
+			startPosition = raf.getFilePointer();
+			startPositionInFiveBytes = Serializer.getFiveBytes(startPosition);
+			raf.seek(startLowerZoom);
+			for (byte b : startPositionInFiveBytes) {
+				raf.writeByte(b);
+			}
+			raf.seek(startPosition);
+
+			minZoom = (short) (upperLeftLow.zoomLevel - 2);
+			maxZoom = (short) (upperLeftLow.zoomLevel + 3);
+			System.out.println("min & maxzoom: " + minZoom + " " + maxZoom);
+			writeHeaderAndIndex(upperLeftLow, bottomRightLow);
+			writeTiles(upperLeftLow, bottomRightLow, true);
+
+			endLowerZoom = raf.getFilePointer();
+			raf.seek(subFileSizeLowZoom);
+			long difference = endLowerZoom - startPosition;
+			byte[] differenceInFiveBytes = Serializer.getFiveBytes(difference);
+			for (byte b : differenceInFiveBytes) {
+				raf.writeByte(b);
+			}
+			raf.seek(endLowerZoom);
+
+			// begin of the part for higher zoom level
+			startPosition = raf.getFilePointer();
+			startPositionInFiveBytes = Serializer.getFiveBytes(startPosition);
+			raf.seek(startHigherZoom);
+			for (byte b : startPositionInFiveBytes) {
+				raf.writeByte(b);
+			}
+			raf.seek(startPosition);
+
+			minZoom = (short) (upperLeftHigh.zoomLevel - 2);
+			maxZoom = (short) (upperLeftHigh.zoomLevel + 3);
+			System.out.println("min & maxzoom: " + minZoom + " " + maxZoom);
+			writeHeaderAndIndex(upperLeftHigh, bottomRightHigh);
+			writeTiles(upperLeftHigh, bottomRightHigh, false);
+
+			endHigherZoom = raf.getFilePointer();
+			raf.seek(subFileSizeHighZoom);
+			difference = endHigherZoom - startPosition;
+			differenceInFiveBytes = Serializer.getFiveBytes(difference);
+			for (byte b : differenceInFiveBytes) {
+				raf.writeByte(b);
+			}
+			raf.seek(endHigherZoom);
+
+			long currentPosition = raf.getFilePointer();
+			raf.seek(biggestTileSizePosition);
+			logger.info("biggest tile is written to: " + raf.getFilePointer());
+			logger.info("biggest tile size: " + biggestTileSize);
+			raf.writeInt(biggestTileSize);
+			logger.info("biggest tile is written to file " + raf.getFilePointer());
+			raf.seek(currentPosition);
+			logger.info("end of file: " + raf.getFilePointer());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void writeHeaderForWholeFile() {
 		try {
 			int maxlat = -1;
 			int minlon = -1;
@@ -227,27 +362,35 @@ public class BinaryFileWriter {
 				maxlon = rsBBoxCorners.getInt("maxlon");
 				date = rsBBoxCorners.getLong("date");
 				version = rsBBoxCorners.getInt("import_version");
-				zoom_level = rsBBoxCorners.getShort("zoom");
+				zoom_level_high = rsBBoxCorners.getShort("zoom");
+				zoom_level_low = rsBBoxCorners.getShort("zoom_low");
 				tilePixel = rsBBoxCorners.getShort("tile_size");
 				minZoom = rsBBoxCorners.getShort("min_zoom_level");
 				maxZoom = rsBBoxCorners.getShort("max_zoom_level");
-
-				// *** TEMP ***//
-
-				minZoom = (short) (zoom_level - 2);
-				maxZoom = (short) (zoom_level + 2);
+				minZoomLow = rsBBoxCorners.getShort("min_zoom_level_low");
+				maxZoomLow = rsBBoxCorners.getShort("max_zoom_level_low");
 
 				// *** TEMP ***//
 
 				// calculate corner tiles of the bounding box of the given area
-				upperLeft = new Tile(MercatorProjection.longitudeToTileX(
-						(double) minlon / 1000000, (byte) zoom_level), MercatorProjection
-						.latitudeToTileY((double) maxlat / 1000000, (byte) zoom_level),
-						(byte) zoom_level);
-				bottomRight = new Tile(MercatorProjection.longitudeToTileX(
-						(double) maxlon / 1000000, (byte) zoom_level), MercatorProjection
-						.latitudeToTileY((double) minlat / 1000000, (byte) zoom_level),
-						(byte) zoom_level);
+				upperLeftHigh = new Tile(MercatorProjection.longitudeToTileX(
+						(double) minlon / 1000000, (byte) zoom_level_high), MercatorProjection
+						.latitudeToTileY((double) maxlat / 1000000, (byte) zoom_level_high),
+						(byte) zoom_level_high);
+				bottomRightHigh = new Tile(MercatorProjection.longitudeToTileX(
+						(double) maxlon / 1000000, (byte) zoom_level_high), MercatorProjection
+						.latitudeToTileY((double) minlat / 1000000, (byte) zoom_level_high),
+						(byte) zoom_level_high);
+
+				upperLeftLow = new Tile(MercatorProjection.longitudeToTileX(
+						(double) minlon / 1000000, (byte) zoom_level_low), MercatorProjection
+						.latitudeToTileY((double) maxlat / 1000000, (byte) (zoom_level_low)),
+						(byte) (zoom_level_low));
+				bottomRightLow = new Tile(MercatorProjection.longitudeToTileX(
+						(double) maxlon / 1000000, (byte) zoom_level_low), MercatorProjection
+						.latitudeToTileY((double) minlat / 1000000, (byte) (zoom_level_low)),
+						(byte) (zoom_level_low));
+
 			}
 
 			logger.info("writing header");
@@ -261,17 +404,11 @@ public class BinaryFileWriter {
 			// version number of the binary file format
 			raf.writeInt(version);
 
-			// basic zoom level
-			raf.writeByte(zoom_level);
+			// amount of map files inside this file
+			raf.writeByte(2);
 
 			// width and height of a tile in pixel
 			raf.writeShort(tilePixel);
-
-			// minimal zoom level
-			raf.writeByte((byte) minZoom);
-
-			// maximal zoom level
-			raf.writeByte((byte) maxZoom);
 
 			// upper left corner of the bounding box
 			raf.writeInt(maxlat);
@@ -288,10 +425,7 @@ public class BinaryFileWriter {
 			biggestTileSizePosition = raf.getFilePointer();
 			logger.info("position of the value for the biggest tile: "
 					+ biggestTileSizePosition);
-			raf.seek(biggestTileSizePosition + 5);
-			/** test **/
-			// raf.writeInt(20000);
-			/** test **/
+			raf.seek(biggestTileSizePosition + 4);
 
 			// comment
 			if (!comment.equals("")) {
@@ -300,21 +434,70 @@ public class BinaryFileWriter {
 				raf.writeUTF("no comment");
 			}
 
-			// zoom_level = (short) ((maxZoom - minZoom) + 1);
+			// basic zoom level (low)
+			raf.writeByte(zoom_level_low);
+			// minimal zoom level
+			raf.writeByte((byte) minZoomLow);
+			// maximal zoom level
+			raf.writeByte((byte) maxZoomLow);
+			// position of the begin of the index for the lower zoom level data is stored here
+			startLowerZoom = raf.getFilePointer();
+			raf.seek(raf.getFilePointer() + 5);
+			subFileSizeLowZoom = raf.getFilePointer();
+			raf.seek(raf.getFilePointer() + 5);
+
+			// basic zoom level (high)
+			raf.writeByte(zoom_level_high);
+			// minimal zoom level
+			// minimal zoom level
+			raf.writeByte((byte) minZoom);
+			// maximal zoom level
+			raf.writeByte((byte) maxZoom);
+			// position of the begin of the index for the higher zoom level data is stored here
+			startHigherZoom = raf.getFilePointer();
+			raf.seek(raf.getFilePointer() + 5);
+			subFileSizeHighZoom = raf.getFilePointer();
+			raf.seek(raf.getFilePointer() + 5);
 
 			// create temporary zoom table
 			conn.createStatement().execute(
-					"CREATE TEMPORARY TABLE zoom_level(zoom_level smallint)");
-			for (short s = (short) (minZoom + 1); s < maxZoom; s++) {
+					"CREATE TEMPORARY TABLE zoom_level_high(zoom_level smallint)");
+			for (short s = (short) (zoom_level_high - 1); s < maxZoom; s++) {
 				conn.createStatement().execute(
-						"INSERT INTO zoom_level (zoom_level) VALUES (" + s + ")");
+						"INSERT INTO zoom_level_high(zoom_level) VALUES (" + s + ")");
 			}
+
+			conn.createStatement().execute(
+					"CREATE TEMPORARY TABLE zoom_level_low(zoom_level smallint)");
+			for (short s = (short) (zoom_level_low - 1); s < maxZoomLow; s++) {
+				conn.createStatement().execute(
+						"INSERT INTO zoom_level_low(zoom_level) VALUES (" + s + ")");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void writeHeaderAndIndex(Tile upperLeft, Tile bottomRight) {
+		try {
+
+			/** only for debug **/
+			// write tile header
+			String indexStart = "+++IndexStart+++";
+			logger.info(indexStart);
+			byte[] stringBytes = indexStart.getBytes();
+			for (byte b : stringBytes) {
+				raf.writeByte(b);
+			}
+			/** only for debug **/
 
 			// write Index
 			logger.info("+++IndexStart+++");
 			logger.info("filepointer " + raf.getFilePointer());
 
-			/** test **/
 			long diffX = (bottomRight.x - upperLeft.x) + 1;
 			long diffY = (bottomRight.y - upperLeft.y) + 1;
 			long tileAmount = diffX * diffY;
@@ -328,15 +511,12 @@ public class BinaryFileWriter {
 			raf.seek(raf.getFilePointer() + bytesForIndex);
 			logger.info("current filepointer " + raf.getFilePointer());
 
-			/** test **/
-		} catch (SQLException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void writeTiles() {
+	private void writeTiles(Tile upperLeft, Tile bottomRight, boolean writeLowerZoomLevel) {
 		try {
 			String tileHead = "###TileStart";
 			String tileTail = "###";
@@ -356,8 +536,6 @@ public class BinaryFileWriter {
 			short cumulatedCounterWays;
 
 			long id;
-			// int latitude;
-			// int longitude;
 			Byte layer;
 			short tagAmount;
 			String tags;
@@ -365,10 +543,8 @@ public class BinaryFileWriter {
 			short nameLength;
 			int elevation;
 			String housenumber;
-			// short zoom;
 			int waynodesAmount;
 			short wayType;
-			// short convexness;
 			int labelPositionLatitude;
 			int labelPositionLongitude;
 			short innerWayAmount;
@@ -382,26 +558,39 @@ public class BinaryFileWriter {
 			long currentPosition;
 			byte[] currentPositionInFiveBytes;
 			long tileDiff;
-			long biggestTileSize = 0;
 
 			boolean hadResult = false;
 
 			String[] tagStrings;
+
+			byte[] stringBytes;
+			int byteArrayLength;
 
 			Map<String, Byte> tagIdsPOIs = TagIdsPOIs.getMap();
 			Map<String, Byte> tagIdsWays = TagIdsWays.getMap();
 
 			int tileCounter = 0;
 
+			long tileStartAdress;
+			int skipTillFirstWay;
+
+			long startOfWay;
+
+			Coordinate[] tileVertices;
+			ArrayList<Coordinate> wayNodes = new ArrayList<Coordinate>();
+
 			for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
 				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
+
+					tileVertices = Utils.getBoundingBox(tileX, tileY, bottomRight.zoomLevel)
+							.getEnvelope().getCoordinates();
+
 					tileCounter++;
 					/** test **/
-					tileStart = tileHead + tileX + tileY + tileTail;
-					logger.info(tileStart);
 					logger.info("before tile:" + raf.getFilePointer());
 					currentPosition = raf.getFilePointer();
-					currentPositionInFiveBytes = Serializer.getFiveBytes(currentPosition);
+					currentPositionInFiveBytes = Serializer.getFiveBytes(currentPosition
+							- startPosition);
 					raf.seek(nextIndexValue);
 					logger.info("nextindexvalue " + nextIndexValue);
 					for (byte b : currentPositionInFiveBytes) {
@@ -417,102 +606,212 @@ public class BinaryFileWriter {
 						// TODO compare last tile also!
 						logger.info("size of the previous tile " + tileDiff);
 						if (tileDiff > biggestTileSize) {
-							biggestTileSize = tileDiff;
+							biggestTileSize = (int) tileDiff;
 						}
 					}
 					previousTilePosition = currentPosition;
 					logger.info("previous tilePosition " + previousTilePosition);
+
+					tileStartAdress = raf.getFilePointer();
+					logger.info("tilestart: " + tileStartAdress);
 					/** test **/
+					/** only for debug **/
+					// write tile header
+					tileStart = tileHead + tileX + "," + tileY + tileTail;
+					logger.info(tileStart);
+
+					stringBytes = tileStart.getBytes();
+					byteArrayLength = stringBytes.length;
+					for (byte b : stringBytes) {
+						raf.writeByte(b);
+					}
+
+					if (byteArrayLength < 32) {
+						while (byteArrayLength < 32) {
+							raf.writeByte(32);
+							byteArrayLength++;
+						}
+					}
+					/** only for debug **/
 
 					logger.info("write element zoom table");
-					poiTableForTile = new TreeMap<Short, Short>();
-					wayTableForTile = new TreeMap<Short, Short>();
+					poiTableForTile = new HashMap<Short, Short>();
+					wayTableForTile = new HashMap<Short, Short>();
 
-					// get amount of pois and ways grouped by zoom level for this certain
-					// tile
-					hadResult = false;
-					pstmtPoisCountMinZoom.setLong(1, tileX);
-					pstmtPoisCountMinZoom.setLong(2, tileY);
-					pstmtPoisCountMinZoom.setShort(3, minZoom);
-					rsPoisMinZoom = pstmtPoisCountMinZoom.executeQuery();
+					if (writeLowerZoomLevel) {
+						// get amount of pois and ways grouped by zoom level for this certain
+						// tile
+						hadResult = false;
+						pstmtPoisCountMinZoomLow.setLong(1, tileX);
+						pstmtPoisCountMinZoomLow.setLong(2, tileY);
+						pstmtPoisCountMinZoomLow.setShort(3, minZoom);
+						rsPoisMinZoom = pstmtPoisCountMinZoomLow.executeQuery();
+						System.out.println("pstmtPoisCountMinZoom " + pstmtPoisCountMinZoomLow);
 
-					while (rsPoisMinZoom.next()) {
-						hadResult = true;
-						poiTableForTile.put(minZoom, rsPoisMinZoom.getShort(1));
+						while (rsPoisMinZoom.next()) {
+							hadResult = true;
+							poiTableForTile.put(minZoom, rsPoisMinZoom.getShort(1));
+
+						}
+						if (!hadResult) {
+							poiTableForTile.put(minZoom, (short) 0);
+						}
+
+						hadResult = false;
+						pstmtWaysCountMinZoomLow.setLong(1, tileX);
+						pstmtWaysCountMinZoomLow.setLong(2, tileY);
+						pstmtWaysCountMinZoomLow.setShort(3, minZoom);
+						rsWaysMinZoom = pstmtWaysCountMinZoomLow.executeQuery();
+						System.out.println(pstmtWaysCountMinZoomLow);
+
+						while (rsWaysMinZoom.next()) {
+							hadResult = true;
+							wayTableForTile.put(minZoom, rsWaysMinZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							wayTableForTile.put(minZoom, (short) 0);
+						}
+
+						pstmtPoisZoomTableLow.setLong(1, tileX);
+						pstmtPoisZoomTableLow.setLong(2, tileY);
+						rsPoisZoomTable = pstmtPoisZoomTableLow.executeQuery();
+						System.out.println(pstmtPoisZoomTableLow);
+
+						// join temporary zoom level table with filtered pois table
+						while (rsPoisZoomTable.next()) {
+							poiTableForTile.put(rsPoisZoomTable.getShort(1), rsPoisZoomTable
+									.getShort(2));
+						}
+
+						pstmtWaysZoomTableLow.setLong(1, tileX);
+						pstmtWaysZoomTableLow.setLong(2, tileY);
+						rsWaysZoomTable = pstmtWaysZoomTableLow.executeQuery();
+						while (rsWaysZoomTable.next()) {
+							wayTableForTile.put(rsWaysZoomTable.getShort(1), rsWaysZoomTable
+									.getShort(2));
+						}
+
+						hadResult = false;
+						pstmtPoisCountMaxZoomLow.setLong(1, tileX);
+						pstmtPoisCountMaxZoomLow.setLong(2, tileY);
+						pstmtPoisCountMaxZoomLow.setShort(3, maxZoom);
+						rsPoisMaxZoom = pstmtPoisCountMaxZoomLow.executeQuery();
+						while (rsPoisMaxZoom.next()) {
+							hadResult = true;
+							poiTableForTile.put(maxZoom, rsPoisMaxZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							poiTableForTile.put(maxZoom, (short) 0);
+						}
+
+						hadResult = false;
+						pstmtWaysCountMaxZoomLow.setLong(1, tileX);
+						pstmtWaysCountMaxZoomLow.setLong(2, tileY);
+						pstmtWaysCountMaxZoomLow.setShort(3, maxZoom);
+						rsWaysMaxZoom = pstmtWaysCountMaxZoomLow.executeQuery();
+
+						while (rsWaysMaxZoom.next()) {
+							hadResult = true;
+							wayTableForTile.put(maxZoom, rsWaysMaxZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							wayTableForTile.put(maxZoom, (short) 0);
+						}
+					} else {
+						// get amount of pois and ways grouped by zoom level for this certain
+						// tile
+						hadResult = false;
+						pstmtPoisCountMinZoom.setLong(1, tileX);
+						pstmtPoisCountMinZoom.setLong(2, tileY);
+						pstmtPoisCountMinZoom.setShort(3, minZoom);
+						rsPoisMinZoom = pstmtPoisCountMinZoom.executeQuery();
+
+						while (rsPoisMinZoom.next()) {
+							hadResult = true;
+							poiTableForTile.put(minZoom, rsPoisMinZoom.getShort(1));
+
+						}
+						if (!hadResult) {
+							poiTableForTile.put(minZoom, (short) 0);
+						}
+
+						hadResult = false;
+						pstmtWaysCountMinZoom.setLong(1, tileX);
+						pstmtWaysCountMinZoom.setLong(2, tileY);
+						pstmtWaysCountMinZoom.setShort(3, minZoom);
+						rsWaysMinZoom = pstmtWaysCountMinZoom.executeQuery();
+
+						while (rsWaysMinZoom.next()) {
+							hadResult = true;
+							wayTableForTile.put(minZoom, rsWaysMinZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							wayTableForTile.put(minZoom, (short) 0);
+						}
+
+						pstmtPoisZoomTable.setLong(1, tileX);
+						pstmtPoisZoomTable.setLong(2, tileY);
+						rsPoisZoomTable = pstmtPoisZoomTable.executeQuery();
+
+						// join temporary zoom level table with filtered pois table
+						while (rsPoisZoomTable.next()) {
+							poiTableForTile.put(rsPoisZoomTable.getShort(1), rsPoisZoomTable
+									.getShort(2));
+						}
+
+						pstmtWaysZoomTable.setLong(1, tileX);
+						pstmtWaysZoomTable.setLong(2, tileY);
+						rsWaysZoomTable = pstmtWaysZoomTable.executeQuery();
+						while (rsWaysZoomTable.next()) {
+							wayTableForTile.put(rsWaysZoomTable.getShort(1), rsWaysZoomTable
+									.getShort(2));
+						}
+
+						hadResult = false;
+						pstmtPoisCountMaxZoom.setLong(1, tileX);
+						pstmtPoisCountMaxZoom.setLong(2, tileY);
+						pstmtPoisCountMaxZoom.setShort(3, maxZoom);
+						rsPoisMaxZoom = pstmtPoisCountMaxZoom.executeQuery();
+						while (rsPoisMaxZoom.next()) {
+							hadResult = true;
+							poiTableForTile.put(maxZoom, rsPoisMaxZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							poiTableForTile.put(maxZoom, (short) 0);
+						}
+
+						hadResult = false;
+						pstmtWaysCountMaxZoom.setLong(1, tileX);
+						pstmtWaysCountMaxZoom.setLong(2, tileY);
+						pstmtWaysCountMaxZoom.setShort(3, maxZoom);
+						rsWaysMaxZoom = pstmtWaysCountMaxZoom.executeQuery();
+
+						while (rsWaysMaxZoom.next()) {
+							hadResult = true;
+							wayTableForTile.put(maxZoom, rsWaysMaxZoom.getShort(1));
+						}
+
+						if (!hadResult) {
+							wayTableForTile.put(maxZoom, (short) 0);
+						}
 					}
-					if (!hadResult) {
-						poiTableForTile.put(minZoom, (short) 0);
-					}
-
-					hadResult = false;
-					pstmtWaysCountMinZoom.setLong(1, tileX);
-					pstmtWaysCountMinZoom.setLong(2, tileY);
-					pstmtWaysCountMinZoom.setShort(3, minZoom);
-					rsWaysMinZoom = pstmtWaysCountMinZoom.executeQuery();
-
-					while (rsWaysMinZoom.next()) {
-						hadResult = true;
-						wayTableForTile.put(minZoom, rsWaysMinZoom.getShort(1));
-					}
-
-					if (!hadResult) {
-						wayTableForTile.put(minZoom, (short) 0);
-					}
-
-					pstmtPoisZoomTable.setLong(1, tileX);
-					pstmtPoisZoomTable.setLong(2, tileY);
-					rsPoisZoomTable = pstmtPoisZoomTable.executeQuery();
-
-					// join temporary zoom level table with filtered pois table
-					while (rsPoisZoomTable.next()) {
-						poiTableForTile.put(rsPoisZoomTable.getShort(1), rsPoisZoomTable
-								.getShort(2));
-					}
-
-					pstmtWaysZoomTable.setLong(1, tileX);
-					pstmtWaysZoomTable.setLong(2, tileY);
-					rsWaysZoomTable = pstmtWaysZoomTable.executeQuery();
-
-					while (rsWaysZoomTable.next()) {
-						wayTableForTile.put(rsWaysZoomTable.getShort(1), rsWaysZoomTable
-								.getShort(2));
-					}
-
-					hadResult = false;
-					pstmtPoisCountMaxZoom.setLong(1, tileX);
-					pstmtPoisCountMaxZoom.setLong(2, tileY);
-					pstmtPoisCountMaxZoom.setShort(3, maxZoom);
-					rsPoisMaxZoom = pstmtPoisCountMaxZoom.executeQuery();
-					while (rsPoisMaxZoom.next()) {
-						hadResult = true;
-						poiTableForTile.put(maxZoom, rsPoisMaxZoom.getShort(1));
-					}
-
-					if (!hadResult) {
-						poiTableForTile.put(maxZoom, (short) 0);
-					}
-
-					hadResult = false;
-					pstmtWaysCountMaxZoom.setLong(1, tileX);
-					pstmtWaysCountMaxZoom.setLong(2, tileY);
-					pstmtWaysCountMaxZoom.setShort(3, maxZoom);
-					rsWaysMaxZoom = pstmtWaysCountMaxZoom.executeQuery();
-
-					while (rsWaysMaxZoom.next()) {
-						hadResult = true;
-						wayTableForTile.put(maxZoom, rsWaysMaxZoom.getShort(1));
-					}
-
-					if (!hadResult) {
-						wayTableForTile.put(maxZoom, (short) 0);
-					}
-
 					// cumulate the amount of pois and ways
 					cumulatedCounterPois = 0;
 					cumulatedCounterWays = 0;
 					for (short min = minZoom; min <= maxZoom; min++) {
-						cumulatedCounterPois += poiTableForTile.get(min);
-						cumulatedCounterWays += wayTableForTile.get(min);
+
+						short pc = poiTableForTile.get(min);
+						short wc = wayTableForTile.get(min);
+						cumulatedCounterPois += pc;
+						cumulatedCounterWays += wc;
+
+						logger.info("table:  " + min + " " + cumulatedCounterPois + " "
+								+ cumulatedCounterWays);
 
 						// write amount of pois and ways which should be read for a certain
 						// zoom level
@@ -521,17 +820,45 @@ public class BinaryFileWriter {
 					}
 
 					// get pointer to first way in this tile
+					logger.info("firstWayInTile: " + raf.getFilePointer());
 					firstWayInTile = raf.getFilePointer();
-					raf.seek(firstWayInTile + 8);
+					raf.seek(firstWayInTile + 4);
 
-					pstmtPoisForTile.setLong(1, tileX);
-					pstmtPoisForTile.setLong(2, tileY);
+					if (writeLowerZoomLevel) {
+						pstmtPoisForTileLow.setLong(1, tileX);
+						pstmtPoisForTileLow.setLong(2, tileY);
 
-					// get all pois for this tile ordered by zoom level
-					rsPoisForTile = pstmtPoisForTile.executeQuery();
+						// get all pois for this tile ordered by zoom level
+						rsPoisForTile = pstmtPoisForTileLow.executeQuery();
+
+					} else {
+						pstmtPoisForTile.setLong(1, tileX);
+						pstmtPoisForTile.setLong(2, tileY);
+
+						// get all pois for this tile ordered by zoom level
+						rsPoisForTile = pstmtPoisForTile.executeQuery();
+					}
 					while (rsPoisForTile.next()) {
 						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
 						logger.info(poiStart);
+
+						/** only for debug **/
+						// write debug string
+						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
+						logger.info(poiStart);
+						stringBytes = poiStart.getBytes();
+						byteArrayLength = stringBytes.length;
+						for (byte b : stringBytes) {
+							raf.writeByte(b);
+						}
+						// if string is not 32 byte long append whitespaces, byte value = 32
+						if (byteArrayLength < 32) {
+							while (byteArrayLength < 32) {
+								raf.writeByte(32);
+								byteArrayLength++;
+							}
+						}
+						/** only for debug **/
 
 						// write poi features to the file
 						raf.writeInt(rsPoisForTile.getInt("latitude"));
@@ -546,7 +873,7 @@ public class BinaryFileWriter {
 						// zoom = rsPoisForTile.getShort("zoom_level");
 
 						/** debug **/
-						logger.info("hausnumber: " + housenumber + " length: "
+						logger.info("housenumber: " + housenumber + " length: "
 								+ housenumber.getBytes().length);
 						logger.info("name: " + name + " length: " + nameLength);
 						logger.info("elevation: " + elevation);
@@ -595,18 +922,49 @@ public class BinaryFileWriter {
 					// write position of the first way in the tile
 					currentPosition = raf.getFilePointer();
 					raf.seek(firstWayInTile);
-					raf.writeLong(currentPosition);
+					logger.info("current: " + currentPosition + " start: " + tileStartAdress);
+					skipTillFirstWay = (int) (currentPosition - tileStartAdress);
+					logger.info("skipTillFirstWay: " + skipTillFirstWay);
+					raf.writeInt(skipTillFirstWay);
 					raf.seek(currentPosition);
 
-					// get ways
-					pstmtWaysForTile.setLong(1, tileX);
-					pstmtWaysForTile.setLong(2, tileY);
+					if (writeLowerZoomLevel) {
+						// get ways
+						pstmtWaysForTileLow.setLong(1, tileX);
+						pstmtWaysForTileLow.setLong(2, tileY);
 
-					// get all ways for this tile ordered by zoom level
-					rsWaysForTile = pstmtWaysForTile.executeQuery();
+						// get all ways for this tile ordered by zoom level
+						rsWaysForTile = pstmtWaysForTileLow.executeQuery();
+					} else {
+						// get ways
+						pstmtWaysForTile.setLong(1, tileX);
+						pstmtWaysForTile.setLong(2, tileY);
+
+						// get all ways for this tile ordered by zoom level
+						rsWaysForTile = pstmtWaysForTile.executeQuery();
+					}
 					while (rsWaysForTile.next()) {
 						id = rsWaysForTile.getLong("id");
 						wayStart = waysHead + id + waysTail;
+						startOfWay = raf.getFilePointer();
+						/** only for debug **/
+						// write debug string
+						wayStart = waysHead + id + waysTail;
+						logger.info(wayStart);
+						stringBytes = wayStart.getBytes();
+						byteArrayLength = stringBytes.length;
+						for (byte b : stringBytes) {
+							raf.writeByte(b);
+						}
+						// if string is not 32 byte long append whitespaces, byte value = 32
+						if (byteArrayLength < 32) {
+							while (byteArrayLength < 32) {
+								raf.writeByte(32);
+								byteArrayLength++;
+							}
+						}
+						/** only for debug **/
+
 						logger.info(wayStart);
 
 						nameLength = rsWaysForTile.getShort("name_length");
@@ -620,7 +978,6 @@ public class BinaryFileWriter {
 						labelPositionLongitude = rsWaysForTile.getInt("label_pos_lon");
 						innerWayAmount = rsWaysForTile.getShort("inner_way_amount");
 						tileBitmask = rsWaysForTile.getShort("tile_bitmask");
-						// waySize = rsWaysForTile.getInt("size");
 
 						tagStrings = tags.split("\n");
 
@@ -629,7 +986,6 @@ public class BinaryFileWriter {
 						logger.info("waySizePosition: " + waySizePosition);
 						raf.seek(waySizePosition + 4);
 						logger.info("position after waysize: " + raf.getFilePointer());
-						// raf.writeInt(waySize);
 						raf.writeShort(tileBitmask);
 
 						// write byte with layer and tag amount
@@ -646,14 +1002,42 @@ public class BinaryFileWriter {
 							raf.writeByte(tagIdsWays.get(tag));
 						}
 
-						// write way nodes
-						raf.writeShort(waynodesAmount);
+						// TODO: clip only polygons without name!
+						if (wayType < 2 || waynodesAmount < 4) {
+							// write way nodes
+							raf.writeShort(waynodesAmount);
 
-						pstmtWaynodes.setLong(1, id);
-						rsWaynodes = pstmtWaynodes.executeQuery();
-						while (rsWaynodes.next()) {
-							raf.writeInt(rsWaynodes.getInt("latitude"));
-							raf.writeInt(rsWaynodes.getInt("longitude"));
+							pstmtWaynodes.setLong(1, id);
+							rsWaynodes = pstmtWaynodes.executeQuery();
+							while (rsWaynodes.next()) {
+								raf.writeInt(rsWaynodes.getInt("latitude"));
+								raf.writeInt(rsWaynodes.getInt("longitude"));
+							}
+						} else {
+							// polygon clipping
+							wayNodes.clear();
+							pstmtWaynodes.setLong(1, id);
+							rsWaynodes = pstmtWaynodes.executeQuery();
+							while (rsWaynodes.next()) {
+								int lat = rsWaynodes.getInt("latitude");
+								int lon = rsWaynodes.getInt("longitude");
+								double la = (double) lat / 1000000;
+								double lo = (double) lon / 1000000;
+								wayNodes.add(new Coordinate(la, lo));
+							}
+
+							for (int t = 0; t < tileVertices.length - 1; t++) {
+								wayNodes = Utils.clipPolygonToTile(tileVertices[t],
+										tileVertices[t + 1], wayNodes);
+							}
+
+							raf.writeShort(wayNodes.size());
+
+							for (Coordinate c : wayNodes) {
+								raf.writeInt((int) (c.x * 1000000));
+								raf.writeInt((int) (c.y * 1000000));
+							}
+
 						}
 
 						// write byte with name, label and way type information
@@ -701,7 +1085,7 @@ public class BinaryFileWriter {
 								+ raf.getFilePointer());
 						raf.seek(waySizePosition);
 						logger.info("waysizeposition " + raf.getFilePointer());
-						raf.writeInt((int) (currentPosition - waySizePosition - 4));
+						raf.writeInt((int) (currentPosition - startOfWay));
 						raf.seek(currentPosition);
 						logger.info("end of way: " + raf.getFilePointer());
 					}
@@ -713,17 +1097,8 @@ public class BinaryFileWriter {
 			// compare size of last tile in file with the size of the biggest tile
 			tileDiff = raf.getFilePointer() - previousTilePosition;
 			if (tileDiff > biggestTileSize) {
-				biggestTileSize = tileDiff;
+				biggestTileSize = (int) tileDiff;
 			}
-			raf.seek(biggestTileSizePosition);
-			logger.info("biggest tile is written to: " + raf.getFilePointer());
-			byte[] biggestTileInFiveBytes = Serializer.getFiveBytes(biggestTileSize);
-			for (byte b : biggestTileInFiveBytes) {
-				raf.writeByte(b);
-			}
-			logger.info("biggest tile is written to file " + raf.getFilePointer());
-			raf.seek(currentPosition);
-			logger.info("end of file: " + raf.getFilePointer());
 
 			logger.info("total number of " + tileCounter + " tiles");
 			logger.info("binary map data file created");
@@ -871,18 +1246,26 @@ public class BinaryFileWriter {
 		return infoByte;
 	}
 
+	/**
+	 * The main method to start the writing of a map data file.
+	 * 
+	 * @param args
+	 *            command line arguments
+	 * 
+	 */
 	public static void main(String[] args) {
-		if (args.length < 2 || args.length > 3) {
+		if (args.length < 2 || args.length > 4) {
 			System.err
-					.println("usage: BinaryFileWriter <properties-file> <target-file> (optional: <comment>)");
+					.println("usage: BinaryFileWriter <properties-file> <target-file> <amount-of-sub-files> (optional: <comment>)");
 			System.exit(1);
 		}
 
 		propertiesFile = args[0];
 		targetFile = args[1];
+		fileAmount = Short.parseShort(args[2]);
 
-		if (args.length == 3) {
-			mapFileComment = args[2];
+		if (args.length == 4) {
+			mapFileComment = args[3];
 		}
 
 		try {
@@ -890,8 +1273,7 @@ public class BinaryFileWriter {
 			raf = new RandomAccessFile(targetFile, "rw");
 
 			BinaryFileWriter bfw = new BinaryFileWriter(propertiesFile);
-			bfw.writeHeaderAndIndex();
-			bfw.writeTiles();
+			bfw.writeBinaryFile();
 
 			logger.info("processing took " + (System.currentTimeMillis() - startTime) / 1000
 					+ "s.");
