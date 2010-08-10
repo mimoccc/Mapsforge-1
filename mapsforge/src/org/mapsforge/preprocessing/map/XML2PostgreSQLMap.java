@@ -328,21 +328,19 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 		try {
 			// write metadata into the database
-
-			// TODO min and max zoom for lower zoom level
 			pstmtMetadata.setInt(1, maxlat);
 			pstmtMetadata.setInt(2, minlon);
 			pstmtMetadata.setInt(3, minlat);
 			pstmtMetadata.setInt(4, maxlon);
 			pstmtMetadata.setLong(5, DATE);
 			pstmtMetadata.setInt(6, VERSION);
-			pstmtMetadata.setShort(7, zoom_low);
-			pstmtMetadata.setShort(8, zoom_high);
+			pstmtMetadata.setShort(7, zoom_high);
+			pstmtMetadata.setShort(8, zoom_low);
 			pstmtMetadata.setInt(9, Tile.TILE_SIZE);
 			pstmtMetadata.setShort(10, minZoomHigh);
 			pstmtMetadata.setShort(11, maxZoomHigh);
-			pstmtMetadata.setShort(10, minZoomLow);
-			pstmtMetadata.setShort(11, maxZoomLow);
+			pstmtMetadata.setShort(12, minZoomLow);
+			pstmtMetadata.setShort(13, maxZoomLow);
 			pstmtMetadata.execute();
 
 			logger.info("metadata inserted");
