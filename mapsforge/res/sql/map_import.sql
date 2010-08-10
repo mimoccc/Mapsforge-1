@@ -49,7 +49,7 @@ CREATE TABLE metadata (
     zoom_low smallint,
     tile_size smallint,
     min_zoom_level smallint,
-    max_zoom_level smallint
+    max_zoom_level smallint,
     min_zoom_level_low smallint,
     max_zoom_level_low smallint
 );
