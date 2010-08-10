@@ -17,25 +17,41 @@
 package org.mapsforge.android.map;
 
 /**
- * A container class that holds all rendering parameters for a single map image.
+ * A container class that holds all immutable rendering parameters for a single map image
+ * together with a priority field, which indicates the importance of this task.
  */
 class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	private final int hashCode;
-	private final String mapFile;
-	private final MapViewMode mapViewMode;
 	private MapGeneratorJob other;
-	private final Tile tile;
+	final boolean drawTileFrames;
+	final String mapFile;
+	final MapViewMode mapViewMode;
+	int priority;
+	final Tile tile;
 
-	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile) {
+	/**
+	 * Creates a new job for the MapGenerator with the given parameters.
+	 * 
+	 * @param tile
+	 *            the tile to be generated.
+	 * @param mapViewMode
+	 *            the operation mode.
+	 * @param mapFile
+	 *            the map file.
+	 * @param drawTileFrames
+	 *            flag to enable tile frames.
+	 */
+	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, boolean drawTileFrames) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
+		this.drawTileFrames = drawTileFrames;
 		this.hashCode = calculateHashCode();
 	}
 
 	@Override
-	public int compareTo(MapGeneratorJob arg0) {
-		return 0;
+	public int compareTo(MapGeneratorJob another) {
+		return this.priority - another.priority;
 	}
 
 	@Override
@@ -51,6 +67,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 			} else if (this.mapViewMode != this.other.mapViewMode) {
 				return false;
 			} else if (!this.mapFile.equals(this.other.mapFile)) {
+				return false;
+			} else if (this.drawTileFrames != this.other.drawTileFrames) {
 				return false;
 			}
 			return true;
@@ -70,10 +88,11 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	private int calculateHashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = prime * result + ((this.tile == null) ? 0 : this.tile.hashCode());
 		result = prime * result
 				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
-		result = prime * result + ((this.tile == null) ? 0 : this.tile.hashCode());
+		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
 		return result;
 	}
 }

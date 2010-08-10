@@ -35,11 +35,12 @@ class ImageFileCache {
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
+	private int cacheId;
 	private int capacity;
 	private FileInputStream fileInputStream;
 	private FileOutputStream fileOutputStream;
 	private File imageFile;
-	private LinkedHashMap<Tile, File> map;
+	private LinkedHashMap<MapGeneratorJob, File> map;
 	private final File tempDir;
 
 	/**
@@ -76,13 +77,13 @@ class ImageFileCache {
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
-	private LinkedHashMap<Tile, File> createMap(final int initialCapacity) {
-		return new LinkedHashMap<Tile, File>((int) (initialCapacity / LOAD_FACTOR) + 2,
-				LOAD_FACTOR, true) {
+	private LinkedHashMap<MapGeneratorJob, File> createMap(final int initialCapacity) {
+		return new LinkedHashMap<MapGeneratorJob, File>(
+				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<Tile, File> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, File> eldest) {
 				if (size() > initialCapacity) {
 					// remove the entry from the cache and delete the cached file
 					this.remove(eldest.getKey());
@@ -95,8 +96,8 @@ class ImageFileCache {
 		};
 	}
 
-	synchronized boolean containsKey(Tile tile) {
-		return this.map.containsKey(tile);
+	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
+		return this.map.containsKey(mapGeneratorJob);
 	}
 
 	/**
@@ -121,9 +122,9 @@ class ImageFileCache {
 		}
 	}
 
-	synchronized void get(Tile tile, ByteBuffer buffer) {
+	synchronized void get(MapGeneratorJob mapGeneratorJob, ByteBuffer buffer) {
 		try {
-			this.fileInputStream = new FileInputStream(this.map.get(tile));
+			this.fileInputStream = new FileInputStream(this.map.get(mapGeneratorJob));
 			if (this.fileInputStream.read(buffer.array()) == buffer.array().length) {
 				// the complete bitmap has been read successfully
 				buffer.rewind();
@@ -134,19 +135,18 @@ class ImageFileCache {
 		}
 	}
 
-	synchronized void put(Tile tile, Bitmap bitmap) {
+	synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
 			// write the image to a temporary file
 			try {
 				bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 				this.bitmapBuffer.rewind();
-				this.imageFile = new File(this.tempDir, tile.zoomLevel + "_" + tile.x + "_"
-						+ tile.y + ".tile");
+				this.imageFile = new File(this.tempDir, ++cacheId + ".tile");
 				this.fileOutputStream = new FileOutputStream(this.imageFile, false);
 				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
 						.array().length);
 				this.fileOutputStream.close();
-				this.map.put(tile, this.imageFile);
+				this.map.put(mapGeneratorJob, this.imageFile);
 			} catch (IOException e) {
 				Logger.e(e);
 			}
@@ -162,10 +162,10 @@ class ImageFileCache {
 	synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
 		// create a new map with the new capacity
-		LinkedHashMap<Tile, File> newMap = createMap(this.capacity);
+		LinkedHashMap<MapGeneratorJob, File> newMap = createMap(this.capacity);
 
 		// put all entries from the old map in the new one.
-		for (Map.Entry<Tile, File> entry : this.map.entrySet()) {
+		for (Map.Entry<MapGeneratorJob, File> entry : this.map.entrySet()) {
 			newMap.put(entry.getKey(), entry.getValue());
 		}
 		this.map = newMap;

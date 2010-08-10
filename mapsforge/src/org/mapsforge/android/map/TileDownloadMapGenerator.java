@@ -48,13 +48,13 @@ class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
-	boolean generateTile(Tile tile) {
+	boolean executeJob(MapGeneratorJob mapGeneratorJob) {
 		// build the relative path to the tile
-		this.stringBuilder.append(tile.zoomLevel);
+		this.stringBuilder.append(mapGeneratorJob.tile.zoomLevel);
 		this.stringBuilder.append("/");
-		this.stringBuilder.append(tile.x);
+		this.stringBuilder.append(mapGeneratorJob.tile.x);
 		this.stringBuilder.append("/");
-		this.stringBuilder.append(tile.y);
+		this.stringBuilder.append(mapGeneratorJob.tile.y);
 		this.stringBuilder.append(".png");
 		try {
 			// read the data from the assembled URL

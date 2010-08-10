@@ -45,7 +45,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_RAILWAY = 0x40;
 	private static final short BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
-	private static final boolean DRAW_TILE_FRAMES = false;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -220,6 +219,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
+
 	private ArrayList<Point> additionalCoastlinePoints;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
@@ -246,6 +246,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private MapDatabase database;
 	private float distanceX;
 	private float distanceY;
+	private EndPoints endPoints;
+	private HashSet<EndPoints> handledCoastlineSegments;
 	private Point[] helperPoints;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
@@ -269,8 +271,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
-	private HashSet<EndPoints> handledCoastlineSegments;
-	private EndPoints endPoints;
 
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
@@ -278,7 +278,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param wayName
 	 *            the name of the area.
 	 * @param nameColor
-	 *            the area name color mode.
+	 *            the area name colour mode.
 	 * @param nameOffset
 	 *            the vertical offset from the area center.
 	 */
@@ -1505,27 +1505,23 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	abstract void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays,
 			byte layers, byte levelsPerLayer);
 
-	/**
-	 * This method is called after all map objects have been rendered.
-	 */
-	abstract void finishMapGeneration();
-
 	@Override
-	final boolean generateTile(Tile tile) {
-		this.currentTile = tile;
+	final boolean executeJob(MapGeneratorJob mapGeneratorJob) {
+		this.currentTile = mapGeneratorJob.tile;
 		// check if the paint1 parameters need to be set again
-		if (tile.zoomLevel != this.lastTileZoomLevel) {
-			setPaintParameters(tile.zoomLevel);
-			this.lastTileZoomLevel = tile.zoomLevel;
+		if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
+			setPaintParameters(this.currentTile.zoomLevel);
+			this.lastTileZoomLevel = this.currentTile.zoomLevel;
 		}
 
-		this.database.executeQuery(tile, tile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
+		this.database.executeQuery(this.currentTile,
+				this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
 		if (isInterrupted()) {
 			return false;
 		}
 		addCoastlines();
 
-		// erase the tileBitmap with the default color
+		// erase the tileBitmap with the default colour
 		this.tileBitmap.eraseColor(TILE_BACKGROUND);
 
 		// draw all map objects
@@ -1543,14 +1539,18 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 		drawNodes(this.nodes);
 
-		if (DRAW_TILE_FRAMES) {
-			// draw tile frames
+		if (mapGeneratorJob.drawTileFrames) {
 			drawTileFrame();
 		}
 
 		finishMapGeneration();
 		return true;
 	}
+
+	/**
+	 * This method is called after all map objects have been rendered.
+	 */
+	abstract void finishMapGeneration();
 
 	@Override
 	final GeoPoint getDefaultStartPoint() {

@@ -26,6 +26,7 @@ class MapFile {
 	private static final double COORDINATES_DIVISOR = 1000000.0;
 
 	final byte baseZoomLevel;
+	final int blockEntriesTableSize;
 	final long blocksHeight;
 	final long blocksWidth;
 	final long boundaryBottomTile;
@@ -35,7 +36,6 @@ class MapFile {
 	final long indexStartAddress;
 	final long mapFileSize;
 	final long numberOfBlocks;
-	final int blockEntriesTableSize;
 	final byte zoomLevelMax;
 	final byte zoomLevelMin;
 

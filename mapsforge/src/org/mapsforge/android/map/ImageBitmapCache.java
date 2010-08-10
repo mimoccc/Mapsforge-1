@@ -33,7 +33,7 @@ class ImageBitmapCache {
 	private static final float LOAD_FACTOR = 0.6f;
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
-	private LinkedHashMap<Tile, Bitmap> map;
+	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
 	private Bitmap tempBitmap;
 	final LinkedList<Bitmap> bitmapPool;
 
@@ -60,13 +60,13 @@ class ImageBitmapCache {
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
-	private LinkedHashMap<Tile, Bitmap> createMap(final int initialCapacity) {
-		return new LinkedHashMap<Tile, Bitmap>((int) (initialCapacity / LOAD_FACTOR) + 2,
-				LOAD_FACTOR, true) {
+	private LinkedHashMap<MapGeneratorJob, Bitmap> createMap(final int initialCapacity) {
+		return new LinkedHashMap<MapGeneratorJob, Bitmap>(
+				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<Tile, Bitmap> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
 					ImageBitmapCache.this.bitmapPool.add(eldest.getValue());
@@ -76,8 +76,8 @@ class ImageBitmapCache {
 		};
 	}
 
-	synchronized boolean containsKey(Tile tile) {
-		return this.map.containsKey(tile);
+	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
+		return this.map.containsKey(mapGeneratorJob);
 	}
 
 	/**
@@ -96,13 +96,13 @@ class ImageBitmapCache {
 		}
 	}
 
-	synchronized Bitmap get(Tile tile) {
-		return this.map.get(tile);
+	synchronized Bitmap get(MapGeneratorJob mapGeneratorJob) {
+		return this.map.get(mapGeneratorJob);
 	}
 
-	synchronized void put(Tile tile, Bitmap bitmap) {
+	synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
-			if (this.map.get(tile) != null) {
+			if (this.map.get(mapGeneratorJob) != null) {
 				// the item is already in the cache
 				return;
 			}
@@ -110,7 +110,7 @@ class ImageBitmapCache {
 			this.bitmapBuffer.rewind();
 			this.tempBitmap = this.bitmapPool.remove();
 			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
-			this.map.put(tile, this.tempBitmap);
+			this.map.put(mapGeneratorJob, this.tempBitmap);
 		}
 	}
 }

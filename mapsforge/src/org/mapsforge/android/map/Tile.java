@@ -16,9 +16,9 @@
  */
 package org.mapsforge.android.map;
 
-class Tile implements Comparable<Tile> {
+class Tile {
 	/**
-	 * Amount of bytes per pixel of a map tile.
+	 * The amount of bytes per pixel of a map tile.
 	 */
 	static final byte TILE_BYTES_PER_PIXEL = 2;
 
@@ -31,11 +31,11 @@ class Tile implements Comparable<Tile> {
 	 * The size of a single map tile in bytes.
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
+
 	private final int hashCode;
-	final MapViewMode mapViewMode;
+	private Tile other;
 	final long pixelX;
 	final long pixelY;
-	int renderPriority;
 	final long x;
 	final long y;
 	final byte zoomLevel;
@@ -49,23 +49,14 @@ class Tile implements Comparable<Tile> {
 	 *            the Y number of the tile.
 	 * @param zoomLevel
 	 *            the zoom level of the tile.
-	 * @param mapViewMode
-	 *            the map view mode.
 	 */
-	Tile(long x, long y, byte zoomLevel, MapViewMode mapViewMode) {
+	Tile(long x, long y, byte zoomLevel) {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;
-		this.mapViewMode = mapViewMode;
 		this.hashCode = calculateHashCode();
 		this.pixelX = x * TILE_SIZE;
 		this.pixelY = y * TILE_SIZE;
-		this.renderPriority = Integer.MAX_VALUE;
-	}
-
-	@Override
-	public int compareTo(Tile another) {
-		return this.renderPriority - another.renderPriority;
 	}
 
 	@Override
@@ -75,14 +66,12 @@ class Tile implements Comparable<Tile> {
 		} else if (!(obj instanceof Tile)) {
 			return false;
 		} else {
-			Tile other = (Tile) obj;
-			if (this.x != other.x) {
+			this.other = (Tile) obj;
+			if (this.x != this.other.x) {
 				return false;
-			} else if (this.y != other.y) {
+			} else if (this.y != this.other.y) {
 				return false;
-			} else if (this.zoomLevel != other.zoomLevel) {
-				return false;
-			} else if (this.mapViewMode != other.mapViewMode) {
+			} else if (this.zoomLevel != this.other.zoomLevel) {
 				return false;
 			}
 			return true;
@@ -110,13 +99,11 @@ class Tile implements Comparable<Tile> {
 		result = prime * result + (int) (this.x ^ (this.x >>> 32));
 		result = prime * result + (int) (this.y ^ (this.y >>> 32));
 		result = prime * result + this.zoomLevel;
-		result = prime * result
-				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		return result;
 	}
 
 	/**
-	 * Get the bounding box of this tile.
+	 * Calculates the bounding box of this tile.
 	 * 
 	 * @return the bounding box of this tile.
 	 */

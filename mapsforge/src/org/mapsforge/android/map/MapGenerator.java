@@ -22,26 +22,26 @@ import android.graphics.Bitmap;
 
 /**
  * A MapGenerator provides map images. This abstract base class handles all thread specific
- * actions and provides the job queue for tiles, which need to be processed.
+ * actions and provides the queue for jobs, which need to be processed.
  */
 abstract class MapGenerator extends Thread {
-	private Tile currentTile;
+	private MapGeneratorJob currentMapGeneratorJob;
 	private Bitmap currentTileBitmap;
 	private ImageBitmapCache imageBitmapCache;
 	private ImageFileCache imageFileCache;
-	private PriorityQueue<Tile> jobQueue1;
-	private PriorityQueue<Tile> jobQueue2;
+	private PriorityQueue<MapGeneratorJob> jobQueue1;
+	private PriorityQueue<MapGeneratorJob> jobQueue2;
 	private MapView mapView;
 	private boolean pause;
 	private boolean ready;
 	private boolean requestMoreJobs;
 	private boolean scheduleNeeded;
-	private PriorityQueue<Tile> tempQueue;
+	private PriorityQueue<MapGeneratorJob> tempQueue;
 
 	MapGenerator() {
 		// set up the two job queues
-		this.jobQueue1 = new PriorityQueue<Tile>(64);
-		this.jobQueue2 = new PriorityQueue<Tile>(64);
+		this.jobQueue1 = new PriorityQueue<MapGeneratorJob>(64);
+		this.jobQueue2 = new PriorityQueue<MapGeneratorJob>(64);
 
 		// create the currentTileBitmap for the tile content
 		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
@@ -80,25 +80,26 @@ abstract class MapGenerator extends Thread {
 					schedule();
 					this.scheduleNeeded = false;
 				}
-				this.currentTile = this.jobQueue1.poll();
+				this.currentMapGeneratorJob = this.jobQueue1.poll();
 			}
 
 			// check if the current job can be skipped or must be processed
-			if (!this.imageBitmapCache.containsKey(this.currentTile)
-					&& !this.imageFileCache.containsKey(this.currentTile)) {
+			if (!this.imageBitmapCache.containsKey(this.currentMapGeneratorJob)
+					&& !this.imageFileCache.containsKey(this.currentMapGeneratorJob)) {
 				// check if the tile was generated successfully
-				if (generateTile(this.currentTile)) {
+				if (executeJob(this.currentMapGeneratorJob)) {
 					if (isInterrupted()) {
 						break;
 					}
 
 					// copy the tile to the MapView
-					this.mapView
-							.putTileOnBitmap(this.currentTile, this.currentTileBitmap, true);
+					this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
+							this.currentTileBitmap, true);
 					this.mapView.postInvalidate();
 
 					// put the tile image in the cache
-					this.imageFileCache.put(this.currentTile, this.currentTileBitmap);
+					this.imageFileCache
+							.put(this.currentMapGeneratorJob, this.currentTileBitmap);
 				}
 			}
 
@@ -135,11 +136,11 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * Schedules all tiles in the job queue.
+	 * Schedules all jobs in the queue.
 	 */
 	private void schedule() {
 		while (!this.jobQueue1.isEmpty()) {
-			this.jobQueue2.offer(this.mapView.setTilePriority(this.jobQueue1.poll()));
+			this.jobQueue2.offer(this.mapView.setJobPriority(this.jobQueue1.poll()));
 		}
 		// swap the two job queues
 		this.tempQueue = this.jobQueue1;
@@ -148,14 +149,15 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * Adds the given tile to the job queue.
+	 * Adds the given job to the queue. A call to this method has no effect if the given job is
+	 * already in the queue.
 	 * 
-	 * @param tile
-	 *            the tile to be added to the job queue.
+	 * @param mapGeneratorJob
+	 *            the job to be added to the queue.
 	 */
-	final synchronized void addJob(Tile tile) {
-		if (!this.jobQueue1.contains(tile)) {
-			this.jobQueue1.offer(tile);
+	final synchronized void addJob(MapGeneratorJob mapGeneratorJob) {
+		if (!this.jobQueue1.contains(mapGeneratorJob)) {
+			this.jobQueue1.offer(mapGeneratorJob);
 		}
 	}
 
@@ -173,13 +175,13 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method will by called when a map tile needs to be generated.
+	 * This method will by called when a job needs to be executed.
 	 * 
-	 * @param tile
-	 *            the tile that is needed.
-	 * @return true, if the tile was generated successfully, false otherwise.
+	 * @param mapGeneratorJob
+	 *            the job that should be executed.
+	 * @return true if the job was executed successfully, false otherwise.
 	 */
-	abstract boolean generateTile(Tile tile);
+	abstract boolean executeJob(MapGeneratorJob mapGeneratorJob);
 
 	/**
 	 * Returns the default starting point on the map.
@@ -216,7 +218,7 @@ abstract class MapGenerator extends Thread {
 	/**
 	 * Returns the status of the MapGenerator.
 	 * 
-	 * @return true, if the MapGenerator is not working, false otherwise.
+	 * @return true if the MapGenerator is not working, false otherwise.
 	 */
 	final boolean isReady() {
 		return this.ready;
@@ -240,10 +242,10 @@ abstract class MapGenerator extends Thread {
 	abstract void prepareMapGeneration();
 
 	/**
-	 * Request a scheduling of all tiles that are currently in the job queue.
+	 * Request a scheduling of all jobs that are currently in the queue.
 	 * 
 	 * @param askForMoreJobs
-	 *            true, if the MapGenerator may ask for more jobs, false otherwise.
+	 *            true if the MapGenerator may ask for more jobs, false otherwise.
 	 */
 	final synchronized void requestSchedule(boolean askForMoreJobs) {
 		this.scheduleNeeded = true;

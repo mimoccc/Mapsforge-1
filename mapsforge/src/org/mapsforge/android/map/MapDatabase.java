@@ -1135,19 +1135,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * This method exists only for compatibility reasons with the old database class.
-	 * 
-	 * @param fileName
-	 *            the path to the map file.
-	 * @return true if the file could be opened and is a valid map file, false otherwise.
-	 * @deprecated use {@link #openFile} instead.
-	 */
-	@Deprecated
-	boolean setFile(String fileName) {
-		return openFile(fileName);
-	}
-
-	/**
 	 * Notifies the database reader to stop the currently executed query.
 	 */
 	void stopCurrentQuery() {

@@ -43,6 +43,7 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private SymbolContainer symbolContainer;
 	private float[] textCoordinates;
+	private float[] tileFrame;
 	private ArrayList<ShapePaintContainer> wayList;
 
 	@Override
@@ -65,10 +66,7 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void drawTileFrame() {
-		this.canvas.drawLines(new float[] { 0, 0, 0, this.canvas.getHeight(), 0,
-				this.canvas.getHeight(), this.canvas.getWidth(), this.canvas.getHeight(),
-				this.canvas.getWidth(), this.canvas.getHeight(), this.canvas.getWidth(), 0 },
-				PAINT_TILE_FRAME);
+		this.canvas.drawLines(tileFrame, PAINT_TILE_FRAME);
 	}
 
 	@Override
@@ -147,6 +145,9 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	@Override
 	void setupMapGenerator(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
+		this.tileFrame = new float[] { 0, 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+				Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE,
+				0 };
 		this.path = new Path();
 		this.path.setFillType(Path.FillType.EVEN_ODD);
 	}

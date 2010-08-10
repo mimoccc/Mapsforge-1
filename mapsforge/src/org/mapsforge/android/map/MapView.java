@@ -100,15 +100,17 @@ public class MapView extends ViewGroup {
 	 */
 	public static boolean isValidMapFile(String mapFile) {
 		MapDatabase testDatabase = new MapDatabase();
-		boolean isValid = testDatabase.setFile(mapFile);
+		boolean isValid = testDatabase.openFile(mapFile);
 		testDatabase.closeFile();
 		return isValid;
 	}
 
 	private boolean attachedToWindow;
+	private MapGeneratorJob currentJob;
 	private Tile currentTile;
 	private long currentTime;
 	private MapDatabase database;
+	private boolean drawTileFrames;
 	private int fileCacheSize;
 	private int fps;
 	private Paint fpsPaint;
@@ -139,8 +141,7 @@ public class MapView extends ViewGroup {
 	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
-	/** Overlays bound to this mapView */
-	private List<Overlay> overlays;
+	private ArrayList<Overlay> overlays;
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
@@ -163,7 +164,6 @@ public class MapView extends ViewGroup {
 	double mapViewPixelY;
 	Matrix matrix;
 	ZoomControls zoomControls;
-
 	byte zoomLevel;
 
 	/**
@@ -241,6 +241,15 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the current center of the map as a GeoPoint.
+	 * 
+	 * @return the current center of the map.
+	 */
+	public GeoPoint getMapCenter() {
+		return new GeoPoint(this.latitude, this.longitude);
+	}
+
+	/**
 	 * Returns the database which is currently used for reading the map file.
 	 * 
 	 * @return the map database.
@@ -252,15 +261,6 @@ public class MapView extends ViewGroup {
 			throw new UnsupportedOperationException();
 		}
 		return this.database;
-	}
-
-	/**
-	 * Returns the current center of the map as a GeoPoint.
-	 * 
-	 * @return the current center of the map.
-	 */
-	public GeoPoint getMapCenter() {
-		return new GeoPoint(this.latitude, this.longitude);
 	}
 
 	/**
@@ -310,11 +310,10 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the overlays of the map.
+	 * Returns the list of overlays for this MapView.
 	 * 
-	 * @return the overlays.
+	 * @return the overlay list.
 	 */
-
 	public final List<Overlay> getOverlays() {
 		return this.overlays;
 	}
@@ -420,9 +419,9 @@ public class MapView extends ViewGroup {
 		} else if (event.getAction() == MotionEvent.ACTION_UP
 				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
 			hideZoomControlsDelayed();
-			for (Overlay o : this.overlays) {
-				synchronized (o) {
-					o.notify();
+			for (Overlay overlay : this.overlays) {
+				synchronized (overlay) {
+					overlay.notify();
 				}
 			}
 			return true;
@@ -444,8 +443,8 @@ public class MapView extends ViewGroup {
 			synchronized (this) {
 				// add the movement to the transformation matrix
 				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
-				for (Overlay o : this.overlays) {
-					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
+				for (Overlay overlay : this.overlays) {
+					overlay.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
 				}
 				// calculate the new position of the map center
 				this.latitude = getValidLatitude(MercatorProjection
@@ -537,7 +536,7 @@ public class MapView extends ViewGroup {
 		this.mapMover.unpause();
 
 		this.database.closeFile();
-		if (this.database.setFile(newMapFile)) {
+		if (this.database.openFile(newMapFile)) {
 			this.mapFile = newMapFile;
 			clearMapView();
 			setCenter(this.database.getMapBoundary().getCenter());
@@ -620,6 +619,19 @@ public class MapView extends ViewGroup {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Sets the drawing of tile frames for debugging purposes. Not all operation modes support
+	 * this feature, some may simply ignore this request.
+	 * 
+	 * @param drawTileFrames
+	 *            true if tile frames should be drawn, false otherwise.
+	 */
+	public void setTileFrames(boolean drawTileFrames) {
+		this.drawTileFrames = drawTileFrames;
+		clearMapView();
+		handleTiles(true);
 	}
 
 	private synchronized void clearMapView() {
@@ -743,7 +755,7 @@ public class MapView extends ViewGroup {
 		this.matrix = new Matrix();
 
 		// create overlay list
-		this.overlays = new ArrayList<Overlay>();
+		this.overlays = new ArrayList<Overlay>(4);
 
 		// create the tile bitmap and buffer
 		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
@@ -936,18 +948,18 @@ public class MapView extends ViewGroup {
 			this.previousTimeSinceDrawOverlays = this.currentTime;
 		}
 
-		for (Overlay o : this.overlays) {
-			if (!o.isMapViewSet()) {
-				o.setMapViewAndCreateOverlayBitmaps(this);
-				synchronized (o) {
-					o.notify();
+		for (Overlay overlay : this.overlays) {
+			if (!overlay.isMapViewSet()) {
+				overlay.setMapViewAndCreateOverlayBitmaps(this);
+				synchronized (overlay) {
+					overlay.notify();
 				}
 			} else if (timeElapsed) {
-				synchronized (o) {
-					o.notify();
+				synchronized (overlay) {
+					overlay.notify();
 				}
 			}
-			o.draw(canvas, this, false);
+			overlay.draw(canvas, this, false);
 		}
 	}
 
@@ -963,7 +975,7 @@ public class MapView extends ViewGroup {
 	}
 
 	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+	protected final void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		// find out how big the ZoomControls should be
 		this.zoomControls.measure(MeasureSpec.makeMeasureSpec(MeasureSpec
 				.getSize(widthMeasureSpec), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(
@@ -1011,6 +1023,14 @@ public class MapView extends ViewGroup {
 			this.mapActivity = null;
 		}
 
+		// stop the overlay threads
+		if (this.overlays != null) {
+			for (Overlay overlay : this.overlays) {
+				overlay.interrupt();
+			}
+			this.overlays = null;
+		}
+
 		// stop the MapMover thread
 		if (this.mapMover != null) {
 			this.mapMover.interrupt();
@@ -1024,11 +1044,6 @@ public class MapView extends ViewGroup {
 		}
 
 		stopMapGeneratorThread();
-
-		// stop the overlays
-		for (Overlay overLay : this.overlays) {
-			overLay.interrupt();
-		}
 
 		// destroy the map controller
 		if (this.mapController != null) {
@@ -1131,20 +1146,21 @@ public class MapView extends ViewGroup {
 			// go through all tiles that intersect the screen rectangle
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
-					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel,
-							this.mapViewMode);
-					if (this.imageBitmapCache.containsKey(this.currentTile)) {
+					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
+					this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
+							this.mapFile, this.drawTileFrames);
+					if (this.imageBitmapCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
-						putTileOnBitmap(this.currentTile, this.imageBitmapCache
-								.get(this.currentTile), false);
-					} else if (this.imageFileCache.containsKey(this.currentTile)) {
+						putTileOnBitmap(this.currentJob, this.imageBitmapCache
+								.get(this.currentJob), false);
+					} else if (this.imageFileCache.containsKey(this.currentJob)) {
 						// file cache hit
-						this.imageFileCache.get(this.currentTile, this.tileBuffer);
+						this.imageFileCache.get(this.currentJob, this.tileBuffer);
 						this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-						putTileOnBitmap(this.currentTile, this.tileBitmap, true);
+						putTileOnBitmap(this.currentJob, this.tileBitmap, true);
 					} else {
 						// cache miss
-						this.mapGenerator.addJob(this.currentTile);
+						this.mapGenerator.addJob(this.currentJob);
 					}
 				}
 			}
@@ -1215,24 +1231,35 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	synchronized void putTileOnBitmap(Tile tile, Bitmap bitmap, boolean putToBitmapCache) {
+	/**
+	 * Draws a tile bitmap at the right position on the MapViewBitmap.
+	 * 
+	 * @param mapGeneratorJob
+	 *            the job with the tile.
+	 * @param bitmap
+	 *            the bitmap to be drawn.
+	 * @param putToBitmapCache
+	 *            true if the bitmap may be put in the cache, false otherwise.
+	 */
+	synchronized void putTileOnBitmap(MapGeneratorJob mapGeneratorJob, Bitmap bitmap,
+			boolean putToBitmapCache) {
 		// check if the tile and the current MapView rectangle intersect
-		if (this.mapViewPixelX - tile.pixelX > Tile.TILE_SIZE
-				|| this.mapViewPixelX + getWidth() < tile.pixelX) {
+		if (this.mapViewPixelX - mapGeneratorJob.tile.pixelX > Tile.TILE_SIZE
+				|| this.mapViewPixelX + getWidth() < mapGeneratorJob.tile.pixelX) {
 			// no intersection in x direction
 			return;
-		} else if (this.mapViewPixelY - tile.pixelY > Tile.TILE_SIZE
-				|| this.mapViewPixelY + getHeight() < tile.pixelY) {
+		} else if (this.mapViewPixelY - mapGeneratorJob.tile.pixelY > Tile.TILE_SIZE
+				|| this.mapViewPixelY + getHeight() < mapGeneratorJob.tile.pixelY) {
 			// no intersection in y direction
 			return;
-		} else if (tile.zoomLevel != this.zoomLevel) {
+		} else if (mapGeneratorJob.tile.zoomLevel != this.zoomLevel) {
 			// the tile doesn't fit to the current zoom level
 			return;
 		}
 
 		// check if the bitmap should go to the image bitmap cache
 		if (putToBitmapCache) {
-			this.imageBitmapCache.put(tile, bitmap);
+			this.imageBitmapCache.put(mapGeneratorJob, bitmap);
 		}
 
 		if (!this.matrix.isIdentity()) {
@@ -1240,7 +1267,7 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
 
-			// draw the previous MapViewBitmap on the mapViewBitmap
+			// draw the previous MapViewBitmap on the current MapViewBitmap
 			this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 
 			// swap the two MapViewBitmaps
@@ -1253,8 +1280,9 @@ public class MapView extends ViewGroup {
 		}
 
 		// draw the tile bitmap at the correct position
-		this.mapViewCanvas.drawBitmap(bitmap, (float) (tile.pixelX - this.mapViewPixelX),
-				(float) (tile.pixelY - this.mapViewPixelY), null);
+		this.mapViewCanvas.drawBitmap(bitmap,
+				(float) (mapGeneratorJob.tile.pixelX - this.mapViewPixelX),
+				(float) (mapGeneratorJob.tile.pixelY - this.mapViewPixelY), null);
 	}
 
 	/**
@@ -1276,35 +1304,39 @@ public class MapView extends ViewGroup {
 		synchronized (this) {
 			// tiles below and above the visible area
 			for (this.tileX = this.mapViewTileX2 + 1; this.tileX >= this.mapViewTileX1 - 1; --this.tileX) {
-				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel,
-						this.mapViewMode);
-				if (!this.imageFileCache.containsKey(this.currentTile)) {
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
+				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
+						this.mapFile, this.drawTileFrames);
+				if (!this.imageFileCache.containsKey(this.currentJob)) {
 					// cache miss
-					this.mapGenerator.addJob(this.currentTile);
+					this.mapGenerator.addJob(this.currentJob);
 				}
 
-				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel,
-						this.mapViewMode);
-				if (!this.imageFileCache.containsKey(this.currentTile)) {
+				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
+				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
+						this.mapFile, this.drawTileFrames);
+				if (!this.imageFileCache.containsKey(this.currentJob)) {
 					// cache miss
-					this.mapGenerator.addJob(this.currentTile);
+					this.mapGenerator.addJob(this.currentJob);
 				}
 			}
 
 			// tiles left and right from the visible area
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
-				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel,
-						this.mapViewMode);
-				if (!this.imageFileCache.containsKey(this.currentTile)) {
+				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
+				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
+						this.mapFile, this.drawTileFrames);
+				if (!this.imageFileCache.containsKey(this.currentJob)) {
 					// cache miss
-					this.mapGenerator.addJob(this.currentTile);
+					this.mapGenerator.addJob(this.currentJob);
 				}
 
-				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel,
-						this.mapViewMode);
-				if (!this.imageFileCache.containsKey(this.currentTile)) {
+				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
+				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
+						this.mapFile, this.drawTileFrames);
+				if (!this.imageFileCache.containsKey(this.currentJob)) {
 					// cache miss
-					this.mapGenerator.addJob(this.currentTile);
+					this.mapGenerator.addJob(this.currentJob);
 				}
 			}
 		}
@@ -1331,8 +1363,8 @@ public class MapView extends ViewGroup {
 									this.zoomLevel) - MercatorProjection.latitudeToPixelY(point
 									.getLatitude(), this.zoomLevel)));
 
-					for (Overlay o : this.overlays) {
-						o.getMatrix().postTranslate(
+					for (Overlay overlay : this.overlays) {
+						overlay.getMatrix().postTranslate(
 								(float) (MercatorProjection.longitudeToPixelX(this.longitude,
 										this.zoomLevel) - MercatorProjection.longitudeToPixelX(
 										point.getLongitude(), this.zoomLevel)),
@@ -1357,6 +1389,35 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Calculates the priority for the given job based on the current position and zoom level of
+	 * the map.
+	 * 
+	 * @param mapGeneratorJob
+	 *            the job for which the priority should be calculated.
+	 * @return the MapGeneratorJob with updated priority.
+	 */
+	MapGeneratorJob setJobPriority(MapGeneratorJob mapGeneratorJob) {
+		if (mapGeneratorJob.tile.zoomLevel != this.zoomLevel) {
+			mapGeneratorJob.priority = 1000 * Math.abs(mapGeneratorJob.tile.zoomLevel
+					- this.zoomLevel);
+		} else {
+			// calculate the center of the MapView
+			double mapViewCenterX = this.mapViewPixelX + (getWidth() >> 1);
+			double mapViewCenterY = this.mapViewPixelY + (getHeight() >> 1);
+
+			// calculate the center of the tile
+			long tileCenterX = mapGeneratorJob.tile.pixelX + (Tile.TILE_SIZE >> 1);
+			long tileCenterY = mapGeneratorJob.tile.pixelY + (Tile.TILE_SIZE >> 1);
+
+			// set tile priority to the distance from the MapView center
+			int diffX = (int) (mapViewCenterX - tileCenterX);
+			int diffY = (int) (mapViewCenterY - tileCenterY);
+			mapGeneratorJob.priority = SquareRoot.sqrt(diffX * diffX + diffY * diffY);
+		}
+		return mapGeneratorJob;
+	}
+
+	/**
 	 * Sets the map file for this MapView without displaying it.
 	 * 
 	 * @param newMapFile
@@ -1368,31 +1429,11 @@ public class MapView extends ViewGroup {
 		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
 			throw new UnsupportedOperationException();
 		}
-		if (newMapFile != null && this.database != null && this.database.setFile(newMapFile)) {
+		if (newMapFile != null && this.database != null && this.database.openFile(newMapFile)) {
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;
 		}
-	}
-
-	Tile setTilePriority(Tile tile) {
-		if (tile.zoomLevel != this.zoomLevel) {
-			tile.renderPriority = 1000 * Math.abs(tile.zoomLevel - this.zoomLevel);
-		} else {
-			// calculate the center of the MapView
-			double mapViewCenterX = this.mapViewPixelX + (getWidth() >> 1);
-			double mapViewCenterY = this.mapViewPixelY + (getHeight() >> 1);
-
-			// calculate the center of the tile
-			long tileCenterX = tile.pixelX + (Tile.TILE_SIZE >> 1);
-			long tileCenterY = tile.pixelY + (Tile.TILE_SIZE >> 1);
-
-			// set tile priority to the distance from the MapView center
-			int diffX = (int) (mapViewCenterX - tileCenterX);
-			int diffY = (int) (mapViewCenterY - tileCenterY);
-			tile.renderPriority = SquareRoot.sqrt(diffX * diffX + diffY * diffY);
-		}
-		return tile;
 	}
 
 	byte setZoom(byte zoomLevel) {
