@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * A database class for reading binary OSM files. Byte order is big-endian.
  */
-public class DatabaseNew {
+public class MapDatabase {
 	/**
 	 * The magic byte at the beginning of a valid binary map file.
 	 */
@@ -98,7 +98,7 @@ public class DatabaseNew {
 	private int currentBlockSize;
 	private long currentColumn;
 	private long currentRow;
-	private DatabaseIndexCacheNew databaseIndexCache;
+	private MapDatabaseIndexCache databaseIndexCache;
 	private boolean[] defaultNodeTagIds;
 	private boolean[] defaultWayTagIds;
 	private short elementCounter;
@@ -193,7 +193,7 @@ public class DatabaseNew {
 	/**
 	 * Empty default constructor with limited visibility.
 	 */
-	DatabaseNew() {
+	MapDatabase() {
 		// do nothing
 	}
 
@@ -1111,7 +1111,7 @@ public class DatabaseNew {
 			}
 
 			// create the DatabaseIndexCache
-			this.databaseIndexCache = new DatabaseIndexCacheNew(inputFile, INDEX_CACHE_SIZE);
+			this.databaseIndexCache = new MapDatabaseIndexCache(inputFile, INDEX_CACHE_SIZE);
 
 			// create a read buffer that is big enough even for the largest block
 			this.readBuffer = new byte[this.maximumBlockSize];

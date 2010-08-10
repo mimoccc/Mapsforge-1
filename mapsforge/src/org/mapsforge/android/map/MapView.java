@@ -99,7 +99,7 @@ public class MapView extends ViewGroup {
 	 * @return true, if the file is a valid map file, false otherwise.
 	 */
 	public static boolean isValidMapFile(String mapFile) {
-		DatabaseNew testDatabase = new DatabaseNew();
+		MapDatabase testDatabase = new MapDatabase();
 		boolean isValid = testDatabase.setFile(mapFile);
 		testDatabase.closeFile();
 		return isValid;
@@ -108,7 +108,7 @@ public class MapView extends ViewGroup {
 	private boolean attachedToWindow;
 	private Tile currentTile;
 	private long currentTime;
-	private DatabaseNew database;
+	private MapDatabase database;
 	private int fileCacheSize;
 	private int fps;
 	private Paint fpsPaint;
@@ -247,7 +247,7 @@ public class MapView extends ViewGroup {
 	 * @throws UnsupportedOperationException
 	 *             if the MapView operates in a mode without a map file.
 	 */
-	public DatabaseNew getMapDatabase() {
+	public MapDatabase getMapDatabase() {
 		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
 			throw new UnsupportedOperationException();
 		}
@@ -763,7 +763,7 @@ public class MapView extends ViewGroup {
 		this.mapController = new MapController(this);
 
 		// create the database
-		this.database = new DatabaseNew();
+		this.database = new MapDatabase();
 
 		startMapGeneratorThread();
 

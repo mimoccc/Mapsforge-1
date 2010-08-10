@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * A cache for database index blocks with a fixed size and LRU policy.
  */
-class DatabaseIndexCacheNew {
+class MapDatabaseIndexCache {
 	/**
 	 * An immutable container class which is the key for the map of the cache.
 	 */
@@ -116,7 +116,7 @@ class DatabaseIndexCacheNew {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	DatabaseIndexCacheNew(RandomAccessFile inputFile, int capacity) {
+	MapDatabaseIndexCache(RandomAccessFile inputFile, int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}

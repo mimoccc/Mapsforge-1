@@ -45,7 +45,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_RAILWAY = 0x40;
 	private static final short BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
-	private static final boolean DRAW_TILE_FRAMES = !false;
+	private static final boolean DRAW_TILE_FRAMES = false;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -243,7 +243,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private Tile currentTile;
 	private float currentX;
 	private float currentY;
-	private DatabaseNew database;
+	private MapDatabase database;
 	private float distanceX;
 	private float distanceY;
 	private Point[] helperPoints;
@@ -3066,7 +3066,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param database
 	 *            the database.
 	 */
-	final void setDatabase(DatabaseNew database) {
+	final void setDatabase(MapDatabase database) {
 		this.database = database;
 	}
 
