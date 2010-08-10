@@ -61,73 +61,11 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Shortens a coastline segment by removing all way points from the begin and end that are
-	 * outside of the tile and therefore invisible.
+	 * Returns a WayContainer for the given coastline segment.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
-	 * @return the coordinates of the shortened coastline segment.
-	 */
-	private static float[] shortenCoastlineSegment(float[] coastline) {
-		int skipStart = 0;
-		float x1 = coastline[0];
-		float y1 = coastline[1];
-		float x2;
-		float y2;
-		double[] clippedSegment;
-		// find the first way segment that intersects with the tile
-		for (int i = 2; i < coastline.length; i += 2) {
-			x2 = coastline[i];
-			y2 = coastline[i + 1];
-			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
-					Tile.TILE_SIZE, Tile.TILE_SIZE);
-			if (clippedSegment != null) {
-				coastline[i - 2] = (float) clippedSegment[0];
-				coastline[i - 1] = (float) clippedSegment[1];
-				coastline[i] = (float) clippedSegment[2];
-				coastline[i + 1] = (float) clippedSegment[3];
-				break;
-			}
-			x1 = x2;
-			y1 = y2;
-			++skipStart;
-		}
-
-		int skipEnd = 0;
-		x1 = coastline[coastline.length - 2];
-		y1 = coastline[coastline.length - 1];
-		// find the last way segment that intersects with the tile
-		for (int i = coastline.length - 4; i >= 0; i -= 2) {
-			x2 = coastline[i];
-			y2 = coastline[i + 1];
-			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
-					Tile.TILE_SIZE, Tile.TILE_SIZE);
-			if (clippedSegment != null) {
-				coastline[i + 2] = (float) clippedSegment[0];
-				coastline[i + 3] = (float) clippedSegment[1];
-				coastline[i] = (float) clippedSegment[2];
-				coastline[i + 1] = (float) clippedSegment[3];
-				break;
-			}
-			x1 = x2;
-			y1 = y2;
-			++skipEnd;
-		}
-
-		// copy the subset of the old coastline segment to a new segment
-		float[] newCoastline = new float[coastline.length - 2 * skipStart - 2 * skipEnd];
-		System.arraycopy(coastline, 2 * skipStart, newCoastline, 0, newCoastline.length);
-		return newCoastline;
-	}
-
-	/**
-	 * Returns a WayContainer for a given coastline segment.
-	 * 
-	 * @param coastline
-	 *            the coordinates of the coastline segment.
-	 * @return the WayContainer.
+	 * @return a WayContainer.
 	 */
 	static WayContainer getWayContainer(float[] coastline) {
 		float[][] wayCoordinates = new float[1][coastline.length];
@@ -180,6 +118,72 @@ class CoastlineWay {
 						|| coastline[coastline.length - 1] <= 0 || coastline[coastline.length - 1] >= Tile.TILE_SIZE);
 	}
 
+	/**
+	 * Shortens a coastline segment by removing all way points from the begin and end that are
+	 * outside of the tile and therefore invisible.
+	 * 
+	 * @param coastline
+	 *            the coordinates of the coastline segment.
+	 * @return the coordinates of the shortened coastline segment.
+	 */
+	static float[] shortenCoastlineSegment(float[] coastline) {
+		int skipStart = 0;
+		float x1 = coastline[0];
+		float y1 = coastline[1];
+		float x2;
+		float y2;
+		double[] clippedSegment;
+		// find the first way segment that intersects with the tile
+		for (int i = 2; i < coastline.length; i += 2) {
+			x2 = coastline[i];
+			y2 = coastline[i + 1];
+			// clip the current way segment to the tile rectangle
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
+					Tile.TILE_SIZE, Tile.TILE_SIZE);
+			if (clippedSegment != null) {
+				coastline[i - 2] = (float) clippedSegment[0];
+				coastline[i - 1] = (float) clippedSegment[1];
+				coastline[i] = (float) clippedSegment[2];
+				coastline[i + 1] = (float) clippedSegment[3];
+				break;
+			}
+			x1 = x2;
+			y1 = y2;
+			++skipStart;
+		}
+
+		int skipEnd = 0;
+		x1 = coastline[coastline.length - 2];
+		y1 = coastline[coastline.length - 1];
+		// find the last way segment that intersects with the tile
+		for (int i = coastline.length - 4; i >= 0; i -= 2) {
+			x2 = coastline[i];
+			y2 = coastline[i + 1];
+			// clip the current way segment to the tile rectangle
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
+					Tile.TILE_SIZE, Tile.TILE_SIZE);
+			if (clippedSegment != null) {
+				coastline[i + 2] = (float) clippedSegment[0];
+				coastline[i + 3] = (float) clippedSegment[1];
+				coastline[i] = (float) clippedSegment[2];
+				coastline[i + 1] = (float) clippedSegment[3];
+				break;
+			}
+			x1 = x2;
+			y1 = y2;
+			++skipEnd;
+		}
+
+		// check if the shortened coastline segment will be empty
+		if (coastline.length - 2 * skipStart - 2 * skipEnd <= 0) {
+			return null;
+		}
+		// copy the subset of the old coastline segment to a new segment
+		float[] newCoastline = new float[coastline.length - 2 * skipStart - 2 * skipEnd];
+		System.arraycopy(coastline, 2 * skipStart, newCoastline, 0, newCoastline.length);
+		return newCoastline;
+	}
+
 	final float[] data;
 	final double entryAngle;
 	final byte entrySide;
@@ -193,7 +197,7 @@ class CoastlineWay {
 	 *            the coordinates of the coastline segment.
 	 */
 	CoastlineWay(float[] coastline) {
-		this.data = shortenCoastlineSegment(coastline);
+		this.data = coastline;
 		this.entryAngle = calculateAngle(this.data[0], this.data[1]);
 		this.exitAngle = calculateAngle(this.data[this.data.length - 2],
 				this.data[this.data.length - 1]);

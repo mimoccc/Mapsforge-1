@@ -99,7 +99,7 @@ public class MapView extends ViewGroup {
 	 * @return true, if the file is a valid map file, false otherwise.
 	 */
 	public static boolean isValidMapFile(String mapFile) {
-		Database testDatabase = new Database();
+		DatabaseNew testDatabase = new DatabaseNew();
 		boolean isValid = testDatabase.setFile(mapFile);
 		testDatabase.closeFile();
 		return isValid;
@@ -108,7 +108,7 @@ public class MapView extends ViewGroup {
 	private boolean attachedToWindow;
 	private Tile currentTile;
 	private long currentTime;
-	private Database database;
+	private DatabaseNew database;
 	private int fileCacheSize;
 	private int fps;
 	private Paint fpsPaint;
@@ -132,8 +132,6 @@ public class MapView extends ViewGroup {
 	private Bitmap mapViewBitmap2;
 	private Canvas mapViewCanvas;
 	private MapViewMode mapViewMode;
-	double mapViewPixelX;
-	double mapViewPixelY;
 	private long mapViewTileX1;
 	private long mapViewTileX2;
 	private long mapViewTileY1;
@@ -141,6 +139,8 @@ public class MapView extends ViewGroup {
 	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
+	/** Overlays bound to this mapView */
+	private List<Overlay> overlays;
 	private float previousPositionX;
 	private float previousPositionY;
 	private long previousTime;
@@ -159,12 +159,12 @@ public class MapView extends ViewGroup {
 	double latitude;
 	double longitude;
 	final int mapViewId;
+	double mapViewPixelX;
+	double mapViewPixelY;
 	Matrix matrix;
 	ZoomControls zoomControls;
-	byte zoomLevel;
 
-	/** Overlays bound to this mapView */
-	private List<Overlay> overlays;
+	byte zoomLevel;
 
 	/**
 	 * Constructs a new MapView with the default {@link MapViewMode}.
@@ -241,6 +241,20 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the database which is currently used for reading the map file.
+	 * 
+	 * @return the map database.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView operates in a mode without a map file.
+	 */
+	public DatabaseNew getMapDatabase() {
+		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+			throw new UnsupportedOperationException();
+		}
+		return this.database;
+	}
+
+	/**
 	 * Returns the current center of the map as a GeoPoint.
 	 * 
 	 * @return the current center of the map.
@@ -261,23 +275,6 @@ public class MapView extends ViewGroup {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapFile;
-	}
-
-	/**
-	 * Returns the center coordinates of the current map file as a GeoPoint.
-	 * 
-	 * @return the center coordinates of the map file.
-	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
-	 */
-	public GeoPoint getMapFileCenter() {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
-			throw new UnsupportedOperationException();
-		}
-		if (this.database == null || this.database.getMapBoundary() == null) {
-			return null;
-		}
-		return this.database.getMapBoundary().getCenter();
 	}
 
 	/**
@@ -313,15 +310,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the current zoom level of the map.
-	 * 
-	 * @return the current zoom level.
-	 */
-	public int getZoomLevel() {
-		return this.zoomLevel;
-	}
-
-	/**
 	 * Returns the overlays of the map.
 	 * 
 	 * @return the overlays.
@@ -329,6 +317,15 @@ public class MapView extends ViewGroup {
 
 	public final List<Overlay> getOverlays() {
 		return this.overlays;
+	}
+
+	/**
+	 * Returns the current zoom level of the map.
+	 * 
+	 * @return the current zoom level.
+	 */
+	public int getZoomLevel() {
+		return this.zoomLevel;
 	}
 
 	/**
@@ -523,7 +520,7 @@ public class MapView extends ViewGroup {
 			// same map file as before
 			return;
 		} else if (this.database == null) {
-			// do database exists
+			// no database exists
 			return;
 		}
 
@@ -766,7 +763,7 @@ public class MapView extends ViewGroup {
 		this.mapController = new MapController(this);
 
 		// create the database
-		this.database = new Database();
+		this.database = new DatabaseNew();
 
 		startMapGeneratorThread();
 

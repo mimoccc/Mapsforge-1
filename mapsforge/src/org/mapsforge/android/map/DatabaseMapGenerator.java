@@ -19,6 +19,7 @@ package org.mapsforge.android.map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.TreeMap;
 
 import android.graphics.Bitmap;
@@ -35,16 +36,16 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final byte AREA_NAME_BLACK = 0;
 	private static final byte AREA_NAME_BLUE = 1;
 	private static final byte AREA_NAME_RED = 2;
-	private static final short BITMAP_AMENITY = 32;
-	private static final short BITMAP_BUILDING = 2;
-	private static final short BITMAP_HIGHWAY = 1;
-	private static final short BITMAP_LANDUSE = 8;
-	private static final short BITMAP_LEISURE = 16;
-	private static final short BITMAP_NATURAL = 64;
-	private static final short BITMAP_RAILWAY = 4;
-	private static final short BITMAP_WATERWAY = 128;
+	private static final short BITMAP_AMENITY = 0x04;
+	private static final short BITMAP_BUILDING = 0x20;
+	private static final short BITMAP_HIGHWAY = 0x80;
+	private static final short BITMAP_LANDUSE = 0x10;
+	private static final short BITMAP_LEISURE = 0x08;
+	private static final short BITMAP_NATURAL = 0x02;
+	private static final short BITMAP_RAILWAY = 0x40;
+	private static final short BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
-	private static final boolean DRAW_TILE_FRAMES = false;
+	private static final boolean DRAW_TILE_FRAMES = !false;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -242,7 +243,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private Tile currentTile;
 	private float currentX;
 	private float currentY;
-	private Database database;
+	private DatabaseNew database;
 	private float distanceX;
 	private float distanceY;
 	private Point[] helperPoints;
@@ -268,6 +269,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
+	private HashSet<EndPoints> handledCoastlineSegments;
+	private EndPoints endPoints;
 
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
@@ -348,7 +351,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.islandSituation = true;
 				}
 			} else if (CoastlineWay.isValid(coastline)) {
-				this.coastlineWays.add(new CoastlineWay(coastline));
+				coastline = CoastlineWay.shortenCoastlineSegment(coastline);
+				if (coastline != null) {
+					this.coastlineWays.add(new CoastlineWay(coastline));
+				}
 			} else {
 				this.noWaterBackground = true;
 				this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
@@ -432,6 +438,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
 						new ShapePaintContainer(new WayContainer(this.coordinates),
 								PAINT_NATURAL_WATER_FILL));
+
 			} else {
 				// calculate the length of the new coastline segment
 				this.coastlineStartLength = this.coastlineStart.data.length;
@@ -458,8 +465,11 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 				// replace the end segment in the list with the new segment
 				this.coastlineWays.remove(this.coastlineEnd);
-				this.coastlineWays.add(new CoastlineWay(newSegment));
-				Collections.sort(this.coastlineWays, this.coastlineWayComparator);
+				newSegment = CoastlineWay.shortenCoastlineSegment(newSegment);
+				if (newSegment != null) {
+					this.coastlineWays.add(new CoastlineWay(newSegment));
+					Collections.sort(this.coastlineWays, this.coastlineWayComparator);
+				}
 			}
 		}
 	}
@@ -1574,6 +1584,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.symbols.clear();
 		this.coastlineStarts.clear();
 		this.coastlineEnds.clear();
+		this.handledCoastlineSegments.clear();
 	}
 
 	/**
@@ -1974,7 +1985,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 *            the tag id array of the way.
 	 * @param wayTagBitmap
 	 *            the way tag tileBitmap.
-	 * @param wayNodes
+	 * @param wayNodesSequenceLength
 	 *            the number of node positions.
 	 * @param wayNodesSequence
 	 *            the node positions.
@@ -1982,16 +1993,16 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 *            the inner nodes if this way is a multipolygon.
 	 */
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName,
-			boolean[] wayTagIds, byte wayTagBitmap, short wayNodes, int[] wayNodesSequence,
-			int[][] innerWays) {
+			boolean[] wayTagIds, byte wayTagBitmap, short wayNodesSequenceLength,
+			int[] wayNodesSequence, int[][] innerWays) {
 		this.remainingTags = wayNumberOfRealTags;
 		if (innerWays == null) {
 			this.coordinates = new float[1][];
 		} else {
 			this.coordinates = new float[1 + innerWays.length][];
 		}
-		this.coordinates[0] = new float[wayNodes];
-		for (short i = 0; i < wayNodes; i += 2) {
+		this.coordinates[0] = new float[wayNodesSequenceLength];
+		for (short i = 0; i < wayNodesSequenceLength; i += 2) {
 			this.coordinates[0][i] = scaleLongitude(wayNodesSequence[i]);
 			this.coordinates[0][i + 1] = scaleLatitude(wayNodesSequence[i + 1]);
 		}
@@ -2795,39 +2806,52 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.coastlineStartPoint = new Point(nodesSequence[0], nodesSequence[1]);
 				this.coastlineEndPoint = new Point(nodesSequence[nodesSequence.length - 2],
 						nodesSequence[nodesSequence.length - 1]);
-				float[] matchPath;
-				float[] newPath;
+				this.endPoints = new EndPoints(this.coastlineStartPoint, this.coastlineEndPoint);
 
-				// check if a data way starts with the last point of the current way
-				if (this.coastlineStarts.containsKey(this.coastlineEndPoint)) {
-					// merge both way segments
-					matchPath = this.coastlineStarts.remove(this.coastlineEndPoint);
-					newPath = new float[nodesSequence.length + matchPath.length - 2];
-					System.arraycopy(nodesSequence, 0, newPath, 0, nodesSequence.length - 2);
-					System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
-							matchPath.length);
-					nodesSequence = newPath;
-					this.coastlineEndPoint = new Point(nodesSequence[nodesSequence.length - 2],
-							nodesSequence[nodesSequence.length - 1]);
-				}
+				// check to avoid duplicate coastline segments
+				if (!this.handledCoastlineSegments.contains(this.endPoints)) {
+					// update the set of handled coastline segments
+					this.handledCoastlineSegments.add(new EndPoints(this.coastlineStartPoint,
+							this.coastlineEndPoint));
 
-				// check if a data way ends with the first point of the current way
-				if (this.coastlineEnds.containsKey(this.coastlineStartPoint)) {
-					matchPath = this.coastlineEnds.remove(this.coastlineStartPoint);
-					// check if the merged way is already a circle
-					if (!this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
+					float[] matchPath;
+					float[] newPath;
+
+					// check if a data way starts with the last point of the current way
+					if (this.coastlineStarts.containsKey(this.coastlineEndPoint)) {
 						// merge both way segments
+						matchPath = this.coastlineStarts.remove(this.coastlineEndPoint);
 						newPath = new float[nodesSequence.length + matchPath.length - 2];
-						System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);
-						System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
-								nodesSequence.length);
+						System
+								.arraycopy(nodesSequence, 0, newPath, 0,
+										nodesSequence.length - 2);
+						System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
+								matchPath.length);
 						nodesSequence = newPath;
-						this.coastlineStartPoint = new Point(nodesSequence[0], nodesSequence[1]);
+						this.coastlineEndPoint = new Point(
+								nodesSequence[nodesSequence.length - 2],
+								nodesSequence[nodesSequence.length - 1]);
 					}
-				}
 
-				this.coastlineStarts.put(this.coastlineStartPoint, nodesSequence);
-				this.coastlineEnds.put(this.coastlineEndPoint, nodesSequence);
+					// check if a data way ends with the first point of the current way
+					if (this.coastlineEnds.containsKey(this.coastlineStartPoint)) {
+						matchPath = this.coastlineEnds.remove(this.coastlineStartPoint);
+						// check if the merged way is already a circle
+						if (!this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
+							// merge both way segments
+							newPath = new float[nodesSequence.length + matchPath.length - 2];
+							System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);
+							System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
+									nodesSequence.length);
+							nodesSequence = newPath;
+							this.coastlineStartPoint = new Point(nodesSequence[0],
+									nodesSequence[1]);
+						}
+					}
+
+					this.coastlineStarts.put(this.coastlineStartPoint, nodesSequence);
+					this.coastlineEnds.put(this.coastlineEndPoint, nodesSequence);
+				}
 			}
 			if (--this.remainingTags <= 0) {
 				return;
@@ -3042,7 +3066,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param database
 	 *            the database.
 	 */
-	final void setDatabase(Database database) {
+	final void setDatabase(DatabaseNew database) {
 		this.database = database;
 	}
 
@@ -3070,6 +3094,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.symbols = new ArrayList<SymbolContainer>(64);
 		this.coastlineEnds = new TreeMap<Point, float[]>();
 		this.coastlineStarts = new TreeMap<Point, float[]>();
+		this.handledCoastlineSegments = new HashSet<EndPoints>(64);
 		this.coastlineWayComparator = new Comparator<CoastlineWay>() {
 			@Override
 			public int compare(CoastlineWay o1, CoastlineWay o2) {

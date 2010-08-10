@@ -35,7 +35,7 @@ class MapFile {
 	final long indexStartAddress;
 	final long mapFileSize;
 	final long numberOfBlocks;
-	final int tileEntriesTableSize;
+	final int blockEntriesTableSize;
 	final byte zoomLevelMax;
 	final byte zoomLevelMin;
 
@@ -81,6 +81,6 @@ class MapFile {
 		this.numberOfBlocks = this.blocksWidth * this.blocksHeight;
 
 		// calculate the size of the tile entries table
-		this.tileEntriesTableSize = 2 * (this.zoomLevelMax - this.zoomLevelMin + 1) * 2;
+		this.blockEntriesTableSize = 2 * (this.zoomLevelMax - this.zoomLevelMin + 1) * 2;
 	}
 }
