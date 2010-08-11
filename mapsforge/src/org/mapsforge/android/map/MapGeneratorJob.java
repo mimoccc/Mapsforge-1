@@ -30,7 +30,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	final boolean drawTileFrames;
 
 	/**
-	 * The map file used to render the map image, may be null if tiles are downloaded.
+	 * The map file used to render the map image (may be null).
 	 */
 	final String mapFile;
 

@@ -141,7 +141,7 @@ class ImageFileCache {
 			try {
 				bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 				this.bitmapBuffer.rewind();
-				this.imageFile = new File(this.tempDir, ++cacheId + ".tile");
+				this.imageFile = new File(this.tempDir, ++this.cacheId + ".tile");
 				this.fileOutputStream = new FileOutputStream(this.imageFile, false);
 				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
 						.array().length);

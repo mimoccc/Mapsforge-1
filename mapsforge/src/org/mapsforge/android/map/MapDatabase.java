@@ -46,9 +46,9 @@ public class MapDatabase {
 	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 37;
 
 	/**
-	 * The size of the index cache for each contained map file in bytes.
+	 * The amount of cache blocks that the index cache should store.
 	 */
-	private static final int INDEX_CACHE_SIZE = 32;
+	private static final int INDEX_CACHE_SIZE = 64;
 
 	/**
 	 * The initial length of the way nodes array.
@@ -124,7 +124,7 @@ public class MapDatabase {
 	private MapFileParameters[] mapFilesLookupTable;
 	private int maximumBlockSize;
 	private long nextBlockPointer;
-	private short nodeElevation;
+	private String nodeElevation;
 	private byte nodeFeatureByte;
 	private boolean nodeFeatureElevation;
 	private boolean nodeFeatureHouseNumber;
@@ -146,6 +146,7 @@ public class MapDatabase {
 	private int queryTileBitmask;
 	private int queryZoomLevel;
 	private byte[] readBuffer;
+	private long startAddress;
 	private boolean stopCurrentQuery;
 	private short stringLength;
 	private long subtileX;
@@ -166,8 +167,7 @@ public class MapDatabase {
 	private boolean wayFeatureMultipolygon;
 	private boolean wayFeatureName;
 	private int[][] wayInnerWays;
-	private int wayLabelPositionLatitude;
-	private int wayLabelPositionLongitude;
+	private int[] wayLabelPosition;
 	private byte wayLayer;
 	private String wayName;
 	private int wayNodeLatitude;
@@ -245,7 +245,6 @@ public class MapDatabase {
 				Logger.d("invalid block signature: " + this.tempString);
 				return;
 			}
-			// Logger.d("valid block signature: " + this.tempString);
 		}
 
 		// calculate the offset in the block entries table and move the pointer
@@ -255,10 +254,8 @@ public class MapDatabase {
 		// read the amount of way and nodes on the current zoomLevel level
 		this.nodesOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
-		// Logger.d("  nodesOnZoomLevel: " + this.nodesOnZoomLevel);
 		this.waysOnZoomLevel = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
-		// Logger.d("  waysOnZoomLevel: " + this.waysOnZoomLevel);
 
 		// move the pointer to the end of the block entries table
 		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
@@ -271,7 +268,6 @@ public class MapDatabase {
 			Logger.d("invalid first way offset: " + this.firstWayOffset);
 			return;
 		}
-		// Logger.d("  firstWayOffset: " + this.firstWayOffset);
 
 		// read nodes
 		for (this.elementCounter = this.nodesOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
@@ -284,7 +280,6 @@ public class MapDatabase {
 					Logger.d("invalid node signature: " + this.tempString);
 					return;
 				}
-				// Logger.d("valid node signature: " + this.tempString);
 			}
 
 			// read node latitude (4 bytes)
@@ -345,10 +340,11 @@ public class MapDatabase {
 			this.nodeFeatureElevation = (this.nodeFeatureByte & 0x40) != 0;
 			if (this.nodeFeatureElevation) {
 				// get the node elevation (2 bytes)
-				this.nodeElevation = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+				this.nodeElevation = Short.toString(Deserializer.toShort(this.readBuffer,
+						this.bufferPosition));
 				this.bufferPosition += 2;
 			} else {
-				this.nodeElevation = -1;
+				this.nodeElevation = null;
 			}
 
 			// check if the node has a house number
@@ -371,9 +367,9 @@ public class MapDatabase {
 			}
 
 			// render the node
-			// TODO: send optional node fields to the MapGenerator
 			mapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
-					this.nodeLongitude, this.nodeName, this.nodeTagIds);
+					this.nodeLongitude, this.nodeName, this.nodeHouseNumber,
+					this.nodeElevation, this.nodeTagIds);
 		}
 
 		// finished reading nodes, check if the current buffer position is valid
@@ -396,7 +392,6 @@ public class MapDatabase {
 					Logger.d("invalid way signature: " + this.tempString);
 					return;
 				}
-				// Logger.d("valid way signature: " + this.tempString);
 			}
 
 			// read the size of the way (4 bytes)
@@ -519,15 +514,18 @@ public class MapDatabase {
 			// check if the way has a label position
 			this.wayFeatureLabelPosition = (this.wayFeatureByte & 0x40) != 0;
 			if (this.wayFeatureLabelPosition) {
+				this.wayLabelPosition = new int[2];
 				// read the label position latitude (4 bytes)
-				this.wayLabelPositionLatitude = Deserializer.toInt(this.readBuffer,
+				this.wayLabelPosition[0] = Deserializer.toInt(this.readBuffer,
 						this.bufferPosition);
 				this.bufferPosition += 4;
 				// read the label position longitude (4 bytes)
-				this.wayLabelPositionLongitude = Deserializer.toInt(this.readBuffer,
+				this.wayLabelPosition[1] = Deserializer.toInt(this.readBuffer,
 						this.bufferPosition);
 				this.bufferPosition += 4;
-			} // TODO: if no label position exists, mark the old values as invalid
+			} else {
+				this.wayLabelPosition = null;
+			}
 
 			// check if the way represents a closed area
 			this.wayFeatureArea = (this.wayFeatureByte & 0x20) != 0;
@@ -586,10 +584,9 @@ public class MapDatabase {
 			}
 
 			// render the way
-			// TODO: send optional way fields to the MapGenerator
 			mapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags, this.wayName,
-					this.wayTagIds, this.wayTagBitmap, this.wayNodesSequenceLength,
-					this.wayNodesSequence, this.wayInnerWays);
+					this.wayLabelPosition, this.wayTagIds, this.wayTagBitmap,
+					this.wayNodesSequenceLength, this.wayNodesSequence, this.wayInnerWays);
 		}
 	}
 
@@ -761,18 +758,21 @@ public class MapDatabase {
 				return false;
 			}
 
-			// get and check the index start address of the map file (5 bytes)
-			this.indexStartAddress = Deserializer.fiveBytesToLong(this.readBuffer,
+			// get and check the start address of the map file (5 bytes)
+			this.startAddress = Deserializer.fiveBytesToLong(this.readBuffer,
 					this.bufferPosition);
 			this.bufferPosition += 5;
-			if (this.indexStartAddress < 1 || this.indexStartAddress >= this.fileSize) {
-				Logger.d("invalid index start address: " + this.indexStartAddress);
+			if (this.startAddress < 1 || this.startAddress >= this.fileSize) {
+				Logger.d("invalid start address: " + this.startAddress);
 				return false;
 			}
 
 			if (DEBUG_FILE) {
-				// the beginning of the index is marked with a signature
-				this.indexStartAddress += SIGNATURE_LENGTH_INDEX;
+				// the map file has an index signature before the index
+				this.indexStartAddress = this.startAddress + SIGNATURE_LENGTH_INDEX;
+			} else {
+				// the map file begins directly with the index
+				this.indexStartAddress = this.startAddress;
 			}
 
 			// get and check the size of the map file (5 bytes)
@@ -785,9 +785,9 @@ public class MapDatabase {
 			}
 
 			// add the current map file to the map files list
-			this.mapFilesList[this.tempByte] = new MapFileParameters(this.indexStartAddress,
-					this.mapFileSize, this.baseZoomLevel, this.zoomLevelMin, this.zoomLevelMax,
-					this.mapBoundary);
+			this.mapFilesList[this.tempByte] = new MapFileParameters(this.startAddress,
+					this.indexStartAddress, this.mapFileSize, this.baseZoomLevel,
+					this.zoomLevelMin, this.zoomLevelMax, this.mapBoundary);
 
 			// update the global minimum and maximum zoom level information
 			if (this.zoomLevelMin < this.globalMinimumZoomLevel) {
@@ -841,7 +841,6 @@ public class MapDatabase {
 	 */
 	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
 		try {
-			// Logger.d("executing query: " + tile);
 			// reset the stop execution flag
 			this.stopCurrentQuery = false;
 
@@ -1001,7 +1000,6 @@ public class MapDatabase {
 					// calculate the actual block number of the needed block in the file
 					this.blockNumber = this.currentRow * this.mapFileParameters.blocksWidth
 							+ this.currentColumn;
-					// Logger.d("  blockNumber: " + this.blockNumber);
 
 					// get and check the current block pointer
 					this.currentBlockPointer = this.databaseIndexCache.getAddress(
@@ -1012,7 +1010,6 @@ public class MapDatabase {
 						Logger.d("mapFileSize: " + this.mapFileParameters.mapFileSize);
 						return;
 					}
-					// Logger.d("  currentBlockPointer: " + this.currentBlockPointer);
 
 					// check if the current block is the last block in the file
 					if (this.blockNumber + 1 == this.mapFileParameters.numberOfBlocks) {
@@ -1046,11 +1043,10 @@ public class MapDatabase {
 						Logger.d("invalid buffer size:" + this.readBuffer.length);
 						return;
 					}
-					// Logger.d("  currentBlockSize: " + this.currentBlockSize);
 
 					// go to the current block in the map file and read the data into the buffer
-					this.inputFile.seek(this.mapFileParameters.indexStartAddress
-							+ this.currentBlockPointer - 16); // FIXME: remove 16
+					this.inputFile.seek(this.mapFileParameters.startAddress
+							+ this.currentBlockPointer);
 					if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
 						// if reading the current block has failed, skip it
 						Logger.d("reading the current block has failed");
@@ -1116,7 +1112,8 @@ public class MapDatabase {
 			}
 
 			// create the DatabaseIndexCache
-			this.databaseIndexCache = new MapDatabaseIndexCache(inputFile, INDEX_CACHE_SIZE);
+			this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile,
+					INDEX_CACHE_SIZE);
 
 			// create a read buffer that is big enough even for the largest block
 			this.readBuffer = new byte[this.maximumBlockSize];

@@ -91,7 +91,7 @@ public abstract class MapActivity extends Activity {
 	 * @return the new ID.
 	 */
 	final int getMapViewId() {
-		return ++mapViewId;
+		return ++this.mapViewId;
 	}
 
 	final void registerMapView(MapView mapView) {

@@ -98,8 +98,8 @@ class Point implements Comparable<Point> {
 	private int calculateHashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Float.floatToIntBits(x);
-		result = prime * result + Float.floatToIntBits(y);
+		result = prime * result + Float.floatToIntBits(this.x);
+		result = prime * result + Float.floatToIntBits(this.y);
 		return result;
 	}
 }

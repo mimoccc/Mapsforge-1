@@ -66,7 +66,7 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void drawTileFrame() {
-		this.canvas.drawLines(tileFrame, PAINT_TILE_FRAME);
+		this.canvas.drawLines(this.tileFrame, PAINT_TILE_FRAME);
 	}
 
 	@Override

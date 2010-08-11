@@ -169,6 +169,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_MILITARY_NAVAL_BASE_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_25 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -179,6 +180,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_NAME_RED_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_11 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -277,14 +279,22 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * 
 	 * @param wayName
 	 *            the name of the area.
+	 * @param wayLabelPosition
+	 *            the position of the area label (may be null).
 	 * @param nameColor
 	 *            the area name colour mode.
 	 * @param nameOffset
 	 *            the vertical offset from the area center.
 	 */
-	private void addAreaName(String wayName, byte nameColor, byte nameOffset) {
+	private void addAreaName(String wayName, int[] wayLabelPosition, byte nameColor,
+			byte nameOffset) {
 		if (wayName != null && this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_NAMES) {
-			this.areaNamePositions = calculateCenterOfBoundingBox();
+			if (wayLabelPosition == null) {
+				this.areaNamePositions = calculateCenterOfBoundingBox();
+			} else {
+				this.areaNamePositions = new float[] { scaleLatitude(wayLabelPosition[0]),
+						scaleLongitude(wayLabelPosition[1]) };
+			}
 			// choose the correct text paint
 			if (nameColor == AREA_NAME_BLUE) {
 				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
@@ -1034,6 +1044,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_BLACK_12.setTextAlign(Align.CENTER);
 		PAINT_NAME_BLACK_12.setTextSize(12);
 		PAINT_NAME_BLACK_12.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_13.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_13.setTextSize(13);
+		PAINT_NAME_BLACK_13.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_NAME_BLACK_15.setTextAlign(Align.CENTER);
 		PAINT_NAME_BLACK_15.setTextSize(15);
@@ -1078,6 +1092,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_WHITE_STROKE_11.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_11.setTextSize(11);
 		PAINT_NAME_WHITE_STROKE_11.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_12.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_12.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_12.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_12.setTextSize(12);
+		PAINT_NAME_WHITE_STROKE_12.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_NAME_WHITE_STROKE_13.setTextAlign(Align.CENTER);
 		PAINT_NAME_WHITE_STROKE_13.setStyle(Paint.Style.STROKE);
@@ -1597,14 +1617,26 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param longitude
 	 *            the longitude of the node.
 	 * @param nodeName
-	 *            the name of the node.
+	 *            the name of the node (may be null).
+	 * @param houseNumber
+	 *            the house number of the node (may be null).
+	 * @param nodeElevation
+	 *            the elevation of the node (may be null).
 	 * @param nodeTagIds
 	 *            the tag id array of the node.
 	 */
 	final void renderPointOfInterest(byte nodeLayer, int latitude, int longitude,
-			String nodeName, boolean[] nodeTagIds) {
+			String nodeName, String houseNumber, String nodeElevation, boolean[] nodeTagIds) {
 		this.currentNodeX = scaleLongitude(longitude);
 		this.currentNodeY = scaleLatitude(latitude);
+
+		/* houseNumber */
+		if (houseNumber != null && this.currentTile.zoomLevel >= 17) {
+			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
+					this.currentNodeY, PAINT_NAME_BLACK_10));
+			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
+					this.currentNodeY, PAINT_NAME_WHITE_STROKE_10));
+		}
 
 		/* aeroway */
 		if (nodeTagIds[TagIdsPOIs.AEROWAY$HELIPAD]) {
@@ -1818,9 +1850,17 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		else if (nodeTagIds[TagIdsPOIs.NATURAL$PEAK]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLACK_12));
+						this.currentNodeY - 15, PAINT_NAME_BLACK_13));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_13));
 			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
+			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
+				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+						this.currentNodeY + 18, PAINT_NAME_BLACK_10));
+				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+						this.currentNodeY + 18, PAINT_NAME_WHITE_STROKE_10));
+			}
 		}
 
 		/* place */
@@ -1973,7 +2013,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	/**
-	 * Renders a single way.
+	 * Renders a single way or area. An area is a special case of a way where the first and last
+	 * way node have the same coordinates.
 	 * 
 	 * @param wayLayer
 	 *            the layer of the way.
@@ -1981,6 +2022,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 *            the number of real tags.
 	 * @param wayName
 	 *            the name of the way.
+	 * @param wayLabelPosition
+	 *            the position of the area label (may be null).
 	 * @param wayTagIds
 	 *            the tag id array of the way.
 	 * @param wayTagBitmap
@@ -1993,8 +2036,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 *            the inner nodes if this way is a multipolygon.
 	 */
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName,
-			boolean[] wayTagIds, byte wayTagBitmap, short wayNodesSequenceLength,
-			int[] wayNodesSequence, int[][] innerWays) {
+			int[] wayLabelPosition, boolean[] wayTagIds, byte wayTagBitmap,
+			short wayNodesSequenceLength, int[] wayNodesSequence, int[][] innerWays) {
 		this.remainingTags = wayNumberOfRealTags;
 		if (innerWays == null) {
 			this.coordinates = new float[1][];
@@ -2322,7 +2365,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SERVICE_AREA_FILL));
-					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SERVICE1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2378,7 +2421,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN_AREA_FILL));
-					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2456,7 +2499,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_FOOTWAY_AREA_FILL));
-					addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
@@ -2565,7 +2608,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.BUILDING$TRAIN_STATION]
 					|| wayTagIds[TagIdsWays.BUILDING$UNIVERSITY]
 					|| wayTagIds[TagIdsWays.BUILDING$YES]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.BUILDING$YES)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2637,7 +2680,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* landuse */
 		if ((wayTagBitmap & BITMAP_LANDUSE) != 0) {
 			if (wayTagIds[TagIdsWays.LANDUSE$ALLOTMENTS]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_ALLOTMENTS_FILL));
@@ -2647,7 +2690,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			} else if (wayTagIds[TagIdsWays.LANDUSE$CEMETERY]
 					|| wayTagIds[TagIdsWays.LANDUSE$FARM]
 					|| wayTagIds[TagIdsWays.LANDUSE$RECREATION_GROUND]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_CEMETERY_FILL));
@@ -2657,12 +2700,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_BASIN_FILL));
 			} else if (wayTagIds[TagIdsWays.LANDUSE$BROWNFIELD]
 					|| wayTagIds[TagIdsWays.LANDUSE$INDUSTRIAL]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$INDUSTRIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_INDUSTRIAL_FILL));
 			} else if (wayTagIds[TagIdsWays.LANDUSE$COMMERCIAL]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_COMMERCIAL_FILL));
@@ -2714,7 +2757,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$PARK]
 					|| wayTagIds[TagIdsWays.LEISURE$PITCH]
 					|| wayTagIds[TagIdsWays.LEISURE$PLAYGROUND]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$COMMON)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2726,7 +2769,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					|| wayTagIds[TagIdsWays.LEISURE$STADIUM]
 					|| wayTagIds[TagIdsWays.LEISURE$TRACK]
 					|| wayTagIds[TagIdsWays.LEISURE$WATER_PARK]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$STADIUM)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2744,7 +2787,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		if ((wayTagBitmap & BITMAP_AMENITY) != 0) {
 			if (wayTagIds[TagIdsWays.AMENITY$COLLEGE] || wayTagIds[TagIdsWays.AMENITY$SCHOOL]
 					|| wayTagIds[TagIdsWays.AMENITY$UNIVERSITY]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.AMENITY$SCHOOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2757,13 +2800,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_GRAVE_YARD_FILL));
 			} else if (wayTagIds[TagIdsWays.AMENITY$HOSPITAL]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 18);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 18);
 				addAreaSymbol(this.mapSymbols.hospital, (byte) 16);
 				this.layer.get(LayerIds.AMENITY$HOSPITAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_HOSPITAL_FILL));
 			} else if (wayTagIds[TagIdsWays.AMENITY$PARKING]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 18);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 18);
 				addAreaSymbol(this.mapSymbols.parking, (byte) 17);
 				this.layer.get(LayerIds.AMENITY$PARKING)
 						.add(
@@ -2783,7 +2826,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* natural */
 		if ((wayTagBitmap & BITMAP_NATURAL) != 0) {
 			if (wayTagIds[TagIdsWays.NATURAL$BEACH]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$BEACH).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_BEACH_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$HEATH]) {
@@ -2797,7 +2840,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				this.layer.get(LayerIds.NATURAL$WOOD).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WOOD_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$WATER]) {
-				addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WATER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
 			} else if (wayTagIds[TagIdsWays.NATURAL$COASTLINE]) {
@@ -2999,7 +3042,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* tourism */
 		if (wayTagIds[TagIdsWays.TOURISM$ATTRACTION]) {
-			addAreaName(wayName, AREA_NAME_RED, (byte) 0);
+			addAreaName(wayName, wayLabelPosition, AREA_NAME_RED, (byte) 0);
 			this.layer.get(LayerIds.TOURISM$ATTRACTION)
 					.add(
 							new ShapePaintContainer(this.shapeContainer,
@@ -3045,7 +3088,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* historic */
 		if (wayTagIds[TagIdsWays.HISTORIC$RUINS]) {
-			addAreaName(wayName, AREA_NAME_BLUE, (byte) 0);
+			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
 			}
@@ -3053,7 +3096,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* place */
 		if (wayTagIds[TagIdsWays.PLACE$LOCALITY]) {
-			addAreaName(wayName, AREA_NAME_BLACK, (byte) 0);
+			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLACK, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
 			}

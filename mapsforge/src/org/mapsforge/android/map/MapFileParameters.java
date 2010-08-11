@@ -17,7 +17,7 @@
 package org.mapsforge.android.map;
 
 /**
- * Stores the parameters for a contained map file in a binary map file.
+ * Holds all parameters of a map file.
  */
 class MapFileParameters {
 	/**
@@ -25,23 +25,83 @@ class MapFileParameters {
 	 */
 	private static final double COORDINATES_DIVISOR = 1000000.0;
 
+	private final int hashCode;
+	private MapFileParameters other;
+
+	/**
+	 * The base zoom level of the map file, which equals to one block.
+	 */
 	final byte baseZoomLevel;
+
+	/**
+	 * The size of the entries table at the beginning of each block in bytes.
+	 */
 	final int blockEntriesTableSize;
+
+	/**
+	 * The vertical amount of blocks in the grid.
+	 */
 	final long blocksHeight;
+
+	/**
+	 * The horizontal amount of blocks in the grid.
+	 */
 	final long blocksWidth;
+
+	/**
+	 * The Y number of the tile at the bottom boundary in the grid.
+	 */
 	final long boundaryBottomTile;
+
+	/**
+	 * The X number of the tile at the left boundary in the grid.
+	 */
 	final long boundaryLeftTile;
+
+	/**
+	 * The X number of the tile at the right boundary in the grid.
+	 */
 	final long boundaryRightTile;
+
+	/**
+	 * The Y number of the tile at the top boundary in the grid.
+	 */
 	final long boundaryTopTile;
+
+	/**
+	 * The absolute start address of the index in the enclosing file.
+	 */
 	final long indexStartAddress;
+
+	/**
+	 * The size of the map file in bytes.
+	 */
 	final long mapFileSize;
+
+	/**
+	 * The total number of blocks in the grid.
+	 */
 	final long numberOfBlocks;
+
+	/**
+	 * The absolute start address of the map file in the enclosing file.
+	 */
+	final long startAddress;
+
+	/**
+	 * The maximum zoom level for which the block entries tables are made.
+	 */
 	final byte zoomLevelMax;
+	/**
+	 * The minimum zoom level for which the block entries tables are made.
+	 */
 	final byte zoomLevelMin;
 
 	/**
 	 * Creates a new immutable set of parameters for a MapFileParameters.
 	 * 
+	 * @param startAddress
+	 *            the start address of the map file.
 	 * @param indexStartAddress
 	 *            the start address of the index.
 	 * @param mapFileSize
@@ -55,13 +115,15 @@ class MapFileParameters {
 	 * @param mapBoundary
 	 *            the boundary of the map file.
 	 */
-	MapFileParameters(long indexStartAddress, long mapFileSize, byte baseZoomLevel,
-			byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
+	MapFileParameters(long startAddress, long indexStartAddress, long mapFileSize,
+			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
+		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
 		this.mapFileSize = mapFileSize;
 		this.baseZoomLevel = baseZoomLevel;
 		this.zoomLevelMin = tileZoomLevelMin;
 		this.zoomLevelMax = tileZoomLevelMax;
+		this.hashCode = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
 		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.top
@@ -82,5 +144,43 @@ class MapFileParameters {
 
 		// calculate the size of the tile entries table
 		this.blockEntriesTableSize = 2 * (this.zoomLevelMax - this.zoomLevelMin + 1) * 2;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof MapFileParameters)) {
+			return false;
+		} else {
+			this.other = (MapFileParameters) obj;
+			if (this.startAddress != this.other.startAddress) {
+				return false;
+			} else if (this.mapFileSize != this.other.mapFileSize) {
+				return false;
+			} else if (this.baseZoomLevel != this.other.baseZoomLevel) {
+				return false;
+			}
+			return true;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCode;
+	}
+
+	/**
+	 * Calculates the hash value of this object.
+	 * 
+	 * @return the hash value of this object.
+	 */
+	private int calculateHashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (this.startAddress ^ (this.startAddress >>> 32));
+		result = prime * result + (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
+		result = prime * result + this.baseZoomLevel;
+		return result;
 	}
 }
