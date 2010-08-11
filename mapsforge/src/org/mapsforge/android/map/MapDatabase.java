@@ -118,10 +118,10 @@ public class MapDatabase {
 	private RandomAccessFile inputFile;
 	private Rect mapBoundary;
 	private long mapDate;
-	private MapFile mapFile;
+	private MapFileParameters mapFileParameters;
 	private long mapFileSize;
-	private MapFile[] mapFilesList;
-	private MapFile[] mapFilesLookupTable;
+	private MapFileParameters[] mapFilesList;
+	private MapFileParameters[] mapFilesLookupTable;
 	private int maximumBlockSize;
 	private long nextBlockPointer;
 	private short nodeElevation;
@@ -249,7 +249,7 @@ public class MapDatabase {
 		}
 
 		// calculate the offset in the block entries table and move the pointer
-		this.blockEntriesTableOffset = (this.queryZoomLevel - this.mapFile.zoomLevelMin) * 4;
+		this.blockEntriesTableOffset = (this.queryZoomLevel - this.mapFileParameters.zoomLevelMin) * 4;
 		this.bufferPosition += this.blockEntriesTableOffset;
 
 		// read the amount of way and nodes on the current zoomLevel level
@@ -261,7 +261,7 @@ public class MapDatabase {
 		// Logger.d("  waysOnZoomLevel: " + this.waysOnZoomLevel);
 
 		// move the pointer to the end of the block entries table
-		this.bufferPosition += this.mapFile.blockEntriesTableSize
+		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
 				- this.blockEntriesTableOffset - 4;
 
 		// read the offset to the first stored way in the block (4 bytes)
@@ -724,7 +724,7 @@ public class MapDatabase {
 		this.bufferPosition = 0;
 
 		// create the list of all contained map files
-		this.mapFilesList = new MapFile[this.numberOfMapFiles];
+		this.mapFilesList = new MapFileParameters[this.numberOfMapFiles];
 		this.globalMinimumZoomLevel = Byte.MAX_VALUE;
 		this.globalMaximumZoomLevel = Byte.MIN_VALUE;
 
@@ -785,7 +785,7 @@ public class MapDatabase {
 			}
 
 			// add the current map file to the map files list
-			this.mapFilesList[this.tempByte] = new MapFile(this.indexStartAddress,
+			this.mapFilesList[this.tempByte] = new MapFileParameters(this.indexStartAddress,
 					this.mapFileSize, this.baseZoomLevel, this.zoomLevelMin, this.zoomLevelMax,
 					this.mapBoundary);
 
@@ -799,11 +799,11 @@ public class MapDatabase {
 		}
 
 		// create and fill the lookup table for the map files
-		this.mapFilesLookupTable = new MapFile[this.globalMaximumZoomLevel + 1];
+		this.mapFilesLookupTable = new MapFileParameters[this.globalMaximumZoomLevel + 1];
 		for (this.tempInt = 0; this.tempInt < this.numberOfMapFiles; ++this.tempInt) {
-			this.mapFile = this.mapFilesList[this.tempInt];
-			for (this.tempByte = this.mapFile.zoomLevelMin; this.tempByte <= this.mapFile.zoomLevelMax; ++this.tempByte) {
-				this.mapFilesLookupTable[this.tempByte] = this.mapFile;
+			this.mapFileParameters = this.mapFilesList[this.tempInt];
+			for (this.tempByte = this.mapFileParameters.zoomLevelMin; this.tempByte <= this.mapFileParameters.zoomLevelMax; ++this.tempByte) {
+				this.mapFilesLookupTable[this.tempByte] = this.mapFileParameters;
 			}
 		}
 
@@ -855,8 +855,8 @@ public class MapDatabase {
 			}
 
 			// get and check the map file for the query zoom level
-			this.mapFile = this.mapFilesLookupTable[this.queryZoomLevel];
-			if (this.mapFile == null) {
+			this.mapFileParameters = this.mapFilesLookupTable[this.queryZoomLevel];
+			if (this.mapFileParameters == null) {
 				Logger.d("no map file for zoom level: " + tile.zoomLevel);
 				return;
 			}
@@ -864,17 +864,19 @@ public class MapDatabase {
 			this.queryReadWayNames = readWayNames;
 
 			// calculate the blocks that cover the area of the requested tile
-			if (tile.zoomLevel < this.mapFile.baseZoomLevel) {
+			if (tile.zoomLevel < this.mapFileParameters.baseZoomLevel) {
 				// calculate the XY numbers of the upper left and lower right subtiles
-				this.zoomLevelDifference = this.mapFile.baseZoomLevel - tile.zoomLevel;
+				this.zoomLevelDifference = this.mapFileParameters.baseZoomLevel
+						- tile.zoomLevel;
 				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
 				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
 				this.useTileBitmask = false;
-			} else if (tile.zoomLevel > this.mapFile.baseZoomLevel) {
+			} else if (tile.zoomLevel > this.mapFileParameters.baseZoomLevel) {
 				// calculate the XY numbers of the parent base tile
-				this.zoomLevelDifference = tile.zoomLevel - this.mapFile.baseZoomLevel;
+				this.zoomLevelDifference = tile.zoomLevel
+						- this.mapFileParameters.baseZoomLevel;
 				this.fromBaseTileX = tile.x >> this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y >> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
@@ -978,12 +980,15 @@ public class MapDatabase {
 			}
 
 			// calculate the blocks in the file which need to be read
-			this.fromBlockX = Math.max(this.fromBaseTileX - this.mapFile.boundaryLeftTile, 0);
-			this.fromBlockY = Math.max(this.fromBaseTileY - this.mapFile.boundaryTopTile, 0);
-			this.toBlockX = Math.min(this.toBaseTileX - this.mapFile.boundaryLeftTile,
-					this.mapFile.blocksWidth - 1);
-			this.toBlockY = Math.min(this.toBaseTileY - this.mapFile.boundaryTopTile,
-					this.mapFile.blocksHeight - 1);
+			this.fromBlockX = Math.max(this.fromBaseTileX
+					- this.mapFileParameters.boundaryLeftTile, 0);
+			this.fromBlockY = Math.max(this.fromBaseTileY
+					- this.mapFileParameters.boundaryTopTile, 0);
+			this.toBlockX = Math.min(
+					this.toBaseTileX - this.mapFileParameters.boundaryLeftTile,
+					this.mapFileParameters.blocksWidth - 1);
+			this.toBlockY = Math.min(this.toBaseTileY - this.mapFileParameters.boundaryTopTile,
+					this.mapFileParameters.blocksHeight - 1);
 
 			// read all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
@@ -994,33 +999,33 @@ public class MapDatabase {
 					}
 
 					// calculate the actual block number of the needed block in the file
-					this.blockNumber = this.currentRow * this.mapFile.blocksWidth
+					this.blockNumber = this.currentRow * this.mapFileParameters.blocksWidth
 							+ this.currentColumn;
 					// Logger.d("  blockNumber: " + this.blockNumber);
 
 					// get and check the current block pointer
-					this.currentBlockPointer = this.databaseIndexCache.getAddress(this.mapFile,
-							this.blockNumber);
+					this.currentBlockPointer = this.databaseIndexCache.getAddress(
+							this.mapFileParameters, this.blockNumber);
 					if (this.currentBlockPointer < 1
-							|| this.currentBlockPointer > this.mapFile.mapFileSize) {
+							|| this.currentBlockPointer > this.mapFileParameters.mapFileSize) {
 						Logger.d("invalid current block pointer: " + this.currentBlockPointer);
-						Logger.d("mapFileSize: " + this.mapFile.mapFileSize);
+						Logger.d("mapFileSize: " + this.mapFileParameters.mapFileSize);
 						return;
 					}
 					// Logger.d("  currentBlockPointer: " + this.currentBlockPointer);
 
 					// check if the current block is the last block in the file
-					if (this.blockNumber + 1 == this.mapFile.numberOfBlocks) {
+					if (this.blockNumber + 1 == this.mapFileParameters.numberOfBlocks) {
 						// set the next block pointer to the end of the file
-						this.nextBlockPointer = this.mapFile.mapFileSize;
+						this.nextBlockPointer = this.mapFileParameters.mapFileSize;
 					} else {
 						// get and check the next block pointer
 						this.nextBlockPointer = this.databaseIndexCache.getAddress(
-								this.mapFile, this.blockNumber + 1);
+								this.mapFileParameters, this.blockNumber + 1);
 						if (this.nextBlockPointer < 1
-								|| this.nextBlockPointer > this.mapFile.mapFileSize) {
+								|| this.nextBlockPointer > this.mapFileParameters.mapFileSize) {
 							Logger.d("invalid next block pointer: " + this.nextBlockPointer);
-							Logger.d("mapFileSize: " + this.mapFile.mapFileSize);
+							Logger.d("mapFileSize: " + this.mapFileParameters.mapFileSize);
 							return;
 						}
 					}
@@ -1044,7 +1049,7 @@ public class MapDatabase {
 					// Logger.d("  currentBlockSize: " + this.currentBlockSize);
 
 					// go to the current block in the map file and read the data into the buffer
-					this.inputFile.seek(this.mapFile.indexStartAddress
+					this.inputFile.seek(this.mapFileParameters.indexStartAddress
 							+ this.currentBlockPointer - 16); // FIXME: remove 16
 					if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
 						// if reading the current block has failed, skip it

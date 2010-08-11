@@ -18,26 +18,47 @@ package org.mapsforge.android.map;
 
 /**
  * A container class that holds all immutable rendering parameters for a single map image
- * together with a priority field, which indicates the importance of this task.
+ * together with a mutable priority field, which indicates the importance of this task.
  */
 class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	private final int hashCode;
 	private MapGeneratorJob other;
+
+	/**
+	 * Indicates if a frame should be drawn around the image for debug purposes.
+	 */
 	final boolean drawTileFrames;
+
+	/**
+	 * The map file used to render the map image, may be null if tiles are downloaded.
+	 */
 	final String mapFile;
+
+	/**
+	 * The MapViewMode used to render the map image.
+	 */
 	final MapViewMode mapViewMode;
+
+	/**
+	 * The rendering priority of this job. Moving the map influences the priority of jobs, as
+	 * the distance from tiles to the visible map area changes.
+	 */
 	int priority;
+
+	/**
+	 * The tile that is rendered to a map image.
+	 */
 	final Tile tile;
 
 	/**
 	 * Creates a new job for the MapGenerator with the given parameters.
 	 * 
 	 * @param tile
-	 *            the tile to be generated.
+	 *            the tile to be rendered as a map image.
 	 * @param mapViewMode
-	 *            the operation mode.
+	 *            the operation mode in which the map image should be generated.
 	 * @param mapFile
-	 *            the map file.
+	 *            the map file or null, if no map file is needed.
 	 * @param drawTileFrames
 	 *            flag to enable tile frames.
 	 */

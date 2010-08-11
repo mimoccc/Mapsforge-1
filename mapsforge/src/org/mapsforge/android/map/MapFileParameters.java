@@ -19,7 +19,7 @@ package org.mapsforge.android.map;
 /**
  * Stores the parameters for a contained map file in a binary map file.
  */
-class MapFile {
+class MapFileParameters {
 	/**
 	 * The divisor for converting coordinates stored as integers to double values.
 	 */
@@ -40,7 +40,7 @@ class MapFile {
 	final byte zoomLevelMin;
 
 	/**
-	 * Creates a new immutable set of parameters for a MapFile.
+	 * Creates a new immutable set of parameters for a MapFileParameters.
 	 * 
 	 * @param indexStartAddress
 	 *            the start address of the index.
@@ -55,7 +55,7 @@ class MapFile {
 	 * @param mapBoundary
 	 *            the boundary of the map file.
 	 */
-	MapFile(long indexStartAddress, long mapFileSize, byte baseZoomLevel,
+	MapFileParameters(long indexStartAddress, long mapFileSize, byte baseZoomLevel,
 			byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
 		this.indexStartAddress = indexStartAddress;
 		this.mapFileSize = mapFileSize;

@@ -16,6 +16,11 @@
  */
 package org.mapsforge.android.map;
 
+/**
+ * A tile represents a rectangular part of the world map. All tiles can be identified by their X
+ * and Y number together with their zoom level. The actual area that a tile covers on a map
+ * depends on the underlying map projection.
+ */
 class Tile {
 	/**
 	 * The amount of bytes per pixel of a map tile.
@@ -34,14 +39,34 @@ class Tile {
 
 	private final int hashCode;
 	private Tile other;
+
+	/**
+	 * The pixel X coordinate of the upper left corner of this tile on the world map.
+	 */
 	final long pixelX;
+
+	/**
+	 * The pixel Y coordinate of the upper left corner of this tile on the world map.
+	 */
 	final long pixelY;
+
+	/**
+	 * The X number of this tile.
+	 */
 	final long x;
+
+	/**
+	 * The Y number of this tile.
+	 */
 	final long y;
+
+	/**
+	 * The zoom level of this tile.
+	 */
 	final byte zoomLevel;
 
 	/**
-	 * Constructs a new tile with the specified XY number and zoom level.
+	 * Constructs an immutable tile with the specified XY number and zoom level.
 	 * 
 	 * @param x
 	 *            the X number of the tile.

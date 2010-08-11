@@ -32,10 +32,18 @@ class MapDatabaseIndexCache {
 		private final int hashCode;
 		private CacheEntryKey other;
 		final long blockNumber;
-		final MapFile mapFile;
+		final MapFileParameters mapFileParameters;
 
-		CacheEntryKey(MapFile mapFile, long blockNumber) {
-			this.mapFile = mapFile;
+		/**
+		 * Creates an immutable key to be stored in a map.
+		 * 
+		 * @param mapFileParameters
+		 *            the parameters of the map file.
+		 * @param blockNumber
+		 *            the block number in the map file.
+		 */
+		CacheEntryKey(MapFileParameters mapFileParameters, long blockNumber) {
+			this.mapFileParameters = mapFileParameters;
 			this.blockNumber = blockNumber;
 			this.hashCode = calculateHashCode();
 		}
@@ -48,11 +56,11 @@ class MapDatabaseIndexCache {
 				return false;
 			} else {
 				this.other = (CacheEntryKey) obj;
-				if (this.mapFile == null && other.mapFile != null) {
+				if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
 					return false;
-				} else if (!this.mapFile.equals(other.mapFile)) {
+				} else if (!this.mapFileParameters.equals(this.other.mapFileParameters)) {
 					return false;
-				} else if (this.blockNumber != other.blockNumber) {
+				} else if (this.blockNumber != this.other.blockNumber) {
 					return false;
 				}
 				return true;
@@ -72,7 +80,9 @@ class MapDatabaseIndexCache {
 		private int calculateHashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+			result = prime
+					* result
+					+ ((this.mapFileParameters == null) ? 0 : this.mapFileParameters.hashCode());
 			result = prime * result + (int) (this.blockNumber ^ (this.blockNumber >>> 32));
 			return result;
 		}
@@ -98,6 +108,7 @@ class MapDatabaseIndexCache {
 	 */
 	private static final int SIZE_OF_CACHE_BLOCK = INDEX_ENTRIES_PER_CACHE_BLOCK
 			* BYTES_PER_INDEX_ENTRY;
+
 	private int addressInCacheBlock;
 	private byte[] cacheBlock;
 	private long cacheBlockNumber;
@@ -152,21 +163,21 @@ class MapDatabaseIndexCache {
 	 * Returns the real address of a block in the given map file. If the required block address
 	 * is not cached, it will be read from the correct map file index and put in the cache.
 	 * 
-	 * @param mapFile
-	 *            the map file for which the address is needed.
+	 * @param mapFileParameters
+	 *            the parameters of the map file for which the address is needed.
 	 * @param blockNumber
 	 *            the number of the block in the map file.
 	 * @return the block address or -1 if the block number is invalid.
 	 */
-	long getAddress(MapFile mapFile, long blockNumber) {
+	long getAddress(MapFileParameters mapFileParameters, long blockNumber) {
 		try {
 			// check if the block number is out of bounds
-			if (blockNumber >= mapFile.numberOfBlocks) {
+			if (blockNumber >= mapFileParameters.numberOfBlocks) {
 				return -1;
 			}
 
 			// create the cache entry key for this request
-			this.cacheEntryKey = new CacheEntryKey(mapFile, blockNumber);
+			this.cacheEntryKey = new CacheEntryKey(mapFileParameters, blockNumber);
 
 			// calculate the index block number
 			this.cacheBlockNumber = blockNumber / INDEX_ENTRIES_PER_CACHE_BLOCK;
@@ -177,7 +188,7 @@ class MapDatabaseIndexCache {
 				// cache miss, create a new index block
 				this.cacheBlock = new byte[SIZE_OF_CACHE_BLOCK];
 				// seek to the correct index block in the file and read it
-				this.inputFile.seek(mapFile.indexStartAddress + this.cacheBlockNumber
+				this.inputFile.seek(mapFileParameters.indexStartAddress + this.cacheBlockNumber
 						* SIZE_OF_CACHE_BLOCK);
 				if (this.inputFile.read(this.cacheBlock, 0, SIZE_OF_CACHE_BLOCK) != SIZE_OF_CACHE_BLOCK) {
 					return -1;

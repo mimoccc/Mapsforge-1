@@ -17,7 +17,8 @@
 package org.mapsforge.android.map;
 
 /**
- * An immutable container for the two endpoints of a way to compare segments.
+ * An immutable container for the two endpoints of a way. The purpose of this class is to
+ * compare segments by looking at their first and last point.
  */
 class EndPoints {
 	private final Point end;

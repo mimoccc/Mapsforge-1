@@ -22,7 +22,7 @@ import android.graphics.Bitmap;
 
 /**
  * A MapGenerator provides map images. This abstract base class handles all thread specific
- * actions and provides the queue for jobs, which need to be processed.
+ * actions and provides the queue for jobs, which need to be processed and scheduled.
  */
 abstract class MapGenerator extends Thread {
 	private MapGeneratorJob currentMapGeneratorJob;
