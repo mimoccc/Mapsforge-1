@@ -17,106 +17,111 @@
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
 import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BinaryFileHeader;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphHeader;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BlockIndex;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.HHGlobalConstants;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.RouterFactory;
 
 public class RoutingGraph {
 
-	private final int numLevels;
-	private final BlockReader blockReader;
-	private final Cache<Block> cache;
-	private final int shiftClusterId;
-	private final int bitMask;
-	private final Random rnd = new Random(1222);
+	public final static byte[] HEADER_MAGIC = HHGlobalConstants.BINARY_FILE_HEADER_MAGIC;
+	public final static int HEADER_LENGTH = HHGlobalConstants.BINARY_FILE_HEADER_LENGTH;
+
+	private final RleBlockReader blockReader;
+	private final Cache<RleBlock> cache;
+	private final Random rnd = new Random(1333);
 	public int[] numBlockReads;
-	public int ioTime;
-	public int shiftTime;
+	public long ioTime;
+	public long shiftTime;
 
-	public RoutingGraph(File file, Cache<Block> cache) throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(file, "r");
+	public RoutingGraph(File hhBinaryFile, Cache<RleBlock> cache) throws IOException {
+		RandomAccessFile raf = new RandomAccessFile(hhBinaryFile, "r");
 
-		BinaryFileHeader fileHeader = new BinaryFileHeader(read(raf, 0,
-				BinaryFileHeader.HEADER_LENGTH));
-		if (!fileHeader.isHeaderValid()) {
-			throw new IOException("Header not valid!");
+		// ------------- READ BINARY FILE HEADER --------------
+
+		// read the header from secondary storage
+		byte[] header = new byte[HEADER_LENGTH];
+		raf.seek(0);
+		raf.readFully(header);
+
+		// extract data from header and verify the header magic
+		DataInputStream iStream = new DataInputStream(new ByteArrayInputStream(header));
+		byte[] headerMagic = new byte[HEADER_MAGIC.length];
+		iStream.read(headerMagic);
+
+		for (int i = 0; i < headerMagic.length; i++) {
+			if (headerMagic[i] != HEADER_MAGIC[i]) {
+				throw new IOException("invalid header.");
+			}
 		}
 
-		BlockedGraphHeader graphHeader = new BlockedGraphHeader(read(raf,
-				fileHeader.startAddrGraphHeader, fileHeader.endAddrGraphHeader));
-		BlockPointerIndex blockIdx = new BlockPointerIndex(read(raf,
-				fileHeader.startAddrBlockPointerIdx, fileHeader.endAddrBlockPointerIdx));
+		long startAddrGraph = iStream.readLong();
+		/* long endAddrGraph = */iStream.readLong();
+		long startAddrBlockIndex = iStream.readLong();
+		long endAddrBlockIndex = iStream.readLong();
+
+		BlockIndex blockIdx = new BlockIndex(read(raf, startAddrBlockIndex, endAddrBlockIndex));
 		for (int i = 0; i < blockIdx.size(); i++) {
 			blockIdx.getPointer(i);
 		}
-
 		raf.close();
 
-		this.numLevels = graphHeader.numLevels;
-		this.blockReader = new BlockReader(file, fileHeader.startAddrClusterBlocks,
-				graphHeader, blockIdx);
+		this.blockReader = new RleBlockReader(hhBinaryFile, startAddrGraph, blockIdx);
 		this.cache = cache;
-		this.shiftClusterId = graphHeader.bpVertexCount;
-		this.bitMask = getBitmask(shiftClusterId);
-
-		this.numBlockReads = new int[numLevels];
+		this.numBlockReads = new int[blockReader.numLevels];
 		this.ioTime = 0;
 		this.shiftTime = 0;
 	}
 
 	public int numLevels() {
-		return numLevels;
+		return blockReader.numLevels;
 	}
 
-	public Vertex getRandomVertex(int lvl) throws IOException {
+	public void getRandomVertex(int lvl, Vertex buff) throws IOException {
 		int blockId = rnd.nextInt(blockReader.getNumBlocks());
-		Vertex v = getVertex(blockId << shiftClusterId);
-		while (v.getLvl() != lvl) {
+		getVertex(blockReader.getVertexId(blockId, 0), buff);
+		while (buff.getLvl() != lvl) {
 			blockId = rnd.nextInt(blockReader.getNumBlocks());
-			v = getVertex(blockId << shiftClusterId);
+			getVertex(blockReader.getVertexId(blockId, 0), buff);
 		}
-		return v;
 	}
 
-	public Vertex getVertex(int vertexId) throws IOException {
-		int blockId = getBlockId(vertexId);
-		Block block = cache.getItem(blockId);
+	public void getVertex(int vertexId, Vertex buff) throws IOException {
+		int blockId = blockReader.getBlockId(vertexId);
+		RleBlock block = getBlock(blockId);
+		int vertexOffset = blockReader.getVertexOffset(vertexId);
+		long time = System.nanoTime();
+		block.getVertex(vertexOffset, buff);
+		shiftTime += System.nanoTime() - time;
+	}
+
+	public void getOutboundEdge(Vertex v, int i, Edge buff) throws IOException {
+		int blockId = blockReader.getBlockId(v.getId());
+		RleBlock block = getBlock(blockId);
+		long time = System.nanoTime();
+		block.getOutboundEdge(v, i, buff);
+		shiftTime += System.nanoTime() - time;
+	}
+
+	private RleBlock getBlock(int blockId) throws IOException {
+		RleBlock block = cache.getItem(blockId);
 		if (block == null) {
-			long time = System.currentTimeMillis();
+			long time = System.nanoTime();
 			block = blockReader.readBlock(blockId);
-			ioTime += System.currentTimeMillis() - time;
+			ioTime += System.nanoTime() - time;
+
 			numBlockReads[block.getLevel()]++;
 			cache.putItem(block);
 		}
-		int vertexOffset = getVertexOffset(vertexId);
-		long time = System.currentTimeMillis();
-		Vertex v = block.getVertex(vertexOffset);
-		shiftTime += System.currentTimeMillis() - time;
-		return v;
-	}
-
-	public int getBlockId(int vertexId) {
-		return vertexId >>> shiftClusterId;
-	}
-
-	public int getVertexOffset(int vertexId) {
-		return vertexId & bitMask;
-	}
-
-	private static int getBitmask(int shiftClusterId) {
-		int bMask = 0;
-		for (int i = 0; i < shiftClusterId; i++) {
-			bMask = (bMask << 1) | 1;
-		}
-		return bMask;
+		return block;
 	}
 
 	private static byte[] read(RandomAccessFile raf, long startAddr, long endAddr)
@@ -130,10 +135,12 @@ public class RoutingGraph {
 	public static void main(String[] args) throws IOException {
 		String map = "berlin";
 
-		RoutingGraph router = new RoutingGraph(new File(map + ".mobile_hh"),
-				new DummyCache<Block>());
-		Vertex s = router.getRandomVertex(0);
-		Vertex t = router.getRandomVertex(0);
+		RoutingGraph router = new RoutingGraph(new File(map + ".hhmobile"),
+				new DummyCache<RleBlock>());
+		Vertex s = new Vertex();
+		router.getRandomVertex(0, s);
+		Vertex t = new Vertex();
+		router.getRandomVertex(0, t);
 		System.out.println(s);
 		System.out.println(t);
 

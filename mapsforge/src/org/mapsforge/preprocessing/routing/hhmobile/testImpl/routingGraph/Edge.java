@@ -17,19 +17,12 @@
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
 public class Edge {
-	private final int targetId, targetIdLvlZero;
-	private final int weight;
-	private final boolean isShortcut, isForward, isBackward, isCore;
+	int targetId, targetIdLvlZero;
+	int weight;
+	boolean isShortcut, isForward, isBackward, isCore;
 
-	public Edge(int targetId, int targetIdLvlZero, int weight, boolean isShortcut,
-			boolean isForward, boolean isBackward, boolean isCore) {
-		this.targetId = targetId;
-		this.targetIdLvlZero = targetIdLvlZero;
-		this.weight = weight;
-		this.isShortcut = isShortcut;
-		this.isForward = isForward;
-		this.isBackward = isBackward;
-		this.isCore = isCore;
+	public Edge() {
+
 	}
 
 	@Override

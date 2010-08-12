@@ -55,11 +55,15 @@ public class DijkstraAlgorithm {
 		discovered.put(s.vertexId, s);
 		while (!queue.isEmpty()) {
 			HeapItem _u = queue.extractMin();
-			Vertex u = graph.getVertex(_u.vertexId);
+			Vertex u = new Vertex();
+			graph.getVertex(_u.vertexId, u);
 			if (u.getId() == targetId) {
 				break;
 			}
-			for (Edge e : u.getOutboundEdges()) {
+			int n = u.getOutboundDegree();
+			for (int i = 0; i < n; i++) {
+				Edge e = new Edge();
+				graph.getOutboundEdge(u, i, e);
 				if (!e.isForward()) {
 					continue;
 				}
@@ -79,7 +83,9 @@ public class DijkstraAlgorithm {
 			return Integer.MAX_VALUE;
 		}
 		int distance = _t.distance;
-		shortestPathBuff.add(graph.getVertex(targetId));
+		Vertex v = new Vertex();
+		graph.getVertex(targetId, v);
+		shortestPathBuff.add(v);
 		while (_t.parent != null) {
 			shortestPathBuff.add(_t.parent);
 			_t = discovered.get(_t.parent.getId());
@@ -128,7 +134,7 @@ public class DijkstraAlgorithm {
 		String map = "berlin";
 		int n = 10;
 
-		RoutingGraph graph = new RoutingGraph(new File(map + ".mobile_hh"), new DummyCache());
+		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), new DummyCache());
 
 		DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
 		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
@@ -137,18 +143,15 @@ public class DijkstraAlgorithm {
 
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
-			Vertex s = graph.getRandomVertex(0);
-			Vertex t = graph.getRandomVertex(0);
+			Vertex s = new Vertex();
+			graph.getRandomVertex(0, s);
+			Vertex t = new Vertex();
+			graph.getRandomVertex(0, t);
 			int distance = d.getShortestPath(s.getId(), t.getId(), sp);
 			for (Vertex v : sp) {
-				Vertex v_ = graph.getVertex(v.getIdLvlZero());
+				Vertex v_ = new Vertex();
+				graph.getVertex(v.getIdLvlZero(), v_);
 				renderer.addCircle(new GeoCoordinate(v_.getLat(), v_.getLon()), Color.BLUE);
-
-				Edge e = v.getOutboundEdges()[0];
-				Vertex et = graph.getVertex(e.getTargetId());
-				if (et.getIdLvlZero() != e.getTargetIdLvlZero()) {
-					System.out.println("error");
-				}
 			}
 			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
 			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);

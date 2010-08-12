@@ -16,26 +16,17 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.testImpl.routingGraph;
 
-
 public class Vertex {
 
-	private final int neighborhood;
-	private final int id, idSubj, idOverly, idLvlZero;
-	private final byte lvl;
-	private final int lon, lat;
-	private final Edge[] outboundEdges;
+	int neighborhood;
+	int id, idSubj, idOverly, idLvlZero;
+	byte lvl;
+	int lon, lat;
+	int internalEdgeStartIdx, externalEdgeStartIdx;
+	short numInternalEdges, numExternalEdges;
 
-	public Vertex(int neighborhood, int id, int idSubj, int idOverly, int idLvlZero, byte lvl,
-			int lon, int lat, Edge[] outboundEdges) {
-		this.neighborhood = neighborhood;
-		this.id = id;
-		this.idSubj = idSubj;
-		this.idOverly = idOverly;
-		this.idLvlZero = idLvlZero;
-		this.lvl = lvl;
-		this.lon = lon;
-		this.lat = lat;
-		this.outboundEdges = outboundEdges;
+	public Vertex() {
+
 	}
 
 	@Override
@@ -50,7 +41,6 @@ public class Vertex {
 		sb.append("  lvl = " + lvl + "\n");
 		sb.append("  lon = " + lon + "\n");
 		sb.append("  lat = " + lat + "\n");
-		sb.append("  outboundEdges = " + outboundEdges.length + "\n");
 		sb.append("(");
 		return sb.toString();
 	}
@@ -87,7 +77,7 @@ public class Vertex {
 		return lat;
 	}
 
-	public Edge[] getOutboundEdges() {
-		return outboundEdges;
+	public short getOutboundDegree() {
+		return (short) (numInternalEdges + numExternalEdges);
 	}
 }

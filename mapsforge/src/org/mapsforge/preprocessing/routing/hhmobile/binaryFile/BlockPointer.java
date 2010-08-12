@@ -14,21 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.util;
+package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
-//public class BoundingBox {
-//
-//	public final int minLon, minLat, maxLon, maxLat;
-//
-//	public BoundingBox(int minLon, int minLat, int maxLon, int maxLat) {
-//		this.minLon = minLon;
-//		this.minLat = minLat;
-//		this.maxLon = maxLon;
-//		this.maxLat = maxLat;
-//	}
-//
-//	@Override
-//	public String toString() {
-//		return "(" + minLon + ", " + minLat + ") (" + maxLon + " " + maxLat + ")";
-//	}
-// }
+public final class BlockPointer {
+
+	public final long startAddr;
+	public final int lengthBytes;
+
+	public BlockPointer(long startAddr, int lenghtBytes) {
+		this.startAddr = startAddr;
+		this.lengthBytes = lenghtBytes;
+	}
+
+	@Override
+	public String toString() {
+		return "[" + startAddr + " - " + (startAddr + lengthBytes) + "]";
+	}
+}

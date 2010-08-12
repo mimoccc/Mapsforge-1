@@ -14,21 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.hhmobile.util;
+package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
-//public class BoundingBox {
-//
-//	public final int minLon, minLat, maxLon, maxLat;
-//
-//	public BoundingBox(int minLon, int minLat, int maxLon, int maxLat) {
-//		this.minLon = minLon;
-//		this.minLat = minLat;
-//		this.maxLon = maxLon;
-//		this.maxLat = maxLat;
-//	}
-//
-//	@Override
-//	public String toString() {
-//		return "(" + minLon + ", " + minLat + ") (" + maxLon + " " + maxLat + ")";
-//	}
-// }
+/**
+ * All constants used by preprocessing and by the runtime classes on the mobile device are put
+ * here.
+ */
+public class HHGlobalConstants {
+
+	public static final byte[] RUN_LENTH_ENCODED_CLUSTER_BLOCKS_HEADER_MAGIC = "# mapsforge hh RunLenthEncodedGraph #"
+			.getBytes();
+	public static final int RUN_LENTH_ENCODED_CLUSTER_BLOCKS_HEADER_LENGTH = 4096;
+
+	public final static byte[] BINARY_FILE_HEADER_MAGIC = "#mapsforge hh-binary#".getBytes();
+	public final static int BINARY_FILE_HEADER_LENGTH = 4096;
+
+}

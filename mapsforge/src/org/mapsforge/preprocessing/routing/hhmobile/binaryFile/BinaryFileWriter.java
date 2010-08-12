@@ -18,6 +18,7 @@ package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,15 +28,16 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockPointerIndex;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.graph.BlockedGraphSerializer;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-public class BinaryFileWriter {
+class BinaryFileWriter {
+
+	private final static byte[] HEADER_MAGIC = HHGlobalConstants.BINARY_FILE_HEADER_MAGIC;
+	private final static int HEADER_LENGTH = HHGlobalConstants.BINARY_FILE_HEADER_LENGTH;
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 
@@ -58,7 +60,7 @@ public class BinaryFileWriter {
 			String clusterBlockEncoding = props.getProperty("hhmobile.clusterblockEncoding");
 			int blockPointerIdxGroupSizeThreshold = Integer.parseInt(props
 					.getProperty("hhmobile.blockPointerIndex.groupSizeThreshold"));
-			System.out.println("create binary file '" + outputFile.getAbsolutePath() + "'");
+			System.out.println("create hh binary file '" + outputFile.getAbsolutePath() + "'");
 
 			// load graph from database
 			System.out.println("load graph from db 'jdbc://" + dbHost + ":" + dbPort + "/"
@@ -86,8 +88,7 @@ public class BinaryFileWriter {
 			}
 			// create the binary file
 			System.out.println("write file '" + outputFile.getAbsolutePath() + "'");
-			writeBinaryFile(graph, clustering, outputFile, "COMMENT",
-					blockPointerIdxGroupSizeThreshold);
+			writeBinaryFile(graph, clustering, outputFile, blockPointerIdxGroupSizeThreshold);
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -102,67 +103,59 @@ public class BinaryFileWriter {
 	}
 
 	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
-			File targetFile, String comment, int indexGroupSizeThreshold) throws IOException {
+			File targetFile, int indexGroupSizeThreshold) throws IOException {
 
-		// temporary files
-		File fGraphHeader = new File(targetFile.getAbsolutePath() + ".blocksHeader");
-		File fClusterBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
-		File fBlockPointerIdx = new File(targetFile.getAbsolutePath() + ".blockIdx");
+		// ---------------- WRITE TEMPORARY FILES --------------------------
+
+		File fBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
+		File fBlockIndex = new File(targetFile.getAbsolutePath() + ".blockIdx");
 		File fRTree = new File(targetFile.getAbsolutePath() + ".rtree");
 
-		// write graphHeader and clusterBlocks
-		int[] blockSize = BlockedGraphSerializer.writeBlockedGraph(fGraphHeader,
-				fClusterBlocks, levelGraph, clustering);
+		// write the graphs cluster blocks
+		int[] blockSize = RleBlockWriter.writeClusterBlocks(fBlocks, levelGraph, clustering);
 
-		// write blockPointer Index
-		BlockPointerIndex blockIdx = BlockPointerIndex.getSpaceOptimalIndex(blockSize,
+		// write block index
+		BlockIndex blockIdx = BlockIndex.getSpaceOptimalIndex(blockSize,
 				indexGroupSizeThreshold);
-		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
-				fBlockPointerIdx));
-		for (int i = 0; i < blockIdx.size(); i++) {
-			blockIdx.getPointer(i);
-		}
+
+		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+				new FileOutputStream(fBlockIndex)));
 		blockIdx.serialize(out);
 		out.close();
 
-		// create binary file header
-
-		long startAddrGraphHeader = BinaryFileHeader.HEADER_LENGTH;
-		long endAddrGraphHeader = startAddrGraphHeader + fGraphHeader.length();
-
-		long startAddrClusterBlocks = endAddrGraphHeader;
-		long endAddrClusterBlocks = startAddrClusterBlocks + fClusterBlocks.length();
-
-		long startAddrBlockPointerIdx = endAddrClusterBlocks;
-		long endAddrBlockPointerIdx = startAddrBlockPointerIdx + fBlockPointerIdx.length();
-
-		BinaryFileHeader header = new BinaryFileHeader(startAddrGraphHeader,
-				endAddrGraphHeader, startAddrClusterBlocks, endAddrClusterBlocks,
-				startAddrBlockPointerIdx, endAddrBlockPointerIdx, comment);
-
 		// ---------------- WRITE THE BINARY FILE --------------------------
 
-		out = new BufferedOutputStream(new FileOutputStream(targetFile));
+		out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(targetFile)));
 
-		// write header
-		out.write(header.serialize());
+		// write header of the binary
+		long startAddrGraph = HEADER_LENGTH;
+		long endAddrGraph = startAddrGraph + fBlocks.length();
 
-		// write graph header
-		writeFile(fGraphHeader, out);
+		long startAddrBlockIdx = endAddrGraph;
+		long endAddrBlockIdx = startAddrBlockIdx + fBlockIndex.length();
+
+		out.write(HEADER_MAGIC);
+		out.writeLong(startAddrGraph);
+		out.writeLong(endAddrGraph);
+		out.writeLong(startAddrBlockIdx);
+		out.writeLong(endAddrBlockIdx);
+		if (out.size() <= HEADER_LENGTH) {
+			out.write(new byte[HEADER_LENGTH - out.size()]);
+		} else {
+			throw new RuntimeException("need to increase header length.");
+		}
 
 		// write cluster blocks
-		writeFile(fClusterBlocks, out);
+		writeFile(fBlocks, out);
 
 		// write cluster blocks
-		writeFile(fBlockPointerIdx, out);
-
+		writeFile(fBlockIndex, out);
 		out.flush();
 		out.close();
 
-		// clean up
-		fGraphHeader.delete();
-		fClusterBlocks.delete();
-		fBlockPointerIdx.delete();
+		// ---------------- CLEAN UP TEMPORARY FILES --------------------------
+		// fGraph.delete();
+		// fBlockIndex.delete();
 	}
 
 	/**

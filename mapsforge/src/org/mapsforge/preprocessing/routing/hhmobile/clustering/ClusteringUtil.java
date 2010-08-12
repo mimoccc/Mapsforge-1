@@ -22,11 +22,11 @@ import gnu.trove.set.hash.THashSet;
 
 import java.util.LinkedList;
 
+import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.routing.hhmobile.util.BoundingBox;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
@@ -190,7 +190,7 @@ public class ClusteringUtil {
 		return max;
 	}
 
-	public BoundingBox getClusterBoundingBox(Cluster c) {
+	public Rect getClusterBoundingBox(Cluster c) {
 		int minLon = Integer.MAX_VALUE;
 		int minLat = Integer.MAX_VALUE;
 		int maxLon = Integer.MIN_VALUE;
@@ -204,7 +204,7 @@ public class ClusteringUtil {
 			maxLon = Math.max(maxLon, lon);
 			maxLat = Math.max(maxLat, lat);
 		}
-		return new BoundingBox(minLon, minLat, maxLon, maxLat);
+		return new Rect(minLon, minLat, maxLon, maxLat);
 	}
 
 	public LinkedList<Cluster> getAdjacentClusters(Cluster c) {
