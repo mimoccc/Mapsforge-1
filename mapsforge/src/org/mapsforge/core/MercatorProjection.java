@@ -20,14 +20,15 @@ import org.mapsforge.preprocessing.map.Tile;
 
 /**
  * A static class that implements spherical mercator projection.
- * 
- * Maybe we should use proj4j instead? http://trac.osgeo.org/proj4j/
  */
 public class MercatorProjection {
 
 	/**
+	 * Convert a longitude coordinate (in degrees) to a horizontal distance in meters from the
+	 * zero meridian
+	 * 
 	 * @param longitude
-	 *            in radians
+	 *            in degrees
 	 * @return longitude in meters in spherical mercator projection
 	 */
 	public static double longitudeToMetersX(double longitude) {
@@ -35,8 +36,11 @@ public class MercatorProjection {
 	}
 
 	/**
+	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the
+	 * equator
+	 * 
 	 * @param latitude
-	 *            in radians
+	 *            in degrees
 	 * @return latitude in meters in spherical mercator projection
 	 */
 	public static double latitudeToMetersY(double latitude) {
