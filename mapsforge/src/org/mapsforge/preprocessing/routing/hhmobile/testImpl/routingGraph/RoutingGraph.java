@@ -22,11 +22,14 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.LinkedList;
 import java.util.Random;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BlockIndex;
+import org.mapsforge.core.WGS84;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.AddressLookupTable;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.HHGlobalConstants;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.StaticRTree;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.RouterFactory;
 
@@ -38,6 +41,7 @@ public class RoutingGraph {
 	private final RleBlockReader blockReader;
 	private final Cache<RleBlock> cache;
 	private final Random rnd = new Random(1333);
+	private final StaticRTree rtree;
 	public int[] numBlockReads;
 	public long ioTime;
 	public long shiftTime;
@@ -67,14 +71,18 @@ public class RoutingGraph {
 		/* long endAddrGraph = */iStream.readLong();
 		long startAddrBlockIndex = iStream.readLong();
 		long endAddrBlockIndex = iStream.readLong();
+		long startAddrRTree = iStream.readLong();
+		/* long endAddrRTree = */iStream.readLong();
 
-		BlockIndex blockIdx = new BlockIndex(read(raf, startAddrBlockIndex, endAddrBlockIndex));
+		AddressLookupTable blockIdx = new AddressLookupTable(read(raf, startAddrBlockIndex,
+				endAddrBlockIndex));
 		for (int i = 0; i < blockIdx.size(); i++) {
 			blockIdx.getPointer(i);
 		}
 		raf.close();
 
 		this.blockReader = new RleBlockReader(hhBinaryFile, startAddrGraph, blockIdx);
+		this.rtree = new StaticRTree(hhBinaryFile, startAddrRTree);
 		this.cache = cache;
 		this.numBlockReads = new int[blockReader.numLevels];
 		this.ioTime = 0;
@@ -83,6 +91,33 @@ public class RoutingGraph {
 
 	public int numLevels() {
 		return blockReader.numLevels;
+	}
+
+	public boolean getNearestVertex(GeoCoordinate c, double maxDistanceMeters, Vertex buff)
+			throws IOException {
+		double alphaLon = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180;
+		double alphaLat = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180; // TODO:
+		int minLon = GeoCoordinate.doubleToInt(c.getLongitude() - alphaLon);
+		int maxLon = GeoCoordinate.doubleToInt(c.getLongitude() + alphaLon);
+		int minLat = GeoCoordinate.doubleToInt(c.getLatitude() - alphaLat);
+		int maxLat = GeoCoordinate.doubleToInt(c.getLatitude() + alphaLat);
+		LinkedList<Integer> blockIds = rtree.overlaps(minLon, maxLon, minLat, maxLat);
+		Vertex v = new Vertex();
+		double dBest = Double.MAX_VALUE;
+		for (int blockId : blockIds) {
+			RleBlock block = getBlock(blockId);
+			int n = block.getNumVertices();
+			for (int i = 0; i < n; i++) {
+				block.getVertex(i, v);
+				double distance = GeoCoordinate.sphericalDistance(c.getLatitudeE6(), c
+						.getLongitudeE6(), v.getLat(), v.getLon());
+				if (dBest > distance) {
+					dBest = distance;
+					block.getVertex(i, buff);
+				}
+			}
+		}
+		return dBest != Double.MAX_VALUE;
 	}
 
 	public void getRandomVertex(int lvl, Vertex buff) throws IOException {

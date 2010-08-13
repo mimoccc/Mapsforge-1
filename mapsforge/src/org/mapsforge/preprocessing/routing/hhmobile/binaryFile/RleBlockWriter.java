@@ -49,7 +49,7 @@ class RleBlockWriter {
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
 
 	public static int[] writeClusterBlocks(File targetFile, LevelGraph levelGraph,
-			Clustering[] clustering) throws IOException {
+			Clustering[] clustering, ClusterBlockMapping mapping) throws IOException {
 
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(targetFile));
 
@@ -62,7 +62,6 @@ class RleBlockWriter {
 		// --- REARRANGE VERTICES AND BLOCK IDS ---
 
 		sortClusterVertices(levelGraph, clustering);
-		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
 		// need new instance since we swapped clusters and vertices
 		cUtil = new ClusteringUtil(clustering, levelGraph);
 		int[] blockSizes = getBlockByteSizes(mapping, cUtil, enc);

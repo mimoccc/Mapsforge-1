@@ -461,7 +461,7 @@ public class HighwayHierarchiesAlgorithm {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		String map = "berlin";
-		int n = 50;
+		int n = 1;
 
 		LRUCache cache = new LRUCache(1000 * 1024);
 		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), cache);
@@ -477,9 +477,11 @@ public class HighwayHierarchiesAlgorithm {
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
 			Vertex s = new Vertex();
-			graph.getRandomVertex(0, s);
+			graph.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655), 300, s);
+			// graph.getRandomVertex(0, s);
 			Vertex t = new Vertex();
-			graph.getRandomVertex(0, t);
+			graph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805), 300, t);
+			// graph.getRandomVertex(0, t);
 			int d1 = hh.getShortestPath(s.getId(), t.getId(), sp1);
 			System.out.println("cache misses : " + cache.getNumCacheMisses());
 			System.out.println("bytes read : " + cache.getNumBytesRead());

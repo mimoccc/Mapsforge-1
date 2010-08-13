@@ -16,12 +16,12 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile.binaryFile;
 
-public final class BlockPointer {
+public final class Pointer {
 
 	public final long startAddr;
 	public final int lengthBytes;
 
-	public BlockPointer(long startAddr, int lenghtBytes) {
+	public Pointer(long startAddr, int lenghtBytes) {
 		this.startAddr = startAddr;
 		this.lengthBytes = lenghtBytes;
 	}

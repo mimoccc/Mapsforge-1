@@ -36,7 +36,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
  * is constant an can be limited by group size. Additionally a method is provided which
  * determines the optimal group size with regard to a given threshold.
  */
-public final class BlockIndex {
+public final class AddressLookupTable {
 
 	private final static int MIN_G_SIZE = 5;
 
@@ -68,7 +68,7 @@ public final class BlockIndex {
 	 * @param gSize
 	 *            pointer are grouped in groups of size gSize.
 	 */
-	public BlockIndex(int[] blockSize, int gSize) {
+	public AddressLookupTable(int[] blockSize, int gSize) {
 		this.gSize = gSize;
 		this.numBlocks = blockSize.length;
 
@@ -93,7 +93,7 @@ public final class BlockIndex {
 	 * @throws IOException
 	 *             thrown if something is wrong with the byte array.
 	 */
-	public BlockIndex(byte[] buff) throws IOException {
+	public AddressLookupTable(byte[] buff) throws IOException {
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(buff));
 
 		this.gSize = in.readInt();
@@ -127,17 +127,17 @@ public final class BlockIndex {
 	 *            limit on size of the pointer groups.
 	 * @return the space optimal index concerning the given parameters.
 	 */
-	public static BlockIndex getSpaceOptimalIndex(int[] blockSize, int maxGSize) {
+	public static AddressLookupTable getSpaceOptimalIndex(int[] blockSize, int maxGSize) {
 		maxGSize = Math.min(blockSize.length, maxGSize);
 		int[] indexSize = new int[maxGSize - MIN_G_SIZE + 1];
 
 		for (int gSize = MIN_G_SIZE; gSize <= maxGSize; gSize++) {
-			BlockIndex index = new BlockIndex(blockSize, gSize);
+			AddressLookupTable index = new AddressLookupTable(blockSize, gSize);
 			indexSize[gSize - MIN_G_SIZE] = index.byteSize();
 		}
 		int optGSize = MIN_G_SIZE + Utils.firstIndexOfMin(indexSize);
 
-		return new BlockIndex(blockSize, optGSize);
+		return new AddressLookupTable(blockSize, optGSize);
 	}
 
 	/**
@@ -175,7 +175,7 @@ public final class BlockIndex {
 	 *            id of the pointer.
 	 * @return pointer identified by the given id or bull if id is out of range.
 	 */
-	public BlockPointer getPointer(int blockId) {
+	public Pointer getPointer(int blockId) {
 		try {
 			final int groupIdx = blockId / gSize;
 			final int blockOffset = blockId % gSize;
@@ -189,7 +189,7 @@ public final class BlockIndex {
 				blockStartAddr += blockSize;
 				blockSize += stream.readUInt(gEncBits[groupIdx]);
 			}
-			return new BlockPointer(blockStartAddr, blockSize);
+			return new Pointer(blockStartAddr, blockSize);
 		} catch (IOException e) {
 			return null;
 		}

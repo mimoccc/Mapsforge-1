@@ -22,8 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BlockIndex;
-import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.BlockPointer;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.AddressLookupTable;
+import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.Pointer;
 import org.mapsforge.preprocessing.routing.hhmobile.binaryFile.HHGlobalConstants;
 
 class RleBlockReader {
@@ -32,7 +32,7 @@ class RleBlockReader {
 	private static final int HEADER_LENGTH = HHGlobalConstants.RUN_LENTH_ENCODED_CLUSTER_BLOCKS_HEADER_LENGTH;
 
 	private final RandomAccessFile raf;
-	private final BlockIndex blockIndex;
+	private final AddressLookupTable blockIndex;
 	private final long startAddrFirstClusterBlock;
 	private final int bitMask;
 
@@ -41,7 +41,7 @@ class RleBlockReader {
 
 	private int bytesRead;
 
-	public RleBlockReader(File f, long startAddrClusterBlocks, BlockIndex blockIndex)
+	public RleBlockReader(File f, long startAddrClusterBlocks, AddressLookupTable blockIndex)
 			throws IOException {
 		this.raf = new RandomAccessFile(f, "r");
 		this.startAddrFirstClusterBlock = startAddrClusterBlocks + HEADER_LENGTH;
@@ -73,7 +73,7 @@ class RleBlockReader {
 	}
 
 	public RleBlock readBlock(int blockId) throws IOException {
-		BlockPointer pointer = blockIndex.getPointer(blockId);
+		Pointer pointer = blockIndex.getPointer(blockId);
 		raf.seek(startAddrFirstClusterBlock + pointer.startAddr);
 		byte[] buff = new byte[pointer.lengthBytes];
 		bytesRead += buff.length;

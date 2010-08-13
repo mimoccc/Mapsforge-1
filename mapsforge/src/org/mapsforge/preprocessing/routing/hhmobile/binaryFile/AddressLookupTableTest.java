@@ -23,7 +23,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
-public class BlockIndexTest {
+public class AddressLookupTableTest {
 
 	private static final int INDEX_SIZE = 50000;
 	private static final int BLOCK_SIZE_MIN = 800;
@@ -35,12 +35,12 @@ public class BlockIndexTest {
 		int[] blockSize = Utils.getRandomInts(INDEX_SIZE, BLOCK_SIZE_MIN, BLOCK_SIZE_MAX);
 		Arrays.sort(blockSize);
 
-		BlockIndex index = new BlockIndex(blockSize, GROUP_SIZE);
+		AddressLookupTable index = new AddressLookupTable(blockSize, GROUP_SIZE);
 		assertEquals(INDEX_SIZE, index.size());
 
 		int startAddr = 0;
 		for (int i = 0; i < index.size(); i++) {
-			BlockPointer p = index.getPointer(i);
+			Pointer p = index.getPointer(i);
 
 			assertEquals(p.startAddr, startAddr);
 			assertEquals(p.lengthBytes, blockSize[i]);

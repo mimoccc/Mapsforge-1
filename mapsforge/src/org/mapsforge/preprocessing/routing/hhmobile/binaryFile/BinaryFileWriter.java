@@ -28,10 +28,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.Rect;
+import org.mapsforge.preprocessing.routing.hhmobile.clustering.Cluster;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.Clustering;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.KCenterClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.clustering.QuadTreeClusteringAlgorithm;
 import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level;
+import org.mapsforge.preprocessing.routing.hhmobile.graph.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.util.DBConnection;
 
 class BinaryFileWriter {
@@ -88,7 +93,8 @@ class BinaryFileWriter {
 			}
 			// create the binary file
 			System.out.println("write file '" + outputFile.getAbsolutePath() + "'");
-			writeBinaryFile(graph, clustering, outputFile, blockPointerIdxGroupSizeThreshold);
+			writeBinaryFile(graph, clustering, outputFile, blockPointerIdxGroupSizeThreshold,
+					4096);
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -103,7 +109,8 @@ class BinaryFileWriter {
 	}
 
 	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
-			File targetFile, int indexGroupSizeThreshold) throws IOException {
+			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize)
+			throws IOException {
 
 		// ---------------- WRITE TEMPORARY FILES --------------------------
 
@@ -112,16 +119,39 @@ class BinaryFileWriter {
 		File fRTree = new File(targetFile.getAbsolutePath() + ".rtree");
 
 		// write the graphs cluster blocks
-		int[] blockSize = RleBlockWriter.writeClusterBlocks(fBlocks, levelGraph, clustering);
+		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
+		int[] blockSize = RleBlockWriter.writeClusterBlocks(fBlocks, levelGraph, clustering,
+				mapping);
 
 		// write block index
-		BlockIndex blockIdx = BlockIndex.getSpaceOptimalIndex(blockSize,
+		AddressLookupTable blockIdx = AddressLookupTable.getSpaceOptimalIndex(blockSize,
 				indexGroupSizeThreshold);
 
 		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
 				new FileOutputStream(fBlockIndex)));
 		blockIdx.serialize(out);
 		out.close();
+
+		// construct and write r-tree (insert only level 0 clusters)
+		int[] minLat = new int[clustering[0].size()];
+		int[] maxLat = new int[clustering[0].size()];
+		int[] minLon = new int[clustering[0].size()];
+		int[] maxLon = new int[clustering[0].size()];
+		int[] blockId = new int[clustering[0].size()];
+		{
+			int i = 0;
+			for (Cluster c : clustering[0].getClusters()) {
+				Rect r = getBoundingBox(c, levelGraph.getLevel(0));
+				minLat[i] = r.minLat;
+				maxLat[i] = r.maxLat;
+				minLon[i] = r.minLon;
+				maxLon[i] = r.maxLon;
+				blockId[i] = mapping.getBlockId(c);
+				i++;
+			}
+		}
+		StaticRTree.packSortTileRecursive(minLon, maxLon, minLat, maxLat, blockId,
+				rtreeBlockSize, fRTree);
 
 		// ---------------- WRITE THE BINARY FILE --------------------------
 
@@ -134,28 +164,52 @@ class BinaryFileWriter {
 		long startAddrBlockIdx = endAddrGraph;
 		long endAddrBlockIdx = startAddrBlockIdx + fBlockIndex.length();
 
+		long startAddrRTree = endAddrBlockIdx;
+		long endAddrRTree = startAddrRTree + fRTree.length();
+
 		out.write(HEADER_MAGIC);
 		out.writeLong(startAddrGraph);
 		out.writeLong(endAddrGraph);
 		out.writeLong(startAddrBlockIdx);
 		out.writeLong(endAddrBlockIdx);
+		out.writeLong(startAddrRTree);
+		out.writeLong(endAddrRTree);
 		if (out.size() <= HEADER_LENGTH) {
 			out.write(new byte[HEADER_LENGTH - out.size()]);
 		} else {
 			throw new RuntimeException("need to increase header length.");
 		}
 
-		// write cluster blocks
+		// write components
 		writeFile(fBlocks, out);
-
-		// write cluster blocks
 		writeFile(fBlockIndex, out);
+		writeFile(fRTree, out);
+
 		out.flush();
 		out.close();
 
 		// ---------------- CLEAN UP TEMPORARY FILES --------------------------
-		// fGraph.delete();
-		// fBlockIndex.delete();
+		fBlocks.delete();
+		fBlockIndex.delete();
+		fRTree.delete();
+	}
+
+	private static Rect getBoundingBox(Cluster c, Level graph) {
+		int minLat = Integer.MAX_VALUE;
+		int maxLat = Integer.MIN_VALUE;
+		int minLon = Integer.MAX_VALUE;
+		int maxLon = Integer.MIN_VALUE;
+
+		int[] vertexIds = c.getVertices();
+		for (int vId : vertexIds) {
+			LevelVertex v = graph.getVertex(vId);
+			GeoCoordinate coord = v.getCoordinate();
+			minLat = Math.min(coord.getLatitudeE6(), minLat);
+			maxLat = Math.max(coord.getLatitudeE6(), maxLat);
+			minLon = Math.min(coord.getLongitudeE6(), minLon);
+			maxLon = Math.max(coord.getLongitudeE6(), maxLon);
+		}
+		return new Rect(minLon, maxLon, minLat, maxLat);
 	}
 
 	/**

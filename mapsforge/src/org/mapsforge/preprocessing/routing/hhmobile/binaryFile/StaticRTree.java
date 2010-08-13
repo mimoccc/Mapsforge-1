@@ -69,8 +69,8 @@ public class StaticRTree {
 			}
 		}
 		this.blockSizeBytes = raf.readInt();
-		this.root = readNode(1);
 		this.readBuff = new byte[blockSizeBytes];
+		this.root = readNode(1);
 	}
 
 	/**
@@ -127,9 +127,6 @@ public class StaticRTree {
 	 */
 	private void overlaps(int minLon, int maxLon, int minLat, int maxLat, RtreeNode node,
 			LinkedList<Integer> buff) throws IOException {
-		if (node.isLeaf) {
-			System.out.println("REACHED LEAF");
-		}
 		for (int i = 0; i < node.minLon.length; i++) {
 			boolean overlaps = Rect.overlaps(node.minLon[i], node.maxLon[i], node.minLat[i],
 					node.maxLat[i], minLon, maxLon, minLat, maxLat);
@@ -187,6 +184,14 @@ public class StaticRTree {
 				minLat, maxLat, pointer);
 		RandomAccessFile raf = new RandomAccessFile(targetFile, "rw");
 		packSTR(rectangles, blockSizeBytes, raf, 1, true);
+
+		// fill the last node with zeroes if necessary
+		long length = raf.length();
+		if (length % blockSizeBytes != 0) {
+			long newLength = length + blockSizeBytes - (length % blockSizeBytes);
+			raf.setLength(newLength);
+		}
+
 		raf.close();
 	}
 
@@ -258,7 +263,6 @@ public class StaticRTree {
 				raf.seek(nodeId * blockSizeBytes);
 				raf.writeBoolean(isLeaf);
 				raf.writeShort(nodeEnd - nodeStart);
-
 				parentEntries.minLon[parentEntryIdx] = rectangles.minLon[i];
 				parentEntries.maxLon[parentEntryIdx] = rectangles.maxLon[i];
 				parentEntries.minLat[parentEntryIdx] = rectangles.minLat[i];
@@ -390,7 +394,7 @@ public class StaticRTree {
 		 * @param b
 		 *            switch.
 		 */
-		private void setSortByLongitude(boolean b) {
+		void setSortByLongitude(boolean b) {
 			this.sortByLongitude = b;
 		}
 
@@ -443,7 +447,7 @@ public class StaticRTree {
 	// public static void main(String[] args) throws IOException {
 	// int width = 1600;
 	// int height = 1100;
-	// int n = 100000;
+	// int n = 685;
 	// int blockSizeBytes = 4096;
 	// File targetFile = new File("rtree.dat");
 	// canvas = new BufferedCanvas(width, height);
@@ -454,7 +458,8 @@ public class StaticRTree {
 	//
 	// System.out.println("generating rectangles");
 	// canvas.clear(Color.BLACK);
-	// Rect[] rect = getRadomRects(0, width * 35, 0, height * 35, 4, 50, n);
+	// int fac = 10;
+	// Rect[] rect = getRadomRects(0, width * fac, 0, height * fac, 4, 50, n);
 	// Color c = Color.WHITE;
 	// for (Rect r : rect) {
 	// drawRect(r, c);
@@ -479,13 +484,17 @@ public class StaticRTree {
 	// targetFile);
 	//
 	// System.out.println("query overlaps");
-	// RTree tree = new RTree(targetFile, 0);
-	// Rect q = new Rect(100, 500, 100, 600);
+	// StaticRTree tree = new StaticRTree(targetFile, 0);
+	// // Rect q = new Rect(100, 500, 100, 600);
+	// Rect q = new Rect(Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE,
+	// Integer.MAX_VALUE);
+	//
 	// LinkedList<Integer> list = tree.overlaps(q.minLon, q.maxLon, q.minLat, q.maxLat);
 	// for (int i : list) {
 	// drawRect(rect[i], Color.GREEN);
 	// }
 	// drawRect(q, Color.RED);
+	// System.out.println("ready");
 	// }
 	//
 	// private static Rect[] getRadomRects(int minLon, int maxLon, int minLat, int maxLat,
