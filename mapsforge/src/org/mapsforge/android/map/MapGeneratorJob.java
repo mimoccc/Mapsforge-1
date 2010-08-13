@@ -87,7 +87,9 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 				return false;
 			} else if (this.mapViewMode != this.other.mapViewMode) {
 				return false;
-			} else if (!this.mapFile.equals(this.other.mapFile)) {
+			} else if (this.mapFile == null && this.other.mapFile != null) {
+				return false;
+			} else if (this.mapFile != null && !this.mapFile.equals(this.other.mapFile)) {
 				return false;
 			} else if (this.drawTileFrames != this.other.drawTileFrames) {
 				return false;
