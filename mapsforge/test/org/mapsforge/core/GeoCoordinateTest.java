@@ -19,9 +19,13 @@ package org.mapsforge.core;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.core.WGS84;
 
+/**
+ * Test GeoCoordinate Class with right and wrong values for the constructor and distance
+ * measurement
+ * 
+ * @author Eike
+ */
 public class GeoCoordinateTest {
 
 	/**
