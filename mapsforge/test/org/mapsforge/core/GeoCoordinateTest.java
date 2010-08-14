@@ -86,12 +86,12 @@ public class GeoCoordinateTest {
 		GeoCoordinate nearSriLanka = new GeoCoordinate(0d, 90d);
 		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, nearSriLanka)
 				- (earthEquatorCircumference / 4)) < 0.01);
-		assertTrue(Math.abs(WGS84.vincentyDistance(zeroZero, nearSriLanka)
+		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(zeroZero, nearSriLanka)
 				- (earthEquatorCircumference / 4)) < 1);
 		// On the equator the result of the different distance calculation methods should be
 		// about the same
 		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, nearSriLanka)
-				- WGS84.vincentyDistance(zeroZero, nearSriLanka)) < 0.01);
+				- GeoCoordinate.vincentyDistance(zeroZero, nearSriLanka)) < 0.01);
 
 		// These coordinates are also 1/4 Earth circumference from zero on the equator
 		GeoCoordinate islaGenovesa = new GeoCoordinate(0d, -90d);
@@ -105,12 +105,12 @@ public class GeoCoordinateTest {
 		GeoCoordinate northPole = new GeoCoordinate(90d, 0d);
 		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, northPole)
 				- (earthEquatorCircumference / 4)) < 0.01);
-		assertTrue(Math
-				.abs(WGS84.vincentyDistance(zeroZero, northPole) - distancePoleToEquator) < 1);
+		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(zeroZero, northPole)
+				- distancePoleToEquator) < 1);
 
 		// Check if the distance from pole to pole works as well in the vincentyDistance
 		GeoCoordinate southPole = new GeoCoordinate(-90d, 0d);
-		assertTrue(Math.abs(WGS84.vincentyDistance(southPole, northPole) - 2
+		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(southPole, northPole) - 2
 				* distancePoleToEquator) < 1);
 	}
 }
