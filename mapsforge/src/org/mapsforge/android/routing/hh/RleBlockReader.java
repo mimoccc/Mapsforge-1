@@ -24,7 +24,7 @@ import java.io.RandomAccessFile;
 
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 
-class RleBlockReader {
+final class RleBlockReader {
 
 	private static final byte[] HEADER_MAGIC = HHGlobals.RLE_CLUSTER_BLOCKS_HEADER_MAGIC;
 	private static final int HEADER_LENGTH = HHGlobals.RLE_CLUSTER_BLOCKS_HEADER_LENGTH;

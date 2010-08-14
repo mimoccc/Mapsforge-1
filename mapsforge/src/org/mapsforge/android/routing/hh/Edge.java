@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.hh;
 
-public class Edge {
+class Edge {
 	int targetId, targetIdLvlZero;
 	int weight;
 	boolean isShortcut, isForward, isBackward, isCore;

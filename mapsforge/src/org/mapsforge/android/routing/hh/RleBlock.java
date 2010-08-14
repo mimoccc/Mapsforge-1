@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayInputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitSerializer;
 
-class RleBlock implements CacheItem {
+final class RleBlock implements CacheItem {
 
 	private final BitArrayInputStream stream;
 

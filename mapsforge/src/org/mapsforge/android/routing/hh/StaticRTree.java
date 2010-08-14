@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 
-class StaticRTree {
+final class StaticRTree {
 
 	private final RandomAccessFile raf;
 	private final int blockSizeBytes;

@@ -28,7 +28,7 @@ import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.RouterFactory;
 
-public class ClusteringEvaluator {
+class ClusteringEvaluator {
 
 	public static void main(String[] args) throws SQLException {
 

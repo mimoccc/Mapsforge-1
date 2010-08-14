@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.mapsforge.preprocessing.routing.hhmobile.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
-public class AddressLookupTableWriter {
+class AddressLookupTableWriter {
 
 	private final static int MIN_G_SIZE = 5;
 

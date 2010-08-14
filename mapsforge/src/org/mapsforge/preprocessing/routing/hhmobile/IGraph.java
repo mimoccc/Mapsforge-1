@@ -18,7 +18,7 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 
 import java.util.Iterator;
 
-public interface IGraph {
+interface IGraph {
 
 	public Iterator<? extends IVertex> getVertices();
 

@@ -28,7 +28,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVerte
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
 
-public class LevelGraph implements Serializable {
+class LevelGraph implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

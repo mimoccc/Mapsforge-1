@@ -31,7 +31,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.RouterFactory;
 
-public class RoutingGraph {
+class RoutingGraph {
 
 	public final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
 	public final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;

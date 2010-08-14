@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.hh;
 
-public interface Cache<I extends CacheItem> {
+interface Cache<I extends CacheItem> {
 
 	public I getItem(int id);
 

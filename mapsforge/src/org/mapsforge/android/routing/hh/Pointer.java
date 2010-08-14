@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.hh;
 
-public final class Pointer {
+final class Pointer {
 
 	public final long startAddr;
 	public final int lengthBytes;

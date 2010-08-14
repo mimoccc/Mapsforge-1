@@ -20,7 +20,7 @@ import gnu.trove.list.TLinkable;
 import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class LRUCache<I extends CacheItem> implements Cache<I> {
+class LRUCache<I extends CacheItem> implements Cache<I> {
 
 	private final TLinkedList<ListNode<I>> list;
 	private final TIntObjectHashMap<ListNode<I>> map;

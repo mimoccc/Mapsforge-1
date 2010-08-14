@@ -23,7 +23,7 @@ import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.QuadTreeClustering.QuadTreeCluster;
 
-public class QuadTreeClusteringAlgorithm {
+class QuadTreeClusteringAlgorithm {
 
 	public static final String ALGORITHM_NAME = "quad_tree";
 

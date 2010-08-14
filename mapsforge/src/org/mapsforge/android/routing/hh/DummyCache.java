@@ -18,7 +18,7 @@ package org.mapsforge.android.routing.hh;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class DummyCache<I extends CacheItem> implements Cache<I> {
+class DummyCache<I extends CacheItem> implements Cache<I> {
 
 	private TIntObjectHashMap<I> map;
 

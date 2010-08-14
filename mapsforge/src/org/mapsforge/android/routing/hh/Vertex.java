@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.hh;
 
-public class Vertex {
+class Vertex {
 
 	int neighborhood;
 	int id, idSubj, idOverly, idLvlZero;

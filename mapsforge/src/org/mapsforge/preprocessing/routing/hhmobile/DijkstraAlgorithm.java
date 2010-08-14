@@ -26,7 +26,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
-public class DijkstraAlgorithm {
+class DijkstraAlgorithm {
 
 	private final BinaryMinHeap<HeapItem, Integer> queue;
 	private final LevelGraph graph;

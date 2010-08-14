@@ -31,7 +31,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
-public class HighwayHierarchiesAlgorithm {
+class HighwayHierarchiesAlgorithm {
 
 	private static final int INITIAL_QUEUE_SIZE = 300;
 	private static final int INITIAL_MAP_SIZE = 2000;

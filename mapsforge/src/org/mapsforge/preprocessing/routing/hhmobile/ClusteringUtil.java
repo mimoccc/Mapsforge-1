@@ -29,7 +29,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
-public class ClusteringUtil {
+class ClusteringUtil {
 
 	private final Clustering[] clustering;
 	private final Level[] graphLevel;

@@ -35,7 +35,7 @@ import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-class BinaryFileWriter {
+public class HHBinaryFileWriter {
 
 	private final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
 	private final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;

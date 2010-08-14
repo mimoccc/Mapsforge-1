@@ -29,7 +29,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBi
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.RouterFactory;
 
-public class DijkstraAlgorithm {
+class DijkstraAlgorithm {
 
 	private final BinaryMinHeap<HeapItem, Integer> queue;
 	private final RoutingGraph graph;

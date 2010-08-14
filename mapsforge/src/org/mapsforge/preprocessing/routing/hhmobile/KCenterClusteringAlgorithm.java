@@ -34,7 +34,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.Bin
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.util.DBConnection;
 
-public class KCenterClusteringAlgorithm {
+class KCenterClusteringAlgorithm {
 
 	public static final String ALGORITHM_NAME = "k_center";
 
@@ -234,8 +234,8 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private static KCenterCluster[] getAdjacentClusters(IGraph graph, KCenterClustering clustering,
-			KCenterCluster cluster) {
+	private static KCenterCluster[] getAdjacentClusters(IGraph graph,
+			KCenterClustering clustering, KCenterCluster cluster) {
 		THashSet<KCenterCluster> set = new THashSet<KCenterCluster>();
 		for (int v : cluster.getVertices()) {
 			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
@@ -250,8 +250,8 @@ public class KCenterClusteringAlgorithm {
 		return adjClusters;
 	}
 
-	private static KCenterCluster chooseClusterForRemoval(IGraph graph, KCenterClustering clustering,
-			int heuristik) {
+	private static KCenterCluster chooseClusterForRemoval(IGraph graph,
+			KCenterClustering clustering, int heuristik) {
 		switch (heuristik) {
 			case HEURISTIC_MIN_RADIUS:
 				return getMinCluster(clustering, new Comparator<KCenterCluster>() {
@@ -274,7 +274,8 @@ public class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private static KCenterCluster getMinCluster(KCenterClustering clustering, Comparator<KCenterCluster> comp) {
+	private static KCenterCluster getMinCluster(KCenterClustering clustering,
+			Comparator<KCenterCluster> comp) {
 		KCenterCluster min = clustering.getClusters().iterator().next();
 		for (KCenterCluster c : clustering.getClusters()) {
 			if (comp.compare(c, min) < 0) {

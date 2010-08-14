@@ -31,7 +31,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.Rend
 import org.mapsforge.server.routing.RouterFactory;
 
 //check for duplicate ids
-public class HighwayHierarchiesAlgorithm {
+class HighwayHierarchiesAlgorithm {
 
 	private static final int INITIAL_HH_QUEUE_SIZE = 300;
 	private static final int INITIAL_HH_MAP_SIZE = 2000;

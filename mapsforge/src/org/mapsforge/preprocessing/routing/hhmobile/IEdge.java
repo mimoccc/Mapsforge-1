@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
-public interface IEdge {
+interface IEdge {
 
 	public IVertex getSource();
 

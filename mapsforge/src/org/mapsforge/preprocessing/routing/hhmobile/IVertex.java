@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
-public interface IVertex {
+interface IVertex {
 
 	public int getId();
 
