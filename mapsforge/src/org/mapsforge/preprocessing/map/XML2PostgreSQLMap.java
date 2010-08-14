@@ -129,6 +129,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private final String SQL_WAY_NODE_DIFF = "INSERT INTO waynodes_diff (way_id,waynode_sequence,diff_lat,diff_lon) VALUES (?,?,?,?)";
 	private final String SQL_UPDATE_INNER_WAY_AMOUNT = "UPDATE ways SET inner_way_amount = ? WHERE id = ?";
 
+	private final String SQL_GET_INNER_WAY_TAGS = "SELECT tags, tags_amount FROM ways WHERE id =?";
+	private final String SQL_UPDATE_INNER_WAY_TAGS = "UPDATE ways SET tags = ?, tags_amount = ? WHERE id = ?";
+
 	private boolean poisBatched = false;
 	private boolean waysBatched = false;
 
@@ -155,10 +158,14 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private PreparedStatement pstmtPoisTilesLessData;
 	private PreparedStatement pstmtWaysTilesLessData;
 
+	private PreparedStatement pstmtInnerWayTags;
+	private PreparedStatement pstmtUpdateInnerWayTags;
+
 	// result sets
 	private ResultSet rsWayNodes;
 	private ResultSet rsInnerWays;
 	private ResultSet rsWaysWithTags;
+	private ResultSet rsInnerWayTags;
 
 	private Connection conn;
 
@@ -299,6 +306,9 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 		pstmtPoisTilesLessData = conn.prepareStatement(SQL_INSERT_POI_TILE_LESS);
 		pstmtWaysTilesLessData = conn.prepareStatement(SQL_INSERT_WAY_TILE_LESS);
 
+		pstmtInnerWayTags = conn.prepareStatement(SQL_GET_INNER_WAY_TAGS);
+		pstmtUpdateInnerWayTags = conn.prepareStatement(SQL_UPDATE_INNER_WAY_TAGS);
+
 		logger.info("database connection setup done...");
 
 	}
@@ -351,6 +361,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			pstmtMultipolygons.executeBatch();
 			pstmtUpdateWayType.executeBatch();
 			pstmtUpdateWayInnerWayAmount.executeBatch();
+			pstmtUpdateInnerWayTags.executeBatch();
 
 			logger.info("create indices on tag tables");
 
@@ -424,6 +435,13 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			minlon = (int) (Double.parseDouble(coordinates[1]) * 1000000);
 			maxlat = (int) (Double.parseDouble(coordinates[2]) * 1000000);
 			maxlon = (int) (Double.parseDouble(coordinates[3]) * 1000000);
+		}
+
+		if (qName.equals("bounds")) {
+			minlat = (int) (Double.parseDouble(attributes.getValue("minlat")) * 1000000);
+			minlon = (int) (Double.parseDouble(attributes.getValue("minlon")) * 1000000);
+			maxlat = (int) (Double.parseDouble(attributes.getValue("maxlat")) * 1000000);
+			maxlon = (int) (Double.parseDouble(attributes.getValue("maxlon")) * 1000000);
 		}
 
 		if (qName.equals("node")) {
@@ -529,6 +547,10 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 			double latDouble;
 			double lonDouble;
 
+			String tags;
+			String innerWayTags = "";
+			String newInnerWayTags;
+
 			if (qName.equals("node")) {
 
 				nodes++;
@@ -617,7 +639,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				pstmtPoisTmp.addBatch();
 
 				// if the node has tags it is a poi and it is stored in the persistent poi table
-				if (!storedTags.equals("")) {
+				if (!storedTags.equals("") || !currentNode.housenumber.equals("")) {
 					pstmtPoisTags.setLong(1, currentNode.id);
 					pstmtPoisTags.setInt(2, currentNode.latitude);
 					pstmtPoisTags.setInt(3, currentNode.longitude);
@@ -944,6 +966,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 
 						if (rsWaysWithTags.next()) {
 							waytype = rsWaysWithTags.getInt("way_type");
+							tags = rsWaysWithTags.getString("tags");
 
 							// if (waytype == 2) {
 							// // outer way is a closed way
@@ -972,6 +995,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 										pstmtMultipolygons.setLong(5, rsInnerWays
 												.getInt("longitude"));
 										pstmtMultipolygons.addBatch();
+
 										sequence++;
 									} catch (SQLException e) {
 
@@ -980,6 +1004,33 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 									}
 								}
 								innerNodes[j] = sequence - 1;
+
+								pstmtInnerWayTags.setInt(1, currentInnerWays.get(j));
+								rsInnerWayTags = pstmtInnerWayTags.executeQuery();
+								int newTagAmount = 0;
+								while (rsInnerWayTags.next()) {
+									innerWayTags = rsInnerWayTags.getString("tags");
+									newTagAmount = rsInnerWayTags.getShort("tags_amount");
+								}
+								splittedTags = innerWayTags.split("\n");
+								newInnerWayTags = "";
+								for (String s : splittedTags) {
+									logger.info("s: " + s + " tags: " + tags);
+									if (tags.indexOf(s) == -1) {
+										newInnerWayTags += s + "\n";
+									} else {
+										newTagAmount--;
+									}
+								}
+								if (newInnerWayTags.equals("\n")) {
+									newInnerWayTags = "";
+									newTagAmount = 0;
+								}
+								pstmtUpdateInnerWayTags.setString(1, newInnerWayTags);
+								pstmtUpdateInnerWayTags.setInt(2, newTagAmount);
+								pstmtUpdateInnerWayTags.setInt(3, currentInnerWays.get(j));
+								logger.info("SQL: " + pstmtUpdateInnerWayTags);
+								pstmtUpdateInnerWayTags.addBatch();
 							}
 
 							boolean noInnerNodes = true;
@@ -1019,6 +1070,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 					pstmtMultipolygons.executeBatch();
 					pstmtUpdateWayType.executeBatch();
 					pstmtUpdateWayInnerWayAmount.executeBatch();
+					pstmtUpdateInnerWayTags.executeBatch();
 					logger.info("executed batch for multipolygons "
 							+ (multipolygons - batchSizeMP) + "-" + multipolygons);
 				}

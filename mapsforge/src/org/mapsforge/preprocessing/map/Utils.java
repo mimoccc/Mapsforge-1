@@ -36,6 +36,12 @@ class Utils {
 	private static final int[] tileBitMaskValues = new int[] { 32768, 16384, 2048, 1024, 8192,
 			4096, 512, 256, 128, 64, 8, 4, 32, 16, 2, 1 };
 
+	// private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0.01,
+	// 0.003, 0.001, 0.0008, 0.00025, 0.00012, 0.0001, 0, 0 };
+
+	private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0.0002, 0, 0.0001 };
+
 	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
 	/**
@@ -50,11 +56,36 @@ class Utils {
 	 * @return the bounding box of this tile.
 	 */
 	static LinearRing getBoundingBox(long tileX, long tileY, byte zoom) {
-		double minLat = MercatorProjection.tileYToLatitude(tileY, zoom);
-		double maxLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
+		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
+				new Coordinate(minLat, minLon), new Coordinate(minLat, maxLon),
+				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
+	}
+
+	static LinearRing getBoundingBox(long tileX, long tileY, byte zoom, boolean bigger) {
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
+		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+
+		if (bigger) {
+			Coordinate[] c = new Coordinate[] {
+					new Coordinate(maxLat + tileEpsilon[zoom - 1], minLon
+							- tileEpsilon[zoom - 1]),
+					new Coordinate(minLat - tileEpsilon[zoom - 1], minLon
+							- tileEpsilon[zoom - 1]),
+					new Coordinate(minLat - tileEpsilon[zoom - 1], maxLon
+							+ tileEpsilon[zoom - 1]),
+					new Coordinate(maxLat + tileEpsilon[zoom - 1], maxLon
+							+ tileEpsilon[zoom - 1]),
+					new Coordinate(maxLat + tileEpsilon[zoom - 1], minLon
+							- tileEpsilon[zoom - 1]) };
+			return geoFac.createLinearRing(c);
+		}
 		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
 				new Coordinate(minLat, minLon), new Coordinate(minLat, maxLon),
 				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
@@ -294,7 +325,7 @@ class Utils {
 			result.put(p, (short) 0);
 			for (Tile csb : currentSubTiles) {
 				subTile = geoFac.createPolygon(Utils.getBoundingBox(csb.x, csb.y,
-						(byte) (p.zoomLevel + 2)), null);
+						(byte) (p.zoomLevel + 2), true), null);
 				if (wayType == 1) {
 					if (geoWay.crosses(subTile) || geoWay.within(subTile)
 							|| geoWay.intersects(subTile)) {
@@ -471,4 +502,38 @@ class Utils {
 		return intersectionPoint;
 	}
 
+	static ArrayList<Coordinate> compressWay(ArrayList<Coordinate> wayNodes, byte zoom) {
+		// zoom: maxzoom for certain base zoom level
+		ArrayList<Coordinate> result = new ArrayList<Coordinate>();
+		int wayLength;
+		float delta = 2;
+		double xOld;
+		double yOld;
+		double x;
+		double y;
+
+		wayLength = wayNodes.size();
+
+		xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(0).y, zoom);
+		yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(0).x, zoom);
+		result.add(wayNodes.get(0));
+
+		for (int i = 1; i < wayLength - 1; i++) {
+			x = MercatorProjection.longitudeToPixelX(wayNodes.get(i).y, zoom);
+			y = MercatorProjection.latitudeToPixelY(wayNodes.get(i).x, zoom);
+
+			if (Math.abs(x - xOld) > delta || Math.abs(y - yOld) > delta) {
+				xOld = x;
+				yOld = y;
+				result.add(wayNodes.get(i));
+				// result.add(new Coordinate(yOld, xOld));
+			}
+		}
+
+		// xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(wayLength - 1).y, zoom);
+		// yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(wayLength - 1).x, zoom);
+		result.add(wayNodes.get(wayLength - 1));
+
+		return result;
+	}
 }

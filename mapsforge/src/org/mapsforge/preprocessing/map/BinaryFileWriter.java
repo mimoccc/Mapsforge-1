@@ -50,48 +50,35 @@ public class BinaryFileWriter {
 	// sql queries
 	private final String SQL_GET_METADATA = "SELECT * FROM metadata";
 
-	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
-	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
 
 	private final String SQL_GET_ZOOM_TABLE_FOR_POIS_LOW_ZOOM = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level_low z LEFT OUTER JOIN "
-			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles_less_data pt JOIN filtered_pois fp ON (pt.poi_id = fp.poi_id) "
-			+ "WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
+			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles_less_data pt WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
 	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS_LOW_ZOOM = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level_low z LEFT OUTER JOIN "
-			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles_less_data wt JOIN filtered_ways fw ON (wt.way_id = fw.way_id) "
-			+ "WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
+			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles_less_data wt WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
 
-	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
-	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS_LOW_ZOOM = "SELECT count(pt.poi_id) FROM pois_to_tiles_less_data pt WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS_LOW_ZOOM = "SELECT count(wt.way_id) FROM ways_to_tiles_less_data wt WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
 
-	private final String SQL_GET_POIS_FOR_TILE_LOW_ZOOM = "SELECT pois.*,ptt.zoom_level FROM filtered_pois fp JOIN pois_to_tiles_less_data ptt ON (fp.poi_id = ptt.poi_id) JOIN pois pois "
+	private final String SQL_GET_POIS_FOR_TILE_LOW_ZOOM = "SELECT pois.*,ptt.zoom_level FROM  pois_to_tiles_less_data ptt JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
-	private final String SQL_GET_WAYS_FOR_TILE_LOW_ZOOM = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM filtered_ways fw JOIN ways_to_tiles_less_data wtt ON (fw.way_id = wtt.way_id) "
-			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
+	private final String SQL_GET_WAYS_FOR_TILE_LOW_ZOOM = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM ways_to_tiles_less_data wtt JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 
-	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
-	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
+	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
 
 	private final String SQL_GET_ZOOM_TABLE_FOR_POIS = "SELECT z.zoom_level,count(ptt.poi_id) FROM zoom_level_high z LEFT OUTER JOIN "
-			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles pt JOIN filtered_pois fp ON (pt.poi_id = fp.poi_id) "
-			+ "WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
+			+ "(SELECT pt.poi_id,pt.zoom_level FROM pois_to_tiles pt WHERE pt.tile_x = ? AND pt.tile_y = ?) as ptt ON (z.zoom_level = ptt.zoom_level) group by z.zoom_level ORDER BY z.zoom_level";
 	private final String SQL_GET_ZOOM_TABLE_FOR_WAYS = "SELECT z.zoom_level, count(wtt.way_id) FROM zoom_level_high z LEFT OUTER JOIN "
-			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles wt JOIN filtered_ways fw ON (wt.way_id = fw.way_id) "
-			+ "WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
+			+ "(SELECT wt.way_id, wt.zoom_level FROM ways_to_tiles wt WHERE wt.tile_x = ? and wt.tile_y = ?) as wtt ON (z.zoom_level = wtt.zoom_level) GROUP BY z.zoom_level ORDER BY z.zoom_level";
 
-	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt JOIN filtered_pois fp "
-			+ "ON (pt.poi_id = fp.poi_id) WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
-	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt JOIN filtered_ways fw "
-			+ "ON (wt.way_id = fw.way_id) WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level >= ?";
+	private final String SQL_GET_MAX_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level >= ?";
 
-	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM filtered_pois fp JOIN pois_to_tiles ptt ON (fp.poi_id = ptt.poi_id) JOIN pois pois "
+	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM pois_to_tiles ptt JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
-	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM filtered_ways fw JOIN ways_to_tiles wtt ON (fw.way_id = wtt.way_id) "
+	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM ways_to_tiles wtt "
 			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 
 	private final String SQL_GET_WAYNODES = "SELECT latitude,longitude FROM waynodes WHERE way_id = ? ORDER BY waynode_sequence";
@@ -183,8 +170,7 @@ public class BinaryFileWriter {
 
 	// bitmap flags for ways
 	private static final short BITMAP_LABEL = 64;
-	private static final short BITMAP_AREA = 32;
-	private static final short BITMAP_MULTIPOLYGON = 16;
+	private static final short BITMAP_MULTIPOLYGON = 32;
 	private static final short BITMAP_HIGHWAY = 128;
 	private static final short BITMAP_RAILWAY = 64;
 	private static final short BITMAP_BUILDING = 32;
@@ -579,11 +565,15 @@ public class BinaryFileWriter {
 			Coordinate[] tileVertices;
 			ArrayList<Coordinate> wayNodes = new ArrayList<Coordinate>();
 
+			byte currentZoom;
+
 			for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
 				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
 
-					tileVertices = Utils.getBoundingBox(tileX, tileY, bottomRight.zoomLevel)
-							.getEnvelope().getCoordinates();
+					currentZoom = (byte) (upperLeft.zoomLevel + 3);
+
+					tileVertices = Utils.getBoundingBox(tileX, tileY, bottomRight.zoomLevel,
+							true).getEnvelope().getCoordinates();
 
 					tileCounter++;
 					/** test **/
@@ -883,12 +873,15 @@ public class BinaryFileWriter {
 						raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
 
 						// write tag ids to the file
-						tagStrings = tags.split("\n");
-						for (String tag : tagStrings) {
-							// TODO write only tags which belong to the filter to the file
-							// if(filterPois.containsKey(tag)){
-							raf.writeByte(tagIdsPOIs.get(tag));
-							// }
+						if (!tags.equals("")) {
+							tagStrings = tags.split("\n");
+
+							for (String tag : tagStrings) {
+								// TODO write only tags which belong to the filter to the file
+								// if(filterPois.containsKey(tag)){
+								raf.writeByte(tagIdsPOIs.get(tag));
+								// }
+							}
 						}
 
 						// write byte with bits set to 1 if the poi has a name, an elevation
@@ -999,45 +992,43 @@ public class BinaryFileWriter {
 
 						// write tag ids
 						for (String tag : tagStrings) {
-							raf.writeByte(tagIdsWays.get(tag));
+							Byte b = tagIdsWays.get(tag);
+							if (b != null) {
+								raf.writeByte(b);
+							} else {
+								logger.info("TAG: " + tag);
+							}
 						}
 
-						// TODO: clip only polygons without name!
-						if (wayType < 2 || waynodesAmount < 4) {
-							// write way nodes
-							raf.writeShort(waynodesAmount);
+						wayNodes.clear();
+						pstmtWaynodes.setLong(1, id);
+						rsWaynodes = pstmtWaynodes.executeQuery();
+						while (rsWaynodes.next()) {
+							int lat = rsWaynodes.getInt("latitude");
+							int lon = rsWaynodes.getInt("longitude");
+							double la = (double) lat / 1000000;
+							double lo = (double) lon / 1000000;
+							wayNodes.add(new Coordinate(la, lo));
+						}
+						if (writeLowerZoomLevel) {
+							wayNodes = Utils.compressWay(wayNodes, currentZoom);
+						}
 
-							pstmtWaynodes.setLong(1, id);
-							rsWaynodes = pstmtWaynodes.executeQuery();
-							while (rsWaynodes.next()) {
-								raf.writeInt(rsWaynodes.getInt("latitude"));
-								raf.writeInt(rsWaynodes.getInt("longitude"));
-							}
-						} else {
-							// polygon clipping
-							wayNodes.clear();
-							pstmtWaynodes.setLong(1, id);
-							rsWaynodes = pstmtWaynodes.executeQuery();
-							while (rsWaynodes.next()) {
-								int lat = rsWaynodes.getInt("latitude");
-								int lon = rsWaynodes.getInt("longitude");
-								double la = (double) lat / 1000000;
-								double lo = (double) lon / 1000000;
-								wayNodes.add(new Coordinate(la, lo));
-							}
+						waynodesAmount = wayNodes.size();
 
+						if (wayType >= 2 && waynodesAmount >= 4 && name.equals("")) {
 							for (int t = 0; t < tileVertices.length - 1; t++) {
 								wayNodes = Utils.clipPolygonToTile(tileVertices[t],
 										tileVertices[t + 1], wayNodes);
 							}
+							waynodesAmount = wayNodes.size();
+						}
 
-							raf.writeShort(wayNodes.size());
+						raf.writeShort(waynodesAmount);
 
-							for (Coordinate c : wayNodes) {
-								raf.writeInt((int) (c.x * 1000000));
-								raf.writeInt((int) (c.y * 1000000));
-							}
-
+						for (Coordinate c : wayNodes) {
+							raf.writeInt((int) (c.x * 1000000));
+							raf.writeInt((int) (c.y * 1000000));
 						}
 
 						// write byte with name, label and way type information
@@ -1161,9 +1152,6 @@ public class BinaryFileWriter {
 		if (labelPosLat != 0 && labelPosLon != 0) {
 			infoByte |= BITMAP_LABEL;
 		}
-		if (wayType == 2) {
-			infoByte |= BITMAP_AREA;
-		}
 		if (wayType == 3 || wayType == 0) {
 			infoByte |= BITMAP_MULTIPOLYGON;
 		}
@@ -1200,12 +1188,15 @@ public class BinaryFileWriter {
 		byte infoByte = 0;
 		short counter = 0;
 
-		for (String tag : tags) {
-			if (!whiteList.get(tag).equals(Byte.MAX_VALUE))
-				counter++;
-		}
+		if (tags != null) {
+			for (String tag : tags) {
+				Byte b = whiteList.get(tag);
+				if (b != null && b.equals(Byte.MAX_VALUE))
+					counter++;
+			}
 
-		infoByte = (byte) (counter << 5);
+			infoByte = (byte) (counter << 5);
+		}
 		return infoByte;
 	}
 
@@ -1223,7 +1214,11 @@ public class BinaryFileWriter {
 
 		for (String tag : tags) {
 			logger.info("tag for bitmap: " + tag);
-			key = tag.substring(0, tag.indexOf("="));
+			int i = tag.indexOf("=");
+			if (i == -1) {
+				continue;
+			}
+			key = tag.substring(0, i);
 			if (key.equals("highway")) {
 				infoByte |= BITMAP_HIGHWAY;
 			} else if (key.equals("railway")) {
