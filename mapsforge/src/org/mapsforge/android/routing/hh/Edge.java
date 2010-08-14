@@ -17,7 +17,7 @@
 package org.mapsforge.android.routing.hh;
 
 class Edge {
-	int targetId, targetIdLvlZero;
+	int targetId, targetIdZeroLvl;
 	int weight;
 	boolean isShortcut, isForward, isBackward, isCore;
 
@@ -26,7 +26,7 @@ class Edge {
 		StringBuilder sb = new StringBuilder();
 		sb.append(Edge.class.getName() + " (\n");
 		sb.append("  targetId = " + targetId + "\n");
-		sb.append("  targetIdLvlZero = " + targetIdLvlZero + "\n");
+		sb.append("  targetIdLvlZero = " + targetIdZeroLvl + "\n");
 		sb.append("  weight = " + weight + "\n");
 		sb.append("  isShortcut = " + isShortcut + "\n");
 		sb.append("  isForward = " + isForward + "\n");
@@ -41,7 +41,7 @@ class Edge {
 	}
 
 	public int getTargetIdLvlZero() {
-		return targetIdLvlZero;
+		return targetIdZeroLvl;
 	}
 
 	public int getWeight() {

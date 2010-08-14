@@ -37,6 +37,9 @@ final class RleBlockReader {
 	// header data
 	final byte bpClusterId, bpVertexCount, bpEdgeCount, bpNeighborhood, numLevels;
 
+	// used for address lookup, avoids object creation
+	private Pointer tmpPointer = new Pointer();
+
 	private int bytesRead;
 
 	public RleBlockReader(File f, long startAddrClusterBlocks, AddressLookupTable blockIndex)
@@ -70,13 +73,15 @@ final class RleBlockReader {
 		this.bitMask = getBitmask(bpVertexCount);
 	}
 
-	public RleBlock readBlock(int blockId) throws IOException {
-		Pointer pointer = blockIndex.getPointer(blockId);
-		raf.seek(startAddrFirstClusterBlock + pointer.startAddr);
-		byte[] buff = new byte[pointer.lengthBytes];
-		bytesRead += buff.length;
-		raf.readFully(buff);
-		return new RleBlock(buff, this, blockId);
+	public synchronized RleBlock readBlock(int blockId) throws IOException {
+		if (blockIndex.getPointer(blockId, tmpPointer)) {
+			raf.seek(startAddrFirstClusterBlock + tmpPointer.startAddr);
+			byte[] buff = new byte[tmpPointer.lengthBytes];
+			bytesRead += buff.length;
+			raf.readFully(buff);
+			return new RleBlock(buff, this, blockId);
+		}
+		return null;
 	}
 
 	private static int getBitmask(int shiftClusterId) {

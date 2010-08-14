@@ -39,7 +39,7 @@ class RoutingGraph {
 	public long ioTime;
 	public long shiftTime;
 
-	public RoutingGraph(File hhBinaryFile, Cache<RleBlock> cache) throws IOException {
+	public RoutingGraph(File hhBinaryFile, int CacheSizeBytes) throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(hhBinaryFile, "r");
 
 		// ------------- READ BINARY FILE HEADER --------------
@@ -76,7 +76,7 @@ class RoutingGraph {
 
 		this.blockReader = new RleBlockReader(hhBinaryFile, startAddrGraph, blockIdx);
 		this.rtree = new StaticRTree(hhBinaryFile, startAddrRTree);
-		this.cache = cache;
+		this.cache = new LRUCache<RleBlock>(CacheSizeBytes);
 		this.numBlockReads = new int[blockReader.numLevels];
 		this.ioTime = 0;
 		this.shiftTime = 0;
@@ -98,12 +98,12 @@ class RoutingGraph {
 		Vertex v = new Vertex();
 		double dBest = Double.MAX_VALUE;
 		for (int blockId : blockIds) {
-			RleBlock block = getBlock(blockId);
+			RleBlock block = fetchBlock(blockId);
 			int n = block.getNumVertices();
 			for (int i = 0; i < n; i++) {
 				block.getVertex(i, v);
 				double distance = GeoCoordinate.sphericalDistance(c.getLatitudeE6(), c
-						.getLongitudeE6(), v.getLat(), v.getLon());
+						.getLongitudeE6(), v.getLatitude(), v.getLongitude());
 				if (dBest > distance) {
 					dBest = distance;
 					block.getVertex(i, buff);
@@ -115,7 +115,7 @@ class RoutingGraph {
 
 	public void getVertex(int vertexId, Vertex buff) throws IOException {
 		int blockId = blockReader.getBlockId(vertexId);
-		RleBlock block = getBlock(blockId);
+		RleBlock block = fetchBlock(blockId);
 		int vertexOffset = blockReader.getVertexOffset(vertexId);
 		long time = System.nanoTime();
 		block.getVertex(vertexOffset, buff);
@@ -124,13 +124,17 @@ class RoutingGraph {
 
 	public void getOutboundEdge(Vertex v, int i, Edge buff) throws IOException {
 		int blockId = blockReader.getBlockId(v.id);
-		RleBlock block = getBlock(blockId);
+		RleBlock block = fetchBlock(blockId);
 		long time = System.nanoTime();
 		block.getOutboundEdge(v, i, buff);
 		shiftTime += System.nanoTime() - time;
 	}
 
-	private RleBlock getBlock(int blockId) throws IOException {
+	public void clearCache() {
+		cache.clear();
+	}
+
+	private RleBlock fetchBlock(int blockId) throws IOException {
 		RleBlock block = cache.getItem(blockId);
 		if (block == null) {
 			long time = System.nanoTime();

@@ -18,10 +18,15 @@ package org.mapsforge.android.routing.hh;
 
 final class Pointer {
 
-	public final long startAddr;
-	public final int lengthBytes;
+	public long startAddr;
+	public int lengthBytes;
 
-	public Pointer(long startAddr, int lenghtBytes) {
+	Pointer() {
+		this.startAddr = -1;
+		this.lengthBytes = -1;
+	}
+
+	Pointer(long startAddr, int lenghtBytes) {
 		this.startAddr = startAddr;
 		this.lengthBytes = lenghtBytes;
 	}

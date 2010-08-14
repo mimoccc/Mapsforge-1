@@ -19,42 +19,22 @@ package org.mapsforge.android.routing.hh;
 class Vertex {
 
 	int neighborhood;
-	int id, idSubj, idOverly, idLvlZero;
+	int id, idPrevLvl, idNextLvl, idZeroLvl;
 	byte lvl;
-	int lon, lat;
+	int longitude, latitude;
 	int internalEdgeStartIdx, externalEdgeStartIdx;
 	short numInternalEdges, numExternalEdges;
 
-	// int getNeighborhood() {
-	// return neighborhood;
-	// }
-	//
-	// public int getId() {
-	// return id;
-	// }
-	//
-	// int getIdSubj() {
-	// return idSubj;
-	// }
-	//
-	// int getIdOverly() {
-	// return idOverly;
-	// }
-	//
-	// int getIdLvlZero() {
-	// return idLvlZero;
-	// }
-	//
-	// byte getLvl() {
-	// return lvl;
-	// }
-
-	public int getLon() {
-		return lon;
+	public int getId() {
+		return id;
 	}
 
-	public int getLat() {
-		return lat;
+	public int getLongitude() {
+		return longitude;
+	}
+
+	public int getLatitude() {
+		return latitude;
 	}
 
 	public short getOutboundDegree() {
@@ -67,13 +47,13 @@ class Vertex {
 		sb.append(Vertex.class.getName() + " (\n");
 		sb.append("  neighborhood = " + neighborhood + "\n");
 		sb.append("  id = " + id + "\n");
-		sb.append("  idSubj = " + idSubj + "\n");
-		sb.append("  idOverly = " + idOverly + "\n");
-		sb.append("  idLvlZero = " + idLvlZero + "\n");
+		sb.append("  idPrevLvl = " + idPrevLvl + "\n");
+		sb.append("  idNextLvl = " + idNextLvl + "\n");
+		sb.append("  idZeroLvl = " + idZeroLvl + "\n");
 		sb.append("  lvl = " + lvl + "\n");
-		sb.append("  lon = " + lon + "\n");
-		sb.append("  lat = " + lat + "\n");
-		sb.append("(");
+		sb.append("  longitude = " + longitude + "\n");
+		sb.append("  latitude = " + latitude + "\n");
+		sb.append(")");
 		return sb.toString();
 	}
 }

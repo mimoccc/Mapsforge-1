@@ -109,7 +109,29 @@ final class AddressLookupTable {
 		} catch (IOException e) {
 			return null;
 		}
+	}
 
+	public boolean getPointer(int blockId, Pointer buff) {
+		try {
+			final int groupIdx = blockId / gSize;
+			final int blockOffset = blockId % gSize;
+
+			long blockStartAddr = gStartAddr[groupIdx];
+			int blockSize = gFirstBlockSize[groupIdx];
+
+			BitArrayInputStream stream = new BitArrayInputStream(encBlockSize);
+			stream.setPointer(gBlockEncOffs[groupIdx], 0);
+			for (int i = 0; i < blockOffset; i++) {
+				blockStartAddr += blockSize;
+				blockSize += stream.readUInt(gEncBits[groupIdx]);
+			}
+			buff.startAddr = blockStartAddr;
+			buff.lengthBytes = blockSize;
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	/**

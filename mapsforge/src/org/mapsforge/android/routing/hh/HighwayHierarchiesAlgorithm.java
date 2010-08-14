@@ -77,13 +77,13 @@ class HighwayHierarchiesAlgorithm {
 		graph.getVertex(sourceId, s);
 		HHHeapItem _s = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
 		queue[FWD].insert(_s);
-		discovered[FWD].put(s.idLvlZero, _s);
+		discovered[FWD].put(s.idZeroLvl, _s);
 
 		Vertex t = new Vertex();
 		graph.getVertex(targetId, t);
 		HHHeapItem _t = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
 		queue[BWD].insert(_t);
-		discovered[BWD].put(t.idLvlZero, _t);
+		discovered[BWD].put(t.idZeroLvl, _t);
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
@@ -117,10 +117,10 @@ class HighwayHierarchiesAlgorithm {
 			}
 			int lvl = uItem.level;
 			int gap = uItem.gap;
-			while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap) && u.idOverly != -1) {
+			while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap) && u.idNextLvl != -1) {
 				// switch to next level
 				lvl++;
-				graph.getVertex(u.idOverly, u);
+				graph.getVertex(u.idNextLvl, u);
 				uItem.id = u.id;
 				gap = u.neighborhood;
 			}
@@ -188,7 +188,7 @@ class HighwayHierarchiesAlgorithm {
 			HHHeapItem vItem = discovered[direction].get(e.getTargetIdLvlZero());
 			if (vItem == null) {
 				vItem = new HHHeapItem(uItem.distance + e.getWeight(), lvl, gap_, e
-						.getTargetId(), e.getTargetIdLvlZero(), u.idLvlZero, u.id, e
+						.getTargetId(), e.getTargetIdLvlZero(), u.idZeroLvl, u.id, e
 						.getTargetId());
 				discovered[direction].put(e.getTargetIdLvlZero(), vItem);
 				queue[direction].insert(vItem);
@@ -197,7 +197,7 @@ class HighwayHierarchiesAlgorithm {
 				vItem.level = lvl;
 				vItem.id = e.getTargetId();
 				vItem.gap = gap_;
-				vItem.parentIdLvlZero = u.idLvlZero;
+				vItem.parentIdLvlZero = u.idZeroLvl;
 				vItem.eSrcId = u.id;
 				vItem.eTgtId = e.getTargetId();
 				queue[direction].decreaseKey(vItem, vItem);
@@ -228,7 +228,7 @@ class HighwayHierarchiesAlgorithm {
 		// System.out.println("expand edge " + s.getId() + " " + t.getId() + " " + s.getLvl()
 		// + " " + t.getLvl());
 		Edge e = extractEdge(s, t, fwd);
-		if (s.idSubj == -1) {
+		if (s.idPrevLvl == -1) {
 			// edge level == 0
 			if (fwd) {
 				buff.addFirst(e);
@@ -238,18 +238,18 @@ class HighwayHierarchiesAlgorithm {
 			}
 		} else if (!e.isShortcut()) {
 			// jump directly to level 0
-			expandEdgeRec(s.idSubj, t.idLvlZero, buff, fwd);
+			expandEdgeRec(s.idPrevLvl, t.idZeroLvl, buff, fwd);
 		} else {
 			// use dijkstra within the core of subjacent level
 			discoveredDijkstra.clear();
 			queueDijkstra.clear();
-			DijkstraHeapItem sItem = new DijkstraHeapItem(0, s.idSubj, null);
-			discoveredDijkstra.put(s.idSubj, sItem);
+			DijkstraHeapItem sItem = new DijkstraHeapItem(0, s.idPrevLvl, null);
+			discoveredDijkstra.put(s.idPrevLvl, sItem);
 			queueDijkstra.insert(sItem);
 
 			while (!queueDijkstra.isEmpty()) {
 				DijkstraHeapItem uItem = queueDijkstra.extractMin();
-				if (uItem.id == t.idSubj) {
+				if (uItem.id == t.idPrevLvl) {
 					// found target
 					break;
 				}
@@ -278,7 +278,7 @@ class HighwayHierarchiesAlgorithm {
 					}
 				}
 			}
-			DijkstraHeapItem i = discoveredDijkstra.get(t.idSubj);
+			DijkstraHeapItem i = discoveredDijkstra.get(t.idPrevLvl);
 			while (i.parent != null) {
 				int s_ = i.parent.id;
 				int t_ = i.id;
@@ -454,11 +454,10 @@ class HighwayHierarchiesAlgorithm {
 	}
 
 	public static void main(String[] args) throws IOException {
-		String map = "berlin";
+		String map = "germany";
 		int n = 1;
 
-		LRUCache<RleBlock> cache = new LRUCache<RleBlock>(1000 * 1024);
-		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), cache);
+		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), 1024 * 1000);
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
@@ -477,9 +476,9 @@ class HighwayHierarchiesAlgorithm {
 			graph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805), 300, t);
 			// graph.getRandomVertex(0, t);
 			int d1 = hh.getShortestPath(s.id, t.id, sp1);
-			System.out.println("cache misses : " + cache.getNumCacheMisses());
-			System.out.println("bytes read : " + cache.getNumBytesRead());
-			cache.clear();
+			// System.out.println("cache misses : " + cache.getNumCacheMisses());
+			// System.out.println("bytes read : " + cache.getNumBytesRead());
+			graph.clearCache();
 
 			int d2 = dijkstra.getShortestPath(s.id, t.id, new LinkedList<Vertex>());
 			if (d1 != d2) {
@@ -489,11 +488,11 @@ class HighwayHierarchiesAlgorithm {
 			}
 			int j = 1;
 			GeoCoordinate[] coords = new GeoCoordinate[sp1.size() + 1];
-			coords[0] = new GeoCoordinate(s.getLat(), s.getLon());
+			coords[0] = new GeoCoordinate(s.getLatitude(), s.getLongitude());
 			for (Edge e : sp1) {
 				Vertex v = new Vertex();
 				graph.getVertex(e.getTargetId(), v);
-				coords[j] = new GeoCoordinate(v.getLat(), v.getLon());
+				coords[j] = new GeoCoordinate(v.getLatitude(), v.getLongitude());
 				if (coords[j].getLongitudeE6() == coords[j - 1].getLongitudeE6()
 						&& coords[j].getLatitudeE6() == coords[j - 1].getLatitudeE6()) {
 					System.out.println("error " + j);
@@ -502,8 +501,10 @@ class HighwayHierarchiesAlgorithm {
 			}
 			renderer.addMultiLine(coords, Color.RED);
 			//
-			renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
-			renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
+			renderer.addCircle(new GeoCoordinate(s.getLatitude(), s.getLongitude()),
+					Color.GREEN);
+			renderer.addCircle(new GeoCoordinate(t.getLatitude(), t.getLongitude()),
+					Color.GREEN);
 			sp1.clear();
 		}
 		System.out.println("num routes : " + n);

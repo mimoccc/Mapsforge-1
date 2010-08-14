@@ -24,15 +24,15 @@ class LRUCache<I extends CacheItem> implements Cache<I> {
 
 	private final TLinkedList<ListNode<I>> list;
 	private final TIntObjectHashMap<ListNode<I>> map;
-	private int sizeBytesThreshold, sizeBytes;
+	private int cacheSizeBytes, currentSizeBytes;
 	private int numCacheMisses;
 	private int numBytesRead;
 
-	public LRUCache(int sizeBytesThreshold) {
+	public LRUCache(int cacheSizeBytes) {
 		this.list = new TLinkedList<ListNode<I>>();
 		this.map = new TIntObjectHashMap<ListNode<I>>();
-		this.sizeBytesThreshold = sizeBytesThreshold;
-		this.sizeBytes = 0;
+		this.cacheSizeBytes = cacheSizeBytes;
+		this.currentSizeBytes = 0;
 		this.numCacheMisses = 0;
 		this.numBytesRead = 0;
 	}
@@ -41,7 +41,7 @@ class LRUCache<I extends CacheItem> implements Cache<I> {
 	public void clear() {
 		this.list.clear();
 		this.map.clear();
-		this.sizeBytes = 0;
+		this.currentSizeBytes = 0;
 		this.numCacheMisses = 0;
 		this.numBytesRead = 0;
 	}
@@ -71,11 +71,11 @@ class LRUCache<I extends CacheItem> implements Cache<I> {
 		ListNode<I> ci = new ListNode<I>(item);
 		list.addFirst(ci);
 		map.put(item.getId(), ci);
-		sizeBytes += item.getSizeBytes();
-		while (sizeBytes > sizeBytesThreshold) {
+		currentSizeBytes += item.getSizeBytes();
+		while (currentSizeBytes > cacheSizeBytes) {
 			ListNode<I> last = list.removeLast();
 			map.remove(last.item.getId());
-			sizeBytes -= last.item.getSizeBytes();
+			currentSizeBytes -= last.item.getSizeBytes();
 		}
 		this.numBytesRead += item.getSizeBytes();
 	}

@@ -42,19 +42,19 @@ final class RleBlock implements CacheItem {
 	private final int minLat;
 
 	private final byte bpLon, bpLat, bpOffsEdgeInt, bpOffsEdgeExt, bpOffsBlockAdj,
-			bpOffsBlockSubj, bpOffsBlockOverly, bpOffsBlockLvlZero, bpEdgeWeight;
+			bpOffsBlockPrevLvl, bpOffsBlockNextLvl, bpOffsBlockZeroLvl, bpEdgeWeight;
 
 	private final int startAddrBlockAdj;
-	private final int startAddrBlockSubj;
-	private final int startAddrBlockOverly;
-	private final int startAddrBlockLevelZero;
+	private final int startAddrBlockPrevLvl;
+	private final int startAddrBlockNextLvl;
+	private final int startAddrBlockZeroLvl;
 
-	private final int startAddrVOffsBlockSubj;
-	private final int startAddrVOffsVertexSubj;
-	private final int startAddrVOffsBlockOverly;
-	private final int startAddrVOffsVertexOverly;
-	private final int startAddrVOffsBlockLvlZero;
-	private final int startAddrVOffsVertexLvlZero;
+	private final int startAddrVOffsBlockPrevLvl;
+	private final int startAddrVOffsVertexPrevLvl;
+	private final int startAddrVOffsBlockNextLvl;
+	private final int startAddrVOffsVertexNextLvl;
+	private final int startAddrVOffsBlockZeroLvl;
+	private final int startAddrVOffsVertexZeroLvl;
 
 	private final int startAddrVNeighborhood;
 	private final int startAddrVLongitude;
@@ -71,8 +71,8 @@ final class RleBlock implements CacheItem {
 
 	private int startAddrEExtTargetOffsBlockAdj;
 	private int startAddrEExtTargetOffsVertexAdj;
-	private int startAddrEExtTargetOffsBlockLvlZero;
-	private int startAddrEExtTargetOffsVertexLvlZero;
+	private int startAddrEExtTargetOffsBlockZeroLvl;
+	private int startAddrEExtTargetOffsVertexZeroLvl;
 
 	private int startAddrEExtWeight;
 	private int startAddrEExtIsShortcut;
@@ -100,11 +100,6 @@ final class RleBlock implements CacheItem {
 		short numBlocksOverly = (short) stream.readUInt(blockReader.bpClusterId);
 		short numBlocksLvlZero = (short) stream.readUInt(blockReader.bpClusterId);
 
-		// System.out.println("numBlocksAdj = " + numBlocksAdj);
-		// System.out.println("numBlocksSubj = " + numBlocksSubj);
-		// System.out.println("numBlocksOverly = " + numBlocksOverly);
-		// System.out.println("numBlocksLvlZero = " + numBlocksLvlZero);
-
 		this.minLon = stream.readInt();
 		this.minLat = stream.readInt();
 
@@ -113,9 +108,9 @@ final class RleBlock implements CacheItem {
 		this.bpOffsEdgeInt = (byte) stream.readUInt(5);
 		this.bpOffsEdgeExt = (byte) stream.readUInt(5);
 		this.bpOffsBlockAdj = (byte) stream.readUInt(5);
-		this.bpOffsBlockSubj = (byte) stream.readUInt(5);
-		this.bpOffsBlockOverly = (byte) stream.readUInt(5);
-		this.bpOffsBlockLvlZero = (byte) stream.readUInt(5);
+		this.bpOffsBlockPrevLvl = (byte) stream.readUInt(5);
+		this.bpOffsBlockNextLvl = (byte) stream.readUInt(5);
+		this.bpOffsBlockZeroLvl = (byte) stream.readUInt(5);
 		this.bpEdgeWeight = (byte) stream.readUInt(5);
 
 		stream.alignPointer(1);
@@ -126,30 +121,30 @@ final class RleBlock implements CacheItem {
 		// referenced blocks :
 		this.startAddrBlockAdj = offset;
 		offset += byteAlign(numBlocksAdj * blockReader.bpClusterId);
-		this.startAddrBlockSubj = offset;
+		this.startAddrBlockPrevLvl = offset;
 		offset += byteAlign(numBlocksSubj * blockReader.bpClusterId);
-		this.startAddrBlockOverly = offset;
+		this.startAddrBlockNextLvl = offset;
 		offset += byteAlign(numBlocksOverly * blockReader.bpClusterId);
-		this.startAddrBlockLevelZero = offset;
+		this.startAddrBlockZeroLvl = offset;
 		offset += byteAlign(numBlocksLvlZero * blockReader.bpClusterId);
 
 		// vertices :
-		this.startAddrVOffsBlockSubj = offset;
+		this.startAddrVOffsBlockPrevLvl = offset;
 		if (lvl > 1)
-			offset += byteAlign(numVertices * bpOffsBlockSubj);
-		this.startAddrVOffsVertexSubj = offset;
+			offset += byteAlign(numVertices * bpOffsBlockPrevLvl);
+		this.startAddrVOffsVertexPrevLvl = offset;
 		if (lvl > 1)
 			offset += byteAlign(numVertices * blockReader.bpVertexCount);
-		this.startAddrVOffsBlockOverly = offset;
+		this.startAddrVOffsBlockNextLvl = offset;
 		if (lvl < blockReader.numLevels - 1)
-			offset += byteAlign(numVerticesHavingHigherLevel * bpOffsBlockOverly);
-		this.startAddrVOffsVertexOverly = offset;
+			offset += byteAlign(numVerticesHavingHigherLevel * bpOffsBlockNextLvl);
+		this.startAddrVOffsVertexNextLvl = offset;
 		if (lvl < blockReader.numLevels - 1)
 			offset += byteAlign(numVerticesHavingHigherLevel * blockReader.bpVertexCount);
-		this.startAddrVOffsBlockLvlZero = offset;
+		this.startAddrVOffsBlockZeroLvl = offset;
 		if (lvl > 0)
-			offset += byteAlign(numVertices * bpOffsBlockLvlZero);
-		this.startAddrVOffsVertexLvlZero = offset;
+			offset += byteAlign(numVertices * bpOffsBlockZeroLvl);
+		this.startAddrVOffsVertexZeroLvl = offset;
 		if (lvl > 0)
 			offset += byteAlign(numVertices * blockReader.bpVertexCount);
 		this.startAddrVNeighborhood = offset;
@@ -184,10 +179,10 @@ final class RleBlock implements CacheItem {
 		offset += byteAlign(numEdgesExt * bpOffsBlockAdj);
 		this.startAddrEExtTargetOffsVertexAdj = offset;
 		offset += byteAlign(numEdgesExt * blockReader.bpVertexCount);
-		this.startAddrEExtTargetOffsBlockLvlZero = offset;
+		this.startAddrEExtTargetOffsBlockZeroLvl = offset;
 		if (lvl > 0)
-			offset += byteAlign(numEdgesExt * bpOffsBlockLvlZero);
-		this.startAddrEExtTargetOffsVertexLvlZero = offset;
+			offset += byteAlign(numEdgesExt * bpOffsBlockZeroLvl);
+		this.startAddrEExtTargetOffsVertexZeroLvl = offset;
 		if (lvl > 0)
 			offset += byteAlign(numEdgesExt * blockReader.bpVertexCount);
 		this.startAddrEExtWeight = offset;
@@ -225,56 +220,56 @@ final class RleBlock implements CacheItem {
 	}
 
 	public void getVertex(int i, Vertex buff) {
-		int id = getVertexId(bId, i);
+		int id = blockReader.getVertexId(bId, i);
 
 		int idLvlZero;
 		if (lvl > 0) {
-			int offset = startAddrVOffsBlockLvlZero + (bpOffsBlockLvlZero * i);
-			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
+			int offset = startAddrVOffsBlockZeroLvl + (bpOffsBlockZeroLvl * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockZeroLvl,
 					offset / 8, offset % 8);
-			offset = startAddrBlockLevelZero + (blockReader.bpClusterId * _blockOffset);
+			offset = startAddrBlockZeroLvl + (blockReader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, blockReader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsVertexLvlZero + (blockReader.bpVertexCount * i);
+			offset = startAddrVOffsVertexZeroLvl + (blockReader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 					offset / 8, offset % 8);
-			idLvlZero = getVertexId(_blockId, _vertexOffset);
+			idLvlZero = blockReader.getVertexId(_blockId, _vertexOffset);
 		} else {
 			idLvlZero = id;
 		}
 
-		int idSubj;
+		int idPrevLvl;
 		if (lvl > 1) {
-			int offset = startAddrVOffsBlockSubj + (bpOffsBlockSubj * i);
-			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockSubj, offset / 8,
-					offset % 8);
-			offset = startAddrBlockSubj + (blockReader.bpClusterId * _blockOffset);
+			int offset = startAddrVOffsBlockPrevLvl + (bpOffsBlockPrevLvl * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockPrevLvl,
+					offset / 8, offset % 8);
+			offset = startAddrBlockPrevLvl + (blockReader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, blockReader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsVertexSubj + (blockReader.bpVertexCount * i);
+			offset = startAddrVOffsVertexPrevLvl + (blockReader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 					offset / 8, offset % 8);
-			idSubj = getVertexId(_blockId, _vertexOffset);
+			idPrevLvl = blockReader.getVertexId(_blockId, _vertexOffset);
 		} else if (lvl == 1) {
-			idSubj = idLvlZero;
+			idPrevLvl = idLvlZero;
 		} else {
-			idSubj = -1;
+			idPrevLvl = -1;
 		}
 
-		int idOverly;
+		int idNextLvl;
 		if (lvl < blockReader.numLevels - 1 && i < numVerticesHavingHigherLevel) {
-			int offset = startAddrVOffsBlockOverly + (bpOffsBlockOverly * i);
-			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockOverly,
+			int offset = startAddrVOffsBlockNextLvl + (bpOffsBlockNextLvl * i);
+			int _blockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockNextLvl,
 					offset / 8, offset % 8);
-			offset = startAddrBlockOverly + (blockReader.bpClusterId * _blockOffset);
+			offset = startAddrBlockNextLvl + (blockReader.bpClusterId * _blockOffset);
 			int _blockId = (int) BitSerializer.readUInt(data, blockReader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsVertexOverly + (blockReader.bpVertexCount * i);
+			offset = startAddrVOffsVertexNextLvl + (blockReader.bpVertexCount * i);
 			int _vertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 					offset / 8, offset % 8);
-			idOverly = getVertexId(_blockId, _vertexOffset);
+			idNextLvl = blockReader.getVertexId(_blockId, _vertexOffset);
 		} else {
-			idOverly = -1;
+			idNextLvl = -1;
 		}
 
 		int neighborhood;
@@ -320,12 +315,12 @@ final class RleBlock implements CacheItem {
 
 		buff.neighborhood = neighborhood;
 		buff.id = id;
-		buff.idSubj = idSubj;
-		buff.idOverly = idOverly;
-		buff.idLvlZero = idLvlZero;
+		buff.idPrevLvl = idPrevLvl;
+		buff.idNextLvl = idNextLvl;
+		buff.idZeroLvl = idLvlZero;
 		buff.lvl = lvl;
-		buff.lon = lon;
-		buff.lat = lat;
+		buff.longitude = lon;
+		buff.latitude = lat;
 		buff.externalEdgeStartIdx = _externalEdgeStartIdx;
 		buff.numExternalEdges = (short) (_externalEdgeEndIdx - _externalEdgeStartIdx);
 		buff.internalEdgeStartIdx = _internalEdgeStartIdx;
@@ -347,23 +342,24 @@ final class RleBlock implements CacheItem {
 		int offset = startAddrEIntTargetOffset + (i * blockReader.bpVertexCount);
 		int _targetVertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 				offset / 8, offset % 8);
-		buff.targetId = getVertexId(bId, _targetVertexOffset);
+		buff.targetId = blockReader.getVertexId(bId, _targetVertexOffset);
 
 		if (lvl == 0) {
-			buff.targetIdLvlZero = buff.targetId;
+			buff.targetIdZeroLvl = buff.targetId;
 		} else {
 			// read level zero id of internal vertex (analog to code within getVertex())
-			offset = startAddrVOffsBlockLvlZero + (bpOffsBlockLvlZero * _targetVertexOffset);
-			int _blockOffsetLvlZero = (int) BitSerializer.readUInt(data, bpOffsBlockLvlZero,
+			offset = startAddrVOffsBlockZeroLvl + (bpOffsBlockZeroLvl * _targetVertexOffset);
+			int _blockOffsetLvlZero = (int) BitSerializer.readUInt(data, bpOffsBlockZeroLvl,
 					offset / 8, offset % 8);
-			offset = startAddrBlockLevelZero + (blockReader.bpClusterId * _blockOffsetLvlZero);
+			offset = startAddrBlockZeroLvl + (blockReader.bpClusterId * _blockOffsetLvlZero);
 			int _blockIdLvlZero = (int) BitSerializer.readUInt(data, blockReader.bpClusterId,
 					offset / 8, offset % 8);
-			offset = startAddrVOffsVertexLvlZero
+			offset = startAddrVOffsVertexZeroLvl
 					+ (blockReader.bpVertexCount * _targetVertexOffset);
 			int _vertexOffsetLvlZero = (int) BitSerializer.readUInt(data,
 					blockReader.bpVertexCount, offset / 8, offset % 8);
-			buff.targetIdLvlZero = getVertexId(_blockIdLvlZero, _vertexOffsetLvlZero);
+			buff.targetIdZeroLvl = blockReader.getVertexId(_blockIdLvlZero,
+					_vertexOffsetLvlZero);
 		}
 
 		offset = startAddrEIntWeight + (i * bpEdgeWeight);
@@ -393,22 +389,22 @@ final class RleBlock implements CacheItem {
 		offset = startAddrEExtTargetOffsVertexAdj + (i * blockReader.bpVertexCount);
 		int _targetVertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 				offset / 8, offset % 8);
-		buff.targetId = getVertexId(_targetBlockId, _targetVertexOffset);
+		buff.targetId = blockReader.getVertexId(_targetBlockId, _targetVertexOffset);
 
 		if (lvl == 0) {
-			buff.targetIdLvlZero = buff.targetId;
+			buff.targetIdZeroLvl = buff.targetId;
 		} else {
-			offset = startAddrEExtTargetOffsBlockLvlZero + (i * bpOffsBlockLvlZero);
+			offset = startAddrEExtTargetOffsBlockZeroLvl + (i * bpOffsBlockZeroLvl);
 			int _targetBlockOffsetLvlZero = (int) BitSerializer.readUInt(data,
-					bpOffsBlockLvlZero, offset / 8, offset % 8);
-			offset = startAddrBlockLevelZero
+					bpOffsBlockZeroLvl, offset / 8, offset % 8);
+			offset = startAddrBlockZeroLvl
 					+ (blockReader.bpClusterId * _targetBlockOffsetLvlZero);
 			int _targetBlockIdLvlZero = (int) BitSerializer.readUInt(data,
 					blockReader.bpClusterId, offset / 8, offset % 8);
-			offset = startAddrEExtTargetOffsVertexLvlZero + (i * blockReader.bpVertexCount);
+			offset = startAddrEExtTargetOffsVertexZeroLvl + (i * blockReader.bpVertexCount);
 			int _targetVertexOffsetLvlZero = (int) BitSerializer.readUInt(data,
 					blockReader.bpVertexCount, offset / 8, offset % 8);
-			buff.targetIdLvlZero = getVertexId(_targetBlockIdLvlZero,
+			buff.targetIdZeroLvl = blockReader.getVertexId(_targetBlockIdLvlZero,
 					_targetVertexOffsetLvlZero);
 		}
 
@@ -426,10 +422,6 @@ final class RleBlock implements CacheItem {
 
 		offset = startAddrEExtIsCore + i;
 		buff.isCore = BitSerializer.readBit(data, offset / 8, offset % 8);
-	}
-
-	private int getVertexId(int blockId, int vertexOffset) {
-		return (blockId << blockReader.bpVertexCount) | vertexOffset;
 	}
 
 	@Override
@@ -454,9 +446,9 @@ final class RleBlock implements CacheItem {
 		sb.append("  bpOffsEdgeInt = " + bpOffsEdgeInt + "\n");
 		sb.append("  bpOffsEdgeExt = " + bpOffsEdgeExt + "\n");
 		sb.append("  bpOffsBlockAdj = " + bpOffsBlockAdj + "\n");
-		sb.append("  bpOffsBlockSubj = " + bpOffsBlockSubj + "\n");
-		sb.append("  bpOffsBlockOverly = " + bpOffsBlockOverly + "\n");
-		sb.append("  bpOffsBlockLvlZero = " + bpOffsBlockLvlZero + "\n");
+		sb.append("  bpOffsBlockPrevLvl = " + bpOffsBlockPrevLvl + "\n");
+		sb.append("  bpOffsBlockNextLvl = " + bpOffsBlockNextLvl + "\n");
+		sb.append("  bpOffsBlockZeroLvl = " + bpOffsBlockZeroLvl + "\n");
 		sb.append("  bpEdgeWeight = " + bpEdgeWeight + "\n");
 		sb.append(")");
 
