@@ -143,7 +143,7 @@ class LevelGraph implements Serializable {
 		return vLat;
 	}
 
-	public class Level implements IGraph, Serializable {
+	public class Level implements Graph, Serializable {
 
 		private static final long serialVersionUID = 1L;
 
@@ -212,7 +212,7 @@ class LevelGraph implements Serializable {
 			return lvlNumVertices;
 		}
 
-		public class LevelVertex implements IVertex, Serializable {
+		public class LevelVertex implements Vertex, Serializable {
 
 			private static final long serialVersionUID = 1L;
 
@@ -259,7 +259,7 @@ class LevelGraph implements Serializable {
 			}
 		}
 
-		public class LevelEdge implements IEdge, Serializable {
+		public class LevelEdge implements Edge, Serializable {
 
 			private static final long serialVersionUID = 1L;
 

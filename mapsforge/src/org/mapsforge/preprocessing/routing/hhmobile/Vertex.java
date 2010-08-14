@@ -16,12 +16,10 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
-interface IEdge {
+interface Vertex {
 
-	public IVertex getSource();
+	public int getId();
 
-	public IVertex getTarget();
-
-	public int getWeight();
+	public Edge[] getOutboundEdges();
 
 }

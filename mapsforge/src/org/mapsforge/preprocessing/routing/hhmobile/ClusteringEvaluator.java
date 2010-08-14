@@ -85,7 +85,7 @@ class ClusteringEvaluator {
 
 	}
 
-	private static void evaluateClustering(Clustering clustering, IGraph graph) {
+	private static void evaluateClustering(Clustering clustering, Graph graph) {
 		int[] countV, countInternalE, countExternalE, countVE, percentInternalE;
 		countV = new int[clustering.size()];
 		countInternalE = new int[clustering.size()];
@@ -100,7 +100,7 @@ class ClusteringEvaluator {
 			countInternalE[i] = 0;
 			countExternalE[i] = 0;
 			for (int v : c.getVertices()) {
-				for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
+				for (Edge e : graph.getVertex(v).getOutboundEdges()) {
 					if (clustering.getCluster(e.getTarget().getId()) == c) {
 						countInternalE[i]++;
 					} else {

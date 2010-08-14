@@ -36,7 +36,7 @@ class QuadTreeClusteringAlgorithm {
 			"average" };
 	private static final QuickSort quicksort = new QuickSort();
 
-	public static QuadTreeClustering[] computeClustering(IGraph[] graph, int[] lon, int[] lat,
+	public static QuadTreeClustering[] computeClustering(Graph[] graph, int[] lon, int[] lat,
 			int heuristik, int threshold) throws IllegalArgumentException {
 		QuadTreeClustering[] clustering = new QuadTreeClustering[graph.length];
 		for (int i = 0; i < graph.length; i++) {
@@ -46,7 +46,7 @@ class QuadTreeClusteringAlgorithm {
 		return clustering;
 	}
 
-	public static QuadTreeClustering computeClustering(IGraph graph, int[] lon, int[] lat,
+	public static QuadTreeClustering computeClustering(Graph graph, int[] lon, int[] lat,
 			int heuristik, int threshold, int numVerticesLvlZero)
 			throws IllegalArgumentException {
 		System.out.println("computing quad-clustering (|V|=" + graph.numVertices()
@@ -56,8 +56,8 @@ class QuadTreeClusteringAlgorithm {
 		int[] lon_ = new int[graph.numVertices()];
 		int[] lat_ = new int[graph.numVertices()];
 		int i = 0;
-		for (Iterator<? extends IVertex> iter = graph.getVertices(); iter.hasNext();) {
-			IVertex v = iter.next();
+		for (Iterator<? extends Vertex> iter = graph.getVertices(); iter.hasNext();) {
+			Vertex v = iter.next();
 			vertexId[i] = v.getId();
 			lon_[i] = lon[v.getId()];
 			lat_[i] = lat[v.getId()];

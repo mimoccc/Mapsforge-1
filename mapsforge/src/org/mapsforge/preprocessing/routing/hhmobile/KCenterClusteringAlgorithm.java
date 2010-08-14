@@ -46,7 +46,7 @@ class KCenterClusteringAlgorithm {
 
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MIN_SIZE;
 
-	public static KCenterClustering[] computeClustering(IGraph[] graph,
+	public static KCenterClustering[] computeClustering(Graph[] graph,
 			int avgVerticesPerCluster, int heuristic) {
 		KCenterClustering[] clustering = new KCenterClustering[graph.length];
 		for (int i = 0; i < graph.length; i++) {
@@ -56,7 +56,7 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	public static KCenterClustering computeClustering(IGraph graph, int k, int heuristic) {
+	public static KCenterClustering computeClustering(Graph graph, int k, int heuristic) {
 		k = Math.max(k, 1);
 		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(8)));
 		k_ = Math.max(k, k_);
@@ -73,14 +73,14 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	private static KCenterClustering chooseRandomCenters(IGraph graph, int k_) {
+	private static KCenterClustering chooseRandomCenters(Graph graph, int k_) {
 
 		Random rnd = new Random(1);
 		int maxVertexId = 0;
 		int[] ids = new int[graph.numVertices()];
 		int offset = 0;
-		for (Iterator<? extends IVertex> iter = graph.getVertices(); iter.hasNext();) {
-			IVertex v = iter.next();
+		for (Iterator<? extends Vertex> iter = graph.getVertices(); iter.hasNext();) {
+			Vertex v = iter.next();
 			ids[offset] = v.getId();
 			maxVertexId = Math.max(ids[offset], maxVertexId);
 			offset++;
@@ -97,7 +97,7 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
-	private static void expandClusters(IGraph graph, KCenterClustering clustering) {
+	private static void expandClusters(Graph graph, KCenterClustering clustering) {
 		// map vertex id to heap item of enqueued vertex
 		HashMap<Integer, HeapItem> enqueuedVertices = new HashMap<Integer, HeapItem>();
 
@@ -126,7 +126,7 @@ class KCenterClusteringAlgorithm {
 				clustering.getCluster(uItem.parent).addVertex(u, uItem.distance);
 			}
 			// relax adjacent edges
-			IEdge[] adjEdges = graph.getVertex(u).getOutboundEdges();
+			Edge[] adjEdges = graph.getVertex(u).getOutboundEdges();
 			for (int i = 0; i < adjEdges.length; i++) {
 				int weight = adjEdges[i].getWeight();
 				int v = adjEdges[i].getTarget().getId();
@@ -155,7 +155,7 @@ class KCenterClusteringAlgorithm {
 				+ ((count / MSG_INT_BUILD_CLUSTERS) * MSG_INT_BUILD_CLUSTERS) + " - " + count);
 	}
 
-	private static void sampleDown(IGraph graph, KCenterClustering clustering, int k, int k_,
+	private static void sampleDown(Graph graph, KCenterClustering clustering, int k, int k_,
 			int heuristik) {
 		int count = 0;
 		while (k_ - count > k) {
@@ -172,7 +172,7 @@ class KCenterClusteringAlgorithm {
 
 	}
 
-	private static void removeClusterAndRearrange(IGraph graph, KCenterClustering clustering,
+	private static void removeClusterAndRearrange(Graph graph, KCenterClustering clustering,
 			KCenterCluster cluster) {
 		// remove the cluster
 		KCenterCluster[] adjClusters = getAdjacentClusters(graph, clustering, cluster);
@@ -211,7 +211,7 @@ class KCenterClusteringAlgorithm {
 				disseminatedVertices++;
 			}
 			// relax adjacent edges
-			IEdge[] adjEdges = graph.getVertex(u).getOutboundEdges();
+			Edge[] adjEdges = graph.getVertex(u).getOutboundEdges();
 			for (int i = 0; i < adjEdges.length; i++) {
 				int weight = adjEdges[i].getWeight();
 				int v = adjEdges[i].getTarget().getId();
@@ -234,11 +234,11 @@ class KCenterClusteringAlgorithm {
 		}
 	}
 
-	private static KCenterCluster[] getAdjacentClusters(IGraph graph,
+	private static KCenterCluster[] getAdjacentClusters(Graph graph,
 			KCenterClustering clustering, KCenterCluster cluster) {
 		THashSet<KCenterCluster> set = new THashSet<KCenterCluster>();
 		for (int v : cluster.getVertices()) {
-			for (IEdge e : graph.getVertex(v).getOutboundEdges()) {
+			for (Edge e : graph.getVertex(v).getOutboundEdges()) {
 				KCenterCluster c = clustering.getCluster(e.getTarget().getId());
 				if (c != null && !c.equals(cluster)) {
 					set.add(c);
@@ -250,7 +250,7 @@ class KCenterClusteringAlgorithm {
 		return adjClusters;
 	}
 
-	private static KCenterCluster chooseClusterForRemoval(IGraph graph,
+	private static KCenterCluster chooseClusterForRemoval(Graph graph,
 			KCenterClustering clustering, int heuristik) {
 		switch (heuristik) {
 			case HEURISTIC_MIN_RADIUS:

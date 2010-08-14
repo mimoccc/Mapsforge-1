@@ -16,10 +16,16 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
-interface IVertex {
+import java.util.Iterator;
 
-	public int getId();
+interface Graph {
 
-	public IEdge[] getOutboundEdges();
+	public Iterator<? extends Vertex> getVertices();
+
+	public int numVertices();
+
+	public int numEdges();
+
+	public Vertex getVertex(int id);
 
 }
