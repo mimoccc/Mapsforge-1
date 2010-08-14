@@ -161,7 +161,6 @@ public class MapDatabase {
 	private long toBlockX;
 	private long toBlockY;
 	private boolean useTileBitmask;
-	private boolean wayFeatureArea;
 	private byte wayFeatureByte;
 	private boolean wayFeatureLabelPosition;
 	private boolean wayFeatureMultipolygon;
@@ -526,9 +525,6 @@ public class MapDatabase {
 			} else {
 				this.wayLabelPosition = null;
 			}
-
-			// check if the way represents a closed area
-			this.wayFeatureArea = (this.wayFeatureByte & 0x20) != 0;
 
 			// check if the way represents a multipolygon
 			this.wayFeatureMultipolygon = (this.wayFeatureByte & 0x10) != 0;
