@@ -25,7 +25,7 @@ public class HHEdge {
 	boolean isShortcut, isForward, isBackward, isCore;
 
 	HHEdge() {
-		// no initialiyation due to using object pooling.
+		// no initialization due to using object pooling.
 	}
 
 	/**
