@@ -53,6 +53,7 @@ final class ObjectPool<T> {
 	public void release(T obj) {
 		if (obj != null) {
 			objects.add(obj);
+			numBorrowed--;
 		}
 	}
 

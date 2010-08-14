@@ -43,8 +43,8 @@ import org.mapsforge.core.GeoCoordinate;
  */
 public class HHRouter {
 
-	private static final int POOL_VERTICES_INITIAL_SIZE = 20;
-	private static final int POOL_EDGES_INITIAL_SIZE = 50;
+	private static final int POOL_VERTICES_INITIAL_SIZE = 0;
+	private static final int POOL_EDGES_INITIAL_SIZE = 0;
 
 	private final HighwayHierarchiesAlgorithm algorithm;
 	private final RoutingGraph routingGraph;
@@ -184,4 +184,12 @@ public class HHRouter {
 	public void release(HHEdge e) {
 		poolEdges.release(e);
 	}
+
+	@Override
+	public String toString() {
+		return "vertex pool : " + poolVertices.numBorrowed() + "b "
+				+ poolVertices.numReleased() + "r" + "\n" + "edge pool : "
+				+ poolEdges.numBorrowed() + "b " + poolVertices.numReleased() + "r";
+	}
+
 }

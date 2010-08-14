@@ -74,27 +74,34 @@ final class HighwayHierarchiesAlgorithm {
 		graph.ioTime = 0;
 		graph.shiftTime = 0;
 		long startTime = System.currentTimeMillis();
+
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discovered[FWD].clear();
 		discovered[BWD].clear();
-		numSettled = new int[][] { new int[graph.numLevels()], new int[graph.numLevels()] };
-
-		HHVertex s = new HHVertex();
-		graph.getVertex(sourceId, s);
-		HHHeapItem _s = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
-		queue[FWD].insert(_s);
-		discovered[FWD].put(s.idZeroLvl, _s);
-
-		HHVertex t = new HHVertex();
-		graph.getVertex(targetId, t);
-		HHHeapItem _t = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
-		queue[BWD].insert(_t);
-		discovered[BWD].put(t.idZeroLvl, _t);
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
 		int searchScopeHitId = -1;
+
+		numSettled = new int[][] { new int[graph.numLevels()], new int[graph.numLevels()] };
+
+		{ // scope for s
+			HHVertex s = poolVertices.borrow();
+			graph.getVertex(sourceId, s);
+			HHHeapItem _s = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
+			queue[FWD].insert(_s);
+			discovered[FWD].put(s.idZeroLvl, _s);
+			poolVertices.release(s);
+		}
+		{ // scope for t
+			HHVertex t = poolVertices.borrow();
+			graph.getVertex(targetId, t);
+			HHHeapItem _t = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
+			queue[BWD].insert(_t);
+			discovered[BWD].put(t.idZeroLvl, _t);
+			poolVertices.release(t);
+		}
 
 		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
 			if (queue[direction].isEmpty()) {
@@ -117,21 +124,24 @@ final class HighwayHierarchiesAlgorithm {
 				}
 			}
 
-			HHVertex u = new HHVertex();
-			graph.getVertex(uItem.id, u);
-			if (uItem.gap == Integer.MAX_VALUE) {
-				uItem.gap = u.neighborhood;
+			{ // scope for u
+				HHVertex u = poolVertices.borrow();
+				graph.getVertex(uItem.id, u);
+				if (uItem.gap == Integer.MAX_VALUE) {
+					uItem.gap = u.neighborhood;
+				}
+				int lvl = uItem.level;
+				int gap = uItem.gap;
+				while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap) && u.idNextLvl != -1) {
+					// switch to next level
+					lvl++;
+					graph.getVertex(u.idNextLvl, u);
+					uItem.id = u.id;
+					gap = u.neighborhood;
+				}
+				direction = (direction + 1) % 2;
+				poolVertices.release(u);
 			}
-			int lvl = uItem.level;
-			int gap = uItem.gap;
-			while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap) && u.idNextLvl != -1) {
-				// switch to next level
-				lvl++;
-				graph.getVertex(u.idNextLvl, u);
-				uItem.id = u.id;
-				gap = u.neighborhood;
-			}
-			direction = (direction + 1) % 2;
 		}
 		if (searchScopeHitId != -1) {
 			System.out.println("got shortest distance " + distance + " "
@@ -169,12 +179,14 @@ final class HighwayHierarchiesAlgorithm {
 
 		int n = u.getOutboundDegree();
 		for (int i = 0; i < n; i++) {
-			HHEdge e = new HHEdge();
+			HHEdge e = poolEdges.borrow();
 			graph.getOutboundEdge(u, i, e);
 			if (forward && !e.isForward()) {
+				poolEdges.release(e);
 				continue;
 			}
 			if (!forward && !e.isBackward()) {
+				poolEdges.release(e);
 				continue;
 			}
 
@@ -183,11 +195,13 @@ final class HighwayHierarchiesAlgorithm {
 				gap_ = gap - e.weight;
 				if (!e.isCore()) {
 					// don't leave the core
+					poolEdges.release(e);
 					continue;
 				}
 				if (gap_ < 0) {
 					// edge crosses neighborhood of entry point, don't relax it
 					result = false;
+					poolEdges.release(e);
 					continue;
 				}
 			}
@@ -208,6 +222,7 @@ final class HighwayHierarchiesAlgorithm {
 				vItem.eTgtId = e.getTargetId();
 				queue[direction].decreaseKey(vItem, vItem);
 			}
+			poolEdges.release(e);
 		}
 
 		return result;
@@ -231,8 +246,7 @@ final class HighwayHierarchiesAlgorithm {
 		graph.getVertex(src, s);
 		HHVertex t = new HHVertex();
 		graph.getVertex(tgt, t);
-		// System.out.println("expand edge " + s.getId() + " " + t.getId() + " " + s.getLvl()
-		// + " " + t.getLvl());
+
 		HHEdge e = extractEdge(s, t, fwd);
 		if (s.idPrevLvl == -1) {
 			// edge level == 0

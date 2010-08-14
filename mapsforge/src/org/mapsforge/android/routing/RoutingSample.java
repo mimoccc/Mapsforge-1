@@ -48,6 +48,8 @@ class RoutingSample {
 		}
 		router.release(s);
 		router.release(t);
+
+		System.out.println(router.toString());
 	}
 
 }
