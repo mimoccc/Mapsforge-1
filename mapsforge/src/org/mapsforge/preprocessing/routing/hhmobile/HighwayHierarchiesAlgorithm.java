@@ -52,7 +52,7 @@ class HighwayHierarchiesAlgorithm {
 	}
 
 	public int getShortestPath(int sourceId, int targetId,
-			LinkedList<LevelVertex> shortestPathBuff) throws IOException {
+			LinkedList<LevelVertex> shortestPathBuff) {
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discovered[FWD].clear();
@@ -109,8 +109,7 @@ class HighwayHierarchiesAlgorithm {
 		return distance;
 	}
 
-	private boolean relaxAdjacentEdges(HeapItem u, int direction, int lvl, int gap)
-			throws IOException {
+	private boolean relaxAdjacentEdges(HeapItem u, int direction, int lvl, int gap) {
 		boolean result = true;
 		boolean forward = (direction == FWD);
 
@@ -179,7 +178,7 @@ class HighwayHierarchiesAlgorithm {
 
 	public static class HeapItem implements IBinaryHeapItem<HeapItem>, Comparable<HeapItem> {
 
-		private int heapIdx;
+		int heapIdx;
 		// the key
 		public int distance;
 		public int level;
@@ -261,7 +260,7 @@ class HighwayHierarchiesAlgorithm {
 		String map = "berlin";
 		int n = 500;
 
-		LevelGraph graph = Serializer.deserialize(new File("berlin.levelGraph"));
+		LevelGraph graph = Serializer.deserialize(new File(map + ".levelGraph"));
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);
 		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
 		HHDynamicGraph graph2 = Serializer.deserialize(new File("berlin.hhDynamicGraph"));

@@ -26,7 +26,7 @@ class QuadTreeClustering implements Clustering {
 	private static final long serialVersionUID = 1L;
 
 	private final TIntObjectHashMap<QuadTreeCluster> clusters;
-	private final int[] clusterIds;
+	final int[] clusterIds;
 
 	private int nextClusterId;
 
@@ -62,14 +62,14 @@ class QuadTreeClustering implements Clustering {
 		return clusters.size();
 	}
 
-	public class QuadTreeCluster implements Cluster {
+	class QuadTreeCluster implements Cluster {
 
 		private static final long serialVersionUID = 1L;
 
 		private TIntArrayList vertices;
 		private int clusterId;
 
-		private QuadTreeCluster(int clusterId) {
+		QuadTreeCluster(int clusterId) {
 			this.vertices = new TIntArrayList();
 			this.clusterId = clusterId;
 		}

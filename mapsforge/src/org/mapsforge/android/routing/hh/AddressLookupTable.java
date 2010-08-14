@@ -51,14 +51,6 @@ final class AddressLookupTable {
 
 	private final int byteSize;
 
-	/**
-	 * Constructs and index based on the serialization.
-	 * 
-	 * @param buff
-	 *            serialized index.
-	 * @throws IOException
-	 *             thrown if something is wrong with the byte array.
-	 */
 	public AddressLookupTable(long startAddr, long endAddr, File f) throws IOException {
 		// read into ram
 		this.byteSize = (int) (endAddr - startAddr);

@@ -18,7 +18,6 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.IOException;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelEdge;
@@ -39,7 +38,7 @@ class DijkstraAlgorithm {
 	}
 
 	public int getShortestPath(int sourceId, int targetId,
-			LinkedList<LevelVertex> shortestPathBuff) throws IOException {
+			LinkedList<LevelVertex> shortestPathBuff) {
 		this.queue.clear();
 		this.discovered.clear();
 
@@ -83,9 +82,9 @@ class DijkstraAlgorithm {
 	private class HeapItem implements IBinaryHeapItem<Integer> {
 
 		private int heapIdx;
-		private int distance;
-		private LevelVertex parent;
-		private int vertexId;
+		int distance;
+		LevelVertex parent;
+		int vertexId;
 
 		public HeapItem(int vertexId, int distance, LevelVertex parent) {
 			this.vertexId = vertexId;

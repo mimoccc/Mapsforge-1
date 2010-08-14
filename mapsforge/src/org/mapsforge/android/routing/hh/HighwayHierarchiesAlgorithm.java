@@ -309,7 +309,7 @@ class HighwayHierarchiesAlgorithm {
 	private static class HHHeapItem implements IBinaryHeapItem<HHHeapItem>,
 			Comparable<HHHeapItem> {
 
-		private int heapIdx;
+		int heapIdx;
 		// the key
 		public int distance;
 		public int level;
@@ -455,11 +455,11 @@ class HighwayHierarchiesAlgorithm {
 		}
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException {
 		String map = "berlin";
 		int n = 1;
 
-		LRUCache cache = new LRUCache(1000 * 1024);
+		LRUCache<RleBlock> cache = new LRUCache<RleBlock>(1000 * 1024);
 		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), cache);
 
 		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph);

@@ -27,7 +27,7 @@ class KCenterClustering implements Clustering {
 	private static final long serialVersionUID = 1L;
 
 	private final TIntObjectHashMap<KCenterCluster> clusters;
-	private final int[] clusterIds;
+	final int[] clusterIds;
 
 	private int nextClusterId;
 
@@ -78,16 +78,16 @@ class KCenterClustering implements Clustering {
 		return clusters.size();
 	}
 
-	public class KCenterCluster implements Cluster {
+	class KCenterCluster implements Cluster {
 
 		private static final long serialVersionUID = 1L;
 
-		private TIntArrayList vertices;
-		private int centerVertex;
-		private int radius;
-		private int clusterId;
+		TIntArrayList vertices;
+		int centerVertex;
+		int radius;
+		int clusterId;
 
-		private KCenterCluster(int centerVertex, int id) {
+		KCenterCluster(int centerVertex, int id) {
 			this.vertices = new TIntArrayList();
 			this.centerVertex = centerVertex;
 			this.clusterId = id;

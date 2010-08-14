@@ -35,11 +35,15 @@ class LevelGraph implements Serializable {
 	private static final int FWD = 0;
 	private static final int BWD = 1;
 
-	private final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, vLon, vLat, eSource, eTarget,
-			eWeight;
-	private final BitArray[] eDirection;
-	private final BitArray eIsShortcut;
-	private final int numLevels, numVertices, numLvlVertices, numEdges;
+	final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, vLon, vLat;
+	final int[] eSource, eTarget, eWeight;
+	final BitArray[] eDirection;
+	final BitArray eIsShortcut;
+	private final int numLevels;
+
+	final int numVertices;
+
+	private final int numLvlVertices, numEdges;
 
 	private final Level[] levels;
 
@@ -131,7 +135,7 @@ class LevelGraph implements Serializable {
 		return numLevels;
 	}
 
-	private int getVertexLvl(int id) {
+	int getVertexLvl(int id) {
 		return (vFirstLvlVertex[id + 1] - vFirstLvlVertex[id]) - 1;
 	}
 
@@ -150,7 +154,7 @@ class LevelGraph implements Serializable {
 		public final int lvl;
 		private final int lvlNumVertices, lvlNumEdges;
 
-		private Level(int lvl, int lvlNumVertices, int lvlNumEdges) {
+		Level(int lvl, int lvlNumVertices, int lvlNumEdges) {
 			this.lvl = lvl;
 			this.lvlNumVertices = lvlNumVertices;
 			this.lvlNumEdges = lvlNumEdges;
@@ -187,7 +191,7 @@ class LevelGraph implements Serializable {
 
 				@Override
 				public void remove() {
-
+					// do nothing
 				}
 
 				private int getNextVertex(int startId) {
@@ -218,7 +222,7 @@ class LevelGraph implements Serializable {
 
 			private final int id;
 
-			private LevelVertex(int id) {
+			LevelVertex(int id) {
 				if (getVertexLvl(id) < lvl) {
 					System.out.println("dasdsadasgdasdasgjk");
 				}
@@ -265,7 +269,7 @@ class LevelGraph implements Serializable {
 
 			private final int id;
 
-			private LevelEdge(int id) {
+			LevelEdge(int id) {
 				this.id = id;
 			}
 

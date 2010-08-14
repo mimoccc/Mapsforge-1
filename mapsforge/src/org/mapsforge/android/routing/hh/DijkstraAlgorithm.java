@@ -87,9 +87,9 @@ class DijkstraAlgorithm {
 	private class HeapItem implements IBinaryHeapItem<Integer> {
 
 		private int heapIdx;
-		private int distance;
-		private Vertex parent;
-		private int vertexId;
+		int distance;
+		Vertex parent;
+		int vertexId;
 
 		public HeapItem(int vertexId, int distance, Vertex parent) {
 			this.vertexId = vertexId;

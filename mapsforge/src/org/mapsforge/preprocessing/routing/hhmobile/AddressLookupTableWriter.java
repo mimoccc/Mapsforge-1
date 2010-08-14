@@ -36,7 +36,7 @@ class AddressLookupTableWriter {
 		byte[] bestSerialization = null;
 
 		// determine space optimal group Size
-		for (int gSize = MIN_G_SIZE; gSize < gSize || gSize == MIN_G_SIZE; gSize++) {
+		for (int gSize = MIN_G_SIZE; gSize < gSizeThreshold || gSize == MIN_G_SIZE; gSize++) {
 
 			// compute the compressed table data
 			int numBlocks = blockSize.length;

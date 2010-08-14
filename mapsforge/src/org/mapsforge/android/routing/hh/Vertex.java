@@ -25,10 +25,6 @@ class Vertex {
 	int internalEdgeStartIdx, externalEdgeStartIdx;
 	short numInternalEdges, numExternalEdges;
 
-	public Vertex() {
-
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

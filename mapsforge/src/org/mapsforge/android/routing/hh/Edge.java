@@ -21,10 +21,6 @@ class Edge {
 	int weight;
 	boolean isShortcut, isForward, isBackward, isCore;
 
-	public Edge() {
-
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

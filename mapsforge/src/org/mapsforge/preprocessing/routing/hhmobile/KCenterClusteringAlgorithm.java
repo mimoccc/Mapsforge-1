@@ -287,8 +287,10 @@ class KCenterClusteringAlgorithm {
 
 	private static class HeapItem implements IBinaryHeapItem<Integer> {
 
-		private final int vertexId;
-		private int heapIndex, distance, parent;
+		final int vertexId;
+		private int heapIndex;
+		int distance;
+		int parent;
 
 		public HeapItem(int vertexId, int distance, int parent) {
 			this.heapIndex = -1;
