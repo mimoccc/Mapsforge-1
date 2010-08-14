@@ -48,8 +48,6 @@ public abstract class ItemizedOverlay extends Overlay {
 	 * 
 	 * @param defaultMarker
 	 *            the default drawable for each item in the overlay.
-	 * @param context
-	 *            the context.
 	 */
 	public ItemizedOverlay(Drawable defaultMarker) {
 		this.defaultMarker = defaultMarker;
@@ -92,7 +90,7 @@ public abstract class ItemizedOverlay extends Overlay {
 	public abstract void addOverLay(OverlayItem overlayItem);
 
 	@Override
-	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+	public boolean onTouchEvent(MotionEvent event, MapView mapview) {
 		// iterate over all overlay items
 		for (int i = 0; i < size(); i++) {
 			item = createItem(i);
@@ -157,7 +155,7 @@ public abstract class ItemizedOverlay extends Overlay {
 	abstract protected boolean onTap(int index);
 
 	@Override
-	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
 		canvas.drawBitmap(this.bitmap, this.matrix, null);
 	}
 
@@ -171,7 +169,7 @@ public abstract class ItemizedOverlay extends Overlay {
 	/**
 	 * Calculate if a given point is within the bounds of an item.
 	 * 
-	 * @param item
+	 * @param currentItem
 	 *            the item to test.
 	 * @param marker
 	 *            the marker of the item.
@@ -181,7 +179,7 @@ public abstract class ItemizedOverlay extends Overlay {
 	 *            the y-coordinate of the point.
 	 * @return true if the point is within the bounds of the item.
 	 */
-	protected boolean hitTest(OverlayItem item, Drawable marker, int hitX, int hitY) {
+	protected boolean hitTest(OverlayItem currentItem, Drawable marker, int hitX, int hitY) {
 		Point eventPos = new Point(hitX, hitY);
 		Point itemHitPosOnDisplay = calculateItemPostionRelativeToDisplay(item.getPoint());
 		Point distance = Point.substract(eventPos, itemHitPosOnDisplay);
@@ -209,25 +207,13 @@ public abstract class ItemizedOverlay extends Overlay {
 	}
 
 	@Override
-	final protected void prepareOverlayBitmap(MapView mapView) {
-		// if (!hasDisplayPostionChanged()) {
-		// return;
-		// }
+	final protected void prepareOverlayBitmap(MapView mapview) {
 		saveDisplayPositionBeforeDrawing();
 		drawItemsOnShaddowBitmap();
 		saveDisplayPositionAfterDrawing();
 		swapBitmapAndCorrectMatrix(this.displayPositonBeforeDrawing,
 				this.displayPositonAfterDrawing);
 		notifyMapViewToRedraw();
-	}
-
-	private boolean hasDisplayPostionChanged() {
-		Point currentPositon = calculateDisplayPoint(new GeoPoint(this.mapView.latitude,
-				this.mapView.longitude));
-		if (displayPositonAfterDrawing == null) {
-			return true;
-		}
-		return (!this.displayPositonAfterDrawing.equals(currentPositon));
 	}
 
 	private void saveDisplayPositionBeforeDrawing() {
@@ -248,25 +234,25 @@ public abstract class ItemizedOverlay extends Overlay {
 		}
 	}
 
-	private void drawItem(OverlayItem item) {
-		if (hasValidDisplayPosition(item)) {
-			this.itemPixelPositon = item.posOnDisplay;
+	private void drawItem(OverlayItem currentItem) {
+		if (hasValidDisplayPosition(currentItem)) {
+			this.itemPixelPositon = currentItem.posOnDisplay;
 		} else {
-			item.posOnDisplay = calculateItemPoint(item.getPoint());
-			this.itemPixelPositon = item.posOnDisplay;
-			item.zoomLevel = this.mapView.zoomLevel;
+			currentItem.posOnDisplay = calculateItemPoint(currentItem.getPoint());
+			this.itemPixelPositon = currentItem.posOnDisplay;
+			currentItem.zoomLevel = this.mapView.zoomLevel;
 		}
 		this.itemPosOnDisplay = Point.substract(this.itemPixelPositon,
 				this.displayPositonBeforeDrawing);
-		setCostumOrDeaultItemMarker(item);
+		setCostumOrDeaultItemMarker(currentItem);
 		if (isItemOnDisplay(this.itemPosOnDisplay)) {
 			boundCenter(this.itemMarker, this.itemPosOnDisplay).draw(this.bitmapWrapper);
 		}
 	}
 
-	private boolean hasValidDisplayPosition(OverlayItem item) {
+	private boolean hasValidDisplayPosition(OverlayItem currentItem) {
 		boolean displayPositionValid = true;
-		displayPositionValid &= (this.mapView.zoomLevel == item.zoomLevel);
+		displayPositionValid &= (this.mapView.zoomLevel == currentItem.zoomLevel);
 		return displayPositionValid;
 	}
 
@@ -306,15 +292,14 @@ public abstract class ItemizedOverlay extends Overlay {
 
 	private Point calculateItemPoint(GeoPoint geoPoint) {
 		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.mapView.zoomLevel), (float) MercatorProjection.latitudeToPixelY(geoPoint
-				.getLatitude(), this.mapView.zoomLevel));
+				this.mapView.zoomLevel), (float) MercatorProjection.latitudeToPixelY(
+				geoPoint.getLatitude(), this.mapView.zoomLevel));
 	}
 
 	private Point calculateDisplayPoint(GeoPoint geoPoint) {
 		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.mapView.zoomLevel)
-				- this.mapView.getWidth() / 2, (float) MercatorProjection.latitudeToPixelY(
-				geoPoint.getLatitude(), this.mapView.zoomLevel)
-				- this.mapView.getHeight() / 2);
+				this.mapView.zoomLevel) - this.mapView.getWidth() / 2,
+				(float) MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
+						this.mapView.zoomLevel) - this.mapView.getHeight() / 2);
 	}
 }

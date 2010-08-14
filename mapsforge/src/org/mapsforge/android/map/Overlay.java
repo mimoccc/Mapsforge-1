@@ -36,11 +36,6 @@ public abstract class Overlay extends Thread {
 	protected Bitmap bmp;
 
 	/**
-	 * To ensure that the mapview is set.
-	 */
-	private boolean isReady = false;
-
-	/**
 	 * The reference to the mapview class.
 	 */
 	protected MapView mapView;
@@ -61,13 +56,14 @@ public abstract class Overlay extends Thread {
 	 * @param canvas
 	 *            the canvas the overlay will be thrown onto.
 	 * 
-	 * @param mapView
+	 * @param mapview
 	 *            the {@link MapView} that called the draw-method.
 	 * 
 	 * @param shadow
 	 *            not yet implemented!
 	 */
-	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
+		// overwritten
 	}
 
 	/**
@@ -76,7 +72,7 @@ public abstract class Overlay extends Thread {
 	 * @param canvas
 	 *            the canvas the overlay will be drawn onto.
 	 * 
-	 * @param mapView
+	 * @param mapview
 	 *            the {@link MapView} that called the draw-method.
 	 * 
 	 * @param shadow
@@ -85,7 +81,7 @@ public abstract class Overlay extends Thread {
 	 *            not yet implemented!
 	 * @return false
 	 */
-	public boolean draw(android.graphics.Canvas canvas, MapView mapView, boolean shadow,
+	public boolean draw(android.graphics.Canvas canvas, MapView mapview, boolean shadow,
 			long when) {
 		draw(canvas, mapView, shadow);
 		return false;
@@ -98,11 +94,11 @@ public abstract class Overlay extends Thread {
 	 *            the keyCode of the event.
 	 * @param event
 	 *            the event.
-	 * @param mapView
+	 * @param mapview
 	 *            {@link MapView} that triggered the event.
 	 * @return false
 	 */
-	public boolean onKeyDown(int keyCode, android.view.KeyEvent event, MapView mapView) {
+	public boolean onKeyDown(int keyCode, android.view.KeyEvent event, MapView mapview) {
 		return false;
 	}
 
@@ -113,11 +109,11 @@ public abstract class Overlay extends Thread {
 	 *            the keyCode of the event.
 	 * @param event
 	 *            the event.
-	 * @param mapView
+	 * @param mapview
 	 *            {@link MapView} that triggered the event.
 	 * @return false
 	 */
-	public boolean onKeyUp(int keyCode, android.view.KeyEvent event, MapView mapView) {
+	public boolean onKeyUp(int keyCode, android.view.KeyEvent event, MapView mapview) {
 		return false;
 	}
 
@@ -126,11 +122,11 @@ public abstract class Overlay extends Thread {
 	 * 
 	 * @param event
 	 *            the event.
-	 * @param mapView
+	 * @param mapview
 	 *            {@link MapView} that triggered the event.
 	 * @return true if the event was handled by the overlay.
 	 */
-	public boolean onTouchEvent(android.view.MotionEvent event, MapView mapView) {
+	public boolean onTouchEvent(android.view.MotionEvent event, MapView mapview) {
 		return false;
 	}
 
@@ -139,21 +135,21 @@ public abstract class Overlay extends Thread {
 	 * 
 	 * @param event
 	 *            the event.
-	 * @param mapView
+	 * @param mapview
 	 *            {@link MapView} that triggered the event.
 	 * @return true if the event was handled by the overlay.
 	 */
-	public boolean onTrackballEvent(android.view.MotionEvent event, MapView mapView) {
+	public boolean onTrackballEvent(android.view.MotionEvent event, MapView mapview) {
 		return false;
 	}
 
 	/**
 	 * Prepares this overlay for drawing.
 	 * 
-	 * @param mapView
+	 * @param mapview
 	 *            the parent mapview.
 	 */
-	protected abstract void prepareOverlayBitmap(MapView mapView);
+	protected abstract void prepareOverlayBitmap(MapView mapview);
 
 	/**
 	 * 
@@ -204,13 +200,11 @@ public abstract class Overlay extends Thread {
 		while (!isInterrupted()) {
 			synchronized (this) {
 				try {
-					this.isReady = true;
 					this.wait();
 				} catch (InterruptedException e) {
 					interrupt();
 				}
 			}
-			this.isReady = false;
 			if (isInterrupted()) {
 				break;
 			}

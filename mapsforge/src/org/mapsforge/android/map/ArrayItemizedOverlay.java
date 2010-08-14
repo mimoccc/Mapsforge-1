@@ -6,11 +6,25 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+/**
+ * Implementation of the Overlay class using an arrayList as data-structure.
+ * 
+ * @author Sebastian Schlaak
+ * @author Karsten Groll
+ */
 public class ArrayItemizedOverlay extends ItemizedOverlay {
 
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Context context;
 
+	/**
+	 * Constructs an overlay.
+	 * 
+	 * @param defaultMarker
+	 *            the default marker.
+	 * @param context
+	 *            the context for the alert-dialog.
+	 */
 	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
 		super(defaultMarker);
 		this.context = context;
