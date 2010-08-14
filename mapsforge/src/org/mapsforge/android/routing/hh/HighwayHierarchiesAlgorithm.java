@@ -501,7 +501,7 @@ final class HighwayHierarchiesAlgorithm {
 		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.BLACK,
 				Color.WHITE);
 		LinkedList<HHEdge> sp1 = new LinkedList<HHEdge>();
-		LinkedList<HHEdge> sp2 = new LinkedList<HHEdge>();
+		// LinkedList<HHEdge> sp2 = new LinkedList<HHEdge>();
 
 		long time = System.currentTimeMillis();
 		for (int i = 0; i < n; i++) {
