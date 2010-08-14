@@ -18,16 +18,11 @@ package org.mapsforge.android.routing.hh;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.awt.Color;
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.RouterFactory;
 
 class DijkstraAlgorithm {
 
@@ -124,36 +119,5 @@ class DijkstraAlgorithm {
 			distance = key;
 		}
 
-	}
-
-	public static void main(String[] args) throws IOException {
-		String map = "berlin";
-		int n = 10;
-
-		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), new DummyCache());
-
-		DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
-		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
-				Color.BLACK);
-		LinkedList<Vertex> sp = new LinkedList<Vertex>();
-
-		long time = System.currentTimeMillis();
-		for (int i = 0; i < n; i++) {
-			Vertex s = new Vertex();
-			graph.getRandomVertex(0, s);
-			Vertex t = new Vertex();
-			graph.getRandomVertex(0, t);
-			int distance = d.getShortestPath(s.getId(), t.getId(), sp);
-			for (Vertex v : sp) {
-				Vertex v_ = new Vertex();
-				graph.getVertex(v.getIdLvlZero(), v_);
-				renderer.addCircle(new GeoCoordinate(v_.getLat(), v_.getLon()), Color.BLUE);
-			}
-			// renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
-			// renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
-			sp.clear();
-		}
-		System.out.println("num routes : " + n);
-		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}
 }

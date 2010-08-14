@@ -16,20 +16,16 @@
  */
 package org.mapsforge.android.routing.hh;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
-import java.util.Random;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.WGS84;
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.RouterFactory;
 
 class RoutingGraph {
 
@@ -38,7 +34,6 @@ class RoutingGraph {
 
 	private final RleBlockReader blockReader;
 	private final Cache<RleBlock> cache;
-	private final Random rnd = new Random(1333);
 	private final StaticRTree rtree;
 	public int[] numBlockReads;
 	public long ioTime;
@@ -118,15 +113,6 @@ class RoutingGraph {
 		return dBest != Double.MAX_VALUE;
 	}
 
-	public void getRandomVertex(int lvl, Vertex buff) throws IOException {
-		int blockId = rnd.nextInt(blockReader.getNumBlocks());
-		getVertex(blockReader.getVertexId(blockId, 0), buff);
-		while (buff.getLvl() != lvl) {
-			blockId = rnd.nextInt(blockReader.getNumBlocks());
-			getVertex(blockReader.getVertexId(blockId, 0), buff);
-		}
-	}
-
 	public void getVertex(int vertexId, Vertex buff) throws IOException {
 		int blockId = blockReader.getBlockId(vertexId);
 		RleBlock block = getBlock(blockId);
@@ -155,31 +141,5 @@ class RoutingGraph {
 			cache.putItem(block);
 		}
 		return block;
-	}
-
-	private static byte[] read(RandomAccessFile raf, long startAddr, long endAddr)
-			throws IOException {
-		byte[] b = new byte[(int) (endAddr - startAddr)];
-		raf.seek(startAddr);
-		raf.readFully(b);
-		return b;
-	}
-
-	public static void main(String[] args) throws IOException {
-		String map = "berlin";
-
-		RoutingGraph router = new RoutingGraph(new File(map + ".hhmobile"),
-				new DummyCache<RleBlock>());
-		Vertex s = new Vertex();
-		router.getRandomVertex(0, s);
-		Vertex t = new Vertex();
-		router.getRandomVertex(0, t);
-		System.out.println(s);
-		System.out.println(t);
-
-		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
-				Color.BLACK);
-		renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.RED);
-		renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.RED);
 	}
 }
