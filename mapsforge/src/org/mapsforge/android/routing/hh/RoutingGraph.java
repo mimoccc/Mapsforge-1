@@ -27,7 +27,7 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.WGS84;
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 
-class RoutingGraph {
+final class RoutingGraph {
 
 	public final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
 	public final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;
@@ -86,7 +86,7 @@ class RoutingGraph {
 		return blockReader.numLevels;
 	}
 
-	public boolean getNearestVertex(GeoCoordinate c, double maxDistanceMeters, Vertex buff)
+	public boolean getNearestVertex(GeoCoordinate c, double maxDistanceMeters, HHVertex buff)
 			throws IOException {
 		double alphaLon = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180;
 		double alphaLat = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180; // TODO:
@@ -95,7 +95,7 @@ class RoutingGraph {
 		int minLat = GeoCoordinate.doubleToInt(c.getLatitude() - alphaLat);
 		int maxLat = GeoCoordinate.doubleToInt(c.getLatitude() + alphaLat);
 		LinkedList<Integer> blockIds = rtree.overlaps(minLon, maxLon, minLat, maxLat);
-		Vertex v = new Vertex();
+		HHVertex v = new HHVertex();
 		double dBest = Double.MAX_VALUE;
 		for (int blockId : blockIds) {
 			RleBlock block = fetchBlock(blockId);
@@ -103,7 +103,7 @@ class RoutingGraph {
 			for (int i = 0; i < n; i++) {
 				block.getVertex(i, v);
 				double distance = GeoCoordinate.sphericalDistance(c.getLatitudeE6(), c
-						.getLongitudeE6(), v.getLatitude(), v.getLongitude());
+						.getLongitudeE6(), v.getLatitudeE6(), v.getLongitudeE6());
 				if (dBest > distance) {
 					dBest = distance;
 					block.getVertex(i, buff);
@@ -113,21 +113,23 @@ class RoutingGraph {
 		return dBest != Double.MAX_VALUE;
 	}
 
-	public void getVertex(int vertexId, Vertex buff) throws IOException {
+	public boolean getVertex(int vertexId, HHVertex buff) throws IOException {
 		int blockId = blockReader.getBlockId(vertexId);
 		RleBlock block = fetchBlock(blockId);
 		int vertexOffset = blockReader.getVertexOffset(vertexId);
 		long time = System.nanoTime();
-		block.getVertex(vertexOffset, buff);
+		boolean result = block.getVertex(vertexOffset, buff);
 		shiftTime += System.nanoTime() - time;
+		return result;
 	}
 
-	public void getOutboundEdge(Vertex v, int i, Edge buff) throws IOException {
+	public boolean getOutboundEdge(HHVertex v, int i, HHEdge buff) throws IOException {
 		int blockId = blockReader.getBlockId(v.id);
 		RleBlock block = fetchBlock(blockId);
 		long time = System.nanoTime();
-		block.getOutboundEdge(v, i, buff);
+		boolean result = block.getOutboundEdge(v, i, buff);
 		shiftTime += System.nanoTime() - time;
+		return result;
 	}
 
 	public void clearCache() {

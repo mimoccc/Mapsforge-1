@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.hh;
 
-class Vertex {
+public class HHVertex {
 
 	int neighborhood;
 	int id, idPrevLvl, idNextLvl, idZeroLvl;
@@ -25,16 +25,21 @@ class Vertex {
 	int internalEdgeStartIdx, externalEdgeStartIdx;
 	short numInternalEdges, numExternalEdges;
 
+	HHVertex() {
+		// empty constructor suffices since
+		// this class will be object pooled
+	}
+
 	public int getId() {
 		return id;
 	}
 
-	public int getLongitude() {
-		return longitude;
+	public int getLatitudeE6() {
+		return latitude;
 	}
 
-	public int getLatitude() {
-		return latitude;
+	public int getLongitudeE6() {
+		return longitude;
 	}
 
 	public short getOutboundDegree() {
@@ -44,7 +49,7 @@ class Vertex {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(Vertex.class.getName() + " (\n");
+		sb.append(HHVertex.class.getName() + " (\n");
 		sb.append("  neighborhood = " + neighborhood + "\n");
 		sb.append("  id = " + id + "\n");
 		sb.append("  idPrevLvl = " + idPrevLvl + "\n");

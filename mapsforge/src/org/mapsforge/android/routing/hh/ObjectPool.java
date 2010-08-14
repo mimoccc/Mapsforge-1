@@ -18,17 +18,11 @@ package org.mapsforge.android.routing.hh;
 
 import java.util.ArrayList;
 
-class ObjectPool<T extends ObjectPool.Poolable> {
+final class ObjectPool<T> {
 
-	public static interface PoolableFactory<T extends Poolable> {
+	public static interface PoolableFactory<T> {
 
 		public T makeObject();
-
-	}
-
-	public static interface Poolable {
-
-		public void onRelease();
 
 	}
 
@@ -59,7 +53,6 @@ class ObjectPool<T extends ObjectPool.Poolable> {
 	public void release(T obj) {
 		if (obj != null) {
 			objects.add(obj);
-			obj.onRelease();
 		}
 	}
 

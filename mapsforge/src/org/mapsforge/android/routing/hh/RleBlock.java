@@ -219,7 +219,10 @@ final class RleBlock implements CacheItem {
 		return numEdgesExt + numEdgesInt;
 	}
 
-	public void getVertex(int i, Vertex buff) {
+	public boolean getVertex(int i, HHVertex buff) {
+		if (i > numVertices || i < 0) {
+			return false;
+		}
 		int id = blockReader.getVertexId(bId, i);
 
 		int idLvlZero;
@@ -325,20 +328,23 @@ final class RleBlock implements CacheItem {
 		buff.numExternalEdges = (short) (_externalEdgeEndIdx - _externalEdgeStartIdx);
 		buff.internalEdgeStartIdx = _internalEdgeStartIdx;
 		buff.numInternalEdges = (short) (_internalEdgeEndIdx - _internalEdgeStartIdx);
+
+		return true;
 	}
 
-	public void getOutboundEdge(Vertex v, int i, Edge buff) {
+	public boolean getOutboundEdge(HHVertex v, int i, HHEdge buff) {
 		if (i > v.numInternalEdges + v.numExternalEdges - 1) {
-			throw new ArrayIndexOutOfBoundsException();
+			return false;
 		}
 		if (i < v.numInternalEdges) {
 			getInternalEdge(v.internalEdgeStartIdx + i, buff);
 		} else {
 			getExternalEdge(v.externalEdgeStartIdx + (i - v.numInternalEdges), buff);
 		}
+		return true;
 	}
 
-	private void getInternalEdge(int i, Edge buff) {
+	private void getInternalEdge(int i, HHEdge buff) {
 		int offset = startAddrEIntTargetOffset + (i * blockReader.bpVertexCount);
 		int _targetVertexOffset = (int) BitSerializer.readUInt(data, blockReader.bpVertexCount,
 				offset / 8, offset % 8);
@@ -378,7 +384,7 @@ final class RleBlock implements CacheItem {
 		buff.isCore = BitSerializer.readBit(data, offset / 8, offset % 8);
 	}
 
-	private void getExternalEdge(int i, Edge buff) {
+	private void getExternalEdge(int i, HHEdge buff) {
 
 		int offset = startAddrEExtTargetOffsBlockAdj + (i * bpOffsBlockAdj);
 		int _targetBlockOffset = (int) BitSerializer.readUInt(data, bpOffsBlockAdj, offset / 8,

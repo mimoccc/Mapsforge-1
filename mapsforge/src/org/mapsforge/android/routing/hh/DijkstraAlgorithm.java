@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
-class DijkstraAlgorithm {
+final class DijkstraAlgorithm {
 
 	private final BinaryMinHeap<HeapItem, Integer> queue;
 	private final RoutingGraph graph;
@@ -36,7 +36,7 @@ class DijkstraAlgorithm {
 		this.discovered = new TIntObjectHashMap<HeapItem>();
 	}
 
-	public int getShortestPath(int sourceId, int targetId, LinkedList<Vertex> shortestPathBuff)
+	public int getShortestPath(int sourceId, int targetId, LinkedList<HHVertex> shortestPathBuff)
 			throws IOException {
 		this.queue.clear();
 		this.discovered.clear();
@@ -46,25 +46,25 @@ class DijkstraAlgorithm {
 		discovered.put(s.vertexId, s);
 		while (!queue.isEmpty()) {
 			HeapItem _u = queue.extractMin();
-			Vertex u = new Vertex();
+			HHVertex u = new HHVertex();
 			graph.getVertex(_u.vertexId, u);
 			if (u.id == targetId) {
 				break;
 			}
 			int n = u.getOutboundDegree();
 			for (int i = 0; i < n; i++) {
-				Edge e = new Edge();
+				HHEdge e = new HHEdge();
 				graph.getOutboundEdge(u, i, e);
 				if (!e.isForward()) {
 					continue;
 				}
 				HeapItem _v = discovered.get(e.getTargetId());
 				if (_v == null) {
-					_v = new HeapItem(e.getTargetId(), _u.distance + e.getWeight(), u);
+					_v = new HeapItem(e.getTargetId(), _u.distance + e.weight, u);
 					queue.insert(_v);
 					discovered.put(_v.vertexId, _v);
-				} else if (_v.distance > _u.distance + e.getWeight()) {
-					queue.decreaseKey(_v, _u.distance + e.getWeight());
+				} else if (_v.distance > _u.distance + e.weight) {
+					queue.decreaseKey(_v, _u.distance + e.weight);
 					_v.parent = u;
 				}
 			}
@@ -74,7 +74,7 @@ class DijkstraAlgorithm {
 			return Integer.MAX_VALUE;
 		}
 		int distance = _t.distance;
-		Vertex v = new Vertex();
+		HHVertex v = new HHVertex();
 		graph.getVertex(targetId, v);
 		shortestPathBuff.add(v);
 		while (_t.parent != null) {
@@ -88,10 +88,10 @@ class DijkstraAlgorithm {
 
 		private int heapIdx;
 		int distance;
-		Vertex parent;
+		HHVertex parent;
 		int vertexId;
 
-		public HeapItem(int vertexId, int distance, Vertex parent) {
+		public HeapItem(int vertexId, int distance, HHVertex parent) {
 			this.vertexId = vertexId;
 			this.distance = distance;
 			this.parent = parent;
