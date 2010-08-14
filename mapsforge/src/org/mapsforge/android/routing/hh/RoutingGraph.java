@@ -123,7 +123,7 @@ class RoutingGraph {
 	}
 
 	public void getOutboundEdge(Vertex v, int i, Edge buff) throws IOException {
-		int blockId = blockReader.getBlockId(v.getId());
+		int blockId = blockReader.getBlockId(v.id);
 		RleBlock block = getBlock(blockId);
 		long time = System.nanoTime();
 		block.getOutboundEdge(v, i, buff);

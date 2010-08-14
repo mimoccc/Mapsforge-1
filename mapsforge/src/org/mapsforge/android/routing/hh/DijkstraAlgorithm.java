@@ -48,7 +48,7 @@ class DijkstraAlgorithm {
 			HeapItem _u = queue.extractMin();
 			Vertex u = new Vertex();
 			graph.getVertex(_u.vertexId, u);
-			if (u.getId() == targetId) {
+			if (u.id == targetId) {
 				break;
 			}
 			int n = u.getOutboundDegree();
@@ -79,7 +79,7 @@ class DijkstraAlgorithm {
 		shortestPathBuff.add(v);
 		while (_t.parent != null) {
 			shortestPathBuff.add(_t.parent);
-			_t = discovered.get(_t.parent.getId());
+			_t = discovered.get(_t.parent.id);
 		}
 		return distance;
 	}

@@ -25,6 +25,42 @@ class Vertex {
 	int internalEdgeStartIdx, externalEdgeStartIdx;
 	short numInternalEdges, numExternalEdges;
 
+	// int getNeighborhood() {
+	// return neighborhood;
+	// }
+	//
+	// public int getId() {
+	// return id;
+	// }
+	//
+	// int getIdSubj() {
+	// return idSubj;
+	// }
+	//
+	// int getIdOverly() {
+	// return idOverly;
+	// }
+	//
+	// int getIdLvlZero() {
+	// return idLvlZero;
+	// }
+	//
+	// byte getLvl() {
+	// return lvl;
+	// }
+
+	public int getLon() {
+		return lon;
+	}
+
+	public int getLat() {
+		return lat;
+	}
+
+	public short getOutboundDegree() {
+		return (short) (numInternalEdges + numExternalEdges);
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -39,41 +75,5 @@ class Vertex {
 		sb.append("  lat = " + lat + "\n");
 		sb.append("(");
 		return sb.toString();
-	}
-
-	public int getNeighborhood() {
-		return neighborhood;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public int getIdSubj() {
-		return idSubj;
-	}
-
-	public int getIdOverly() {
-		return idOverly;
-	}
-
-	public int getIdLvlZero() {
-		return idLvlZero;
-	}
-
-	public byte getLvl() {
-		return lvl;
-	}
-
-	public int getLon() {
-		return lon;
-	}
-
-	public int getLat() {
-		return lat;
-	}
-
-	public short getOutboundDegree() {
-		return (short) (numInternalEdges + numExternalEdges);
 	}
 }
