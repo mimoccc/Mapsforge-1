@@ -16,34 +16,29 @@
  */
 package org.mapsforge.android.routing.hh;
 
+/**
+ * A structure for holding edge data of the highway hierarchies routing graph.
+ */
 public class HHEdge {
 	int targetId, targetIdZeroLvl;
 	int weight;
 	boolean isShortcut, isForward, isBackward, isCore;
 
 	HHEdge() {
-		//
+		// no initialiyation due to using object pooling.
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(HHEdge.class.getName() + " (\n");
-		sb.append("  targetId = " + targetId + "\n");
-		sb.append("  targetIdLvlZero = " + targetIdZeroLvl + "\n");
-		sb.append("  weight = " + weight + "\n");
-		sb.append("  isShortcut = " + isShortcut + "\n");
-		sb.append("  isForward = " + isForward + "\n");
-		sb.append("  isBackward = " + isBackward + "\n");
-		sb.append("  isCore = " + isCore + "\n");
-		sb.append("(");
-		return sb.toString();
-	}
-
+	/**
+	 * 
+	 * @return returns the unique identifier of the target vertex.
+	 */
 	public int getTargetId() {
 		return targetId;
 	}
 
+	/**
+	 * @return returns the edge weight of unkown metric.
+	 */
 	public int getWeight() {
 		return weight;
 	}
@@ -62,5 +57,20 @@ public class HHEdge {
 
 	boolean isCore() {
 		return isCore;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(HHEdge.class.getName() + " (\n");
+		sb.append("  targetId = " + targetId + "\n");
+		sb.append("  targetIdLvlZero = " + targetIdZeroLvl + "\n");
+		sb.append("  weight = " + weight + "\n");
+		sb.append("  isShortcut = " + isShortcut + "\n");
+		sb.append("  isForward = " + isForward + "\n");
+		sb.append("  isBackward = " + isBackward + "\n");
+		sb.append("  isCore = " + isCore + "\n");
+		sb.append("(");
+		return sb.toString();
 	}
 }

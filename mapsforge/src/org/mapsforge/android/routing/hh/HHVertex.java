@@ -16,6 +16,9 @@
  */
 package org.mapsforge.android.routing.hh;
 
+/**
+ * A structure for holding vertex data of the highway hierarchies routing graph.
+ */
 public class HHVertex {
 
 	int neighborhood;
@@ -30,18 +33,30 @@ public class HHVertex {
 		// this class will be object pooled
 	}
 
+	/**
+	 * @return returns the unique identifier of this vertex.
+	 */
 	public int getId() {
 		return id;
 	}
 
+	/**
+	 * @return returns the latitude of this vertex' position in micro degrees.
+	 */
 	public int getLatitudeE6() {
 		return latitude;
 	}
 
+	/**
+	 * @return returns the longitude of this vertex' position in micro degrees.
+	 */
 	public int getLongitudeE6() {
 		return longitude;
 	}
 
+	/**
+	 * @return returns the size of this vertex' adjacency list.
+	 */
 	public short getOutboundDegree() {
 		return (short) (numInternalEdges + numExternalEdges);
 	}
