@@ -26,14 +26,16 @@ import org.mapsforge.core.GeoCoordinate;
 /**
  * This class implements the only interface of the complete package to the outer world. The
  * reason for encapsulating the routing graph and the algorithm with this class is mainly to
- * hide object pooling as far as possible and to provide java style method signatures (internal
- * package classes often use c style void functions writing their result into buffers).
+ * hide object pooling as far as possible and at the same time provide java style method
+ * signatures (internal package classes often use c style void functions writing their result
+ * into buffers).
  * 
  * All objects (Vertices and Edges) returned by this class should be released to the object pool
  * using this classes's release methods. This can be useful with regard to performance due to
  * avoiding garbage collection. The Object pools are implemented in a way that there will be no
  * memory leaks if one forgets to release one of the objects. That is to say no pointer is
- * stored somewhere and the garbage collection will waste these objects later on.
+ * stored somewhere and the garbage collection will waste these objects later on. The only way
+ * to get memory leaks is releasing the same object multiple times which must be avoided!
  * 
  * This class is not thread safe. Shortest path queries are not likely to be a candidate for
  * thread safety. But maybe it will be desired to access the graph while shortest path queries
