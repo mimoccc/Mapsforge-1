@@ -341,6 +341,7 @@ final class RleBlock implements CacheItem {
 		} else {
 			getExternalEdge(v.externalEdgeStartIdx + (i - v.numInternalEdges), buff);
 		}
+		buff.sourceId = v.id;
 		return true;
 	}
 

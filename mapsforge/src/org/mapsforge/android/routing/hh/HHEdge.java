@@ -20,12 +20,20 @@ package org.mapsforge.android.routing.hh;
  * A structure for holding edge data of the highway hierarchies routing graph.
  */
 public class HHEdge {
-	int targetId, targetIdZeroLvl;
+
+	int sourceId, targetId, targetIdZeroLvl;
 	int weight;
 	boolean isShortcut, isForward, isBackward, isCore;
 
 	HHEdge() {
 		// no initialization due to using object pooling.
+	}
+
+	/**
+	 * @return returns the unique identifier of the source vertex.
+	 */
+	public int getSourceId() {
+		return sourceId;
 	}
 
 	/**

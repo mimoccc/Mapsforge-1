@@ -242,25 +242,37 @@ final class HighwayHierarchiesAlgorithm {
 
 	private void expandEdgeRec(int src, int tgt, LinkedList<HHEdge> buff, boolean fwd)
 			throws IOException {
-		HHVertex s = new HHVertex();
+		HHVertex s = poolVertices.borrow();
 		graph.getVertex(src, s);
-		HHVertex t = new HHVertex();
+		HHVertex t = poolVertices.borrow();
 		graph.getVertex(tgt, t);
 
-		HHEdge e = extractEdge(s, t, fwd);
+		HHEdge e = poolEdges.borrow();
+		extractEdge(s, t, fwd, e);
+
+		// if edge belongs to level 0, recursion anchor is reached!
 		if (s.idPrevLvl == -1) {
-			// edge level == 0
+			// add the edge to buff and do not release to pool!
+			// if the edge is backward only, fetch the corresponding forward edge
 			if (fwd) {
 				buff.addFirst(e);
 			} else {
-				e = extractEdge(t, s, true);
+				extractEdge(t, s, true, e);
 				buff.addLast(e);
 			}
-		} else if (!e.isShortcut()) {
-			// jump directly to level 0
-			expandEdgeRec(s.idPrevLvl, t.idZeroLvl, buff, fwd);
+			poolVertices.release(s);
+			poolVertices.release(t);
+			// need to return here since we don't want to release e
+			// to the pool which is done at the end of the method.
+			return;
+		}
+
+		// if edge is not a shortcut, we can directly jump to level 0
+		// if not we have to expand the shortcut using dijkstra within the core
+		// of the underlying level
+		if (!e.isShortcut()) {
+			expandEdgeRec(s.idZeroLvl, t.idZeroLvl, buff, fwd);
 		} else {
-			// use dijkstra within the core of subjacent level
 			discoveredDijkstra.clear();
 			queueDijkstra.clear();
 			DijkstraHeapItem sItem = new DijkstraHeapItem(0, s.idPrevLvl, null);
@@ -273,17 +285,18 @@ final class HighwayHierarchiesAlgorithm {
 					// found target
 					break;
 				}
-				HHVertex u = new HHVertex();
+				HHVertex u = poolVertices.borrow();
 				graph.getVertex(uItem.id, u);
 
 				// relax edges
 				int n = u.getOutboundDegree();
 				for (int i = 0; i < n; i++) {
-					HHEdge e_ = new HHEdge();
+					HHEdge e_ = poolEdges.borrow();
 					graph.getOutboundEdge(u, i, e_);
 					if (!e_.isCore() || (fwd && !e_.isForward()) || (!fwd && !e_.isBackward())) {
 						// -skip edge if it is not applicable for current search direction
 						// -skip non core edges
+						poolEdges.release(e_);
 						continue;
 					}
 					DijkstraHeapItem vItem = discoveredDijkstra.get(e_.getTargetId());
@@ -296,7 +309,9 @@ final class HighwayHierarchiesAlgorithm {
 						vItem.distance = uItem.distance + e_.weight;
 						vItem.parent = uItem;
 					}
+					poolEdges.release(e_);
 				}
+				poolVertices.release(u);
 			}
 			DijkstraHeapItem i = discoveredDijkstra.get(t.idPrevLvl);
 			while (i.parent != null) {
@@ -306,22 +321,25 @@ final class HighwayHierarchiesAlgorithm {
 				i = i.parent;
 			}
 		}
+		poolEdges.release(e);
+		poolVertices.release(s);
+		poolVertices.release(t);
 	}
 
-	private HHEdge extractEdge(HHVertex s, HHVertex t, boolean fwd) throws IOException {
+	private void extractEdge(HHVertex s, HHVertex t, boolean fwd, HHEdge buff)
+			throws IOException {
 		int minWeight = Integer.MAX_VALUE;
 		int n = s.getOutboundDegree();
-		HHEdge eMinWeight = new HHEdge();
+		HHEdge e = poolEdges.borrow();
 		for (int i = 0; i < n; i++) {
-			HHEdge e = new HHEdge();
 			graph.getOutboundEdge(s, i, e);
 			if (e.getTargetId() == t.id && e.weight < minWeight
 					&& ((fwd && e.isForward()) || (!fwd && e.isBackward()))) {
 				minWeight = e.weight;
-				eMinWeight = e;
+				graph.getOutboundEdge(s, i, buff);
 			}
 		}
-		return eMinWeight;
+		poolEdges.release(e);
 	}
 
 	private static class HHHeapItem implements IBinaryHeapItem<HHHeapItem>,
