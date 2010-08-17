@@ -1,4 +1,4 @@
-// this is a sorted list of all way tags that can currently be rendered
+// this is a sorted list of all way tags that could be rendered
 // to generate java code with unique IDs run the tagIdTool on this file
 
 admin_level=2
@@ -8,6 +8,9 @@ admin_level=8
 admin_level=9
 admin_level=10
 
+aerialway=cable_car
+aerialway=chair_lift
+
 aeroway=aerodrome
 aeroway=apron
 aeroway=helipad
@@ -16,6 +19,7 @@ aeroway=taxiway
 aeroway=terminal
 
 amenity=college
+amenity=embassy
 amenity=fountain
 amenity=grave_yard
 amenity=hospital
@@ -44,6 +48,7 @@ building=university
 building=yes
 
 highway=bridleway
+highway=bus_guideway
 highway=construction
 highway=cycleway
 highway=footway
@@ -55,9 +60,11 @@ highway=pedestrian
 highway=primary
 highway=primary_link
 highway=residential
+highway=raceway
 highway=road
 highway=secondary
 highway=service
+highway=services
 highway=steps
 highway=tertiary
 highway=track
@@ -80,11 +87,14 @@ landuse=grass
 landuse=greenfield
 landuse=industrial
 landuse=military
+landuse=quarry
+landuse=railway
 landuse=recreation_ground
 landuse=reservoir
 landuse=residential
 landuse=retail
 landuse=village_green
+landuse=vineyard
 landuse=wood
 
 leisure=common
@@ -106,6 +116,7 @@ military=naval_base
 
 natural=beach
 natural=coastline
+natural=glacier
 natural=heath
 natural=land
 natural=scrub
@@ -113,6 +124,9 @@ natural=water
 natural=wood
 
 place=locality
+
+power=station
+power=sub_station
 
 railway=light_rail
 railway=rail
@@ -122,17 +136,26 @@ railway=tram
 
 route=ferry
 
+sport=golf
 sport=shooting
+sport=soccer
 sport=tennis
 
 tourism=attraction
 tourism=hostel
 tourism=zoo
 
+tracktype=grade1
+tracktype=grade2
+tracktype=grade3
+tracktype=grade4
+tracktype=grade5
+
 tunnel=no
 tunnel=yes
 
 waterway=canal
+waterway=dam
 waterway=drain
 waterway=river
 waterway=riverbank

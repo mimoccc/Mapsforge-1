@@ -61,8 +61,8 @@ class TagIdCreator {
 
 		// read and process all lines until EOF
 		String currentLine = bufferedReader.readLine();
-		byte currentId = 0;
-		Map<String, Byte> map = new TreeMap<String, Byte>();
+		short currentId = 0;
+		Map<String, Short> map = new TreeMap<String, Short>();
 		while (currentLine != null) {
 			if (currentLine.length() == 0) {
 				// skip empty line
@@ -70,7 +70,7 @@ class TagIdCreator {
 				// skip line with comment
 			} else {
 				// write the line of java code with the corresponding id
-				System.out.println("static final byte "
+				System.out.println("static final short "
 						+ currentLine.replace('=', '$').toUpperCase(Locale.ENGLISH) + " = "
 						+ currentId + ";");
 				map.put(currentLine, currentId);
@@ -81,11 +81,11 @@ class TagIdCreator {
 
 		// write the java code for the map with all entries
 		System.out.println();
-		System.out.println("static final Map<String, Byte> getMap() {");
-		System.out.println("	Map<String, Byte> map = new HashMap<String, Byte>();");
+		System.out.println("static final Map<String, Short> getMap() {");
+		System.out.println("	Map<String, Short> map = new HashMap<String, Short>();");
 
-		for (Entry<String, Byte> entry : map.entrySet()) {
-			System.out.println("	map.put(\"" + entry.getKey() + "\", Byte.valueOf((byte) "
+		for (Entry<String, Short> entry : map.entrySet()) {
+			System.out.println("	map.put(\"" + entry.getKey() + "\", Short.valueOf((short) "
 					+ entry.getValue() + "));");
 		}
 

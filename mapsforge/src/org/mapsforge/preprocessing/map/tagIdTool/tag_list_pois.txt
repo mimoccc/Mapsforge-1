@@ -1,6 +1,7 @@
-// this is a sorted list of all POI tags that can currently be rendered
+// this is a sorted list of all POI tags that could be rendered
 // to generate java code with unique IDs run the tagIdTool on this file
 
+aeroway=gate
 aeroway=helipad
 
 amenity=atm
@@ -18,6 +19,7 @@ amenity=library
 amenity=parking
 amenity=pharmacy
 amenity=place_of_worship
+amenity=police
 amenity=post_box
 amenity=post_office
 amenity=pub
@@ -31,18 +33,29 @@ amenity=toilets
 amenity=university
 
 barrier=bollard
+barrier=cycle_barrier
+
+emergency=phone
 
 highway=bus_stop
+highway=mini_roundabout
 highway=traffic_signals
+highway=turning_circle
 
 historic=memorial
 historic=monument
 
+leisure=slipway
 leisure=playground
 
+man_made=lighthouse
+man_made=surveillance
+man_made=tower
 man_made=windmill
 
 natural=peak
+natural=spring
+natural=tree
 
 place=city
 place=island
@@ -50,12 +63,16 @@ place=suburb
 place=town
 place=village
 
+power=generator
+power=tower
+
 railway=halt
 railway=level_crossing
 railway=station
 railway=tram_stop
 
 shop=bakery
+shop=hairdresser
 shop=organic
 shop=supermarket
 
