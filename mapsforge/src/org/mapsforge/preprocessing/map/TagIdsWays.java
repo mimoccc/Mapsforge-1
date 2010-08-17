@@ -73,8 +73,8 @@ final class TagIdsWays {
 	static final short HIGHWAY$PEDESTRIAN = 46;
 	static final short HIGHWAY$PRIMARY = 47;
 	static final short HIGHWAY$PRIMARY_LINK = 48;
-	static final short HIGHWAY$RESIDENTIAL = 49;
-	static final short HIGHWAY$RACEWAY = 50;
+	static final short HIGHWAY$RACEWAY = 49;
+	static final short HIGHWAY$RESIDENTIAL = 50;
 	static final short HIGHWAY$ROAD = 51;
 	static final short HIGHWAY$SECONDARY = 52;
 	static final short HIGHWAY$SERVICE = 53;
@@ -211,8 +211,8 @@ final class TagIdsWays {
 		map.put("highway=pedestrian", Short.valueOf((short) 46));
 		map.put("highway=primary", Short.valueOf((short) 47));
 		map.put("highway=primary_link", Short.valueOf((short) 48));
-		map.put("highway=raceway", Short.valueOf((short) 50));
-		map.put("highway=residential", Short.valueOf((short) 49));
+		map.put("highway=raceway", Short.valueOf((short) 49));
+		map.put("highway=residential", Short.valueOf((short) 50));
 		map.put("highway=road", Short.valueOf((short) 51));
 		map.put("highway=secondary", Short.valueOf((short) 52));
 		map.put("highway=service", Short.valueOf((short) 53));

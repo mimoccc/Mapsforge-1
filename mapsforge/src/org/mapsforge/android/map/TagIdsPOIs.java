@@ -62,8 +62,8 @@ final class TagIdsPOIs {
 	static final short HIGHWAY$TURNING_CIRCLE = 35;
 	static final short HISTORIC$MEMORIAL = 36;
 	static final short HISTORIC$MONUMENT = 37;
-	static final short LEISURE$SLIPWAY = 38;
-	static final short LEISURE$PLAYGROUND = 39;
+	static final short LEISURE$PLAYGROUND = 38;
+	static final short LEISURE$SLIPWAY = 39;
 	static final short MAN_MADE$LIGHTHOUSE = 40;
 	static final short MAN_MADE$SURVEILLANCE = 41;
 	static final short MAN_MADE$TOWER = 42;
@@ -135,8 +135,8 @@ final class TagIdsPOIs {
 		map.put("highway=turning_circle", Short.valueOf((short) 35));
 		map.put("historic=memorial", Short.valueOf((short) 36));
 		map.put("historic=monument", Short.valueOf((short) 37));
-		map.put("leisure=playground", Short.valueOf((short) 39));
-		map.put("leisure=slipway", Short.valueOf((short) 38));
+		map.put("leisure=playground", Short.valueOf((short) 38));
+		map.put("leisure=slipway", Short.valueOf((short) 39));
 		map.put("man_made=lighthouse", Short.valueOf((short) 40));
 		map.put("man_made=surveillance", Short.valueOf((short) 41));
 		map.put("man_made=tower", Short.valueOf((short) 42));

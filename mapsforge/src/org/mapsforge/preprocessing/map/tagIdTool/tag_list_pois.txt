@@ -45,8 +45,8 @@ highway=turning_circle
 historic=memorial
 historic=monument
 
-leisure=slipway
 leisure=playground
+leisure=slipway
 
 man_made=lighthouse
 man_made=surveillance
