@@ -14,6 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/*
+ * This WAR requires:
+ * - json.jar for JSON writing
+ * - xstream-1.3.1.jar for XML writing
+ * - mapsforge-routing-X.X.X.jar as created by the ant task
+ * - trove-3.0.0.a3.jar or later
+ * 
+ * *.hh file for which the location is set in th routerFactory.properties
+ */
 package org.mapsforge.server.ws;
 
 import java.io.IOException;
@@ -73,12 +83,16 @@ public class HHRoutingWebservice extends HttpServlet {
 				response.setContentType("application/json; charset=UTF-8");
 				out.write(turnByTurn.toJSONString());
 			} else if (format.equalsIgnoreCase("xml")) {
-				//response.setHeader("Content-Type", "text/xml; charset=utf-8");//charset=utf-8");
+				//application/vnd.google-earth.kml+xml
 				response.setContentType("text/xml; charset=UTF-8");
-				// TODO: Write KML
+				out.write(turnByTurn.toXMLString());
+			} else if (format.equalsIgnoreCase("kml")) {
+				response.setContentType("application/vnd.google-earth.kml+xml");
+				out.write(turnByTurn.toXMLString());
 			}
 		} catch (Exception e) {
 			System.err.print(e.toString());
+			
 			out.println("Error");
 		}
 	}
