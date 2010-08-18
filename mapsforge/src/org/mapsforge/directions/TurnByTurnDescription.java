@@ -16,10 +16,19 @@
  */
 package org.mapsforge.directions;
 
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Vector;
 
 import javax.naming.directory.InvalidAttributeValueException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,13 +36,8 @@ import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.server.routing.IEdge;
-
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Turn by turn directions contain a way which was found by a routing algorithm. Streets which
@@ -235,19 +239,6 @@ public class TurnByTurnDescription {
 	}
 
 	/**
-	 * Creates a valid KML version of the
-	 * 
-	 * @return a xml / kml string representation of a set of directions
-	 */
-	public String toXMLString() {
-		XStream xstream = new XStream();
-		xstream.registerConverter(new TurnByTurnConverter());
-		xstream.alias("Document", TurnByTurnDescription.class);
-		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
-				+ xstream.toXML(this) + "</kml>";
-	}
-
-	/**
 	 * Generates a GeoJSON String which represents the route
 	 * 
 	 * @return a string containing a GeoJSON representation of the route
@@ -282,6 +273,152 @@ public class TurnByTurnDescription {
 			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);
+	}
+
+	/**
+	 * Creates a KML (Keyhole markup language) version of the directions.
+	 * 
+	 * @return a KML string
+	 * @throws ParserConfigurationException
+	 *             if the DOM can't be built
+	 * @throws TransformerConfigurationException
+	 *             if turning the DOM into a string fails
+	 * @throws TransformerException
+	 *             if turning the DOM into a string fails
+	 * @throws TransformerFactoryConfigurationError
+	 *             if turning the DOM into a string fails
+	 */
+	public String toKML() throws ParserConfigurationException,
+			TransformerConfigurationException,
+			TransformerException, TransformerFactoryConfigurationError {
+		// This creates a new DOM
+		Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		// And let's get this started
+		dom.setXmlVersion("1.0");
+		dom.setXmlStandalone(true);
+		Element kml = dom.createElement("kml");
+		dom.appendChild(kml);
+		kml.setAttribute("xmlns", "http://www.opengis.net/kml/2.2");
+		Element document = dom.createElement("Document");
+		kml.appendChild(document);
+		Element name = dom.createElement("name");
+		name.setTextContent("MapsForge directions from "
+				+ streets.firstElement().name + " to "
+				+ streets.lastElement().name);
+		document.appendChild(name);
+		Element style = dom.createElement("Style");
+		style.setAttribute("id", "MapsForgeStyle");
+		document.appendChild(style);
+		Element lineStyle = dom.createElement("LineStyle");
+		style.appendChild(lineStyle);
+		Element color = dom.createElement("color");
+		color.setTextContent("ff0000ff");
+		lineStyle.appendChild(color);
+		Element width = dom.createElement("width");
+		width.setTextContent("3");
+		lineStyle.appendChild(width);
+		for (TurnByTurnStreet street : streets) {
+			Element placemark = dom.createElement("Placemark");
+			document.appendChild(placemark);
+			Element placemarkName = dom.createElement("name");
+			placemarkName.setTextContent(street.name);
+			placemark.appendChild(placemarkName);
+			Element lineString = dom.createElement("LineString");
+			placemark.appendChild(lineString);
+			Element coordinates = dom.createElement("coordinates");
+			lineString.appendChild(coordinates);
+			String coordinatesContent = "";
+			for (GeoCoordinate c : street.points) {
+				coordinatesContent += c.getLongitude() + "," + c.getLatitude() + " ";
+			}
+			coordinatesContent = coordinatesContent.substring(0,
+				coordinatesContent.length() - 1); // remove last space
+			coordinates.setTextContent(coordinatesContent);
+			Element extendedData = dom.createElement("ExtendedData");
+			placemark.appendChild(extendedData);
+			Element length = dom.createElement("Length");
+			extendedData.appendChild(length);
+			length.setTextContent(Double.toString(street.length));
+			Element angle = dom.createElement("AngleToPreviousStreet");
+			extendedData.appendChild(angle);
+			angle.setTextContent(Double.toString(street.angleToPreviousStreet));
+			Element styleUrl = dom.createElement("styleUrl");
+			placemark.appendChild(styleUrl);
+			styleUrl.setTextContent("#MapsForgeStyle");
+
+		}
+		// This is for turning the DOM object into a proper StringWriter
+		StringWriter stringWriter = new StringWriter();
+		TransformerFactory.newInstance().newTransformer().transform(new DOMSource(dom),
+			new StreamResult(stringWriter));
+		return stringWriter.getBuffer().toString();
+	}
+
+	/**
+	 * Creates a KML (Keyhole markup language) version of the directions.
+	 * 
+	 * @return a KML string
+	 * @throws ParserConfigurationException
+	 *             if the DOM can't be built
+	 * @throws TransformerConfigurationException
+	 *             if turning the DOM into a string fails
+	 * @throws TransformerException
+	 *             if turning the DOM into a string fails
+	 * @throws TransformerFactoryConfigurationError
+	 *             if turning the DOM into a string fails
+	 */
+	public String toGPX() throws ParserConfigurationException,
+			TransformerConfigurationException,
+			TransformerException, TransformerFactoryConfigurationError {
+		// This creates a new DOM
+		Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		// And let's get this started
+		dom.setXmlVersion("1.0");
+		dom.setXmlStandalone(true);
+		Element gpx = dom.createElement("gpx");
+		dom.appendChild(gpx);
+		gpx.setAttribute("version", "1.1");
+		gpx.setAttribute("xmlns", "http://www.topografix.com/GPX/1/1");
+		gpx.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+		gpx.setAttribute("xmlns:mf", "http://tom.mapsforge.de");
+		gpx.setAttribute("xsi:schemaLocation",
+			"http://www.topografix.com/GPX/1/1 http://www.topografix.com/gpx/1/1/gpx.xsd");
+		gpx.setAttribute("creator", "tom.mapsforge.de");
+		Element metadata = dom.createElement("metadata");
+		gpx.appendChild(metadata);
+		Element name = dom.createElement("name");
+		name.setTextContent("MapsForge directions from "
+				+ streets.firstElement().name + " to "
+				+ streets.lastElement().name);
+		metadata.appendChild(name);
+		for (TurnByTurnStreet street : streets) {
+			Element trk = dom.createElement("trk");
+			gpx.appendChild(trk);
+			Element trkName = dom.createElement("name");
+			trkName.setTextContent(street.name);
+			trk.appendChild(trkName);
+			Element trkseg = dom.createElement("trkseg");
+			trk.appendChild(trkseg);
+			for (GeoCoordinate c : street.points) {
+				Element trkpt = dom.createElement("trkpt");
+				trkseg.appendChild(trkpt);
+				trkpt.setAttribute("lat", Double.toString(c.getLatitude()));
+				trkpt.setAttribute("lon", Double.toString(c.getLongitude()));
+			}
+			Element extensions = dom.createElement("extensions");
+			trkseg.appendChild(extensions);
+			Element length = dom.createElement("mf:Length");
+			extensions.appendChild(length);
+			length.setTextContent(Double.toString(street.length));
+			Element angle = dom.createElement("mf:AngleToPreviousStreet");
+			extensions.appendChild(angle);
+			angle.setTextContent(Double.toString(street.angleToPreviousStreet));
+		}
+		// This is for turning the DOM object into a proper StringWriter
+		StringWriter stringWriter = new StringWriter();
+		TransformerFactory.newInstance().newTransformer().transform(new DOMSource(dom),
+			new StreamResult(stringWriter));
+		return stringWriter.getBuffer().toString();
 	}
 
 	/**
@@ -328,77 +465,5 @@ public class TurnByTurnDescription {
 			return angleToPreviousStreet + ";" + name + ";"
 					+ java.lang.Math.round(length) + "m;" + "\n";
 		}
-	}
-
-	/**
-	 * Converts a TurnByTurnDescription object to a XML Object using xstream
-	 */
-	class TurnByTurnConverter implements Converter {
-
-		@Override
-		public boolean canConvert(Class clazz) {
-			return clazz.equals(TurnByTurnDescription.class);
-		}
-
-		@Override
-		public void marshal(Object value, HierarchicalStreamWriter writer,
-						MarshallingContext context) {
-			TurnByTurnDescription directions = (TurnByTurnDescription) value;
-			writer.startNode("name");
-			writer.setValue("MapsForge directions from "
-					+ directions.streets.firstElement().name + " to "
-					+ directions.streets.lastElement().name);
-			writer.endNode(); // name
-			writer.startNode("Style");
-			writer.addAttribute("id", "MapsForgeStyle");
-			writer.startNode("LineStyle");
-			writer.startNode("color");
-			writer.setValue("ff0000ff");
-			writer.endNode(); // color
-			writer.startNode("width");
-			writer.setValue("3");
-			writer.endNode(); // width
-			writer.endNode(); // LineStyle
-			writer.endNode(); // Style
-
-			for (TurnByTurnStreet street : directions.streets) {
-				writer.startNode("Placemark");
-				writer.startNode("name");
-				writer.setValue(street.name);
-				writer.endNode();
-				writer.startNode("LineString");
-				writer.startNode("coordinates");
-				String coordinates = "";
-				for (GeoCoordinate c : street.points) {
-					coordinates += c.getLongitude() + "," + c.getLatitude() + " ";
-				}
-				writer.setValue(coordinates);
-				writer.endNode(); // coordinates
-				writer.endNode(); // LineString
-				writer.startNode("ExtendedData");
-				if (street.angleToPreviousStreet != -360d) {
-					writer.startNode("AngleToPreviousStreet");
-					writer.setValue(Double.toString(street.angleToPreviousStreet));
-					writer.endNode(); // AngleToPreviousStreet
-				}
-				writer.startNode("Length");
-				writer.setValue(Double.toString(street.length));
-				writer.endNode(); // Length
-				writer.endNode(); // ExtendedData
-				writer.startNode("styleUrl");
-				writer.setValue("#MapsForgeStyle");
-				writer.endNode(); // styleUrl
-				writer.endNode(); // Placemark
-			}
-		}
-
-		/**
-		 * Converting XML to TurnByTurnDescription is not implemented
-		 */
-		public Object unmarshal(HierarchicalStreamReader reader,
-						UnmarshallingContext context) {
-			return null;
-		}
-
 	}
 }
