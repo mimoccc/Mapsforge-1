@@ -87,12 +87,14 @@ public class HHRoutingWebservice extends HttpServlet {
 			if (format.equalsIgnoreCase("json")) {
 				response.setContentType("application/json; charset=UTF-8");
 				out.write(turnByTurn.toJSONString());
-			} else if (format.equalsIgnoreCase("xml")) {
-				response.setContentType("text/xml; charset=UTF-8");
-				out.write(turnByTurn.toXMLString());
+			} else if (format.equalsIgnoreCase("gpx")) {
+				response.setHeader("Content-Disposition", "attachment; filename=route.gpx");
+				response.setContentType("application/gpx+xml");
+				out.write(turnByTurn.toGPX());
 			} else if (format.equalsIgnoreCase("kml")) {
 				response.setContentType("application/vnd.google-earth.kml+xml");
-				out.write(turnByTurn.toXMLString());
+				out.write(turnByTurn.toKML());
+//				response.getOutputStream().
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
