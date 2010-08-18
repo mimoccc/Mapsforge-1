@@ -28,6 +28,13 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.server.routing.IEdge;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+
 /**
  * Turn by turn directions contain a way which was found by a routing algorithm. Streets which
  * are of them same name are concatenated, except in case of a U-turn. Street lengths and angles
@@ -228,6 +235,19 @@ public class TurnByTurnDescription {
 	}
 
 	/**
+	 * Creates a valid KML version of the
+	 * 
+	 * @return a xml / kml string representation of a set of directions
+	 */
+	public String toXMLString() {
+		XStream xstream = new XStream();
+		xstream.registerConverter(new TurnByTurnConverter());
+		xstream.alias("Document", TurnByTurnDescription.class);
+		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+				+ xstream.toXML(this) + "</kml>";
+	}
+
+	/**
 	 * Generates a GeoJSON String which represents the route
 	 * 
 	 * @return a string containing a GeoJSON representation of the route
@@ -240,7 +260,26 @@ public class TurnByTurnDescription {
 		json.put("type", "FeatureCollection");
 		json.put("features", jsonfeatures);
 		for (TurnByTurnStreet street : streets) {
-			jsonfeatures.put(street.toJSONObject());
+			JSONObject jsonstreet = new JSONObject();
+			jsonstreet.put("type", "Feature");
+			JSONArray streetCoordinatesAsJson = new JSONArray();
+			for (int j = 0; j < street.points.size(); j++) {
+				GeoCoordinate sc = street.points.elementAt(j);
+				streetCoordinatesAsJson.put(new JSONArray()
+					.put(sc.getLongitude())
+					.put(sc.getLatitude())
+					);
+			}
+			jsonstreet.put("geometry", new JSONObject()
+				.put("type", "LineString")
+				.put("coordinates", streetCoordinatesAsJson)
+				);
+			jsonstreet.put("properties", new JSONObject()
+				.put("Name", street.name)
+				.put("Length", street.length)
+				.put("Angle", street.angleToPreviousStreet)
+				);
+			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);
 	}
@@ -267,29 +306,6 @@ public class TurnByTurnDescription {
 			appendCoordinatesFromEdge(edge);
 		}
 
-		public JSONObject toJSONObject() throws JSONException {
-			JSONObject json = new JSONObject();
-			json.put("type", "Feature");
-			JSONArray streetCoordinatesAsJson = new JSONArray();
-			for (int j = 0; j < points.size(); j++) {
-				GeoCoordinate sc = points.elementAt(j);
-				streetCoordinatesAsJson.put(new JSONArray()
-					.put(sc.getLongitude())
-					.put(sc.getLatitude())
-					);
-			}
-			json.put("geometry", new JSONObject()
-				.put("type", "LineString")
-				.put("coordinates", streetCoordinatesAsJson)
-				);
-			json.put("properties", new JSONObject()
-				.put("Name", this.name)
-				.put("Length", this.length)
-				.put("Angle", this.angleToPreviousStreet)
-				);
-			return json;
-		}
-
 		/**
 		 * Append the GeoCoordinates of the given edge to the internal data structure
 		 * 
@@ -312,5 +328,77 @@ public class TurnByTurnDescription {
 			return angleToPreviousStreet + ";" + name + ";"
 					+ java.lang.Math.round(length) + "m;" + "\n";
 		}
+	}
+
+	/**
+	 * Converts a TurnByTurnDescription object to a XML Object using xstream
+	 */
+	class TurnByTurnConverter implements Converter {
+
+		@Override
+		public boolean canConvert(Class clazz) {
+			return clazz.equals(TurnByTurnDescription.class);
+		}
+
+		@Override
+		public void marshal(Object value, HierarchicalStreamWriter writer,
+						MarshallingContext context) {
+			TurnByTurnDescription directions = (TurnByTurnDescription) value;
+			writer.startNode("name");
+			writer.setValue("MapsForge directions from "
+					+ directions.streets.firstElement().name + " to "
+					+ directions.streets.lastElement().name);
+			writer.endNode(); // name
+			writer.startNode("Style");
+			writer.addAttribute("id", "MapsForgeStyle");
+			writer.startNode("LineStyle");
+			writer.startNode("color");
+			writer.setValue("ff0000ff");
+			writer.endNode(); // color
+			writer.startNode("width");
+			writer.setValue("3");
+			writer.endNode(); // width
+			writer.endNode(); // LineStyle
+			writer.endNode(); // Style
+
+			for (TurnByTurnStreet street : directions.streets) {
+				writer.startNode("Placemark");
+				writer.startNode("name");
+				writer.setValue(street.name);
+				writer.endNode();
+				writer.startNode("LineString");
+				writer.startNode("coordinates");
+				String coordinates = "";
+				for (GeoCoordinate c : street.points) {
+					coordinates += c.getLongitude() + "," + c.getLatitude() + " ";
+				}
+				writer.setValue(coordinates);
+				writer.endNode(); // coordinates
+				writer.endNode(); // LineString
+				writer.startNode("ExtendedData");
+				if (street.angleToPreviousStreet != -360d) {
+					writer.startNode("AngleToPreviousStreet");
+					writer.setValue(Double.toString(street.angleToPreviousStreet));
+					writer.endNode(); // AngleToPreviousStreet
+				}
+				writer.startNode("Length");
+				writer.setValue(Double.toString(street.length));
+				writer.endNode(); // Length
+				writer.endNode(); // ExtendedData
+				writer.startNode("styleUrl");
+				writer.setValue("#MapsForgeStyle");
+				writer.endNode(); // styleUrl
+				writer.endNode(); // Placemark
+			}
+		}
+
+		/**
+		 * Converting XML to TurnByTurnDescription is not implemented
+		 */
+		public Object unmarshal(HierarchicalStreamReader reader,
+						UnmarshallingContext context) {
+			return null;
+		}
+
 	}
 }
