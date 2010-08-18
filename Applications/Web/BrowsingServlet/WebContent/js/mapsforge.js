@@ -313,63 +313,59 @@ function hhRoute() {
   route.waitingForResponse = true;
 	OpenLayers.Request.GET( {
 		url : route.url,
-		success : hhRouteResponseHandler,
+		callback : hhRouteResponseHandler,
 		scope : this
 	});
 }
 
 // deal with routing request response
-  function hhRouteResponseHandler(response) {
-  //console.log(response.responseText);
-  if (response.responseText != "Error") {
-    data = eval('('+response.responseText+')');
-    if (data.type != "Error") {
-      if(route.line) layerVectors.removeFeatures(route.line);
-      geoJSONParser = new OpenLayers.Format.GeoJSON();
-      route.line = geoJSONParser.read(response.responseText);
-      // We need to manualy convert all points to sperical mercator
-      // While iterating over the whole thing, I'll collect the streetnames too
-      var directions = "";
-      for (i in route.line) {
-        for (j in route.line[i].geometry.components) {
-          route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
-        }
-        streetName = route.line[i].attributes.Name;
-        curlength = Math.round(route.line[i].attributes["Length"]/10)*10;
-        unit = "m";
-        if (curlength > 1000) {
-        	curlength = Math.round(curlength/100)/10;
-        	unit = "km";
-        }
-        angle = route.line[i].attributes.Angle;
-    	if (angle == -360 || isNaN(angle) || angle == undefined) {
-    		arrow = "";
-    	} else if (angle > 337 || angle < 22) {
-    		arrow = '<div class="Straight"></div>';
-    	} else if (angle > 22 && angle < 67) {
-    		arrow = '<div class="R45"></div>';
-    	} else if (angle > 67 && angle < 112) {
-    		arrow = '<div class="R90"></div>';
-    	} else if (angle > 112 && angle < 157) {
-    		arrow = '<div class="R135"></div>';
-    	} else if (angle > 157 && angle < 202) {
-    		arrow = '<div class="UTurn"></div>';
-    	} else if (angle > 202 && angle < 247 ) {
-    		arrow = '<div class="L135"></div>';
-    	} else if (angle > 247 && angle < 292 ) {
-    		arrow = '<div class="L90"></div>';
-    	} else if (angle > 292 && angle < 337 ) {
-    		arrow = '<div class="L45"></div>';
-    	}
-        angle = Math.round(angle);
-      	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  curlength + '&nbsp;' + unit + '</td></tr>';
+function hhRouteResponseHandler(response) {
+  if (response.status == 200) {
+    if(route.line) layerVectors.removeFeatures(route.line);
+    geoJSONParser = new OpenLayers.Format.GeoJSON();
+    route.line = geoJSONParser.read(response.responseText);
+    // We need to manualy convert all points to sperical mercator
+    // While iterating over the whole thing, I'll collect the streetnames too
+    var directions = "";
+    for (i in route.line) {
+      for (j in route.line[i].geometry.components) {
+        route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
       }
-      document.getElementById("turnByTurn").innerHTML = '<table id="turnTable" />' + directions + '</table>';
-      layerVectors.addFeatures(route.line);
-      route.start.point = route.line[0].geometry.components[0];
-      route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
-      if (!route.drag.isdragging) redrawEndPoints();
+      streetName = route.line[i].attributes.Name;
+      curlength = Math.round(route.line[i].attributes["Length"]/10)*10;
+      unit = "m";
+      if (curlength > 1000) {
+      	curlength = Math.round(curlength/100)/10;
+      	unit = "km";
+      }
+      angle = route.line[i].attributes.Angle;
+  	if (angle == -360 || isNaN(angle) || angle == undefined) {
+  		arrow = "";
+  	} else if (angle > 337 || angle < 22) {
+  		arrow = '<div class="Straight"></div>';
+  	} else if (angle > 22 && angle < 67) {
+  		arrow = '<div class="R45"></div>';
+  	} else if (angle > 67 && angle < 112) {
+  		arrow = '<div class="R90"></div>';
+  	} else if (angle > 112 && angle < 157) {
+  		arrow = '<div class="R135"></div>';
+  	} else if (angle > 157 && angle < 202) {
+  		arrow = '<div class="UTurn"></div>';
+  	} else if (angle > 202 && angle < 247 ) {
+  		arrow = '<div class="L135"></div>';
+  	} else if (angle > 247 && angle < 292 ) {
+  		arrow = '<div class="L90"></div>';
+  	} else if (angle > 292 && angle < 337 ) {
+  		arrow = '<div class="L45"></div>';
+  	}
+      angle = Math.round(angle);
+    	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  curlength + '&nbsp;' + unit + '</td></tr>';
     }
+    document.getElementById("turnByTurn").innerHTML = '<table id="turnTable" />' + directions + '</table>';
+    layerVectors.addFeatures(route.line);
+    route.start.point = route.line[0].geometry.components[0];
+    route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
+    if (!route.drag.isdragging) redrawEndPoints();
   }
   route.waitingForResponse = false;
 }
