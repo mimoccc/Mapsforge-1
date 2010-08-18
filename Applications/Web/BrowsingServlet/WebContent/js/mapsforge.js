@@ -2,10 +2,17 @@
  * Entry Point and zoom level of the initial map
  * Coordinates of Brandenburger Tor
  */
+//var initMap = {
+//  lon : 13.41,
+//  lat : 52.49,
+//  zoom : 15
+//};
+
+//  Bremen:
 var initMap = {
-  lon : 13.41,
-  lat : 52.49,
-  zoom : 15
+ lon : 8.82046,
+ lat : 53.06866,
+ zoom : 15
 };
 
 // These are the URLs of the servlets which provide routing and geocoding
@@ -13,9 +20,9 @@ var routingServiceURL  = "/HHRoutingWebservice/";
 var geoCodingURL = "/GeoCoder/";
 
 /**
- * Initialization of the OpenStreetMap map.
+ * Initialization of the OpenStreetMap map, layers and controls
  */
-function init() {
+window.onload = function(){
   // set map div size once
   resizeMapWindow();
 
@@ -79,6 +86,7 @@ function init() {
     map.setCenter(centerLonLat, initMap.zoom);
   }
 
+  // read the routing coordinates from the url's parameters
   var args = OpenLayers.Util.getParameters();
   route.start.lat = args["route.start.lat"];
   route.start.lon = args["route.start.lon"];
@@ -88,7 +96,13 @@ function init() {
   route.end.lon = args["route.end.lon"];
   hhRoute();
 
-}
+  // Setup event handlers:
+  document.getElementById("routeButton").onclick = hhRoute;
+  document.getElementById("newRequestButton").onclick = newRequest;
+  document.search.start.onblur = geoCode;
+  document.search.via.onblur = geoCode;
+  document.search.end.onblur = geoCode;
+};
 
 var map; // complex object of type OpenLayers.Map
 var dragcontrol; // the drag control object
@@ -111,8 +125,9 @@ var route = {
 var menupopup;
 // This function draws the context menu
 function contextmenu(e) {
-  clickX = e.pageX - leftDivWidth + 10; // 10 because of padding
-  clickY = e.pageY - 5; // 5 also because of padding
+  e = e || window.event; // For my beloved Internet Explorer
+  clickX = e.clientX - leftDivWidth + 10; // 10 because of padding
+  clickY = e.clientY - 5; // 5 also because of padding
   clickLatLon = map.getLonLatFromPixel(new OpenLayers.Pixel(clickX, clickY)).rtf();
   newValues = clickLatLon.lon
               + ',' + clickLatLon.lat
@@ -229,11 +244,6 @@ function newRequest() {
     route[x].lat = null;
     document.search[x].value = "";
   }
-  // Clear all fields in the html
-  document.getElementById("resultAreaStart").innerHTML = "";
-	document.getElementById("resultAreaEnd").innerHTML = "";
-	document.getElementById("resultAreaStop").innerHTML = "";
-	document.getElementById("resultAreaInfo").innerHTML = "";
 }
 
 
@@ -323,10 +333,10 @@ function hhRoute() {
           route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
         }
         streetName = route.line[i].attributes.Name;
-        length = Math.round(route.line[i].attributes.Length/10)*10;
+        curlength = Math.round(route.line[i].attributes["Length"]/10)*10;
         unit = "m";
-        if (length > 1000) {
-        	length = Math.round(length/100)/10;
+        if (curlength > 1000) {
+        	curlength = Math.round(curlength/100)/10;
         	unit = "km";
         }
         angle = route.line[i].attributes.Angle;
@@ -350,9 +360,9 @@ function hhRoute() {
     		arrow = '<div class="L45"></div>';
     	}
         angle = Math.round(angle);
-      	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  length + '&nbsp;' + unit + '</td></tr>';
+      	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  curlength + '&nbsp;' + unit + '</td></tr>';
       }
-      document.getElementById("turnTable").innerHTML = directions;
+      document.getElementById("turnByTurn").innerHTML = '<table id="turnTable" />' + directions + '</table>';
       layerVectors.addFeatures(route.line);
       route.start.point = route.line[0].geometry.components[0];
       route.end.point = route.line[route.line.length-1].geometry.components[route.line[route.line.length-1].geometry.components.length-1];
@@ -367,19 +377,26 @@ function hhRoute() {
  ************************************************************************************/
 // send it
 var geoCodeStation;
-geoCode = function(name, station) {
-  if (name.length > 2) {
-    geoCodeStation = station;
-  	OpenLayers.Request.GET( {
-  		url : geoCodingURL + "?name=" + name,
-  		success : geoCodeResponseHandler,
-  		scope : this
-  	});
-	}
+geoCode = function(e) {
+console.log(e);
+  // Cross browser implementation of event target detection
+  if (e.target) targ = e.target;
+  else if (e.srcElement) targ = e.srcElement;
+	if (targ.nodeType == 3) // defeat Safari bug
+		targ = targ.parentNode;
+
+  locationName = document.search[targ.name].value;
+  geoCodeStation = targ.name;
+	OpenLayers.Request.GET( {
+		url : geoCodingURL + "?name=" + locationName,
+		success : geoCodeResponseHandler,
+		scope : this
+	});
 };
 
 geoCodeResponseHandler = function(response){
   data = eval('('+response.responseText+')');
+  console.log(data);
   route[geoCodeStation].lat = data[0].lat;
   route[geoCodeStation].lon = data[0].lon;
   hhRoute();
