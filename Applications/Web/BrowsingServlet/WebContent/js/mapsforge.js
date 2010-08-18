@@ -99,6 +99,8 @@ window.onload = function(){
   // Setup event handlers:
   document.getElementById("routeButton").onclick = hhRoute;
   document.getElementById("newRequestButton").onclick = newRequest;
+  document.getElementById("sizeSwitch").onclick = sizeSwitch;
+  
   document.search.start.onblur = geoCode;
   document.search.via.onblur = geoCode;
   document.search.end.onblur = geoCode;
@@ -378,7 +380,6 @@ function hhRoute() {
 // send it
 var geoCodeStation;
 geoCode = function(e) {
-console.log(e);
   // Cross browser implementation of event target detection
   if (e.target) targ = e.target;
   else if (e.srcElement) targ = e.srcElement;
@@ -424,15 +425,54 @@ reverseGeoCodeResponseHandler = function(response){
 
 var leftDivWidth;
 var resizeMapWindow = function resizeMap() {
-	windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-	windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-	document.getElementById("map").style.height = windowHeight - 10; // 10 because body padding
-	document.getElementById("leftDiv").style.height = windowHeight - 20; // 10 because body padding
-	document.getElementById("turnByTurn").style.height = windowHeight - 20 - document.getElementById('searchForm').offsetHeight; // 10 because body padding
+	window.windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+	window.windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+	document.getElementById("map").style.height = window.windowHeight - 10; // 10 because body padding
+	document.getElementById("leftDiv").style.height = window.windowHeight - 10; // 10 because body padding
+	document.getElementById("turnByTurn").style.height = window.windowHeight - 20 - document.getElementById('searchForm').offsetHeight - document.getElementById('sizeSwitch').offsetHeight;
 	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth);
-	document.getElementById("map").style.width = windowWidth - leftDivWidth;
+	document.getElementById("leftDiv").style.width = leftDivWidth - 10;
+	document.getElementById("map").style.width = window.windowWidth - leftDivWidth - 10;
+	document.getElementById("map").style.left = leftDivWidth;
 }
 window.onresize = resizeMapWindow;
+// This function is for showing / hiding the left DIV
+var sizeSwitchFunction;
+function sizeSwitch() {
+  document.getElementById("sizeSwitch").onclick = null;
+  if (leftDivWidth > 100) {
+    document.getElementById('sizeSwitch').disabled="disabled";
+    sizeSwitchFunction = window.setInterval("changeLeftDivSize(20)", 10);
+  } else {
+    document.getElementById('sizeSwitch').disabled="disabled";
+    sizeSwitchFunction = window.setInterval("changeLeftDivSize(200)", 10);
+  }
+}
+function changeLeftDivSize(targetSize) {
+  var lw = parseInt(document.getElementById("leftDiv").style.width);
+  if (lw < 200) {
+    document.getElementById("turnByTurn").style.display = "none";
+    document.getElementById("searchForm").style.display = "none";
+  }
+  if (targetSize < lw) {
+    document.getElementById("leftDiv").style.width = lw - 10;
+  } else {
+    document.getElementById("leftDiv").style.width = lw + 10;
+  }
+	document.getElementById("map").style.width = window.windowWidth - lw - 10;
+	document.getElementById("map").style.left = lw;
+	if (lw >= 200) {
+    document.getElementById("turnByTurn").style.display = "block";
+    document.getElementById("searchForm").style.display = "block";
+  }
+  if (lw == targetSize) {
+    window.clearInterval(sizeSwitchFunction);
+    resizeMapWindow();
+    map.updateSize();
+    document.getElementById("sizeSwitch").onclick = sizeSwitch;
+  }
+}
+
 
 /************************************************************************************
  *  Helper functions
@@ -476,3 +516,4 @@ OpenLayers.LonLat.prototype.rtf = function() {
   }
   return this.rtf_result;
 };
+

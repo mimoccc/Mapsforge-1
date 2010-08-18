@@ -9,8 +9,7 @@ body {
 
 #leftDiv {
   position:absolute;
-  width:220px;
-  padding:5px;
+  width:210px;
 }
 
 #map {
@@ -19,15 +18,30 @@ body {
   border: 1px solid black;
 }
 
+#searchForm {
+  margin-top: 15px;
+}
+
+#sizeSwitch {
+  width:20px;
+  font-weight:bold;
+  margin:0;
+  color:blue;
+  font-size:10px;
+  cursor:pointer;
+  position: absolute;
+  right: 0px;
+}
+
 #leftDiv label {
   display: inline-block;
-  width: 30px;
+  width: 15%;
 }
 
 #leftDiv input {
   display: inline-block;
-  width: 165px;
-  margin: 5px 0;
+  width: 80%;
+  margin: 0 0 5px 0;
 }
 
 #leftDiv .mfbutton {
@@ -59,56 +73,56 @@ body {
 
 
 #TurnByTurn .L90 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: 0 0;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 26px;
 }
 #TurnByTurn .R90 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -22px 0;
 	background-repeat: no-repeat;
 	width: 20px;
 	height: 26px;
 }
 #TurnByTurn .L45 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: 0 -29px;
 	background-repeat: no-repeat;
 	width: 16px;
 	height: 28px;
 }
 #TurnByTurn .R45 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -18px -29px;
 	background-repeat: no-repeat;
 	width: 16px;
 	height: 28px;
 }
 #TurnByTurn .L135 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -57px -31px;
 	background-repeat: no-repeat;
 	width: 19px;
 	height: 22px;
 }
 #TurnByTurn .R135 {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -37px -31px;
 	background-repeat: no-repeat;
 	width: 19px;
 	height: 22px;
 }
 #TurnByTurn .UTurn {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -44px 0;
 	background-repeat: no-repeat;
 	width: 21px;
 	height: 24px;
 }
 #TurnByTurn .Straight {
-	background-image: url("img/Pfeile.png");
+	background-image: url(img/Pfeile.png);
 	background-position: -67px 0;
 	background-repeat: no-repeat;
 	width: 13px;
