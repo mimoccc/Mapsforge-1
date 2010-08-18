@@ -552,8 +552,8 @@ public class BinaryFileWriter {
 			byte[] stringBytes;
 			int byteArrayLength;
 
-			Map<String, Byte> tagIdsPOIs = TagIdsPOIs.getMap();
-			Map<String, Byte> tagIdsWays = TagIdsWays.getMap();
+			Map<String, Short> tagIdsPOIs = TagIdsPOIs.getMap();
+			Map<String, Short> tagIdsWays = TagIdsWays.getMap();
 
 			int tileCounter = 0;
 
@@ -879,7 +879,7 @@ public class BinaryFileWriter {
 							for (String tag : tagStrings) {
 								// TODO write only tags which belong to the filter to the file
 								// if(filterPois.containsKey(tag)){
-								raf.writeByte(tagIdsPOIs.get(tag));
+								raf.writeShort(tagIdsPOIs.get(tag));
 								// }
 							}
 						}
@@ -992,9 +992,9 @@ public class BinaryFileWriter {
 
 						// write tag ids
 						for (String tag : tagStrings) {
-							Byte b = tagIdsWays.get(tag);
-							if (b != null) {
-								raf.writeByte(b);
+							Short s = tagIdsWays.get(tag);
+							if (s != null) {
+								raf.writeShort(s);
 							} else {
 								logger.info("TAG: " + tag);
 							}
