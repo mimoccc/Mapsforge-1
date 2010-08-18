@@ -42,6 +42,7 @@ import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.RouterFactory;
 
 import org.mapsforge.directions.TurnByTurnDescription;
+
 /**
  * Servlet implementation class HHRoutingWebservice
  */
@@ -76,14 +77,17 @@ public class HHRoutingWebservice extends HttpServlet {
 			// for now its just source and destination
 
 			IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
+			if (routeEdges == null || routeEdges.length == 0) {
+				response.setStatus(500);
+				out.print("<error>It seems like I was not able to find a route. Sorry about that!</error>");
+				return;
+			}
 			TurnByTurnDescription turnByTurn = new TurnByTurnDescription(routeEdges);
 			String format = request.getParameter("format");
 			if (format.equalsIgnoreCase("json")) {
-				//response.setHeader("Content-Type", "application/json;charset=utf-8"); // iso-8859-1  utf-8´
 				response.setContentType("application/json; charset=UTF-8");
 				out.write(turnByTurn.toJSONString());
 			} else if (format.equalsIgnoreCase("xml")) {
-				//application/vnd.google-earth.kml+xml
 				response.setContentType("text/xml; charset=UTF-8");
 				out.write(turnByTurn.toXMLString());
 			} else if (format.equalsIgnoreCase("kml")) {
@@ -91,9 +95,8 @@ public class HHRoutingWebservice extends HttpServlet {
 				out.write(turnByTurn.toXMLString());
 			}
 		} catch (Exception e) {
-			System.err.print(e.toString());
-			
-			out.println("Error");
+			e.printStackTrace();
+			out.print("<error>"+e.toString()+"</error>");
 		}
 	}
 	
