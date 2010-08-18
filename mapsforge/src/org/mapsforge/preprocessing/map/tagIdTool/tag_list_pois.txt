@@ -85,3 +85,6 @@ tourism=hotel
 tourism=information
 tourism=museum
 tourism=viewpoint
+
+// the following line must be the last line in the file to get the highest ID
+NUMBER_OF_POI_TAGS

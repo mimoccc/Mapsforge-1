@@ -1118,10 +1118,10 @@ public class MapDatabase {
 			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
 
 			// create the tag arrays
-			this.defaultNodeTagIds = new boolean[Byte.MAX_VALUE];
-			this.nodeTagIds = new boolean[Byte.MAX_VALUE];
-			this.defaultWayTagIds = new boolean[Byte.MAX_VALUE];
-			this.wayTagIds = new boolean[Byte.MAX_VALUE];
+			this.defaultNodeTagIds = new boolean[TagIdsPOIs.NUMBER_OF_POI_TAGS];
+			this.nodeTagIds = new boolean[TagIdsPOIs.NUMBER_OF_POI_TAGS];
+			this.defaultWayTagIds = new boolean[TagIdsWays.NUMBER_OF_WAY_TAGS];
+			this.wayTagIds = new boolean[TagIdsWays.NUMBER_OF_WAY_TAGS];
 
 			return true;
 		} catch (IOException e) {
