@@ -137,7 +137,7 @@ public class MapDatabase {
 	private byte nodeNumberOfTags;
 	private short nodesOnZoomLevel;
 	private byte nodeSpecialByte;
-	private byte nodeTagId;
+	private short nodeTagId;
 	private boolean[] nodeTagIds;
 	private byte numberOfMapFiles;
 	private long parentTileX;
@@ -182,7 +182,7 @@ public class MapDatabase {
 	private byte waySpecialByte1;
 	private byte waySpecialByte2;
 	private byte wayTagBitmap;
-	private byte wayTagId;
+	private short wayTagId;
 	private boolean[] wayTagIds;
 	private short wayTileBitmask;
 	private int zoomLevelDifference;
@@ -301,10 +301,10 @@ public class MapDatabase {
 			// reset the node tag array
 			System.arraycopy(this.defaultNodeTagIds, 0, this.nodeTagIds, 0,
 					this.nodeTagIds.length);
-			// read node tag IDs (1 byte per tag ID)
+			// read node tag IDs (2 bytes per tag ID)
 			for (this.tempByte = this.nodeNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.nodeTagId = this.readBuffer[this.bufferPosition];
-				this.bufferPosition += 1;
+				this.nodeTagId = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+				this.bufferPosition += 2;
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
 					Logger.d("invalid node tag ID: " + this.nodeTagId);
 					continue;
@@ -441,10 +441,10 @@ public class MapDatabase {
 			System
 					.arraycopy(this.defaultWayTagIds, 0, this.wayTagIds, 0,
 							this.wayTagIds.length);
-			// read way tag IDs (1 byte per tag ID)
+			// read way tag IDs (2 bytes per tag ID)
 			for (this.tempByte = this.wayNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.wayTagId = this.readBuffer[this.bufferPosition];
-				this.bufferPosition += 1;
+				this.wayTagId = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+				this.bufferPosition += 2;
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
 					Logger.d("invalid way tag ID: " + this.wayTagId);
 					continue;
