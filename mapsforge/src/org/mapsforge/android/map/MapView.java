@@ -46,6 +46,7 @@ import android.widget.ZoomControls;
 public class MapView extends ViewGroup {
 	private static final int BITMAP_CACHE_SIZE = 20;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
+	private static final int DEFAULT_MAP_MOVE_DELTA = 5;
 	private static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
 	private static final int DEFAULT_MOVE_SPEED = 10;
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
@@ -121,6 +122,8 @@ public class MapView extends ViewGroup {
 	private MapController mapController;
 	private String mapFile;
 	private MapGenerator mapGenerator;
+	private boolean mapMoved;
+	private float mapMoveDelta;
 	private MapMover mapMover;
 	private float mapMoveX;
 	private float mapMoveY;
@@ -376,24 +379,29 @@ public class MapView extends ViewGroup {
 		if (!isClickable()) {
 			return false;
 		}
+
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			// save the position of the event
 			this.previousPositionX = event.getX();
 			this.previousPositionY = event.getY();
-
-			// trigger event to overlays
-			synchronized (this.overlays) {
-				for (Overlay o : this.overlays) {
-					o.onTouchEvent(event, this);
-				}
-			}
-
+			this.mapMoved = false;
 			showZoomControls();
 			return true;
 		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 			// calculate the distance between previous and current position
 			this.mapMoveX = event.getX() - this.previousPositionX;
 			this.mapMoveY = event.getY() - this.previousPositionY;
+
+			if (!this.mapMoved) {
+				if (Math.abs(this.mapMoveX) > this.mapMoveDelta
+						|| Math.abs(this.mapMoveY) > this.mapMoveDelta) {
+					// the map movement delta has been reached
+					this.mapMoved = true;
+				} else {
+					// do nothing
+					return true;
+				}
+			}
 
 			// save the position of the event
 			this.previousPositionX = event.getX();
@@ -416,14 +424,27 @@ public class MapView extends ViewGroup {
 			}
 			handleTiles(true);
 			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_UP
-				|| event.getAction() == MotionEvent.ACTION_CANCEL) {
+		} else if (event.getAction() == MotionEvent.ACTION_UP) {
 			hideZoomControlsDelayed();
-			for (Overlay overlay : this.overlays) {
-				synchronized (overlay) {
-					overlay.notify();
+
+			if (this.mapMoved) {
+				// move-event: notify all overlays
+				for (Overlay overlay : this.overlays) {
+					synchronized (overlay) {
+						overlay.notify();
+					}
+				}
+			} else {
+				// touch-event: forward the event to all overlays
+				synchronized (this.overlays) {
+					for (Overlay overlay : this.overlays) {
+						overlay.onTouchEvent(event, this);
+					}
 				}
 			}
+			return true;
+		} else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+			hideZoomControlsDelayed();
 			return true;
 		}
 		// the event was not handled
@@ -742,6 +763,8 @@ public class MapView extends ViewGroup {
 	private void setupMapView() {
 		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
+		this.mapMoveDelta = DEFAULT_MAP_MOVE_DELTA
+				* this.mapActivity.getResources().getDisplayMetrics().density;
 
 		setBackgroundColor(MAP_VIEW_BACKGROUND);
 		setWillNotDraw(false);
