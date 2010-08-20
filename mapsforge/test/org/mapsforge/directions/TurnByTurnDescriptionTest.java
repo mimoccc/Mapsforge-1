@@ -168,7 +168,5 @@ public class TurnByTurnDescriptionTest {
 		assertTrue(uTurnCase0.streets.get(2).angleToPreviousStreet == 180d);
 		assertFalse(uTurnCase1.toString().contains("between"));
 		assertFalse(shortStreet2LaneCase0.toString().contains("between"));
-		System.out.println(twoStreets.toXMLString());
-
 	}
 }
