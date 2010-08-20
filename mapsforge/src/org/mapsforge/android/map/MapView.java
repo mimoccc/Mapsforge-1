@@ -46,7 +46,7 @@ import android.widget.ZoomControls;
 public class MapView extends ViewGroup {
 	private static final int BITMAP_CACHE_SIZE = 20;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
-	private static final int DEFAULT_MAP_MOVE_DELTA = 5;
+	private static final int DEFAULT_MAP_MOVE_DELTA = 10;
 	private static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
 	private static final int DEFAULT_MOVE_SPEED = 10;
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
