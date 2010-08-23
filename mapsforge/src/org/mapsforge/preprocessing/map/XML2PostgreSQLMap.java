@@ -1015,21 +1015,27 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								splittedTags = innerWayTags.split("\n");
 								newInnerWayTags = "";
 								for (String s : splittedTags) {
-									logger.info("s: " + s + " tags: " + tags);
+									// logger.info("s: " + s + " tags: " + tags);
 									if (tags.indexOf(s) == -1) {
 										newInnerWayTags += s + "\n";
 									} else {
 										newTagAmount--;
 									}
 								}
+								if (newInnerWayTags.equals("")) {
+									newTagAmount = 0;
+								}
 								if (newInnerWayTags.equals("\n")) {
 									newInnerWayTags = "";
 									newTagAmount = 0;
 								}
+								if (newInnerWayTags.indexOf("=") != -1) {
+									newTagAmount = newInnerWayTags.split("\n").length;
+								}
 								pstmtUpdateInnerWayTags.setString(1, newInnerWayTags);
 								pstmtUpdateInnerWayTags.setInt(2, newTagAmount);
 								pstmtUpdateInnerWayTags.setInt(3, currentInnerWays.get(j));
-								logger.info("SQL: " + pstmtUpdateInnerWayTags);
+								// logger.info("SQL: " + pstmtUpdateInnerWayTags);
 								pstmtUpdateInnerWayTags.addBatch();
 							}
 
