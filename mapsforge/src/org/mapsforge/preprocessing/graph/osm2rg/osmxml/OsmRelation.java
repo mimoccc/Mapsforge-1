@@ -14,47 +14,72 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.model.osmxml;
+package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
 
 import java.sql.Timestamp;
 import java.util.LinkedList;
 
 /**
- * @author Frank Viernau
+ * 
  */
 public class OsmRelation extends OsmElement {
 
 	private final LinkedList<Member> wayRefs;
 
-	public OsmRelation(long id) {
+	OsmRelation(long id) {
 		super(id);
 		this.wayRefs = new LinkedList<Member>();
 	}
 
-	public OsmRelation(long id, Timestamp timestamp, String user, boolean visible) {
+	OsmRelation(long id, Timestamp timestamp, String user, boolean visible) {
 		super(id, timestamp, user, visible);
 		this.wayRefs = new LinkedList<Member>();
 	}
 
-	public void addMember(Member ref) {
+	void addMember(Member ref) {
 		wayRefs.add(ref);
 	}
 
+	/**
+	 * @return returns all members of this relation.
+	 */
 	public LinkedList<Member> getMembers() {
-		return wayRefs;
+		LinkedList<Member> tmp = new LinkedList<Member>();
+		tmp.addAll(wayRefs);
+		return tmp;
 	}
 
+	/**
+	 * This class represents a reference from a relation to another osm element like a node or a
+	 * way.
+	 */
 	public static class Member {
-
+		/** Member type way reference. */
 		public final static String TYPE_WAY = "way";
+		/** Role type outer. */
 		public final static String ROLE_OUTER = "outer";
+		/** Role type inner. */
 		public final static String ROLE_INNER = "innter";
+		/** Role type forward. */
 		public final static String ROLE_FORWARD = "forward";
+		/** Role type backward. */
 		public final static String ROLE_BACKWARD = "backward";
 
-		public final String type, role;
+		/** type of the referenced element */
+		public final String type;
+		/** role type */
+		public final String role;
+		/** id of the referenced element. */
 		public final long refId;
 
+		/**
+		 * @param type
+		 *            type of the referenced element.
+		 * @param role
+		 *            role type.
+		 * @param refId
+		 *            id of the referenced element.
+		 */
 		public Member(String type, String role, long refId) {
 			this.type = type;
 			this.role = role;

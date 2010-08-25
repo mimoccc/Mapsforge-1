@@ -18,7 +18,7 @@ package org.mapsforge.preprocessing.model;
 
 public enum EHighwayLevel {
 
-	motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, tertiary, residential, living_street,
+	motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, residential, living_street,
 
 	track, pedestrian, foot, footway, path,
 

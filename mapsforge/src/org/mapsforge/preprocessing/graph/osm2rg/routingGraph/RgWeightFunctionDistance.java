@@ -21,12 +21,14 @@ import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction
 /**
  * For shortest distance graphs.
  * 
- * @author Frank Viernau
  */
 public class RgWeightFunctionDistance implements IRgWeightFunction<RgEdge> {
 
+	/**
+	 * 
+	 */
 	public RgWeightFunctionDistance() {
-
+		//
 	}
 
 	@Override

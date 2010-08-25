@@ -17,23 +17,32 @@
 package org.mapsforge.preprocessing.graph.routingGraphInterface;
 
 /**
- * @author Frank Viernau
+ * 
  */
 public interface IRgEdge {
 
+	/**
+	 * @return vertex id of source vertex.
+	 */
 	public int getSourceId();
 
+	/**
+	 * @return vertex id of target vertex.
+	 */
 	public int getTargetId();
 
+	/**
+	 * @return directed or undirected.
+	 */
 	public boolean isUndirected();
 
 	/**
-	 * @return in degree.
+	 * @return returns waypoint longitudes in degree.
 	 */
 	public double[] getLongitudes();
 
 	/**
-	 * @return in degree.
+	 * @return returns waypoint latitudes in degree.
 	 */
 	public double[] getLatitudes();
 

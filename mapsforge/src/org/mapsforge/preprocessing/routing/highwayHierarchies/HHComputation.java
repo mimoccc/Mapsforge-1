@@ -43,7 +43,6 @@ import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgDAO;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
-import org.mapsforge.preprocessing.model.impl.DEHighwayLevel2Speed;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
@@ -125,8 +124,8 @@ public final class HHComputation {
 		// write vertices
 		for (Iterator<V> iter = rgDao.getVertices().iterator(); iter.hasNext();) {
 			IRgVertex v = iter.next();
-			writer.writeVertex(result.originalVertexIdsToAssignedVertexId[v.getId()],
-					v.getLongitude(), v.getLatitude());
+			writer.writeVertex(result.originalVertexIdsToAssignedVertexId[v.getId()], v
+					.getLongitude(), v.getLatitude());
 		}
 		writer.flush();
 
@@ -142,9 +141,9 @@ public final class HHComputation {
 		// write edges
 		for (int i = 0; i < graph.numEdgeEntries(); i++) {
 			HHDynamicEdge e = graph.getEdge(i);
-			writer.writeEdge(e.getId(), e.getSource().getId(), e.getTarget().getId(),
-					e.getWeight(), e.getMinLevel(), e.getMaxLevel(), e.isForward(),
-					e.isBackward(), e.isShortcut());
+			writer.writeEdge(e.getId(), e.getSource().getId(), e.getTarget().getId(), e
+					.getWeight(), e.getMinLevel(), e.getMaxLevel(), e.isForward(), e
+					.isBackward(), e.isShortcut());
 		}
 		writer.flush();
 
@@ -194,8 +193,8 @@ public final class HHComputation {
 			 * COMPUTE LEVEL ONE
 			 */
 			ThreadedNeighborhoodComputation.computeNeighborhoods(graph, 0, H, NUM_THREADS);
-			BitArraySynchronized highwayEdges = new BitArraySynchronized(
-					graph.getEdgeIdUpperBound());
+			BitArraySynchronized highwayEdges = new BitArraySynchronized(graph
+					.getEdgeIdUpperBound());
 			ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, 0, highwayEdges,
 					NUM_THREADS, true);
 			ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, 0, highwayEdges,
@@ -245,10 +244,10 @@ public final class HHComputation {
 
 				// remove non highway edges
 				highwayEdges = new BitArraySynchronized(graph.getEdgeIdUpperBound());
-				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph,
-						graph.numLevels() - 1, highwayEdges, NUM_THREADS, true);
-				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph,
-						graph.numLevels() - 1, highwayEdges, NUM_THREADS, false);
+				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, graph
+						.numLevels() - 1, highwayEdges, NUM_THREADS, true);
+				ThreadedHighwayNetworkComputation.computeHighwayNetwork(graph, graph
+						.numLevels() - 1, highwayEdges, NUM_THREADS, false);
 				for (Iterator<HHDynamicVertex> iter = graph.getVertices(graph.numLevels() - 1); iter
 						.hasNext();) {
 					HHDynamicVertex v = iter.next();
@@ -282,8 +281,8 @@ public final class HHComputation {
 						.hasNext();) {
 					HHDynamicVertex v = iter.next();
 					if (v.getMaxLevel() == graph.numLevels() - 1) {
-						v.setNeighborhood(v.getNeighborhood(graph.numLevels() - 1),
-								graph.numLevels() - 2);
+						v.setNeighborhood(v.getNeighborhood(graph.numLevels() - 1), graph
+								.numLevels() - 2);
 					} else {
 						v.setNeighborhood(INFINITY_1, graph.numLevels() - 2);
 					}
@@ -356,10 +355,11 @@ public final class HHComputation {
 
 	private static void addLevelInfo(HHDynamicGraph graph, LinkedList<HHLevelStats> levelInfo) {
 		levelInfo
-				.add(new HHLevelStats(graph.numLevels() - 2,
-						graph.numEdges(graph.numLevels() - 2), graph.numVertices(graph
-								.numLevels() - 2), graph.numEdges(graph.numLevels() - 1), graph
-								.numVertices(graph.numLevels() - 1)));
+				.add(new HHLevelStats(graph.numLevels() - 2, graph
+						.numEdges(graph.numLevels() - 2), graph
+						.numVertices(graph.numLevels() - 2), graph
+						.numEdges(graph.numLevels() - 1), graph
+						.numVertices(graph.numLevels() - 1)));
 	}
 
 	private static boolean verifyInputGraph(HHDynamicGraph graph) {
@@ -424,16 +424,16 @@ public final class HHComputation {
 			for (HHDynamicEdge e : v.getOutboundEdges(lvl)) {
 				if (e.isForward()) {
 					if (dFwd.containsKey(e.getTarget().getId())) {
-						dFwd.put(e.getTarget().getId(),
-								Math.min(e.getWeight(), dFwd.get(e.getTarget().getId())));
+						dFwd.put(e.getTarget().getId(), Math.min(e.getWeight(), dFwd.get(e
+								.getTarget().getId())));
 					} else {
 						dFwd.put(e.getTarget().getId(), e.getWeight());
 					}
 				}
 				if (e.isBackward()) {
 					if (dBwd.containsKey(e.getTarget().getId())) {
-						dBwd.put(e.getTarget().getId(),
-								Math.min(e.getWeight(), dBwd.get(e.getTarget().getId())));
+						dBwd.put(e.getTarget().getId(), Math.min(e.getWeight(), dBwd.get(e
+								.getTarget().getId())));
 					} else {
 						dBwd.put(e.getTarget().getId(), e.getWeight());
 					}
@@ -487,9 +487,8 @@ public final class HHComputation {
 						continue;
 					}
 					HHDynamicEdge e = graph.addEdge(in.getSource().getId(), out.getTarget()
-							.getId(), in.getWeight() + out.getWeight(),
-							in.isForward() && out.isForward(),
-							in.isBackward() && out.isBackward(), lvl);
+							.getId(), in.getWeight() + out.getWeight(), in.isForward()
+							&& out.isForward(), in.isBackward() && out.isBackward(), lvl);
 					if (!e.isForward() && !e.isBackward()) {
 						System.out.println("error");
 					}
@@ -600,6 +599,7 @@ public final class HHComputation {
 		int numThreads;
 		Connection inputDb, outputDb;
 		File outputFile;
+		File highwayLevelToAverageSpeed;
 
 		// initialize parameters
 		if (args.length == 1) {
@@ -621,6 +621,8 @@ public final class HHComputation {
 			outputFile = new File(props.getProperty("output.file"));
 
 			weightFunction = props.getProperty("preprocessing.param.weightFunction");
+			highwayLevelToAverageSpeed = new File(props
+					.getProperty("preprocessing.param.weightFunction.time.input.file"));
 		} else if (args.length == 14) {
 			// get parameters from command line
 			// this can be removed in near future : currently in use by scripts which will be
@@ -637,6 +639,7 @@ public final class HHComputation {
 			outputDb = DBConnection.getJdbcConnectionPg(args[9], Integer.parseInt(args[10]),
 					args[11], args[12], args[13]);
 			outputFile = null;
+			highwayLevelToAverageSpeed = new File("res/conf/highwayLevel2AverageSpeed.txt");
 		} else if (args.length == 18) {
 			// get parameters from command line
 			h = Integer.parseInt(args[0]);
@@ -651,6 +654,7 @@ public final class HHComputation {
 			outputDb = DBConnection.getJdbcConnectionPg(args[12], Integer.parseInt(args[13]),
 					args[14], args[15], args[16]);
 			outputFile = new File(args[17]);
+			highwayLevelToAverageSpeed = new File("res/conf/highwayLevel2AverageSpeed.txt");
 		} else {
 			usage();
 			return;
@@ -661,7 +665,7 @@ public final class HHComputation {
 		if (weightFunction != null && weightFunction.equals("DISTANCE")) {
 			wFunc = new RgWeightFunctionDistance();
 		} else {
-			wFunc = new RgWeightFunctionTime(new DEHighwayLevel2Speed());
+			wFunc = new RgWeightFunctionTime(highwayLevelToAverageSpeed);
 		}
 
 		// read input database and write to output database

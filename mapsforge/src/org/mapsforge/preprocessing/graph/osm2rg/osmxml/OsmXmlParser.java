@@ -23,10 +23,7 @@ import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation.Member;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmRelation.Member;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -35,16 +32,22 @@ import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
- * @author Frank Viernau Runs through osm xml and calls all registered handlers on occurance of
- *         the respective osm element.
+ * Runs through osm xml and calls all registered handlers on occurance of the respective osm
+ * element.
  */
 public class OsmXmlParser {
 
 	private final XMLReader xmlReader;
-	private final LinkedList<IOsmWayListener> wayListeners;
-	private final LinkedList<IOsmNodeListener> nodeListeners;
-	private final LinkedList<IOsmRelationListener> relationListeners;
+	final LinkedList<IOsmWayListener> wayListeners;
+	final LinkedList<IOsmNodeListener> nodeListeners;
+	final LinkedList<IOsmRelationListener> relationListeners;
 
+	/**
+	 * Constructs a new Osm xml Parser.
+	 * 
+	 * @throws SAXException
+	 *             on error parsing document.
+	 */
 	public OsmXmlParser() throws SAXException {
 		this.xmlReader = XMLReaderFactory.createXMLReader();
 		this.wayListeners = new LinkedList<IOsmWayListener>();
@@ -54,30 +57,64 @@ public class OsmXmlParser {
 
 	}
 
+	/**
+	 * Registers a way listener at the parser. All listeners are notified by callbacks on
+	 * occurence of the respective element of type way.
+	 * 
+	 * @param wayListener
+	 *            the listener to register.
+	 */
 	public void addWayListener(IOsmWayListener wayListener) {
 		if (wayListener != null && !this.wayListeners.contains(wayListener)) {
 			this.wayListeners.add(wayListener);
 		}
 	}
 
+	/**
+	 * Registers a node listener at the parser. All listeners are notified by callbacks on
+	 * occurence of the respective element of type node.
+	 * 
+	 * @param nodeListener
+	 *            the listener to register.
+	 */
 	public void addNodeListener(IOsmNodeListener nodeListener) {
 		if (nodeListener != null && !this.nodeListeners.contains(nodeListener)) {
 			this.nodeListeners.add(nodeListener);
 		}
 	}
 
+	/**
+	 * Registers a relation listener at the parser. All listeners are notified by callbacks on
+	 * occurence of the respective element of type relation.
+	 * 
+	 * @param relationListener
+	 *            the listener to register.
+	 */
 	public void addRelationListener(IOsmRelationListener relationListener) {
 		if (relationListener != null && !this.nodeListeners.contains(relationListener)) {
 			this.relationListeners.add(relationListener);
 		}
 	}
 
+	/**
+	 * removes all listeners.
+	 */
 	public void resetListners() {
 		this.wayListeners.clear();
 		this.nodeListeners.clear();
 		this.relationListeners.clear();
 	}
 
+	/**
+	 * Starts parsing the osm file. Triggers call backs to all registered Listeners.
+	 * 
+	 * @param osmXmlFile
+	 *            the source file.
+	 * @throws IOException
+	 *             on error reading file.
+	 * @throws SAXException
+	 *             on xml related error.
+	 */
 	public void parse(File osmXmlFile) throws IOException, SAXException {
 		FileInputStream istream = new FileInputStream(osmXmlFile);
 		InputSource isource = new InputSource(istream);
@@ -85,14 +122,14 @@ public class OsmXmlParser {
 		istream.close();
 	}
 
-	private class OsmXmlHandler extends DefaultHandler {
+	class OsmXmlHandler extends DefaultHandler {
 
 		private OsmNode currentNode;
-		private OsmWay_withNodeRefs currentWay;
+		private OsmWay currentWay;
 		private OsmRelation currentRelation;
 
 		@Override
-		public void startDocument() throws SAXException {
+		public void startDocument() {
 			this.currentNode = null;
 			this.currentWay = null;
 			this.currentRelation = null;
@@ -100,7 +137,7 @@ public class OsmXmlParser {
 
 		@Override
 		public void startElement(String uri, String localName, String qName,
-				Attributes attributes) throws SAXException {
+				Attributes attributes) {
 			/* nodes */
 			if (qName.equals("node")) {
 				Long id = Long.parseLong(attributes.getValue("id"));
@@ -121,7 +158,7 @@ public class OsmXmlParser {
 				String user = attributes.getValue("user");
 				Timestamp timestamp = parseTimestampTag(attributes.getValue("timestamp"));
 				boolean visible = parseBooleanTag(attributes.getValue("visible"), true);
-				this.currentWay = new OsmWay_withNodeRefs(id, timestamp, user, visible);
+				this.currentWay = new OsmWay(id, timestamp, user, visible);
 			}
 			/* way tags */
 			else if (currentWay != null && qName.equals("tag")) {
@@ -133,6 +170,7 @@ public class OsmXmlParser {
 					long id = Long.parseLong(attributes.getValue("ref"));
 					currentWay.addNodeRef(id);
 				} catch (NumberFormatException e) {
+					// skip this reference TODO : check if this should be handled another way.
 				}
 				/* relation */
 			} else if (qName.equals("relation")) {
@@ -158,7 +196,7 @@ public class OsmXmlParser {
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
+		public void endElement(String uri, String localName, String qName) {
 			if (qName.equals("node")) {
 				Iterator<IOsmNodeListener> iter = nodeListeners.iterator();
 				while (iter.hasNext()) {

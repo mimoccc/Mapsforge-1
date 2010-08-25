@@ -25,19 +25,21 @@ public class DEHighwayLevel2Speed implements IHighwayLevel2Speed {
 	public int speed(EHighwayLevel highwayLevel) {
 		switch (highwayLevel) {
 			case motorway:
-				return 120;
-			case motorway_link:
-				return 90;
-			case trunk:
 				return 100;
+			case motorway_link:
+				return 70;
+			case trunk:
+				return 90;
 			case trunk_link:
 				return 60;
 			case primary:
-				return 80;
-			case primary_link:
 				return 50;
+			case primary_link:
+				return 40;
 			case secondary:
-				return 60;
+				return 42;
+			case secondary_link:
+				return 42;
 			case tertiary:
 				return 50;
 			case residential:

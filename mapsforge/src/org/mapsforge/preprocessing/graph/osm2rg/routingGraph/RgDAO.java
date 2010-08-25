@@ -24,10 +24,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgDAO;
-import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 /**
- * @author Frank Viernau Implementation of the Routing graph interface.
+ * Implementation of the Routing graph interface. Access the routing graph stored in the
+ * database via this data access object.
  */
 public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 
@@ -41,12 +41,18 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 	private static final String SQL_SELECT_EDGES = "SELECT id, osm_way_id, source_id, target_id, length_meters, longitudes, latitudes, name, hwy_lvl, undirected, urban FROM rg_edge ORDER BY id;";
 
 	private final Connection conn;
-	private final HashMap<Integer, EHighwayLevel> hwyLvlInt2E;
+	final HashMap<Integer, String> hwyLvlInt2S;
 	private final int numVertices, numEdges, numWaypoints;
 
+	/**
+	 * @param conn
+	 *            database to connect to.
+	 * @throws SQLException
+	 *             on sql specific error.
+	 */
 	public RgDAO(Connection conn) throws SQLException {
 		this.conn = conn;
-		this.hwyLvlInt2E = new HashMap<Integer, EHighwayLevel>();
+		this.hwyLvlInt2S = new HashMap<Integer, String>();
 		conn.setAutoCommit(false);
 		ResultSet rs;
 
@@ -69,7 +75,7 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 		while (rs.next()) {
 			int id = rs.getInt("id");
 			String name = rs.getString("name");
-			hwyLvlInt2E.put(id, EHighwayLevel.valueOf(name));
+			hwyLvlInt2S.put(id, name);
 		}
 	}
 
@@ -83,6 +89,10 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 		return numVertices;
 	}
 
+	/**
+	 * @return number of all waypoints of all edges. The start and endpoints are not counted
+	 *         since the coordinates are redundant to vertex coordinates.
+	 */
 	public int getNumWaypoints() {
 		return numWaypoints;
 	}
@@ -119,17 +129,20 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 		};
 	}
 
-	public Iterable<EHighwayLevel> getHighwayLevels() {
-		return new Iterable<EHighwayLevel>() {
+	/**
+	 * @return returns the names of all highway levels used within this routing graph.
+	 */
+	public Iterable<String> getHighwayLevels() {
+		return new Iterable<String>() {
 
 			@Override
-			public Iterator<EHighwayLevel> iterator() {
-				return hwyLvlInt2E.values().iterator();
+			public Iterator<String> iterator() {
+				return hwyLvlInt2S.values().iterator();
 			}
 		};
 	}
 
-	private Iterator<RgVertex> getVertexIterator() throws SQLException {
+	Iterator<RgVertex> getVertexIterator() throws SQLException {
 		return new Iterator<RgVertex>() {
 
 			private ResultSet rs = getStreamedResult(SQL_SELECT_VERTICES);
@@ -169,12 +182,12 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 
 			@Override
 			public void remove() {
-
+				// do nithing
 			}
 		};
 	}
 
-	private Iterator<RgEdge> getEdgeIterator() throws SQLException {
+	Iterator<RgEdge> getEdgeIterator() throws SQLException {
 		return new Iterator<RgEdge>() {
 
 			private ResultSet rs = getStreamedResult(SQL_SELECT_EDGES);
@@ -213,7 +226,7 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 								.getInt("target_id"), lon_, lat_, rs.getBoolean("undirected"),
 								rs.getBoolean("urban"), rs.getLong("osm_way_id"), rs
 										.getString("name"), rs.getDouble("length_meters"),
-								hwyLvlInt2E.get(rs.getInt("hwy_lvl")));
+								hwyLvlInt2S.get(rs.getInt("hwy_lvl")));
 					}
 					return null;
 
@@ -229,29 +242,15 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 
 			@Override
 			public void remove() {
-
+				// do nothing
 			}
 		};
 	}
 
-	private ResultSet getStreamedResult(String sql) throws SQLException {
+	ResultSet getStreamedResult(String sql) throws SQLException {
 		Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
 				ResultSet.CONCUR_READ_ONLY);
 		stmt.setFetchSize(FETCH_SIZE);
 		return stmt.executeQuery(sql);
 	}
-
-	// public static void main(String[] args) throws SQLException {
-	// RgDAO dao = new RgDAO(DbConnection.getBerlinDbConn());
-	// Iterator<RgVertex> iter = dao.getVertices().iterator();
-	// while(iter.hasNext()) {
-	// RgVertex v = iter.next();
-	// System.out.println(v.getLongitude());
-	// System.out.println(v.getLatitude());
-	// }
-	// Iterator<RgEdge> iter2 = dao.getEdges().iterator();
-	// while(iter2.hasNext()) {
-	// System.out.println(iter2.next());
-	// }
-	// }
 }

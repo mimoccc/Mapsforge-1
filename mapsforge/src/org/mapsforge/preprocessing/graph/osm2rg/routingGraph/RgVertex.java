@@ -19,7 +19,8 @@ package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
 
 /**
- * @author Frank Viernau
+ * This class implements an Object representation of the vertices stored in the routing graph db
+ * schema.
  */
 public class RgVertex implements IRgVertex {
 
@@ -27,6 +28,16 @@ public class RgVertex implements IRgVertex {
 	private final double longitude, latitude;
 	private final long osmNodeId;
 
+	/**
+	 * @param id
+	 *            the assigned id within the routing graph
+	 * @param longitude
+	 *            longitude in degrees.
+	 * @param latitude
+	 *            latitude in degrees.
+	 * @param osmNodeId
+	 *            the osm node id.
+	 */
 	public RgVertex(int id, double longitude, double latitude, long osmNodeId) {
 		this.id = id;
 		this.longitude = longitude;
@@ -49,6 +60,9 @@ public class RgVertex implements IRgVertex {
 		return longitude;
 	}
 
+	/**
+	 * @return retuns the osm id of this node.
+	 */
 	public long getOsmNodeId() {
 		return osmNodeId;
 	}

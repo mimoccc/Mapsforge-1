@@ -19,6 +19,8 @@ package org.mapsforge.preprocessing.graph.model.osmxml;
 import java.sql.Timestamp;
 import java.util.LinkedList;
 
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmElement;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 public class OsmWay_withNodes extends OsmElement {
@@ -61,7 +63,7 @@ public class OsmWay_withNodes extends OsmElement {
 	}
 
 	public int getMaxSpeed() {
-		// TODO alle möglichen maxspeeds hinzufügen
+		// TODO alle mï¿½glichen maxspeeds hinzufï¿½gen
 		return DEFAULT_TAG_VALUE_MAX_SPEED;
 	}
 

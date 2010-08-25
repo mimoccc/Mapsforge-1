@@ -25,8 +25,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.graph.model.gui.Transport;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 

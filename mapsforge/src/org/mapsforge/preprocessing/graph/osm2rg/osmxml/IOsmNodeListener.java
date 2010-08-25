@@ -16,14 +16,14 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
 
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
-import org.xml.sax.SAXException;
 
 /**
  * Implement for listening for OsmElements at OsmXmlParser.
- * 
- * @author Frank Viernau
  */
 public interface IOsmNodeListener {
-	public void handleNode(OsmNode node) throws SAXException;
+	/**
+	 * @param node
+	 *            the node to be handled.
+	 */
+	public void handleNode(OsmNode node);
 }

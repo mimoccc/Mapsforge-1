@@ -17,10 +17,13 @@
 package org.mapsforge.preprocessing.graph.routingGraphInterface;
 
 /**
- * @author Frank Viernau
+ * 
  */
 public interface IRgVertex {
 
+	/**
+	 * @return id of this vertex.
+	 */
 	public int getId();
 
 	/**

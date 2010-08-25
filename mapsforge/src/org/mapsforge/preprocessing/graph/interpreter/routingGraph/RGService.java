@@ -88,7 +88,6 @@ public class RGService {
 						useableWays.add(currentWay);
 					}
 				}
-
 			}
 		}
 

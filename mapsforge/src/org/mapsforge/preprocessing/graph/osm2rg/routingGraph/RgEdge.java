@@ -18,12 +18,10 @@ package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
 
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
-import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 /**
- * @author Frank Viernau
- * 
- *         Should be extended to contain all relevant edge osm data.
+ * This class implements an Object representation of edges stored in the routing graph db
+ * schema.
  */
 public class RgEdge implements IRgEdge {
 
@@ -33,8 +31,24 @@ public class RgEdge implements IRgEdge {
 	private final boolean isUndirected, isUrban;
 	private final long osmWayId;
 	private final String name;
-	private final EHighwayLevel hwyLevel;
+	private final String hwyLevel;
 
+	/**
+	 * @param id
+	 *            the assigned edge id within the routing graph.
+	 * @param sourceId
+	 *            vertex id.
+	 * @param targetId
+	 *            vertex id.
+	 * @param longitudes
+	 *            waypoint longitudes in degrees.
+	 * @param latitudes
+	 *            waypoint latitudes in degrees.
+	 * @param way
+	 *            the osm way.
+	 * @param lengthMeters
+	 *            length in meters.
+	 */
 	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
 			OsmWay_withNodes way, double lengthMeters) {
 		this.id = id;
@@ -47,12 +61,36 @@ public class RgEdge implements IRgEdge {
 		this.osmWayId = way.getId();
 		this.name = way.getName();
 		this.lengthMeters = lengthMeters;
-		this.hwyLevel = way.getHighwayLevel();
+		this.hwyLevel = way.getHighwayLevel().toString();
 	}
 
+	/**
+	 * @param id
+	 *            the assigned edge id
+	 * @param sourceId
+	 *            vertex id.
+	 * @param targetId
+	 *            vertex id.
+	 * @param longitudes
+	 *            waypoint longitudes in degrees.
+	 * @param latitudes
+	 *            waypoint latitudes in degrees.
+	 * @param isUndirected
+	 *            one way or not
+	 * @param isUrban
+	 *            within city boundaries StVO.
+	 * @param osmWayId
+	 *            the osm id of the way.
+	 * @param name
+	 *            the name of the street.
+	 * @param lengthMeters
+	 *            the length along the waypoints in meters.
+	 * @param hwyLevel
+	 *            the highway level
+	 */
 	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
 			boolean isUndirected, boolean isUrban, long osmWayId, String name,
-			double lengthMeters, EHighwayLevel hwyLevel) {
+			double lengthMeters, String hwyLevel) {
 		this.id = id;
 		this.sourceId = sourceId;
 		this.targetId = targetId;
@@ -66,6 +104,9 @@ public class RgEdge implements IRgEdge {
 		this.hwyLevel = hwyLevel;
 	}
 
+	/**
+	 * @return id of this edge.
+	 */
 	public int getId() {
 		return id;
 	}
@@ -95,23 +136,38 @@ public class RgEdge implements IRgEdge {
 		return isUndirected;
 	}
 
+	/**
+	 * @return true if edge is within boundaries of a city StVO.
+	 */
 	public boolean isUrban() {
 		return isUrban;
 	}
 
+	/**
+	 * @return the osm id of the related way.
+	 */
 	public long getOsmWayId() {
 		return osmWayId;
 	}
 
+	/**
+	 * @return the name of the street.
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return length along the waypoints in meters.
+	 */
 	public double getLengthMeters() {
 		return lengthMeters;
 	}
 
-	public EHighwayLevel getHighwayLevel() {
+	/**
+	 * @return the highway level.
+	 */
+	public String getHighwayLevel() {
 		return hwyLevel;
 	}
 

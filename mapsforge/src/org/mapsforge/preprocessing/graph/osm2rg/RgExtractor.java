@@ -32,25 +32,23 @@ import java.util.Properties;
 
 import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodeRefs;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmNodeListener;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmWayListener;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmWay;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmXmlParser;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
-import org.mapsforge.preprocessing.model.EHighwayLevel;
 import org.xml.sax.SAXException;
 
 /**
- * @author Frank Viernau
  * 
- *         Extracts the routing graph directly from xml. requires about 42 byte of memory per
- *         vertex / waypoint used in the resulting routing graph. config can be done via
- *         res/conf/osm2rg.properties.
+ * Extracts the routing graph directly from xml. requires about 42 byte of memory per vertex /
+ * waypoint used in the resulting routing graph. config can be done via
+ * res/conf/osm2rg.properties.
  * 
- *         Prior to running create tables file has to be executed by hand.
- *         /res/sql/osm2rgCreateTables.sql
+ * Prior to running create tables file has to be executed by hand.
+ * /res/sql/osm2rgCreateTables.sql
  */
 public class RgExtractor {
 
@@ -58,20 +56,34 @@ public class RgExtractor {
 	private static final double COORDINATE_FAC = 1E6d;
 	private static final DecimalFormat df = new DecimalFormat("##.#");
 
-	public static void extractGraph(File osmFile, HashSet<EHighwayLevel> hwyLvlss,
+	/**
+	 * @param osmFile
+	 *            the source file.
+	 * @param highwayLevels
+	 *            white list of highway tags to be extracted.
+	 * @param outputDb
+	 *            the destination.
+	 * @throws IOException
+	 *             on error reading file.
+	 * @throws SAXException
+	 *             on error parsing xml.
+	 * @throws SQLException
+	 *             on database errors.
+	 */
+	public static void extractGraph(File osmFile, HashSet<String> highwayLevels,
 			Connection outputDb) throws IOException, SAXException, SQLException {
 		long startTime = System.currentTimeMillis();
 		TLongIntHashMap idMapping = new TLongIntHashMap();
-		int numVertices = IdAssigner.assignNodeIds(osmFile, hwyLvlss, idMapping);
-		RoutingGraphWriter.writeGraph(osmFile, hwyLvlss, idMapping, numVertices, outputDb);
+		int numVertices = IdAssigner.assignNodeIds(osmFile, highwayLevels, idMapping);
+		RoutingGraphWriter.writeGraph(osmFile, highwayLevels, idMapping, numVertices, outputDb);
 		double time = System.currentTimeMillis() - startTime;
 
 		System.out
 				.println("\nextraction finished in " + df.format(time / 60000d) + " minutes.");
 
 		System.out.println("\nextracted highway levels :");
-		for (EHighwayLevel hwyLvl : hwyLvlss) {
-			System.out.println(hwyLvl.toString() + " [" + hwyLvl.ordinal() + "]");
+		for (String highwayLevel : highwayLevels) {
+			System.out.println(highwayLevel);
 		}
 
 		System.out.println("\n|nodes| = " + IdAssigner.numOverallNodes);
@@ -84,20 +96,21 @@ public class RgExtractor {
 	}
 
 	private static class RoutingGraphWriter {
-		private static int[] latitudes, longitudes;
+		static int[] latitudes;
+		static int[] longitudes;
 		public static int countOverallNodes, countOverallWays, nextEdgeId;
 
-		public static void writeGraph(File osmFile, final HashSet<EHighwayLevel> hwyLevels,
+		public static void writeGraph(File osmFile, final HashSet<String> highwayLevels,
 				final TLongIntHashMap idMapping, final int numVertices, Connection outputDb)
 				throws IOException, SAXException, SQLException {
-			final RgDbWriter writer = new RgDbWriter(outputDb);
+			final RgDbWriter writer = new RgDbWriter(outputDb, highwayLevels);
 			countOverallNodes = countOverallWays = nextEdgeId = 0;
 			latitudes = new int[idMapping.size()];
 			longitudes = new int[idMapping.size()];
 
 			writer.clearTables();
 			writer.flush();
-			writer.insertHighwayLevels(hwyLevels);
+			writer.insertHighwayLevels();
 			OsmXmlParser parser = new OsmXmlParser();
 			parser.addNodeListener(new IOsmNodeListener() {
 				@Override
@@ -129,7 +142,7 @@ public class RgExtractor {
 			});
 			parser.addWayListener(new IOsmWayListener() {
 				@Override
-				public void handleWay(OsmWay_withNodeRefs way) {
+				public void handleWay(OsmWay way) {
 					if ((++countOverallWays) % MSG_INT == 0) {
 						System.out.println("[write routingGraph] - processed ways "
 								+ (countOverallWays - MSG_INT) + " - " + countOverallWays);
@@ -142,9 +155,17 @@ public class RgExtractor {
 						}
 					}
 
-					EHighwayLevel hwyLvl = way.getHighwayLevel();
+					String hwyLvl = way.getHighwayLevel();
 					if (way.isVisible() && way.getNodeRefs().size() > 1 && hwyLvl != null
-							&& hwyLevels.contains(hwyLvl)) {
+							&& highwayLevels.contains(hwyLvl)) {
+						boolean debug = false;
+						if (way.getId() == 4677807) {
+							debug = true;
+							for (long l : way.getNodeRefs()) {
+								System.out.println(l);
+							}
+						}
+
 						LinkedList<Integer> indices = new LinkedList<Integer>();
 						for (int i = 0; i < way.getNodeRefs().size(); i++) {
 							int idx = idMapping.get(way.getNodeRefs().get(i));
@@ -188,6 +209,10 @@ public class RgExtractor {
 								writer.insertEdge(new RgEdge(nextEdgeId++, sourceId, targetId,
 										lon, lat, !oneway, way.isUrban(), way.getId(), way
 												.getName(), distanceMeters, hwyLvl));
+								if (debug) {
+									System.out.println(sourceId + " -> " + targetId);
+								}
+
 							} catch (SQLException e) {
 								e.printStackTrace();
 								while (e.getNextException() != null) {
@@ -207,9 +232,11 @@ public class RgExtractor {
 	private static class IdAssigner {
 
 		public static long numOverallNodes, numOverallWays, numUsedWays;
-		private static int nextVertexId, nextWaypointId, numVertices;
+		static int nextVertexId;
+		static int nextWaypointId;
+		static int numVertices;
 
-		public static int assignNodeIds(File osmFile, final HashSet<EHighwayLevel> hwyLevels,
+		public static int assignNodeIds(File osmFile, final HashSet<String> highwayLevels,
 				final TLongIntHashMap buff) throws IOException, SAXException {
 			numOverallNodes = numOverallWays = numUsedWays = nextVertexId = nextWaypointId = numVertices = 0;
 			buff.clear();
@@ -227,10 +254,10 @@ public class RgExtractor {
 			});
 			parser.addWayListener(new IOsmWayListener() {
 				@Override
-				public void handleWay(OsmWay_withNodeRefs way) {
-					EHighwayLevel hwyLvl = way.getHighwayLevel();
+				public void handleWay(OsmWay way) {
+					String hwyLvl = way.getHighwayLevel();
 					if (way.isVisible() && way.getNodeRefs().size() > 1 && hwyLvl != null
-							&& hwyLevels.contains(hwyLvl)) {
+							&& highwayLevels.contains(hwyLvl)) {
 						if (buff.containsKey(way.getNodeRefs().getFirst())) {
 							buff.adjustValue(way.getNodeRefs().getFirst(), 1);
 						} else {
@@ -286,7 +313,7 @@ public class RgExtractor {
 		}
 	}
 
-	private static double[] reverseDoubleArray(double[] array) {
+	static double[] reverseDoubleArray(double[] array) {
 		double[] tmp = new double[array.length];
 		for (int i = 0; i < array.length; i++) {
 			tmp[array.length - 1 - i] = array[i];
@@ -294,11 +321,11 @@ public class RgExtractor {
 		return tmp;
 	}
 
-	private static int doubleCoordinateDegreeToInt(double c) {
+	static int doubleCoordinateDegreeToInt(double c) {
 		return (int) Math.rint(c * COORDINATE_FAC);
 	}
 
-	private static double intCoordinateDegreeToDouble(int c) {
+	static double intCoordinateDegreeToDouble(int c) {
 		return c / COORDINATE_FAC;
 	}
 
@@ -307,7 +334,18 @@ public class RgExtractor {
 				+ "osm2rg <db.host> <db.port> <db.name> <db.user> <db.pass> <comma separated ways whitelist> <input.file>";
 	}
 
-	public static void main(String[] args) throws IOException, SAXException, SQLException {
+	/**
+	 * 
+	 * @param args
+	 *            see usage().
+	 * @throws IOException
+	 *             on error reading input file.
+	 * @throws SAXException
+	 *             on error parsing input file.
+	 * @throws SQLException
+	 *             on error writing output.
+	 */
+	public static void main(final String[] args) throws IOException, SAXException, SQLException {
 
 		// the parameters
 		String dbHost, dbName, dbUser, dbPass;
@@ -343,13 +381,13 @@ public class RgExtractor {
 
 		// extract the routing graph
 
-		HashSet<EHighwayLevel> hwyLevels = new HashSet<EHighwayLevel>();
+		HashSet<String> highwayLevels = new HashSet<String>();
 		for (String hwyLvl : waysWhiteList) {
-			hwyLevels.add(EHighwayLevel.valueOf(hwyLvl));
+			highwayLevels.add(hwyLvl);
 		}
 		Connection outputDb = new DBConnection(dbHost, dbName, dbUser, dbPass, dbPort)
 				.getConnection();
-		RgExtractor.extractGraph(inputFile, hwyLevels, outputDb);
+		RgExtractor.extractGraph(inputFile, highwayLevels, outputDb);
 
 		outputDb.close();
 	}

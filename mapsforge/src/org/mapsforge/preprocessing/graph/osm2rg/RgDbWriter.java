@@ -19,17 +19,16 @@ package org.mapsforge.preprocessing.graph.osm2rg;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
-import org.mapsforge.preprocessing.model.EHighwayLevel;
 
 /**
- * @author Frank Viernau
  * 
- *         Important to write nodes before edges since referential constraints will throw an
- *         exception else. Call Flush after writing to write the buffer.
+ * Important to write nodes before edges since referential constraints will throw an exception
+ * else. Call Flush after writing to write the buffer.
  */
 class RgDbWriter {
 
@@ -50,13 +49,21 @@ class RgDbWriter {
 	private final Connection conn;
 	private final PreparedStatement pstmtInsertVertex, pstmtInsertEdge;
 	private long insertVertexCount, insertEdgeCount;
+	private final HashMap<String, Integer> highwayLevelToId;
 
-	public RgDbWriter(Connection conn) throws SQLException {
+	public RgDbWriter(Connection conn, HashSet<String> highwayLevels) throws SQLException {
 		this.conn = conn;
 		conn.setAutoCommit(false);
 		pstmtInsertVertex = conn.prepareStatement(SQL_INSERT_VERTEX);
 		pstmtInsertEdge = conn.prepareStatement(SQL_INSERT_EDGE);
 		insertVertexCount = insertEdgeCount = 0;
+		highwayLevelToId = new HashMap<String, Integer>();
+		{
+			int id = 0;
+			for (String key : highwayLevels) {
+				highwayLevelToId.put(key, id++);
+			}
+		}
 	}
 
 	public void clearTables() throws SQLException {
@@ -95,7 +102,7 @@ class RgDbWriter {
 		pstmtInsertEdge.setDouble(6, e.getLengthMeters());
 		pstmtInsertEdge.setBoolean(7, e.isUndirected());
 		pstmtInsertEdge.setBoolean(8, e.isUrban());
-		pstmtInsertEdge.setInt(9, e.getHighwayLevel().ordinal());
+		pstmtInsertEdge.setInt(9, highwayLevelToId.get(e.getHighwayLevel()));
 		pstmtInsertEdge.setString(10, doubleArrayToSqlString(e.getLongitudes()));
 		pstmtInsertEdge.setString(11, doubleArrayToSqlString(e.getLatitudes()));
 		pstmtInsertEdge.addBatch();
@@ -119,11 +126,11 @@ class RgDbWriter {
 
 	}
 
-	public void insertHighwayLevels(HashSet<EHighwayLevel> hwyLvls) throws SQLException {
+	public void insertHighwayLevels() throws SQLException {
 		PreparedStatement pstmt = conn.prepareStatement(SQL_INSERT_EDGE_CLASSES);
-		for (EHighwayLevel hwyLvl : hwyLvls) {
-			pstmt.setInt(1, hwyLvl.ordinal());
-			pstmt.setString(2, hwyLvl.toString());
+		for (String highwayLevel : highwayLevelToId.keySet()) {
+			pstmt.setInt(1, highwayLevelToId.get(highwayLevel));
+			pstmt.setString(2, highwayLevel);
 			pstmt.addBatch();
 		}
 		pstmt.executeBatch();

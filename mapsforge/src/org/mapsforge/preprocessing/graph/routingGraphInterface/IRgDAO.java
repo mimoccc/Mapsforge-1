@@ -17,20 +17,33 @@
 package org.mapsforge.preprocessing.graph.routingGraphInterface;
 
 /**
- * @author Frank Viernau
  * @param <V>
+ *            data type of vertices.
  * @param <E>
- *            This interface can be used as input for routing graph preprocessing. For a graph
- *            consisting of n vertices, ids should range from 0 to n-1.
+ *            data type of edges. This interface can be used as input for routing graph
+ *            preprocessing. For a graph consisting of n vertices, ids should range from 0 to
+ *            n-1.
  */
 public interface IRgDAO<V extends IRgVertex, E extends IRgEdge> {
 
+	/**
+	 * @return the number of vertices in the routing graph.
+	 */
 	public int getNumVertices();
 
+	/**
+	 * @return the number of edges in the routing graph.
+	 */
 	public int getNumEdges();
 
+	/**
+	 * @return iterates over all vertices in the graph.
+	 */
 	public Iterable<V> getVertices();
 
+	/**
+	 * @return iterates over all edges in this graph.
+	 */
 	public Iterable<E> getEdges();
 
 }

@@ -16,12 +16,15 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
 
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmRelation;
-import org.xml.sax.SAXException;
-
 /**
- * @author Frank Viernau Implement for listening for OsmElements at OsmXmlParser.
+ * Implement for listening for OsmElements at OsmXmlParser.
  */
 public interface IOsmRelationListener {
-	public void handleRelation(OsmRelation relation) throws SAXException;
+	/**
+	 * Callback method.
+	 * 
+	 * @param relation
+	 *            the relation to be handled.
+	 */
+	public void handleRelation(OsmRelation relation);
 }

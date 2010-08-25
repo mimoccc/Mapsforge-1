@@ -24,8 +24,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.mapsforge.preprocessing.model.EHighwayLevel;
@@ -212,7 +212,7 @@ public class OsmBaseService implements IOsmBaseService {
 			pstmt.setDouble(6, currentEdge.getLengthMeters());
 			pstmt.setBoolean(7, currentEdge.isUndirected());
 			pstmt.setBoolean(8, currentEdge.isUrban());
-			pstmt.setInt(9, currentEdge.getHighwayLevel().ordinal());
+			pstmt.setInt(9, EHighwayLevel.valueOf(currentEdge.getHighwayLevel()).ordinal());
 			pstmt.setString(10, doubleArrayToSqlString(currentEdge.getLongitudes()));
 			pstmt.setString(11, doubleArrayToSqlString(currentEdge.getLatitudes()));
 			pstmt.addBatch();

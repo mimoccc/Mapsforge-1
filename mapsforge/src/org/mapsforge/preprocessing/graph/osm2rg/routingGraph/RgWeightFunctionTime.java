@@ -16,25 +16,81 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.HashMap;
+
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
-import org.mapsforge.preprocessing.model.IHighwayLevel2Speed;
 
 /**
  * No good heuristcs until now, should be extended along with edge data.
- * 
- * @author Frank Viernau
  */
 public class RgWeightFunctionTime implements IRgWeightFunction<RgEdge> {
 
-	private final IHighwayLevel2Speed hl2s;
+	private final HashMap<String, Double> highwayLevelAverageSpeed;
+	private double defaultSpeed;
 
-	public RgWeightFunctionTime(IHighwayLevel2Speed hl2s) {
-		this.hl2s = hl2s;
+	/**
+	 * @param highwayLevelAverageSpeed
+	 *            map highway level to average speed in km/h
+	 * @param defaultSpeed
+	 *            default average speed in km/h
+	 */
+	public RgWeightFunctionTime(HashMap<String, Double> highwayLevelAverageSpeed,
+			double defaultSpeed) {
+		this.highwayLevelAverageSpeed = highwayLevelAverageSpeed;
+		this.defaultSpeed = defaultSpeed;
+	}
+
+	/**
+	 * Read the average speed form a highwayLevel2AverageSpeed File.
+	 * 
+	 * @param file
+	 *            the source file.
+	 * @throws IOException
+	 *             on error reading file.
+	 */
+	public RgWeightFunctionTime(File file) throws IOException {
+		LineNumberReader reader = new LineNumberReader(new FileReader(file));
+		String line = reader.readLine();
+		this.highwayLevelAverageSpeed = new HashMap<String, Double>();
+		while (line != null) {
+
+			line = line.trim();
+			if (!line.startsWith("#") && line.length() > 0) {
+				String[] tmp = line.split("=");
+				if (tmp.length == 2) {
+					String key = tmp[0];
+					try {
+						double value = Double.parseDouble(tmp[1]);
+						if (key.equals("DEFAULT_VALUE")) {
+							this.defaultSpeed = value;
+						} else {
+							highwayLevelAverageSpeed.put(key, value);
+						}
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
+						throw new IllegalArgumentException("wrong file format!");
+					}
+				} else {
+					throw new IllegalArgumentException("wrong file format!");
+				}
+			}
+			line = reader.readLine();
+
+		}
 	}
 
 	@Override
 	public double getWeightDouble(RgEdge edge) {
-		double m_per_s = hl2s.speed(edge.getHighwayLevel()) / 3.6d;
+		double m_per_s;
+		if (highwayLevelAverageSpeed.containsKey(edge.getHighwayLevel())) {
+			m_per_s = highwayLevelAverageSpeed.get(edge.getHighwayLevel()) / 3.6d;
+		} else {
+			m_per_s = defaultSpeed / 3.6d;
+		}
 		return (edge.getLengthMeters() / m_per_s) * 10;
 	}
 

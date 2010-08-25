@@ -17,14 +17,24 @@
 package org.mapsforge.preprocessing.graph.routingGraphInterface;
 
 /**
- * @author Frank Viernau
  * @param <E>
  *            weights should be scaled so that summing up weights should not exceed respective
  *            data-type max value.
  */
 public interface IRgWeightFunction<E extends IRgEdge> {
 
+	/**
+	 * 
+	 * @param edge
+	 *            the edge to be weighted.
+	 * @return weight as double precision.
+	 */
 	public double getWeightDouble(E edge);
 
+	/**
+	 * @param edge
+	 *            the edge to be weighted.
+	 * @return weight as int.
+	 */
 	public int getWeightInt(E edge);
 }
