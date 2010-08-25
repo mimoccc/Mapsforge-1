@@ -222,7 +222,7 @@ class WhiteList {
 
 		tagWhitelist.put("tourism=attraction", Byte.valueOf((byte) 15));
 		tagWhitelist.put("tourism=hostel", Byte.valueOf((byte) 15));
-		tagWhitelist.put("tourism=zoo", Byte.valueOf((byte) 15));
+		tagWhitelist.put("tourism=zoo", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("tunnel=no", Byte.valueOf(Byte.MAX_VALUE));
 		tagWhitelist.put("tunnel=yes", Byte.valueOf(Byte.MAX_VALUE));

@@ -745,7 +745,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_HIGHWAY_CONSTRUCTION.setColor(Color.rgb(208, 208, 209));
 		PAINT_HIGHWAY_CYCLEWAY1.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_CYCLEWAY1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_HIGHWAY_CYCLEWAY1.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_CYCLEWAY1.setStrokeCap(Paint.Cap.BUTT);
 		PAINT_HIGHWAY_CYCLEWAY1.setColor(Color.rgb(136, 159, 139));
 		PAINT_HIGHWAY_CYCLEWAY2.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_CYCLEWAY2.setStrokeJoin(Paint.Join.ROUND);
@@ -785,7 +785,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_HIGHWAY_MOTORWAY2.setColor(Color.rgb(128, 155, 192));
 		PAINT_HIGHWAY_MOTORWAY_LINK1.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_MOTORWAY_LINK1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_HIGHWAY_MOTORWAY_LINK1.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_MOTORWAY_LINK1.setStrokeCap(Paint.Cap.BUTT);
 		PAINT_HIGHWAY_MOTORWAY_LINK1.setColor(Color.rgb(80, 96, 119));
 		PAINT_HIGHWAY_MOTORWAY_LINK2.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_MOTORWAY_LINK2.setStrokeJoin(Paint.Join.ROUND);
@@ -905,7 +905,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_HIGHWAY_TRUNK2.setColor(Color.rgb(127, 201, 127));
 		PAINT_HIGHWAY_TRUNK_LINK1.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_TRUNK_LINK1.setStrokeJoin(Paint.Join.ROUND);
-		PAINT_HIGHWAY_TRUNK_LINK1.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_TRUNK_LINK1.setStrokeCap(Paint.Cap.BUTT);
 		PAINT_HIGHWAY_TRUNK_LINK1.setColor(Color.rgb(71, 113, 71));
 		PAINT_HIGHWAY_TRUNK_LINK2.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_TRUNK_LINK2.setStrokeJoin(Paint.Join.ROUND);
@@ -1292,23 +1292,20 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private void setPaintParameters(byte zoomLevel) {
 		float paintScaleFactor;
 		switch (zoomLevel) {
-			case 23:
-				paintScaleFactor = 512;
-				break;
 			case 22:
-				paintScaleFactor = 256;
+				paintScaleFactor = 54;
 				break;
 			case 21:
-				paintScaleFactor = 128;
+				paintScaleFactor = 42;
 				break;
 			case 20:
-				paintScaleFactor = 64;
+				paintScaleFactor = 30;
 				break;
 			case 19:
-				paintScaleFactor = 32;
+				paintScaleFactor = 20;
 				break;
 			case 18:
-				paintScaleFactor = 16;
+				paintScaleFactor = 12;
 				break;
 			case 17:
 				paintScaleFactor = 8;
@@ -2075,12 +2072,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_MOTORWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2099,12 +2097,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY_LINK2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_MOTORWAY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2123,12 +2122,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRUNK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_TRUNK2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$TRUNK1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2145,12 +2144,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRUNK_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_TRUNK_LINK2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_TRUNK_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2169,12 +2169,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PRIMARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_PRIMARY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
-					this.layer.get(LayerIds.HIGHWAY$PRIMARY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+					this.layer.get(LayerIds.HIGHWAY$PRIMARY2)
+							.add(
+									new ShapePaintContainer(this.shapeContainer,
+											PAINT_HIGHWAY_PRIMARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2195,12 +2197,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PRIMARY_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_PRIMARY_LINK2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_PRIMARY_LINK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2219,12 +2222,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SECONDARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_SECONDARY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_SECONDARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2243,12 +2247,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TERTIARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_TERTIARY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_TERTIARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2267,12 +2272,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_UNCLASSIFIED1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_UNCLASSIFIED2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_UNCLASSIFIED2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2291,12 +2297,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_ROAD1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_ROAD2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$ROAD1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2313,12 +2319,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_RESIDENTIAL1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_RESIDENTIAL2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_RESIDENTIAL2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2337,12 +2344,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_LIVING_STREET1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_LIVING_STREET2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_LIVING_STREET2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2369,12 +2377,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SERVICE1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_SERVICE2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$SERVICE1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
-					this.layer.get(LayerIds.HIGHWAY$SERVICE2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+					this.layer.get(LayerIds.HIGHWAY$SERVICE2)
+							.add(
+									new ShapePaintContainer(this.shapeContainer,
+											PAINT_HIGHWAY_SERVICE2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2395,12 +2405,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRACK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_TRACK2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$TRACK1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2425,12 +2435,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_PEDESTRIAN2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2449,12 +2460,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PATH1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_PATH2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$PATH1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2471,12 +2482,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_CYCLEWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_CYCLEWAY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_CYCLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2503,12 +2515,15 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				} else if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
+					paint1Bridge.setPathEffect(null);
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
-					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+					this.layer.get(LayerIds.HIGHWAY$FOOTWAY2)
+							.add(
+									new ShapePaintContainer(this.shapeContainer,
+											PAINT_HIGHWAY_FOOTWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2529,12 +2544,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_BRIDLEWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_BRIDLEWAY2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_BRIDLEWAY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}
@@ -2553,12 +2569,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				if (wayTagIds[TagIdsWays.BRIDGE$YES]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_STEPS1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
-					Paint paint2Bridge = new Paint(PAINT_HIGHWAY_STEPS2);
-					paint2Bridge.setStrokeCap(Paint.Cap.SQUARE);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
 					this.layer.get(LayerIds.HIGHWAY$STEPS1).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
-							new ShapePaintContainer(this.shapeContainer, paint2Bridge));
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName);
 					}

@@ -102,10 +102,10 @@ highway=road1
 highway=tertiary1
 highway=secondary1
 highway=primary_link1
-highway=primary1
 highway=trunk_link1
-highway=trunk1
 highway=motorway_link1
+highway=primary1
+highway=trunk1
 highway=motorway1
 
 highway=steps2
@@ -123,10 +123,10 @@ highway=road2
 highway=tertiary2
 highway=secondary2
 highway=primary_link2
-highway=primary2
 highway=trunk_link2
-highway=trunk2
 highway=motorway_link2
+highway=primary2
+highway=trunk2
 highway=motorway2
 
 railway=light_rail railway=rail railway=rail_tunnel=yes railway=subway railway=subway_tunnel railway=station railway=tram
