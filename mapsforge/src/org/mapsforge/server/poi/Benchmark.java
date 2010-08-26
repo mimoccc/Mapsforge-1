@@ -11,6 +11,13 @@ import org.mapsforge.server.poi.persistence.IPersistenceManager;
 import org.mapsforge.server.poi.persistence.PersistenceManagerFactory;
 import org.mapsforge.server.poi.persistence.PerstQueryTracer;
 
+/**
+ * Used to benchmark poi queries. Only really useful with patched perst, otherwise it is
+ * impossible to count page loads.
+ * 
+ * @author weise
+ * 
+ */
 public class Benchmark {
 
 	class Series {
@@ -57,6 +64,12 @@ public class Benchmark {
 	private PerstQueryTracer tracer;
 	private BufferedWriter writer;
 
+	/**
+	 * @param persistenceManager
+	 *            {@link IPersistenceManager} to be tested.
+	 * @param outputFile
+	 *            path to output file. Will be written to in csv format.
+	 */
 	public Benchmark(IPersistenceManager persistenceManager, String outputFile) {
 		this.persistenceManager = persistenceManager;
 		this.tracer = PerstQueryTracer.getInstance();
@@ -68,6 +81,12 @@ public class Benchmark {
 		}
 	}
 
+	/**
+	 * Runs the benchmark
+	 * 
+	 * @throws IOException
+	 *             if unable to write to specified output file.
+	 */
 	public void run() throws IOException {
 		writer.write("category; radius; nodes; pages; nonNodePages; found; time\r\n");
 
