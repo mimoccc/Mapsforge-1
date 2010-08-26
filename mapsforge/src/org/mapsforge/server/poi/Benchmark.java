@@ -52,12 +52,20 @@ public class Benchmark {
 	static final String[] categories = new String[] { "School", "Gas Station", "Restaurant",
 			"Food & Drink", "Root" };
 
-	public static void main(String[] args) throws IOException {
+	/**
+	 * @param args
+	 *            none used
+	 */
+	public static void main(String[] args) {
 		IPersistenceManager persistenceManager = PersistenceManagerFactory
 				.getPerstMultiRtreePersistenceManager("c:/users/weise/Desktop/berlin.dbs.clustered");
 		Benchmark benchmark = new Benchmark(persistenceManager,
 				"c:/users/weise/Desktop/berlin.dbs.csv");
-		benchmark.run();
+		try {
+			benchmark.run();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private IPersistenceManager persistenceManager;
