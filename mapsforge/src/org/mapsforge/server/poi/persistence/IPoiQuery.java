@@ -19,6 +19,7 @@ package org.mapsforge.server.poi.persistence;
 import java.util.Collection;
 
 import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
 
@@ -50,7 +51,7 @@ public interface IPoiQuery {
 	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory}
 	 *         near the given position.
 	 */
-	public Collection<PointOfInterest> findNearPosition(GeoPoint point, int distance,
+	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int distance,
 			String categoryName, int limit);
 
 	/**
@@ -67,7 +68,8 @@ public interface IPoiQuery {
 	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory}
 	 *         contained in the rectangle specified by the two given {@link GeoPoint}s.
 	 */
-	public Collection<PointOfInterest> findInRect(GeoPoint p1, GeoPoint p2, String categoryName);
+	public Collection<PointOfInterest> findInRect(GeoCoordinate p1, GeoCoordinate p2,
+			String categoryName);
 
 	/**
 	 * Use this to free claimed resources. After that you might no longer be able to query for

@@ -14,21 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.perst;
+package org.mapsforge.server.poi.persistence;
 
-import org.garret.perst.Persistent;
-import org.garret.perst.SpatialIndexR2;
+import java.util.ArrayList;
+import java.util.Iterator;
 
-class NamedSpatialIndex extends Persistent {
-	public String name;
-	public SpatialIndexR2<PerstPoi> index;
+import org.garret.perst.IPersistent;
+import org.garret.perst.Storage;
 
-	public NamedSpatialIndex() {
-	}
+interface RtreeIndex<T, S extends SpatialShape<S>> extends IPersistent {
 
-	public NamedSpatialIndex(String name, SpatialIndexR2<PerstPoi> index) {
-		super();
-		this.name = name;
-		this.index = index;
-	}
+	public ArrayList<T> getList(S b);
+
+	public S getMinimalBoundingShape();
+
+	public void packInsert(Iterator<PackEntry<S, T>> iterator, Storage storage);
+
+	public void put(T item, S shape);
+
+	public void remove(T item, S shape);
+
+	public void clear();
+
+	public int size();
+
 }

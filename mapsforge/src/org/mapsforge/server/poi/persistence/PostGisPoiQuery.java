@@ -14,16 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.postgis;
+package org.mapsforge.server.poi.persistence;
 
 import java.sql.Connection;
 import java.util.Collection;
 
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.poi.PointOfInterest;
-import org.mapsforge.server.poi.persistence.IPoiQuery;
 
-public class PostGisPoiQuery implements IPoiQuery {
+class PostGisPoiQuery implements IPoiQuery {
 
 	private final PostGisPersistenceManager persistenceManager;
 
@@ -32,13 +31,14 @@ public class PostGisPoiQuery implements IPoiQuery {
 	}
 
 	@Override
-	public Collection<PointOfInterest> findNearPosition(GeoPoint point, int distance,
+	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int distance,
 			String categoryName, int limit) {
 		return persistenceManager.findNearPosition(point, distance, categoryName, limit);
 	}
 
 	@Override
-	public Collection<PointOfInterest> findInRect(GeoPoint p1, GeoPoint p2, String categoryName) {
+	public Collection<PointOfInterest> findInRect(GeoCoordinate p1, GeoCoordinate p2,
+			String categoryName) {
 		return persistenceManager.findInRect(p1, p2, categoryName);
 	}
 

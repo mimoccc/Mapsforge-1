@@ -24,12 +24,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
+import org.mapsforge.server.poi.persistence.PoiBuilder;
 
+/**
+ * Provides methods for generating points of interest from their geo json representation.
+ * 
+ * @author weise
+ * 
+ */
 public class GeoJsonPoiReader implements IPoiReader {
 
 	private final String geoJsonString;
 	private final PoiCategory category;
 
+	/**
+	 * @param geoJsonString
+	 *            geo json string containg the point of interest data.
+	 * @param category
+	 *            category the point of interests belong to.
+	 */
 	public GeoJsonPoiReader(String geoJsonString, PoiCategory category) {
 		this.geoJsonString = geoJsonString;
 		this.category = category;
@@ -58,8 +71,7 @@ public class GeoJsonPoiReader implements IPoiReader {
 		return pois;
 	}
 
-	public Collection<PointOfInterest> fromFeatureCollection(JSONArray features)
-			throws JSONException {
+	Collection<PointOfInterest> fromFeatureCollection(JSONArray features) throws JSONException {
 		ArrayList<PointOfInterest> pois = new ArrayList<PointOfInterest>(features.length());
 
 		for (int i = 0; i < features.length(); i++) {
@@ -69,7 +81,7 @@ public class GeoJsonPoiReader implements IPoiReader {
 		return pois;
 	}
 
-	public Collection<PointOfInterest> fromGeometryCollection(JSONArray geometries)
+	Collection<PointOfInterest> fromGeometryCollection(JSONArray geometries)
 			throws JSONException {
 		ArrayList<PointOfInterest> pois = new ArrayList<PointOfInterest>(geometries.length());
 
@@ -80,7 +92,7 @@ public class GeoJsonPoiReader implements IPoiReader {
 		return pois;
 	}
 
-	public PointOfInterest fromFeature(JSONObject feature) throws JSONException {
+	PointOfInterest fromFeature(JSONObject feature) throws JSONException {
 		String type = feature.getString("type").toString();
 		PointOfInterest point;
 		String name = null;
@@ -107,11 +119,11 @@ public class GeoJsonPoiReader implements IPoiReader {
 			throw new IllegalArgumentException();
 		}
 
-		return new PointOfInterest(id, point.latitude, point.longitude, name, url,
-				this.category);
+		return new PoiBuilder(id, point.getLatitude(), point.getLongitude(), this.category)
+				.setName(name).setUrl(url).build();
 	}
 
-	public PointOfInterest fromPoint(JSONObject point) throws JSONException {
+	PointOfInterest fromPoint(JSONObject point) throws JSONException {
 		String type = point.getString("type");
 		double lat;
 		double lng;
@@ -124,7 +136,6 @@ public class GeoJsonPoiReader implements IPoiReader {
 			throw new IllegalArgumentException();
 		}
 
-		return new PointOfInterest(null, lat, lng, null, null, this.category);
+		return new PoiBuilder(0, lat, lng, this.category).build();
 	}
-
 }

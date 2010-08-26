@@ -14,19 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.perst;
+package org.mapsforge.server.poi.persistence;
 
+import org.garret.perst.FieldIndex;
 import org.garret.perst.Persistent;
+import org.garret.perst.Storage;
 
-class DeleteQueue extends Persistent {
+class BasicRootElement extends Persistent {
 
-	long poiId;
+	FieldIndex<PerstPoi> poiIntegerIdPKIndex;
+	FieldIndex<PerstPoi> poiCategoryFkIndex;
+	FieldIndex<PerstCategory> categoryTitlePkIndex;
 
-	public DeleteQueue() {
+	public BasicRootElement() {
+		// required by perst
 	}
 
-	public DeleteQueue(long poiId) {
-		this.poiId = poiId;
+	public BasicRootElement(Storage db) {
+		super(db);
+		poiIntegerIdPKIndex = db.<PerstPoi> createFieldIndex(PerstPoi.class, "id", true);
+		poiCategoryFkIndex = db.<PerstPoi> createFieldIndex(PerstPoi.class, "category", false);
+		categoryTitlePkIndex = db.<PerstCategory> createFieldIndex(PerstCategory.class,
+				"title", true);
 	}
 
 }

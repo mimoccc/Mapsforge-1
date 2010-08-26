@@ -14,26 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.perst;
+package org.mapsforge.server.poi.persistence;
 
+import org.garret.perst.Persistent;
 import org.mapsforge.server.poi.PoiCategory;
 
-class PerstCategory {
+class PerstCategory extends Persistent implements PoiCategory {
 
-	String parentTitle;
 	String title;
+	PerstCategory parent;
 
 	public PerstCategory() {
+		// require by perst
 	}
 
-	public PerstCategory(PoiCategory category) {
-		this.parentTitle = (category.parent == null ? null : category.parent.title);
-		this.title = category.title;
+	public PerstCategory(String title, PerstCategory parent) {
+		this.parent = parent;
+		this.title = title;
 	}
 
 	@Override
 	public String toString() {
-		return title + (parentTitle == null ? "" : " < " + parentTitle);
+		return title + (parent == null ? "" : " < " + parent.getTitle());
 	}
 
 	@Override
@@ -50,15 +52,25 @@ class PerstCategory {
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (!(obj instanceof PoiCategory))
 			return false;
-		PerstCategory other = (PerstCategory) obj;
+		PoiCategory other = (PoiCategory) obj;
 		if (title == null) {
-			if (other.title != null)
+			if (other.getTitle() != null)
 				return false;
-		} else if (!title.equals(other.title))
+		} else if (!title.equalsIgnoreCase(other.getTitle()))
 			return false;
 		return true;
+	}
+
+	@Override
+	public PoiCategory getParent() {
+		return parent;
+	}
+
+	@Override
+	public String getTitle() {
+		return title;
 	}
 
 }

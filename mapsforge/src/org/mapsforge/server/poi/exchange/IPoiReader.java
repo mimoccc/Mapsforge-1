@@ -20,8 +20,20 @@ import java.util.Collection;
 
 import org.mapsforge.server.poi.PointOfInterest;
 
+/**
+ * Implementing classes provide capability to create point of interest from different text based
+ * formats such as json and xml.
+ * 
+ * @author weise
+ * 
+ */
 public interface IPoiReader {
 
+	/**
+	 * Transforms the contained String into points of interest.
+	 * 
+	 * @return a collection of points of interest read from the underlying string.
+	 */
 	public Collection<PointOfInterest> read();
 
 }

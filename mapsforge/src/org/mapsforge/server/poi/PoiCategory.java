@@ -24,44 +24,15 @@ package org.mapsforge.server.poi;
  * @author weise
  * 
  */
-public class PoiCategory {
+public interface PoiCategory {
 
-	public final String title;
-	public final PoiCategory parent;
+	/**
+	 * @return title of this category.
+	 */
+	public String getTitle();
 
-	public PoiCategory(String title, PoiCategory parent) {
-		this.title = title;
-		this.parent = parent;
-	}
-
-	@Override
-	public String toString() {
-		return title + (parent == null ? "" : " < " + parent.title);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((title == null) ? 0 : title.toLowerCase().hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		PoiCategory other = (PoiCategory) obj;
-		if (title == null) {
-			if (other.title != null)
-				return false;
-		} else if (!title.equalsIgnoreCase(other.title))
-			return false;
-		return true;
-	}
-
+	/**
+	 * @return parent category of this category or null if this category has no parent.
+	 */
+	public PoiCategory getParent();
 }

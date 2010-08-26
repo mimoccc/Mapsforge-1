@@ -14,19 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.exchange;
+package org.mapsforge.server.poi.persistence;
 
-/**
- * Implementing classes provide capability to transform points of interest into different text
- * based formats such as json and xml.
- * 
- * @author weise
- * 
- */
-public interface IPoiPrinter {
+import org.garret.perst.Persistent;
 
-	/**
-	 * @return text based representation of the contained point of interests.
-	 */
-	public String print();
+class DeleteQueue extends Persistent {
+
+	long poiId;
+
+	public DeleteQueue() {
+		// required by perst
+	}
+
+	public DeleteQueue(long poiId) {
+		this.poiId = poiId;
+	}
+
 }

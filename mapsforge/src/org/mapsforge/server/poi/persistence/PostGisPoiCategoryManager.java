@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.postgis;
+package org.mapsforge.server.poi.persistence;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import org.mapsforge.server.poi.PoiCategory;
-import org.mapsforge.server.poi.persistence.IPoiCategoryManager;
 
 class PostGisPoiCategoryManager implements IPoiCategoryManager {
 
@@ -81,7 +80,7 @@ class PostGisPoiCategoryManager implements IPoiCategoryManager {
 		if (result == null) {
 			result = fetch(categoryName);
 			if (result != null) {
-				categories.put(result.title, result);
+				categories.put(result.getTitle(), result);
 			}
 		}
 		return result;
@@ -108,7 +107,7 @@ class PostGisPoiCategoryManager implements IPoiCategoryManager {
 		ArrayList<PoiCategory> result = new ArrayList<PoiCategory>();
 
 		while (resultSet.next()) {
-			result.add(new PoiCategory(resultSet.getString("title"), fetch(resultSet
+			result.add(new PostGisPoiCategory(resultSet.getString("title"), fetch(resultSet
 					.getString("parent"))));
 		}
 		return result;

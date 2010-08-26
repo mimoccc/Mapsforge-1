@@ -23,10 +23,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.server.poi.PointOfInterest;
 
+/**
+ * Provides method for generating GeoJson for points of interest.
+ * 
+ * @author weise
+ * 
+ */
 public class GeoJsonPoiPrinter implements IPoiPrinter {
 
 	private final Collection<PointOfInterest> pois;
 
+	/**
+	 * @param pois
+	 *            collection of points of interest that shall be transformed into geo json
+	 *            format.
+	 */
 	public GeoJsonPoiPrinter(Collection<PointOfInterest> pois) {
 		this.pois = pois;
 	}
@@ -61,14 +72,14 @@ public class GeoJsonPoiPrinter implements IPoiPrinter {
 		JSONArray coordinates = new JSONArray();
 
 		// order of longitude and latitude is important here!
-		coordinates.put(poi.longitude);
-		coordinates.put(poi.latitude);
+		coordinates.put(poi.getLongitude());
+		coordinates.put(poi.getLatitude());
 		jsonPoint.put("coordinates", coordinates);
 
 		JSONObject jsonProperties = new JSONObject();
-		jsonProperties.put("name", poi.name);
-		jsonProperties.put("url", poi.url);
-		jsonProperties.put("id", poi.id);
+		jsonProperties.put("name", poi.getName());
+		jsonProperties.put("url", poi.getUrl());
+		jsonProperties.put("id", poi.getId());
 
 		JSONObject jsonFeature = new JSONObject();
 		jsonFeature.put("type", "Feature");

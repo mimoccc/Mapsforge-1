@@ -17,6 +17,7 @@
 package org.mapsforge.server.poi;
 
 import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.core.GeoCoordinate;
 
 /**
  * This class represents a point of interest. Every poi should be uniquely identifiable by its
@@ -25,57 +26,50 @@ import org.mapsforge.android.map.GeoPoint;
  * @author weise
  * 
  */
-public class PointOfInterest {
+/**
+ * @author weise
+ * 
+ */
+public interface PointOfInterest {
 
-	public final long id;
-	public double latitude;
-	public double longitude;
-	public String name;
-	public String url;
-	public PoiCategory category;
-	public GeoPoint geoPoint;
+	/**
+	 * @return id of this point of interest.
+	 */
+	public long getId();
 
-	public PointOfInterest(Long id, Double latitude, Double longitude, String name, String url,
-			PoiCategory category) {
-		super();
-		this.id = id;
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.name = name;
-		this.url = url;
-		this.category = category;
-		this.geoPoint = new GeoPoint(latitude, longitude);
-	}
+	/**
+	 * @return latitude of this point of interest.
+	 */
+	public double getLatitude();
 
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append(category.toString()).append(": ").append("name=").append(name).append(
-				' ').append("url=").append(url).append(' ').append("lat=").append(latitude)
-				.append(" lng=").append(longitude);
-		return builder.toString();
-	}
+	/**
+	 * @return longitude of this point of interest
+	 */
+	public double getLongitude();
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (id ^ (id >>> 32));
-		return result;
-	}
+	/**
+	 * @return name of this point of interest.
+	 */
+	public String getName();
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		PointOfInterest other = (PointOfInterest) obj;
-		if (id != other.id)
-			return false;
-		return true;
-	}
+	/**
+	 * @return url of this point of interest.
+	 */
+	public String getUrl();
+
+	/**
+	 * @return category of this point of interest.
+	 */
+	public PoiCategory getCategory();
+
+	/**
+	 * @return {@link GeoPoint} of this point of interest.
+	 */
+	public GeoPoint getGeoPoint();
+
+	/**
+	 * @return {@link GeoCoordinate} of this point of interest.
+	 */
+	public GeoCoordinate getGeoCoordinate();
 
 }

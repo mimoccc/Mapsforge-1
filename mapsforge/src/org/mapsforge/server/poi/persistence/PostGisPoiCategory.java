@@ -14,37 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.perst;
+package org.mapsforge.server.poi.persistence;
 
-import org.garret.perst.Persistent;
-import org.mapsforge.server.poi.PointOfInterest;
+import org.mapsforge.server.poi.PoiCategory;
 
-public class PerstPoi extends Persistent {
+class PostGisPoiCategory implements PoiCategory {
 
-	public long id;
-	public double latitude;
-	public double longitude;
-	public String name;
-	public String url;
-	public String category;
+	final PoiCategory parent;
+	final String title;
 
-	public PerstPoi() {
+	public PostGisPoiCategory(String title, PoiCategory parent) {
+		super();
+		this.parent = parent;
+		this.title = title;
 	}
 
-	public PerstPoi(PointOfInterest poi) {
-		this.id = poi.id;
-		this.latitude = poi.latitude;
-		this.longitude = poi.longitude;
-		this.name = poi.name;
-		this.url = poi.url;
-		this.category = poi.category.title;
+	@Override
+	public PoiCategory getParent() {
+		return parent;
+	}
+
+	@Override
+	public String getTitle() {
+		return title;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + (int) (id ^ (id >>> 32));
+		int result = 1;
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
 		return result;
 	}
 
@@ -52,14 +51,22 @@ public class PerstPoi extends Persistent {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
+		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (!(obj instanceof PoiCategory))
 			return false;
-		PerstPoi other = (PerstPoi) obj;
-		if (id != other.id)
+		PoiCategory other = (PoiCategory) obj;
+		if (title == null) {
+			if (other.getTitle() != null)
+				return false;
+		} else if (!title.equalsIgnoreCase(other.getTitle()))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return title + (parent == null ? "" : " < " + parent.getTitle());
 	}
 
 }

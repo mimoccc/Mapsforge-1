@@ -14,19 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.exchange;
+package org.mapsforge.server.poi.persistence;
 
-/**
- * Implementing classes provide capability to transform points of interest into different text
- * based formats such as json and xml.
- * 
- * @author weise
- * 
- */
-public interface IPoiPrinter {
+import org.garret.perst.Storage;
 
-	/**
-	 * @return text based representation of the contained point of interests.
-	 */
-	public String print();
+class Poi3DRootElement extends BasicRootElement {
+
+	RtreeIndex<PerstPoi, RtreeBox> spatialIndex;
+
+	public Poi3DRootElement() {
+		// required by perst.
+	}
+
+	public Poi3DRootElement(Storage db) {
+		super(db);
+		spatialIndex = new Rtree3DIndex<PerstPoi>();
+	}
+
 }

@@ -17,13 +17,14 @@
 package org.mapsforge.server.poi.persistence;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.poi.exchange.IPoiReader;
 
 /**
- * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/search
+ * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/searching
  * {@link PointOfInterest} and {@link PoiCategory} objects in named Storage/DB.<br/>
  * <br/>
  * Remember to call the {@link #close()} method as soon as your done manipulating the Storage/DB
@@ -39,8 +40,9 @@ public interface IPersistenceManager extends IPoiQuery {
 	 * 
 	 * @param category
 	 *            {@link PoiCategory} to insert into storage.
+	 * @return true if category was successfully inserted else false.
 	 */
-	public void insertCategory(PoiCategory category);
+	public boolean insertCategory(PoiCategory category);
 
 	/**
 	 * Insert a single {@link PointOfInterest} into storage.
@@ -105,4 +107,42 @@ public interface IPersistenceManager extends IPoiQuery {
 	 */
 	public void close();
 
+	/**
+	 * Reopens this {@link IPersistenceManager} after it has been closed so that it can be
+	 * queried again.
+	 */
+	public void reopen();
+
+	/**
+	 * @param poiId
+	 *            the id of the point of interest that shall be returned.
+	 * @return a single {@link PointOfInterest} p where p.id == poiId.
+	 */
+	public PointOfInterest getPointById(long poiId);
+
+	/**
+	 * Clusters this storage on background memory in order to provide faster query times. May
+	 * require at least twice the amount of memory currently used by the underlying storage. May
+	 * not be supported by all implementing classes.
+	 */
+	public void clusterStorage();
+
+	/**
+	 * Provides bulk insert capabilities. Index structures such as rtrees will be tightly packed
+	 * to provide best performance.<br>
+	 * <br>
+	 * May not be supported by all implementing classes.
+	 * 
+	 * @param poiIterator
+	 *            iterator over all {@link PointOfInterest} objects that shall be stored in this
+	 *            {@link IPersistenceManager}.
+	 * @param categories
+	 *            collection containing all categories the provided {@link PointOfInterest}
+	 *            belong to.
+	 * 
+	 * @throws UnsupportedOperationException
+	 *             if not supported by implementing class.
+	 */
+	public void packInsert(Iterator<PointOfInterest> poiIterator,
+			Collection<PoiCategory> categories);
 }

@@ -14,19 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.exchange;
+package org.mapsforge.server.poi.persistence;
 
-/**
- * Implementing classes provide capability to transform points of interest into different text
- * based formats such as json and xml.
- * 
- * @author weise
- * 
- */
-public interface IPoiPrinter {
+import java.util.ArrayList;
 
-	/**
-	 * @return text based representation of the contained point of interests.
-	 */
-	public String print();
+import org.garret.perst.Storage;
+
+interface RtreeIndexPage<T, S extends SpatialShape<S>> {
+
+	public RtreeIndexPage<T, S> insert(Storage storage, S shape, T item, int level);
+
+	public RtreeIndexPage<T, S> remove(S shape, T item, int level);
+
+	public void find(S shape, ArrayList<T> result, int level);
+
+	public S getMinimalBoundingShape();
+
+	public void purge(int level);
+
 }

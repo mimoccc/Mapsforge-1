@@ -14,37 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.perst;
+package org.mapsforge.server.poi.persistence;
 
 import org.garret.perst.FieldIndex;
-import org.garret.perst.Persistent;
-import org.garret.perst.SpatialIndexR2;
 import org.garret.perst.Storage;
 
-class PoiRootElement extends Persistent {
+/**
+ * @author weise
+ * 
+ */
+class PoiRootElement extends BasicRootElement {
 
-	public FieldIndex<PerstPoi> poiIntegerIdPKIndex;
-	public FieldIndex<PerstPoi> poiCategoryFkIndex;
-	public FieldIndex<PerstCategory> categoryTitlePkIndex;
-	public FieldIndex<DeleteQueue> deleteQueueIndex;
-	public FieldIndex<NamedSpatialIndex> spatialIndexIndex;
+	FieldIndex<DeleteQueue> deleteQueueIndex;
+	FieldIndex<NamedSpatialIndex> spatialIndexIndex;
 
+	/**
+	 * Default constructor required by perst!
+	 */
 	public PoiRootElement() {
+		// require by perst
 	}
 
 	public PoiRootElement(Storage db) {
 		super(db);
-		poiIntegerIdPKIndex = db.<PerstPoi> createFieldIndex(PerstPoi.class, "id", true);
-		poiCategoryFkIndex = db.<PerstPoi> createFieldIndex(PerstPoi.class, "category", false);
-		categoryTitlePkIndex = db.<PerstCategory> createFieldIndex(PerstCategory.class,
-				"title", true);
 		deleteQueueIndex = db.<DeleteQueue> createFieldIndex(DeleteQueue.class, "poiId", true);
 		spatialIndexIndex = db.<NamedSpatialIndex> createFieldIndex(NamedSpatialIndex.class,
 				"name", true);
 	}
 
 	public void addSpatialIndex(Storage db, String categoryName) {
-		SpatialIndexR2<PerstPoi> index = db.<PerstPoi> createSpatialIndexR2();
+		Rtree2DIndex<PerstPoi> index = new Rtree2DIndex<PerstPoi>();
 		NamedSpatialIndex namedIndex = new NamedSpatialIndex(categoryName, index);
 
 		spatialIndexIndex.add(namedIndex);
@@ -59,7 +58,7 @@ class PoiRootElement extends Persistent {
 		namedIndex.deallocate();
 	}
 
-	public SpatialIndexR2<PerstPoi> getSpatialIndex(String categoryName) {
+	public Rtree2DIndex<PerstPoi> getSpatialIndex(String categoryName) {
 		NamedSpatialIndex namedIndex = spatialIndexIndex.get(categoryName);
 		return namedIndex == null ? null : namedIndex.index;
 	}

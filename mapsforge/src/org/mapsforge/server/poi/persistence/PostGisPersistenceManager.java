@@ -14,21 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.poi.persistence.postgis;
+package org.mapsforge.server.poi.persistence;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.poi.exchange.IPoiReader;
-import org.mapsforge.server.poi.persistence.IPersistenceManager;
 
-public class PostGisPersistenceManager implements IPersistenceManager {
+class PostGisPersistenceManager implements IPersistenceManager {
 
 	protected static final String REPLACE_REGEX = "\\Q{{?}}\\E";
 	protected static final String INSERT_POI = "INSERT INTO pois (\"location\", category, name, url) VALUES "
@@ -63,17 +63,19 @@ public class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void insertCategory(PoiCategory category) {
-		if (!categoryManager.contains(category.title)) {
-			String sql = INSERT_CATEGORY.replaceFirst(REPLACE_REGEX, category.title)
+	public boolean insertCategory(PoiCategory category) {
+		if (!categoryManager.contains(category.getTitle())) {
+			String sql = INSERT_CATEGORY.replaceFirst(REPLACE_REGEX, category.getTitle())
 					.replaceFirst(
 							REPLACE_REGEX,
-							category.parent != null ? "'" + category.parent.title + "'"
-									: "null");
+							category.getParent() != null ? "'"
+									+ category.getParent().getTitle() + "'" : "null");
 			if (pgConnection.executeInsertStatement(sql)) {
 				categoryManager = new PostGisPoiCategoryManager(pgConnection);
 			}
+			return true;
 		}
+		return false;
 	}
 
 	protected String sanitize(String argument) {
@@ -96,10 +98,10 @@ public class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	private String insertPoiString(PointOfInterest poi) {
-		return INSERT_POI.replaceFirst(REPLACE_REGEX, "" + poi.longitude).replaceFirst(
-				REPLACE_REGEX, "" + poi.latitude).replaceFirst(REPLACE_REGEX,
-				poi.category.title).replaceFirst(REPLACE_REGEX, sanitize(poi.name))
-				.replaceFirst(REPLACE_REGEX, sanitize(poi.url));
+		return INSERT_POI.replaceFirst(REPLACE_REGEX, "" + poi.getLongitude()).replaceFirst(
+				REPLACE_REGEX, "" + poi.getLatitude()).replaceFirst(REPLACE_REGEX,
+				poi.getCategory().getTitle()).replaceFirst(REPLACE_REGEX,
+				sanitize(poi.getName())).replaceFirst(REPLACE_REGEX, sanitize(poi.getUrl()));
 	}
 
 	@Override
@@ -122,7 +124,7 @@ public class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public Collection<PointOfInterest> findNearPosition(GeoPoint point, int distance,
+	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int distance,
 			String categoryName, int limit) {
 		ArrayList<PointOfInterest> pois = new ArrayList<PointOfInterest>();
 
@@ -136,10 +138,10 @@ public class PostGisPersistenceManager implements IPersistenceManager {
 
 			if (result.first()) {
 				while (!result.isLast()) {
-					pois.add(new PointOfInterest(result.getLong("id"), result.getDouble("lat"),
-							result.getDouble("lng"), result.getString("name"), result
-									.getString("url"), categoryManager.get(result
-									.getString("category"))));
+					pois.add(new PostGisPoi(result.getLong("id"), new Double(result
+							.getDouble("lat")).intValue(), new Double(result.getDouble("lng"))
+							.intValue(), result.getString("name"), result.getString("url"),
+							categoryManager.get(result.getString("category"))));
 					result.next();
 				}
 			}
@@ -151,8 +153,30 @@ public class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public Collection<PointOfInterest> findInRect(GeoPoint p1, GeoPoint p2, String categoryName) {
+	public Collection<PointOfInterest> findInRect(GeoCoordinate p1, GeoCoordinate p2,
+			String categoryName) {
 		// TODO implement findInRect
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public PointOfInterest getPointById(long poiId) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void reopen() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void clusterStorage() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void packInsert(Iterator<PointOfInterest> poiIterator,
+			Collection<PoiCategory> categories) {
 		throw new UnsupportedOperationException();
 	}
 

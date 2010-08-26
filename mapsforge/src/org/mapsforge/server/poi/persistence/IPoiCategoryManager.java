@@ -29,7 +29,7 @@ import org.mapsforge.server.poi.PoiCategory;
  * @author weise
  * 
  */
-public interface IPoiCategoryManager {
+interface IPoiCategoryManager {
 
 	/**
 	 * @param categoryName
