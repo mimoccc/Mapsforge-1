@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.MercatorProjection;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -40,7 +42,7 @@ class Utils {
 	// 0.003, 0.001, 0.0008, 0.00025, 0.00012, 0.0001, 0, 0 };
 
 	private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0.0002, 0, 0.0001 };
+			0, 0.0003, 0.00015, 0, 0.0001 };
 
 	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 

@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mapsforge.core.MercatorProjection;
+
 class POIToTiles {
 	/**
 	 * The default maximum character size for all tags not in the map.
@@ -125,10 +127,10 @@ class POIToTiles {
 		double poiPixelYMaximum = poiPixelY + (POI_MAXIMUM_SYMBOL_HEIGHT >> 1);
 
 		// calculate the tile XY numbers of the POI bounding box coordinates
-		long poiTileXMinimum = MercatorProjection.pixelXToTileX(poiPixelXMinimum);
-		long poiTileXMaximum = MercatorProjection.pixelXToTileX(poiPixelXMaximum);
-		long poiTileYMinimum = MercatorProjection.pixelYToTileY(poiPixelYMinimum);
-		long poiTileYMaximum = MercatorProjection.pixelYToTileY(poiPixelYMaximum);
+		long poiTileXMinimum = MercatorProjection.pixelXToTileX(poiPixelXMinimum, zoom);
+		long poiTileXMaximum = MercatorProjection.pixelXToTileX(poiPixelXMaximum, zoom);
+		long poiTileYMinimum = MercatorProjection.pixelYToTileY(poiPixelYMinimum, zoom);
+		long poiTileYMaximum = MercatorProjection.pixelYToTileY(poiPixelYMaximum, zoom);
 
 		// create a list and add all tiles within the bounding box to it
 		List<Tile> tileList = new ArrayList<Tile>();
