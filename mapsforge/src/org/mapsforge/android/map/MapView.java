@@ -28,6 +28,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -35,6 +36,7 @@ import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
@@ -44,6 +46,265 @@ import android.widget.ZoomControls;
  * An implementation of the MapView class from the Google Maps library.
  */
 public class MapView extends ViewGroup {
+	/**
+	 * Implementation for multi-touch capable devices.
+	 */
+	private class MultiTouchHandler extends TouchEventHandler {
+		private static final int INVALID_POINTER_ID = -1;
+		private int action;
+		private int activePointerId;
+		private int pointerIndex;
+		private ScaleGestureDetector scaleGestureDetector;
+
+		MultiTouchHandler() {
+			this.activePointerId = INVALID_POINTER_ID;
+			this.scaleGestureDetector = new ScaleGestureDetector(MapView.this.mapActivity,
+					new ScaleListener());
+		}
+
+		@Override
+		boolean handleTouchEvent(MotionEvent event) {
+			// let the ScaleGestureDetector inspect all events
+			this.scaleGestureDetector.onTouchEvent(event);
+
+			// extract the action from the action code
+			this.action = event.getAction() & MotionEvent.ACTION_MASK;
+
+			if (this.action == MotionEvent.ACTION_DOWN) {
+				// save the position of the event
+				MapView.this.previousPositionX = event.getX();
+				MapView.this.previousPositionY = event.getY();
+				MapView.this.mapMoved = false;
+				showZoomControls();
+				// save the ID of the pointer
+				this.activePointerId = event.getPointerId(0);
+				return true;
+			} else if (this.action == MotionEvent.ACTION_MOVE) {
+				this.pointerIndex = event.findPointerIndex(this.activePointerId);
+
+				if (this.scaleGestureDetector.isInProgress()) {
+					return true;
+				}
+
+				// calculate the distance between previous and current position
+				MapView.this.mapMoveX = event.getX(this.pointerIndex)
+						- MapView.this.previousPositionX;
+				MapView.this.mapMoveY = event.getY(this.pointerIndex)
+						- MapView.this.previousPositionY;
+
+				if (!MapView.this.mapMoved) {
+					if (Math.abs(MapView.this.mapMoveX) > MapView.this.mapMoveDelta
+							|| Math.abs(MapView.this.mapMoveY) > MapView.this.mapMoveDelta) {
+						// the map movement delta has been reached
+						MapView.this.mapMoved = true;
+					} else {
+						// do nothing
+						return true;
+					}
+				}
+
+				// save the position of the event
+				MapView.this.previousPositionX = event.getX(this.pointerIndex);
+				MapView.this.previousPositionY = event.getY(this.pointerIndex);
+
+				synchronized (this) {
+					// add the movement to the transformation matrix
+					MapView.this.matrix.postTranslate(MapView.this.mapMoveX,
+							MapView.this.mapMoveY);
+
+					for (Overlay o : MapView.this.overlays) {
+						o.getMatrix().postTranslate(MapView.this.mapMoveX,
+								MapView.this.mapMoveY);
+					}
+					// calculate the new position of the map center
+					MapView.this.latitude = getValidLatitude(MercatorProjection
+							.pixelYToLatitude(
+									(MercatorProjection.latitudeToPixelY(MapView.this.latitude,
+											MapView.this.zoomLevel) - MapView.this.mapMoveY),
+									MapView.this.zoomLevel));
+					MapView.this.longitude = MercatorProjection.pixelXToLongitude(
+							(MercatorProjection.longitudeToPixelX(MapView.this.longitude,
+									MapView.this.zoomLevel) - MapView.this.mapMoveX),
+							MapView.this.zoomLevel);
+				}
+				handleTiles(true);
+				return true;
+			} else if (this.action == MotionEvent.ACTION_UP) {
+				hideZoomControlsDelayed();
+
+				if (MapView.this.mapMoved) {
+					// move-event: notify all overlays
+					for (Overlay overlay : MapView.this.overlays) {
+						synchronized (overlay) {
+							overlay.notify();
+						}
+					}
+				} else {
+					// touch-event: forward the event to all overlays
+					synchronized (MapView.this.overlays) {
+						for (Overlay overlay : MapView.this.overlays) {
+							overlay.onTouchEvent(event, MapView.this);
+						}
+					}
+				}
+				this.activePointerId = INVALID_POINTER_ID;
+				return true;
+			} else if (this.action == MotionEvent.ACTION_CANCEL) {
+				hideZoomControlsDelayed();
+				this.activePointerId = INVALID_POINTER_ID;
+				return true;
+			} else if (this.action == MotionEvent.ACTION_POINTER_UP) {
+				// extract the index of the pointer that left the touch sensor
+				this.pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+				if (event.getPointerId(this.pointerIndex) == this.activePointerId) {
+					// the active pointer has gone up, choose a new one
+					if (this.pointerIndex == 0) {
+						this.pointerIndex = 1;
+					} else {
+						this.pointerIndex = 0;
+					}
+					// save the position of the event
+					MapView.this.previousPositionX = event.getX(this.pointerIndex);
+					MapView.this.previousPositionY = event.getY(this.pointerIndex);
+					this.activePointerId = event.getPointerId(this.pointerIndex);
+				}
+				return true;
+			}
+			// the event was not handled
+			return false;
+		}
+	}
+
+	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+		private float scaleFactor;
+
+		ScaleListener() {
+			this.scaleFactor = 1;
+		}
+
+		@Override
+		public boolean onScale(ScaleGestureDetector detector) {
+			// TODO: some tuning for pinch and zoom is needed
+			this.scaleFactor *= detector.getScaleFactor();
+			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, MapView.this
+					.getWidth() >> 1, MapView.this.getHeight() >> 1);
+			if (this.scaleFactor <= 0.5) {
+				this.scaleFactor = 1;
+				MapView.this.matrix.setScale(1, 1, MapView.this.getWidth() >> 1, MapView.this
+						.getHeight() >> 1);
+				zoomOut();
+			} else if (this.scaleFactor >= 2) {
+				this.scaleFactor = 1;
+				MapView.this.matrix.setScale(1, 1, MapView.this.getWidth() >> 1, MapView.this
+						.getHeight() >> 1);
+				zoomIn();
+			} else {
+				invalidate();
+			}
+			return true;
+		}
+
+		@Override
+		public void onScaleEnd(ScaleGestureDetector detector) {
+			this.scaleFactor = 1;
+			handleTiles(true);
+		}
+	}
+
+	/**
+	 * Implementation for single-touch capable devices.
+	 */
+	private class SingleTouchHandler extends TouchEventHandler {
+		SingleTouchHandler() {
+			// do nothing
+		}
+
+		@Override
+		boolean handleTouchEvent(MotionEvent event) {
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				// save the position of the event
+				MapView.this.previousPositionX = event.getX();
+				MapView.this.previousPositionY = event.getY();
+				MapView.this.mapMoved = false;
+				showZoomControls();
+				return true;
+			} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+				// calculate the distance between previous and current position
+				MapView.this.mapMoveX = event.getX() - MapView.this.previousPositionX;
+				MapView.this.mapMoveY = event.getY() - MapView.this.previousPositionY;
+
+				if (!MapView.this.mapMoved) {
+					if (Math.abs(MapView.this.mapMoveX) > MapView.this.mapMoveDelta
+							|| Math.abs(MapView.this.mapMoveY) > MapView.this.mapMoveDelta) {
+						// the map movement delta has been reached
+						MapView.this.mapMoved = true;
+					} else {
+						// do nothing
+						return true;
+					}
+				}
+
+				// save the position of the event
+				MapView.this.previousPositionX = event.getX();
+				MapView.this.previousPositionY = event.getY();
+
+				synchronized (this) {
+					// add the movement to the transformation matrix
+					MapView.this.matrix.postTranslate(MapView.this.mapMoveX,
+							MapView.this.mapMoveY);
+
+					for (Overlay o : MapView.this.overlays) {
+						o.getMatrix().postTranslate(MapView.this.mapMoveX,
+								MapView.this.mapMoveY);
+					}
+					// calculate the new position of the map center
+					MapView.this.latitude = getValidLatitude(MercatorProjection
+							.pixelYToLatitude(
+									(MercatorProjection.latitudeToPixelY(MapView.this.latitude,
+											MapView.this.zoomLevel) - MapView.this.mapMoveY),
+									MapView.this.zoomLevel));
+					MapView.this.longitude = MercatorProjection.pixelXToLongitude(
+							(MercatorProjection.longitudeToPixelX(MapView.this.longitude,
+									MapView.this.zoomLevel) - MapView.this.mapMoveX),
+							MapView.this.zoomLevel);
+				}
+				handleTiles(true);
+				return true;
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				hideZoomControlsDelayed();
+
+				if (MapView.this.mapMoved) {
+					// move-event: notify all overlays
+					for (Overlay overlay : MapView.this.overlays) {
+						synchronized (overlay) {
+							overlay.notify();
+						}
+					}
+				} else {
+					// touch-event: forward the event to all overlays
+					synchronized (MapView.this.overlays) {
+						for (Overlay overlay : MapView.this.overlays) {
+							overlay.onTouchEvent(event, MapView.this);
+						}
+					}
+				}
+				return true;
+			} else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+				hideZoomControlsDelayed();
+				return true;
+			}
+			// the event was not handled
+			return false;
+		}
+	}
+
+	/**
+	 * Abstract base class for all handlers of touch events.
+	 */
+	abstract class TouchEventHandler {
+		abstract boolean handleTouchEvent(MotionEvent event);
+	}
+
 	private static final int BITMAP_CACHE_SIZE = 20;
 	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
 	private static final int DEFAULT_MAP_MOVE_DELTA = 10;
@@ -118,15 +379,10 @@ public class MapView extends ViewGroup {
 	private short frame_counter;
 	private ImageBitmapCache imageBitmapCache;
 	private ImageFileCache imageFileCache;
-	private MapActivity mapActivity;
 	private MapController mapController;
 	private String mapFile;
 	private MapGenerator mapGenerator;
-	private boolean mapMoved;
-	private float mapMoveDelta;
 	private MapMover mapMover;
-	private float mapMoveX;
-	private float mapMoveY;
 	private int mapScale;
 	private Bitmap mapScaleBitmap;
 	private Canvas mapScaleCanvas;
@@ -144,9 +400,6 @@ public class MapView extends ViewGroup {
 	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
-	private ArrayList<Overlay> overlays;
-	private float previousPositionX;
-	private float previousPositionY;
 	private long previousTime;
 	private long previousTimeSinceDrawOverlays;
 	private boolean showFpsCounter;
@@ -157,15 +410,24 @@ public class MapView extends ViewGroup {
 	private ByteBuffer tileBuffer;
 	private long tileX;
 	private long tileY;
+	private TouchEventHandler touchEventHandler;
 	private String unit_symbol_kilometer;
 	private String unit_symbol_meter;
 	private Handler zoomControlsHideHandler;
 	double latitude;
 	double longitude;
+	MapActivity mapActivity;
+	boolean mapMoved;
+	float mapMoveDelta;
+	float mapMoveX;
+	float mapMoveY;
 	final int mapViewId;
 	double mapViewPixelX;
 	double mapViewPixelY;
 	Matrix matrix;
+	ArrayList<Overlay> overlays;
+	float previousPositionX;
+	float previousPositionY;
 	ZoomControls zoomControls;
 	byte zoomLevel;
 
@@ -379,76 +641,7 @@ public class MapView extends ViewGroup {
 		if (!isClickable()) {
 			return false;
 		}
-
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			// save the position of the event
-			this.previousPositionX = event.getX();
-			this.previousPositionY = event.getY();
-			this.mapMoved = false;
-			showZoomControls();
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			// calculate the distance between previous and current position
-			this.mapMoveX = event.getX() - this.previousPositionX;
-			this.mapMoveY = event.getY() - this.previousPositionY;
-
-			if (!this.mapMoved) {
-				if (Math.abs(this.mapMoveX) > this.mapMoveDelta
-						|| Math.abs(this.mapMoveY) > this.mapMoveDelta) {
-					// the map movement delta has been reached
-					this.mapMoved = true;
-				} else {
-					// do nothing
-					return true;
-				}
-			}
-
-			// save the position of the event
-			this.previousPositionX = event.getX();
-			this.previousPositionY = event.getY();
-
-			synchronized (this) {
-				// add the movement to the transformation matrix
-				this.matrix.postTranslate(this.mapMoveX, this.mapMoveY);
-
-				for (Overlay o : this.overlays) {
-					o.getMatrix().postTranslate(this.mapMoveX, this.mapMoveY);
-				}
-				// calculate the new position of the map center
-				this.latitude = getValidLatitude(MercatorProjection
-						.pixelYToLatitude((MercatorProjection.latitudeToPixelY(this.latitude,
-								this.zoomLevel) - this.mapMoveY), this.zoomLevel));
-				this.longitude = MercatorProjection.pixelXToLongitude((MercatorProjection
-						.longitudeToPixelX(this.longitude, this.zoomLevel) - this.mapMoveX),
-						this.zoomLevel);
-			}
-			handleTiles(true);
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_UP) {
-			hideZoomControlsDelayed();
-
-			if (this.mapMoved) {
-				// move-event: notify all overlays
-				for (Overlay overlay : this.overlays) {
-					synchronized (overlay) {
-						overlay.notify();
-					}
-				}
-			} else {
-				// touch-event: forward the event to all overlays
-				synchronized (this.overlays) {
-					for (Overlay overlay : this.overlays) {
-						overlay.onTouchEvent(event, this);
-					}
-				}
-			}
-			return true;
-		} else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
-			hideZoomControlsDelayed();
-			return true;
-		}
-		// the event was not handled
-		return false;
+		return this.touchEventHandler.handleTouchEvent(event);
 	}
 
 	@Override
@@ -761,6 +954,13 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setupMapView() {
+		// set up the TouchEventHandler depending on the Android version
+		if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.FROYO) {
+			this.touchEventHandler = new SingleTouchHandler();
+		} else {
+			this.touchEventHandler = new MultiTouchHandler();
+		}
+
 		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 		this.mapMoveDelta = DEFAULT_MAP_MOVE_DELTA
@@ -846,15 +1046,6 @@ public class MapView extends ViewGroup {
 
 		addView(this.zoomControls, new ViewGroup.LayoutParams(
 				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-	}
-
-	private void showZoomControls() {
-		if (this.showZoomControls) {
-			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
-			if (this.zoomControls.getVisibility() != VISIBLE) {
-				this.zoomControls.show();
-			}
-		}
 	}
 
 	/**
@@ -1141,6 +1332,12 @@ public class MapView extends ViewGroup {
 		return lat;
 	}
 
+	/**
+	 * Calculates all necessary tiles and adds jobs accordingly.
+	 * 
+	 * @param calledByUiThread
+	 *            true if called from the UI thread, false otherwise.
+	 */
 	void handleTiles(boolean calledByUiThread) {
 		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD && this.mapFile == null) {
 			return;
@@ -1470,6 +1667,15 @@ public class MapView extends ViewGroup {
 		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
 		handleTiles(true);
 		return this.zoomLevel;
+	}
+
+	void showZoomControls() {
+		if (this.showZoomControls) {
+			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
+			if (this.zoomControls.getVisibility() != VISIBLE) {
+				this.zoomControls.show();
+			}
+		}
 	}
 
 	boolean zoomIn() {

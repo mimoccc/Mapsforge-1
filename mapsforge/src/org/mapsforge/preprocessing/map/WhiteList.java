@@ -163,16 +163,16 @@ class WhiteList {
 		tagWhitelist.put("historic=ruins", Byte.valueOf((byte) 17));
 
 		tagWhitelist.put("landuse=allotments", Byte.valueOf((byte) 12));
-		tagWhitelist.put("landuse=basin", Byte.valueOf((byte) 15));
+		tagWhitelist.put("landuse=basin", Byte.valueOf((byte) 14));
 		tagWhitelist.put("landuse=brownfield", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=cemetery", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=commercial", Byte.valueOf((byte) 12));
-		tagWhitelist.put("landuse=construction", Byte.valueOf((byte) 15));
+		tagWhitelist.put("landuse=construction", Byte.valueOf((byte) 14));
 		tagWhitelist.put("landuse=farm", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=farmland", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=forest", Byte.valueOf((byte) 12));
-		tagWhitelist.put("landuse=grass", Byte.valueOf((byte) 15));
-		tagWhitelist.put("landuse=greenfield", Byte.valueOf((byte) 15));
+		tagWhitelist.put("landuse=grass", Byte.valueOf((byte) 12));
+		tagWhitelist.put("landuse=greenfield", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=industrial", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=military", Byte.valueOf((byte) 12));
 		tagWhitelist.put("landuse=recreation_ground", Byte.valueOf((byte) 12));

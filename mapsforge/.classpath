@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="lib/android-1.5.jar"/>
 	<classpathentry kind="lib" path="lib/hadoop-0.20.1-core.jar"/>
 	<classpathentry kind="lib" path="lib/javaproj-1.0.8.jar"/>
 	<classpathentry kind="lib" path="lib/jts-1.11.jar"/>
@@ -17,5 +16,6 @@
 	<classpathentry kind="lib" path="lib/swingx-ws.jar"/>
 	<classpathentry kind="lib" path="lib/swingx.jar"/>
 	<classpathentry kind="lib" path="lib/perst-421.jar"/>
+	<classpathentry kind="lib" path="lib/android-2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
