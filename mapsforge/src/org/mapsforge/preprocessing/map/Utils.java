@@ -42,7 +42,10 @@ class Utils {
 	// 0.003, 0.001, 0.0008, 0.00025, 0.00012, 0.0001, 0, 0 };
 
 	private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0.0003, 0.00015, 0, 0.0001 };
+			0, 0.0006, 0.00025, 0.00013, 0.00006 };
+
+	private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0.0006, 0.0004, 0.00013, 0.0004 };
 
 	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
@@ -86,6 +89,31 @@ class Utils {
 							+ tileEpsilon[zoom - 1]),
 					new Coordinate(maxLat + tileEpsilon[zoom - 1], minLon
 							- tileEpsilon[zoom - 1]) };
+			return geoFac.createLinearRing(c);
+		}
+		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
+				new Coordinate(minLat, minLon), new Coordinate(minLat, maxLon),
+				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
+	}
+
+	static LinearRing getSubTileBoundingBox(long tileX, long tileY, byte zoom, boolean bigger) {
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
+		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+
+		if (bigger) {
+			Coordinate[] c = new Coordinate[] {
+					new Coordinate(maxLat + subTileEpsilon[zoom - 1], minLon
+							- subTileEpsilon[zoom - 1]),
+					new Coordinate(minLat - subTileEpsilon[zoom - 1], minLon
+							- subTileEpsilon[zoom - 1]),
+					new Coordinate(minLat - subTileEpsilon[zoom - 1], maxLon
+							+ subTileEpsilon[zoom - 1]),
+					new Coordinate(maxLat + subTileEpsilon[zoom - 1], maxLon
+							+ subTileEpsilon[zoom - 1]),
+					new Coordinate(maxLat + subTileEpsilon[zoom - 1], minLon
+							- subTileEpsilon[zoom - 1]) };
 			return geoFac.createLinearRing(c);
 		}
 		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
@@ -231,7 +259,6 @@ class Utils {
 			}
 
 			// check for every tile in the set if the tile contains the given way
-
 			Set<Entry<Coordinate, Geometry>> set = tiles.entrySet();
 			for (Entry<Coordinate, Geometry> e : set) {
 				Coordinate c = e.getKey();
@@ -326,7 +353,7 @@ class Utils {
 			bitmap = 0;
 			result.put(p, (short) 0);
 			for (Tile csb : currentSubTiles) {
-				subTile = geoFac.createPolygon(Utils.getBoundingBox(csb.x, csb.y,
+				subTile = geoFac.createPolygon(Utils.getSubTileBoundingBox(csb.x, csb.y,
 						(byte) (p.zoomLevel + 2), true), null);
 				if (wayType == 1) {
 					if (geoWay.crosses(subTile) || geoWay.within(subTile)

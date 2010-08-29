@@ -1025,10 +1025,22 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								}
 								if (newInnerWayTags.equals("")) {
 									newTagAmount = 0;
+									conn.createStatement().execute(
+											"delete from ways_to_tiles where way_id = "
+													+ currentInnerWays.get(j));
+									conn.createStatement().execute(
+											"delete from ways_to_tiles_less_data where way_id = "
+													+ currentInnerWays.get(j));
 								}
 								if (newInnerWayTags.equals("\n")) {
 									newInnerWayTags = "";
 									newTagAmount = 0;
+									conn.createStatement().execute(
+											"delete from ways_to_tiles where way_id = "
+													+ currentInnerWays.get(j));
+									conn.createStatement().execute(
+											"delete from ways_to_tiles_less_data where way_id = "
+													+ currentInnerWays.get(j));
 								}
 								if (newInnerWayTags.indexOf("=") != -1) {
 									newTagAmount = newInnerWayTags.split("\n").length;

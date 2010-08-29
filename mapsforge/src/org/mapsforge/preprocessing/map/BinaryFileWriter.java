@@ -40,11 +40,11 @@ import com.vividsolutions.jts.geom.Coordinate;
  * Extracts already filtered data from the database. Writes the data grouped by map tiles and
  * ordered by zoom levels.
  * 
- * @author sinikka.schroeter
- * 
  */
 
 public class BinaryFileWriter {
+
+	private static final String MAGIC_BYTE = "mapsforge binary OSM";
 
 	private static final Logger logger = Logger.getLogger(BinaryFileWriter.class.getName());
 
@@ -140,10 +140,17 @@ public class BinaryFileWriter {
 	private static String propertiesFile;
 	private static String targetFile;
 
+	private static String featurePropertiesFile;
+
 	private static String mapFileComment = "";
 
 	// TODO: make sub file amount flexible
 	private static short fileAmount;
+
+	private static boolean debugStrings;
+	private static boolean polygonClipping;
+	private static boolean wayNodePixelFilter;
+	private static boolean wayNodeCompression;
 
 	private short zoom_level_low;
 	private short zoom_level_high;
@@ -153,9 +160,6 @@ public class BinaryFileWriter {
 	private static RandomAccessFile raf;
 
 	private static Map<String, Byte> whiteList = WhiteList.getWayTagWhitelist();
-
-	// private static Map<String, Byte> filterPois = Filter.getNodeFilter();
-	// private static Map<String, Byte> filterWays = Filter.getWayFilter();
 
 	private static short minZoom;
 	private static short maxZoom;
@@ -245,6 +249,16 @@ public class BinaryFileWriter {
 
 			logger.info("database connection setup done");
 
+			// set feature options
+			props = new Properties();
+			props.load(new FileInputStream(featurePropertiesFile));
+
+			debugStrings = Boolean.parseBoolean(props.getProperty("debug.strings"));
+			polygonClipping = Boolean.parseBoolean(props.getProperty("polygon.clipping"));
+			wayNodePixelFilter = Boolean
+					.parseBoolean(props.getProperty("waynode.pixel.filter"));
+			wayNodeCompression = Boolean.parseBoolean(props.getProperty("waynode.compression"));
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -268,14 +282,11 @@ public class BinaryFileWriter {
 			startPosition = raf.getFilePointer();
 			startPositionInFiveBytes = Serializer.getFiveBytes(startPosition);
 			raf.seek(startLowerZoom);
-			for (byte b : startPositionInFiveBytes) {
-				raf.writeByte(b);
-			}
+			raf.write(startPositionInFiveBytes);
 			raf.seek(startPosition);
 
 			minZoom = (short) (upperLeftLow.zoomLevel - 2);
 			maxZoom = (short) (upperLeftLow.zoomLevel + 3);
-			System.out.println("min & maxzoom: " + minZoom + " " + maxZoom);
 			writeHeaderAndIndex(upperLeftLow, bottomRightLow);
 			writeTiles(upperLeftLow, bottomRightLow, true);
 
@@ -283,23 +294,18 @@ public class BinaryFileWriter {
 			raf.seek(subFileSizeLowZoom);
 			long difference = endLowerZoom - startPosition;
 			byte[] differenceInFiveBytes = Serializer.getFiveBytes(difference);
-			for (byte b : differenceInFiveBytes) {
-				raf.writeByte(b);
-			}
+			raf.write(differenceInFiveBytes);
 			raf.seek(endLowerZoom);
 
 			// begin of the part for higher zoom level
 			startPosition = raf.getFilePointer();
 			startPositionInFiveBytes = Serializer.getFiveBytes(startPosition);
 			raf.seek(startHigherZoom);
-			for (byte b : startPositionInFiveBytes) {
-				raf.writeByte(b);
-			}
+			raf.write(startPositionInFiveBytes);
 			raf.seek(startPosition);
 
 			minZoom = (short) (upperLeftHigh.zoomLevel - 2);
 			maxZoom = (short) (upperLeftHigh.zoomLevel + 3);
-			System.out.println("min & maxzoom: " + minZoom + " " + maxZoom);
 			writeHeaderAndIndex(upperLeftHigh, bottomRightHigh);
 			writeTiles(upperLeftHigh, bottomRightHigh, false);
 
@@ -307,17 +313,15 @@ public class BinaryFileWriter {
 			raf.seek(subFileSizeHighZoom);
 			difference = endHigherZoom - startPosition;
 			differenceInFiveBytes = Serializer.getFiveBytes(difference);
-			for (byte b : differenceInFiveBytes) {
-				raf.writeByte(b);
-			}
+			raf.write(differenceInFiveBytes);
 			raf.seek(endHigherZoom);
 
 			long currentPosition = raf.getFilePointer();
 			raf.seek(biggestTileSizePosition);
-			logger.info("biggest tile is written to: " + raf.getFilePointer());
-			logger.info("biggest tile size: " + biggestTileSize);
+			// logger.info("biggest tile is written to: " + raf.getFilePointer());
+			// logger.info("biggest tile size: " + biggestTileSize);
 			raf.writeInt(biggestTileSize);
-			logger.info("biggest tile is written to file " + raf.getFilePointer());
+			// logger.info("biggest tile is written to file " + raf.getFilePointer());
 			raf.seek(currentPosition);
 			logger.info("end of file: " + raf.getFilePointer());
 		} catch (IOException e) {
@@ -333,12 +337,9 @@ public class BinaryFileWriter {
 			int maxlon = -1;
 			long date = -1;
 			int version = -1;
-			// short zoom = -1;
 			short tilePixel = -1;
 
 			String comment = mapFileComment;
-
-			String magicByte = "mapsforge binary OSM";
 
 			// get metadata for the map file
 			rsBBoxCorners = conn.createStatement().executeQuery(SQL_GET_METADATA);
@@ -356,8 +357,6 @@ public class BinaryFileWriter {
 				maxZoom = rsBBoxCorners.getShort("max_zoom_level");
 				minZoomLow = rsBBoxCorners.getShort("min_zoom_level_low");
 				maxZoomLow = rsBBoxCorners.getShort("max_zoom_level_low");
-
-				// *** TEMP ***//
 
 				// calculate corner tiles of the bounding box of the given area
 				upperLeftHigh = new Tile(MercatorProjection.longitudeToTileX(
@@ -384,15 +383,14 @@ public class BinaryFileWriter {
 
 			// write file header
 			// magic byte
-			byte[] magicBytes = magicByte.getBytes();
-			for (byte b : magicBytes) {
-				raf.writeByte(b);
-			}
+			byte[] magicBytes = MAGIC_BYTE.getBytes();
+			raf.write(magicBytes);
+
 			// version number of the binary file format
 			raf.writeInt(version);
 
 			// amount of map files inside this file
-			raf.writeByte(2);
+			raf.writeByte(fileAmount);
 
 			// width and height of a tile in pixel
 			raf.writeShort(tilePixel);
@@ -410,8 +408,8 @@ public class BinaryFileWriter {
 
 			// place holder for the size of the biggest tile
 			biggestTileSizePosition = raf.getFilePointer();
-			logger.info("position of the value for the biggest tile: "
-					+ biggestTileSizePosition);
+			// logger.info("position of the value for the biggest tile: "
+			// + biggestTileSizePosition);
 			raf.seek(biggestTileSizePosition + 4);
 
 			// comment
@@ -435,7 +433,6 @@ public class BinaryFileWriter {
 
 			// basic zoom level (high)
 			raf.writeByte(zoom_level_high);
-			// minimal zoom level
 			// minimal zoom level
 			raf.writeByte((byte) minZoom);
 			// maximal zoom level
@@ -471,32 +468,28 @@ public class BinaryFileWriter {
 	private void writeHeaderAndIndex(Tile upperLeft, Tile bottomRight) {
 		try {
 
-			/** only for debug **/
-			// write tile header
-			String indexStart = "+++IndexStart+++";
-			logger.info(indexStart);
-			byte[] stringBytes = indexStart.getBytes();
-			for (byte b : stringBytes) {
-				raf.writeByte(b);
+			if (debugStrings) {
+				String indexStart = "+++IndexStart+++";
+				byte[] stringBytes = indexStart.getBytes();
+				raf.write(stringBytes);
 			}
-			/** only for debug **/
 
 			// write Index
 			logger.info("+++IndexStart+++");
-			logger.info("filepointer " + raf.getFilePointer());
+			// logger.info("filepointer " + raf.getFilePointer());
 
 			long diffX = (bottomRight.x - upperLeft.x) + 1;
 			long diffY = (bottomRight.y - upperLeft.y) + 1;
 			long tileAmount = diffX * diffY;
 
 			long bytesForIndex = tileAmount * 5;
-			logger.info("bytes needed for index: " + bytesForIndex);
+			// logger.info("bytes needed for index: " + bytesForIndex);
 
 			nextIndexValue = raf.getFilePointer();
-			logger.info("first index value at: " + nextIndexValue);
+			// logger.info("first index value at: " + nextIndexValue);
 
 			raf.seek(raf.getFilePointer() + bytesForIndex);
-			logger.info("current filepointer " + raf.getFilePointer());
+			// logger.info("current filepointer " + raf.getFilePointer());
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -505,6 +498,7 @@ public class BinaryFileWriter {
 
 	private void writeTiles(Tile upperLeft, Tile bottomRight, boolean writeLowerZoomLevel) {
 		try {
+
 			String tileHead = "###TileStart";
 			String tileTail = "###";
 			String poisHead = "***POIStart";
@@ -577,55 +571,50 @@ public class BinaryFileWriter {
 							true).getEnvelope().getCoordinates();
 
 					tileCounter++;
-					/** test **/
-					logger.info("before tile:" + raf.getFilePointer());
+
+					// logger.info("before tile:" + raf.getFilePointer());
 					currentPosition = raf.getFilePointer();
 					currentPositionInFiveBytes = Serializer.getFiveBytes(currentPosition
 							- startPosition);
 					raf.seek(nextIndexValue);
-					logger.info("nextindexvalue " + nextIndexValue);
-					for (byte b : currentPositionInFiveBytes) {
-						raf.writeByte(b);
-					}
+					// logger.info("nextindexvalue " + nextIndexValue);
+					raf.write(currentPositionInFiveBytes);
 					nextIndexValue = raf.getFilePointer();
-					logger.info("new nextindexvalue " + nextIndexValue);
+					// logger.info("new nextindexvalue " + nextIndexValue);
 					raf.seek(currentPosition);
-					logger.info("new position " + raf.getFilePointer());
+					// logger.info("new position " + raf.getFilePointer());
 					if (previousTilePosition != 0) {
-						logger.info("previousTilePosition: " + previousTilePosition);
+						// logger.info("previousTilePosition: " + previousTilePosition);
 						tileDiff = raf.getFilePointer() - previousTilePosition;
-						// TODO compare last tile also!
-						logger.info("size of the previous tile " + tileDiff);
+						// logger.info("size of the previous tile " + tileDiff);
 						if (tileDiff > biggestTileSize) {
 							biggestTileSize = (int) tileDiff;
 						}
 					}
 					previousTilePosition = currentPosition;
-					logger.info("previous tilePosition " + previousTilePosition);
+					// logger.info("previous tilePosition " + previousTilePosition);
 
 					tileStartAdress = raf.getFilePointer();
-					logger.info("tilestart: " + tileStartAdress);
-					/** test **/
-					/** only for debug **/
-					// write tile header
+					// logger.info("tilestart: " + tileStartAdress);
+
 					tileStart = tileHead + tileX + "," + tileY + tileTail;
 					logger.info(tileStart);
 
-					stringBytes = tileStart.getBytes();
-					byteArrayLength = stringBytes.length;
-					for (byte b : stringBytes) {
-						raf.writeByte(b);
-					}
+					if (debugStrings) {
+						// write tile header
+						stringBytes = tileStart.getBytes();
+						byteArrayLength = stringBytes.length;
+						raf.write(stringBytes);
 
-					if (byteArrayLength < 32) {
-						while (byteArrayLength < 32) {
-							raf.writeByte(32);
-							byteArrayLength++;
+						if (byteArrayLength < 32) {
+							while (byteArrayLength < 32) {
+								raf.writeByte(32);
+								byteArrayLength++;
+							}
 						}
 					}
-					/** only for debug **/
 
-					logger.info("write element zoom table");
+					// logger.info("write element zoom table");
 					poiTableForTile = new HashMap<Short, Short>();
 					wayTableForTile = new HashMap<Short, Short>();
 
@@ -637,7 +626,6 @@ public class BinaryFileWriter {
 						pstmtPoisCountMinZoomLow.setLong(2, tileY);
 						pstmtPoisCountMinZoomLow.setShort(3, minZoom);
 						rsPoisMinZoom = pstmtPoisCountMinZoomLow.executeQuery();
-						System.out.println("pstmtPoisCountMinZoom " + pstmtPoisCountMinZoomLow);
 
 						while (rsPoisMinZoom.next()) {
 							hadResult = true;
@@ -653,7 +641,6 @@ public class BinaryFileWriter {
 						pstmtWaysCountMinZoomLow.setLong(2, tileY);
 						pstmtWaysCountMinZoomLow.setShort(3, minZoom);
 						rsWaysMinZoom = pstmtWaysCountMinZoomLow.executeQuery();
-						System.out.println(pstmtWaysCountMinZoomLow);
 
 						while (rsWaysMinZoom.next()) {
 							hadResult = true;
@@ -667,7 +654,6 @@ public class BinaryFileWriter {
 						pstmtPoisZoomTableLow.setLong(1, tileX);
 						pstmtPoisZoomTableLow.setLong(2, tileY);
 						rsPoisZoomTable = pstmtPoisZoomTableLow.executeQuery();
-						System.out.println(pstmtPoisZoomTableLow);
 
 						// join temporary zoom level table with filtered pois table
 						while (rsPoisZoomTable.next()) {
@@ -801,8 +787,8 @@ public class BinaryFileWriter {
 						cumulatedCounterPois += pc;
 						cumulatedCounterWays += wc;
 
-						logger.info("table:  " + min + " " + cumulatedCounterPois + " "
-								+ cumulatedCounterWays);
+						// logger.info("table:  " + min + " " + cumulatedCounterPois + " "
+						// + cumulatedCounterWays);
 
 						// write amount of pois and ways which should be read for a certain
 						// zoom level
@@ -811,7 +797,7 @@ public class BinaryFileWriter {
 					}
 
 					// get pointer to first way in this tile
-					logger.info("firstWayInTile: " + raf.getFilePointer());
+					// logger.info("firstWayInTile: " + raf.getFilePointer());
 					firstWayInTile = raf.getFilePointer();
 					raf.seek(firstWayInTile + 4);
 
@@ -830,26 +816,22 @@ public class BinaryFileWriter {
 						rsPoisForTile = pstmtPoisForTile.executeQuery();
 					}
 					while (rsPoisForTile.next()) {
-						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
-						logger.info(poiStart);
 
-						/** only for debug **/
-						// write debug string
-						poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
-						logger.info(poiStart);
-						stringBytes = poiStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							raf.writeByte(b);
-						}
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								raf.writeByte(32);
-								byteArrayLength++;
+						if (debugStrings) {
+							poiStart = poisHead + rsPoisForTile.getLong("id") + poisTail;
+							// logger.info(poiStart);
+							stringBytes = poiStart.getBytes();
+							byteArrayLength = stringBytes.length;
+							raf.write(stringBytes);
+
+							// if string is not 32 byte long append whitespaces, byte value = 32
+							if (byteArrayLength < 32) {
+								while (byteArrayLength < 32) {
+									raf.writeByte(32);
+									byteArrayLength++;
+								}
 							}
 						}
-						/** only for debug **/
 
 						// write poi features to the file
 						raf.writeInt(rsPoisForTile.getInt("latitude"));
@@ -861,14 +843,6 @@ public class BinaryFileWriter {
 						elevation = rsPoisForTile.getInt("elevation");
 						housenumber = rsPoisForTile.getString("housenumber");
 						tags = rsPoisForTile.getString("tags");
-						// zoom = rsPoisForTile.getShort("zoom_level");
-
-						/** debug **/
-						logger.info("housenumber: " + housenumber + " length: "
-								+ housenumber.getBytes().length);
-						logger.info("name: " + name + " length: " + nameLength);
-						logger.info("elevation: " + elevation);
-						/** debug **/
 
 						// write byte with layer and tag amount info
 						raf.writeByte(buildLayerTagAmountByte(layer, tagAmount));
@@ -878,10 +852,7 @@ public class BinaryFileWriter {
 							tagStrings = tags.split("\n");
 
 							for (String tag : tagStrings) {
-								// TODO write only tags which belong to the filter to the file
-								// if(filterPois.containsKey(tag)){
 								raf.writeShort(tagIdsPOIs.get(tag));
-								// }
 							}
 						}
 
@@ -893,21 +864,21 @@ public class BinaryFileWriter {
 
 						if (nameLength != 0) {
 							/** debug **/
-							logger.info("poi has name");
+							// logger.info("poi has name");
 							/** debug **/
 							raf.writeUTF(name);
 						}
 
 						if (elevation != 0) {
 							/** debug **/
-							logger.info("poi has elevation");
+							// logger.info("poi has elevation");
 							/** debug **/
 							raf.writeShort(elevation);
 						}
 
 						if (housenumber.getBytes().length != 0) {
 							/** debug **/
-							logger.info("poi has housenumber");
+							// logger.info("poi has housenumber");
 							/** debug **/
 							raf.writeUTF(housenumber);
 						}
@@ -916,9 +887,10 @@ public class BinaryFileWriter {
 					// write position of the first way in the tile
 					currentPosition = raf.getFilePointer();
 					raf.seek(firstWayInTile);
-					logger.info("current: " + currentPosition + " start: " + tileStartAdress);
+					// logger.info("current: " + currentPosition + " start: " +
+					// tileStartAdress);
 					skipTillFirstWay = (int) (currentPosition - tileStartAdress);
-					logger.info("skipTillFirstWay: " + skipTillFirstWay);
+					// logger.info("skipTillFirstWay: " + skipTillFirstWay);
 					raf.writeInt(skipTillFirstWay);
 					raf.seek(currentPosition);
 
@@ -941,26 +913,25 @@ public class BinaryFileWriter {
 						id = rsWaysForTile.getLong("id");
 						wayStart = waysHead + id + waysTail;
 						startOfWay = raf.getFilePointer();
-						/** only for debug **/
-						// write debug string
-						wayStart = waysHead + id + waysTail;
-						logger.info(wayStart);
-						stringBytes = wayStart.getBytes();
-						byteArrayLength = stringBytes.length;
-						for (byte b : stringBytes) {
-							raf.writeByte(b);
-						}
-						// if string is not 32 byte long append whitespaces, byte value = 32
-						if (byteArrayLength < 32) {
-							while (byteArrayLength < 32) {
-								raf.writeByte(32);
-								byteArrayLength++;
+
+						if (debugStrings) {
+							// write debug string
+							wayStart = waysHead + id + waysTail;
+							// logger.info(wayStart);
+							stringBytes = wayStart.getBytes();
+							byteArrayLength = stringBytes.length;
+							raf.write(stringBytes);
+
+							// if string is not 32 byte long append whitespaces, byte value = 32
+							if (byteArrayLength < 32) {
+								while (byteArrayLength < 32) {
+									raf.writeByte(32);
+									byteArrayLength++;
+								}
 							}
 						}
-						/** only for debug **/
 
-						logger.info(wayStart);
-
+						// logger.info(wayStart);
 						nameLength = rsWaysForTile.getShort("name_length");
 						name = rsWaysForTile.getString("name");
 						tagAmount = rsWaysForTile.getShort("tags_amount");
@@ -977,9 +948,9 @@ public class BinaryFileWriter {
 
 						// write way features
 						waySizePosition = raf.getFilePointer();
-						logger.info("waySizePosition: " + waySizePosition);
+						// logger.info("waySizePosition: " + waySizePosition);
 						raf.seek(waySizePosition + 4);
-						logger.info("position after waysize: " + raf.getFilePointer());
+						// logger.info("position after waysize: " + raf.getFilePointer());
 						raf.writeShort(tileBitmask);
 
 						// write byte with layer and tag amount
@@ -996,8 +967,6 @@ public class BinaryFileWriter {
 							Short s = tagIdsWays.get(tag);
 							if (s != null) {
 								raf.writeShort(s);
-							} else {
-								logger.info("TAG: " + tag);
 							}
 						}
 
@@ -1011,13 +980,14 @@ public class BinaryFileWriter {
 							double lo = (double) lon / 1000000;
 							wayNodes.add(new Coordinate(la, lo));
 						}
-						if (writeLowerZoomLevel) {
+						if (writeLowerZoomLevel && wayNodePixelFilter) {
 							wayNodes = Utils.compressWay(wayNodes, currentZoom);
 						}
 
 						waynodesAmount = wayNodes.size();
 
-						if (wayType >= 2 && waynodesAmount >= 4 && name.equals("")) {
+						if (wayType >= 2 && waynodesAmount >= 4 && name.equals("")
+								&& polygonClipping) {
 							for (int t = 0; t < tileVertices.length - 1; t++) {
 								wayNodes = Utils.clipPolygonToTile(tileVertices[t],
 										tileVertices[t + 1], wayNodes);
@@ -1049,7 +1019,7 @@ public class BinaryFileWriter {
 						// corresponding way nodes
 						if (wayType == 3) { // || wayType == 0) {
 							/** debug **/
-							logger.info("amount of innerways: " + innerWayAmount);
+							// logger.info("amount of innerways: " + innerWayAmount);
 							/** debug **/
 							raf.writeByte((byte) innerWayAmount);
 							for (int k = 1; k <= innerWayAmount; k++) {
@@ -1066,20 +1036,20 @@ public class BinaryFileWriter {
 								}
 								currentPosition = raf.getFilePointer();
 								raf.seek(innerwayNodeCounterPos);
-								logger.info("innerwayNodes: " + innerwayNodes);
+								// logger.info("innerwayNodes: " + innerwayNodes);
 								raf.writeShort(innerwayNodes);
 								raf.seek(currentPosition);
 							}
 						}
 
 						currentPosition = raf.getFilePointer();
-						logger.info("currentPosition after complete way "
-								+ raf.getFilePointer());
+						// logger.info("currentPosition after complete way "
+						// + raf.getFilePointer());
 						raf.seek(waySizePosition);
-						logger.info("waysizeposition " + raf.getFilePointer());
+						// logger.info("waysizeposition " + raf.getFilePointer());
 						raf.writeInt((int) (currentPosition - startOfWay));
 						raf.seek(currentPosition);
-						logger.info("end of way: " + raf.getFilePointer());
+						// logger.info("end of way: " + raf.getFilePointer());
 					}
 				}
 			}
@@ -1124,9 +1094,6 @@ public class BinaryFileWriter {
 		if (housenumberLength != 0) {
 			infoByte |= BITMAP_HOUSENUMBER;
 		}
-
-		logger.info("infobyte: " + infoByte);
-
 		return infoByte;
 	}
 
@@ -1214,7 +1181,6 @@ public class BinaryFileWriter {
 		String key;
 
 		for (String tag : tags) {
-			logger.info("tag for bitmap: " + tag);
 			int i = tag.indexOf("=");
 			if (i == -1) {
 				continue;
@@ -1250,9 +1216,9 @@ public class BinaryFileWriter {
 	 * 
 	 */
 	public static void main(String[] args) {
-		if (args.length < 2 || args.length > 4) {
+		if (args.length < 4 || args.length > 5) {
 			System.err
-					.println("usage: BinaryFileWriter <properties-file> <target-file> <amount-of-sub-files> (optional: <comment>)");
+					.println("usage: BinaryFileWriter <properties-file> <target-file> <amount-of-sub-files> <feature-properties-file> (optional: <comment>)");
 			System.exit(1);
 		}
 
@@ -1260,8 +1226,15 @@ public class BinaryFileWriter {
 		targetFile = args[1];
 		fileAmount = Short.parseShort(args[2]);
 
-		if (args.length == 4) {
-			mapFileComment = args[3];
+		if (fileAmount > 2) {
+			System.err.println("currently maximal two subfiles are supported");
+			System.exit(1);
+		}
+
+		featurePropertiesFile = args[3];
+
+		if (args.length == 5) {
+			mapFileComment = args[4];
 		}
 
 		try {
