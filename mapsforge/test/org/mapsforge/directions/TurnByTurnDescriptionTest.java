@@ -42,120 +42,55 @@ public class TurnByTurnDescriptionTest {
 	public void setUp() throws Exception {
 
 		twoStreets = new TurnByTurnDescription(new DummyEdge[] {
-				new DummyEdge(
-					new GeoCoordinate[] {
-							new GeoCoordinate(53.08997, 8.78746),
-							new GeoCoordinate(53.088898, 8.785359),
-							new GeoCoordinate(53.088842, 8.785249)
-					}, "Hansestraße"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(53.088842, 8.785249),
-								new GeoCoordinate(53.088775, 8.785105),
-								new GeoCoordinate(53.088752, 8.785057),
-								new GeoCoordinate(53.088692, 8.784977),
-								new GeoCoordinate(53.088614, 8.784839),
-								new GeoCoordinate(53.087088, 8.782624)
-						}, "Hansator")
-		});
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(53.08997, 8.78746),
+						new GeoCoordinate(53.088898, 8.785359),
+						new GeoCoordinate(53.088842, 8.785249) }, "Hansestraße"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(53.088842, 8.785249),
+						new GeoCoordinate(53.088775, 8.785105),
+						new GeoCoordinate(53.088752, 8.785057),
+						new GeoCoordinate(53.088692, 8.784977),
+						new GeoCoordinate(53.088614, 8.784839),
+						new GeoCoordinate(53.087088, 8.782624) }, "Hansator") });
 		uTurnCase0 = new TurnByTurnDescription(new DummyEdge[] {
-				new DummyEdge(
-					new GeoCoordinate[] {
-							new GeoCoordinate(0, 0),
-							new GeoCoordinate(0, 5E-3)
-					}, "some street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 5E-3),
-								new GeoCoordinate(0, 8E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 8E-3),
-								new GeoCoordinate(5E-5, 8E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(5E-5, 8E-3),
-								new GeoCoordinate(5E-5, 5E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(5E-5, 5E-3),
-								new GeoCoordinate(5E-5, 0)
-						}, "another street")
-		});
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 0),
+						new GeoCoordinate(0, 5E-3) }, "some street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 5E-3),
+						new GeoCoordinate(0, 8E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 8E-3),
+						new GeoCoordinate(5E-5, 8E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(5E-5, 8E-3),
+						new GeoCoordinate(5E-5, 5E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(5E-5, 5E-3),
+						new GeoCoordinate(5E-5, 0) }, "another street") });
 		uTurnCase1 = new TurnByTurnDescription(new DummyEdge[] {
-				new DummyEdge(
-					new GeoCoordinate[] {
-							new GeoCoordinate(0, 0),
-							new GeoCoordinate(0, 5E-3)
-					}, "some street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 5E-3),
-								new GeoCoordinate(0, 8E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 8E-3),
-								new GeoCoordinate(5E-5, 8E-3)
-						}, "short in between street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(5E-5, 8E-3),
-								new GeoCoordinate(5E-5, 5E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(5E-5, 5E-3),
-								new GeoCoordinate(5E-5, 0)
-						}, "another street")
-		});
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 0),
+						new GeoCoordinate(0, 5E-3) }, "some street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 5E-3),
+						new GeoCoordinate(0, 8E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 8E-3),
+						new GeoCoordinate(5E-5, 8E-3) }, "short in between street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(5E-5, 8E-3),
+						new GeoCoordinate(5E-5, 5E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(5E-5, 5E-3),
+						new GeoCoordinate(5E-5, 0) }, "another street") });
 		shortStreet2LaneCase0 = new TurnByTurnDescription(new DummyEdge[] {
-				new DummyEdge(
-					new GeoCoordinate[] {
-							new GeoCoordinate(0, 0),
-							new GeoCoordinate(0, 5E-3)
-					}, "some street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 5E-3),
-								new GeoCoordinate(0, 8E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 8E-3),
-								new GeoCoordinate(5E-5, 8E-3)
-						}, "short in between street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(5E-5, 8E-3),
-								new GeoCoordinate(8E-3, 8E-3)
-						}, "another street")
-		});
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 0),
+						new GeoCoordinate(0, 5E-3) }, "some street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 5E-3),
+						new GeoCoordinate(0, 8E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 8E-3),
+						new GeoCoordinate(5E-5, 8E-3) }, "short in between street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(5E-5, 8E-3),
+						new GeoCoordinate(8E-3, 8E-3) }, "another street") });
 		shortStreet2LaneCase1 = new TurnByTurnDescription(new DummyEdge[] {
-				new DummyEdge(
-					new GeoCoordinate[] {
-							new GeoCoordinate(0, 0),
-							new GeoCoordinate(0, 5E-3)
-					}, "some street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 5E-3),
-								new GeoCoordinate(0, 8E-3)
-						}, "some other street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 8E-3),
-								new GeoCoordinate(0, 8.01E-3)
-						}, "short in between street"),
-					new DummyEdge(
-						new GeoCoordinate[] {
-								new GeoCoordinate(0, 8.01E-3),
-								new GeoCoordinate(0, 8E-3)
-						}, "another street")
-		});
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 0),
+						new GeoCoordinate(0, 5E-3) }, "some street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 5E-3),
+						new GeoCoordinate(0, 8E-3) }, "some other street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 8E-3),
+						new GeoCoordinate(0, 8.01E-3) }, "short in between street"),
+				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(0, 8.01E-3),
+						new GeoCoordinate(0, 8E-3) }, "another street") });
 	}
 
 	/**
@@ -165,7 +100,7 @@ public class TurnByTurnDescriptionTest {
 	public void testTurnByTurnDescription() {
 		assertTrue(twoStreets.streets.size() == 2);
 		assertTrue(uTurnCase0.streets.size() == 4);
-		assertTrue(uTurnCase0.streets.get(2).angleToPreviousStreet == 180d);
+		assertTrue(uTurnCase0.streets.get(2).angleFromPreviousStreet == 180d);
 		assertFalse(uTurnCase1.toString().contains("between"));
 		assertFalse(shortStreet2LaneCase0.toString().contains("between"));
 	}

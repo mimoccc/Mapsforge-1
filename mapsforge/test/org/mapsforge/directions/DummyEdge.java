@@ -74,4 +74,22 @@ public class DummyEdge implements IEdge {
 		return 0;
 	}
 
+	@Override
+	public String getRef() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isMotorWayLink() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isRoundabout() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
