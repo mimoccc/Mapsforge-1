@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -108,6 +109,9 @@ public class RgExtractor {
 			latitudes = new int[idMapping.size()];
 			longitudes = new int[idMapping.size()];
 
+			final HashMap<Integer, String> nodeRefs = new HashMap<Integer, String>();
+			final HashMap<Integer, String> nodeNames = new HashMap<Integer, String>();
+
 			writer.clearTables();
 			writer.flush();
 			writer.insertHighwayLevels();
@@ -136,6 +140,12 @@ public class RgExtractor {
 									e.printStackTrace();
 								}
 							}
+						}
+						if (node.getTag("ref") != null) {
+							nodeRefs.put(id, node.getTag("ref"));
+						}
+						if (node.getTag("name") != null) {
+							nodeNames.put(id, node.getTag("name"));
 						}
 					}
 				}
@@ -206,9 +216,21 @@ public class RgExtractor {
 									targetId = idMapping.get(way.getNodeRefs().get(end));
 									oneway = way.isOneway() == 1;
 								}
+								String wayRef = way.getRef();
+								if (wayRef == null || wayRef.equals("")) {
+									if (nodeRefs.get(sourceId) != null) {
+										wayRef = nodeRefs.get(sourceId);
+									}
+								}
+								String wayName = way.getName();
+								if (wayName == null || wayName.equals("")) {
+									if (nodeNames.get(sourceId) != null) {
+										wayName = nodeNames.get(sourceId);
+									}
+								}
 								writer.insertEdge(new RgEdge(nextEdgeId++, sourceId, targetId,
-										lon, lat, !oneway, way.isUrban(), way.getId(), way
-												.getName(), distanceMeters, hwyLvl));
+										lon, lat, !oneway, way.isUrban(), way.getId(), wayName,
+										distanceMeters, hwyLvl, wayRef, way.isRoundabout()));
 								if (debug) {
 									System.out.println(sourceId + " -> " + targetId);
 								}

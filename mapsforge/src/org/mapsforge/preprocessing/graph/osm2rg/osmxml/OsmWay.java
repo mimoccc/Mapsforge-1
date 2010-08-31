@@ -129,16 +129,39 @@ public class OsmWay extends OsmElement {
 	}
 
 	/**
+	 * @return true if this way is a roundabout
+	 */
+	public boolean isRoundabout() {
+		String v = getTag("junction");
+		if (v == null) {
+			return false;
+		}
+		if (v.equals("roundabout")) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * @return returns the name of the street assigned by the name tag.
 	 */
 	public String getName() {
 		String v = getTag("name");
 		if (v == null) {
-			v = getTag("ref");
+			return DEFAULT_TAG_VALUE_NAME;
 		}
+		return v;
+	}
+
+	/**
+	 * @return ref tag, like "A 2" for a german autobahn
+	 */
+	public String getRef() {
+		String v = getTag("ref");
 		if (v == null) {
 			return DEFAULT_TAG_VALUE_NAME;
 		}
 		return v;
 	}
+
 }

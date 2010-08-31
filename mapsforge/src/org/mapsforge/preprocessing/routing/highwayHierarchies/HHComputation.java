@@ -57,12 +57,19 @@ import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
  * 
  *         This class is responsible for the complete process of preprocessing. As input, it
  *         reads a properties file res/hhPreprocessing.properties. tuning params for
- *         preprocessing: (names similar to highway hierarchies paper) 1. h = neighborhood size
- *         2. c = contraction facor, see method isBypassable for details. 3. vertexThreshold =
- *         on number of core node, should be >>> 0 to use distance table 4. hop limit = limit on
- *         number of edges of level l - 1 a shortcut of level l can represent 5. downgrade edge
- *         = downgrade edges leaving core (check of restriction 2 is no more needed during
- *         query)
+ *         preprocessing: (names similar to highway hierarchies paper)
+ * 
+ *         1. h = neighborhood size
+ * 
+ *         2. c = contraction facor, see method isBypassable for details.
+ * 
+ *         3. vertexThreshold = on number of core node, should be >>> 0 to use distance table
+ * 
+ *         4. hop limit = limit on number of edges of level l - 1 a shortcut of level l can
+ *         represent
+ * 
+ *         5. downgrade edge = downgrade edges leaving core (check of restriction 2 is no more
+ *         needed during query)
  */
 public final class HHComputation {
 

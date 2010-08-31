@@ -80,17 +80,26 @@ public class TurnByTurnDescription {
 				streets.add(previousStreet);
 			} else {
 				double delta = getAngleOfStreets(lastEdge, currentEdge);
+				int deltaRange = (int) java.lang.Math.round(delta / 90) % 8;
 				boolean isUturn = determineUTurn(secondLastEdge, lastEdge, currentEdge);
-				if (hasSameName(currentEdge, lastEdge)) {
-					if (!isUturn) {
+				boolean isRoundabout = currentEdge.isRoundabout();
+				if (hasSameName(currentEdge, lastEdge) || lastEdge.isMotorWayLink()
+						&& currentEdge.isMotorWayLink()) {
+					if (!isUturn && !isRoundabout) {
 						// if the same street just continues on, we only attach the
 						// GeoCoordinates
 						previousStreet.appendCoordinatesFromEdge(currentEdge);
-					} else {
+					} else if (isUturn) {
 						// if it is a uturn on the same street, we start a new street so
 						// the information about the uTurn is not lost
 						previousStreet = new TurnByTurnStreet(currentEdge);
-						previousStreet.angleToPreviousStreet = 180;
+						previousStreet.angleFromPreviousStreet = 180;
+						streets.add(previousStreet);
+					} else if (isRoundabout) {
+						// if it is a uturn on the same street, we start a new street so
+						// the information about the uTurn is not lost
+						previousStreet = new TurnByTurnStreet(currentEdge);
+						previousStreet.angleFromPreviousStreet = delta;
 						streets.add(previousStreet);
 					}
 				} else {
@@ -99,7 +108,7 @@ public class TurnByTurnDescription {
 						// it's only a short street between two lanes. don't need that name
 						previousStreet.appendCoordinatesFromEdge(currentEdge);
 						previousStreet.name = currentEdge.getName();
-						previousStreet.angleToPreviousStreet = 180;
+						previousStreet.angleFromPreviousStreet = 180;
 					} else {
 						// The first two cases check for very short streets which can be ignored
 						// because they belong to streets which accidently have a different name
@@ -108,15 +117,15 @@ public class TurnByTurnDescription {
 							previousStreet.appendCoordinatesFromEdge(currentEdge);
 							previousStreet.name = currentEdge.getName();
 						} else if (currentEdge.getAllWaypoints()[0]
-							.sphericalDistance(currentEdge.getAllWaypoints()[currentEdge
-								.getAllWaypoints().length - 1]) < 30d
+								.sphericalDistance(currentEdge.getAllWaypoints()[currentEdge
+										.getAllWaypoints().length - 1]) < 30d
 								&& (delta < 15 || 345 < delta)
 								&& (nextEdge == null || !hasSameName(nextEdge, currentEdge))) {
 							previousStreet.appendCoordinatesFromEdge(currentEdge);
 						} else {
 							// Here is the last case in which a new street is started
 							previousStreet = new TurnByTurnStreet(currentEdge);
-							previousStreet.angleToPreviousStreet = delta;
+							previousStreet.angleFromPreviousStreet = delta;
 							streets.add(previousStreet);
 						}
 					}
@@ -141,15 +150,12 @@ public class TurnByTurnDescription {
 	boolean determineUTurn(IEdge secondLastEdge, IEdge lastEdge, IEdge currentEdge) {
 		if (secondLastEdge == null || lastEdge == null || currentEdge == null)
 			return false;
-		double angleSum = (getAngleOfStreets(secondLastEdge, lastEdge) +
-				getAngleOfStreets(lastEdge, currentEdge)) % 360;
+		double angleSum = (getAngleOfStreets(secondLastEdge, lastEdge) + getAngleOfStreets(
+				lastEdge, currentEdge)) % 360;
 		if (hasSameName(secondLastEdge, currentEdge)
-				&&
-				(170 < angleSum && angleSum < 190)
-				&&
-				currentEdge.getAllWaypoints()[0]
-					.sphericalDistance(
-					secondLastEdge.getAllWaypoints()[secondLastEdge.getAllWaypoints().length - 1]) < 30d) {
+				&& (170 < angleSum && angleSum < 190)
+				&& currentEdge.getAllWaypoints()[0].sphericalDistance(secondLastEdge
+						.getAllWaypoints()[secondLastEdge.getAllWaypoints().length - 1]) < 30d) {
 			return true;
 		}
 		return false;
@@ -185,13 +191,13 @@ public class TurnByTurnDescription {
 			// This is the crossing
 			GeoCoordinate crossingCoordinate = currentStreetEdge.getAllWaypoints()[0];
 			// The following is the last coordinate before the crossing
-			GeoCoordinate lastCoordinate = lastStreetEdge.getAllWaypoints()
-					[lastStreetEdge.getAllWaypoints().length - 2];
+			GeoCoordinate lastCoordinate = lastStreetEdge.getAllWaypoints()[lastStreetEdge
+					.getAllWaypoints().length - 2];
 			// Take a coordinate further away from the crossing if it's too close
 			if (lastCoordinate.sphericalDistance(crossingCoordinate) < 10
 					&& lastStreetEdge.getAllWaypoints().length > 2) {
-				lastCoordinate = lastStreetEdge.getAllWaypoints()
-						[lastStreetEdge.getAllWaypoints().length - 3];
+				lastCoordinate = lastStreetEdge.getAllWaypoints()[lastStreetEdge
+						.getAllWaypoints().length - 3];
 			}
 			// Here comes the first coordinate after the crossing
 			GeoCoordinate firstCoordinate = currentStreetEdge.getAllWaypoints()[1];
@@ -201,10 +207,10 @@ public class TurnByTurnDescription {
 			}
 			// calculate angles of the incoming street
 			double deltaY = MercatorProjection.latitudeToMetersY(crossingCoordinate
-				.getLatitude())
+					.getLatitude())
 					- MercatorProjection.latitudeToMetersY(lastCoordinate.getLatitude());
 			double deltaX = MercatorProjection.longitudeToMetersX(crossingCoordinate
-				.getLongitude())
+					.getLongitude())
 					- MercatorProjection.longitudeToMetersX(lastCoordinate.getLongitude());
 			double alpha = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
 			if (deltaY < 0)
@@ -256,20 +262,16 @@ public class TurnByTurnDescription {
 			JSONArray streetCoordinatesAsJson = new JSONArray();
 			for (int j = 0; j < street.points.size(); j++) {
 				GeoCoordinate sc = street.points.elementAt(j);
-				streetCoordinatesAsJson.put(new JSONArray()
-					.put(sc.getLongitude())
-					.put(sc.getLatitude())
-					);
+				streetCoordinatesAsJson.put(new JSONArray().put(sc.getLongitude()).put(
+						sc.getLatitude()));
 			}
-			jsonstreet.put("geometry", new JSONObject()
-				.put("type", "LineString")
-				.put("coordinates", streetCoordinatesAsJson)
-				);
-			jsonstreet.put("properties", new JSONObject()
-				.put("Name", street.name)
-				.put("Length", street.length)
-				.put("Angle", street.angleToPreviousStreet)
-				);
+			jsonstreet.put("geometry", new JSONObject().put("type", "LineString").put(
+					"coordinates", streetCoordinatesAsJson));
+			jsonstreet.put(
+					"properties",
+					new JSONObject().put("Name", street.name).put("Length", street.length).put(
+							"Angle", street.angleFromPreviousStreet)).put("Roundabout",
+					street.isRoundabout).put("Motorway_Exit", street.isMotorwayExit);
 			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);
@@ -289,8 +291,8 @@ public class TurnByTurnDescription {
 	 *             if turning the DOM into a string fails
 	 */
 	public String toKML() throws ParserConfigurationException,
-			TransformerConfigurationException,
-			TransformerException, TransformerFactoryConfigurationError {
+			TransformerConfigurationException, TransformerException,
+			TransformerFactoryConfigurationError {
 		// This creates a new DOM
 		Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		// And let's get this started
@@ -302,8 +304,7 @@ public class TurnByTurnDescription {
 		Element document = dom.createElement("Document");
 		kml.appendChild(document);
 		Element name = dom.createElement("name");
-		name.setTextContent("MapsForge directions from "
-				+ streets.firstElement().name + " to "
+		name.setTextContent("MapsForge directions from " + streets.firstElement().name + " to "
 				+ streets.lastElement().name);
 		document.appendChild(name);
 		Element style = dom.createElement("Style");
@@ -332,7 +333,7 @@ public class TurnByTurnDescription {
 				coordinatesContent += c.getLongitude() + "," + c.getLatitude() + " ";
 			}
 			coordinatesContent = coordinatesContent.substring(0,
-				coordinatesContent.length() - 1); // remove last space
+					coordinatesContent.length() - 1); // remove last space
 			coordinates.setTextContent(coordinatesContent);
 			Element extendedData = dom.createElement("ExtendedData");
 			placemark.appendChild(extendedData);
@@ -341,7 +342,7 @@ public class TurnByTurnDescription {
 			length.setTextContent(Double.toString(street.length));
 			Element angle = dom.createElement("AngleToPreviousStreet");
 			extendedData.appendChild(angle);
-			angle.setTextContent(Double.toString(street.angleToPreviousStreet));
+			angle.setTextContent(Double.toString(street.angleFromPreviousStreet));
 			Element styleUrl = dom.createElement("styleUrl");
 			placemark.appendChild(styleUrl);
 			styleUrl.setTextContent("#MapsForgeStyle");
@@ -350,12 +351,12 @@ public class TurnByTurnDescription {
 		// This is for turning the DOM object into a proper StringWriter
 		StringWriter stringWriter = new StringWriter();
 		TransformerFactory.newInstance().newTransformer().transform(new DOMSource(dom),
-			new StreamResult(stringWriter));
+				new StreamResult(stringWriter));
 		return stringWriter.getBuffer().toString();
 	}
 
 	/**
-	 * Creates a KML (Keyhole markup language) version of the directions.
+	 * Creates a GPX version of the directions.
 	 * 
 	 * @return a KML string
 	 * @throws ParserConfigurationException
@@ -368,8 +369,8 @@ public class TurnByTurnDescription {
 	 *             if turning the DOM into a string fails
 	 */
 	public String toGPX() throws ParserConfigurationException,
-			TransformerConfigurationException,
-			TransformerException, TransformerFactoryConfigurationError {
+			TransformerConfigurationException, TransformerException,
+			TransformerFactoryConfigurationError {
 		// This creates a new DOM
 		Document dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		// And let's get this started
@@ -382,13 +383,12 @@ public class TurnByTurnDescription {
 		gpx.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
 		gpx.setAttribute("xmlns:mf", "http://tom.mapsforge.de");
 		gpx.setAttribute("xsi:schemaLocation",
-			"http://www.topografix.com/GPX/1/1 http://www.topografix.com/gpx/1/1/gpx.xsd");
+				"http://www.topografix.com/GPX/1/1 http://www.topografix.com/gpx/1/1/gpx.xsd");
 		gpx.setAttribute("creator", "tom.mapsforge.de");
 		Element metadata = dom.createElement("metadata");
 		gpx.appendChild(metadata);
 		Element name = dom.createElement("name");
-		name.setTextContent("MapsForge directions from "
-				+ streets.firstElement().name + " to "
+		name.setTextContent("MapsForge directions from " + streets.firstElement().name + " to "
 				+ streets.lastElement().name);
 		metadata.appendChild(name);
 		for (TurnByTurnStreet street : streets) {
@@ -412,12 +412,12 @@ public class TurnByTurnDescription {
 			length.setTextContent(Double.toString(street.length));
 			Element angle = dom.createElement("mf:AngleToPreviousStreet");
 			extensions.appendChild(angle);
-			angle.setTextContent(Double.toString(street.angleToPreviousStreet));
+			angle.setTextContent(Double.toString(street.angleFromPreviousStreet));
 		}
 		// This is for turning the DOM object into a proper StringWriter
 		StringWriter stringWriter = new StringWriter();
 		TransformerFactory.newInstance().newTransformer().transform(new DOMSource(dom),
-			new StreamResult(stringWriter));
+				new StreamResult(stringWriter));
 		return stringWriter.getBuffer().toString();
 	}
 
@@ -428,9 +428,11 @@ public class TurnByTurnDescription {
 	 */
 	class TurnByTurnStreet {
 		double length = 0;
-		double angleToPreviousStreet = -360;
+		double angleFromPreviousStreet = -360;
+		boolean isRoundabout, isMotorwayExit = false;
 		Vector<GeoCoordinate> points = new Vector<GeoCoordinate>();
 		String name = "";
+		String ref = "";
 
 		/**
 		 * Constructor for using a single IEdge
@@ -440,6 +442,9 @@ public class TurnByTurnDescription {
 		 */
 		TurnByTurnStreet(IEdge edge) {
 			name = edge.getName();
+			ref = edge.getRef();
+			isRoundabout = edge.isRoundabout();
+			isMotorwayExit = edge.isMotorWayLink();
 			appendCoordinatesFromEdge(edge);
 		}
 
@@ -462,8 +467,53 @@ public class TurnByTurnDescription {
 
 		@Override
 		public String toString() {
-			return angleToPreviousStreet + ";" + name + ";"
-					+ java.lang.Math.round(length) + "m;" + "\n";
+			String result = "";
+			if (!isMotorwayExit && !isRoundabout) {
+				int delta = (int) java.lang.Math.round(angleFromPreviousStreet / 45);
+				switch (delta) {
+					case 0:
+					case 8:
+						result += "Go straight on ";
+						break;
+					case 1:
+						result += "Make a slight right turn onto ";
+						break;
+					case 2:
+						result += "Make a right turn onto ";
+						break;
+					case 3:
+						result += "Make a sharp right turn onto ";
+						break;
+					case 4:
+						result += "Make U-Turn and stay on ";
+						break;
+					case 5:
+						result += "Make a sharp left turn onto ";
+						break;
+					case 6:
+						result += "Make a left turn onto ";
+						break;
+					case 7:
+						result += "Make slight left turn onto ";
+						break;
+					default:
+						result += "Go on ";
+				}
+				result += name + ". Stay on it for ";
+				length = java.lang.Math.round(length);
+				if (length > 1000) {
+					length = java.lang.Math.round(length / 100) / 10;
+					result += length + " km.";
+				} else {
+					result += length + " m.";
+				}
+			} else if (isMotorwayExit) {
+				result = "Take exit " + ref + " " + name;
+			} else if (isRoundabout) {
+				result = "Go onto the roundabout " + name;
+			}
+			result += "\n\n";
+			return result;
 		}
 	}
 }

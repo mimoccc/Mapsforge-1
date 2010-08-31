@@ -32,6 +32,12 @@ public interface IEdge {
 
 	public String getName();
 
+	public String getRef();
+
 	public int getWeight();
+
+	public boolean isRoundabout();
+
+	public boolean isMotorWayLink();
 
 }

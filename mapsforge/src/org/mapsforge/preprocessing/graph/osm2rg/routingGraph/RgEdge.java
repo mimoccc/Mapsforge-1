@@ -28,9 +28,10 @@ public class RgEdge implements IRgEdge {
 	private final int id, sourceId, targetId;
 	private final double[] longitudes, latitudes;
 	private final double lengthMeters;
-	private final boolean isUndirected, isUrban;
+	private final boolean isUndirected, isUrban, isRoundabout;
 	private final long osmWayId;
 	private final String name;
+	private final String ref; // See http://wiki.openstreetmap.org/wiki/Map_Features#References
 	private final String hwyLevel;
 
 	/**
@@ -62,6 +63,8 @@ public class RgEdge implements IRgEdge {
 		this.name = way.getName();
 		this.lengthMeters = lengthMeters;
 		this.hwyLevel = way.getHighwayLevel().toString();
+		this.isRoundabout = false; // TODO: FIXME
+		this.ref = ""; // TODO: FIXME
 	}
 
 	/**
@@ -87,10 +90,14 @@ public class RgEdge implements IRgEdge {
 	 *            the length along the waypoints in meters.
 	 * @param hwyLevel
 	 *            the highway level
+	 * @param ref
+	 *            The ref key as it is found in the OSM data
+	 * @param isRoundabout
+	 *            Whether or not this is a roundabout
 	 */
 	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
 			boolean isUndirected, boolean isUrban, long osmWayId, String name,
-			double lengthMeters, String hwyLevel) {
+			double lengthMeters, String hwyLevel, String ref, boolean isRoundabout) {
 		this.id = id;
 		this.sourceId = sourceId;
 		this.targetId = targetId;
@@ -98,8 +105,10 @@ public class RgEdge implements IRgEdge {
 		this.latitudes = latitudes;
 		this.isUndirected = isUndirected;
 		this.isUrban = isUrban;
+		this.isRoundabout = isRoundabout;
 		this.osmWayId = osmWayId;
 		this.name = name;
+		this.ref = ref;
 		this.lengthMeters = lengthMeters;
 		this.hwyLevel = hwyLevel;
 	}
@@ -144,6 +153,13 @@ public class RgEdge implements IRgEdge {
 	}
 
 	/**
+	 * @return true if edge is part of a roundabout.
+	 */
+	public boolean isRoundabout() {
+		return isRoundabout;
+	}
+
+	/**
 	 * @return the osm id of the related way.
 	 */
 	public long getOsmWayId() {
@@ -155,6 +171,13 @@ public class RgEdge implements IRgEdge {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * @return the ref of the street.
+	 */
+	public String getRef() {
+		return ref;
 	}
 
 	/**

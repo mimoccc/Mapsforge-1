@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import org.mapsforge.core.DBConnection;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
@@ -37,10 +38,17 @@ public class RgEdgeNames implements Serializable {
 
 	private final String[] names;
 	private final int[] namesIndex;
+	private final String[] refs;
+	private final int[] refsIndex;
+	private final byte[] flags;
 
-	private RgEdgeNames(String[] names, int[] namesIndex) {
+	private RgEdgeNames(String[] names, int[] namesIndex, String[] refs, int[] refsIndex,
+			byte[] flags) {
 		this.names = names;
 		this.namesIndex = namesIndex;
+		this.refs = refs;
+		this.refsIndex = refsIndex;
+		this.flags = flags;
 	}
 
 	public String getName(int rgEdgeId) {
@@ -48,6 +56,21 @@ public class RgEdgeNames implements Serializable {
 			return "";
 		}
 		return names[namesIndex[rgEdgeId]];
+	}
+
+	public String getRef(int rgEdgeId) {
+		if (rgEdgeId < 0 || rgEdgeId >= refsIndex.length || refsIndex[rgEdgeId] == -1) {
+			return "";
+		}
+		return refs[refsIndex[rgEdgeId]];
+	}
+
+	public boolean isMotorWayLink(int rgEdgeId) {
+		return (flags[rgEdgeId] & 1) == 1;
+	}
+
+	public boolean isRoundabout(int rgEdgeId) {
+		return (flags[rgEdgeId] & 2) == 2;
 	}
 
 	public int size() {
@@ -66,31 +89,58 @@ public class RgEdgeNames implements Serializable {
 	public static RgEdgeNames importFromDb(Connection conn) throws SQLException {
 		RgDAO rg = new RgDAO(conn);
 
-		int[] index = new int[rg.getNumEdges()];
+		int[] namesIndex = new int[rg.getNumEdges()];
+		int[] refsIndex = new int[rg.getNumEdges()];
+		byte[] flags = new byte[rg.getNumEdges()];
 
 		int counter = 0;
 		// put all names on a map
 		TObjectIntHashMap<String> namesMap = new TObjectIntHashMap<String>();
+		TObjectIntHashMap<String> refsMap = new TObjectIntHashMap<String>();
 		for (Iterator<RgEdge> iter = rg.getEdges().iterator(); iter.hasNext();) {
 			RgEdge e = iter.next();
 			String name = e.getName();
+			String ref = e.getRef();
 			if (name != null && !name.isEmpty()) {
 				if (!namesMap.containsKey(name)) {
 					namesMap.put(name, counter++);
 				}
 				int offset = namesMap.get(name);
-				index[e.getId()] = offset;
+				namesIndex[e.getId()] = offset;
 			} else {
-				index[e.getId()] = -1;
+				namesIndex[e.getId()] = -1;
 			}
+			if (ref != null && !ref.isEmpty()) {
+				if (!refsMap.containsKey(ref)) {
+					refsMap.put(ref, counter++);
+				}
+				int offset = refsMap.get(ref);
+				refsIndex[e.getId()] = offset;
+			} else {
+				refsIndex[e.getId()] = -1;
+			}
+			// Set additional flags
+			byte flagByte = 0;
+			if (e.getHighwayLevel().equals(TagHighway.MOTORWAY_LINK)) {
+				flagByte = 1;
+			}
+			if (e.isRoundabout()) {
+				flagByte = (byte) (flagByte + 2);
+			}
+			flags[e.getId()] = flagByte;
 		}
 
 		String[] names = new String[counter];
+		String[] refs = new String[counter];
 		for (Object s : namesMap.keys()) {
 			String s1 = (String) s;
 			names[namesMap.get(s)] = s1;
 		}
-		return new RgEdgeNames(names, index);
+		for (Object s : refsMap.keys()) {
+			String s1 = (String) s;
+			refs[refsMap.get(s)] = s1;
+		}
+		return new RgEdgeNames(names, namesIndex, refs, refsIndex, flags);
 	}
 
 	public static void main(String[] args) throws SQLException {
@@ -98,7 +148,8 @@ public class RgEdgeNames implements Serializable {
 				"osm", "osm");
 		RgEdgeNames edgeNames = importFromDb(conn);
 		for (int i = 0; i < edgeNames.size(); i++) {
-			System.out.println(edgeNames.getName(i));
+
+			// System.out.println(edgeNames.getName(i) + " " + edgeNames.getRef(i));
 		}
 	}
 }

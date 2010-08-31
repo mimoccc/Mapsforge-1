@@ -142,8 +142,8 @@ public class RouterImpl implements IRouter {
 
 	@Override
 	public IVertex getNearestVertex(GeoCoordinate coord) {
-		int id = vertexIndex.getNearestNeighborIdx(coord.getLongitudeE6(),
-				coord.getLatitudeE6());
+		int id = vertexIndex.getNearestNeighborIdx(coord.getLongitudeE6(), coord
+				.getLatitudeE6());
 		return new HHVertex(routingGraph.getVertex(id));
 	}
 
@@ -350,6 +350,24 @@ public class RouterImpl implements IRouter {
 		public int getWeight() {
 			return e.getWeight();
 		}
+
+		@Override
+		public String getRef() {
+			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
+			return edgeNames.getRef(mapping.rgEdgeId);
+		}
+
+		@Override
+		public boolean isRoundabout() {
+			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
+			return edgeNames.isRoundabout(mapping.rgEdgeId);
+		}
+
+		@Override
+		public boolean isMotorWayLink() {
+			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
+			return edgeNames.isMotorWayLink(mapping.rgEdgeId);
+		}
 	}
 
 	private class HHVertex implements IVertex {
@@ -383,27 +401,34 @@ public class RouterImpl implements IRouter {
 
 	public static void main(String[] args) {
 		IRouter router = RouterFactory.getRouter();
-		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09468, 8.80808))
-				.getId());
-		System.out.println(router.getNearestVertex(new GeoCoordinate(53.09579, 8.80461))
-				.getId());
-
-		// IEdge[] sp = router.getShortestPath(1896, 7873);
-		// IEdge[] sp = router.getShortestPath(10262, 119);
-		IEdge[] sp = router.getShortestPath(8446, 5093);
-
-		System.out.println(sp.length);
+		// Autobahn Ausfahrt
+		// int source = router.getNearestVertex(new GeoCoordinate(53.114021,
+		// 8.8580001)).getId();
+		// int target = router.getNearestVertex(new GeoCoordinate(53.111445,
+		// 8.8087332)).getId();
+		// Kreisverkehr
+		int source = router
+				.getNearestVertex(new GeoCoordinate(53.08081638703, 8.8126494073506)).getId();
+		int target = router.getNearestVertex(
+				new GeoCoordinate(53.077825950522, 8.8222195291153)).getId();
+		IEdge[] sp = router.getShortestPath(source, target);
 
 		for (IEdge e : sp) {
-			System.out.print(e.getSource().getId() + " -> " + e.getTarget().getId() + " : "
-					+ e.getName() + " : ");
-			System.out.print(e.getSource().getCoordinate() + ", ");
-			for (GeoCoordinate c : e.getWaypoints()) {
-				System.out.print(c + ", ");
-			}
-			System.out.println(e.getTarget().getCoordinate());
+			System.out.print(e.getName());
+			if (e.isRoundabout())
+				System.out.print(" (ROUNDABOUT!) ");
+			if (e.isMotorWayLink())
+				System.out.print(" (MotorWayLink!) ");
+			if (!e.getRef().equals(""))
+				System.out.print(" (" + e.getRef() + ")");
+			// System.out.print(e.);
+			// System.out.print(e.getSource().getCoordinate() + ", ");
+			// for (GeoCoordinate c : e.getWaypoints()) {
+			// System.out.print(c + ", ");
+			// }
+			// System.out.println(e.getTarget().getCoordinate());
+			System.out.println();
 		}
 
 	}
-
 }
