@@ -2018,7 +2018,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param wayNumberOfRealTags
 	 *            the number of real tags.
 	 * @param wayName
-	 *            the name of the way.
+	 *            the name of the way (may be null).
+	 * @param wayRef
+	 *            the reference of the way (may be null).
 	 * @param wayLabelPosition
 	 *            the position of the area label (may be null).
 	 * @param wayTagIds
@@ -2033,7 +2035,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 *            the inner nodes if this way is a multipolygon.
 	 */
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName,
-			int[] wayLabelPosition, boolean[] wayTagIds, byte wayTagBitmap,
+			String wayRef, int[] wayLabelPosition, boolean[] wayTagIds, byte wayTagBitmap,
 			short wayNodesSequenceLength, int[] wayNodesSequence, int[][] innerWays) {
 		this.remainingTags = wayNumberOfRealTags;
 		if (innerWays == null) {

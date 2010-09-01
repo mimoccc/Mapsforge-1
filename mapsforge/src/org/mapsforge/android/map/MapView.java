@@ -186,28 +186,22 @@ public class MapView extends ViewGroup {
 		public boolean onScale(ScaleGestureDetector detector) {
 			// TODO: some tuning for pinch and zoom is needed
 			this.scaleFactor *= detector.getScaleFactor();
-			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, MapView.this
-					.getWidth() >> 1, MapView.this.getHeight() >> 1);
-			if (this.scaleFactor <= 0.5) {
-				this.scaleFactor = 1;
-				MapView.this.matrix.setScale(1, 1, MapView.this.getWidth() >> 1, MapView.this
-						.getHeight() >> 1);
-				zoomOut();
-			} else if (this.scaleFactor >= 2) {
-				this.scaleFactor = 1;
-				MapView.this.matrix.setScale(1, 1, MapView.this.getWidth() >> 1, MapView.this
-						.getHeight() >> 1);
-				zoomIn();
-			} else {
-				invalidate();
-			}
+			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, detector
+					.getFocusX(), detector.getFocusY());
+			invalidate();
 			return true;
 		}
 
 		@Override
 		public void onScaleEnd(ScaleGestureDetector detector) {
+			if (this.scaleFactor <= 0.5f) {
+				zoomOut();
+			} else if (this.scaleFactor >= 2) {
+				zoomIn();
+			} else {
+				handleTiles(true);
+			}
 			this.scaleFactor = 1;
-			handleTiles(true);
 		}
 	}
 

@@ -165,10 +165,12 @@ public class MapDatabase {
 	private boolean wayFeatureLabelPosition;
 	private boolean wayFeatureMultipolygon;
 	private boolean wayFeatureName;
+	private boolean wayFeatureRef;
 	private int[][] wayInnerWays;
 	private int[] wayLabelPosition;
 	private byte wayLayer;
 	private String wayName;
+	private byte wayNodeCompressionMode;
 	private int wayNodeLatitude;
 	private int wayNodeLongitude;
 	private int[] wayNodesSequence;
@@ -177,6 +179,7 @@ public class MapDatabase {
 	private byte wayNumberOfRelevantTags;
 	private byte wayNumberOfTags;
 	private short wayNumberOfWayNodes;
+	private String wayRef;
 	private int waySize;
 	private short waysOnZoomLevel;
 	private byte waySpecialByte1;
@@ -294,7 +297,7 @@ public class MapDatabase {
 			this.bufferPosition += 1;
 
 			// bit 1-4 of the special byte represent the node layer
-			this.nodeLayer = (byte) ((this.nodeSpecialByte & 0xf0) >> 4);
+			this.nodeLayer = (byte) ((this.nodeSpecialByte & 0xf0) >>> 4);
 			// bit 5-8 of the special byte represent the number of tag IDs
 			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & 0x0f);
 
@@ -422,7 +425,7 @@ public class MapDatabase {
 			this.bufferPosition += 1;
 
 			// bit 1-4 of the first special byte represent the way layer
-			this.wayLayer = (byte) ((this.waySpecialByte1 & 0xf0) >> 4);
+			this.wayLayer = (byte) ((this.waySpecialByte1 & 0xf0) >>> 4);
 			// bit 5-8 of the first special byte represent the number of tag IDs
 			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & 0x0f);
 
@@ -431,7 +434,9 @@ public class MapDatabase {
 			this.bufferPosition += 1;
 
 			// bit 1-3 of the second special byte represent the number of relevant tags
-			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & 0xe0) >> 5);
+			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & 0xe0) >>> 5);
+			// bit 7-8 of the second special byte represent the way node compression mode
+			this.wayNodeCompressionMode = (byte) (this.waySpecialByte2 & 0x3);
 
 			// read the way tag bitmap (1 byte)
 			this.wayTagBitmap = this.readBuffer[this.bufferPosition];
@@ -456,7 +461,7 @@ public class MapDatabase {
 			this.wayNumberOfWayNodes = Deserializer.toShort(this.readBuffer,
 					this.bufferPosition);
 			this.bufferPosition += 2;
-			if (this.wayNumberOfWayNodes < 0
+			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
 				return;
@@ -470,25 +475,109 @@ public class MapDatabase {
 				this.wayNodesSequence = new int[this.wayNodesSequenceLength];
 			}
 
-			// read the way nodes
-			for (this.tempShort = 0; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
-				// read way node latitude (4 bytes)
-				this.wayNodeLatitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-				this.bufferPosition += 4;
-				// read way node longitude (4 bytes)
-				this.wayNodeLongitude = Deserializer
-						.toInt(this.readBuffer, this.bufferPosition);
-				this.bufferPosition += 4;
-				this.wayNodesSequence[this.tempShort] = this.wayNodeLongitude;
-				this.wayNodesSequence[this.tempShort + 1] = this.wayNodeLatitude;
+			// read the first way node latitude (4 bytes)
+			this.wayNodeLatitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 4;
+			// read the first way node longitude (4 bytes)
+			this.wayNodeLongitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 4;
+			this.wayNodesSequence[1] = this.wayNodeLatitude;
+			this.wayNodesSequence[0] = this.wayNodeLongitude;
+
+			// read the remaining way nodes
+			switch (this.wayNodeCompressionMode) {
+				case 0:
+					// 4 bytes per coordinate (uncompressed)
+					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
+						// read the way node latitude (4 bytes)
+						this.wayNodeLatitude = Deserializer.toInt(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 4;
+						// read the way node longitude (4 bytes)
+						this.wayNodeLongitude = Deserializer.toInt(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 4;
+
+						this.wayNodesSequence[this.tempShort] = this.wayNodeLongitude;
+						this.wayNodesSequence[this.tempShort + 1] = this.wayNodeLatitude;
+					}
+
+					break;
+				case 1:
+					// 3 bytes per coordinate (offset compression)
+					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
+						// read the way node latitude offset (3 bytes)
+						this.wayNodeLatitude = Deserializer.threeBytesToSignedInt(
+								this.readBuffer, this.bufferPosition);
+						this.bufferPosition += 3;
+						// read the way node longitude offset (3 bytes)
+						this.wayNodeLongitude = Deserializer.threeBytesToSignedInt(
+								this.readBuffer, this.bufferPosition);
+						this.bufferPosition += 3;
+
+						// calculate the coordinates with the previous one and the offset
+						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
+								+ this.wayNodeLongitude;
+						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
+								+ this.wayNodeLatitude;
+					}
+
+					break;
+				case 2:
+					// 2 bytes per coordinate (offset compression)
+					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
+						// read the way node latitude offset (2 bytes)
+						this.wayNodeLatitude = Deserializer.toShort(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 2;
+						// read the way node longitude offset (2 bytes)
+						this.wayNodeLongitude = Deserializer.toShort(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 2;
+
+						// calculate the coordinates with the previous one and the offset
+						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
+								+ this.wayNodeLongitude;
+						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
+								+ this.wayNodeLatitude;
+					}
+
+					break;
+				case 3:
+					// 1 byte per coordinate (offset compression)
+					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
+						// read the way node latitude offset (1 byte)
+						this.wayNodeLatitude = this.readBuffer[this.bufferPosition];
+						this.bufferPosition += 1;
+						// read the way node longitude offset (1 byte)
+						this.wayNodeLongitude = this.readBuffer[this.bufferPosition];
+						this.bufferPosition += 1;
+
+						// calculate the coordinates with the previous one and the offset
+						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
+								+ this.wayNodeLongitude;
+						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
+								+ this.wayNodeLatitude;
+					}
+
+					break;
+
+				default:
+					Logger.d("invalid way node compression mode");
+					break;
 			}
 
 			// read the feature byte that activates optional way features (1 byte)
 			this.wayFeatureByte = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
 
-			// check if the way has a name
+			// bit 1-4 of the way feature byte represent optional features
 			this.wayFeatureName = (this.wayFeatureByte & 0x80) != 0;
+			this.wayFeatureRef = (this.wayFeatureByte & 0x40) != 0;
+			this.wayFeatureLabelPosition = (this.wayFeatureByte & 0x20) != 0;
+			this.wayFeatureMultipolygon = (this.wayFeatureByte & 0x10) != 0;
+
+			// check if the way has a name
 			if (this.wayFeatureName) {
 				// get the length of the way name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -510,8 +599,29 @@ public class MapDatabase {
 				this.wayName = null;
 			}
 
+			// check if the way has a reference
+			if (this.wayFeatureRef) {
+				// get the length of the way reference (2 bytes)
+				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+				this.bufferPosition += 2;
+				if (this.stringLength > 0) {
+					if (this.queryReadWayNames) {
+						// read the way reference
+						this.wayRef = new String(this.readBuffer, this.bufferPosition,
+								this.stringLength, "UTF-8");
+					} else {
+						this.wayRef = null;
+					}
+					this.bufferPosition += this.stringLength;
+				} else {
+					Logger.d("invalid string length: " + this.stringLength);
+					this.wayRef = null;
+				}
+			} else {
+				this.wayRef = null;
+			}
+
 			// check if the way has a label position
-			this.wayFeatureLabelPosition = (this.wayFeatureByte & 0x40) != 0;
 			if (this.wayFeatureLabelPosition) {
 				this.wayLabelPosition = new int[2];
 				// read the label position latitude (4 bytes)
@@ -527,7 +637,6 @@ public class MapDatabase {
 			}
 
 			// check if the way represents a multipolygon
-			this.wayFeatureMultipolygon = (this.wayFeatureByte & 0x20) != 0;
 			if (this.wayFeatureMultipolygon) {
 				// read the amount of inner ways (1 byte)
 				this.wayNumberOfInnerWays = this.readBuffer[this.bufferPosition];
@@ -558,11 +667,11 @@ public class MapDatabase {
 
 						// read the inner way nodes
 						for (this.tempShort = 0; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
-							// read inner way node latitude (4 bytes)
+							// read the inner way node latitude (4 bytes)
 							this.wayNodeLatitude = Deserializer.toInt(this.readBuffer,
 									this.bufferPosition);
 							this.bufferPosition += 4;
-							// read inner way node longitude (4 bytes)
+							// read the inner way node longitude (4 bytes)
 							this.wayNodeLongitude = Deserializer.toInt(this.readBuffer,
 									this.bufferPosition);
 							this.bufferPosition += 4;
@@ -581,7 +690,7 @@ public class MapDatabase {
 
 			// render the way
 			mapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags, this.wayName,
-					this.wayLabelPosition, this.wayTagIds, this.wayTagBitmap,
+					this.wayRef, this.wayLabelPosition, this.wayTagIds, this.wayTagBitmap,
 					this.wayNodesSequenceLength, this.wayNodesSequence, this.wayInnerWays);
 		}
 	}
@@ -872,8 +981,8 @@ public class MapDatabase {
 				// calculate the XY numbers of the parent base tile
 				this.zoomLevelDifference = tile.zoomLevel
 						- this.mapFileParameters.baseZoomLevel;
-				this.fromBaseTileX = tile.x >> this.zoomLevelDifference;
-				this.fromBaseTileY = tile.y >> this.zoomLevelDifference;
+				this.fromBaseTileX = tile.x >>> this.zoomLevelDifference;
+				this.fromBaseTileY = tile.y >>> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
 
@@ -894,12 +1003,12 @@ public class MapDatabase {
 					}
 				} else {
 					// calculate the XY numbers of the second level subtile
-					this.subtileX = tile.x >> (this.zoomLevelDifference - 2);
-					this.subtileY = tile.y >> (this.zoomLevelDifference - 2);
+					this.subtileX = tile.x >>> (this.zoomLevelDifference - 2);
+					this.subtileY = tile.y >>> (this.zoomLevelDifference - 2);
 
 					// calculate the XY numbers of the parent tile
-					this.parentTileX = this.subtileX >> 1;
-					this.parentTileY = this.subtileY >> 1;
+					this.parentTileX = this.subtileX >>> 1;
+					this.parentTileY = this.subtileY >>> 1;
 
 					// determine the correct bitmask for all 16 subtiles
 					if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 0) {

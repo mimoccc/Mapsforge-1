@@ -42,7 +42,7 @@ class Serializer {
 	static byte[] getBytes(long value) {
 		return new byte[] { (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40),
 				(byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
-				(byte) (value >> 8), (byte) (value) };
+				(byte) (value >> 8), (byte) value };
 	}
 
 	/**
@@ -65,14 +65,14 @@ class Serializer {
 	 */
 	static byte[] getFiveBytes(long value) {
 		return new byte[] { (byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
-				(byte) (value >> 8), (byte) (value) };
+				(byte) (value >> 8), (byte) value };
 	}
 
 	/**
 	 * Converts the lowest three bytes of an int number to a byte array. The sign of the int
 	 * number is preserved in the most significant bit of the first byte.
 	 * 
-	 * The original int number can be exactly restored if its absolute value was <= 2^23.
+	 * The original int number can be exactly restored if its absolute value was < 2^23.
 	 * 
 	 * @param value
 	 *            the int value.
@@ -80,7 +80,7 @@ class Serializer {
 	 */
 	static final byte[] getSignedThreeBytes(int value) {
 		// check the sign
-		if (value > 0) {
+		if (value >= 0) {
 			// positive number, set the first bit in the first byte to 0
 			return new byte[] { (byte) (value >> 16 & 0x7F), (byte) (value >> 8), (byte) value };
 		}

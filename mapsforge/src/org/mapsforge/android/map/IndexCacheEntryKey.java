@@ -49,7 +49,8 @@ class IndexCacheEntryKey {
 			this.other = (IndexCacheEntryKey) obj;
 			if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
 				return false;
-			} else if (!this.mapFileParameters.equals(this.other.mapFileParameters)) {
+			} else if (this.mapFileParameters != null
+					&& !this.mapFileParameters.equals(this.other.mapFileParameters)) {
 				return false;
 			} else if (this.indexBlockNumber != this.other.indexBlockNumber) {
 				return false;

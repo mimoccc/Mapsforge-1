@@ -36,6 +36,27 @@ class Deserializer {
 	}
 
 	/**
+	 * Converts three bytes of a byte array to a signed int number.
+	 * 
+	 * @param buffer
+	 *            the byte array.
+	 * @param offset
+	 *            the offset in the array.
+	 * @return the int value.
+	 */
+	static int threeBytesToSignedInt(byte[] buffer, int offset) {
+		// check the sign bit
+		if ((buffer[offset] & 0x80) == 0) {
+			// positive number
+			return buffer[offset] << 16 | (buffer[offset + 1] & 0xff) << 8
+					| (buffer[offset + 2] & 0xff);
+		}
+		// negative number
+		return 0xff800000 | (buffer[offset] & 0x7F) << 16 | (buffer[offset + 1] & 0xff) << 8
+				| (buffer[offset + 2] & 0xff);
+	}
+
+	/**
 	 * Converts four bytes of a byte array to an int number.
 	 * 
 	 * @param buffer
