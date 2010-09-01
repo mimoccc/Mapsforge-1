@@ -531,6 +531,16 @@ class Utils {
 		return intersectionPoint;
 	}
 
+	/**
+	 * This method filters the way nodes of a way and returns only those way nodes which do not
+	 * lie on the same pixel at the given zoom level.
+	 * 
+	 * @param wayNodes
+	 *            list of way nodes
+	 * @param zoom
+	 *            zoom level for which the calculations are made
+	 * @return a list of way nodes
+	 */
 	static ArrayList<Coordinate> compressWay(ArrayList<Coordinate> wayNodes, byte zoom) {
 		// zoom: maxzoom for certain base zoom level
 		ArrayList<Coordinate> result = new ArrayList<Coordinate>();
@@ -562,6 +572,40 @@ class Utils {
 		// xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(wayLength - 1).y, zoom);
 		// yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(wayLength - 1).x, zoom);
 		result.add(wayNodes.get(wayLength - 1));
+
+		return result;
+	}
+
+	static ArrayList<Integer> compressWayDiffs(ArrayList<Integer> waynodes) {
+		int diffLat;
+		int diffLon;
+
+		int maxDiffLat = 0;
+		int maxDiffLon = 0;
+
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		result.add(waynodes.get(0));
+		result.add(waynodes.get(1));
+
+		for (int i = 2; i < waynodes.size(); i += 2) {
+			diffLat = waynodes.get(i - 2) - waynodes.get(i);
+			result.add(diffLat);
+			diffLon = waynodes.get(i - 1) - waynodes.get(i + 1);
+			result.add(diffLon);
+
+			diffLat = Math.abs(diffLat);
+			diffLon = Math.abs(diffLon);
+
+			if (diffLat > maxDiffLat) {
+				maxDiffLat = diffLat;
+			}
+			if (diffLon > maxDiffLon) {
+				maxDiffLon = diffLon;
+			}
+		}
+
+		result.add(maxDiffLat);
+		result.add(maxDiffLon);
 
 		return result;
 	}
