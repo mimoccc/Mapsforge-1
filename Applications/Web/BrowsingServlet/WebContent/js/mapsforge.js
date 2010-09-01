@@ -17,7 +17,6 @@ var initMap = {
 
 // These are the URLs of the servlets which provide routing and geocoding
 var routingServiceURL  = "/HHRoutingWebservice/";
-var geoCodingURL = "/GeoCoder/";
 
 /**
  * Initialization of the OpenStreetMap map, layers and controls
@@ -100,7 +99,7 @@ window.onload = function(){
   document.getElementById("routeButton").onclick = hhRoute;
   document.getElementById("newRequestButton").onclick = newRequest;
   document.getElementById("sizeSwitch").onclick = sizeSwitch;
-  
+
   document.search.start.onblur = geoCode;
   document.search.via.onblur = geoCode;
   document.search.end.onblur = geoCode;
@@ -375,6 +374,7 @@ function hhRouteResponseHandler(response) {
  ************************************************************************************/
 // send it
 var geoCodeStation;
+var jsonReader = new OpenLayers.Format.JSON();
 geoCode = function(e) {
   // Cross browser implementation of event target detection
   if (e.target) targ = e.target;
@@ -385,34 +385,50 @@ geoCode = function(e) {
   locationName = document.search[targ.name].value;
   geoCodeStation = targ.name;
 	OpenLayers.Request.GET( {
-		url : geoCodingURL + "?name=" + locationName,
+		url : "http://nominatim.openstreetmap.org/search?format=json&q=" + locationName,
 		success : geoCodeResponseHandler,
 		scope : this
 	});
 };
 
 geoCodeResponseHandler = function(response){
-  data = eval('('+response.responseText+')');
-  console.log(data);
-  route[geoCodeStation].lat = data[0].lat;
-  route[geoCodeStation].lon = data[0].lon;
-  hhRoute();
-}
+  data = jsonReader.read(response.responseText);
+  if (data instanceof Array && data.length > 0 && data[0].hasOwnProperty("lat") && data[0].hasOwnProperty("lon")) {
+    route[geoCodeStation].lat = data[0].lat;
+    route[geoCodeStation].lon = data[0].lon;
+    hhRoute();
+  }
+};
 
 //reverse it
 reverseGeoCode = function(lat, lon, station) {
   geoCodeStation = station;
 	OpenLayers.Request.GET( {
-		url : geoCodingURL + "?lat=" + lat + "&lon=" + lon,
+		url : "http://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=" + lat + "&lon=" + lon,
 		success : reverseGeoCodeResponseHandler,
 		scope : this
 	});
 };
 
 reverseGeoCodeResponseHandler = function(response){
-  data = eval('('+response.responseText+')');
-  document.search[geoCodeStation].value = data.display_name;
-}
+  data = jsonReader.read(response.responseText);
+  var result = [];
+  if (data.hasOwnProperty("address")) {
+    if (data.address.hasOwnProperty("road")) {
+      if (data.address.hasOwnProperty("house_number"))
+        data.address.road += " " + data.address.house_number;
+      result.push(data.address.road);
+    }
+    if (data.address.hasOwnProperty("city")) {
+      if (data.address.hasOwnProperty("postcode"))
+        data.address.city = data.address.postcode + " " + data.address.city;
+      result.push(data.address.city);
+    }
+    if (data.address.hasOwnProperty("country"))
+      result.push(data.address.country);
+    document.search[geoCodeStation].value = result.join(", ");
+  }
+};
 
 /************************************************************************************
  *  This part takes care of the resizing of the map div,
@@ -426,11 +442,12 @@ var resizeMapWindow = function resizeMap() {
 	document.getElementById("map").style.height = window.windowHeight - 10; // 10 because body padding
 	document.getElementById("leftDiv").style.height = window.windowHeight - 10; // 10 because body padding
 	document.getElementById("turnByTurn").style.height = window.windowHeight - 20 - document.getElementById('searchForm').offsetHeight - document.getElementById('sizeSwitch').offsetHeight;
-	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth);
+	leftDivWidth = parseInt(document.getElementById("leftDiv").offsetWidth) + 10;
 	document.getElementById("leftDiv").style.width = leftDivWidth - 10;
-	document.getElementById("map").style.width = window.windowWidth - leftDivWidth - 10;
-	document.getElementById("map").style.left = leftDivWidth;
-}
+	document.getElementById("map").style.width = window.windowWidth - leftDivWidth - 20;
+	document.getElementById("map").style.left = leftDivWidth + 10;
+};
+
 window.onresize = resizeMapWindow;
 // This function is for showing / hiding the left DIV
 var sizeSwitchFunction;
@@ -512,4 +529,3 @@ OpenLayers.LonLat.prototype.rtf = function() {
   }
   return this.rtf_result;
 };
-
