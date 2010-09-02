@@ -28,7 +28,8 @@ import org.mapsforge.server.routing.IVertex;
 public class DummyEdge implements IEdge {
 	GeoCoordinate[] wayPoints;
 	int id;
-	String name;
+	String name, ref = "";
+	boolean isMotorWayLink, isRoundabout = false;
 
 	/**
 	 * @param wayPoints
@@ -37,6 +38,15 @@ public class DummyEdge implements IEdge {
 	public DummyEdge(GeoCoordinate[] wayPoints, String name) {
 		this.wayPoints = wayPoints;
 		this.name = name;
+	}
+
+	public DummyEdge(GeoCoordinate[] wayPoints, String name, String ref,
+			boolean isMotorwayLink, boolean isRoundabout) {
+		this.wayPoints = wayPoints;
+		this.name = name;
+		this.ref = ref;
+		this.isMotorWayLink = isMotorwayLink;
+		this.isRoundabout = isRoundabout;
 	}
 
 	@Override
@@ -76,20 +86,17 @@ public class DummyEdge implements IEdge {
 
 	@Override
 	public String getRef() {
-		// TODO Auto-generated method stub
-		return null;
+		return ref;
 	}
 
 	@Override
 	public boolean isMotorWayLink() {
-		// TODO Auto-generated method stub
-		return false;
+		return isMotorWayLink;
 	}
 
 	@Override
 	public boolean isRoundabout() {
-		// TODO Auto-generated method stub
-		return false;
+		return isRoundabout;
 	}
 
 }
