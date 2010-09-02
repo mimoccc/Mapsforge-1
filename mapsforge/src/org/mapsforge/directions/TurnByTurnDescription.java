@@ -80,15 +80,22 @@ public class TurnByTurnDescription {
 				streets.add(previousStreet);
 			} else {
 				double delta = getAngleOfStreets(lastEdge, currentEdge);
-				int deltaRange = (int) java.lang.Math.round(delta / 90) % 8;
+				int deltaRange = (int) java.lang.Math.round(delta / 90) % 4;
 				boolean isUturn = determineUTurn(secondLastEdge, lastEdge, currentEdge);
 				boolean isRoundabout = currentEdge.isRoundabout();
-				if (hasSameName(currentEdge, lastEdge) || lastEdge.isMotorWayLink()
-						&& currentEdge.isMotorWayLink()) {
+				if (hasSameNameAndRef(currentEdge, lastEdge) && deltaRange == 0
+						|| lastEdge != null && lastEdge.isMotorWayLink()
+						&& currentEdge.isMotorWayLink() || isRoundabout) {
 					if (!isUturn && !isRoundabout) {
 						// if the same street just continues on, we only attach the
 						// GeoCoordinates
 						previousStreet.appendCoordinatesFromEdge(currentEdge);
+						// if (previousStreet.ref != null && !previousStreet.ref.equals("")
+						// && previousStreet.ref.equals(currentEdge.getRef())
+						// && !previousStreet.name.equals(currentEdge.getName())) {
+						// previousStreet.name = currentEdge.getRef();
+						// }
+
 					} else if (isUturn) {
 						// if it is a uturn on the same street, we start a new street so
 						// the information about the uTurn is not lost
@@ -98,9 +105,13 @@ public class TurnByTurnDescription {
 					} else if (isRoundabout) {
 						// if it is a uturn on the same street, we start a new street so
 						// the information about the uTurn is not lost
-						previousStreet = new TurnByTurnStreet(currentEdge);
-						previousStreet.angleFromPreviousStreet = delta;
-						streets.add(previousStreet);
+						if (previousStreet.isRoundabout) {
+							previousStreet.appendCoordinatesFromEdge(currentEdge);
+						} else {
+							previousStreet = new TurnByTurnStreet(currentEdge);
+							previousStreet.angleFromPreviousStreet = delta;
+							streets.add(previousStreet);
+						}
 					}
 				} else {
 					if (isUturn) {
@@ -119,8 +130,9 @@ public class TurnByTurnDescription {
 						} else if (currentEdge.getAllWaypoints()[0]
 								.sphericalDistance(currentEdge.getAllWaypoints()[currentEdge
 										.getAllWaypoints().length - 1]) < 30d
-								&& (delta < 15 || 345 < delta)
-								&& (nextEdge == null || !hasSameName(nextEdge, currentEdge))) {
+								&& deltaRange == 0
+								&& (nextEdge == null || !hasSameNameAndRef(nextEdge,
+										currentEdge))) {
 							previousStreet.appendCoordinatesFromEdge(currentEdge);
 						} else {
 							// Here is the last case in which a new street is started
@@ -152,7 +164,7 @@ public class TurnByTurnDescription {
 			return false;
 		double angleSum = (getAngleOfStreets(secondLastEdge, lastEdge) + getAngleOfStreets(
 				lastEdge, currentEdge)) % 360;
-		if (hasSameName(secondLastEdge, currentEdge)
+		if (hasSameNameAndRef(secondLastEdge, currentEdge)
 				&& (170 < angleSum && angleSum < 190)
 				&& currentEdge.getAllWaypoints()[0].sphericalDistance(secondLastEdge
 						.getAllWaypoints()[secondLastEdge.getAllWaypoints().length - 1]) < 30d) {
@@ -161,14 +173,23 @@ public class TurnByTurnDescription {
 		return false;
 	}
 
-	boolean hasSameName(IEdge edge1, IEdge edge2) {
+	boolean hasSameNameAndRef(IEdge edge1, IEdge edge2) {
 		if (edge1 != null && edge2 != null) {
 			String name1 = edge1.getName();
 			String name2 = edge2.getName();
-			if (name1 != null && name2 != null && name1.equalsIgnoreCase(name2)) {
+			String ref1 = edge1.getRef();
+			String ref2 = edge2.getRef();
+			if (name1 != null
+					&& name2 != null
+					&& ref1 != null
+					&& ref2 != null
+					&& (!name1.equalsIgnoreCase("") && name1.equalsIgnoreCase(name2) || !ref1
+							.equalsIgnoreCase("")
+							&& ref1.equalsIgnoreCase(ref2))
+					&& edge1.isMotorWayLink() == edge2.isMotorWayLink()) {
 				return true;
 			}
-			if (name1 == null && name2 == null) {
+			if (name1 == null && name2 == null && ref1 == null && ref2 == null) {
 				return true;
 			}
 		}
@@ -267,11 +288,10 @@ public class TurnByTurnDescription {
 			}
 			jsonstreet.put("geometry", new JSONObject().put("type", "LineString").put(
 					"coordinates", streetCoordinatesAsJson));
-			jsonstreet.put(
-					"properties",
-					new JSONObject().put("Name", street.name).put("Length", street.length).put(
-							"Angle", street.angleFromPreviousStreet)).put("Roundabout",
-					street.isRoundabout).put("Motorway_Exit", street.isMotorwayExit);
+			jsonstreet.put("properties", new JSONObject().put("Name", street.name).put("Ref",
+					street.ref).put("Length", street.length).put("Angle",
+					street.angleFromPreviousStreet).put("Roundabout", street.isRoundabout).put(
+					"Motorway_Link", street.isMotorwayLink));
 			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);
@@ -356,7 +376,7 @@ public class TurnByTurnDescription {
 	}
 
 	/**
-	 * Creates a GPX version of the directions.
+	 * Creates a GPX (GPS Exchange Format) version of the directions.
 	 * 
 	 * @return a KML string
 	 * @throws ParserConfigurationException
@@ -429,7 +449,7 @@ public class TurnByTurnDescription {
 	class TurnByTurnStreet {
 		double length = 0;
 		double angleFromPreviousStreet = -360;
-		boolean isRoundabout, isMotorwayExit = false;
+		boolean isRoundabout, isMotorwayLink = false;
 		Vector<GeoCoordinate> points = new Vector<GeoCoordinate>();
 		String name = "";
 		String ref = "";
@@ -444,7 +464,7 @@ public class TurnByTurnDescription {
 			name = edge.getName();
 			ref = edge.getRef();
 			isRoundabout = edge.isRoundabout();
-			isMotorwayExit = edge.isMotorWayLink();
+			isMotorwayLink = edge.isMotorWayLink();
 			appendCoordinatesFromEdge(edge);
 		}
 
@@ -467,48 +487,66 @@ public class TurnByTurnDescription {
 
 		@Override
 		public String toString() {
+			int delta = (int) java.lang.Math.round(angleFromPreviousStreet / 45);
+			String turnInstruction;
+			switch (delta) {
+				case 0:
+				case 8:
+					turnInstruction = "Go straight on ";
+					break;
+				case 1:
+					turnInstruction = "Make a slight right turn onto ";
+					break;
+				case 2:
+					turnInstruction = "Make a right turn onto ";
+					break;
+				case 3:
+					turnInstruction = "Make a sharp right turn onto ";
+					break;
+				case 4:
+					turnInstruction = "Make U-Turn and stay on ";
+					break;
+				case 5:
+					turnInstruction = "Make a sharp left turn onto ";
+					break;
+				case 6:
+					turnInstruction = "Make a left turn onto ";
+					break;
+				case 7:
+					turnInstruction = "Make slight left turn onto ";
+					break;
+				default:
+					turnInstruction = "Go on ";
+			}
 			String result = "";
-			if (!isMotorwayExit && !isRoundabout) {
-				int delta = (int) java.lang.Math.round(angleFromPreviousStreet / 45);
-				switch (delta) {
-					case 0:
-					case 8:
-						result += "Go straight on ";
-						break;
-					case 1:
-						result += "Make a slight right turn onto ";
-						break;
-					case 2:
-						result += "Make a right turn onto ";
-						break;
-					case 3:
-						result += "Make a sharp right turn onto ";
-						break;
-					case 4:
-						result += "Make U-Turn and stay on ";
-						break;
-					case 5:
-						result += "Make a sharp left turn onto ";
-						break;
-					case 6:
-						result += "Make a left turn onto ";
-						break;
-					case 7:
-						result += "Make slight left turn onto ";
-						break;
-					default:
-						result += "Go on ";
+			if (!isMotorwayLink && !isRoundabout) {
+				result += turnInstruction;
+				if (!name.equals("")) {
+					result += name + " ";
+					if (!ref.equals("")) {
+						result += "(" + ref + ")";
+					}
+				} else {
+					if (ref.equals("")) {
+						result += "current street";
+					} else {
+						result += ref;
+					}
 				}
-				result += name + ". Stay on it for ";
+				result += ".\n";
 				length = java.lang.Math.round(length);
+				result += "Stay on it for ";
 				if (length > 1000) {
 					length = java.lang.Math.round(length / 100) / 10;
 					result += length + " km.";
 				} else {
 					result += length + " m.";
 				}
-			} else if (isMotorwayExit) {
-				result = "Take exit " + ref + " " + name;
+			} else if (isMotorwayLink) {
+				if (!ref.equals(""))
+					result = "Use motorway link " + ref + " " + name;
+				else
+					result += turnInstruction + "motorway link";
 			} else if (isRoundabout) {
 				result = "Go onto the roundabout " + name;
 			}
