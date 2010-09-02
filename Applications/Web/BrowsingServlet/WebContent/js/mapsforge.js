@@ -330,35 +330,48 @@ function hhRouteResponseHandler(response) {
       for (j in route.line[i].geometry.components) {
         route.line[i].geometry.components[j].transform(projWSG84, projSpheMe); // I actually do want to transform the object itself
       }
-      streetName = route.line[i].attributes.Name;
-      curlength = Math.round(route.line[i].attributes["Length"]/10)*10;
-      unit = "m";
-      if (curlength > 1000) {
-      	curlength = Math.round(curlength/100)/10;
-      	unit = "km";
+      if (route.line[i].attributes.Motorway_Link == false) {
+        streetName = route.line[i].attributes.Name;
+        if (streetName == "") {
+          streetName = route.line[i].attributes.Ref;
+        } else if (route.line[i].attributes.Ref != "" && route.line[i].attributes.Ref != streetName) {
+          streetName += " (" + route.line[i].attributes.Ref + ")";
+        }
+        curlength = Math.round(route.line[i].attributes["Length"]/10)*10;
+        unit = "m";
+        if (curlength > 1000) {
+          curlength = Math.round(curlength/100)/10;
+          unit = "km";
+        }
+        angle = route.line[i].attributes.Angle;
+      	if (angle == -360 || isNaN(angle) || angle == undefined) {
+      		arrow = "";
+      	} else if (angle > 337 || angle < 22) {
+      		arrow = '<div class="Straight Arrow"></div>';
+      	} else if (angle > 22 && angle < 67) {
+      		arrow = '<div class="R45 Arrow"></div>';
+      	} else if (angle > 67 && angle < 112) {
+      		arrow = '<div class="R90 Arrow"></div>';
+      	} else if (angle > 112 && angle < 157) {
+      		arrow = '<div class="R135 Arrow"></div>';
+      	} else if (angle > 157 && angle < 202) {
+      		arrow = '<div class="UTurn Arrow"></div>';
+      	} else if (angle > 202 && angle < 247 ) {
+      		arrow = '<div class="L135 Arrow"></div>';
+      	} else if (angle > 247 && angle < 292 ) {
+      		arrow = '<div class="L90 Arrow"></div>';
+      	} else if (angle > 292 && angle < 337 ) {
+      		arrow = '<div class="L45 Arrow"></div>';
+      	}
+        angle = Math.round(angle);
+      	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  curlength + '&nbsp;' + unit + '</td></tr>';
+      } else {
+        if (route.line[i].attributes.Name != "") {
+          directions += '<tr><td class="direction"></td><td class="street">Take exit ' + route.line[i].attributes.Ref + ' (' + route.line[i].attributes.Name + ')</td><td class="length"></td></tr>';
+        } else {
+          directions += '<tr><td class="direction"></td><td class="street">Take the motorway link</td><td class="length"></td></tr>';
+        }
       }
-      angle = route.line[i].attributes.Angle;
-  	if (angle == -360 || isNaN(angle) || angle == undefined) {
-  		arrow = "";
-  	} else if (angle > 337 || angle < 22) {
-  		arrow = '<div class="Straight"></div>';
-  	} else if (angle > 22 && angle < 67) {
-  		arrow = '<div class="R45"></div>';
-  	} else if (angle > 67 && angle < 112) {
-  		arrow = '<div class="R90"></div>';
-  	} else if (angle > 112 && angle < 157) {
-  		arrow = '<div class="R135"></div>';
-  	} else if (angle > 157 && angle < 202) {
-  		arrow = '<div class="UTurn"></div>';
-  	} else if (angle > 202 && angle < 247 ) {
-  		arrow = '<div class="L135"></div>';
-  	} else if (angle > 247 && angle < 292 ) {
-  		arrow = '<div class="L90"></div>';
-  	} else if (angle > 292 && angle < 337 ) {
-  		arrow = '<div class="L45"></div>';
-  	}
-      angle = Math.round(angle);
-    	directions += '<tr><td class="direction">' + arrow + '</td><td class="street">' + streetName + '</td><td class="length">' +  curlength + '&nbsp;' + unit + '</td></tr>';
     }
     document.getElementById("turnByTurn").innerHTML = '<table id="turnTable" />' + directions + '</table>';
     layerVectors.addFeatures(route.line);
