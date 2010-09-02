@@ -555,7 +555,6 @@ class Utils {
 
 		xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(0).y, zoom);
 		yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(0).x, zoom);
-		result.add(wayNodes.get(0));
 
 		for (int i = 1; i < wayLength - 1; i++) {
 			x = MercatorProjection.longitudeToPixelX(wayNodes.get(i).y, zoom);
@@ -565,17 +564,26 @@ class Utils {
 				xOld = x;
 				yOld = y;
 				result.add(wayNodes.get(i));
-				// result.add(new Coordinate(yOld, xOld));
 			}
 		}
 
-		// xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(wayLength - 1).y, zoom);
-		// yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(wayLength - 1).x, zoom);
 		result.add(wayNodes.get(wayLength - 1));
 
 		return result;
 	}
 
+	/**
+	 * Calculates the distance between two way nodes as an integer offset to the previous way
+	 * node. The first way node is always stored with its complete latitude and longitude
+	 * coordinates. All following coordinates are offsets. At the end the maximal values for
+	 * latitude and longitude offsets are added to the list.
+	 * 
+	 * @param waynodes
+	 *            list of all way nodes of a way
+	 * @return a list that holds the complete coordinates of the first way node, offsets for
+	 *         calculating the coordinates of the following way nodes and the maximal values for
+	 *         latitude and longitude offsets for this way.
+	 */
 	static ArrayList<Integer> compressWayDiffs(ArrayList<Integer> waynodes) {
 		int diffLat;
 		int diffLon;
@@ -588,9 +596,11 @@ class Utils {
 		result.add(waynodes.get(1));
 
 		for (int i = 2; i < waynodes.size(); i += 2) {
-			diffLat = waynodes.get(i - 2) - waynodes.get(i);
+
+			diffLat = (-1) * (waynodes.get(i - 2) - waynodes.get(i));
 			result.add(diffLat);
-			diffLon = waynodes.get(i - 1) - waynodes.get(i + 1);
+
+			diffLon = (-1) * (waynodes.get(i - 1) - waynodes.get(i + 1));
 			result.add(diffLon);
 
 			diffLat = Math.abs(diffLat);

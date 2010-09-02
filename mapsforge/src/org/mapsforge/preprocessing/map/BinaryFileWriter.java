@@ -1021,20 +1021,15 @@ public class BinaryFileWriter {
 
 							compressionType = 0;
 							if (wayNodeCompression) {
-								if (maxDiffLat >= Short.MIN_VALUE
-										&& maxDiffLat <= Short.MAX_VALUE
-										&& maxDiffLon >= Short.MIN_VALUE
+								if (maxDiffLat <= Byte.MAX_VALUE
+										&& maxDiffLon <= Byte.MAX_VALUE)
+									compressionType = 3;
+								if (maxDiffLat <= Short.MAX_VALUE
 										&& maxDiffLon <= Short.MAX_VALUE)
 									compressionType = 2;
 								if ((maxDiffLat <= (Math.pow(2, 23)))
 										&& (maxDiffLon <= (Math.pow(2, 23))))
 									compressionType = 1;
-								if (maxDiffLat >= Byte.MIN_VALUE
-										&& maxDiffLat <= Byte.MAX_VALUE
-										&& maxDiffLon >= Byte.MIN_VALUE
-										&& maxDiffLon <= Byte.MAX_VALUE)
-									compressionType = 3;
-
 							}
 
 							// write byte with amount of tags which are rendered
@@ -1055,7 +1050,15 @@ public class BinaryFileWriter {
 							raf.writeShort(waynodesAmount);
 
 							if (wayNodeCompression) {
-								if (compressionType == 2) {
+								if (compressionType == 3) {
+									raf.writeInt(wayNodesArray.get(0));
+									raf.writeInt(wayNodesArray.get(1));
+									for (int i = 2; i < wayNodesArray.size(); i += 2) {
+
+										raf.writeByte(wayNodesArray.get(i));
+										raf.writeByte(wayNodesArray.get(i + 1));
+									}
+								} else if (compressionType == 2) {
 									raf.writeInt(wayNodesArray.get(0));
 									raf.writeInt(wayNodesArray.get(1));
 									for (int i = 2; i < wayNodesArray.size(); i += 2) {
@@ -1071,14 +1074,6 @@ public class BinaryFileWriter {
 												.get(i)));
 										raf.write(Serializer.getSignedThreeBytes(wayNodesArray
 												.get(i + 1)));
-									}
-								} else if (compressionType == 3) {
-									raf.writeInt(wayNodesArray.get(0));
-									raf.writeInt(wayNodesArray.get(1));
-									for (int i = 2; i < wayNodesArray.size(); i += 2) {
-
-										raf.writeByte(wayNodesArray.get(i));
-										raf.writeByte(wayNodesArray.get(i + 1));
 									}
 								} else {
 									// compressionType = 0;
