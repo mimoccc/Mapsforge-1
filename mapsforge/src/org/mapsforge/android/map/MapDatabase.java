@@ -31,9 +31,14 @@ public class MapDatabase {
 	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
 
 	/**
-	 * The version of the binary map file that this implementation supports.
+	 * The maximum supported version of the file format.
 	 */
-	private static final int BINARY_OSM_VERSION = 1;
+	private static final int BINARY_OSM_VERSION_MAX = 1;
+
+	/**
+	 * The minimal supported version of the file format.
+	 */
+	private static final int BINARY_OSM_VERSION_MIN = 1;
 
 	/**
 	 * The flag to indicate, if the binary map file contains debug signatures.
@@ -66,6 +71,36 @@ public class MapDatabase {
 	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
 
 	/**
+	 * Bitmask for the optional node feature "elevation".
+	 */
+	private static final int NODE_FEATURE_BITMASK_ELEVATION = 0x40;
+
+	/**
+	 * Bitmask for the optional node feature "house number".
+	 */
+	private static final int NODE_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
+
+	/**
+	 * Bitmask for the optional node feature "name".
+	 */
+	private static final int NODE_FEATURE_BITMASK_NAME = 0x80;
+
+	/**
+	 * Bitmask for the node layer.
+	 */
+	private static final int NODE_LAYER_BITMASK = 0xf0;
+
+	/**
+	 * Bit shift for calculating the node layer.
+	 */
+	private static final int NODE_LAYER_SHIFT = 4;
+
+	/**
+	 * Bitmask for the number of node tags.
+	 */
+	private static final int NODE_NUMBER_OF_TAGS_BITMASK = 0x0f;
+
+	/**
 	 * The length of the debug signature at the beginning of each block.
 	 */
 	private static final byte SIGNATURE_LENGTH_BLOCK = 32;
@@ -84,6 +119,76 @@ public class MapDatabase {
 	 * The length of the debug signature at the beginning of each way.
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
+
+	/**
+	 * Bitmask for the compression mode of way nodes.
+	 */
+	private static final int WAY_COMPRESSION_MODE_BITMASK = 0x3;
+
+	/**
+	 * Bitmask for the optional way feature "label position".
+	 */
+	private static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
+
+	/**
+	 * Bitmask for the optional way feature "multipolygon".
+	 */
+	private static final int WAY_FEATURE_BITMASK_MULTIPOLYGON = 0x10;
+
+	/**
+	 * Bitmask for the optional way feature "name".
+	 */
+	private static final int WAY_FEATURE_BITMASK_NAME = 0x80;
+
+	/**
+	 * Bitmask for the optional way feature "reference".
+	 */
+	private static final int WAY_FEATURE_BITMASK_REF = 0x40;
+
+	/**
+	 * Bitmask for the way layer.
+	 */
+	private static final int WAY_LAYER_BITMASK = 0xf0;
+
+	/**
+	 * Bit shift for calculating the way layer.
+	 */
+	private static final int WAY_LAYER_SHIFT = 4;
+
+	/**
+	 * This compression mode indicates 1 byte offset compressed way nodes.
+	 */
+	private static final byte WAY_NODES_COMPRESSED_1_BYTE = 3;
+
+	/**
+	 * This compression mode indicates 2 bytes offset compressed way nodes.
+	 */
+	private static final byte WAY_NODES_COMPRESSED_2_BYTES = 2;
+
+	/**
+	 * This compression mode indicates 3 bytes offset compressed way nodes.
+	 */
+	private static final byte WAY_NODES_COMPRESSED_3_BYTES = 1;
+
+	/**
+	 * This compression mode indicates uncompressed way nodes.
+	 */
+	private static final byte WAY_NODES_UNCOMPRESSED = 0;
+
+	/**
+	 * Bitmask for the number of way tags.
+	 */
+	private static final int WAY_NUMBER_OF_TAGS_BITMASK = 0x0f;
+
+	/**
+	 * Bitmask for the number of relevant way tags.
+	 */
+	private static final int WAY_RELEVANT_TAGS_BITMASK = 0xe0;
+
+	/**
+	 * Bit shift for calculating the number of relevant way tags.
+	 */
+	private static final int WAY_RELEVANT_TAGS_SHIFT = 5;
 
 	private byte baseZoomLevel;
 	private int blockEntriesTableOffset;
@@ -297,9 +402,9 @@ public class MapDatabase {
 			this.bufferPosition += 1;
 
 			// bit 1-4 of the special byte represent the node layer
-			this.nodeLayer = (byte) ((this.nodeSpecialByte & 0xf0) >>> 4);
+			this.nodeLayer = (byte) ((this.nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
 			// bit 5-8 of the special byte represent the number of tag IDs
-			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & 0x0f);
+			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
 
 			// reset the node tag array
 			System.arraycopy(this.defaultNodeTagIds, 0, this.nodeTagIds, 0,
@@ -315,12 +420,16 @@ public class MapDatabase {
 				this.nodeTagIds[this.nodeTagId] = true;
 			}
 
-			// read the feature byte that activates optional node features (1 byte)
+			// read the feature byte (1 byte)
 			this.nodeFeatureByte = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
 
+			// bit 1-3 of the node feature byte enable optional features
+			this.nodeFeatureName = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
+			this.nodeFeatureElevation = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
+			this.nodeFeatureHouseNumber = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
+
 			// check if the node has a name
-			this.nodeFeatureName = (this.nodeFeatureByte & 0x80) != 0;
 			if (this.nodeFeatureName) {
 				// get the length of the node name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -335,22 +444,22 @@ public class MapDatabase {
 					this.nodeName = null;
 				}
 			} else {
+				// no node name
 				this.nodeName = null;
 			}
 
 			// check if the node has an elevation
-			this.nodeFeatureElevation = (this.nodeFeatureByte & 0x40) != 0;
 			if (this.nodeFeatureElevation) {
 				// get the node elevation (2 bytes)
 				this.nodeElevation = Short.toString(Deserializer.toShort(this.readBuffer,
 						this.bufferPosition));
 				this.bufferPosition += 2;
 			} else {
+				// no elevation
 				this.nodeElevation = null;
 			}
 
 			// check if the node has a house number
-			this.nodeFeatureHouseNumber = (this.nodeFeatureByte & 0x20) != 0;
 			if (this.nodeFeatureHouseNumber) {
 				// get the length of the node house number (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -365,6 +474,7 @@ public class MapDatabase {
 					this.nodeHouseNumber = null;
 				}
 			} else {
+				// no house number
 				this.nodeHouseNumber = null;
 			}
 
@@ -407,7 +517,7 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 				// check if the way is inside the requested tile
 				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
-					// skip the way and continue with the next way
+					// skip the rest of the way and continue with the next way
 					if (DEBUG_FILE) {
 						this.bufferPosition += this.waySize - 6 - SIGNATURE_LENGTH_WAY;
 					} else {
@@ -425,18 +535,18 @@ public class MapDatabase {
 			this.bufferPosition += 1;
 
 			// bit 1-4 of the first special byte represent the way layer
-			this.wayLayer = (byte) ((this.waySpecialByte1 & 0xf0) >>> 4);
+			this.wayLayer = (byte) ((this.waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
 			// bit 5-8 of the first special byte represent the number of tag IDs
-			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & 0x0f);
+			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
 
 			// read the second special byte that encodes multiple fields (1 byte)
 			this.waySpecialByte2 = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
 
 			// bit 1-3 of the second special byte represent the number of relevant tags
-			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & 0xe0) >>> 5);
+			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & WAY_RELEVANT_TAGS_BITMASK) >>> WAY_RELEVANT_TAGS_SHIFT);
 			// bit 7-8 of the second special byte represent the way node compression mode
-			this.wayNodeCompressionMode = (byte) (this.waySpecialByte2 & 0x3);
+			this.wayNodeCompressionMode = (byte) (this.waySpecialByte2 & WAY_COMPRESSION_MODE_BITMASK);
 
 			// read the way tag bitmap (1 byte)
 			this.wayTagBitmap = this.readBuffer[this.bufferPosition];
@@ -481,12 +591,14 @@ public class MapDatabase {
 			// read the first way node longitude (4 bytes)
 			this.wayNodeLongitude = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 			this.bufferPosition += 4;
+
+			// store the first way node
 			this.wayNodesSequence[1] = this.wayNodeLatitude;
 			this.wayNodesSequence[0] = this.wayNodeLongitude;
 
-			// read the remaining way nodes
+			// read and store the remaining way nodes
 			switch (this.wayNodeCompressionMode) {
-				case 0:
+				case WAY_NODES_UNCOMPRESSED:
 					// 4 bytes per coordinate (uncompressed)
 					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
 						// read the way node latitude (4 bytes)
@@ -498,12 +610,12 @@ public class MapDatabase {
 								this.bufferPosition);
 						this.bufferPosition += 4;
 
+						// store the inner way node
 						this.wayNodesSequence[this.tempShort] = this.wayNodeLongitude;
 						this.wayNodesSequence[this.tempShort + 1] = this.wayNodeLatitude;
 					}
-
 					break;
-				case 1:
+				case WAY_NODES_COMPRESSED_3_BYTES:
 					// 3 bytes per coordinate (offset compression)
 					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
 						// read the way node latitude offset (3 bytes)
@@ -515,15 +627,14 @@ public class MapDatabase {
 								this.readBuffer, this.bufferPosition);
 						this.bufferPosition += 3;
 
-						// calculate the coordinates with the previous one and the offset
+						// calculate the way node coordinates
 						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
 								+ this.wayNodeLongitude;
 						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
 								+ this.wayNodeLatitude;
 					}
-
 					break;
-				case 2:
+				case WAY_NODES_COMPRESSED_2_BYTES:
 					// 2 bytes per coordinate (offset compression)
 					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
 						// read the way node latitude offset (2 bytes)
@@ -535,15 +646,14 @@ public class MapDatabase {
 								this.bufferPosition);
 						this.bufferPosition += 2;
 
-						// calculate the coordinates with the previous one and the offset
+						// calculate the way node coordinates
 						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
 								+ this.wayNodeLongitude;
 						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
 								+ this.wayNodeLatitude;
 					}
-
 					break;
-				case 3:
+				case WAY_NODES_COMPRESSED_1_BYTE:
 					// 1 byte per coordinate (offset compression)
 					for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
 						// read the way node latitude offset (1 byte)
@@ -553,13 +663,12 @@ public class MapDatabase {
 						this.wayNodeLongitude = this.readBuffer[this.bufferPosition];
 						this.bufferPosition += 1;
 
-						// calculate the coordinates with the previous one and the offset
+						// calculate the way node coordinates
 						this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
 								+ this.wayNodeLongitude;
 						this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
 								+ this.wayNodeLatitude;
 					}
-
 					break;
 
 				default:
@@ -567,15 +676,15 @@ public class MapDatabase {
 					break;
 			}
 
-			// read the feature byte that activates optional way features (1 byte)
+			// read the feature byte (1 byte)
 			this.wayFeatureByte = this.readBuffer[this.bufferPosition];
 			this.bufferPosition += 1;
 
-			// bit 1-4 of the way feature byte represent optional features
-			this.wayFeatureName = (this.wayFeatureByte & 0x80) != 0;
-			this.wayFeatureRef = (this.wayFeatureByte & 0x40) != 0;
-			this.wayFeatureLabelPosition = (this.wayFeatureByte & 0x20) != 0;
-			this.wayFeatureMultipolygon = (this.wayFeatureByte & 0x10) != 0;
+			// bit 1-4 of the way feature byte enable optional features
+			this.wayFeatureName = (this.wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
+			this.wayFeatureRef = (this.wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
+			this.wayFeatureLabelPosition = (this.wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
+			this.wayFeatureMultipolygon = (this.wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
 
 			// check if the way has a name
 			if (this.wayFeatureName) {
@@ -596,6 +705,7 @@ public class MapDatabase {
 					this.wayName = null;
 				}
 			} else {
+				// no way name
 				this.wayName = null;
 			}
 
@@ -618,6 +728,7 @@ public class MapDatabase {
 					this.wayRef = null;
 				}
 			} else {
+				// no reference
 				this.wayRef = null;
 			}
 
@@ -633,11 +744,13 @@ public class MapDatabase {
 						this.bufferPosition);
 				this.bufferPosition += 4;
 			} else {
+				// no label position
 				this.wayLabelPosition = null;
 			}
 
 			// check if the way represents a multipolygon
 			if (this.wayFeatureMultipolygon) {
+				Logger.d("wayFeatureMultipolygon!!!");
 				// read the amount of inner ways (1 byte)
 				this.wayNumberOfInnerWays = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
@@ -652,32 +765,113 @@ public class MapDatabase {
 						this.innerWayNumberOfWayNodes = Deserializer.toShort(this.readBuffer,
 								this.bufferPosition);
 						this.bufferPosition += 2;
-						if (this.innerWayNumberOfWayNodes < 0
+						if (this.innerWayNumberOfWayNodes < 1
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 							Logger.d("invalid inner way number of way nodes: "
 									+ this.innerWayNumberOfWayNodes);
 							return;
 						}
 
-						// each inner way node consists of latitude and longitude fields
+						// each inner way node consists of a latitude and a longitude field
 						this.innerWayNodesSequenceLength = (short) (this.innerWayNumberOfWayNodes * 2);
 
 						// create an array for the inner way coordinates
 						this.innerWay = new int[this.innerWayNodesSequenceLength];
 
-						// read the inner way nodes
-						for (this.tempShort = 0; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
-							// read the inner way node latitude (4 bytes)
-							this.wayNodeLatitude = Deserializer.toInt(this.readBuffer,
-									this.bufferPosition);
-							this.bufferPosition += 4;
-							// read the inner way node longitude (4 bytes)
-							this.wayNodeLongitude = Deserializer.toInt(this.readBuffer,
-									this.bufferPosition);
-							this.bufferPosition += 4;
-							this.innerWay[this.tempShort] = this.wayNodeLongitude;
-							this.innerWay[this.tempShort + 1] = this.wayNodeLatitude;
+						// read the first inner way node latitude (4 bytes)
+						this.wayNodeLatitude = Deserializer.toInt(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 4;
+						// read the first inner way node longitude (4 bytes)
+						this.wayNodeLongitude = Deserializer.toInt(this.readBuffer,
+								this.bufferPosition);
+						this.bufferPosition += 4;
+
+						// store the first inner way node
+						this.innerWay[1] = this.wayNodeLatitude;
+						this.innerWay[0] = this.wayNodeLongitude;
+
+						// read and store the remaining inner way nodes
+						switch (this.wayNodeCompressionMode) {
+							case WAY_NODES_UNCOMPRESSED:
+								// 4 bytes per coordinate (uncompressed)
+								for (this.tempShort = 2; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+									// read the inner way node latitude (4 bytes)
+									this.wayNodeLatitude = Deserializer.toInt(this.readBuffer,
+											this.bufferPosition);
+									this.bufferPosition += 4;
+									// read the inner way node longitude (4 bytes)
+									this.wayNodeLongitude = Deserializer.toInt(this.readBuffer,
+											this.bufferPosition);
+									this.bufferPosition += 4;
+
+									// store the inner way node
+									this.innerWay[this.tempShort] = this.wayNodeLongitude;
+									this.innerWay[this.tempShort + 1] = this.wayNodeLatitude;
+								}
+								break;
+							case WAY_NODES_COMPRESSED_3_BYTES:
+								// 3 bytes per coordinate (offset compression)
+								for (this.tempShort = 2; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+									// read the inner way node latitude offset (3 bytes)
+									this.wayNodeLatitude = Deserializer.threeBytesToSignedInt(
+											this.readBuffer, this.bufferPosition);
+									this.bufferPosition += 3;
+									// read the inner way node longitude offset (3 bytes)
+									this.wayNodeLongitude = Deserializer.threeBytesToSignedInt(
+											this.readBuffer, this.bufferPosition);
+									this.bufferPosition += 3;
+
+									// calculate the inner way node coordinates
+									this.innerWay[this.tempShort] = this.innerWay[this.tempShort - 2]
+											+ this.wayNodeLongitude;
+									this.innerWay[this.tempShort + 1] = this.innerWay[this.tempShort - 1]
+											+ this.wayNodeLatitude;
+								}
+								break;
+							case WAY_NODES_COMPRESSED_2_BYTES:
+								// 2 bytes per coordinate (offset compression)
+								for (this.tempShort = 2; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+									// read the inner way node latitude offset (2 bytes)
+									this.wayNodeLatitude = Deserializer.toShort(
+											this.readBuffer, this.bufferPosition);
+									this.bufferPosition += 2;
+									// read the inner way node longitude offset (2 bytes)
+									this.wayNodeLongitude = Deserializer.toShort(
+											this.readBuffer, this.bufferPosition);
+									this.bufferPosition += 2;
+
+									// calculate the inner way node coordinates
+									this.innerWay[this.tempShort] = this.innerWay[this.tempShort - 2]
+											+ this.wayNodeLongitude;
+									this.innerWay[this.tempShort + 1] = this.innerWay[this.tempShort - 1]
+											+ this.wayNodeLatitude;
+								}
+								break;
+							case WAY_NODES_COMPRESSED_1_BYTE:
+								// 1 byte per coordinate (offset compression)
+								for (this.tempShort = 2; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+									// read the inner way node latitude offset (1 byte)
+									this.wayNodeLatitude = this.readBuffer[this.bufferPosition];
+									this.bufferPosition += 1;
+									// read the inner way node longitude offset (1 byte)
+									this.wayNodeLongitude = this.readBuffer[this.bufferPosition];
+									this.bufferPosition += 1;
+
+									// calculate the inner way node coordinates
+									this.innerWay[this.tempShort] = this.innerWay[this.tempShort - 2]
+											+ this.wayNodeLongitude;
+									this.innerWay[this.tempShort + 1] = this.innerWay[this.tempShort - 1]
+											+ this.wayNodeLatitude;
+								}
+								break;
+
+							default:
+								Logger.d("invalid way node compression mode");
+								break;
 						}
+
+						// store the inner way
 						this.wayInnerWays[this.tempByte] = this.innerWay;
 					}
 				} else {
@@ -685,6 +879,7 @@ public class MapDatabase {
 					this.wayInnerWays = null;
 				}
 			} else {
+				// no multipolygon
 				this.wayInnerWays = null;
 			}
 
@@ -703,7 +898,7 @@ public class MapDatabase {
 	 *             if an error occurs while reading the file.
 	 */
 	private boolean readFileHeader() throws IOException {
-		// read the fixed size part of the header in the buffer to avoid multiple reads
+		// read the fixed size part of the header in the buffer
 		this.readBuffer = new byte[FIXED_HEADER_SIZE];
 		if (this.inputFile.read(this.readBuffer, 0, this.readBuffer.length) != this.readBuffer.length) {
 			Logger.d("reading header data has failed");
@@ -723,8 +918,8 @@ public class MapDatabase {
 		// check the version number (4 bytes)
 		this.tempInt = Deserializer.toInt(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 4;
-		if (this.tempInt != BINARY_OSM_VERSION) {
-			Logger.d("unsupported version number: " + this.tempInt);
+		if (this.tempInt < BINARY_OSM_VERSION_MIN || this.tempInt > BINARY_OSM_VERSION_MAX) {
+			Logger.d("unsupported file format version: " + this.tempInt);
 			return false;
 		}
 
