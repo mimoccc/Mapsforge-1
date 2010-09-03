@@ -29,6 +29,7 @@ window.onload = function(){
 		controls : [ new OpenLayers.Control.Navigation(),
 				new OpenLayers.Control.PanZoomBar(),
 				new OpenLayers.Control.MousePosition(),
+				new OpenLayers.Control.LayerSwitcher(),
 				new OpenLayers.Control.Attribution()],
 		projection : projSpheMe,
 		displayProjection : projWSG84
