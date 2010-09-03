@@ -399,6 +399,10 @@ class Utils {
 
 		Coordinate tmpPoint;
 
+		if (polygonNodes.size() == 0) {
+			return output;
+		}
+
 		// get the last polygon point
 		lastPoint = polygonNodes.get(polygonNodes.size() - 1);
 
@@ -575,16 +579,20 @@ class Utils {
 	/**
 	 * Calculates the distance between two way nodes as an integer offset to the previous way
 	 * node. The first way node is always stored with its complete latitude and longitude
-	 * coordinates. All following coordinates are offsets. At the end the maximal values for
+	 * coordinates. All following coordinates are offsets. At the end the maximum values for
 	 * latitude and longitude offsets are added to the list.
 	 * 
 	 * @param waynodes
 	 *            list of all way nodes of a way
+	 * @param maxValues
+	 *            specifies if the maximum values of the latitude and longitude offsets should
+	 *            be stored in the result list
+	 * 
 	 * @return a list that holds the complete coordinates of the first way node, offsets for
-	 *         calculating the coordinates of the following way nodes and the maximal values for
+	 *         calculating the coordinates of the following way nodes and the maximum values for
 	 *         latitude and longitude offsets for this way.
 	 */
-	static ArrayList<Integer> compressWayDiffs(ArrayList<Integer> waynodes) {
+	static ArrayList<Integer> compressWayDiffs(ArrayList<Integer> waynodes, boolean maxValues) {
 		int diffLat;
 		int diffLon;
 
@@ -592,6 +600,10 @@ class Utils {
 		int maxDiffLon = 0;
 
 		ArrayList<Integer> result = new ArrayList<Integer>();
+
+		if (waynodes.isEmpty())
+			return result;
+
 		result.add(waynodes.get(0));
 		result.add(waynodes.get(1));
 
@@ -614,8 +626,10 @@ class Utils {
 			}
 		}
 
-		result.add(maxDiffLat);
-		result.add(maxDiffLon);
+		if (maxValues) {
+			result.add(maxDiffLat);
+			result.add(maxDiffLon);
+		}
 
 		return result;
 	}

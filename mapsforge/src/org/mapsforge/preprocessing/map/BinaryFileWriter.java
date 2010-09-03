@@ -16,6 +16,8 @@
  */
 package org.mapsforge.preprocessing.map;
 
+import gnu.trove.map.hash.THashMap;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,7 +27,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -189,6 +190,8 @@ public class BinaryFileWriter {
 	private static final short BITMAP_AMENITY = 4;
 	private static final short BITMAP_NATURAL = 2;
 	private static final short BITMAP_WATERWAY = 1;
+
+	private static final int MAX_VALUE_THREE_BYTES = 8388607;
 
 	private static long startTime;
 
@@ -516,8 +519,8 @@ public class BinaryFileWriter {
 
 			long firstWayInTile;
 
-			Map<Short, Short> poiTableForTile;
-			Map<Short, Short> wayTableForTile;
+			THashMap<Short, Short> poiTableForTile;
+			THashMap<Short, Short> wayTableForTile;
 			short cumulatedCounterPois;
 			short cumulatedCounterWays;
 
@@ -541,6 +544,8 @@ public class BinaryFileWriter {
 
 			long innerwayNodeCounterPos;
 			short innerwayNodes = 0;
+			// byte innerWays;
+			// long innerWaysAmountPosition;
 
 			long currentPosition;
 			byte[] currentPositionInFiveBytes;
@@ -566,7 +571,7 @@ public class BinaryFileWriter {
 			Coordinate[] tileVertices;
 			ArrayList<Coordinate> wayNodes = new ArrayList<Coordinate>();
 			ArrayList<Integer> wayNodesArray = new ArrayList<Integer>();
-			int wayNodesArrayIndex;
+			// int wayNodesArrayIndex;
 			int maxDiffLat = 0;
 			int maxDiffLon = 0;
 
@@ -611,8 +616,8 @@ public class BinaryFileWriter {
 					logger.info(tileStart);
 
 					// logger.info("write element zoom table");
-					poiTableForTile = new HashMap<Short, Short>();
-					wayTableForTile = new HashMap<Short, Short>();
+					poiTableForTile = new THashMap<Short, Short>();
+					wayTableForTile = new THashMap<Short, Short>();
 
 					if (writeLowerZoomLevel) {
 						// get amount of pois and ways grouped by zoom level for this certain
@@ -778,10 +783,8 @@ public class BinaryFileWriter {
 					cumulatedCounterWays = 0;
 
 					for (short min = minZoom; min <= maxZoom; min++) {
-						short pc = poiTableForTile.get(min);
-						short wc = wayTableForTile.get(min);
-						cumulatedCounterPois += pc;
-						cumulatedCounterWays += wc;
+						cumulatedCounterPois += poiTableForTile.get(min);
+						cumulatedCounterWays += wayTableForTile.get(min);
 					}
 
 					if (cumulatedCounterPois != 0 || cumulatedCounterWays != 0) {
@@ -801,11 +804,8 @@ public class BinaryFileWriter {
 						cumulatedCounterPois = 0;
 						cumulatedCounterWays = 0;
 						for (short min = minZoom; min <= maxZoom; min++) {
-
-							short pc = poiTableForTile.get(min);
-							short wc = wayTableForTile.get(min);
-							cumulatedCounterPois += pc;
-							cumulatedCounterWays += wc;
+							cumulatedCounterPois += poiTableForTile.get(min);
+							cumulatedCounterWays += wayTableForTile.get(min);
 
 							// logger.info("table:  " + min + " " + cumulatedCounterPois + " "
 							// + cumulatedCounterWays);
@@ -977,15 +977,12 @@ public class BinaryFileWriter {
 
 							if (wayNodeCompression) {
 								wayNodesArray.clear();
-								// wayNodesArray = new int[waynodesAmount*2];
-								// wayNodesArrayIndex = 0;
 								for (Coordinate c : wayNodes) {
 									wayNodesArray.add((int) (c.x * 1000000));
 									wayNodesArray.add((int) (c.y * 1000000));
-									// wayNodesArrayIndex += 2;
 								}
 
-								wayNodesArray = Utils.compressWayDiffs(wayNodesArray);
+								wayNodesArray = Utils.compressWayDiffs(wayNodesArray, true);
 
 								maxDiffLat = wayNodesArray.remove(wayNodesArray.size() - 2);
 								maxDiffLon = wayNodesArray.remove(wayNodesArray.size() - 1);
@@ -1024,11 +1021,11 @@ public class BinaryFileWriter {
 								if (maxDiffLat <= Byte.MAX_VALUE
 										&& maxDiffLon <= Byte.MAX_VALUE)
 									compressionType = 3;
-								if (maxDiffLat <= Short.MAX_VALUE
+								else if (maxDiffLat <= Short.MAX_VALUE
 										&& maxDiffLon <= Short.MAX_VALUE)
 									compressionType = 2;
-								if ((maxDiffLat <= (Math.pow(2, 23)))
-										&& (maxDiffLon <= (Math.pow(2, 23))))
+								else if (maxDiffLat <= MAX_VALUE_THREE_BYTES
+										&& maxDiffLon <= MAX_VALUE_THREE_BYTES)
 									compressionType = 1;
 							}
 
@@ -1054,15 +1051,14 @@ public class BinaryFileWriter {
 									raf.writeInt(wayNodesArray.get(0));
 									raf.writeInt(wayNodesArray.get(1));
 									for (int i = 2; i < wayNodesArray.size(); i += 2) {
-
 										raf.writeByte(wayNodesArray.get(i));
 										raf.writeByte(wayNodesArray.get(i + 1));
 									}
+
 								} else if (compressionType == 2) {
 									raf.writeInt(wayNodesArray.get(0));
 									raf.writeInt(wayNodesArray.get(1));
 									for (int i = 2; i < wayNodesArray.size(); i += 2) {
-
 										raf.writeShort(wayNodesArray.get(i));
 										raf.writeShort(wayNodesArray.get(i + 1));
 									}
@@ -1105,11 +1101,12 @@ public class BinaryFileWriter {
 							// the
 							// corresponding way nodes
 							if (wayType == 3) { // || wayType == 0) {
-								/** debug **/
-								// logger.info("amount of innerways: " + innerWayAmount);
-								/** debug **/
+								// innerWaysAmountPosition = raf.getFilePointer();
+								// raf.seek(innerWaysAmountPosition + 1);
 								raf.writeByte((byte) innerWayAmount);
+								// innerWays = 0;
 								for (int k = 1; k <= innerWayAmount; k++) {
+									wayNodesArray.clear();
 									innerwayNodeCounterPos = raf.getFilePointer();
 									raf.seek(innerwayNodeCounterPos + 2);
 									innerwayNodes = 0;
@@ -1118,15 +1115,84 @@ public class BinaryFileWriter {
 									rsMultipolygons = pstmtMultipolygons.executeQuery();
 									while (rsMultipolygons.next()) {
 										innerwayNodes++;
-										raf.writeInt(rsMultipolygons.getInt("latitude"));
-										raf.writeInt(rsMultipolygons.getInt("longitude"));
+										wayNodesArray.add(rsMultipolygons.getInt("latitude"));
+										wayNodesArray.add(rsMultipolygons.getInt("longitude"));
+										// double latD = (double) rsMultipolygons
+										// .getInt("latitude") / 1000000;
+										// double lonD = (double) rsMultipolygons
+										// .getInt("longitude") / 1000000;
+										// wayNodes.add(new Coordinate(la, lo));
+										// raf.writeInt(rsMultipolygons.getInt("latitude"));
+										// raf.writeInt(rsMultipolygons.getInt("longitude"));
 									}
-									currentPosition = raf.getFilePointer();
-									raf.seek(innerwayNodeCounterPos);
-									// logger.info("innerwayNodes: " + innerwayNodes);
-									raf.writeShort(innerwayNodes);
-									raf.seek(currentPosition);
+									System.out.println("innerwayNodes  " + innerwayNodes
+											+ " id:" + id + " sequence " + k);
+									if (!wayNodesArray.isEmpty()) {
+										// innerWays++;
+
+										// if(writeLowerZoomLevel && wayNodePixelFilter){
+										// wayNodesArray = Utils.compressWay(wayNodes, zoom)
+										// }
+
+										if (wayNodeCompression) {
+											wayNodesArray = Utils.compressWayDiffs(
+													wayNodesArray, false);
+
+											if (compressionType == 3) {
+												raf.writeInt(wayNodesArray.get(0));
+												raf.writeInt(wayNodesArray.get(1));
+												for (int i = 2; i < wayNodesArray.size(); i += 2) {
+
+													raf.writeByte(wayNodesArray.get(i));
+													raf.writeByte(wayNodesArray.get(i + 1));
+												}
+											} else if (compressionType == 2) {
+												raf.writeInt(wayNodesArray.get(0));
+												raf.writeInt(wayNodesArray.get(1));
+												for (int i = 2; i < wayNodesArray.size(); i += 2) {
+
+													raf.writeShort(wayNodesArray.get(i));
+													raf.writeShort(wayNodesArray.get(i + 1));
+												}
+											} else if (compressionType == 1) {
+												raf.writeInt(wayNodesArray.get(0));
+												raf.writeInt(wayNodesArray.get(1));
+												for (int i = 2; i < wayNodesArray.size(); i += 2) {
+													raf.write(Serializer
+															.getSignedThreeBytes(wayNodesArray
+																	.get(i)));
+													raf.write(Serializer
+															.getSignedThreeBytes(wayNodesArray
+																	.get(i + 1)));
+												}
+											} else {
+												// compressionType = 0;
+												for (int i = 0; i < wayNodesArray.size(); i += 2) {
+													raf.writeInt(wayNodesArray.get(i));
+													raf.writeInt(wayNodesArray.get(i + 1));
+												}
+											}
+
+										} else {
+											for (int i = 0; i < wayNodesArray.size(); i += 2) {
+												raf.writeInt(wayNodesArray.get(i));
+												raf.writeInt(wayNodesArray.get(i + 1));
+											}
+										}
+
+										currentPosition = raf.getFilePointer();
+										raf.seek(innerwayNodeCounterPos);
+										// logger.info("innerwayNodes: " + innerwayNodes);
+										raf.writeShort(innerwayNodes);
+										raf.seek(currentPosition);
+									}
 								}
+								// if (innerWays != 0) {
+								// currentPosition = raf.getFilePointer();
+								// raf.seek(innerWaysAmountPosition);
+								// raf.writeByte(innerWays);
+								// raf.seek(currentPosition);
+								// }
 							}
 
 							currentPosition = raf.getFilePointer();
