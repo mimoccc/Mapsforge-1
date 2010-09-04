@@ -179,7 +179,7 @@ public class MapView extends ViewGroup {
 		private float scaleFactor;
 
 		ScaleListener() {
-			this.scaleFactor = 1;
+			// empty default constructor
 		}
 
 		@Override
@@ -193,15 +193,21 @@ public class MapView extends ViewGroup {
 		}
 
 		@Override
+		public boolean onScaleBegin(ScaleGestureDetector detector) {
+			// reset the current scale factor
+			this.scaleFactor = 1;
+			return true;
+		}
+
+		@Override
 		public void onScaleEnd(ScaleGestureDetector detector) {
-			if (this.scaleFactor <= 0.5f) {
-				zoomOut();
-			} else if (this.scaleFactor >= 2) {
-				zoomIn();
+			if (this.scaleFactor <= 0.5f || this.scaleFactor >= 2) {
+				// change the zoom level according to the scale gesture
+				zoom((byte) (Math.log(this.scaleFactor) / Math.log(2)));
 			} else {
+				// the gesture was too small for a zoom level change
 				handleTiles(true);
 			}
-			this.scaleFactor = 1;
 		}
 	}
 
@@ -391,6 +397,7 @@ public class MapView extends ViewGroup {
 	private long mapViewTileX2;
 	private long mapViewTileY1;
 	private long mapViewTileY2;
+	private float matrixScaleFactor;
 	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
@@ -1020,13 +1027,13 @@ public class MapView extends ViewGroup {
 		this.zoomControls.setOnZoomInClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				zoomIn();
+				zoom((byte) 1);
 			}
 		});
 		this.zoomControls.setOnZoomOutClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				zoomOut();
+				zoom((byte) -1);
 			}
 		});
 
@@ -1672,39 +1679,45 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	boolean zoomIn() {
-		if (this.zoomLevel < this.mapGenerator.getMaxZoomLevel()) {
-			synchronized (this) {
-				this.matrix.postScale(2, 2, getWidth() >> 1, getHeight() >> 1);
-				++this.zoomLevel;
+	/**
+	 * Zoom in or out by the given amount of zoom levels.
+	 * 
+	 * @param zoomLevelDiff
+	 *            the difference to the current zoomlevel.
+	 * @return true, if the zoom level was changed, false otherwise.
+	 */
+	boolean zoom(byte zoomLevelDiff) {
+		if (zoomLevelDiff > 0) {
+			// zoom in
+			if (this.zoomLevel + zoomLevelDiff > this.mapGenerator.getMaxZoomLevel()) {
+				return false;
 			}
-
-			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
-					.getMaxZoomLevel());
-			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-			hideZoomControlsDelayed();
-			handleTiles(true);
-			return true;
-		}
-		return false;
-	}
-
-	boolean zoomOut() {
-		if (this.zoomLevel > ZOOM_MIN) {
-			synchronized (this) {
-				this.matrix.postScale(0.5f, 0.5f, getWidth() >> 1, getHeight() >> 1);
-				--this.zoomLevel;
+			this.matrixScaleFactor = 1 << zoomLevelDiff;
+		} else if (zoomLevelDiff < 0) {
+			// zoom out
+			if (this.zoomLevel + zoomLevelDiff < ZOOM_MIN) {
+				return false;
 			}
-
-			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
-					.getMaxZoomLevel());
-			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-			hideZoomControlsDelayed();
-			handleTiles(true);
-			return true;
+			this.matrixScaleFactor = 1.0f / (1 << zoomLevelDiff);
+		} else {
+			// zoom level is unchanged
+			return false;
 		}
-		return false;
+
+		// scale the matrix and change the zoom level
+		synchronized (this) {
+			this.matrix.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
+					getWidth() >> 1, getHeight() >> 1);
+			this.zoomLevel += zoomLevelDiff;
+		}
+
+		// enable or disable the zoom buttons if necessary
+		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+				.getMaxZoomLevel());
+		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+
+		hideZoomControlsDelayed();
+		handleTiles(true);
+		return true;
 	}
 }

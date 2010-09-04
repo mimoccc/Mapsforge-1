@@ -68,7 +68,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	 * @return true, if the zoom level was changed, false otherwise.
 	 */
 	public boolean zoomIn() {
-		return this.mapView.zoomIn();
+		return this.mapView.zoom((byte) 1);
 	}
 
 	/**
@@ -77,7 +77,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	 * @return true, if the zoom level was changed, false otherwise.
 	 */
 	public boolean zoomOut() {
-		return this.mapView.zoomOut();
+		return this.mapView.zoom((byte) -1);
 	}
 
 	void destroy() {

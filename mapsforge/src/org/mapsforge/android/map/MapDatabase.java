@@ -750,7 +750,6 @@ public class MapDatabase {
 
 			// check if the way represents a multipolygon
 			if (this.wayFeatureMultipolygon) {
-				Logger.d("wayFeatureMultipolygon!!!");
 				// read the amount of inner ways (1 byte)
 				this.wayNumberOfInnerWays = this.readBuffer[this.bufferPosition];
 				this.bufferPosition += 1;
