@@ -193,6 +193,7 @@ public class MapDatabase {
 	private byte baseZoomLevel;
 	private int blockEntriesTableOffset;
 	private long blockNumber;
+	private String blockSignature;
 	private int boundaryBottom;
 	private int boundaryLeft;
 	private int boundaryRight;
@@ -221,6 +222,7 @@ public class MapDatabase {
 	private short innerWayNodesSequenceLength;
 	private short innerWayNumberOfWayNodes;
 	private RandomAccessFile inputFile;
+	private String magicByte;
 	private Rect mapBoundary;
 	private long mapDate;
 	private MapFileParameters mapFileParameters;
@@ -240,6 +242,7 @@ public class MapDatabase {
 	private int nodeLongitude;
 	private String nodeName;
 	private byte nodeNumberOfTags;
+	private String nodeSignature;
 	private short nodesOnZoomLevel;
 	private byte nodeSpecialByte;
 	private short nodeTagId;
@@ -259,7 +262,6 @@ public class MapDatabase {
 	private byte tempByte;
 	private int tempInt;
 	private short tempShort;
-	private String tempString;
 	private short tilePixelSize;
 	private long toBaseTileX;
 	private long toBaseTileY;
@@ -285,6 +287,7 @@ public class MapDatabase {
 	private byte wayNumberOfTags;
 	private short wayNumberOfWayNodes;
 	private String wayRef;
+	private String waySignature;
 	private int waySize;
 	private short waysOnZoomLevel;
 	private byte waySpecialByte1;
@@ -345,11 +348,11 @@ public class MapDatabase {
 			throws IndexOutOfBoundsException, UnsupportedEncodingException {
 		if (DEBUG_FILE) {
 			// check read and the block signature
-			this.tempString = new String(this.readBuffer, this.bufferPosition,
+			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
 					SIGNATURE_LENGTH_BLOCK, "UTF-8");
 			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
-			if (!this.tempString.startsWith("###TileStart")) {
-				Logger.d("invalid block signature: " + this.tempString);
+			if (!this.blockSignature.startsWith("###TileStart")) {
+				Logger.d("invalid block signature: " + this.blockSignature);
 				return;
 			}
 		}
@@ -373,6 +376,9 @@ public class MapDatabase {
 		this.bufferPosition += 4;
 		if (this.firstWayOffset > this.readBuffer.length) {
 			Logger.d("invalid first way offset: " + this.firstWayOffset);
+			if (DEBUG_FILE) {
+				Logger.d("block signature: " + this.blockSignature);
+			}
 			return;
 		}
 
@@ -380,11 +386,11 @@ public class MapDatabase {
 		for (this.elementCounter = this.nodesOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
 			if (DEBUG_FILE) {
 				// read and check the node signature
-				this.tempString = new String(this.readBuffer, this.bufferPosition,
+				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
 						SIGNATURE_LENGTH_NODE, "UTF-8");
 				this.bufferPosition += SIGNATURE_LENGTH_NODE;
-				if (!this.tempString.startsWith("***POIStart")) {
-					Logger.d("invalid node signature: " + this.tempString);
+				if (!this.nodeSignature.startsWith("***POIStart")) {
+					Logger.d("invalid node signature: " + this.nodeSignature);
 					return;
 				}
 			}
@@ -415,6 +421,9 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
 					Logger.d("invalid node tag ID: " + this.nodeTagId);
+					if (DEBUG_FILE) {
+						Logger.d("node signature: " + this.nodeSignature);
+					}
 					continue;
 				}
 				this.nodeTagIds[this.nodeTagId] = true;
@@ -441,6 +450,9 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
+					if (DEBUG_FILE) {
+						Logger.d("node signature: " + this.nodeSignature);
+					}
 					this.nodeName = null;
 				}
 			} else {
@@ -471,6 +483,9 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
+					if (DEBUG_FILE) {
+						Logger.d("node signature: " + this.nodeSignature);
+					}
 					this.nodeHouseNumber = null;
 				}
 			} else {
@@ -488,6 +503,9 @@ public class MapDatabase {
 		if (this.bufferPosition > this.firstWayOffset) {
 			Logger.d("invalid buffer position:" + this.bufferPosition + " - "
 					+ this.firstWayOffset);
+			if (DEBUG_FILE) {
+				Logger.d("block signature: " + this.blockSignature);
+			}
 			return;
 		}
 		// move the pointer to the first way
@@ -497,11 +515,11 @@ public class MapDatabase {
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
 			if (DEBUG_FILE) {
 				// read and check the way signature
-				this.tempString = new String(this.readBuffer, this.bufferPosition,
+				this.waySignature = new String(this.readBuffer, this.bufferPosition,
 						SIGNATURE_LENGTH_WAY, "UTF-8");
 				this.bufferPosition += SIGNATURE_LENGTH_WAY;
-				if (!this.tempString.startsWith("---WayStart")) {
-					Logger.d("invalid way signature: " + this.tempString);
+				if (!this.waySignature.startsWith("---WayStart")) {
+					Logger.d("invalid way signature: " + this.waySignature);
 					return;
 				}
 			}
@@ -562,6 +580,9 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
 					Logger.d("invalid way tag ID: " + this.wayTagId);
+					if (DEBUG_FILE) {
+						Logger.d("way signature: " + this.waySignature);
+					}
 					continue;
 				}
 				this.wayTagIds[this.wayTagId] = true;
@@ -574,6 +595,9 @@ public class MapDatabase {
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
+				if (DEBUG_FILE) {
+					Logger.d("way signature: " + this.waySignature);
+				}
 				return;
 			}
 
@@ -673,6 +697,9 @@ public class MapDatabase {
 
 				default:
 					Logger.d("invalid way node compression mode");
+					if (DEBUG_FILE) {
+						Logger.d("way signature: " + this.waySignature);
+					}
 					break;
 			}
 
@@ -702,6 +729,9 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
+					if (DEBUG_FILE) {
+						Logger.d("way signature: " + this.waySignature);
+					}
 					this.wayName = null;
 				}
 			} else {
@@ -725,6 +755,9 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
+					if (DEBUG_FILE) {
+						Logger.d("way signature: " + this.waySignature);
+					}
 					this.wayRef = null;
 				}
 			} else {
@@ -768,6 +801,9 @@ public class MapDatabase {
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 							Logger.d("invalid inner way number of way nodes: "
 									+ this.innerWayNumberOfWayNodes);
+							if (DEBUG_FILE) {
+								Logger.d("way signature: " + this.waySignature);
+							}
 							return;
 						}
 
@@ -867,6 +903,9 @@ public class MapDatabase {
 
 							default:
 								Logger.d("invalid way node compression mode");
+								if (DEBUG_FILE) {
+									Logger.d("way signature: " + this.waySignature);
+								}
 								break;
 						}
 
@@ -875,6 +914,9 @@ public class MapDatabase {
 					}
 				} else {
 					Logger.d("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
+					if (DEBUG_FILE) {
+						Logger.d("way signature: " + this.waySignature);
+					}
 					this.wayInnerWays = null;
 				}
 			} else {
@@ -905,12 +947,12 @@ public class MapDatabase {
 		}
 		this.bufferPosition = 0;
 
-		// check the magic byte
-		this.tempString = new String(this.readBuffer, this.bufferPosition,
-				BINARY_OSM_MAGIC_BYTE.length(), "UTF-8");
+		// check the file identification
+		this.magicByte = new String(this.readBuffer, this.bufferPosition, BINARY_OSM_MAGIC_BYTE
+				.length(), "UTF-8");
 		this.bufferPosition += BINARY_OSM_MAGIC_BYTE.length();
-		if (!this.tempString.equals(BINARY_OSM_MAGIC_BYTE)) {
-			Logger.d("invalid magic byte: " + this.tempString);
+		if (!this.magicByte.equals(BINARY_OSM_MAGIC_BYTE)) {
+			Logger.d("invalid magic byte: " + this.magicByte);
 			return false;
 		}
 
