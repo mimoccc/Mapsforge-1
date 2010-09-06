@@ -544,8 +544,8 @@ public class BinaryFileWriter {
 
 			long innerwayNodeCounterPos;
 			short innerwayNodes = 0;
-			// byte innerWays;
-			// long innerWaysAmountPosition;
+			byte innerWays;
+			long innerWaysAmountPosition;
 
 			long currentPosition;
 			byte[] currentPositionInFiveBytes;
@@ -908,8 +908,8 @@ public class BinaryFileWriter {
 						// write position of the first way in the tile
 						currentPosition = raf.getFilePointer();
 						raf.seek(firstWayInTile);
-						// logger.info("current: " + currentPosition + " start: " +
-						// tileStartAdress);
+						// logger.info("current: " + currentPosition + " start: "
+						// + tileStartAdress);
 						skipTillFirstWay = (int) (currentPosition - tileStartAdress);
 						// logger.info("skipTillFirstWay: " + skipTillFirstWay);
 						raf.writeInt(skipTillFirstWay);
@@ -1101,40 +1101,30 @@ public class BinaryFileWriter {
 							// the
 							// corresponding way nodes
 							if (wayType == 3) { // || wayType == 0) {
-								// innerWaysAmountPosition = raf.getFilePointer();
-								// raf.seek(innerWaysAmountPosition + 1);
-								raf.writeByte((byte) innerWayAmount);
-								// innerWays = 0;
+
+								innerWaysAmountPosition = raf.getFilePointer();
+								raf.seek(innerWaysAmountPosition + 1);
+								innerWays = 0;
 								for (int k = 1; k <= innerWayAmount; k++) {
 									wayNodesArray.clear();
 									innerwayNodeCounterPos = raf.getFilePointer();
-									raf.seek(innerwayNodeCounterPos + 2);
 									innerwayNodes = 0;
 									pstmtMultipolygons.setLong(1, id);
 									pstmtMultipolygons.setShort(2, (short) k);
 									rsMultipolygons = pstmtMultipolygons.executeQuery();
 									while (rsMultipolygons.next()) {
-										innerwayNodes++;
 										wayNodesArray.add(rsMultipolygons.getInt("latitude"));
 										wayNodesArray.add(rsMultipolygons.getInt("longitude"));
-										// double latD = (double) rsMultipolygons
-										// .getInt("latitude") / 1000000;
-										// double lonD = (double) rsMultipolygons
-										// .getInt("longitude") / 1000000;
-										// wayNodes.add(new Coordinate(la, lo));
-										// raf.writeInt(rsMultipolygons.getInt("latitude"));
-										// raf.writeInt(rsMultipolygons.getInt("longitude"));
 									}
-									System.out.println("innerwayNodes  " + innerwayNodes
-											+ " id:" + id + " sequence " + k);
-									if (!wayNodesArray.isEmpty()) {
-										// innerWays++;
+									// System.out.println("innerwayNodes  " + innerwayNodes
+									// + " id:" + id + " sequence " + k);
 
-										// if(writeLowerZoomLevel && wayNodePixelFilter){
-										// wayNodesArray = Utils.compressWay(wayNodes, zoom)
-										// }
+									if (!wayNodesArray.isEmpty()) {
+										raf.seek(innerwayNodeCounterPos + 2);
+										innerWays++;
 
 										if (wayNodeCompression) {
+											innerwayNodes = (short) wayNodes.size();
 											wayNodesArray = Utils.compressWayDiffs(
 													wayNodesArray, false);
 
@@ -1174,25 +1164,31 @@ public class BinaryFileWriter {
 											}
 
 										} else {
+											innerwayNodes = (short) wayNodesArray.size();
 											for (int i = 0; i < wayNodesArray.size(); i += 2) {
 												raf.writeInt(wayNodesArray.get(i));
 												raf.writeInt(wayNodesArray.get(i + 1));
 											}
 										}
 
-										currentPosition = raf.getFilePointer();
-										raf.seek(innerwayNodeCounterPos);
-										// logger.info("innerwayNodes: " + innerwayNodes);
-										raf.writeShort(innerwayNodes);
-										raf.seek(currentPosition);
+										if (innerwayNodes != 0) {
+											currentPosition = raf.getFilePointer();
+											raf.seek(innerwayNodeCounterPos);
+											// logger.info("innerwayNodes: " + innerwayNodes +
+											// " "
+											// + id);
+											raf.writeShort(innerwayNodes);
+											raf.seek(currentPosition);
+										}
 									}
 								}
-								// if (innerWays != 0) {
-								// currentPosition = raf.getFilePointer();
-								// raf.seek(innerWaysAmountPosition);
-								// raf.writeByte(innerWays);
-								// raf.seek(currentPosition);
-								// }
+								if (innerWays != 0) {
+									currentPosition = raf.getFilePointer();
+									raf.seek(innerWaysAmountPosition);
+									// logger.info("innerWays: " + innerWays + " " + id);
+									raf.writeByte(innerWays);
+									raf.seek(currentPosition);
+								}
 							}
 
 							currentPosition = raf.getFilePointer();
