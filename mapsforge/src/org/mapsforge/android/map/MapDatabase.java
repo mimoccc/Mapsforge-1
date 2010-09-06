@@ -1375,7 +1375,7 @@ public class MapDatabase {
 						return;
 					} else if (this.currentBlockSize == 0) {
 						// the current block is empty, continue with the next block
-						return;
+						continue;
 					} else if (this.currentBlockPointer + this.currentBlockSize > this.fileSize) {
 						Logger.d("invalid current block size: " + this.currentBlockSize);
 						return;
