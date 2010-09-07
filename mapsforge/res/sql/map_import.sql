@@ -8,31 +8,12 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET escape_string_warning = off;
 
+
+SET search_path = public, pg_catalog;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
-
---
--- Name: filtered_pois; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE TABLE filtered_pois (
-    poi_id bigint
-);
-
-
-ALTER TABLE public.filtered_pois OWNER TO osm;
-
---
--- Name: filtered_ways; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE TABLE filtered_ways (
-    way_id bigint
-);
-
-
-ALTER TABLE public.filtered_ways OWNER TO osm;
 
 --
 -- Name: metadata; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
@@ -46,10 +27,10 @@ CREATE TABLE metadata (
     minlat integer,
     maxlon integer,
     zoom smallint,
-    zoom_low smallint,
     tile_size smallint,
     min_zoom_level smallint,
     max_zoom_level smallint,
+    zoom_low smallint,
     min_zoom_level_low smallint,
     max_zoom_level_low smallint
 );
@@ -112,9 +93,7 @@ CREATE TABLE pois_to_tiles (
     poi_id bigint,
     tile_x integer,
     tile_y integer,
-    zoom_level smallint,
-    size integer,
-    filter boolean DEFAULT false NOT NULL
+    zoom_level smallint
 );
 
 
@@ -128,9 +107,7 @@ CREATE TABLE pois_to_tiles_less_data (
     poi_id bigint,
     tile_x integer,
     tile_y integer,
-    zoom_level smallint,
-    size integer,
-    filter boolean DEFAULT false NOT NULL
+    zoom_level smallint
 );
 
 
@@ -207,9 +184,7 @@ CREATE TABLE ways_to_tiles (
     tile_x integer,
     tile_y integer,
     tile_bitmask smallint,
-    zoom_level smallint,
-    size integer,
-    filter boolean DEFAULT false NOT NULL
+    zoom_level smallint
 );
 
 
@@ -224,9 +199,7 @@ CREATE TABLE ways_to_tiles_less_data (
     tile_x integer,
     tile_y integer,
     tile_bitmask smallint,
-    zoom_level smallint,
-    size integer,
-    filter boolean DEFAULT false NOT NULL
+    zoom_level smallint
 );
 
 
@@ -265,20 +238,6 @@ ALTER TABLE ONLY ways
 
 ALTER TABLE ONLY waynodes_diff
     ADD CONSTRAINT pkey PRIMARY KEY (way_id, waynode_sequence);
-
-
---
--- Name: filtered_pois_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE INDEX filtered_pois_idx ON filtered_pois USING btree (poi_id);
-
-
---
--- Name: filtered_ways_idx; Type: INDEX; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE INDEX filtered_ways_idx ON filtered_ways USING btree (way_id);
 
 
 --
@@ -367,14 +326,6 @@ ALTER TABLE ONLY multipolygons
 
 
 --
--- Name: fk_pois; Type: FK CONSTRAINT; Schema: public; Owner: osm
---
-
-ALTER TABLE ONLY filtered_pois
-    ADD CONSTRAINT fk_pois FOREIGN KEY (poi_id) REFERENCES pois(id);
-
-
---
 -- Name: fk_pois_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
 --
 
@@ -399,14 +350,6 @@ ALTER TABLE ONLY waynodes
 
 
 --
--- Name: fk_ways; Type: FK CONSTRAINT; Schema: public; Owner: osm
---
-
-ALTER TABLE ONLY filtered_ways
-    ADD CONSTRAINT fk_ways FOREIGN KEY (way_id) REFERENCES ways(id);
-
-
---
 -- Name: fk_ways_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
 --
 
@@ -423,22 +366,6 @@ ALTER TABLE ONLY ways_to_tiles
 
 
 --
--- Name: poi_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: osm
---
-
-ALTER TABLE ONLY filtered_pois
-    ADD CONSTRAINT poi_id_fk FOREIGN KEY (poi_id) REFERENCES pois(id);
-
-
---
--- Name: way_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: osm
---
-
-ALTER TABLE ONLY filtered_ways
-    ADD CONSTRAINT way_id_fk FOREIGN KEY (way_id) REFERENCES ways(id);
-
-
---
 -- Name: public; Type: ACL; Schema: -; Owner: osm
 --
 
@@ -451,4 +378,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-

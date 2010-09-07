@@ -65,7 +65,7 @@ public class BinaryFileWriter {
 
 	private final String SQL_GET_POIS_FOR_TILE_LOW_ZOOM = "SELECT pois.*,ptt.zoom_level FROM  pois_to_tiles_less_data ptt JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
-	private final String SQL_GET_WAYS_FOR_TILE_LOW_ZOOM = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM ways_to_tiles_less_data wtt JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
+	private final String SQL_GET_WAYS_FOR_TILE_LOW_ZOOM = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level FROM ways_to_tiles_less_data wtt JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_POIS = "SELECT count(pt.poi_id) FROM pois_to_tiles pt WHERE pt.tile_x = ? AND pt.tile_y = ? AND pt.zoom_level <= ?";
 	private final String SQL_GET_MIN_ZOOM_ELEMENT_COUNT_WAYS = "SELECT count(wt.way_id) FROM ways_to_tiles wt WHERE wt.tile_x = ? AND wt.tile_y = ? AND wt.zoom_level <= ?";
@@ -80,7 +80,7 @@ public class BinaryFileWriter {
 
 	private final String SQL_GET_POIS_FOR_TILE = "SELECT pois.*,ptt.zoom_level FROM pois_to_tiles ptt JOIN pois pois "
 			+ "ON (ptt.poi_id = pois.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
-	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level,wtt.size FROM ways_to_tiles wtt "
+	private final String SQL_GET_WAYS_FOR_TILE = "SELECT ways.*, wtt.tile_bitmask,wtt.zoom_level FROM ways_to_tiles wtt "
 			+ "JOIN ways ways ON (wtt.way_id = ways.id) WHERE tile_x = ? AND tile_y = ? ORDER BY zoom_level";
 
 	private final String SQL_GET_WAYNODES = "SELECT latitude,longitude FROM waynodes WHERE way_id = ? ORDER BY waynode_sequence";
@@ -961,7 +961,7 @@ public class BinaryFileWriter {
 							}
 
 							if (writeLowerZoomLevel && wayNodePixelFilter) {
-								wayNodes = Utils.compressWay(wayNodes, currentZoom);
+								wayNodes = Utils.compressWay(wayNodes, (byte) maxZoomLow);
 							}
 
 							waynodesAmount = wayNodes.size();
@@ -1113,18 +1113,19 @@ public class BinaryFileWriter {
 									pstmtMultipolygons.setShort(2, (short) k);
 									rsMultipolygons = pstmtMultipolygons.executeQuery();
 									while (rsMultipolygons.next()) {
+										innerwayNodes++;
 										wayNodesArray.add(rsMultipolygons.getInt("latitude"));
 										wayNodesArray.add(rsMultipolygons.getInt("longitude"));
 									}
-									// System.out.println("innerwayNodes  " + innerwayNodes
-									// + " id:" + id + " sequence " + k);
+									//System.out.println("innerwayNodes  " + innerwayNodes
+									//		+ " id:" + id + " sequence " + k);
 
 									if (!wayNodesArray.isEmpty()) {
 										raf.seek(innerwayNodeCounterPos + 2);
 										innerWays++;
 
 										if (wayNodeCompression) {
-											innerwayNodes = (short) wayNodes.size();
+											// innerwayNodes = (short) wayNodesArray.size();
 											wayNodesArray = Utils.compressWayDiffs(
 													wayNodesArray, false);
 
@@ -1164,7 +1165,7 @@ public class BinaryFileWriter {
 											}
 
 										} else {
-											innerwayNodes = (short) wayNodesArray.size();
+											// innerwayNodes = (short) wayNodesArray.size();
 											for (int i = 0; i < wayNodesArray.size(); i += 2) {
 												raf.writeInt(wayNodesArray.get(i));
 												raf.writeInt(wayNodesArray.get(i + 1));

@@ -45,7 +45,7 @@ class Utils {
 			0, 0.0006, 0.00025, 0.00013, 0.00006 };
 
 	private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0.0015, 0.0001, 0.00085, 0.00065 };
+			0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
 
 	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
