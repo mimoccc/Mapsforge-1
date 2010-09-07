@@ -16,6 +16,9 @@
  */
 package org.mapsforge.core;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * This immutable class represents a geographic coordinate with a latitude and longitude value.
  */
@@ -57,6 +60,12 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	private final double longitude;
 
 	/**
+	 * The RegEx pattern to read WKT points
+	 */
+	private static Pattern wktPointPattern = Pattern
+		.compile(".*POINT\\s?\\(([\\d\\.]+)\\s([\\d\\.]+)\\).*");
+
+	/**
 	 * Constructs a new GeoCoordinate with the given latitude and longitude values, measured in
 	 * degrees.
 	 * 
@@ -86,6 +95,24 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	public GeoCoordinate(int latitudeE6, int longitudeE6) throws IllegalArgumentException {
 		this.latitude = validateLatitude(intToDouble(latitudeE6));
 		this.longitude = validateLongitude(intToDouble(longitudeE6));
+	}
+
+	/**
+	 * Constructs a new GeoCoordinate from a Well-Known-Text (WKT) representation of a point For
+	 * example: POINT(13.4125 52.52235)
+	 * 
+	 * WKT is used in PostGIS and other spatial databases
+	 * 
+	 * @param wellKnownText
+	 *            is the WKT point which describes the new GeoCoordinate, this needs to be in
+	 *            degrees using a WGS84 representation. The coordinate order in the POINT is
+	 *            defined as POINT(long lat)
+	 */
+	public GeoCoordinate(String wellKnownText) {
+		Matcher m = wktPointPattern.matcher(wellKnownText);
+		m.matches();
+		this.longitude = validateLongitude(Double.parseDouble(m.group(1)));
+		this.latitude = validateLatitude(Double.parseDouble(m.group(2)));
 	}
 
 	/**

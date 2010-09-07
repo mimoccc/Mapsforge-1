@@ -48,6 +48,16 @@ public class GeoCoordinateTest {
 	}
 
 	/**
+	 * Tests if the WKT constructor works as expected
+	 */
+	@Test
+	public void geoCoordinateFromWellKnownTextTest() {
+		GeoCoordinate alex = new GeoCoordinate("POINT(13.4125 52.52235)");
+		assertTrue(alex.getLatitude() == 52.52235);
+		assertTrue(alex.getLongitude() == 13.4125);
+	}
+
+	/**
 	 * See if an exception is thrown if a invalid longitude is supplied
 	 */
 	@Test(expected = IllegalArgumentException.class)
