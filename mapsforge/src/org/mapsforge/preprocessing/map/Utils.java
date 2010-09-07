@@ -562,6 +562,8 @@ class Utils {
 		xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(0).y, zoom);
 		yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(0).x, zoom);
 
+		result.add(wayNodes.get(0));
+
 		for (int i = 1; i < wayLength - 1; i++) {
 			x = MercatorProjection.longitudeToPixelX(wayNodes.get(i).y, zoom);
 			y = MercatorProjection.latitudeToPixelY(wayNodes.get(i).x, zoom);
