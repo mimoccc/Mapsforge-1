@@ -984,8 +984,12 @@ public class BinaryFileWriter {
 
 								wayNodesArray = Utils.compressWayDiffs(wayNodesArray, true);
 
-								maxDiffLat = wayNodesArray.remove(wayNodesArray.size() - 2);
-								maxDiffLon = wayNodesArray.remove(wayNodesArray.size() - 1);
+								if (!wayNodesArray.isEmpty()) {
+									maxDiffLat = wayNodesArray.remove(wayNodesArray.size() - 2);
+									maxDiffLon = wayNodesArray.remove(wayNodesArray.size() - 1);
+								}
+
+								waynodesAmount = wayNodesArray.size() / 2;
 							}
 
 							if (debugStrings) {
@@ -996,7 +1000,8 @@ public class BinaryFileWriter {
 								byteArrayLength = stringBytes.length;
 								raf.write(stringBytes);
 
-								// if string is not 32 byte long append whitespaces, byte value
+								// if string is not 32 byte long append whitespaces, byte
+								// value
 								// = 32
 								if (byteArrayLength < 32) {
 									while (byteArrayLength < 32) {
@@ -1010,7 +1015,8 @@ public class BinaryFileWriter {
 							waySizePosition = raf.getFilePointer();
 							// logger.info("waySizePosition: " + waySizePosition);
 							raf.seek(waySizePosition + 4);
-							// logger.info("position after waysize: " + raf.getFilePointer());
+							// logger.info("position after waysize: " +
+							// raf.getFilePointer());
 							raf.writeShort(tileBitmask);
 
 							// write byte with layer and tag amount
@@ -1046,7 +1052,7 @@ public class BinaryFileWriter {
 
 							raf.writeShort(waynodesAmount);
 
-							if (wayNodeCompression) {
+							if (wayNodeCompression && !wayNodesArray.isEmpty()) {
 								if (compressionType == 3) {
 									raf.writeInt(wayNodesArray.get(0));
 									raf.writeInt(wayNodesArray.get(1));
@@ -1097,7 +1103,8 @@ public class BinaryFileWriter {
 								raf.writeInt(labelPositionLongitude);
 							}
 
-							// if way is an outer way of a multipolygon write all inner ways and
+							// if way is an outer way of a multipolygon write all inner ways
+							// and
 							// the
 							// corresponding way nodes
 							if (wayType == 3) { // || wayType == 0) {
@@ -1117,8 +1124,8 @@ public class BinaryFileWriter {
 										wayNodesArray.add(rsMultipolygons.getInt("latitude"));
 										wayNodesArray.add(rsMultipolygons.getInt("longitude"));
 									}
-									//System.out.println("innerwayNodes  " + innerwayNodes
-									//		+ " id:" + id + " sequence " + k);
+									// System.out.println("innerwayNodes  " + innerwayNodes
+									// + " id:" + id + " sequence " + k);
 
 									if (!wayNodesArray.isEmpty()) {
 										raf.seek(innerwayNodeCounterPos + 2);
@@ -1175,7 +1182,8 @@ public class BinaryFileWriter {
 										if (innerwayNodes != 0) {
 											currentPosition = raf.getFilePointer();
 											raf.seek(innerwayNodeCounterPos);
-											// logger.info("innerwayNodes: " + innerwayNodes +
+											// logger.info("innerwayNodes: " + innerwayNodes
+											// +
 											// " "
 											// + id);
 											raf.writeShort(innerwayNodes);
@@ -1201,6 +1209,7 @@ public class BinaryFileWriter {
 							raf.seek(currentPosition);
 							// logger.info("end of way: " + raf.getFilePointer());
 						}
+
 					}
 				}
 			}
