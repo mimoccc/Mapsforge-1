@@ -176,6 +176,8 @@ public class MapView extends ViewGroup {
 	}
 
 	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+		private float focusX;
+		private float focusY;
 		private float scaleFactor;
 
 		ScaleListener() {
@@ -186,8 +188,8 @@ public class MapView extends ViewGroup {
 		public boolean onScale(ScaleGestureDetector detector) {
 			// TODO: some tuning for pinch and zoom is needed
 			this.scaleFactor *= detector.getScaleFactor();
-			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, detector
-					.getFocusX(), detector.getFocusY());
+			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, this.focusX,
+					this.focusY);
 			invalidate();
 			return true;
 		}
@@ -196,6 +198,10 @@ public class MapView extends ViewGroup {
 		public boolean onScaleBegin(ScaleGestureDetector detector) {
 			// reset the current scale factor
 			this.scaleFactor = 1;
+
+			// save the focal point of the gesture
+			this.focusX = detector.getFocusX();
+			this.focusY = detector.getFocusY();
 			return true;
 		}
 
