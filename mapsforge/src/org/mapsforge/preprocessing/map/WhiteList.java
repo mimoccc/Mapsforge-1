@@ -183,7 +183,7 @@ class WhiteList {
 		tagWhitelist.put("landuse=wood", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("leisure=common", Byte.valueOf((byte) 12));
-		tagWhitelist.put("leisure=garden", Byte.valueOf((byte) 15));
+		tagWhitelist.put("leisure=garden", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=golf_course", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=park", Byte.valueOf((byte) 12));
 		tagWhitelist.put("leisure=pitch", Byte.valueOf((byte) 15));
