@@ -30,9 +30,9 @@ import org.mapsforge.core.GeoCoordinate;
  * @author Eike Send
  */
 public class LandmarkBuilder {
-	Connection conn;
-	PreparedStatement nearestLandmarkByID;
-	PreparedStatement nearestLandmarkByCoordinates;
+	private Connection conn;
+	private PreparedStatement nearestLandmarkByID;
+	private PreparedStatement nearestLandmarkByCoordinates;
 
 	/**
 	 * @param junction
@@ -41,16 +41,21 @@ public class LandmarkBuilder {
 	 * @throws SQLException
 	 *             if sth goes wrong
 	 */
-	public Landmark getNearestLandMark(GeoCoordinate junction) throws SQLException {
-		nearestLandmarkByCoordinates.setString(1, "POINT(" + junction.getLongitude() + " "
-				+ junction.getLatitude() + ")");
-		ResultSet rs = nearestLandmarkByCoordinates.executeQuery();
-		if (rs.next()) {
-			GeoCoordinate p = new GeoCoordinate(rs.getString("wkt"));
-			return new Landmark(p, rs.getString("name"), rs.getString("key"), rs
-				.getString("value"));
+	public Landmark getNearestLandMark(GeoCoordinate junction) {
+		try {
+			nearestLandmarkByCoordinates.setString(1, "POINT(" + junction.getLongitude() + " "
+					+ junction.getLatitude() + ")");
+			ResultSet rs = nearestLandmarkByCoordinates.executeQuery();
+			if (rs.next()) {
+				GeoCoordinate p = new GeoCoordinate(rs.getString("wkt"));
+				return new Landmark(p, rs.getString("name"), rs.getString("key"), rs
+						.getString("value"));
+			}
+			return null;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
 		}
-		return null;
 	}
 
 	/**
@@ -60,15 +65,19 @@ public class LandmarkBuilder {
 	 * @throws SQLException
 	 *             if sth goes wrong
 	 */
-	public Landmark getNearestLandMark(int osmId) throws SQLException {
-		nearestLandmarkByID.setInt(1, osmId);
-		ResultSet rs = nearestLandmarkByID.executeQuery();
-		if (rs.next()) {
-			GeoCoordinate p = new GeoCoordinate(rs.getString("wkt"));
-			return new Landmark(p, rs.getString("name"), rs.getString("key"), rs
-				.getString("value"));
+	public Landmark getNearestLandMark(int osmId) {
+		try {
+			nearestLandmarkByID.setInt(1, osmId);
+			ResultSet rs = nearestLandmarkByID.executeQuery();
+			if (rs.next()) {
+				GeoCoordinate p = new GeoCoordinate(rs.getString("wkt"));
+				return new Landmark(p, rs.getString("name"), rs.getString("key"), rs
+						.getString("value"));
+			}
+			return null;
+		} catch (SQLException e) {
+			return null;
 		}
-		return null;
 	}
 
 	/**
@@ -77,10 +86,16 @@ public class LandmarkBuilder {
 	 * @throws SQLException
 	 *             if things go wrong
 	 */
-	public LandmarkBuilder() throws SQLException {
-		DBConnection dbconn = new DBConnection("localhost", "osm", "osm", "osm", 3128);
-		conn = dbconn.getConnection();
-		init();
+	public LandmarkBuilder() {
+		DBConnection dbconn;
+		try {
+			dbconn = new DBConnection("localhost", "osm", "osm", "osm", 3128);
+			conn = dbconn.getConnection();
+			init();
+			System.out.println("Successfully connected to database");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -143,14 +158,14 @@ public class LandmarkBuilder {
 						"(tags.k = 'tourism' AND tags.v = 'hotel') OR " +
 						"(tags.k = 'tourism' AND tags.v = 'motel') OR " +
 						"(tags.k = 'tourism' AND tags.v = 'zoo') OR " +
+						// "(tags.k = 'highway' AND tags.v = 'traffic_signals') OR " +
 						"(tags.k = 'highway' AND tags.v = 'crossing') OR " +
-						"(tags.k = 'highway' AND tags.v = 'services') OR " +
-						"(tags.k = 'highway' AND tags.v = 'traffic_signals') "
-						+ " ) " +
+						"(tags.k = 'highway' AND tags.v = 'services') " +
+						" ) " +
 						"ORDER BY dist " +
 						"LIMIT 1";
 		nearestLandmarkByID = conn
-			.prepareStatement(
+				.prepareStatement(
 				"SELECT names.v AS name, tags.k AS key, tags.v AS value, ST_Distance(junction.geom, landmark.geom, true) AS dist, ST_AsText(landmark.geom) AS wkt "
 						+
 						"FROM nodes AS junction, nodes AS landmark "
@@ -163,21 +178,21 @@ public class LandmarkBuilder {
 						"AND junction.id = ? " +
 						queryTagString);
 		nearestLandmarkByCoordinates = conn
-			.prepareStatement(
-			"SELECT names.v AS name, tags.k AS key, tags.v AS value, ST_Distance(junction, landmark.geom, true) AS dist, ST_AsText(landmark.geom) AS wkt "
-					+
-					"FROM "
-					+
-					"(SELECT GeometryFromText(?, 4326) AS junction) AS foo, "
-					+
-					"nodes AS landmark "
-					+
-					"JOIN node_tags AS tags ON tags.node_id = landmark.id "
-					+
-					"LEFT OUTER JOIN node_tags AS names ON names.node_id = landmark.id AND names.k = 'name' "
-					+
-					"WHERE ST_DWithin(junction, landmark.geom, 150, true) " +
-					queryTagString);
+				.prepareStatement(
+				"SELECT names.v AS name, tags.k AS key, tags.v AS value, ST_Distance(junction, landmark.geom, true) AS dist, ST_AsText(landmark.geom) AS wkt "
+						+
+						"FROM "
+						+
+						"(SELECT GeometryFromText(?, 4326) AS junction) AS foo, "
+						+
+						"nodes AS landmark "
+						+
+						"JOIN node_tags AS tags ON tags.node_id = landmark.id "
+						+
+						"LEFT OUTER JOIN node_tags AS names ON names.node_id = landmark.id AND names.k = 'name' "
+						+
+						"WHERE ST_DWithin(junction, landmark.geom, 150, true) " +
+						queryTagString);
 
 	}
 

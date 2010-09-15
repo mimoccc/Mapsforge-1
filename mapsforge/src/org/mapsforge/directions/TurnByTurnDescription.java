@@ -50,17 +50,41 @@ import org.w3c.dom.Element;
  */
 public class TurnByTurnDescription {
 	Vector<TurnByTurnStreet> streets = new Vector<TurnByTurnStreet>();
+	LandmarkBuilder landmarkBuilder;
+
+	/**
+	 * Constructs a TurnByTurnDirectionsObject from an array of IEdges as the are provided by
+	 * the IRouter which includes Landmarks
+	 * 
+	 * @param routeEdges
+	 *            is the IEdges array to convert to directions
+	 * @param landmarkBuilder
+	 *            is the instance to get Landmarks from
+	 * @throws InvalidAttributeValueException
+	 *             if any parameter is null
+	 */
+	public TurnByTurnDescription(IEdge[] routeEdges, LandmarkBuilder landmarkBuilder)
+			throws InvalidAttributeValueException {
+		if (landmarkBuilder == null)
+			throw new InvalidAttributeValueException();
+		this.landmarkBuilder = landmarkBuilder;
+		generate(routeEdges);
+	}
 
 	/**
 	 * Constructs a TurnByTurnDirectionsObject from an array of IEdges as the are provided by
 	 * the IRouter
 	 * 
 	 * @param routeEdges
-	 *            the IEdges to convert to a
+	 *            is the IEdges array to convert to directions
 	 * @throws InvalidAttributeValueException
 	 *             if the parameter is null
 	 */
 	public TurnByTurnDescription(IEdge[] routeEdges) throws InvalidAttributeValueException {
+		generate(routeEdges);
+	}
+
+	private void generate(IEdge[] routeEdges) throws InvalidAttributeValueException {
 		if (routeEdges == null)
 			throw new InvalidAttributeValueException();
 		IEdge nextEdge = null;
@@ -90,11 +114,6 @@ public class TurnByTurnDescription {
 						// if the same street just continues on, we only attach the
 						// GeoCoordinates
 						previousStreet.appendCoordinatesFromEdge(currentEdge);
-						// if (previousStreet.ref != null && !previousStreet.ref.equals("")
-						// && previousStreet.ref.equals(currentEdge.getRef())
-						// && !previousStreet.name.equals(currentEdge.getName())) {
-						// previousStreet.name = currentEdge.getRef();
-						// }
 
 					} else if (isUturn) {
 						// if it is a uturn on the same street, we start a new street so
@@ -149,7 +168,7 @@ public class TurnByTurnDescription {
 	}
 
 	/**
-	 * check 3 edges to see if they form a U-turn.
+	 * Check 3 edges to see if they form a U-turn.
 	 * 
 	 * @param secondLastEdge
 	 *            second last Edge before the current edge
@@ -283,15 +302,20 @@ public class TurnByTurnDescription {
 			JSONArray streetCoordinatesAsJson = new JSONArray();
 			for (int j = 0; j < street.points.size(); j++) {
 				GeoCoordinate sc = street.points.elementAt(j);
-				streetCoordinatesAsJson.put(new JSONArray().put(sc.getLongitude()).put(
-						sc.getLatitude()));
+				streetCoordinatesAsJson.put(new JSONArray()
+						.put(sc.getLongitude())
+						.put(sc.getLatitude()));
 			}
-			jsonstreet.put("geometry", new JSONObject().put("type", "LineString").put(
-					"coordinates", streetCoordinatesAsJson));
-			jsonstreet.put("properties", new JSONObject().put("Name", street.name).put("Ref",
-					street.ref).put("Length", street.length).put("Angle",
-					street.angleFromPreviousStreet).put("Roundabout", street.isRoundabout).put(
-					"Motorway_Link", street.isMotorwayLink));
+			jsonstreet.put("geometry", new JSONObject()
+					.put("type", "LineString")
+					.put("coordinates", streetCoordinatesAsJson));
+			jsonstreet.put("properties", new JSONObject()
+					.put("Name", street.name)
+					.put("Ref", street.ref)
+					.put("Length", street.length)
+					.put("Angle", street.angleFromPreviousStreet)
+					.put("Roundabout", street.isRoundabout)
+					.put("Motorway_Link", street.isMotorwayLink));
 			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);
@@ -453,6 +477,7 @@ public class TurnByTurnDescription {
 		Vector<GeoCoordinate> points = new Vector<GeoCoordinate>();
 		String name = "";
 		String ref = "";
+		Landmark nearestLandmark;
 
 		/**
 		 * Constructor for using a single IEdge
@@ -466,6 +491,12 @@ public class TurnByTurnDescription {
 			isRoundabout = edge.isRoundabout();
 			isMotorwayLink = edge.isMotorWayLink();
 			appendCoordinatesFromEdge(edge);
+
+			if (landmarkBuilder != null) {
+				nearestLandmark = landmarkBuilder
+						.getNearestLandMark(edge.getSource().getCoordinate());
+
+			}
 		}
 
 		/**
@@ -488,43 +519,46 @@ public class TurnByTurnDescription {
 		@Override
 		public String toString() {
 			int delta = (int) java.lang.Math.round(angleFromPreviousStreet / 45);
-			String turnInstruction;
+			String turnInstruction = "";
+			if (nearestLandmark != null) {
+				turnInstruction += "Near " + nearestLandmark + ".\n";
+			}
 			switch (delta) {
 				case 0:
 				case 8:
-					turnInstruction = "Go straight on ";
+					turnInstruction += "Go straight on ";
 					break;
 				case 1:
-					turnInstruction = "Make a slight right turn onto ";
+					turnInstruction += "Make a slight right turn onto ";
 					break;
 				case 2:
-					turnInstruction = "Make a right turn onto ";
+					turnInstruction += "Make a right turn onto ";
 					break;
 				case 3:
-					turnInstruction = "Make a sharp right turn onto ";
+					turnInstruction += "Make a sharp right turn onto ";
 					break;
 				case 4:
-					turnInstruction = "Make U-Turn and stay on ";
+					turnInstruction += "Make U-Turn and stay on ";
 					break;
 				case 5:
-					turnInstruction = "Make a sharp left turn onto ";
+					turnInstruction += "Make a sharp left turn onto ";
 					break;
 				case 6:
-					turnInstruction = "Make a left turn onto ";
+					turnInstruction += "Make a left turn onto ";
 					break;
 				case 7:
-					turnInstruction = "Make slight left turn onto ";
+					turnInstruction += "Make slight left turn onto ";
 					break;
 				default:
-					turnInstruction = "Go on ";
+					turnInstruction += "Go on ";
 			}
 			String result = "";
 			if (!isMotorwayLink && !isRoundabout) {
 				result += turnInstruction;
 				if (!name.equals("")) {
-					result += name + " ";
+					result += name;
 					if (!ref.equals("")) {
-						result += "(" + ref + ")";
+						result += " (" + ref + ")";
 					}
 				} else {
 					if (ref.equals("")) {
@@ -540,7 +574,7 @@ public class TurnByTurnDescription {
 					length = java.lang.Math.round(length / 100) / 10;
 					result += length + " km.";
 				} else {
-					result += length + " m.";
+					result += (int) length + " m.";
 				}
 			} else if (isMotorwayLink) {
 				if (!ref.equals(""))

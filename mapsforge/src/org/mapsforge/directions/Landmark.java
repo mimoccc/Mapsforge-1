@@ -80,6 +80,6 @@ public class Landmark {
 
 	@Override
 	public String toString() {
-		return name + " " + point + " " + type + " " + value;
+		return name + " " + " " + type + " " + value;
 	}
 }
