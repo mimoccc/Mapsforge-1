@@ -17,7 +17,6 @@
 package org.mapsforge.server.poi.persistence;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
@@ -25,18 +24,22 @@ import org.mapsforge.server.poi.exchange.IPoiReader;
 
 /**
  * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/searching
- * {@link PointOfInterest} and {@link PoiCategory} objects in named Storage/DB.<br/>
- * <br/>
+ * {@link PointOfInterest} and {@link PoiCategory} objects in named Storage/DB.
+ * 
  * Remember to call the {@link #close()} method as soon as your done manipulating the Storage/DB
  * via this {@link IPersistenceManager}.
  * 
  * @author weise
  * 
  */
+/**
+ * @author weise
+ * 
+ */
 public interface IPersistenceManager extends IPoiQuery {
 
 	/**
-	 * Insert a {@link PoiCategory} into storage.
+	 * Inserts a {@link PoiCategory} into storage.
 	 * 
 	 * @param category
 	 *            {@link PoiCategory} to insert into storage.
@@ -45,7 +48,7 @@ public interface IPersistenceManager extends IPoiQuery {
 	public boolean insertCategory(PoiCategory category);
 
 	/**
-	 * Insert a single {@link PointOfInterest} into storage.
+	 * Inserts a single {@link PointOfInterest} into storage.
 	 * 
 	 * @param poi
 	 *            {@link PointOfInterest} to insert into storage.
@@ -53,7 +56,7 @@ public interface IPersistenceManager extends IPoiQuery {
 	public void insertPointOfInterest(PointOfInterest poi);
 
 	/**
-	 * Insert {@link PointOfInterest} into this {@link IPersistenceManager}.
+	 * Inserts {@link PointOfInterest} into this {@link IPersistenceManager}.
 	 * 
 	 * @param pois
 	 *            collection of {@link PointOfInterest} to insert into storage.
@@ -61,7 +64,7 @@ public interface IPersistenceManager extends IPoiQuery {
 	public void insertPointsOfInterest(Collection<PointOfInterest> pois);
 
 	/**
-	 * Insert {@link PointOfInterest} from a {@link IPoiReader} instance.
+	 * Inserts {@link PointOfInterest} from a {@link IPoiReader} instance.
 	 * 
 	 * @param poiReader
 	 *            the {@link IPoiReader} fetching the {@link PointOfInterest}s.
@@ -103,7 +106,7 @@ public interface IPersistenceManager extends IPoiQuery {
 	/**
 	 * Use this to free claimed resources. After that you might no longer be able to
 	 * insert/remove/search points of interest and categories. This should be called as soon as
-	 * you are done working with this {@link IPersistenceManager}.
+	 * you are done working with this {@link IPersistenceManager} instance.
 	 */
 	public void close();
 
@@ -122,27 +125,20 @@ public interface IPersistenceManager extends IPoiQuery {
 
 	/**
 	 * Clusters this storage on background memory in order to provide faster query times. May
-	 * require at least twice the amount of memory currently used by the underlying storage. May
-	 * not be supported by all implementing classes.
+	 * require at least twice the amount of memory currently used by the underlying storage.
+	 * Notice that this is not an in place clustering but will create a new database file which
+	 * has the same name as the current database file plus ".clustered".
+	 * 
+	 * May not be supported by all implementing classes.
 	 */
 	public void clusterStorage();
 
 	/**
-	 * Provides bulk insert capabilities. Index structures such as rtrees will be tightly packed
-	 * to provide best performance.<br>
-	 * <br>
+	 * Tightly packs index structures such as rtrees to provide best performance. This may
+	 * result in following inserts to be way more expensive since splits will almost always
+	 * occur and go all the way up to the root.
+	 * 
 	 * May not be supported by all implementing classes.
-	 * 
-	 * @param poiIterator
-	 *            iterator over all {@link PointOfInterest} objects that shall be stored in this
-	 *            {@link IPersistenceManager}.
-	 * @param categories
-	 *            collection containing all categories the provided {@link PointOfInterest}
-	 *            belong to.
-	 * 
-	 * @throws UnsupportedOperationException
-	 *             if not supported by implementing class.
 	 */
-	public void packInsert(Iterator<PointOfInterest> poiIterator,
-			Collection<PoiCategory> categories);
+	public void packIndex();
 }

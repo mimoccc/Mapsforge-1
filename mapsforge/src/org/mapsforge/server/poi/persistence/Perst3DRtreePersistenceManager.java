@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.garret.perst.FieldIndex;
 import org.garret.perst.Storage;
 import org.mapsforge.server.poi.PoiCategory;
 import org.mapsforge.server.poi.PointOfInterest;
@@ -29,35 +28,11 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 
 	private static final int CATEGORY_SPREAD_FACTOR = 5;
 
-	private class PerstPoiIterator implements Iterator<PerstPoi> {
-		private final Iterator<PointOfInterest> poiIterator;
-
-		public PerstPoiIterator(Iterator<PointOfInterest> poiIterator) {
-			this.poiIterator = poiIterator;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return this.poiIterator.hasNext();
-		}
-
-		@Override
-		public PerstPoi next() {
-			PointOfInterest poi = poiIterator.next();
-			return new PerstPoi(poi, categoryManager.get(poi.getCategory().getTitle()));
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-	}
-
 	private class PackEntryIterator implements Iterator<PackEntry<RtreeBox, PerstPoi>> {
 
-		private final Iterator<ClusterEntry> iterator;
+		private final Iterator<PerstPoi> iterator;
 
-		public PackEntryIterator(Iterator<ClusterEntry> iterator) {
+		public PackEntryIterator(Iterator<PerstPoi> iterator) {
 			super();
 			this.iterator = iterator;
 		}
@@ -70,8 +45,7 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 			if (!iterator.hasNext()) {
 				return null;
 			}
-			ClusterEntry entry = iterator.next();
-			PerstPoi poi = entry.poi;
+			PerstPoi poi = iterator.next();
 
 			int x = poi.latitude;
 			int y = poi.longitude;
@@ -115,20 +89,28 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 	}
 
 	@Override
-	protected ClusterEntry generateClusterEntry(PerstPoi poi) {
-		int z = categoryManager.getOrderNumber(poi.category.title) * CATEGORY_SPREAD_FACTOR;
-		return new ClusterEntry(poi, Hilbert.computeValue3D(poi.longitude, poi.latitude, z));
-	}
-
-	@Override
 	protected Poi3DRootElement initRootElement(Storage storage) {
 		return new Poi3DRootElement(storage);
 	}
 
 	@Override
 	public void clusterStorage() {
-		// TODO Auto-generated method stub
+		Perst3DRtreePersistenceManager destinationManager = new Perst3DRtreePersistenceManager(
+				fileName + ".clustered");
 
+		Iterator<PerstPoi> iterator = root.spatialIndex.iterator();
+
+		Collection<PoiCategory> categories = this.allCategories();
+
+		for (PoiCategory category : categories) {
+			destinationManager.insertCategory(category);
+		}
+
+		while (iterator.hasNext()) {
+			destinationManager.insertPointOfInterest(iterator.next());
+		}
+
+		destinationManager.close();
 	}
 
 	@Override
@@ -154,35 +136,8 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 	}
 
 	@Override
-	public void packInsert(Iterator<PointOfInterest> poiIterator,
-			Collection<PoiCategory> categories) {
-		for (PoiCategory category : categories) {
-			this.insertCategory(category);
-			System.out.println("added " + category.toString());
-		}
-
-		FieldIndex<ClusterEntry> clusterIndex = createClusterIndex(new PerstPoiIterator(
-				poiIterator));
-
-		root.spatialIndex.packInsert(new PackEntryIterator(clusterIndex.iterator()), db);
-
-		Iterator<ClusterEntry> clusterIterator = clusterIndex.iterator();
-
-		int i = 0;
-		PerstPoi poi = null;
-		while (clusterIterator.hasNext()) {
-			i++;
-			poi = clusterIterator.next().poi;
-			root.poiCategoryFkIndex.add(poi);
-			root.poiIntegerIdPKIndex.add(poi);
-			db.store(poi);
-		}
-		System.out.println("added " + i + " pois to storage");
-	}
-
-	@Override
 	public void removeCategory(PoiCategory category) {
-		// TODO Auto-generated method stub
+		// TODO implement me
 
 	}
 
@@ -210,6 +165,16 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 				.getOrderNumber(category)
 				* CATEGORY_SPREAD_FACTOR, categoryManager.getFirstChildOrderNumber(category)
 				* CATEGORY_SPREAD_FACTOR);
+	}
+
+	@Override
+	public void packIndex() {
+		Rtree3DIndex<PerstPoi> newIndex = new Rtree3DIndex<PerstPoi>();
+		newIndex.packInsert(new PackEntryIterator(root.spatialIndex.iterator()), root
+				.getStorage());
+		root.spatialIndex.clear();
+		root.spatialIndex.deallocate();
+		root.spatialIndex = newIndex;
 	}
 
 }

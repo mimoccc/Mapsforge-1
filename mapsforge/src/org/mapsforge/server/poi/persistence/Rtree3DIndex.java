@@ -151,4 +151,9 @@ class Rtree3DIndex<T> extends Persistent implements RtreeIndex<T, RtreeBox> {
 		}
 	}
 
+	@Override
+	public Iterator<T> iterator() {
+		return root.iterator(height);
+	}
+
 }

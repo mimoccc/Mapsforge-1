@@ -17,6 +17,7 @@
 package org.mapsforge.server.poi.persistence;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.garret.perst.Storage;
 
@@ -31,5 +32,7 @@ interface RtreeIndexPage<T, S extends SpatialShape<S>> {
 	public S getMinimalBoundingShape();
 
 	public void purge(int level);
+
+	public Iterator<T> iterator(int level);
 
 }

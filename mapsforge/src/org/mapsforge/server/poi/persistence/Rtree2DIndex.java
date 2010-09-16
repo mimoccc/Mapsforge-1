@@ -150,4 +150,11 @@ class Rtree2DIndex<T> extends Persistent implements RtreeIndex<T, Rect> {
 		return n;
 	}
 
+	@Override
+	public Iterator<T> iterator() {
+		System.out.println("size = " + n);
+		System.out.println("height = " + height);
+		return root.iterator(height);
+	}
+
 }

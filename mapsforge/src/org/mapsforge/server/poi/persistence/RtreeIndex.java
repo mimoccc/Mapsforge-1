@@ -38,4 +38,6 @@ interface RtreeIndex<T, S extends SpatialShape<S>> extends IPersistent {
 
 	public int size();
 
+	public Iterator<T> iterator();
+
 }

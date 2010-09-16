@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.poi.PoiCategory;
@@ -175,8 +174,7 @@ class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void packInsert(Iterator<PointOfInterest> poiIterator,
-			Collection<PoiCategory> categories) {
+	public void packIndex() {
 		throw new UnsupportedOperationException();
 	}
 

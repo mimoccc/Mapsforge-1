@@ -16,10 +16,9 @@
  */
 package org.mapsforge.server.poi.persistence;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
-import org.garret.perst.FieldIndex;
 import org.garret.perst.Key;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
@@ -151,12 +150,20 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 	@Override
 	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int radius,
 			String category, int limit) {
-		Collection<PointOfInterest> result = find(computeBoundingBox(point, radius), category,
+		Collection<PointOfInterest> result = find(computeBoundingBox(point, radius),
+				category,
 				limit);
 
-		// TODO: delete pois from result that are in the BB but not within the radius;
+		ArrayList<PointOfInterest> filtered = new ArrayList<PointOfInterest>();
 
-		return result;
+		// delete pois from result that are in the bounding box but not within the radius;
+		for (PointOfInterest poi : result) {
+			if (point.sphericalDistance(poi.getGeoCoordinate()) <= radius) {
+				filtered.add(poi);
+			}
+		}
+
+		return filtered;
 	}
 
 	@Override
@@ -166,17 +173,6 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 				.getLongitudeE6(), p2.getLongitudeE6()), Math.max(p1.getLatitudeE6(), p2
 				.getLatitudeE6()), Math.max(p1.getLongitudeE6(), p2.getLongitudeE6()));
 		return find(rect, categoryName, 0);
-	}
-
-	protected FieldIndex<ClusterEntry> createClusterIndex(Iterator<PerstPoi> iterator) {
-		FieldIndex<ClusterEntry> clusterIndex = db.<ClusterEntry> createFieldIndex(
-				ClusterEntry.class, "value", false);
-
-		while (iterator.hasNext()) {
-			clusterIndex.put(generateClusterEntry(iterator.next()));
-		}
-
-		return clusterIndex;
 	}
 
 	@Override
@@ -198,8 +194,6 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 	public Collection<PoiCategory> descendants(String category) {
 		return categoryManager.descendants(category);
 	}
-
-	abstract protected ClusterEntry generateClusterEntry(PerstPoi poi);
 
 	abstract protected Collection<PointOfInterest> find(Rect rect, String category, int limit);
 

@@ -21,7 +21,7 @@ import org.garret.perst.impl.Page;
 
 class Rtree2DIndexPage<T> extends AbstractHilbertRtreePage<T, Rect> {
 
-	static final int capacity = (Page.pageSize - 8 - 4 * 4) / (4 * 4 + 4);
+	static final int capacity = (Page.pageSize - 8 - 4 * 4 - 8) / (4 * 4 + 4);
 
 	Rect[] rects;
 

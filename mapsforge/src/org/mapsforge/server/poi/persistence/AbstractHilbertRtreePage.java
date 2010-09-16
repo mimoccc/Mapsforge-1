@@ -18,7 +18,10 @@ package org.mapsforge.server.poi.persistence;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
 import org.garret.perst.Assert;
 import org.garret.perst.Link;
@@ -28,7 +31,64 @@ import org.garret.perst.Storage;
 abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Persistent
 		implements RtreeIndexPage<T, S> {
 
-	static final int siblings = 2;
+	static final int cooperatingSiblings = 2;
+
+	class HilbertIterator implements Iterator<T> {
+
+		private Stack<Iterator<Entry<S>>> iteratorStack;
+		private int height = 0;
+
+		public HilbertIterator(AbstractHilbertRtreePage<T, S> root, int height) {
+			super();
+			this.iteratorStack = new Stack<Iterator<Entry<S>>>();
+			this.height = height;
+			iteratorStack.push(root.getEntryList().iterator());
+			downToLeaf();
+		}
+
+		@Override
+		public boolean hasNext() {
+			while (!iteratorStack.empty() && !iteratorStack.peek().hasNext()) {
+				iteratorStack.pop();
+			}
+			if (iteratorStack.empty()) {
+				return false;
+			}
+			return iteratorStack.peek().hasNext();
+		}
+
+		@Override
+		public T next() {
+			while (!iteratorStack.empty() && !iteratorStack.peek().hasNext()) {
+				iteratorStack.pop();
+			}
+			if (iteratorStack.empty()) {
+				throw new NoSuchElementException();
+			}
+
+			downToLeaf();
+
+			return (T) iteratorStack.peek().next().item;
+		}
+
+		private void downToLeaf() {
+			while (currentLevel() != 0) {
+				AbstractHilbertRtreePage<T, S> page = (AbstractHilbertRtreePage<T, S>) iteratorStack
+						.peek().next().item;
+				iteratorStack.push(page.getEntryList().iterator());
+			}
+		}
+
+		private int currentLevel() {
+			return height - iteratorStack.size();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+
+	}
 
 	private static class Entry<S extends SpatialShape<S>> implements Comparable<Entry<S>> {
 		final Object item;
@@ -44,7 +104,12 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 		@Override
 		public int compareTo(Entry<S> other) {
-			return (int) (value - other.value);
+			long result = value - other.value;
+			if (result < 0)
+				return -1;
+			if (result > 0)
+				return 1;
+			return 0;
 		}
 	}
 
@@ -106,9 +171,10 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		return result;
 	}
 
-	int n;
+	int n = 0;
 	Link<Object> branch;
 	AbstractHilbertRtreePage<T, S> parent;
+	long largestHilbertValue = 0;
 
 	AbstractHilbertRtreePage() {
 		// required by perst
@@ -132,6 +198,7 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		initialize(storage);
 		setBranch(0, shape, obj);
 		n = 1;
+		largestHilbertValue = shape.linearOderValue();
 	}
 
 	AbstractHilbertRtreePage(Storage storage) {
@@ -143,6 +210,7 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		n = 1;
 		setBranch(0, root.getMinimalBoundingShape(), root);
 		root.parent = this;
+		largestHilbertValue = getShape(0).linearOderValue();
 	}
 
 	abstract void initialize(Storage storage);
@@ -188,14 +256,22 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	@Override
 	public RtreeIndexPage<T, S> insert(Storage storage, S shape, T item, int level) {
 		modify();
-		AbstractHilbertRtreePage<T, S> newRoot = null;
-		if (--level != 0) { /* not a leaf */
-			AbstractHilbertRtreePage<T, S> leaf = chooseLeaf(level, shape.linearOderValue());
-			leaf.put(storage, item, shape, newRoot);
-		} else {
-			put(storage, item, shape, newRoot);
+		AbstractHilbertRtreePage<T, S> leaf = chooseLeaf(level, shape.linearOderValue());
+		return leaf.put(storage, item, shape);
+	}
+
+	private AbstractHilbertRtreePage<T, S> chooseLeaf(int level, long hilbert) {
+		if (--level != 0) { /* this is an internal node in the tree */
+			for (int i = 0; i < n; i++) {
+				if (this.<AbstractHilbertRtreePage<T, S>> getBranch(i).largestHilbertValue > hilbert) {
+					return this.<AbstractHilbertRtreePage<T, S>> getBranch(i).chooseLeaf(level,
+							hilbert);
+				}
+			}
+			return this.<AbstractHilbertRtreePage<T, S>> getBranch(n - 1).chooseLeaf(level,
+					hilbert);
 		}
-		return newRoot;
+		return this;
 	}
 
 	@Override
@@ -225,38 +301,87 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		return (E) result;
 	}
 
-	private AbstractHilbertRtreePage<T, S> chooseLeaf(int level, long hilbert) {
-		if (--level != 0) { /* this is an internal node in the tree */
-			for (int i = 0; i < n; i++) {
-				if (getShape(i).linearOderValue() > hilbert) {
-					return this.<AbstractHilbertRtreePage<T, S>> getBranch(i).chooseLeaf(level,
-							hilbert);
-				}
-			}
-			return this.<AbstractHilbertRtreePage<T, S>> getBranch(n - 1).chooseLeaf(level,
-					hilbert);
-		}
-		return this;
-	}
-
-	private void put(Storage storage, Object item, S shape,
-			AbstractHilbertRtreePage<T, S> newRoot) {
+	private AbstractHilbertRtreePage<T, S> put(Storage storage, Object item, S shape) {
 		if (n < capacity()) {
 			ArrayList<Entry<S>> children = getEntryList();
 			children.add(new Entry<S>(item, shape));
 			Collections.sort(children);
 			replaceChildren(children);
-		} else {
-			distributeOnPut(storage, new Entry<S>(item, shape), newRoot);
+			if (parent != null) {
+				updateParent();
+			}
+			return null;
 		}
+		return distributeOnPut(storage, new Entry<S>(item, shape));
 	}
 
-	private ArrayList<Entry<S>> getEntryList() {
+	private AbstractHilbertRtreePage<T, S> distributeOnPut(Storage storage, Entry<S> newEntry) {
+		AbstractHilbertRtreePage<T, S> newRoot = null;
+		if (parent == null) {
+			newRoot = newRoot(storage, this);
+			this.parent = newRoot;
+		}
+
+		ArrayList<AbstractHilbertRtreePage<T, S>> siblings = parent.getSiblings(parent.branch
+				.indexOfObject(this));
+		ArrayList<AbstractHilbertRtreePage<T, S>> pages = new ArrayList<AbstractHilbertRtreePage<T, S>>(
+				siblings);
+
+		ArrayList<Entry<S>> list = new ArrayList<Entry<S>>(1);
+		list.add(newEntry);
+
+		AbstractHilbertRtreePage<T, S> newSibling = null;
+		if (isOverflowing(pages)) {
+			// create new sibling and add to list of pages to distribute children
+			newSibling = newNode(storage, parent);
+			pages.add(newSibling);
+		}
+
+		distributeElements(pages, list);
+		updateParent(storage, siblings, newSibling);
+
+		return newRoot;
+	}
+
+	ArrayList<Entry<S>> getEntryList() {
 		ArrayList<Entry<S>> result = new ArrayList<Entry<S>>(n);
 		for (int i = 0; i < n; i++) {
 			result.add(new Entry<S>(branch.get(i), getShape(i)));
 		}
 		return result;
+	}
+
+	/**
+	 * @param storage
+	 *            the storage this page is stored in.
+	 * @param pages
+	 *            changed on this level including this.
+	 * @param newNode
+	 *            the newly created page if split occured.
+	 */
+	private void updateParent(Storage storage, ArrayList<AbstractHilbertRtreePage<T, S>> pages,
+			AbstractHilbertRtreePage<T, S> newNode) {
+		if (parent != null) {
+			int index = 0;
+			for (AbstractHilbertRtreePage<T, S> page : pages) {
+				index = parent.branch.indexOfObject(page);
+				parent.setShape(index, page.getMinimalBoundingShape());
+			}
+			parent.replaceChildren(parent.getEntryList());
+			if (newNode != null) {
+				parent.put(storage, newNode, newNode.getMinimalBoundingShape());
+			} else {
+				parent.updateParent();
+			}
+		}
+	}
+
+	private void updateParent() {
+		if (parent != null) {
+			int index = parent.branch.indexOfObject(this);
+			parent.setShape(index, this.getMinimalBoundingShape());
+			parent.updateParent();
+		}
 	}
 
 	private void replaceChildren(List<Entry<S>> children) {
@@ -276,6 +401,8 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 			instantiateShape(i);
 		}
 		n = children.size();
+		largestHilbertValue = getShape(n - 1).linearOderValue();
+
 		modify();
 	}
 
@@ -304,44 +431,20 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		return null;
 	}
 
-	private void distributeOnPut(Storage storage, Entry<S> newEntry,
-			AbstractHilbertRtreePage<T, S> newRoot) {
-		if (parent == null) {
-			newRoot = newRoot(storage, this);
-			this.parent = newRoot;
-		}
-
-		ArrayList<AbstractHilbertRtreePage<T, S>> pages = parent.getSiblings(parent.branch
-				.indexOfObject(this));
-
-		ArrayList<Entry<S>> list = new ArrayList<Entry<S>>(1);
-		list.add(newEntry);
-
-		if (isOverflowing(pages)) {
-			AbstractHilbertRtreePage<T, S> newSibling = null;
-			newSibling = newNode(storage, parent);
-			pages.add(newSibling);
-			distributeElements(pages, list);
-			parent.put(storage, newSibling, newSibling.getMinimalBoundingShape(), newRoot);
-		} else {
-			distributeElements(pages, list);
-		}
-	}
-
 	private ArrayList<AbstractHilbertRtreePage<T, S>> getSiblings(int index) {
 		Assert.that(index < n);
 		// find child range for distribution
-		int offset = (index - siblings / 2);
-		if (offset + siblings > n)
-			offset = n - 1 - siblings;
+		int offset = (index - cooperatingSiblings / 2);
+		if (offset + cooperatingSiblings > n)
+			offset = n - 1 - cooperatingSiblings;
 		if (offset < 0)
 			offset = 0;
-		int max = Math.min(n, offset + siblings + 1);
+		int max = Math.min(n, offset + cooperatingSiblings + 1);
 
 		Assert.that(offset <= index && index <= max);
 
 		ArrayList<AbstractHilbertRtreePage<T, S>> pages = new ArrayList<AbstractHilbertRtreePage<T, S>>(
-				siblings + 1);
+				cooperatingSiblings + 1);
 
 		for (int i = offset; i < max; i++) {
 			pages.add(this.<AbstractHilbertRtreePage<T, S>> getBranch(i));
@@ -384,5 +487,10 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 			return null;
 		}
 		return this;
+	}
+
+	@Override
+	public Iterator<T> iterator(int level) {
+		return new HilbertIterator(this, level);
 	}
 }

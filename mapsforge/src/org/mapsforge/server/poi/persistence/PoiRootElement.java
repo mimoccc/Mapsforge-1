@@ -50,6 +50,11 @@ class PoiRootElement extends BasicRootElement {
 		db.store(namedIndex);
 	}
 
+	public void addSpatialIndex(NamedSpatialIndex namedIndex) {
+		spatialIndexIndex.add(namedIndex);
+		modify();
+	}
+
 	public void removeSpatialIndex(String categoryName) {
 		NamedSpatialIndex namedIndex = spatialIndexIndex.get(categoryName);
 		spatialIndexIndex.remove(namedIndex);

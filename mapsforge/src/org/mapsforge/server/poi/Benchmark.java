@@ -58,7 +58,7 @@ public class Benchmark {
 	 */
 	public static void main(String[] args) {
 		IPersistenceManager persistenceManager = PersistenceManagerFactory
-				.getPerstMultiRtreePersistenceManager("c:/users/weise/Desktop/berlin.dbs.clustered");
+				.getPerstMultiRtreePersistenceManager("c:/users/weise/Desktop/berlin.dbs");
 		Benchmark benchmark = new Benchmark(persistenceManager,
 				"c:/users/weise/Desktop/berlin.dbs.csv");
 		try {

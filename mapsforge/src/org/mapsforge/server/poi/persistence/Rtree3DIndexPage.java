@@ -21,7 +21,7 @@ import org.garret.perst.impl.Page;
 
 class Rtree3DIndexPage<T> extends AbstractHilbertRtreePage<T, RtreeBox> {
 
-	static final int capacity = (Page.pageSize - 8 - 4 * 4) / (6 * 4 + 4);
+	static final int capacity = (Page.pageSize - 8 - 4 * 4 - 8) / (6 * 4 + 4);
 
 	RtreeBox[] boxes;
 

@@ -1,7 +1,6 @@
 package org.mapsforge.server.poi.persistence;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.poi.PoiCategory;
@@ -100,8 +99,7 @@ class DualPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void packInsert(Iterator<PointOfInterest> poiIterator,
-			Collection<PoiCategory> categories) {
+	public void packIndex() {
 		throw new UnsupportedOperationException();
 	}
 

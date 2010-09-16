@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.garret.perst.FieldIndex;
+import org.garret.perst.Assert;
 import org.garret.perst.GenericIndex;
 import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
@@ -36,6 +36,37 @@ import org.mapsforge.server.poi.PointOfInterest;
  */
 public class MultiRtreePersistenceManager extends
 		AbstractPerstPersistenceManager<PoiRootElement> {
+
+	private class PackEntryIterator implements Iterator<PackEntry<Rect, PerstPoi>> {
+
+		private final Iterator<PerstPoi> iterator;
+
+		public PackEntryIterator(Iterator<PerstPoi> iterator) {
+			super();
+			this.iterator = iterator;
+		}
+
+		public boolean hasNext() {
+			return iterator.hasNext();
+		}
+
+		public PackEntry<Rect, PerstPoi> next() {
+			if (!iterator.hasNext()) {
+				return null;
+			}
+
+			PerstPoi poi = iterator.next();
+
+			return new PackEntry<Rect, PerstPoi>(new Rect(poi.latitude, poi.longitude,
+					poi.latitude,
+					poi.longitude), poi);
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+
+	}
 
 	/**
 	 * @param storageFileName
@@ -165,12 +196,14 @@ public class MultiRtreePersistenceManager extends
 
 	@Override
 	public void clusterStorage() {
-		MultiRtreePersistenceManager destinationManager = new MultiRtreePersistenceManager(
-				fileName + ".dest");
+		if (!categoryManager.contains("Root")) {
+			throw new UnsupportedOperationException("only works if there is a 'Root' category");
+		}
 
-		// create temporary index for cluster value
-		FieldIndex<ClusterEntry> clusterIndex = createClusterIndex(root.poiIntegerIdPKIndex
-				.iterator());
+		MultiRtreePersistenceManager destinationManager = new MultiRtreePersistenceManager(
+				fileName + ".clustered");
+
+		Iterator<PerstPoi> iterator = root.getSpatialIndex("Root").iterator();
 
 		Collection<PoiCategory> categories = this.allCategories();
 
@@ -178,30 +211,32 @@ public class MultiRtreePersistenceManager extends
 			destinationManager.insertCategory(category);
 		}
 
-		Iterator<ClusterEntry> clusterIterator = clusterIndex.iterator();
-		while (clusterIterator.hasNext()) {
-			destinationManager.insertPointOfInterest(clusterIterator.next().poi);
+		while (iterator.hasNext()) {
+			destinationManager.insertPointOfInterest(iterator.next());
 		}
 
-		destinationManager.close();
+		Assert.that(destinationManager.root.getSpatialIndex("Root").size() == root
+				.getSpatialIndex("Root").size());
 
-		// TODO delete old db and rename new one to old name
+		destinationManager.close();
+	}
+
+	@Override
+	public void packIndex() {
+		Iterator<PerstPoi> iterator = null;
+		Rtree2DIndex<PerstPoi> index = null;
+		for (NamedSpatialIndex namedIndex : root.spatialIndexIndex) {
+			iterator = namedIndex.index.iterator();
+			index = new Rtree2DIndex<PerstPoi>();
+			index.packInsert(new PackEntryIterator(iterator), root.getStorage());
+			root.removeSpatialIndex(namedIndex.name); // remove old
+			root.addSpatialIndex(new NamedSpatialIndex(namedIndex.name, index)); // add new
+		}
 	}
 
 	@Override
 	protected PoiRootElement initRootElement(Storage database) {
 		return new PoiRootElement(database);
-	}
-
-	@Override
-	protected ClusterEntry generateClusterEntry(PerstPoi poi) {
-		return new ClusterEntry(poi, Hilbert.computeValue(poi.latitude, poi.longitude));
-	}
-
-	@Override
-	public void packInsert(Iterator<PointOfInterest> poiIterator,
-			Collection<PoiCategory> categories) {
-		throw new UnsupportedOperationException();
 	}
 
 }
