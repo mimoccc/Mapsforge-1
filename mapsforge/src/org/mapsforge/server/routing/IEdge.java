@@ -18,26 +18,62 @@ package org.mapsforge.server.routing;
 
 import org.mapsforge.core.GeoCoordinate;
 
+/**
+ * This interface represents a directed edge within a routing graph.
+ */
 public interface IEdge {
 
+	/**
+	 * @return Returns the unique identifier of this edge.
+	 */
 	public int getId();
 
+	/**
+	 * @return Returns the source vertex of this edge.
+	 */
 	public IVertex getSource();
 
+	/**
+	 * @return Returns the target vertex of this edge.
+	 */
 	public IVertex getTarget();
 
+	/**
+	 * @return Returns the coordinates of this edge sorted from source to target excluding the
+	 *         coordinates of source and target vertex.
+	 */
 	public GeoCoordinate[] getWaypoints();
 
+	/**
+	 * @return Returns the coordinates of this edge sorted from source to target including the
+	 *         coordinates of source and target vertex.
+	 */
 	public GeoCoordinate[] getAllWaypoints();
 
+	/**
+	 * @return Returns the name of the street.
+	 */
 	public String getName();
 
+	/**
+	 * @return Returns the Ref of the street, this can be names of the streets which are higher
+	 *         within the naming hierarchy, e.g. names of motorways.
+	 */
 	public String getRef();
 
+	/**
+	 * @return The weight of this edge representing the costs to travel along this edge.
+	 */
 	public int getWeight();
 
+	/**
+	 * @return Returns true if and only if this edge is part of a roundabout.
+	 */
 	public boolean isRoundabout();
 
+	/**
+	 * @return Returns true if this edge is part of a motorway link.
+	 */
 	public boolean isMotorWayLink();
 
 }

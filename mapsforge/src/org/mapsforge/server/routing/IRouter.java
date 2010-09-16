@@ -21,32 +21,109 @@ import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
 
+/**
+ * This class functionality is composed of spatial indices allowing for nearest neighbor
+ * queries, a routing algorithm for shortest path queries and a graph like interface alowing
+ * traversal and querying satellite data of vertices and edges.
+ */
 public interface IRouter {
 
+	/**
+	 * Computes the Shortest path from source to target vertex.
+	 * 
+	 * @param sourceId
+	 *            identifier of the source vertex.
+	 * @param targetId
+	 *            identifier of the target vertex.
+	 * @return Returns all edges along the shortest path, sorted from source to target.
+	 */
 	public IEdge[] getShortestPath(int sourceId, int targetId);
 
+	/**
+	 * Computes the Shortest path from source to target vertex.
+	 * 
+	 * @param sourceId
+	 *            identifier of the source vertex.
+	 * @param targetId
+	 *            identifier of the target vertex.
+	 * @param searchspaceBuff
+	 *            all edges visited by the algorithm are put here.
+	 * @return Returns all edges along the shortest path, sorted from source to target.
+	 */
 	public IEdge[] getShortestPathDebug(int sourceId, int targetId,
 			Collection<IEdge> searchspaceBuff);
 
+	/**
+	 * Nearest neighbor query for vertices.
+	 * 
+	 * @param coord
+	 *            the query parameter.
+	 * @return Returns the vertex nearest to the given coordinate.
+	 */
 	public IVertex getNearestVertex(GeoCoordinate coord);
 
+	/**
+	 * Looks up the vertex of given id.
+	 * 
+	 * @param id
+	 *            vertex identifier.
+	 * @return Returns the vertex or null if the id is invalid.
+	 */
 	public IVertex getVertex(int id);
 
+	/**
+	 * Range query for vertices.
+	 * 
+	 * @param minLon
+	 *            bounding value.
+	 * @param minLat
+	 *            bounding value.
+	 * @param maxLon
+	 *            bounding value.
+	 * @param maxLat
+	 *            bounding value.
+	 * @return all vertices within the specified range.
+	 */
 	public Iterator<? extends IVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
 			int maxLat);
 
+	/**
+	 * Nearest Neighbor query for Edges.
+	 * 
+	 * @param coord
+	 *            query parameter.
+	 * @return The set of nearest Edges with regard to to the given coordinate.
+	 */
 	public IEdge[] getNearestEdges(GeoCoordinate coord);
 
+	/**
+	 * @return Returns the name of the algorithm used for shortest path computations.
+	 */
 	public String getAlgorithmName();
 
+	/**
+	 * @return Returns a bounding value of the routing graph.
+	 */
 	public int getMinLongitude();
 
+	/**
+	 * @return Returns a bounding value of the routing graph.
+	 */
 	public int getMaxLongitude();
 
+	/**
+	 * @return Returns a bounding value of the routing graph.
+	 */
 	public int getMinLatitude();
 
+	/**
+	 * @return Returns a bounding value of the routing graph.
+	 */
 	public int getMaxLatitude();
 
+	/**
+	 * @return the center of the routing graph.
+	 */
 	public GeoCoordinate getMapCenter();
 
 }

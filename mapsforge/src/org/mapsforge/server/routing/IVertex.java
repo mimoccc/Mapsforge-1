@@ -18,12 +18,24 @@ package org.mapsforge.server.routing;
 
 import org.mapsforge.core.GeoCoordinate;
 
+/**
+ * Routing graph Vertex.
+ */
 public interface IVertex {
 
+	/**
+	 * @return Unique identifier within the scope of the routing graph.
+	 */
 	public int getId();
 
+	/**
+	 * @return Returns all edges leaving this vertex.
+	 */
 	public IEdge[] getOutboundEdges();
 
+	/**
+	 * @return Returns the geographic position of this vertex.
+	 */
 	public GeoCoordinate getCoordinate();
 
 }
