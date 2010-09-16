@@ -32,11 +32,14 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.RouterFactory;
 import org.mapsforge.server.routing.highwayHierarchies.EdgeMapper.EdgeMapping;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
+/**
+ * This class servers the highway hierarchies routing functionality to other packages, thus it
+ * is the interface of this package.
+ */
 public class RouterImpl implements IRouter {
 
 	private static final String ALGORITHM_NAME = "Highway Hierarchies";
@@ -73,6 +76,14 @@ public class RouterImpl implements IRouter {
 		this.edgeIndex = edgeIndex;
 	}
 
+	/**
+	 * Serializes this class to the given stream.
+	 * 
+	 * @param oStream
+	 *            the stream to write to.
+	 * @throws IOException
+	 *             on error writing to the given stream.
+	 */
 	public void serialize(OutputStream oStream) throws IOException {
 		routingGraph.serialize(oStream);
 		edgeExpander.serialize(oStream);
@@ -84,6 +95,18 @@ public class RouterImpl implements IRouter {
 		edgeIndex.serialize(oStream);
 	}
 
+	/**
+	 * Loads a Router object from the given stream which has to be connected to a highway
+	 * hierarchies binary file.
+	 * 
+	 * @param iStream
+	 *            the stream to read from.
+	 * @return a new object of this class.
+	 * @throws IOException
+	 *             on error reading stream.
+	 * @throws ClassNotFoundException
+	 *             error due to deserialization.
+	 */
 	public static RouterImpl deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
 		HHAlgorithm algorithm = new HHAlgorithm();
@@ -106,6 +129,17 @@ public class RouterImpl implements IRouter {
 				edgeReverser, vertexIndex, mapper, edgeNames, edgeIndex);
 	}
 
+	/**
+	 * Loads the data from a highway hierarchies database and constructs a router object. This
+	 * is much slower than reading from a flat binary file. So it might be better to do this
+	 * only once.
+	 * 
+	 * @param conn
+	 *            connection to the database to read from.
+	 * @return an instance of this class using the data of the input database.
+	 * @throws SQLException
+	 *             on error reading from database.
+	 */
 	public static RouterImpl getFromDb(Connection conn) throws SQLException {
 		HHAlgorithm algorithm = new HHAlgorithm();
 		HHStaticGraph routingGraph = HHStaticGraph.getFromHHDb(conn);
@@ -241,7 +275,7 @@ public class RouterImpl implements IRouter {
 
 			@Override
 			public void remove() {
-
+				//
 			}
 		};
 
@@ -399,36 +433,19 @@ public class RouterImpl implements IRouter {
 		}
 	}
 
-	public static void main(String[] args) {
-		IRouter router = RouterFactory.getRouter();
-		// Autobahn Ausfahrt
-		// int source = router.getNearestVertex(new GeoCoordinate(53.114021,
-		// 8.8580001)).getId();
-		// int target = router.getNearestVertex(new GeoCoordinate(53.111445,
-		// 8.8087332)).getId();
-		// Kreisverkehr
-		int source = router
-				.getNearestVertex(new GeoCoordinate(53.08081638703, 8.8126494073506)).getId();
-		int target = router.getNearestVertex(
-				new GeoCoordinate(53.077825950522, 8.8222195291153)).getId();
-		IEdge[] sp = router.getShortestPath(source, target);
-
-		for (IEdge e : sp) {
-			System.out.print(e.getName());
-			if (e.isRoundabout())
-				System.out.print(" (ROUNDABOUT!) ");
-			if (e.isMotorWayLink())
-				System.out.print(" (MotorWayLink!) ");
-			if (!e.getRef().equals(""))
-				System.out.print(" (" + e.getRef() + ")");
-			// System.out.print(e.);
-			// System.out.print(e.getSource().getCoordinate() + ", ");
-			// for (GeoCoordinate c : e.getWaypoints()) {
-			// System.out.print(c + ", ");
-			// }
-			// System.out.println(e.getTarget().getCoordinate());
-			System.out.println();
-		}
-
-	}
+	// public static void main(String[] args) throws FileNotFoundException, IOException,
+	// ClassNotFoundException {
+	// IRouter router = RouterImpl.deserialize(new FileInputStream("berlin.hh"));
+	// int source = router
+	// .getNearestVertex(new GeoCoordinate(52.509257, 13.456766)).getId();
+	// int target = router.getNearestVertex(
+	// new GeoCoordinate(52.525678, 13.306196)).getId();
+	// IEdge[] sp = router.getShortestPath(source, target);
+	//
+	// for (IEdge e : sp) {
+	// System.out.println(e.getName() + ",roudabout=" + e.isRoundabout()
+	// + ",motarwayLink="
+	// + e.isMotorWayLink() + ",ref=" + e.getRef());
+	// }
+	// }
 }
