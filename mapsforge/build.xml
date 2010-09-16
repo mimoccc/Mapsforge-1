@@ -99,20 +99,22 @@
 				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/osm2rg/" />
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
 				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/graph/model/osmxml/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/model/osmxml/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/model/EHighwayLevel.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/model/EHighwayLevel.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/model/IHighwayLevel2Speed.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/model/IHighwayLevel2Speed.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/model/impl/DEHighwayLevel2Speed.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/model/impl/DEHighwayLevel2Speed.*" />
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IEdge.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IEdge.*" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IVertex.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IVertex.*" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IRouter.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IRouter.*" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/highwayHierarchies/" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/highwayHierarchies/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/DBConnection.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/DBConnection.*" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/GeoCoordinate.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/GeoCoordinate.*" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/Rect.*" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/Rect.*" />
 				<fileset refid="info" />
 				<manifest>
 					<attribute name="Main-Class" value="org/mapsforge/preprocessing/graph/osm2rg/RgExtractor"/>
