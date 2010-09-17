@@ -57,10 +57,13 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 
 	@Override
 	void drawNodes(ArrayList<PointTextContainer> drawNodes) {
-		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.pointTextContainer = drawNodes.get(this.arrayListIndex);
-			this.canvas.drawText(this.pointTextContainer.text, this.pointTextContainer.x,
-					this.pointTextContainer.y, this.pointTextContainer.paint);
+		for (PointTextContainer label : drawNodes) {
+			if (label.paintBack != null) {
+				this.canvas.drawText(label.text, label.x, label.y, label.paintBack);
+				this.canvas.drawText(label.text, label.x, label.y, label.paintFront);
+			} else {
+				this.canvas.drawText(label.text, label.x, label.y, label.paintFront);
+			}
 		}
 	}
 

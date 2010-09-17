@@ -259,6 +259,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private MapSymbols mapSymbols;
 	private boolean needHelperPoint;
 	private ArrayList<PointTextContainer> nodes;
+	private ArrayList<PointTextContainer> area_labels;
 	private boolean noWaterBackground;
 	private int pathLengthInPixel;
 	private float previousX;
@@ -273,6 +274,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
+
+	// -----------------------------
+	private LabelPlacement labelPlacement = new LabelPlacement();
 
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
@@ -297,15 +301,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			}
 			// choose the correct text paint
 			if (nameColor == AREA_NAME_BLUE) {
-				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_WHITE_STROKE_10));
+				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
 			} else if (nameColor == AREA_NAME_BLACK) {
-				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
 			} else if (nameColor == AREA_NAME_RED) {
-				this.nodes.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
 			}
 		}
@@ -1037,11 +1040,11 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_MILITARY_NAVAL_BASE_FILL.setColor(Color.rgb(181, 214, 241));
 
 		PAINT_NAME_BLACK_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_10.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_10.setTextSize(10);
 		PAINT_NAME_BLACK_10.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_12.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_12.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_12.setTextSize(12);
 		PAINT_NAME_BLACK_12.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
@@ -1049,45 +1052,45 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_BLACK_13.setTextSize(13);
 		PAINT_NAME_BLACK_13.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_15.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_15.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_15.setTextSize(15);
 		PAINT_NAME_BLACK_15.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_20.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_20.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_20.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_20.setTextSize(20);
 		PAINT_NAME_BLACK_20.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_25.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_25.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_25.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_25.setTextSize(25);
 		PAINT_NAME_BLACK_25.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLUE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLUE_10.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLUE_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLUE_10.setTextSize(10);
 		PAINT_NAME_BLUE_10.setColor(Color.rgb(64, 64, 254));
 		PAINT_NAME_PURPLE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_PURPLE_10.setTextAlign(Align.CENTER);
+		PAINT_NAME_PURPLE_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_PURPLE_10.setTextSize(10);
 		PAINT_NAME_PURPLE_10.setColor(Color.rgb(255, 4, 255));
 		PAINT_NAME_RED_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_10.setTextAlign(Align.CENTER);
+		PAINT_NAME_RED_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_10.setTextSize(10);
 		PAINT_NAME_RED_10.setColor(Color.rgb(236, 46, 46));
 		PAINT_NAME_RED_11.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_11.setTextAlign(Align.CENTER);
+		PAINT_NAME_RED_11.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_11.setTextSize(11);
 		PAINT_NAME_RED_11.setColor(Color.rgb(236, 46, 46));
 		PAINT_NAME_RED_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_13.setTextAlign(Align.CENTER);
+		PAINT_NAME_RED_13.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_13.setTextSize(13);
 		PAINT_NAME_RED_13.setColor(Color.rgb(236, 46, 46));
 		PAINT_NAME_WHITE_STROKE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_10.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_10.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_10.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_10.setTextSize(10);
 		PAINT_NAME_WHITE_STROKE_10.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_11.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_11.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_11.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_11.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_11.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_11.setTextSize(11);
@@ -1099,25 +1102,25 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_WHITE_STROKE_12.setTextSize(12);
 		PAINT_NAME_WHITE_STROKE_12.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_13.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_13.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_13.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_13.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_13.setTextSize(13);
 		PAINT_NAME_WHITE_STROKE_13.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_15.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_15.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_15.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_15.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_15.setTextSize(15);
 		PAINT_NAME_WHITE_STROKE_15.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_20.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_20.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_20.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_20.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_20.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_20.setTextSize(20);
 		PAINT_NAME_WHITE_STROKE_20.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_25.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_25.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_25.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_25.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_25.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_25.setTextSize(25);
@@ -1550,11 +1553,18 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		if (isInterrupted()) {
 			return false;
 		}
+
+		// Places the Labels
+		this.nodes = labelPlacement.placeLabels(this.nodes, this.symbols, this.area_labels,
+				this.currentTile);
+
 		drawMapSymbols(this.symbols);
 		if (isInterrupted()) {
 			return false;
 		}
+
 		drawNodes(this.nodes);
+		drawNodes(this.area_labels);
 
 		if (mapGeneratorJob.drawTileFrames) {
 			drawTileFrame();
@@ -1598,6 +1608,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 		this.wayNames.clear();
 		this.nodes.clear();
+		this.area_labels.clear();
 		this.symbols.clear();
 		this.coastlineStarts.clear();
 		this.coastlineEnds.clear();
@@ -1630,9 +1641,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		/* houseNumber */
 		if (houseNumber != null && this.currentTile.zoomLevel >= 17) {
 			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
-					this.currentNodeY, PAINT_NAME_BLACK_10));
-			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
-					this.currentNodeY, PAINT_NAME_WHITE_STROKE_10));
+					this.currentNodeY, PAINT_NAME_BLACK_10, PAINT_NAME_WHITE_STROKE_10));
 		}
 
 		/* aeroway */
@@ -1642,149 +1651,199 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* amenity */
 		else if (nodeTagIds[TagIdsPOIs.AMENITY$PUB]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_RED_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pub);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_RED_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$CINEMA]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cinema);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$THEATRE]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.theatre);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FIRE_STATION]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.firebrigade);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
+
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$SHELTER]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 20, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 20, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.shelter);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY /*- 20*/, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.shelter);
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$SCHOOL]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.school);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$UNIVERSITY]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.university);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$PLACE_OF_WORSHIP]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.church);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$ATM]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.atm);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$LIBRARY]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.library);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FAST_FOOD]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fastfood);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$PARKING]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.parking);
+
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$HOSPITAL]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hospital);
+
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$RESTAURANT]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.restaurant);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$BANK]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bank);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$CAFE]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
+
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cafe);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$FUEL]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.petrolStation);
+			if (nodeName != null) {
+
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_WHITE_STROKE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$BUS_STATION]) {
+
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus_sta);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
 			}
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus_sta);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$POST_BOX]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postbox);
 		} else if (nodeTagIds[TagIdsPOIs.AMENITY$POST_OFFICE]) {
@@ -1827,9 +1886,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
 			}
 		}
 
@@ -1845,18 +1904,23 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		/* natural */
 		else if (nodeTagIds[TagIdsPOIs.NATURAL$PEAK]) {
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
+
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLACK_13));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_13));
+						this.currentNodeY, PAINT_NAME_BLACK_12,
+						PAINT_NAME_WHITE_STROKE_13));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
 			}
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
+
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
-				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-						this.currentNodeY + 18, PAINT_NAME_BLACK_10));
-				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-						this.currentNodeY + 18, PAINT_NAME_WHITE_STROKE_10));
+				this.nodes
+						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+								this.currentNodeY + 18, PAINT_NAME_BLACK_10,
+								PAINT_NAME_WHITE_STROKE_10));
+
 			}
 		}
 
@@ -1864,24 +1928,21 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		else if (nodeTagIds[TagIdsPOIs.PLACE$CITY]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_25));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_WHITE_STROKE_25));
+						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
+
 			}
 		} else if (nodeTagIds[TagIdsPOIs.PLACE$ISLAND]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_20));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_WHITE_STROKE_20));
+						this.currentNodeY, PAINT_NAME_BLACK_20, PAINT_NAME_WHITE_STROKE_20));
+
 			}
 		} else if (nodeTagIds[TagIdsPOIs.PLACE$SUBURB] || nodeTagIds[TagIdsPOIs.PLACE$TOWN]
 				|| nodeTagIds[TagIdsPOIs.PLACE$VILLAGE]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_15));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_WHITE_STROKE_15));
+						this.currentNodeY, PAINT_NAME_BLACK_15, PAINT_NAME_WHITE_STROKE_15));
+
 			}
 		}
 
@@ -1903,9 +1964,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 										PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
 					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 10, PAINT_NAME_RED_11));
-					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 10, PAINT_NAME_WHITE_STROKE_11));
+							this.currentNodeY - 10, PAINT_NAME_RED_11,
+							PAINT_NAME_WHITE_STROKE_11));
+
 				}
 			} else {
 				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY,
@@ -1920,9 +1981,9 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 										PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
 					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 15, PAINT_NAME_RED_13));
-					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_13));
+							this.currentNodeY, PAINT_NAME_RED_13,
+							PAINT_NAME_WHITE_STROKE_13));
+
 				}
 			}
 		} else if (nodeTagIds[TagIdsPOIs.RAILWAY$HALT]
@@ -1934,36 +1995,41 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 10, PAINT_NAME_RED_11));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 10, PAINT_NAME_WHITE_STROKE_11));
+						this.currentNodeY, PAINT_NAME_RED_11,
+						PAINT_NAME_WHITE_STROKE_11));
+
 			}
 		}
 
 		/* shop */
 		else if (nodeTagIds[TagIdsPOIs.SHOP$BAKERY]) {
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bakery);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
 			}
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bakery);
 		} else if (nodeTagIds[TagIdsPOIs.SHOP$ORGANIC]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
 			}
 		} else if (nodeTagIds[TagIdsPOIs.SHOP$SUPERMARKET]) {
+
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.supermarket);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
 			}
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.supermarket);
 		}
 
 		/* tourism */
@@ -1972,35 +2038,39 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$MUSEUM]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 15, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
 			}
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$HOSTEL]) {
-			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
-			}
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hostel);
-		} else if (nodeTagIds[TagIdsPOIs.TOURISM$HOTEL]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_BLUE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 18, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
 			}
+		} else if (nodeTagIds[TagIdsPOIs.TOURISM$HOTEL]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hotel);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLUE_10,
+						PAINT_NAME_WHITE_STROKE_10));
+
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
+						.size() - 1);
+			}
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$ATTRACTION]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_PURPLE_10));
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_PURPLE_10, PAINT_NAME_WHITE_STROKE_10));
+
 			}
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$VIEWPOINT]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
+
 		}
 
 		/* unknown node */
@@ -3152,6 +3222,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 		this.wayNames = new ArrayList<WayTextContainer>(64);
 		this.nodes = new ArrayList<PointTextContainer>(64);
+		this.area_labels = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
 		this.coastlineEnds = new TreeMap<Point, float[]>();
 		this.coastlineStarts = new TreeMap<Point, float[]>();
