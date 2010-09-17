@@ -19,14 +19,17 @@ package org.mapsforge.android.map;
 import android.graphics.Paint;
 
 class PointTextContainer {
-	final Paint paint;
-	final String text;
-	final float x;
-	final float y;
+	final Paint paintFront;
+	final Paint paintBack;
+	String text;
+	float x;
+	float y;
+	SymbolContainer symbol;
+	android.graphics.Rect boundary;
 
 	/**
 	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
-	 * and a paint1 for drawing.
+	 * and two paint objects.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -34,13 +37,81 @@ class PointTextContainer {
 	 *            the x coordinate of the point.
 	 * @param y
 	 *            the y coordinate of the point.
-	 * @param paint
-	 *            the paint1 for the point.
+	 * @param paintFront
+	 *            the paintFront for the point.
+	 * @param paintBack
+	 *            the paintBack for the point.
 	 */
-	PointTextContainer(String text, float x, float y, Paint paint) {
+
+	PointTextContainer(String text, float x, float y, Paint paintFront, Paint paintBack) {
 		this.text = text;
 		this.x = x;
 		this.y = y;
-		this.paint = paint;
+		this.paintFront = paintFront;
+		this.paintBack = paintBack;
+		this.symbol = null;
+
+		boundary = new android.graphics.Rect();
+		paintBack.getTextBounds(text, 0, text.length(), boundary);
+
 	}
+
+	/**
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable,
+	 * two paint objects, and a reference on a symbol, if the text is connected with a POI.
+	 * 
+	 * @param text
+	 *            the text of the point.
+	 * @param x
+	 *            the x coordinate of the point.
+	 * @param y
+	 *            the y coordinate of the point.
+	 * @param paintFront
+	 *            the paintFront for the point.
+	 * @param paintBack
+	 *            the paintBack for the point.
+	 * @param symbol
+	 *            the connected Symbol.
+	 */
+	PointTextContainer(String text, float x, float y, Paint paintFront, Paint paintBack,
+			SymbolContainer symbol) {
+		this.text = text;
+		this.x = x;
+		this.y = y;
+		this.paintFront = paintFront;
+		this.paintBack = paintBack;
+		this.symbol = symbol;
+
+		boundary = new android.graphics.Rect();
+		paintBack.getTextBounds(text, 0, text.length(), boundary);
+
+	}
+
+	/**
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
+	 * and one paint objects.
+	 * 
+	 * @param text
+	 *            the text of the point.
+	 * @param x
+	 *            the x coordinate of the point.
+	 * @param y
+	 *            the y coordinate of the point.
+	 * @param paintFront
+	 *            the paintFront for the point.
+	 */
+
+	PointTextContainer(String text, float x, float y, Paint paintFront) {
+		this.text = text;
+		this.x = x;
+		this.y = y;
+		this.paintFront = paintFront;
+		this.paintBack = null;
+		this.symbol = null;
+
+		boundary = new android.graphics.Rect();
+		paintFront.getTextBounds(text, 0, text.length(), boundary);
+
+	}
+
 }
