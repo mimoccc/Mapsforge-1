@@ -171,10 +171,30 @@ public class RGGenerator {
 					edge_length += (float) previous_node.distance(current_node);
 					// current_node is no graph node
 					if (graph_nodes.contains(current_node_id)) {
+						/*
+						 * edges.add(new RgEdge(edge_id++,
+						 * graph_nodes.get(previous_junction_node .getId()),
+						 * graph_nodes.get(current_node.getId()), longitudes .toArray(),
+						 * latitudes.toArray(), current_way, edge_length));
+						 */
 
-						edges.add(new RgEdge(edge_id++, graph_nodes.get(previous_junction_node
-								.getId()), graph_nodes.get(current_node.getId()), longitudes
-								.toArray(), latitudes.toArray(), current_way, edge_length));
+						// CHANGE BY frank : use the different constructor of RgEdge. Since
+						// the constructors are almost redundant one of them
+						// was removed! This importer misses the value for edgeRef and
+						// isRoundabout
+						// which should be added TODO : add missing values!
+						edges
+								.add(new RgEdge(edge_id++, graph_nodes
+								.get(previous_junction_node
+								.getId()), graph_nodes
+								.get(current_node.getId()), longitudes
+								.toArray(), latitudes.toArray(), !current_way.isOneway(),
+								current_way
+										.isUrban(), current_way.getId(), current_way.getName(),
+								edge_length,
+								current_way.getHighwayLevel().toString(), "" /* TODO ref */,
+								false /* TODO is roundabout */));
+
 						// current node is now previous junction node
 						previous_junction_node = current_node;
 						latitudes.clear();

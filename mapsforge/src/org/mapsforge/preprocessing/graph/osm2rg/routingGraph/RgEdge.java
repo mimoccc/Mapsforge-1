@@ -16,7 +16,6 @@
  */
 package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
 
-import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
 import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
 
 /**
@@ -33,39 +32,6 @@ public class RgEdge implements IRgEdge {
 	private final String name;
 	private final String ref; // See http://wiki.openstreetmap.org/wiki/Map_Features#References
 	private final String hwyLevel;
-
-	/**
-	 * @param id
-	 *            the assigned edge id within the routing graph.
-	 * @param sourceId
-	 *            vertex id.
-	 * @param targetId
-	 *            vertex id.
-	 * @param longitudes
-	 *            waypoint longitudes in degrees.
-	 * @param latitudes
-	 *            waypoint latitudes in degrees.
-	 * @param way
-	 *            the osm way.
-	 * @param lengthMeters
-	 *            length in meters.
-	 */
-	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
-			OsmWay_withNodes way, double lengthMeters) {
-		this.id = id;
-		this.sourceId = sourceId;
-		this.targetId = targetId;
-		this.longitudes = longitudes;
-		this.latitudes = latitudes;
-		this.isUndirected = way.isOneway();
-		this.isUrban = way.isUrban();
-		this.osmWayId = way.getId();
-		this.name = way.getName();
-		this.lengthMeters = lengthMeters;
-		this.hwyLevel = way.getHighwayLevel().toString();
-		this.isRoundabout = false; // TODO: FIXME
-		this.ref = ""; // TODO: FIXME
-	}
 
 	/**
 	 * @param id
