@@ -259,7 +259,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private MapSymbols mapSymbols;
 	private boolean needHelperPoint;
 	private ArrayList<PointTextContainer> nodes;
-	private ArrayList<PointTextContainer> area_labels;
+	private ArrayList<PointTextContainer> areaLabels;
 	private boolean noWaterBackground;
 	private int pathLengthInPixel;
 	private float previousX;
@@ -301,14 +301,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			}
 			// choose the correct text paint
 			if (nameColor == AREA_NAME_BLUE) {
-				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10,
 						PAINT_NAME_WHITE_STROKE_10));
 			} else if (nameColor == AREA_NAME_BLACK) {
-				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
 			} else if (nameColor == AREA_NAME_RED) {
-				this.area_labels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
+				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
 						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
 			}
 		}
@@ -1554,8 +1554,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			return false;
 		}
 
-		// Places the Labels
-		this.nodes = labelPlacement.placeLabels(this.nodes, this.symbols, this.area_labels,
+		this.nodes = labelPlacement.placeLabels(this.nodes, this.symbols, this.areaLabels,
 				this.currentTile);
 
 		drawMapSymbols(this.symbols);
@@ -1564,7 +1563,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 
 		drawNodes(this.nodes);
-		drawNodes(this.area_labels);
+		drawNodes(this.areaLabels);
 
 		if (mapGeneratorJob.drawTileFrames) {
 			drawTileFrame();
@@ -1608,7 +1607,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 		this.wayNames.clear();
 		this.nodes.clear();
-		this.area_labels.clear();
+		this.areaLabels.clear();
 		this.symbols.clear();
 		this.coastlineStarts.clear();
 		this.coastlineEnds.clear();
@@ -3222,7 +3221,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		}
 		this.wayNames = new ArrayList<WayTextContainer>(64);
 		this.nodes = new ArrayList<PointTextContainer>(64);
-		this.area_labels = new ArrayList<PointTextContainer>(64);
+		this.areaLabels = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
 		this.coastlineEnds = new TreeMap<Point, float[]>();
 		this.coastlineStarts = new TreeMap<Point, float[]>();

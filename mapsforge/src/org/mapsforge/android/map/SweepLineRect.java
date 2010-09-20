@@ -1,3 +1,20 @@
+/*
+ * Copyright 2010 mapsforge.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.mapsforge.android.map;
 
 import java.util.ArrayList;
@@ -5,40 +22,33 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 
-import org.mapsforge.android.map.intervaltree.Interval;
-import org.mapsforge.android.map.intervaltree.IntervalTree;
-
-@SuppressWarnings("unchecked")
-public class SweepLineRect {
+class SweepLineRect {
 
 	LinkedList<Intersection> intersects = new LinkedList<Intersection>();
 
 	public class Intersection {
 
-		Rectangle a;
-		Rectangle b;
+		Rectangle<?> a;
+		Rectangle<?> b;
 
-		public Intersection() {
-		}
-
-		public Intersection(Rectangle a, Rectangle b) {
+		public Intersection(Rectangle<?> a, Rectangle<?> b) {
 			this.a = a;
 			this.b = b;
 		}
 	}
 
 	private class Event {
-		private int time;
-		private Rectangle rectangle;
+		int time;
+		Rectangle<?> rectangle;
 
-		public Event(int time, Rectangle rectangle) {
+		public Event(int time, Rectangle<?> rectangle) {
 			this.time = time;
 			this.rectangle = rectangle;
 		}
 
 	}
 
-	private class EventComparator implements Comparator<Event> {
+	class EventComparator implements Comparator<Event> {
 		@Override
 		public int compare(Event x, Event y) {
 
@@ -56,14 +66,10 @@ public class SweepLineRect {
 	IntervalTree set = new IntervalTree();
 	PriorityQueue<Event> pq;
 
-	public SweepLineRect() {
-
-	}
-
-	public LinkedList<Intersection> sweep(ArrayList<Rectangle> rectangles) {
+	public LinkedList<Intersection> sweep(ArrayList<Rectangle<?>> rectangles) {
 		pq = new PriorityQueue<Event>(rectangles.size() + rectangles.size() / 100 * 20,
 				new EventComparator());
-		for (Rectangle rectangle : rectangles) {
+		for (Rectangle<?> rectangle : rectangles) {
 			Event e1 = new Event(rectangle.rect.left, rectangle);
 			Event e2 = new Event(rectangle.rect.right, rectangle);
 			pq.add(e1);
@@ -77,16 +83,18 @@ public class SweepLineRect {
 		while (pq.size() != 0) {
 			Event e = pq.remove();
 			float sweep = e.time;
-			Rectangle rectangle = e.rectangle;
+			Rectangle<?> rectangle = e.rectangle;
 			if (sweep == rectangle.rect.right) {
-				set.remove(new Interval(rectangle.rect.top, rectangle.rect.bottom));
+				set.remove(new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom));
 
 			} else {
-				for (Interval inters : set.searchAll(new Interval(rectangle.rect.top,
+				for (Interval<?> inters : set.searchAll(new Interval<Object>(
+						rectangle.rect.top,
 						rectangle.rect.bottom))) {
-					intersects.add(new Intersection(rectangle, (Rectangle) inters.value));
+					intersects.add(new Intersection(rectangle, (Rectangle<?>) inters.value));
 				}
-				set.put((new Interval(rectangle.rect.top, rectangle.rect.bottom, rectangle)));
+				set.put((new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom,
+						rectangle)));
 			}
 		}
 		return intersects;

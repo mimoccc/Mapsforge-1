@@ -18,13 +18,10 @@ package org.mapsforge.android.map;
 
 import android.graphics.Bitmap;
 
-class SymbolContainer implements Comparable {
+class SymbolContainer {
 	final Bitmap symbol;
 	final float x;
 	final float y;
-
-	// PointTextContainer one;
-	// PointTextContainer two;
 
 	/**
 	 * Create a new symbol container, that holds the x-y coordinates and a symbol for drawing.
@@ -40,25 +37,6 @@ class SymbolContainer implements Comparable {
 		this.symbol = symbol;
 		this.x = x;
 		this.y = y;
-	}
-
-	// one = null;
-	// two = null;
-	// }
-	//
-	// SymbolContainer(Bitmap symbol, float x, float y, PointTextContainer one,
-	// PointTextContainer two) {
-	// this.symbol = symbol;
-	// this.x = x;
-	// this.y = y;
-	// this.one = one;
-	// this.two = two;
-	// }
-
-	@Override
-	public int compareTo(Object o) {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 }

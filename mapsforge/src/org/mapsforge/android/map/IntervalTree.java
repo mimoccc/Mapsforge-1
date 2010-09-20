@@ -1,31 +1,37 @@
-package org.mapsforge.android.map.intervaltree;
-
-/*************************************************************************
- *  Compilation:  javac IntervalSearch.java
- *  Execution:    java IntervalSearch
- *  
- *  Interval search tree implemented using a randomized BST.
+/*
+ * Copyright 2010 mapsforge.org
  *
- *  Duplicate policy:  if an interval is inserted that already
- *                     exists, the new value overwrite the old one
- * 
- *************************************************************************/
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.mapsforge.android.map;
 
 import java.util.LinkedList;
 
-public class IntervalTree {
+class IntervalTree {
 
 	private Node root; // root of the BST
 
 	// BST helper node data type
 	private class Node {
-		Interval interval; // key
+		Interval<?> interval; // key
 
 		Node left, right; // left and right subtrees
 		int N; // size of subtree rooted at this node
 		int max; // max endpoint in subtree rooted at this node
 
-		Node(Interval interval) {
+		Node(Interval<?> interval) {
 			this.interval = interval;
 
 			this.N = 1;
@@ -33,35 +39,35 @@ public class IntervalTree {
 		}
 	}
 
-	/*************************************************************************
+	/*
 	 * BST search
-	 *************************************************************************/
+	 */
 
-	public boolean contains(Interval interval) {
+	public boolean contains(Interval<?> interval) {
 		return (get(interval) != null);
 	}
 
 	// return value associated with the given key
 	// if no such value, return null
-	public Interval get(Interval interval) {
+	public Interval<?> get(Interval<?> interval) {
 		return get(root, interval);
 	}
 
-	private Interval get(Node x, Interval interval) {
+	private Interval<?> get(Node x, Interval<?> interval) {
 		if (x == null)
 			return null;
 		if (eq(interval, x.interval))
 			return x.interval;
 		if (less(interval, x.interval))
 			return get(x.left, interval);
-		else
-			return get(x.right, interval);
+
+		return get(x.right, interval);
 	}
 
-	/*************************************************************************
+	/*
 	 * randomized insertion
-	 *************************************************************************/
-	public void put(Interval interval) {
+	 */
+	public void put(Interval<?> interval) {
 		if (contains(interval)) {
 			System.out.println("duplicate");
 			remove(interval);
@@ -70,7 +76,7 @@ public class IntervalTree {
 	}
 
 	// make new node the root with uniform probability
-	private Node randomizedInsert(Node x, Interval interval) {
+	private Node randomizedInsert(Node x, Interval<?> interval) {
 		if (x == null)
 			return new Node(interval);
 		if (Math.random() * size(x) < 1.0)
@@ -83,7 +89,7 @@ public class IntervalTree {
 		return x;
 	}
 
-	private Node rootInsert(Node x, Interval interval) {
+	private Node rootInsert(Node x, Interval<?> interval) {
 		if (x == null)
 			return new Node(interval);
 		if (less(interval, x.interval)) {
@@ -96,9 +102,9 @@ public class IntervalTree {
 		return x;
 	}
 
-	/*************************************************************************
+	/*
 	 * deletion
-	 *************************************************************************/
+	 */
 	private Node joinLR(Node a, Node b) {
 		if (a == null)
 			return b;
@@ -109,22 +115,22 @@ public class IntervalTree {
 			a.right = joinLR(a.right, b);
 			fix(a);
 			return a;
-		} else {
-			b.left = joinLR(a, b.left);
-			fix(b);
-			return b;
 		}
+
+		b.left = joinLR(a, b.left);
+		fix(b);
+		return b;
 	}
 
 	// remove and return value associated with given interval;
 	// if no such interval exists return null
-	public Interval remove(Interval interval) {
-		Interval value = get(interval);
+	public Interval<?> remove(Interval<?> interval) {
+		Interval<?> value = get(interval);
 		root = remove(root, interval);
 		return value;
 	}
 
-	private Node remove(Node h, Interval interval) {
+	private Node remove(Node h, Interval<?> interval) {
 		if (h == null)
 			return null;
 		if (less(interval, h.interval))
@@ -137,18 +143,18 @@ public class IntervalTree {
 		return h;
 	}
 
-	/*************************************************************************
+	/*
 	 * Interval searching
-	 *************************************************************************/
+	 */
 
 	// return an interval in data structure that intersects the given inteval;
 	// return null if no such interval exists
-	public Interval search(Interval interval) {
+	public Interval<?> search(Interval<?> interval) {
 		return search(root, interval);
 	}
 
 	// look in subtree rooted at x
-	public Interval search(Node x, Interval interval) {
+	public Interval<?> search(Node x, Interval<?> interval) {
 		while (x != null) {
 			if (interval.intersects(x.interval))
 				return x.interval;
@@ -163,14 +169,14 @@ public class IntervalTree {
 	}
 
 	// return *all* intervals in data structure that intersect the given interval
-	public Iterable<Interval> searchAll(Interval interval) {
-		LinkedList<Interval> list = new LinkedList<Interval>();
+	public Iterable<Interval<?>> searchAll(Interval<?> interval) {
+		LinkedList<Interval<?>> list = new LinkedList<Interval<?>>();
 		searchAll(root, interval, list);
 		return list;
 	}
 
 	// look in subtree rooted at x
-	public boolean searchAll(Node x, Interval interval, LinkedList<Interval> list) {
+	public boolean searchAll(Node x, Interval<?> interval, LinkedList<Interval<?>> list) {
 		boolean found1 = false;
 		boolean found2 = false;
 		boolean found3 = false;
@@ -187,10 +193,6 @@ public class IntervalTree {
 		return found1 || found2 || found3;
 	}
 
-	/*************************************************************************
-	 * useful binary tree functions
-	 *************************************************************************/
-
 	// return number of nodes in subtree rooted at x
 	public int size() {
 		return size(root);
@@ -199,8 +201,8 @@ public class IntervalTree {
 	private int size(Node x) {
 		if (x == null)
 			return 0;
-		else
-			return x.N;
+
+		return x.N;
 	}
 
 	// height of tree (empty tree height = 0)
@@ -213,10 +215,6 @@ public class IntervalTree {
 			return 0;
 		return 1 + Math.max(height(x.left), height(x.right));
 	}
-
-	/*************************************************************************
-	 * helper BST functions
-	 *************************************************************************/
 
 	// fix auxilliar information (subtree count and max fields)
 	private void fix(Node x) {
@@ -257,10 +255,6 @@ public class IntervalTree {
 		return x;
 	}
 
-	/*************************************************************************
-	 * Debugging functions that test the integrity of the tree
-	 *************************************************************************/
-
 	// check integrity of subtree count fields
 	public boolean check() {
 		return checkCount() && checkMax();
@@ -288,13 +282,9 @@ public class IntervalTree {
 		return x.max == max3(x.interval.high, max(x.left), max(x.right));
 	}
 
-	/*************************************************************************
-	 * helper comparison functions
-	 *************************************************************************/
-
 	// is left endpoint of a less than left endpoint of a?
 	// break ties with right endpoint
-	private boolean less(Interval a, Interval b) {
+	private boolean less(Interval<?> a, Interval<?> b) {
 		if (a.low < b.low)
 			return true;
 		else if (a.low > b.low)
@@ -305,7 +295,7 @@ public class IntervalTree {
 			return false;
 	}
 
-	private boolean eq(Interval a, Interval b) {
+	private boolean eq(Interval<?> a, Interval<?> b) {
 		return (a.low == b.low) && (a.high == b.high);
 	}
 

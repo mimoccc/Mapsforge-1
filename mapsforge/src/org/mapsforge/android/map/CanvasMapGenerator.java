@@ -37,8 +37,8 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private byte currentLayer;
 	private byte currentLevel;
 	private Path path;
-	private WayTextContainer pathTextContainer;
 	private PointTextContainer pointTextContainer;
+	private WayTextContainer pathTextContainer;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private SymbolContainer symbolContainer;

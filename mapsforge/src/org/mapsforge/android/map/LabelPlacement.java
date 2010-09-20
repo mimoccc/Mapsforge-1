@@ -36,7 +36,7 @@ import android.graphics.Paint;
 
 class LabelPlacement {
 
-	private int placementOption = 1;
+	private int placementOption = 0;
 	// You can choose between 2 Position and 4 Position
 	// placement Model 0 - 2-Position 1 - 4 Position
 
@@ -51,19 +51,17 @@ class LabelPlacement {
 	private Tile currentTile;
 	private DependencyCache currentDependencyCache;
 
-	/*
-	 * inner classes
-	 */
+	/* inner classes */
 
 	/**
-	 * The class holds the data for a label with dependencys on other tiles.
+	 * The class holds the data for a label with dependencies on other tiles.
 	 */
 	private class DependencyText {
 		public int depCounter;
 		final Paint paintFront;
 		final Paint paintBack;
 		final String text;
-		private LinkedList<Tile> tiles;
+		LinkedList<Tile> tiles;
 		final android.graphics.Rect boundary;
 
 		/**
@@ -97,7 +95,7 @@ class LabelPlacement {
 	}
 
 	/**
-	 * The class holds the data for a symbol with dependencys on other tiles.
+	 * The class holds the data for a symbol with dependencies on other tiles.
 	 */
 	private class DependencySymbol {
 		Bitmap symbol;
@@ -131,7 +129,7 @@ class LabelPlacement {
 	}
 
 	/**
-	 * The class holds the data for a symbol with dependencys on other tiles.
+	 * The class holds the data for a symbol with dependencies on other tiles.
 	 * 
 	 * @param <Type>
 	 *            only two types are reasonable. The DependencySymbol or DependencyText class.
@@ -174,7 +172,6 @@ class LabelPlacement {
 	/**
 	 * This class is assigned to one specific tile. It holds all the elements that must be
 	 * noticed for the label placement oft the assigned tile.
-	 * 
 	 */
 	private class DependencyCache {
 		boolean drawn; //				
@@ -205,14 +202,12 @@ class LabelPlacement {
 		dependencyTable = new Hashtable<Tile, DependencyCache>(60);
 	}
 
-	/*
-	 * Main
-	 */
+	/* main */
 
 	/**
 	 * The inputs are all the label and symbol objects of the current tile. The output is
 	 * overlap free label and symbol placement with the greedy strategy. The placement model is
-	 * either the two fixed point or the four fixed point modell.
+	 * either the two fixed point or the four fixed point model.
 	 * 
 	 * @param labels
 	 *            labels from the current tile.
@@ -221,8 +216,8 @@ class LabelPlacement {
 	 * @param areaLabels
 	 *            area labels from the current tile.
 	 * @param cT
-	 *            current tile with the x,y- coordinates and the zoomlevel
-	 * @return the processed list of labels
+	 *            current tile with the x,y- coordinates and the zoom level.
+	 * @return the processed list of labels.
 	 */
 	public ArrayList<PointTextContainer> placeLabels(ArrayList<PointTextContainer> labels,
 			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels,
@@ -423,13 +418,32 @@ class LabelPlacement {
 
 	}
 
+	/**
+	 * This method uses an adapted greedy strategy for the fixed two position model, above and
+	 * under. It uses no priority search tree, because it will not function with symbols only
+	 * with points. Instead it uses two minimum heaps. They work similar to a sweep line
+	 * algorithm but have not a O(n log n +k) runtime. To find the rectangle that has the
+	 * leftest edge, I use also a minimum Heap. The rectangles are sorted by their x
+	 * coordinates.
+	 * 
+	 * @param labels
+	 *            label positions and text
+	 * @param symbols
+	 *            symbol positions
+	 * @param areaLabels
+	 *            area label positions and text
+	 * @return list of labels without overlaps with symbols and other labels by the two fixed
+	 *         position greedy strategy
+	 */
 	private ArrayList<PointTextContainer> processTwoPointGreedy(
 			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
 			ArrayList<PointTextContainer> areaLabels) {
-		removeEmptySymbolReferences(labels, symbols);
-		ArrayList<PointTextContainer> results = new ArrayList<PointTextContainer>();
+
+		ArrayList<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
+		// Array for the generated reference positions around the points of interests
 		ReferencePosition[] refPos = new ReferencePosition[(labels.size() * 2)];
 
+		// lists that sorts the reference points after the minimum right edge x position
 		PriorityQueue<ReferencePosition> priorRight = new PriorityQueue<ReferencePosition>(
 				labels.size() * 2 + labels.size() / 10 * 2,
 				new Comparator<ReferencePosition>() {
@@ -445,7 +459,7 @@ class LabelPlacement {
 						return 0;
 					}
 				});
-
+		// lists that sorts the reference points after the minimum left edge x position
 		PriorityQueue<ReferencePosition> priorLeft = new PriorityQueue<ReferencePosition>(
 				labels.size() * 2 + labels.size() / 10 * 2,
 				new Comparator<ReferencePosition>() {
@@ -462,6 +476,7 @@ class LabelPlacement {
 					}
 				});
 
+		// creates the reference positions
 		for (int z = 0; z < labels.size(); z++) {
 			PointTextContainer label = labels.get(z);
 
@@ -482,15 +497,16 @@ class LabelPlacement {
 
 		}
 
+		// removes reference positions that overlaps with other symbols or dependency objects
 		removeNonValidateReferencePosition(refPos, symbols, areaLabels);
 
-		// fill the Prior Que
 		for (ReferencePosition reference : refPos)
 			if (reference != null) {
 				priorLeft.add(reference);
 				priorRight.add(reference);
 			}
 
+		// variable for the leftest bounding box of the
 		ReferencePosition leftest;
 		while (priorRight.size() != 0) {
 
@@ -498,21 +514,22 @@ class LabelPlacement {
 
 			PointTextContainer label = labels.get(leftest.nodeNumber);
 
-			results.add(new PointTextContainer(label.text, leftest.x, leftest.y,
+			resolutionSet.add(new PointTextContainer(label.text, leftest.x, leftest.y,
 					label.paintFront, label.paintBack, leftest.symbol));
 
-			// Removes the other conected Positions
+			// Removes the other position that is a possible position for the label of one point
+			// of interest
 
 			priorRight.remove(refPos[leftest.nodeNumber * 2 + 1]);
 			if (priorRight.size() == 0) {
 
-				return results;
+				return resolutionSet;
 			}
 
 			priorLeft.remove(leftest);
 			priorLeft.remove((refPos[leftest.nodeNumber * 2 + 1]));
 
-			// find disturbing reference Points and delete them
+			// find overlapping labels and deletes the reference points and delete them
 			LinkedList<ReferencePosition> linkedRef = new LinkedList<ReferencePosition>();
 
 			while (priorLeft.size() != 0) {
@@ -523,7 +540,8 @@ class LabelPlacement {
 				}
 			}
 
-			// Brute Force collsion
+			// brute Force collision test (faster then sweep line for a small amount of
+			// objects)
 			for (int i = 0; i < linkedRef.size(); i++) {
 				if ((linkedRef.get(i).x <= leftest.x + leftest.width)
 						&& (linkedRef.get(i).y >= leftest.y - linkedRef.get(i).height)
@@ -537,16 +555,36 @@ class LabelPlacement {
 
 		}
 
-		return results;
+		return resolutionSet;
 	}
 
+	/**
+	 * This method uses an adapted greedy strategy for the fixed four position model, above,
+	 * under left and right form the point of interest. It uses no priority search tree, because
+	 * it will not function with symbols only with points. Instead it uses two minimum heaps.
+	 * They work similar to a sweep line algorithm but have not a O(n log n +k) runtime. To find
+	 * the rectangle that has the top edge, I use also a minimum Heap. The rectangles are sorted
+	 * by their y coordinates.
+	 * 
+	 * @param labels
+	 *            label positions and text
+	 * @param symbols
+	 *            symbol positions
+	 * @param areaLabels
+	 *            area label positions and text
+	 * @return list of labels without overlaps with symbols and other labels by the four fixed
+	 *         position greedy strategy
+	 */
 	private ArrayList<PointTextContainer> processFourPointGreedy(
 			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
 			ArrayList<PointTextContainer> areaLabels) {
 
-		ArrayList<PointTextContainer> lösungsmenge = new ArrayList<PointTextContainer>();
+		ArrayList<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
+
+		// Array for the generated reference positions around the points of interests
 		ReferencePosition[] refPos = new ReferencePosition[(labels.size()) * 4];
 
+		// lists that sorts the reference points after the minimum top edge y position
 		PriorityQueue<ReferencePosition> priorUp = new PriorityQueue<ReferencePosition>(labels
 				.size()
 				* 4 * 2 + labels.size() / 10 * 2, new Comparator<ReferencePosition>() {
@@ -562,7 +600,7 @@ class LabelPlacement {
 				return 0;
 			}
 		});
-
+		// lists that sorts the reference points after the minimum bottom edge y position
 		PriorityQueue<ReferencePosition> priorDown = new PriorityQueue<ReferencePosition>(
 				labels.size() * 4 * 2 + labels.size() / 10 * 2,
 				new Comparator<ReferencePosition>() {
@@ -582,6 +620,7 @@ class LabelPlacement {
 		PointTextContainer tmp;
 		int dis = startDistanceToSymbols;
 
+		// creates the reference positions
 		for (int z = 0; z < labels.size(); z++) {
 			if (labels.get(z) != null) {
 				if (labels.get(z).symbol != null) {
@@ -620,6 +659,7 @@ class LabelPlacement {
 
 		removeNonValidateReferencePosition(refPos, symbols, areaLabels);
 
+		// do while it gives reference positions
 		for (ReferencePosition reference : refPos)
 			if (reference != null) {
 				priorUp.add(reference);
@@ -633,12 +673,12 @@ class LabelPlacement {
 
 			PointTextContainer label = labels.get(leftest.nodeNumber);
 
-			lösungsmenge.add(new PointTextContainer(label.text, leftest.x, leftest.y,
+			resolutionSet.add(new PointTextContainer(label.text, leftest.x, leftest.y,
 					label.paintFront, label.paintBack, label.symbol));
 
 			if (priorUp.size() == 0) {
 
-				return lösungsmenge;
+				return resolutionSet;
 			}
 
 			priorUp.remove(refPos[leftest.nodeNumber * 4 + 0]);
@@ -660,7 +700,8 @@ class LabelPlacement {
 					break;
 				}
 			}
-
+			// brute Force collision test (faster then sweep line for a small amount of
+			// objects)
 			for (int i = 0; i < linkedRef.size(); i++) {
 				if ((linkedRef.get(i).x <= leftest.x + leftest.width)
 						&& (linkedRef.get(i).y >= leftest.y - linkedRef.get(i).height)
@@ -673,7 +714,7 @@ class LabelPlacement {
 			priorDown.addAll(linkedRef);
 		}
 
-		return lösungsmenge;
+		return resolutionSet;
 
 	}
 
@@ -705,8 +746,6 @@ class LabelPlacement {
 			}
 		}
 
-		// removes all Reverence Points that hits an area label
-
 		dis = labelDistanceToLabel;
 
 		for (PointTextContainer areaLabel : areaLabels) {
@@ -730,7 +769,6 @@ class LabelPlacement {
 			}
 		}
 		// removes all Reverence Points that are in already drawn areas Runtime n
-		/* Sehr gut */
 		Tile lefttmp = new Tile(currentTile.x - 1, currentTile.y, currentTile.zoomLevel);
 		Tile righttmp = new Tile(currentTile.x + 1, currentTile.y, currentTile.zoomLevel);
 		Tile uptmp = new Tile(currentTile.x, currentTile.y - 1, currentTile.zoomLevel);
@@ -812,9 +850,7 @@ class LabelPlacement {
 			}
 	}
 
-	/*
-	 * Process Symbols
-	 */
+	/* Process Symbols */
 
 	private void preprocessSymbols(ArrayList<SymbolContainer> symbols) {
 
@@ -976,7 +1012,6 @@ class LabelPlacement {
 		SymbolContainer sym;
 		int dis = symbolDistanceToSymbol;
 
-		// Add distance just one time if not you got double of the gab that you wanted
 		for (int x = 0; x < symbols.size(); x++) {
 			sym = symbols.get(x);
 			rect1 = new android.graphics.Rect((int) sym.x - dis, (int) sym.y - dis, (int) sym.x
@@ -998,10 +1033,11 @@ class LabelPlacement {
 	}
 
 	public void deleteOverlappingSymbolsNew(ArrayList<SymbolContainer> symbols) {
-		ArrayList<Rectangle> boundarysSymbol = new ArrayList<Rectangle>();
+		ArrayList<Rectangle<?>> boundarysSymbol = new ArrayList<Rectangle<?>>();
 
 		for (SymbolContainer smb : symbols) {
-			boundarysSymbol.add(new Rectangle(smb, new android.graphics.Rect((int) smb.x,
+			boundarysSymbol.add(new Rectangle<SymbolContainer>(smb, new android.graphics.Rect(
+					(int) smb.x,
 					(int) smb.y, (int) smb.x + smb.symbol.getWidth(), (int) smb.y
 							+ smb.symbol.getHeight())));
 		}
@@ -1245,12 +1281,10 @@ class LabelPlacement {
 			if ((symbol.y < 0.0f) && (!dependencyTable.get(up).drawn)) {
 				linkedDep = dependencyTable.get(up);
 
-				// if (addSmb == null) {
 				addSmb = new DependencySymbol(symbol.symbol, currentTile);
 				currentDependencyCache.addSymbol((new Dependency<DependencySymbol>(addSmb,
 						new Point(symbol.x, symbol.y))));
 				addSmb.depCounter++;
-				// }
 
 				linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb, new Point(
 						symbol.x, symbol.y + 256))));
@@ -1348,6 +1382,14 @@ class LabelPlacement {
 
 	}
 
+	/**
+	 * fills the dependency entry from the tile and the neighbor tiles with the dependency
+	 * information, that are necessary for drawing. To do that every label and symbol that will
+	 * be drawn, will be checked if it produces dependencies with other tiles.
+	 * 
+	 * @param pTC
+	 *            list of the labels
+	 */
 	private void fillDependencyLabels(ArrayList<PointTextContainer> pTC) {
 		Tile left = new Tile(currentTile.x - 1, currentTile.y, currentTile.zoomLevel);
 		Tile right = new Tile(currentTile.x + 1, currentTile.y, currentTile.zoomLevel);
@@ -1373,7 +1415,6 @@ class LabelPlacement {
 			if ((label.y - label.boundary.height() < 0.0f) && (!dependencyTable.get(up).drawn)) {
 				linkedDep = dependencyTable.get(up);
 
-				// if (toAdd == null) {
 				toAdd = new DependencyText(label.paintFront, label.paintBack, label.text,
 						label.boundary, currentTile);
 
@@ -1381,8 +1422,6 @@ class LabelPlacement {
 						label.x, label.y)));
 
 				toAdd.depCounter++;
-
-				// }
 
 				linkedDep.addText(new Dependency<DependencyText>(toAdd, new Point(label.x,
 						label.y + 256)));
@@ -1776,9 +1815,7 @@ class LabelPlacement {
 		return false;
 	}
 
-	/*
-	 * getter and setter methods
-	 */
+	/* getter and setter methods */
 
 	public int getPlacementOption() {
 		return placementOption;
