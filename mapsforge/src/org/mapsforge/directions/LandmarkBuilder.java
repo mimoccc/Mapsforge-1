@@ -52,7 +52,7 @@ public class LandmarkBuilder {
 						.getString("value"));
 			}
 			return null;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -92,7 +92,6 @@ public class LandmarkBuilder {
 			dbconn = new DBConnection("localhost", "osm", "osm", "osm", 3128);
 			conn = dbconn.getConnection();
 			init();
-			System.out.println("Successfully connected to database");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -137,6 +136,16 @@ public class LandmarkBuilder {
 	public LandmarkBuilder(Connection conn) throws SQLException {
 		this.conn = conn;
 		init();
+	}
+
+	@Override
+	protected void finalize() {
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void init() throws SQLException {

@@ -36,6 +36,9 @@ import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.server.routing.IEdge;
+import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.RouterFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -91,7 +94,8 @@ public class TurnByTurnDescription {
 		IEdge currentEdge = null;
 		IEdge lastEdge = null;
 		IEdge secondLastEdge = null;
-		TurnByTurnStreet previousStreet = null;
+		TurnByTurnStreet currentStreet = null;
+		IVertex currentTargetVertex;
 		for (int i = 0; i < routeEdges.length; i++) {
 			if (i < routeEdges.length - 1) {
 				nextEdge = routeEdges[i + 1];
@@ -99,9 +103,10 @@ public class TurnByTurnDescription {
 				nextEdge = null;
 			}
 			currentEdge = routeEdges[i];
-			if (previousStreet == null) {
-				previousStreet = new TurnByTurnStreet(currentEdge);
-				streets.add(previousStreet);
+			currentTargetVertex = currentEdge.getTarget();
+			if (currentStreet == null) {
+				currentStreet = new TurnByTurnStreet(currentEdge);
+				streets.add(currentStreet);
 			} else {
 				double delta = getAngleOfStreets(lastEdge, currentEdge);
 				int deltaRange = (int) java.lang.Math.round(delta / 90) % 4;
@@ -113,51 +118,53 @@ public class TurnByTurnDescription {
 					if (!isUturn && !isRoundabout) {
 						// if the same street just continues on, we only attach the
 						// GeoCoordinates
-						previousStreet.appendCoordinatesFromEdge(currentEdge);
+						currentStreet.appendCoordinatesFromEdge(currentEdge);
 
 					} else if (isUturn) {
 						// if it is a uturn on the same street, we start a new street so
 						// the information about the uTurn is not lost
-						previousStreet = new TurnByTurnStreet(currentEdge);
-						previousStreet.angleFromPreviousStreet = 180;
-						streets.add(previousStreet);
-					} else if (isRoundabout) {
+						currentStreet = new TurnByTurnStreet(currentEdge);
+						currentStreet.angleFromPreviousStreet = 180;
+						streets.add(currentStreet);
+					} else {
 						// if it is a uturn on the same street, we start a new street so
 						// the information about the uTurn is not lost
-						if (previousStreet.isRoundabout) {
-							previousStreet.appendCoordinatesFromEdge(currentEdge);
+						if (currentStreet.isRoundabout && currentEdge.isRoundabout()) {
+							currentStreet.appendCoordinatesFromEdge(currentEdge);
+							if (currentTargetVertex.getOutboundEdges().length > 1)
+								currentStreet.exitCount++;
 						} else {
-							previousStreet = new TurnByTurnStreet(currentEdge);
-							previousStreet.angleFromPreviousStreet = delta;
-							streets.add(previousStreet);
+							currentStreet = new TurnByTurnStreet(currentEdge);
+							currentStreet.angleFromPreviousStreet = delta;
+							streets.add(currentStreet);
 						}
 					}
 				} else {
 					if (isUturn) {
 						// if this is a uturn and the last street has a different name,
 						// it's only a short street between two lanes. don't need that name
-						previousStreet.appendCoordinatesFromEdge(currentEdge);
-						previousStreet.name = currentEdge.getName();
-						previousStreet.angleFromPreviousStreet = 180;
+						currentStreet.appendCoordinatesFromEdge(currentEdge);
+						currentStreet.name = currentEdge.getName();
+						currentStreet.angleFromPreviousStreet = 180;
 					} else {
 						// The first two cases check for very short streets which can be ignored
 						// because they belong to streets which accidently have a different name
 						// but are only driven on on a 2 lane junction
-						if (previousStreet.length < 30d && (delta < 15 || 345 < delta)) {
-							previousStreet.appendCoordinatesFromEdge(currentEdge);
-							previousStreet.name = currentEdge.getName();
+						if (currentStreet.length < 30d && (delta < 15 || 345 < delta)) {
+							currentStreet.appendCoordinatesFromEdge(currentEdge);
+							currentStreet.name = currentEdge.getName();
 						} else if (currentEdge.getAllWaypoints()[0]
 								.sphericalDistance(currentEdge.getAllWaypoints()[currentEdge
 										.getAllWaypoints().length - 1]) < 30d
 								&& deltaRange == 0
 								&& (nextEdge == null || !hasSameNameAndRef(nextEdge,
 										currentEdge))) {
-							previousStreet.appendCoordinatesFromEdge(currentEdge);
+							currentStreet.appendCoordinatesFromEdge(currentEdge);
 						} else {
 							// Here is the last case in which a new street is started
-							previousStreet = new TurnByTurnStreet(currentEdge);
-							previousStreet.angleFromPreviousStreet = delta;
-							streets.add(previousStreet);
+							currentStreet = new TurnByTurnStreet(currentEdge);
+							currentStreet.angleFromPreviousStreet = delta;
+							streets.add(currentStreet);
 						}
 					}
 				}
@@ -314,6 +321,8 @@ public class TurnByTurnDescription {
 					.put("Ref", street.ref)
 					.put("Length", street.length)
 					.put("Angle", street.angleFromPreviousStreet)
+					// .put("Landmark_Type", street.nearestLandmark.value)
+					// .put("Landmark_Name", street.nearestLandmark.name)
 					.put("Roundabout", street.isRoundabout)
 					.put("Motorway_Link", street.isMotorwayLink));
 			jsonfeatures.put(jsonstreet);
@@ -478,6 +487,7 @@ public class TurnByTurnDescription {
 		String name = "";
 		String ref = "";
 		Landmark nearestLandmark;
+		int exitCount = 0;
 
 		/**
 		 * Constructor for using a single IEdge
@@ -568,7 +578,7 @@ public class TurnByTurnDescription {
 					}
 				}
 				result += ".\n";
-				length = java.lang.Math.round(length);
+				length = java.lang.Math.round(length / 10) * 10;
 				result += "Stay on it for ";
 				if (length > 1000) {
 					length = java.lang.Math.round(length / 100) / 10;
@@ -582,10 +592,56 @@ public class TurnByTurnDescription {
 				else
 					result += turnInstruction + "motorway link";
 			} else if (isRoundabout) {
-				result = "Go onto the roundabout " + name;
+				result = "Go onto the roundabout " + name + "\n";
+				result += "Take the ";
+				exitCount++;
+				switch (exitCount) {
+					case 1:
+						result += "first";
+						break;
+					case 2:
+						result += "second";
+						break;
+					case 3:
+						result += "third";
+						break;
+					default:
+						result += exitCount + "th";
+				}
+				result += " exit.";
 			}
 			result += "\n\n";
 			return result;
+		}
+	}
+
+	/**
+	 * @param args
+	 *            unused
+	 */
+	public static void main(String[] args) {
+		long time = System.currentTimeMillis();
+		IRouter router = RouterFactory.getRouter();
+		time = System.currentTimeMillis() - time;
+		System.out.println("Loaded Router in " + time + " ms");
+		time = System.currentTimeMillis();
+		LandmarkBuilder lb = new LandmarkBuilder();
+		time = System.currentTimeMillis() - time;
+		System.out.println("Loaded LandmarkBuilder in " + time + " ms");
+		int source = router
+				.getNearestVertex(new GeoCoordinate(52.512008302373, 13.31718394829)).getId();
+		int target = router.getNearestVertex(
+				new GeoCoordinate(52.516657072923, 13.354906535874)).getId();
+		IEdge[] sp = router.getShortestPath(source, target);
+		try {
+			time = System.currentTimeMillis() - time;
+			TurnByTurnDescription tbtd = new TurnByTurnDescription(sp, lb);
+			time = System.currentTimeMillis() - time;
+			System.out.println("Route directions built in " + time + " ms");
+			System.out.println();
+			System.out.println(tbtd);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
