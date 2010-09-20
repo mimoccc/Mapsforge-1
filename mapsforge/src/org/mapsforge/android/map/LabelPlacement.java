@@ -36,7 +36,7 @@ import android.graphics.Paint;
 
 class LabelPlacement {
 
-	private int placementOption = 0;
+	private int placementOption = 1;
 	// You can choose between 2 Position and 4 Position
 	// placement Model 0 - 2-Position 1 - 4 Position
 
