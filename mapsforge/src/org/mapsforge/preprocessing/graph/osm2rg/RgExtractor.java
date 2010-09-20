@@ -132,7 +132,7 @@ public class RgExtractor {
 								writer.insertVertex(new RgVertex(id,
 										intCoordinateDegreeToDouble(longitudes[id]),
 										intCoordinateDegreeToDouble(latitudes[id]), node
-												.getId()));
+										.getId()));
 							} catch (SQLException e) {
 								e.printStackTrace();
 								while (e.getNextException() != null) {
@@ -228,9 +228,11 @@ public class RgExtractor {
 										wayName = nodeNames.get(sourceId);
 									}
 								}
+
 								writer.insertEdge(new RgEdge(nextEdgeId++, sourceId, targetId,
 										lon, lat, !oneway, way.isUrban(), way.getId(), wayName,
 										distanceMeters, hwyLvl, wayRef, way.isRoundabout()));
+
 								if (debug) {
 									System.out.println(sourceId + " -> " + targetId);
 								}
