@@ -64,6 +64,7 @@ final class RleBlock implements CacheItem {
 
 	private final int startAddrEIntTargetOffset;
 	private final int startAddrEIntWeight;
+	private final int startAddrEIntDownwardLink;
 	private final int startAddrEIntIsShortcut;
 	private final int startAddrEIntIsForward;
 	private final int startAddrEIntIsBackward;
@@ -75,6 +76,7 @@ final class RleBlock implements CacheItem {
 	private int startAddrEExtTargetOffsVertexZeroLvl;
 
 	private int startAddrEExtWeight;
+	private final int startAddrEExtDownwardLink;
 	private int startAddrEExtIsShortcut;
 	private int startAddrEExtIsForward;
 	private int startAddrEExtIsBackward;
@@ -165,6 +167,10 @@ final class RleBlock implements CacheItem {
 		offset += byteAlign(numEdgesInt * blockReader.bpVertexCount);
 		this.startAddrEIntWeight = offset;
 		offset += byteAlign(numEdgesInt * bpEdgeWeight);
+		this.startAddrEIntDownwardLink = offset;
+		if (blockReader.includeHopIndices) {
+			offset += byteAlign(numEdgesInt * 32);
+		}
 		this.startAddrEIntIsShortcut = offset;
 		offset += byteAlign(numEdgesInt);
 		this.startAddrEIntIsForward = offset;
@@ -187,6 +193,10 @@ final class RleBlock implements CacheItem {
 			offset += byteAlign(numEdgesExt * blockReader.bpVertexCount);
 		this.startAddrEExtWeight = offset;
 		offset += byteAlign(numEdgesExt * bpEdgeWeight);
+		this.startAddrEExtDownwardLink = offset;
+		if (blockReader.includeHopIndices) {
+			offset += byteAlign(numEdgesExt * 32);
+		}
 		this.startAddrEExtIsShortcut = offset;
 		offset += byteAlign(numEdgesExt);
 		this.startAddrEExtIsForward = offset;
@@ -342,6 +352,8 @@ final class RleBlock implements CacheItem {
 			getExternalEdge(v.externalEdgeStartIdx + (i - v.numInternalEdges), buff);
 		}
 		buff.sourceId = v.id;
+		if (buff.isShortcut)
+			System.out.println(buff.sourceId + " -> " + buff.downwardLink);
 		return true;
 	}
 
@@ -371,6 +383,13 @@ final class RleBlock implements CacheItem {
 
 		offset = startAddrEIntWeight + (i * bpEdgeWeight);
 		buff.weight = (int) BitSerializer.readUInt(data, bpEdgeWeight, offset / 8, offset % 8);
+
+		if (blockReader.includeHopIndices) {
+			offset = startAddrEIntDownwardLink + (i * 32);
+			buff.downwardLink = (int) BitSerializer.readUInt(data, 32, offset / 8, offset % 8);
+		} else {
+			buff.downwardLink = -1;
+		}
 
 		offset = startAddrEIntIsShortcut + i;
 		buff.isShortcut = BitSerializer.readBit(data, offset / 8, offset % 8);
@@ -417,6 +436,13 @@ final class RleBlock implements CacheItem {
 
 		offset = startAddrEExtWeight + (i * bpEdgeWeight);
 		buff.weight = (int) BitSerializer.readUInt(data, bpEdgeWeight, offset / 8, offset % 8);
+
+		if (blockReader.includeHopIndices) {
+			offset = startAddrEExtDownwardLink + (i * 32);
+			buff.downwardLink = (int) BitSerializer.readUInt(data, 32, offset / 8, offset % 8);
+		} else {
+			buff.downwardLink = -1;
+		}
 
 		offset = startAddrEExtIsShortcut + i;
 		buff.isShortcut = BitSerializer.readBit(data, offset / 8, offset % 8);

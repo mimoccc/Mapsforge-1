@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.Rect;
 
 /**
  * This class functionality is composed of spatial indices allowing for nearest neighbor
@@ -74,18 +75,11 @@ public interface IRouter {
 	/**
 	 * Range query for vertices.
 	 * 
-	 * @param minLon
-	 *            bounding value.
-	 * @param minLat
-	 *            bounding value.
-	 * @param maxLon
-	 *            bounding value.
-	 * @param maxLat
-	 *            bounding value.
+	 * @param bbox
+	 *            the bounding rectangle.
 	 * @return all vertices within the specified range.
 	 */
-	public Iterator<? extends IVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
-			int maxLat);
+	public Iterator<? extends IVertex> getVerticesWithinBox(Rect bbox);
 
 	/**
 	 * Nearest Neighbor query for Edges.
@@ -102,28 +96,8 @@ public interface IRouter {
 	public String getAlgorithmName();
 
 	/**
-	 * @return Returns a bounding value of the routing graph.
+	 * @return Returns a minimal bounding rectangle enclosing all vertices and edges.
 	 */
-	public int getMinLongitude();
-
-	/**
-	 * @return Returns a bounding value of the routing graph.
-	 */
-	public int getMaxLongitude();
-
-	/**
-	 * @return Returns a bounding value of the routing graph.
-	 */
-	public int getMinLatitude();
-
-	/**
-	 * @return Returns a bounding value of the routing graph.
-	 */
-	public int getMaxLatitude();
-
-	/**
-	 * @return the center of the routing graph.
-	 */
-	public GeoCoordinate getMapCenter();
+	public Rect getBoundingBox();
 
 }

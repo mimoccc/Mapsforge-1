@@ -46,6 +46,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.hhmobile.Cluster;
 import org.mapsforge.preprocessing.routing.hhmobile.Clustering;
 import org.mapsforge.server.routing.IEdge;
@@ -65,12 +66,12 @@ public class RendererV2 {
 
 	public final static Projection PROJ = ProjectionFactory
 			.fromPROJ4Specification(new String[] { "+proj=cass", "+lat_0=52.41864827777778",
-					"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
-					"+datum=potsdam", "+units=m", "+no_defs" });
+			"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
+			"+datum=potsdam", "+units=m", "+no_defs" });
 
 	private static double[] getZoomLevels(int n) {
 		double[] tmp = new double[n];
-		tmp[0] = 4;
+		tmp[0] = 0.5;
 		for (int i = 1; i < tmp.length; i++) {
 			tmp[i] = tmp[i - 1] + (tmp[i - 1] / 2.2);
 		}
@@ -111,7 +112,7 @@ public class RendererV2 {
 		this.canvas = new BufferedCanvas(width, height);
 
 		canvas.clear(bgColor);
-		setRenderParam(router.getMapCenter(), 3);
+		setRenderParam(router.getBoundingBox().getCenter(), 3);
 
 		new RendererGui();
 	}
@@ -266,8 +267,8 @@ public class RendererV2 {
 	}
 
 	private void drawGraph() {
-		for (Iterator<? extends IVertex> iter = router.getVerticesWithinBox(minLon, minLat,
-				maxLon, maxLat); iter.hasNext();) {
+		for (Iterator<? extends IVertex> iter = router.getVerticesWithinBox(
+				new Rect(minLon, maxLon, minLat, maxLat)); iter.hasNext();) {
 			IVertex v = iter.next();
 			for (IEdge e : v.getOutboundEdges()) {
 				drawEdge(e, fgColor);
@@ -287,17 +288,21 @@ public class RendererV2 {
 	}
 
 	private void drawEdge(IEdge e, Color c) {
-		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate().getLongitudeE6(), e
-				.getSource().getCoordinate().getLatitudeE6());
-		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate().getLongitudeE6(), e
-				.getTarget().getCoordinate().getLatitudeE6());
-		canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c);
+		GeoCoordinate[] wp = e.getAllWaypoints();
+		for (int i = 1; i < wp.length; i++) {
+			ScreenCoordinate sc1 = geoToScreen(wp[i - 1]);
+			ScreenCoordinate sc2 = geoToScreen(wp[i]);
+			canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c);
+		}
 	}
 
 	private void drawEdge(IEdge e, Color c, int width) {
-		ScreenCoordinate sc1 = geoToScreen(e.getSource().getCoordinate());
-		ScreenCoordinate sc2 = geoToScreen(e.getTarget().getCoordinate());
-		canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, width);
+		GeoCoordinate[] wp = e.getAllWaypoints();
+		for (int i = 1; i < wp.length; i++) {
+			ScreenCoordinate sc1 = geoToScreen(wp[i - 1]);
+			ScreenCoordinate sc2 = geoToScreen(wp[i]);
+			canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, width);
+		}
 	}
 
 	private void drawRoute(IEdge[] route, Color c) {
@@ -327,7 +332,7 @@ public class RendererV2 {
 			for (int i = 1; i < coords.length; i++) {
 				ScreenCoordinate sc1 = geoToScreen(coords[i - 1]);
 				ScreenCoordinate sc2 = geoToScreen(coords[i]);
-				canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, 2);
+				canvas.drawLine(sc1.x, sc1.y, sc2.x, sc2.y, c, 1);
 			}
 		}
 	}
@@ -622,7 +627,7 @@ public class RendererV2 {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						setRenderParam(router.getMapCenter(), zoomLevel);
+						setRenderParam(router.getBoundingBox().getCenter(), zoomLevel);
 					}
 				});
 				menu.add(miCenter);

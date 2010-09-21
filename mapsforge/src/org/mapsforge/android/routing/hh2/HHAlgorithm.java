@@ -14,24 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.hh;
+package org.mapsforge.android.routing.hh2;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.awt.Color;
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.mapsforge.android.routing.hh.ObjectPool.PoolableFactory;
-import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.RouterFactory;
 
-final class HighwayHierarchiesAlgorithm {
+final class HHAlgorithm {
 
 	private static final int INITIAL_HH_QUEUE_SIZE = 300;
 	private static final int INITIAL_HH_MAP_SIZE = 2000;
@@ -41,18 +34,13 @@ final class HighwayHierarchiesAlgorithm {
 	private static final int BWD = 1;
 	private static final int HEAP_IDX_SETTLED = -123456789;
 
-	private final RoutingGraph graph;
+	private final HHRoutingGraph graph;
 	private final HHQueue[] queue;
 	private final HHMap[] discovered;
 	private final BinaryMinHeap<DijkstraHeapItem, DijkstraHeapItem> queueDijkstra;
 	private final TIntObjectHashMap<DijkstraHeapItem> discoveredDijkstra;
-	private int[][] numSettled;
 
-	private final ObjectPool<HHVertex> poolVertices;
-	private final ObjectPool<HHEdge> poolEdges;
-
-	public HighwayHierarchiesAlgorithm(RoutingGraph graph, ObjectPool<HHVertex> poolVertices,
-			ObjectPool<HHEdge> poolEdges) {
+	public HHAlgorithm(HHRoutingGraph graph) {
 		this.graph = graph;
 		this.queue = new HHQueue[] { new HHQueue(INITIAL_HH_QUEUE_SIZE),
 				new HHQueue(INITIAL_HH_QUEUE_SIZE) };
@@ -62,21 +50,11 @@ final class HighwayHierarchiesAlgorithm {
 				INITIAL_DIJKSTRA_QUEUE_SIZE);
 		this.discoveredDijkstra = new TIntObjectHashMap<DijkstraHeapItem>(
 				INITIAL_DIJKSTRA_MAP_SIZE);
-
-		this.poolEdges = poolEdges;
-		this.poolVertices = poolVertices;
 	}
 
 	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff)
 			throws IOException {
-		Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
-		System.out.println("\ngetShortestPath " + sourceId + " -> " + targetId);
-		graph.ioTime = 0;
-		graph.shiftTime = 0;
-		long startTime = System.currentTimeMillis();
 
-		queue[FWD].clear();
-		queue[BWD].clear();
 		discovered[FWD].clear();
 		discovered[BWD].clear();
 
@@ -84,24 +62,17 @@ final class HighwayHierarchiesAlgorithm {
 		int distance = Integer.MAX_VALUE;
 		int searchScopeHitId = -1;
 
-		numSettled = new int[][] { new int[graph.numLevels()], new int[graph.numLevels()] };
+		HHVertex s = graph.getVertex(sourceId);
+		HHHeapItem sItem = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
+		queue[FWD].insert(sItem);
+		discovered[FWD].put(s.vertexIds[0], sItem);
+		graph.releaseVertex(s);
 
-		{ // scope for s
-			HHVertex s = poolVertices.borrow();
-			graph.getVertex(sourceId, s);
-			HHHeapItem _s = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
-			queue[FWD].insert(_s);
-			discovered[FWD].put(s.idZeroLvl, _s);
-			poolVertices.release(s);
-		}
-		{ // scope for t
-			HHVertex t = poolVertices.borrow();
-			graph.getVertex(targetId, t);
-			HHHeapItem _t = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
-			queue[BWD].insert(_t);
-			discovered[BWD].put(t.idZeroLvl, _t);
-			poolVertices.release(t);
-		}
+		HHVertex t = graph.getVertex(targetId);
+		HHHeapItem tItem = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
+		queue[BWD].insert(tItem);
+		discovered[BWD].put(t.vertexIds[0], tItem);
+		graph.releaseVertex(t);
 
 		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
 			if (queue[direction].isEmpty()) {
@@ -109,7 +80,6 @@ final class HighwayHierarchiesAlgorithm {
 			}
 			HHHeapItem uItem = queue[direction].extractMin();
 			uItem.heapIdx = HEAP_IDX_SETTLED;
-			numSettled[direction][uItem.level]++;
 
 			if (uItem.distance > distance) {
 				queue[direction].clear();
@@ -124,50 +94,30 @@ final class HighwayHierarchiesAlgorithm {
 				}
 			}
 
-			{ // scope for u
-				HHVertex u = poolVertices.borrow();
-				graph.getVertex(uItem.id, u);
-				if (uItem.gap == Integer.MAX_VALUE) {
-					uItem.gap = u.neighborhood;
-				}
-				int lvl = uItem.level;
-				int gap = uItem.gap;
-				while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap) && u.idNextLvl != -1) {
-					// switch to next level
-					lvl++;
-					graph.getVertex(u.idNextLvl, u);
-					uItem.id = u.id;
-					gap = u.neighborhood;
-				}
-				direction = (direction + 1) % 2;
-				poolVertices.release(u);
+			HHVertex u = graph.getVertex(uItem.id);
+			if (uItem.gap == Integer.MAX_VALUE) {
+				uItem.gap = u.neighborhood;
 			}
+			int lvl = uItem.level;
+			int gap = uItem.gap;
+			while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap)
+					&& u.vertexIds[lvl + 1] != -1) {
+				// switch to next level
+				lvl++;
+
+				int levelId = u.vertexIds[lvl];
+				graph.releaseVertex(u);
+				u = graph.getVertex(levelId);
+
+				uItem.id = u.vertexIds[lvl];
+				gap = u.neighborhood;
+			}
+			direction = (direction + 1) % 2;
+			graph.releaseVertex(u);
 		}
 		if (searchScopeHitId != -1) {
-			System.out.println("got shortest distance " + distance + " "
-					+ (System.currentTimeMillis() - startTime) + "ms");
-			startTime = System.currentTimeMillis();
-			System.out.println("settled : " + Utils.arrToString(numSettled[0]) + " | "
-					+ Utils.arrToString(numSettled[1]));
-			System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
-			System.out.println("ioTime : " + (graph.ioTime / 1000000) + "ms");
-			System.out.println("shiftTime : " + (graph.shiftTime / 1000000) + "ms");
-			Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
-
-			graph.ioTime = 0;
-			graph.shiftTime = 0;
-
-			System.out.print("expanding shortcuts...");
 			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
 					.get(searchScopeHitId), shortestPathBuff);
-			System.out.println((System.currentTimeMillis() - startTime) + "ms");
-			System.out.println("blockReads : " + Utils.arrToString(graph.numBlockReads));
-			System.out.println("ioTime : " + (graph.ioTime / 1000000) + "ms");
-			System.out.println("shiftTime : " + (graph.shiftTime / 1000000) + "ms");
-
-			graph.ioTime = 0;
-			graph.shiftTime = 0;
-			Utils.setZero(graph.numBlockReads, 0, graph.numBlockReads.length);
 		}
 		return distance;
 	}
@@ -177,52 +127,49 @@ final class HighwayHierarchiesAlgorithm {
 		boolean result = true;
 		boolean forward = (direction == FWD);
 
-		int n = u.getOutboundDegree();
-		for (int i = 0; i < n; i++) {
-			HHEdge e = poolEdges.borrow();
-			graph.getOutboundEdge(u, i, e);
-			if (forward && !e.isForward()) {
-				poolEdges.release(e);
-				continue;
-			}
-			if (!forward && !e.isBackward()) {
-				poolEdges.release(e);
+		HHEdge[] adjEdges = graph.getOutboundEdges(u);
+		for (int i = 0; i < adjEdges.length; i++) {
+			HHEdge e = adjEdges[i];
+			if ((forward && !e.isForward) || (!forward && !e.isBackward)) {
+				graph.releaseEdge(e);
 				continue;
 			}
 
 			int gap_ = gap;
 			if (gap != Integer.MAX_VALUE) {
 				gap_ = gap - e.weight;
-				if (!e.isCore()) {
+				if (!e.isCore) {
 					// don't leave the core
-					poolEdges.release(e);
+					graph.releaseEdge(e);
 					continue;
 				}
 				if (gap_ < 0) {
 					// edge crosses neighborhood of entry point, don't relax it
 					result = false;
-					poolEdges.release(e);
+					graph.releaseEdge(e);
 					continue;
 				}
 			}
 
-			HHHeapItem vItem = discovered[direction].get(e.targetIdZeroLvl);
+			HHVertex v = graph.getVertex(e.targetId);
+			HHHeapItem vItem = discovered[direction].get(v.vertexIds[0]);
 			if (vItem == null) {
-				vItem = new HHHeapItem(uItem.distance + e.weight, lvl, gap_, e.getTargetId(),
-						e.targetIdZeroLvl, u.idZeroLvl, u.id, e.getTargetId());
-				discovered[direction].put(e.targetIdZeroLvl, vItem);
+				vItem = new HHHeapItem(uItem.distance + e.weight, lvl, gap_, e.targetId,
+						v.vertexIds[0], u.vertexIds[0], e.sourceId, e.targetId);
+				discovered[direction].put(v.vertexIds[0], vItem);
 				queue[direction].insert(vItem);
 			} else if (vItem.compareTo(uItem.distance + e.weight, lvl, gap_) > 0) {
 				vItem.distance = uItem.distance + e.weight;
 				vItem.level = lvl;
-				vItem.id = e.getTargetId();
+				vItem.id = e.targetId;
 				vItem.gap = gap_;
-				vItem.parentIdLvlZero = u.idZeroLvl;
-				vItem.eSrcId = u.id;
-				vItem.eTgtId = e.getTargetId();
+				vItem.parentIdLvlZero = u.vertexIds[0];
+				vItem.eSrcId = e.sourceId;
+				vItem.eTgtId = e.targetId;
 				queue[direction].decreaseKey(vItem, vItem);
 			}
-			poolEdges.release(e);
+			graph.releaseEdge(e);
+			graph.releaseVertex(v);
 		}
 
 		return result;
@@ -231,37 +178,99 @@ final class HighwayHierarchiesAlgorithm {
 	private void expandEdges(HHHeapItem fwd, HHHeapItem bwd, LinkedList<HHEdge> buff)
 			throws IOException {
 		while (fwd.eSrcId != -1) {
-			expandEdgeRec(fwd.eSrcId, fwd.eTgtId, buff, true);
+			if (graph.hasShortcutHopIndices) {
+				expandEdgeRecursiveByHopIndices(fwd.eSrcId, fwd.eTgtId, buff, true);
+			} else {
+				expandEdgeRecursiveDijkstra(fwd.eSrcId, fwd.eTgtId, buff, true);
+			}
 			fwd = discovered[FWD].get(fwd.parentIdLvlZero);
 		}
 		while (bwd.eSrcId != -1) {
-			expandEdgeRec(bwd.eSrcId, bwd.eTgtId, buff, false);
+			if (graph.hasShortcutHopIndices) {
+				expandEdgeRecursiveByHopIndices(bwd.eSrcId, bwd.eTgtId, buff, false);
+			} else {
+				expandEdgeRecursiveDijkstra(bwd.eSrcId, bwd.eTgtId, buff, false);
+			}
 			bwd = discovered[BWD].get(bwd.parentIdLvlZero);
 		}
 	}
 
-	private void expandEdgeRec(int src, int tgt, LinkedList<HHEdge> buff, boolean fwd)
-			throws IOException {
-		HHVertex s = poolVertices.borrow();
-		graph.getVertex(src, s);
-		HHVertex t = poolVertices.borrow();
-		graph.getVertex(tgt, t);
-
-		HHEdge e = poolEdges.borrow();
-		extractEdge(s, t, fwd, e);
+	private void expandEdgeRecursiveByHopIndices(int src, int tgt, LinkedList<HHEdge> buff,
+			boolean fwd) throws IOException {
+		HHVertex s = graph.getVertex(src);
+		HHVertex t = graph.getVertex(tgt);
+		HHEdge e = extractEdge(s, t, fwd);
 
 		// if edge belongs to level 0, recursion anchor is reached!
-		if (s.idPrevLvl == -1) {
+		if (e.minLevel == 0) {
+			if (s.getLevel() > 0) {
+				HHVertex s_ = graph.getVertex(s.vertexIds[0]);
+				HHVertex t_ = graph.getVertex(t.vertexIds[0]);
+				if (fwd) {
+					graph.releaseEdge(e);
+					e = extractEdge(s_, t_, true);
+					buff.addFirst(e);
+				} else {
+					graph.releaseEdge(e);
+					e = extractEdge(t_, s_, true);
+					buff.addLast(e);
+				}
+				graph.releaseVertex(s_);
+				graph.releaseVertex(t_);
+			} else if (fwd) {
+				buff.addFirst(e);
+			} else {
+				graph.releaseEdge(e);
+				e = extractEdge(t, s, true);
+				buff.addLast(e);
+			}
+			graph.releaseVertex(s);
+			graph.releaseVertex(t);
+			return;
+		}
+
+		// edge is shortcut, expand it
+		HHVertex v = graph.getVertex(s.vertexIds[e.minLevel - 1]);
+		for (int i = 0; i < e.hopIndices.length; i++) {
+			HHEdge[] adjEdges = graph.getOutboundEdges(v);
+			int hopIdx = e.hopIndices[i];
+			expandEdgeRecursiveByHopIndices(v.vertexIds[v.getLevel()],
+					adjEdges[hopIdx].targetId,
+					buff,
+					fwd);
+			graph.releaseVertex(v);
+			v = graph.getVertex(adjEdges[hopIdx].targetId);
+			for (int j = 0; j < adjEdges.length; j++) {
+				graph.releaseEdge(adjEdges[j]);
+			}
+		}
+		graph.releaseVertex(s);
+		graph.releaseVertex(t);
+		graph.releaseVertex(v);
+		graph.releaseEdge(e);
+	}
+
+	private void expandEdgeRecursiveDijkstra(int src, int tgt, LinkedList<HHEdge> buff,
+			boolean fwd)
+			throws IOException {
+		HHVertex s = graph.getVertex(src);
+		HHVertex t = graph.getVertex(tgt);
+
+		HHEdge e = extractEdge(s, t, fwd);
+
+		// if edge belongs to level 0, recursion anchor is reached!
+		if (s.getLevel() == 0) {
 			// add the edge to buff and do not release to pool!
 			// if the edge is backward only, fetch the corresponding forward edge
 			if (fwd) {
 				buff.addFirst(e);
 			} else {
-				extractEdge(t, s, true, e);
+				graph.releaseEdge(e);
+				e = extractEdge(t, s, true);
 				buff.addLast(e);
 			}
-			poolVertices.release(s);
-			poolVertices.release(t);
+			graph.releaseVertex(s);
+			graph.releaseVertex(t);
 			// need to return here since we don't want to release e
 			// to the pool which is done at the end of the method.
 			return;
@@ -270,76 +279,78 @@ final class HighwayHierarchiesAlgorithm {
 		// if edge is not a shortcut, we can directly jump to level 0
 		// if not we have to expand the shortcut using dijkstra within the core
 		// of the underlying level
-		if (!e.isShortcut()) {
-			expandEdgeRec(s.idZeroLvl, t.idZeroLvl, buff, fwd);
+		if (e.minLevel == 0) {
+			expandEdgeRecursiveDijkstra(s.vertexIds[0], t.vertexIds[0], buff, fwd);
 		} else {
 			discoveredDijkstra.clear();
 			queueDijkstra.clear();
-			DijkstraHeapItem sItem = new DijkstraHeapItem(0, s.idPrevLvl, null);
-			discoveredDijkstra.put(s.idPrevLvl, sItem);
+			DijkstraHeapItem sItem = new DijkstraHeapItem(0, s.vertexIds[e.minLevel - 1], null);
+			discoveredDijkstra.put(s.vertexIds[e.minLevel - 1], sItem);
 			queueDijkstra.insert(sItem);
 
 			while (!queueDijkstra.isEmpty()) {
 				DijkstraHeapItem uItem = queueDijkstra.extractMin();
-				if (uItem.id == t.idPrevLvl) {
+				if (uItem.id == t.vertexIds[e.minLevel - 1]) {
 					// found target
 					break;
 				}
-				HHVertex u = poolVertices.borrow();
-				graph.getVertex(uItem.id, u);
+				HHVertex u = graph.getVertex(uItem.id);
 
 				// relax edges
-				int n = u.getOutboundDegree();
-				for (int i = 0; i < n; i++) {
-					HHEdge e_ = poolEdges.borrow();
-					graph.getOutboundEdge(u, i, e_);
-					if (!e_.isCore() || (fwd && !e_.isForward()) || (!fwd && !e_.isBackward())) {
+				HHEdge[] adjEdges = graph.getOutboundEdges(u);
+				for (int i = 0; i < adjEdges.length; i++) {
+					HHEdge e_ = adjEdges[i];
+					if (!e_.isCore || (fwd && !e_.isForward) || (!fwd && !e_.isBackward)) {
 						// -skip edge if it is not applicable for current search direction
 						// -skip non core edges
-						poolEdges.release(e_);
+						graph.releaseEdge(e_);
 						continue;
 					}
-					DijkstraHeapItem vItem = discoveredDijkstra.get(e_.getTargetId());
+					DijkstraHeapItem vItem = discoveredDijkstra.get(e_.targetId);
 					if (vItem == null) {
 						vItem = new DijkstraHeapItem(uItem.distance + e_.weight, e_
-								.getTargetId(), uItem);
-						discoveredDijkstra.put(e_.getTargetId(), vItem);
+								.targetId, uItem);
+						discoveredDijkstra.put(e_.targetId, vItem);
 						queueDijkstra.insert(vItem);
 					} else if (vItem.distance > uItem.distance + e_.weight) {
 						vItem.distance = uItem.distance + e_.weight;
 						vItem.parent = uItem;
 					}
-					poolEdges.release(e_);
+					graph.releaseEdge(e_);
 				}
-				poolVertices.release(u);
+				graph.releaseVertex(u);
 			}
-			DijkstraHeapItem i = discoveredDijkstra.get(t.idPrevLvl);
+			DijkstraHeapItem i = discoveredDijkstra.get(t.vertexIds[e.minLevel - 1]);
 			while (i.parent != null) {
 				int s_ = i.parent.id;
 				int t_ = i.id;
-				expandEdgeRec(s_, t_, buff, fwd);
+				expandEdgeRecursiveDijkstra(s_, t_, buff, fwd);
 				i = i.parent;
 			}
 		}
-		poolEdges.release(e);
-		poolVertices.release(s);
-		poolVertices.release(t);
+		graph.releaseEdge(e);
+		graph.releaseVertex(s);
+		graph.releaseVertex(t);
 	}
 
-	private void extractEdge(HHVertex s, HHVertex t, boolean fwd, HHEdge buff)
+	private HHEdge extractEdge(HHVertex s, HHVertex t, boolean fwd)
 			throws IOException {
 		int minWeight = Integer.MAX_VALUE;
-		int n = s.getOutboundDegree();
-		HHEdge e = poolEdges.borrow();
-		for (int i = 0; i < n; i++) {
-			graph.getOutboundEdge(s, i, e);
-			if (e.getTargetId() == t.id && e.weight < minWeight
-					&& ((fwd && e.isForward()) || (!fwd && e.isBackward()))) {
-				minWeight = e.weight;
-				graph.getOutboundEdge(s, i, buff);
+		HHEdge[] adjEdges = graph.getOutboundEdges(s);
+		HHEdge result = null;
+		for (int i = 0; i < adjEdges.length; i++) {
+			if (adjEdges[i].targetId == t.vertexIds[t.vertexIds.length - 2]
+					&& adjEdges[i].weight < minWeight
+					&& ((fwd && adjEdges[i].isForward) || (!fwd && adjEdges[i].isBackward))) {
+
+				minWeight = adjEdges[i].weight;
+				graph.releaseEdge(result);
+				result = adjEdges[i];
+			} else {
+				graph.releaseEdge(adjEdges[i]);
 			}
 		}
-		poolEdges.release(e);
+		return result;
 	}
 
 	private static class HHHeapItem implements IBinaryHeapItem<HHHeapItem>,
@@ -489,81 +500,5 @@ final class HighwayHierarchiesAlgorithm {
 		public HHQueue(int initialSize) {
 			super(initialSize);
 		}
-	}
-
-	public static void main(String[] args) throws IOException {
-		String map = "berlin";
-		int n = 1;
-
-		RoutingGraph graph = new RoutingGraph(new File(map + ".hhmobile"), 1024 * 1000);
-		ObjectPool<HHVertex> poolVertices = new ObjectPool<HHVertex>(
-				new PoolableFactory<HHVertex>() {
-
-			@Override
-			public HHVertex makeObject() {
-				return new HHVertex();
-			}
-
-		}, 100);
-		ObjectPool<HHEdge> poolEdges = new ObjectPool<HHEdge>(new PoolableFactory<HHEdge>() {
-			@Override
-			public HHEdge makeObject() {
-				return new HHEdge();
-			}
-		}, 100);
-
-		HighwayHierarchiesAlgorithm hh = new HighwayHierarchiesAlgorithm(graph, poolVertices,
-				poolEdges);
-		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
-
-		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.BLACK,
-				Color.WHITE);
-		LinkedList<HHEdge> sp1 = new LinkedList<HHEdge>();
-		// LinkedList<HHEdge> sp2 = new LinkedList<HHEdge>();
-
-		long time = System.currentTimeMillis();
-		for (int i = 0; i < n; i++) {
-			HHVertex s = new HHVertex();
-			graph.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655), 300, s);
-			// graph.getRandomVertex(0, s);
-			HHVertex t = new HHVertex();
-			graph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805), 300, t);
-			// graph.getRandomVertex(0, t);
-			int d1 = hh.getShortestPath(s.id, t.id, sp1);
-			// System.out.println("cache misses : " + cache.getNumCacheMisses());
-			// System.out.println("bytes read : " + cache.getNumBytesRead());
-			graph.clearCache();
-
-			int d2 = dijkstra.getShortestPath(s.id, t.id, new LinkedList<HHVertex>());
-			if (d1 != d2) {
-				System.out.println(d1 + " != " + d2);
-			} else {
-				System.out.println("distance = " + d1);
-			}
-			System.out.println(d2 + " " + d1);
-
-			int j = 1;
-			GeoCoordinate[] coords = new GeoCoordinate[sp1.size() + 1];
-			coords[0] = new GeoCoordinate(s.getLatitudeE6(), s.getLongitudeE6());
-			for (HHEdge e : sp1) {
-				HHVertex v = new HHVertex();
-				graph.getVertex(e.getTargetId(), v);
-				coords[j] = new GeoCoordinate(v.getLatitudeE6(), v.getLongitudeE6());
-				if (coords[j].getLongitudeE6() == coords[j - 1].getLongitudeE6()
-						&& coords[j].getLatitudeE6() == coords[j - 1].getLatitudeE6()) {
-					System.out.println("error " + j);
-				}
-				j++;
-			}
-			renderer.addMultiLine(coords, Color.RED);
-			//
-			renderer.addCircle(new GeoCoordinate(s.getLatitudeE6(), s.getLongitudeE6()),
-					Color.GREEN);
-			renderer.addCircle(new GeoCoordinate(t.getLatitudeE6(), t.getLongitudeE6()),
-					Color.GREEN);
-			sp1.clear();
-		}
-		System.out.println("num routes : " + n);
-		System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
 	}
 }

@@ -292,7 +292,8 @@ class HighwayHierarchiesAlgorithm {
 			int s = rnd.nextInt(graph.getLevel(0).numVertices());
 			int t = rnd.nextInt(graph.getLevel(0).numVertices());
 			int d1 = hh.getShortestPath(s, t, sp1);
-			int d2 = dijkstra.getShortestPath(s, t, sp2);
+			int d2 = dijkstra.getShortestPath(s, t, 0, sp2, new LinkedList<Integer>(), true,
+					false);
 			int d3 = hh2.shortestDistance(graph2.getVertex(s), graph2.getVertex(t));
 			if (d1 != d2) {
 				System.out.println(d1 + " " + d2);

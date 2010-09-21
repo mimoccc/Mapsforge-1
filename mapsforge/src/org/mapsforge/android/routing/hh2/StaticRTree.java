@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.hh;
+package org.mapsforge.android.routing.hh2;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -26,13 +26,35 @@ import java.util.LinkedList;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.hhmobile.util.HHGlobals;
 
+/**
+ * This class implements a static rtree variant. It supports the overlaps query which is the key
+ * to efficient nearest neighbor queries limited to a specific range.
+ */
 final class StaticRTree {
-
+	/**
+	 * The file where this rtree is stored.
+	 */
 	private final RandomAccessFile raf;
+	/**
+	 * Number of bytes per tree node (should be equal to the file system's block size)
+	 */
 	private final int blockSizeBytes;
+	/**
+	 * The start address of the rtree within the File.
+	 */
 	private final long startAddr;
+	/**
+	 * The root of the tree, always kept in main memory.
+	 */
 	private final RtreeNode root;
+	/**
+	 * Buffer for reading nodes.
+	 */
 	private final byte[] readBuff;
+	/**
+	 * The minimum bounding rectangle around all indexed data.
+	 */
+	private final Rect boundingBox;
 
 	/**
 	 * Instantiate an RTree stored in a file.
@@ -61,6 +83,28 @@ final class StaticRTree {
 		this.blockSizeBytes = raf.readInt();
 		this.readBuff = new byte[blockSizeBytes];
 		this.root = readNode(1);
+
+		// compute the minimum bounding rectangle around the root node
+		int minLat = Integer.MAX_VALUE;
+		int minLon = Integer.MAX_VALUE;
+		int maxLat = Integer.MIN_VALUE;
+		int maxLon = Integer.MIN_VALUE;
+		for (int i = 0; i < root.maxLatitudeE6.length; i++) {
+			minLat = Math.min(minLat, root.minLatitudeE6[i]);
+			minLon = Math.min(minLon, root.minLongitudeE6[i]);
+			maxLat = Math.max(maxLat, root.maxLongitudeE6[i]);
+			maxLon = Math.max(maxLon, root.maxLongitudeE6[i]);
+		}
+		this.boundingBox = new Rect(minLon, maxLon, minLat, maxLat);
+	}
+
+	/**
+	 * Gives the minimum bounding rectangle including all indexed data.
+	 * 
+	 * @return the minimum bounding rectangle around the root node.
+	 */
+	public Rect getBoundingBox() {
+		return this.boundingBox;
 	}
 
 	/**
@@ -78,22 +122,22 @@ final class StaticRTree {
 	}
 
 	/**
-	 * @param minLon
+	 * @param minLongitudeE6
 	 *            longitude bound of the rectangle.
-	 * @param maxLon
+	 * @param maxLongitudeE6
 	 *            longitude bound of the rectangle.
-	 * @param minLat
+	 * @param minLatitudeE6
 	 *            latitude bound of the rectangle.
-	 * @param maxLat
+	 * @param maxLatitudeE6
 	 *            latitude bound of the rectangle.
 	 * @return integers associated with all matching rectangles.
 	 * @throws IOException
 	 *             on error accessing file.
 	 */
-	public LinkedList<Integer> overlaps(int minLon, int maxLon, int minLat, int maxLat)
+	public LinkedList<Integer> overlaps(int minLongitudeE6, int maxLongitudeE6, int minLatitudeE6, int maxLatitudeE6)
 			throws IOException {
 		LinkedList<Integer> buff = new LinkedList<Integer>();
-		overlaps(minLon, maxLon, minLat, maxLat, root, buff);
+		overlaps(minLongitudeE6, maxLongitudeE6, minLatitudeE6, maxLatitudeE6, root, buff);
 		return buff;
 	}
 
@@ -117,9 +161,10 @@ final class StaticRTree {
 	 */
 	private void overlaps(int minLon, int maxLon, int minLat, int maxLat, RtreeNode node,
 			LinkedList<Integer> buff) throws IOException {
-		for (int i = 0; i < node.minLon.length; i++) {
-			boolean overlaps = Rect.overlaps(node.minLon[i], node.maxLon[i], node.minLat[i],
-					node.maxLat[i], minLon, maxLon, minLat, maxLat);
+		for (int i = 0; i < node.minLongitudeE6.length; i++) {
+			boolean overlaps = Rect.overlaps(node.minLongitudeE6[i], node.maxLongitudeE6[i],
+					node.minLatitudeE6[i],
+					node.maxLatitudeE6[i], minLon, maxLon, minLat, maxLat);
 			if (overlaps) {
 				if (node.isLeaf) {
 					buff.add(node.pointer[i]);
@@ -150,8 +195,32 @@ final class StaticRTree {
 	 * A node representation used only during runtime, not during r-tree construction.
 	 */
 	private static class RtreeNode {
+		/**
+		 * True if this node is a leaf node.
+		 */
 		final boolean isLeaf;
-		final int[] minLon, maxLon, minLat, maxLat, pointer;
+		/**
+		 * The minimum longitude in micro degrees of the i-th rectangle.
+		 */
+		final int[] minLongitudeE6;
+		/**
+		 * The maximum longitude in micro degrees of the i-th rectangle.
+		 */
+		final int[] maxLongitudeE6;
+		/**
+		 * The minimum latitude in micro degrees of the i-th rectangle.
+		 */
+		final int[] minLatitudeE6;
+		/**
+		 * The maximum latitude in micro degrees of the i-th rectangle.
+		 */
+		final int[] maxLatitudeE6;
+		/**
+		 * The pointer of the i-th rectangle. If this node is a leaf, the pointer identifies the
+		 * satellite data. If this node is a inner node, the pointer points to the x-th node of
+		 * the file.
+		 */
+		final int[] pointer;
 
 		/**
 		 * Constructs a Tree Node based on the given data representing the tree node.
@@ -166,17 +235,17 @@ final class StaticRTree {
 
 			this.isLeaf = stream.readBoolean();
 			short numEntries = stream.readShort();
-			this.minLon = new int[numEntries];
-			this.maxLon = new int[numEntries];
-			this.minLat = new int[numEntries];
-			this.maxLat = new int[numEntries];
+			this.minLongitudeE6 = new int[numEntries];
+			this.maxLongitudeE6 = new int[numEntries];
+			this.minLatitudeE6 = new int[numEntries];
+			this.maxLatitudeE6 = new int[numEntries];
 			this.pointer = new int[numEntries];
 
 			for (int i = 0; i < numEntries; i++) {
-				this.minLon[i] = stream.readInt();
-				this.maxLon[i] = stream.readInt();
-				this.minLat[i] = stream.readInt();
-				this.maxLat[i] = stream.readInt();
+				this.minLongitudeE6[i] = stream.readInt();
+				this.maxLongitudeE6[i] = stream.readInt();
+				this.minLatitudeE6[i] = stream.readInt();
+				this.maxLatitudeE6[i] = stream.readInt();
 				this.pointer[i] = stream.readInt();
 			}
 		}

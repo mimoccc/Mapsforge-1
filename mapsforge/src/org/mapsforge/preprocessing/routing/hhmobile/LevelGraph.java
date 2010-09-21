@@ -21,7 +21,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelEdge;
+import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
@@ -36,9 +39,15 @@ class LevelGraph implements Serializable {
 	private static final int BWD = 1;
 
 	final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, vLon, vLat;
-	final int[] eSource, eTarget, eWeight;
+	final int[] eSource, eTarget, eWeight, eMinLvl;
 	final BitArray[] eDirection;
 	final BitArray eIsShortcut;
+	final String[] eName;
+	final String[] eRef;
+	final BitArray eMotorwayLink;
+	final BitArray eRoundabout;
+	final int[][] eLatitudesE6;
+	final int[][] eLongitudesE6;
 	private final int numLevels;
 
 	final int numVertices;
@@ -71,8 +80,15 @@ class LevelGraph implements Serializable {
 		eSource = new int[numEdges];
 		eTarget = new int[numEdges];
 		eWeight = new int[numEdges];
+		eMinLvl = new int[numEdges];
 		eDirection = new BitArray[] { new BitArray(numEdges), new BitArray(numEdges) };
-		this.eIsShortcut = new BitArray(numEdges);
+		eIsShortcut = new BitArray(numEdges);
+		eName = new String[numEdges];
+		eRef = new String[numEdges];
+		eMotorwayLink = new BitArray(numEdges);
+		eRoundabout = new BitArray(numEdges);
+		eLatitudesE6 = new int[numEdges][];
+		eLongitudesE6 = new int[numEdges][];
 		levels = new Level[numLevels];
 
 		// copy data to arrays
@@ -107,9 +123,20 @@ class LevelGraph implements Serializable {
 			eSource[offset] = e.sourceId;
 			eTarget[offset] = e.targetId;
 			eWeight[offset] = e.weight;
+			eMinLvl[offset] = e.minLvl;
 			eDirection[FWD].set(offset, e.fwd);
 			eDirection[BWD].set(offset, e.bwd);
 			eIsShortcut.set(offset, e.minLvl > 0);
+			eName[offset] = e.name;
+			eRef[offset] = e.ref;
+			eMotorwayLink.set(offset, e.isMotorwayLink);
+			eRoundabout.set(offset, e.isRoundabout);
+			eLatitudesE6[offset] = toE6Waypoints(e.latitudes);
+			eLongitudesE6[offset] = toE6Waypoints(e.longitudes);
+			if (e.isReversed) {
+				// reverseInplace(eLatitudesE6[offset]);
+				// reverseInplace(eLongitudesE6[offset]);
+			}
 			if (vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] == -1) {
 				vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] = offset;
 			}
@@ -121,6 +148,31 @@ class LevelGraph implements Serializable {
 			levels[i] = new Level(i, reader.getGraphProperties().levelStats[i].numVertices,
 					reader.getGraphProperties().levelStats[i].numEdges);
 		}
+	}
+
+	private void reverseInplace(int[] arr) {
+		if (arr != null) {
+			int i = 0;
+			int j = arr.length - 1;
+			while (i < j) {
+				int tmp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = tmp;
+				i++;
+				j--;
+			}
+		}
+	}
+
+	private int[] toE6Waypoints(double[] degree) {
+		if (degree == null) {
+			return null;
+		}
+		int[] tmp = new int[degree.length - 2];
+		for (int i = 0; i < tmp.length; i++) {
+			tmp[i] = GeoCoordinate.doubleToInt(degree[i + 1]);
+		}
+		return tmp;
 	}
 
 	public Level getLevel(int lvl) {
@@ -273,6 +325,10 @@ class LevelGraph implements Serializable {
 				this.id = id;
 			}
 
+			public int getId() {
+				return this.id;
+			}
+
 			@Override
 			public LevelVertex getSource() {
 				return new LevelVertex(eSource[id]);
@@ -288,6 +344,10 @@ class LevelGraph implements Serializable {
 				return eWeight[id];
 			}
 
+			public int getMinLevel() {
+				return eMinLvl[id];
+			}
+
 			public boolean isForward() {
 				return eDirection[FWD].get(id);
 			}
@@ -299,6 +359,47 @@ class LevelGraph implements Serializable {
 			public boolean isShortcut() {
 				return eIsShortcut.get(id);
 			}
+
+			public String getName() {
+				return eName[id];
+			}
+
+			public String getRef() {
+				return eRef[id];
+			}
+
+			public boolean isMotorwayLink() {
+				return eMotorwayLink.get(id);
+			}
+
+			public boolean isRoundabout() {
+				return eRoundabout.get(id);
+			}
+
+			public GeoCoordinate[] getWaypoints() {
+				if (eLatitudesE6[id] == null) {
+					return new GeoCoordinate[0];
+				}
+				GeoCoordinate[] waypoints = new GeoCoordinate[eLatitudesE6[id].length];
+				for (int i = 0; i < eLatitudesE6[id].length; i++) {
+					waypoints[i] = new GeoCoordinate(eLatitudesE6[id][i], eLongitudesE6[id][i]);
+				}
+				return waypoints;
+			}
 		}
+	}
+
+	public static void main(String[] args) throws SQLException {
+		LevelGraph lg = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
+				"osm", "osm", "osm"));
+		Level l = lg.getLevel(0);
+		Iterator<LevelVertex> iter = l.getVertices();
+		while (iter.hasNext()) {
+			LevelVertex v = iter.next();
+			for (LevelEdge e : v.getOutboundEdges()) {
+				System.out.println(e);
+			}
+		}
+
 	}
 }

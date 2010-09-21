@@ -60,9 +60,9 @@ class EdgeMapper implements Serializable {
 		}
 		return new EdgeMapping[] {
 				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
-						reversed.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
+				reversed.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
 				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
-						reversed.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
+				reversed.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
 	}
 
 	public void serialize(OutputStream oStream) throws IOException {
@@ -136,7 +136,7 @@ class EdgeMapper implements Serializable {
 	}
 
 	public static void main(String[] args) throws SQLException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "osm_base",
+		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
 				"osm", "osm");
 		EdgeMapper mapper = importFromDb(conn);
 		for (int i = 0; i < 50000; i++) {

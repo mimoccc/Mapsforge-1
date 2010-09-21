@@ -36,6 +36,7 @@ final class RleBlockReader {
 
 	// header data
 	final byte bpClusterId, bpVertexCount, bpEdgeCount, bpNeighborhood, numLevels;
+	final boolean includeHopIndices;
 
 	// used for address lookup, avoids object creation
 	private Pointer tmpPointer = new Pointer();
@@ -69,6 +70,7 @@ final class RleBlockReader {
 		this.bpEdgeCount = iStream.readByte();
 		this.bpNeighborhood = iStream.readByte();
 		this.numLevels = iStream.readByte();
+		this.includeHopIndices = iStream.readBoolean();
 
 		this.bitMask = getBitmask(bpVertexCount);
 	}

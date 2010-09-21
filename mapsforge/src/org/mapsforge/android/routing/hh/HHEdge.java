@@ -21,8 +21,7 @@ package org.mapsforge.android.routing.hh;
  */
 public class HHEdge {
 
-	int sourceId, targetId, targetIdZeroLvl;
-	int weight;
+	int sourceId, targetId, targetIdZeroLvl, weight, downwardLink;
 	boolean isShortcut, isForward, isBackward, isCore;
 
 	HHEdge() {

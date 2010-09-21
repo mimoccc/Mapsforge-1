@@ -58,9 +58,13 @@ class HHBinaryFileWriter {
 					.getProperty("hhmobile.quadTreeAlgorithm.threshold"));
 			int kcenterAlgorithmVerticesPerCluster = Integer.parseInt(props
 					.getProperty("hhmobile.kcenterAlgorithm.verticesPerCluster"));
-			String clusterBlockEncoding = props.getProperty("hhmobile.clusterblockEncoding");
 			int blockPointerIdxGroupSizeThreshold = Integer.parseInt(props
 					.getProperty("hhmobile.blockPointerIndex.groupSizeThreshold"));
+			boolean includeHopIndices = Boolean.parseBoolean(props
+					.getProperty("hhmobile.includeHopIndices"));
+			int rtreeBlockSize = Integer.parseInt(props
+					.getProperty("hhmobile.rtree.blockSize"));
+
 			System.out.println("create hh binary file '" + outputFile.getAbsolutePath() + "'");
 
 			// load graph from database
@@ -90,7 +94,7 @@ class HHBinaryFileWriter {
 			// create the binary file
 			System.out.println("write file '" + outputFile.getAbsolutePath() + "'");
 			writeBinaryFile(graph, clustering, outputFile, blockPointerIdxGroupSizeThreshold,
-					4096);
+					rtreeBlockSize, includeHopIndices);
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -105,8 +109,8 @@ class HHBinaryFileWriter {
 	}
 
 	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
-			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize)
-			throws IOException {
+			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize,
+			boolean includeHopIndices) throws IOException {
 
 		// ---------------- WRITE TEMPORARY FILES --------------------------
 
@@ -116,8 +120,8 @@ class HHBinaryFileWriter {
 
 		// write the graphs cluster blocks
 		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
-		int[] blockSize = RleBlockWriter.writeClusterBlocks(fBlocks, levelGraph, clustering,
-				mapping);
+		int[] blockSize = RleBlockWriter2.writeClusterBlocks(fBlocks, levelGraph, clustering,
+				mapping, includeHopIndices);
 
 		// write block index
 		AddressLookupTableWriter.writeTable(blockSize, indexGroupSizeThreshold, fBlockIndex);
@@ -132,10 +136,10 @@ class HHBinaryFileWriter {
 			int i = 0;
 			for (Cluster c : clustering[0].getClusters()) {
 				Rect r = getBoundingBox(c, levelGraph.getLevel(0));
-				minLat[i] = r.minLat;
-				maxLat[i] = r.maxLat;
-				minLon[i] = r.minLon;
-				maxLon[i] = r.maxLon;
+				minLat[i] = r.minLatitudeE6;
+				maxLat[i] = r.maxLatitudeE6;
+				minLon[i] = r.minLongitudeE6;
+				maxLon[i] = r.maxLongitudeE6;
 				blockId[i] = mapping.getBlockId(c);
 				i++;
 			}

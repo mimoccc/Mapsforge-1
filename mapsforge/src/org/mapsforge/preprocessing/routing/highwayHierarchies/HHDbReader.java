@@ -18,6 +18,7 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,25 +27,26 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.mapsforge.core.DBConnection;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
-/**
- * @author Frank Viernau
- */
 public class HHDbReader {
 
-	public static final int FETCH_SIZE = 1000;
+	private static final int FETCH_SIZE = 1000;
+	private static final int MESSAGE_INTERVAL = 100000;
 
 	private static final String SQL_COUNT_VERTICES = "SELECT COUNT(*) AS count FROM hh_vertex_lvl WHERE lvl = 0;";
 	private static final String SQL_COUNT_LVL_VERTICES = "SELECT COUNT(*) AS count FROM hh_vertex_lvl;";
 	private static final String SQL_COUNT_EDGES = "SELECT COUNT(*) AS count FROM hh_edge;";
 	private static final String SQL_COUNT_EDGES_LVL = "SELECT COUNT(*) AS count FROM hh_edge WHERE min_lvl <= ? AND max_lvl >= ?;";
 	private static final String SQL_COUNT_LEVELS = "SELECT MAX(lvl) + 1 AS count FROM hh_vertex_lvl;";
-	public static final String SQL_SELECT_VERTICES = "SELECT id, longitude AS lon, latitude AS lat FROM hh_vertex ORDER BY id;";
+	private static final String SQL_SELECT_VERTICES = "SELECT id, longitude AS lon, latitude AS lat FROM hh_vertex ORDER BY id;";
 	private static final String SQL_SELECT_VERTEX_LVLS = "SELECT * FROM hh_vertex_lvl ORDER BY id, lvl;";
 	private static final String SQL_SELECT_EDGES = "SELECT * FROM hh_edge ORDER BY source_id, max_lvl, min_lvl, weight;";
-	private static final String SQL_SELECT_LVL_EDGES = "SELECT v.lvl, e.* FROM hh_vertex_lvl v JOIN hh_edge e ON v.id = e.source_id AND v.lvl >= e.min_lvl AND v.lvl <= e.max_lvl ORDER BY e.source_id, v.lvl;";
+	// private static final String SQL_SELECT_LVL_EDGES =
+	// "SELECT v.lvl, e.* FROM hh_vertex_lvl v JOIN hh_edge e ON v.id = e.source_id AND v.lvl >= e.min_lvl AND v.lvl <= e.max_lvl LEFT OUTER JOIN rg_edge rge ON e.id / 2 = rge.id ORDER BY e.source_id, v.lvl;";
+	private static final String SQL_SELECT_LVL_EDGES = "SELECT v.lvl, e.*, rge.name, rge.latitudes, rge.longitudes, rge.ref, rge.roundabout, l.name AS hwy_lvl FROM hh_vertex_lvl v JOIN hh_edge e ON v.id = e.source_id AND v.lvl >= e.min_lvl AND v.lvl <= e.max_lvl LEFT OUTER JOIN rg_edge rge ON e.id / 2 = rge.id LEFT OUTER JOIN rg_hwy_lvl l ON rge.hwy_lvl = l.id ORDER BY e.source_id, v.lvl;";
 	private static final String SQL_SELECT_EDGES_LVL = "SELECT * FROM hh_edge  WHERE min_lvl <= ? AND max_lvl >= ? ORDER BY source_id, weight;";
 	private static final String SQL_SELECT_LEVEL_STATS = "SELECT * FROM hh_lvl_stats ORDER BY lvl;";
 	private static final String SQL_SELECT_GRAPH_PROPERTIES = "SELECT * FROM hh_graph_properties;";
@@ -166,6 +168,8 @@ public class HHDbReader {
 
 			return new Iterator<HHVertex>() {
 
+				private int count = 0;
+
 				@Override
 				public boolean hasNext() {
 					try {
@@ -184,6 +188,10 @@ public class HHDbReader {
 				public HHVertex next() {
 					try {
 						if (rs.next()) {
+							if ((++count) % MESSAGE_INTERVAL == 0) {
+								System.out.println("read HHVertex "
+										+ (count - MESSAGE_INTERVAL) + " - " + count);
+							}
 							return new HHVertex(rs.getInt("id"), rs.getDouble("lon"),
 									rs.getDouble("lat"));
 						}
@@ -212,6 +220,8 @@ public class HHDbReader {
 
 			return new Iterator<HHVertexLvl>() {
 
+				private int count = 0;
+
 				@Override
 				public boolean hasNext() {
 					try {
@@ -230,6 +240,10 @@ public class HHDbReader {
 				public HHVertexLvl next() {
 					try {
 						if (rs.next()) {
+							if ((++count) % MESSAGE_INTERVAL == 0) {
+								System.out.println("read HHVertexLvl "
+										+ (count - MESSAGE_INTERVAL) + " - " + count);
+							}
 							return new HHVertexLvl(rs.getInt("id"), rs.getInt("neighborhood"),
 									rs.getInt("lvl"));
 						}
@@ -287,10 +301,24 @@ public class HHDbReader {
 		}
 	}
 
+	static double[] toDoubleArray(Array a) throws SQLException {
+		if (a == null) {
+			return null;
+		}
+		Double[] tmp = (Double[]) a.getArray();
+		double[] result = new double[tmp.length];
+		for (int i = 0; i < tmp.length; i++) {
+			result[i] = tmp[i];
+		}
+		return result;
+	}
+
 	private Iterator<HHEdgeLvl> getEdgesLvl(final PreparedStatement stmt) {
 		try {
 			return new Iterator<HHEdgeLvl>() {
 				private final ResultSet rs = stmt.executeQuery();
+
+				private int count = 0;
 
 				@Override
 				public boolean hasNext() {
@@ -310,11 +338,23 @@ public class HHDbReader {
 				public HHEdgeLvl next() {
 					try {
 						if (rs.next()) {
+							if ((++count) % MESSAGE_INTERVAL == 0) {
+								System.out.println("read HHEdgeLvl "
+										+ (count - MESSAGE_INTERVAL) + " - " + count);
+							}
+							boolean isReversed = rs.getInt("id") % 2 == 0;
+							double[] latitudes = toDoubleArray(rs.getArray("latitudes"));
+							double[] longitudes = toDoubleArray(rs.getArray("longitudes"));
+
 							return new HHEdgeLvl(rs.getInt("id"), rs.getInt("source_id"),
 									rs.getInt("target_id"), rs.getInt("weight"),
 									rs.getInt("min_lvl"), rs.getInt("max_lvl"),
 									rs.getBoolean("fwd"), rs.getBoolean("bwd"),
-									rs.getBoolean("shortcut"), rs.getInt("lvl"));
+									rs.getBoolean("shortcut"), rs.getInt("lvl"),
+									rs.getString("name"), rs.getString("ref"),
+									latitudes, longitudes, isReversed, TagHighway.MOTORWAY_LINK
+									.equals(rs.getString("hwy_lvl")), rs
+									.getBoolean("roundabout"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
@@ -337,6 +377,7 @@ public class HHDbReader {
 		try {
 			return new Iterator<HHEdge>() {
 				private final ResultSet rs = stmt.executeQuery();
+				private int count = 0;
 
 				@Override
 				public boolean hasNext() {
@@ -356,6 +397,10 @@ public class HHDbReader {
 				public HHEdge next() {
 					try {
 						if (rs.next()) {
+							if ((++count) % MESSAGE_INTERVAL == 0) {
+								System.out.println("read HHVertex "
+										+ (count - MESSAGE_INTERVAL) + " - " + count);
+							}
 							return new HHEdge(rs.getInt("id"), rs.getInt("source_id"),
 									rs.getInt("target_id"), rs.getInt("weight"),
 									rs.getInt("min_lvl"), rs.getInt("max_lvl"),
@@ -379,7 +424,7 @@ public class HHDbReader {
 		}
 	}
 
-	public class HHEdge {
+	public static class HHEdge {
 
 		public final int id, sourceId, targetId, weight, minLvl, maxLvl;
 		public final boolean fwd, bwd, shortcut;
@@ -398,18 +443,35 @@ public class HHDbReader {
 		}
 	}
 
-	public class HHEdgeLvl extends HHEdge {
+	public static class HHEdgeLvl extends HHEdge {
 
 		public final int lvl;
+		public final String name;
+		public final String ref;
+		public final double[] latitudes, longitudes;
+		public final boolean isReversed; // edge is reversed with regard to representation in
+		// the osm file
+		public final boolean isMotorwayLink;
+		public final boolean isRoundabout;
 
 		public HHEdgeLvl(int id, int sourceId, int targetId, int weight, int minLvl,
-				int maxLvl, boolean fwd, boolean bwd, boolean shortcut, int lvl) {
+				int maxLvl, boolean fwd, boolean bwd, boolean shortcut, int lvl,
+				String name, String ref, double[] latitudes, double[] longitudes,
+				boolean isReversed,
+				boolean isMotorwayLink, boolean isRoundabout) {
 			super(id, sourceId, targetId, weight, minLvl, maxLvl, fwd, bwd, shortcut);
 			this.lvl = lvl;
+			this.name = name;
+			this.ref = ref;
+			this.latitudes = latitudes;
+			this.longitudes = longitudes;
+			this.isReversed = isReversed;
+			this.isMotorwayLink = isMotorwayLink;
+			this.isRoundabout = isRoundabout;
 		}
 	}
 
-	public class HHVertexLvl {
+	public static class HHVertexLvl {
 
 		public final int id, neighborhood, lvl;
 
@@ -420,7 +482,7 @@ public class HHDbReader {
 		}
 	}
 
-	public class HHVertex {
+	public static class HHVertex {
 		public final int id;
 		public final double longitude, latitude;
 

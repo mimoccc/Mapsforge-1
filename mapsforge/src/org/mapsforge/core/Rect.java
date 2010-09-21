@@ -18,26 +18,37 @@ package org.mapsforge.core;
 
 public class Rect {
 
-	public final int minLon, maxLon, minLat, maxLat;
+	public final int minLongitudeE6;
+	public final int maxLongitudeE6;
+	public final int minLatitudeE6;
+	public final int maxLatitudeE6;
 
 	/**
 	 * Constructs a rectangle, it is not checked if given values are valid coordinates and also
 	 * if the minimum values are less equal compared to the respective maximum value.
 	 * 
-	 * @param minLon
+	 * @param minLongitudeE6
 	 *            bound of the rectangle.
-	 * @param maxLon
+	 * @param maxLongitudeE6
 	 *            bound of the rectangle.
-	 * @param minLat
+	 * @param minLatitudeE6
 	 *            bound of the rectangle.
-	 * @param maxLat
+	 * @param maxLatitudeE6
 	 *            bound of the rectangle.
 	 */
-	public Rect(int minLon, int maxLon, int minLat, int maxLat) {
-		this.minLon = minLon;
-		this.maxLon = maxLon;
-		this.minLat = minLat;
-		this.maxLat = maxLat;
+	public Rect(int minLongitudeE6, int maxLongitudeE6, int minLatitudeE6, int maxLatitudeE6) {
+		this.minLongitudeE6 = minLongitudeE6;
+		this.maxLongitudeE6 = maxLongitudeE6;
+		this.minLatitudeE6 = minLatitudeE6;
+		this.maxLatitudeE6 = maxLatitudeE6;
+	}
+
+	/**
+	 * @return Returns the coordinate lying in the middle of this rectangle.
+	 */
+	public GeoCoordinate getCenter() {
+		return new GeoCoordinate((minLatitudeE6 + maxLatitudeE6) / 2,
+				(minLongitudeE6 + maxLongitudeE6) / 2);
 	}
 
 	/**
@@ -48,12 +59,40 @@ public class Rect {
 	 * @return true if rectangles overlap.
 	 */
 	public boolean overlaps(Rect r) {
-		return overlaps(minLon, maxLon, minLat, maxLat, r.minLon, r.maxLon, r.minLat, r.maxLat);
+		return overlaps(minLongitudeE6, maxLongitudeE6, minLatitudeE6, maxLatitudeE6,
+				r.minLongitudeE6, r.maxLongitudeE6, r.minLatitudeE6, r.maxLatitudeE6);
+	}
+
+	/**
+	 * Checks if the coordinate lies within this rectangle.
+	 * 
+	 * @param c
+	 *            coordinate to check.
+	 * @return Returns true if the given coordinate lies within this rectangle.
+	 */
+	public boolean includes(GeoCoordinate c) {
+		return includes(c.getLatitudeE6(), c.getLongitudeE6());
+	}
+
+	/**
+	 * Checks if the coordinate lies within this rectangle.
+	 * 
+	 * @param latitudeE6
+	 *            coordinate to check.
+	 * @param longitudeE6
+	 *            coordinate to check.
+	 * @return Returns true if the given coordinate lies within this rectangle.
+	 */
+	public boolean includes(int latitudeE6, int longitudeE6) {
+		return latitudeE6 >= minLatitudeE6 && latitudeE6 <= maxLatitudeE6
+				&& longitudeE6 >= minLongitudeE6
+				&& longitudeE6 <= maxLongitudeE6;
 	}
 
 	@Override
 	public String toString() {
-		return "[ (" + minLon + "," + minLat + ") (" + maxLon + "," + maxLat + ") ]";
+		return "[ (" + minLongitudeE6 + "," + minLatitudeE6 + ") (" + maxLongitudeE6 + ","
+				+ maxLatitudeE6 + ") ]";
 	}
 
 	/**

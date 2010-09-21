@@ -19,6 +19,8 @@ package org.mapsforge.server.routing.highwayHierarchies;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.Rect;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -251,10 +254,10 @@ public class RouterImpl implements IRouter {
 	}
 
 	@Override
-	public Iterator<HHVertex> getVerticesWithinBox(int minLon, int minLat, int maxLon,
-			int maxLat) {
-		final TIntArrayList ids = vertexIndex.getIndicesByBoundingBox(minLon, minLat, maxLon,
-				maxLat);
+	public Iterator<HHVertex> getVerticesWithinBox(Rect bbox) {
+		final TIntArrayList ids = vertexIndex.getIndicesByBoundingBox(bbox.minLongitudeE6,
+				bbox.minLatitudeE6, bbox.maxLongitudeE6,
+				bbox.maxLatitudeE6);
 		return new Iterator<HHVertex>() {
 
 			private TIntIterator iter = ids.iterator();
@@ -282,29 +285,11 @@ public class RouterImpl implements IRouter {
 	}
 
 	@Override
-	public int getMaxLatitude() {
-		return Math.max(vertexIndex.getMaxLatitude(), edgeIndex.getMaxLatitude());
-	}
-
-	@Override
-	public int getMaxLongitude() {
-		return Math.max(vertexIndex.getMaxLongitude(), edgeIndex.getMaxLongitude());
-	}
-
-	@Override
-	public int getMinLatitude() {
-		return Math.min(vertexIndex.getMinLatitude(), edgeIndex.getMinLatitude());
-	}
-
-	@Override
-	public int getMinLongitude() {
-		return Math.min(vertexIndex.getMinLongitude(), edgeIndex.getMinLongitude());
-	}
-
-	@Override
-	public GeoCoordinate getMapCenter() {
-		return new GeoCoordinate((getMaxLatitude() + getMinLatitude()) / 2,
-				(getMaxLongitude() + getMinLongitude()) / 2);
+	public Rect getBoundingBox() {
+		return new Rect(Math.min(vertexIndex.getMinLongitude(), edgeIndex.getMinLongitude()),
+				Math.max(vertexIndex.getMaxLongitude(), edgeIndex.getMaxLongitude()),
+				Math.min(vertexIndex.getMinLatitude(), edgeIndex.getMinLatitude()),
+				Math.max(vertexIndex.getMaxLatitude(), edgeIndex.getMaxLatitude()));
 	}
 
 	@Override
@@ -433,19 +418,15 @@ public class RouterImpl implements IRouter {
 		}
 	}
 
-	// public static void main(String[] args) throws FileNotFoundException, IOException,
-	// ClassNotFoundException {
-	// IRouter router = RouterImpl.deserialize(new FileInputStream("berlin.hh"));
-	// int source = router
-	// .getNearestVertex(new GeoCoordinate(52.509257, 13.456766)).getId();
-	// int target = router.getNearestVertex(
-	// new GeoCoordinate(52.525678, 13.306196)).getId();
-	// IEdge[] sp = router.getShortestPath(source, target);
-	//
-	// for (IEdge e : sp) {
-	// System.out.println(e.getName() + ",roudabout=" + e.isRoundabout()
-	// + ",motarwayLink="
-	// + e.isMotorWayLink() + ",ref=" + e.getRef());
-	// }
-	// }
+	public static void main(String[] args) throws FileNotFoundException, IOException,
+			ClassNotFoundException {
+		IRouter router = RouterImpl.deserialize(new FileInputStream("router/berlin.hh"));
+
+		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
+		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
+		for (IEdge e : shortestPath) {
+			System.out.println(e.getName() + " " + e.getRef());
+		}
+	}
 }

@@ -16,14 +16,17 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
+import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.hadoop.util.IndexedSortable;
@@ -46,12 +49,15 @@ class RleBlockWriter {
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
 
 	public static int[] writeClusterBlocks(File targetFile, LevelGraph levelGraph,
-			Clustering[] clustering, ClusterBlockMapping mapping) throws IOException {
+			Clustering[] clustering, ClusterBlockMapping mapping, boolean includeHopIndices)
+			throws IOException {
 
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(targetFile));
 
 		ClusteringUtil cUtil = new ClusteringUtil(clustering, levelGraph);
-		EncodingParams enc = computeHeader(cUtil);
+		EncodingParams enc = computeHeader(cUtil, includeHopIndices);
+		TIntIntHashMap edgeToAdjacencyListIndex = computeEdgeAdjListIndex(levelGraph,
+				clustering);
 
 		// --- WRITE HEADER FILE ---
 		writeHeader(out, enc);
@@ -77,16 +83,52 @@ class RleBlockWriter {
 		return blockSize;
 	}
 
+	private static TIntIntHashMap computeEdgeAdjListIndex(LevelGraph levelGraph,
+			Clustering[] clustering) {
+		TIntIntHashMap map = new TIntIntHashMap();
+		// the order between interal edges is kept
+		// the order between external edges is kept
+		// the internal edges are store first thus the order is changed
+		// this must be taken into account when mapping a edge id of the input
+		// graph to a hopIdx of the output graph
+		for (int lvl = 0; lvl < clustering.length; lvl++) {
+			Level graph = levelGraph.getLevel(lvl);
+			for (Iterator<LevelVertex> iter = graph.getVertices(); iter.hasNext();) {
+				LevelVertex v = iter.next();
+				int hopIdx = 0;
+				for (LevelEdge e : v.getOutboundEdges()) {
+					if (clustering[lvl].getCluster(e.getSource().getId()).equals(
+							clustering[lvl].getCluster(e.getTarget().getId()))) {
+						// internal edge
+						map.put(e.getId(), hopIdx++);
+
+					}
+				}
+				for (LevelEdge e : v.getOutboundEdges()) {
+					if (!clustering[lvl].getCluster(e.getSource().getId()).equals(
+							clustering[lvl].getCluster(e.getTarget().getId()))) {
+						// external edge
+						map.put(e.getId(), hopIdx++);
+					}
+				}
+			}
+
+		}
+		return map;
+	}
+
 	private static void writeHeader(OutputStream out, EncodingParams enc) throws IOException {
 		ByteArrayOutputStream arrayOut = new ByteArrayOutputStream();
-		arrayOut.write(HEADER_MAGIC);
-		arrayOut.write(enc.bpClusterId);
-		arrayOut.write(enc.bpVertexCount);
-		arrayOut.write(enc.bpEdgeCount);
-		arrayOut.write(enc.bpNeighborhood);
-		arrayOut.write(enc.numLevels);
+		DataOutputStream dataOut = new DataOutputStream(arrayOut);
+		dataOut.write(HEADER_MAGIC);
+		dataOut.write(enc.bpClusterId);
+		dataOut.write(enc.bpVertexCount);
+		dataOut.write(enc.bpEdgeCount);
+		dataOut.write(enc.bpNeighborhood);
+		dataOut.write(enc.numLevels);
+		dataOut.writeBoolean(enc.includeHopIndices);
 		byte[] header = arrayOut.toByteArray();
-		arrayOut.close();
+		dataOut.close();
 
 		if (header.length <= HEADER_LENGTH) {
 			out.write(header);
@@ -96,7 +138,7 @@ class RleBlockWriter {
 		}
 	}
 
-	private static EncodingParams computeHeader(ClusteringUtil cUtil) {
+	private static EncodingParams computeHeader(ClusteringUtil cUtil, boolean writeHopIndices) {
 		byte bitsPerClusterId = Utils.numBitsToEncode(0, cUtil.getGlobalNumClusters() - 1);
 		byte bitsPerVertexOffset = Utils.numBitsToEncode(0, cUtil
 				.getGlobalMaxVerticesPerCluster());
@@ -104,14 +146,14 @@ class RleBlockWriter {
 		byte bitsPerNeighborhood = Utils.numBitsToEncode(0, cUtil.getGlobalMaxNeighborhood());
 		byte numGraphLevels = (byte) cUtil.getGlobalNumLevels();
 		return new EncodingParams(bitsPerClusterId, bitsPerVertexOffset, bitsPerEdgeCount,
-				bitsPerNeighborhood, numGraphLevels);
+				bitsPerNeighborhood, numGraphLevels, writeHopIndices);
 	}
 
 	private static int[] getBlockByteSizes(ClusterBlockMapping mapping, ClusteringUtil cUtil,
-			EncodingParams header) throws IOException {
+			EncodingParams enc) throws IOException {
 		int[] byteSize = new int[mapping.size()];
 		for (int i = 0; i < byteSize.length; i++) {
-			byteSize[i] = serializeBlock(BUFFER, mapping.getCluster(i), mapping, cUtil, header);
+			byteSize[i] = serializeBlock(BUFFER, mapping.getCluster(i), mapping, cUtil, enc);
 		}
 		return byteSize;
 	}
@@ -171,7 +213,7 @@ class RleBlockWriter {
 			ClusterBlockMapping mapping, ClusteringUtil cUtil, EncodingParams enc)
 			throws IOException {
 
-		Block b = new Block(cluster, mapping, cUtil);
+		Block b = new Block(cluster, mapping, cUtil, enc.includeHopIndices);
 		BitArrayOutputStream stream = new BitArrayOutputStream(buff);
 
 		// --------HEADER --------
@@ -288,6 +330,12 @@ class RleBlockWriter {
 			stream.writeUInt(val, b.bpEdgeWeight);
 		}
 		stream.alignPointer(1);
+		// downward link
+		for (int i = 0; i < b.eIntSourceDownwardLinkBlockId.length; i++) {
+			stream.writeUInt((b.eIntSourceDownwardLinkBlockId[i] << enc.bpVertexCount)
+					| b.eIntSourceDownwardLinkVertexOffset[i], 32);
+		}
+		stream.alignPointer(1);
 		// is shortcut
 		for (boolean val : b.eIntIsShortcut) {
 			stream.writeBit(val);
@@ -334,6 +382,12 @@ class RleBlockWriter {
 		// weight
 		for (int val : b.eExtWeight) {
 			stream.writeUInt(val, b.bpEdgeWeight);
+		}
+		stream.alignPointer(1);
+		// downward link
+		for (int i = 0; i < b.eExtSourceDownwardLinkBlockId.length; i++) {
+			stream.writeUInt((b.eExtSourceDownwardLinkBlockId[i] << enc.bpVertexCount)
+					| b.eExtSourceDownwardLinkVertexOffset[i], 32);
 		}
 		stream.alignPointer(1);
 		// is shortcut
@@ -426,6 +480,9 @@ class RleBlockWriter {
 		public final boolean[] eIntIsForward;
 		public final boolean[] eIntIsBackward;
 		public final boolean[] eIntIsCore;
+		public final int[] eIntSourceDownwardLinkBlockId; // only if hop indices are written
+		public final int[] eIntSourceDownwardLinkVertexOffset; // only if hop indices are
+		// written
 
 		// -------- EXTERNAL EDGES --------
 
@@ -434,6 +491,9 @@ class RleBlockWriter {
 		public final int[] eExtTargetOffsVertexAdj;
 		public final int[] eExtTargetOffsBlockLvlZero; // only used if level > 0
 		public final int[] eExtTargetOffsVertexLvlZero; // only used if level > 0
+		public final int[] eExtSourceDownwardLinkBlockId; // only if hop indices are written
+		public final int[] eExtSourceDownwardLinkVertexOffset; // only if hop indices are
+		// written
 
 		// edge attributes
 		public final int[] eExtWeight;
@@ -442,7 +502,8 @@ class RleBlockWriter {
 		public final boolean[] eExtIsBackward;
 		public final boolean[] eExtIsCore;
 
-		public Block(Cluster cluster, ClusterBlockMapping mapping, ClusteringUtil cUtil) {
+		public Block(Cluster cluster, ClusterBlockMapping mapping, ClusteringUtil cUtil,
+				boolean writeHopIndices) {
 
 			LinkedList<LevelVertex> vertices = cUtil.getClusterVertices(cluster);
 
@@ -566,6 +627,13 @@ class RleBlockWriter {
 				int numIntEdges = vOffsIntEdge[vOffsIntEdge.length - 1];
 				this.eIntTargetOffsVertex = new int[numIntEdges];
 				this.eIntWeight = new int[numIntEdges];
+				if (writeHopIndices) {
+					this.eIntSourceDownwardLinkBlockId = new int[numIntEdges];
+					this.eIntSourceDownwardLinkVertexOffset = new int[numIntEdges];
+				} else {
+					this.eIntSourceDownwardLinkBlockId = new int[0];
+					this.eIntSourceDownwardLinkVertexOffset = new int[0];
+				}
 				this.eIntIsShortcut = new boolean[numIntEdges];
 				this.eIntIsForward = new boolean[numIntEdges];
 				this.eIntIsBackward = new boolean[numIntEdges];
@@ -577,6 +645,18 @@ class RleBlockWriter {
 					eIntTargetOffsVertex[i] = cUtil.getClusterVertexOffset(e.getTarget()
 							.getId(), this.lvl);
 					eIntWeight[i] = e.getWeight();
+					if (writeHopIndices) {
+						if (e.isShortcut()) {
+							int lvl = e.getMinLevel() - 1;
+							Cluster c = cUtil.getCluster(e.getSource().getId(), lvl);
+							eIntSourceDownwardLinkBlockId[i] = mapping.getBlockId(c);
+							eIntSourceDownwardLinkVertexOffset[i] = cUtil
+									.getClusterVertexOffset(e.getSource().getId(), lvl);
+						} else {
+							eIntSourceDownwardLinkBlockId[i] = -1;
+							eIntSourceDownwardLinkVertexOffset[i] = -1;
+						}
+					}
 					eIntIsShortcut[i] = e.isShortcut();
 					eIntIsForward[i] = e.isForward();
 					eIntIsBackward[i] = e.isBackward();
@@ -602,6 +682,13 @@ class RleBlockWriter {
 					this.eExtTargetOffsVertexLvlZero = new int[0];
 				}
 				this.eExtWeight = new int[numExtEdges];
+				if (writeHopIndices) {
+					this.eExtSourceDownwardLinkBlockId = new int[numExtEdges];
+					this.eExtSourceDownwardLinkVertexOffset = new int[numExtEdges];
+				} else {
+					this.eExtSourceDownwardLinkBlockId = new int[0];
+					this.eExtSourceDownwardLinkVertexOffset = new int[0];
+				}
 				this.eExtIsShortcut = new boolean[numExtEdges];
 				this.eExtIsForward = new boolean[numExtEdges];
 				this.eExtIsBackward = new boolean[numExtEdges];
@@ -619,6 +706,18 @@ class RleBlockWriter {
 								.getCluster(e.getTarget().getId(), 0));
 						eExtTargetOffsVertexLvlZero[i] = cUtil.getClusterVertexOffset(e
 								.getTarget().getId(), 0);
+					}
+					if (writeHopIndices) {
+						if (e.isShortcut()) {
+							int lvl = e.getMinLevel() - 1;
+							Cluster c = cUtil.getCluster(e.getSource().getId(), lvl);
+							eExtSourceDownwardLinkBlockId[i] = mapping.getBlockId(c);
+							eExtSourceDownwardLinkVertexOffset[i] = cUtil
+									.getClusterVertexOffset(e.getSource().getId(), lvl);
+						} else {
+							eExtSourceDownwardLinkBlockId[i] = -1;
+							eExtSourceDownwardLinkVertexOffset[i] = -1;
+						}
 					}
 					eExtWeight[i] = e.getWeight();
 					eExtIsShortcut[i] = e.isShortcut();
@@ -646,11 +745,11 @@ class RleBlockWriter {
 				this.numBlocksOverly = blockOverly.length;
 				this.numBlocksLvlZero = blockLvlZero.length;
 
-				this.minLon = bbox.minLon;
-				this.minLat = bbox.minLat;
+				this.minLon = bbox.minLongitudeE6;
+				this.minLat = bbox.minLatitudeE6;
 
-				this.bpLon = Utils.numBitsToEncode(minLon, bbox.maxLon);
-				this.bpLat = Utils.numBitsToEncode(minLat, bbox.maxLat);
+				this.bpLon = Utils.numBitsToEncode(minLon, bbox.maxLongitudeE6);
+				this.bpLat = Utils.numBitsToEncode(minLat, bbox.maxLatitudeE6);
 				this.bpOffsEdgeInt = Utils.numBitsToEncode(0, eIntWeight.length);
 				this.bpOffsEdgeExt = Utils.numBitsToEncode(0, eExtWeight.length);
 				this.bpOffsBlockAdj = Utils.numBitsToEncode(0, blockAdj.length);
@@ -660,7 +759,6 @@ class RleBlockWriter {
 				this.bpEdgeWeight = Utils.numBitsToEncode(0, cUtil
 						.getClusterMaxEdgeWeight(cluster));
 			}
-
 		}
 
 		public static int getNumExternalEdges(LevelVertex v, ClusteringUtil cUtil) {
@@ -740,14 +838,16 @@ class RleBlockWriter {
 	private static class EncodingParams {
 
 		public final byte bpClusterId, bpVertexCount, bpEdgeCount, bpNeighborhood, numLevels;
+		final boolean includeHopIndices;
 
 		public EncodingParams(byte bpClusterId, byte bpVertexCount, byte bpEdgeCount,
-				byte bpNeighborhood, byte numLevels) {
+				byte bpNeighborhood, byte numLevels, boolean writeHopIndices) {
 			this.bpClusterId = bpClusterId;
 			this.bpVertexCount = bpVertexCount;
 			this.bpEdgeCount = bpEdgeCount;
 			this.bpNeighborhood = bpNeighborhood;
 			this.numLevels = numLevels;
+			this.includeHopIndices = writeHopIndices;
 		}
 
 		@Override
@@ -759,6 +859,7 @@ class RleBlockWriter {
 			sb.append("  bpEdgeCount = " + bpEdgeCount + "\n");
 			sb.append("  bpNeighborhood = " + bpNeighborhood + "\n");
 			sb.append("  numLevels = " + numLevels + "\n");
+			sb.append("  includeHopIndices = " + includeHopIndices + "\n");
 			sb.append(")");
 			return sb.toString();
 		}

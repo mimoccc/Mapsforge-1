@@ -18,7 +18,11 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex;
@@ -37,22 +41,25 @@ class DijkstraAlgorithm {
 		this.discovered = new TIntObjectHashMap<HeapItem>();
 	}
 
-	public int getShortestPath(int sourceId, int targetId,
-			LinkedList<LevelVertex> shortestPathBuff) {
+	public int getShortestPath(int sourceId, int targetId, int level,
+			LinkedList<LevelVertex> shortestPathBuff, LinkedList<Integer> hopIndicesBuff,
+			boolean forward, boolean backward) {
 		this.queue.clear();
 		this.discovered.clear();
 
-		HeapItem s = new HeapItem(sourceId, 0, null);
+		HeapItem s = new HeapItem(sourceId, level, null);
 		queue.insert(s);
 		discovered.put(s.vertexId, s);
 		while (!queue.isEmpty()) {
 			HeapItem _u = queue.extractMin();
-			LevelVertex u = graph.getLevel(0).getVertex(_u.vertexId);
+			LevelVertex u = graph.getLevel(level).getVertex(_u.vertexId);
 			if (u.getId() == targetId) {
 				break;
 			}
-			for (LevelEdge e : u.getOutboundEdges()) {
-				if (!e.isForward()) {
+			LevelEdge[] adjEdges = u.getOutboundEdges();
+			for (int i = 0; i < adjEdges.length; i++) {
+				LevelEdge e = adjEdges[i];
+				if ((forward && !e.isForward()) || (backward && !e.isBackward())) {
 					continue;
 				}
 				HeapItem _v = discovered.get(e.getTarget().getId());
@@ -60,8 +67,10 @@ class DijkstraAlgorithm {
 					_v = new HeapItem(e.getTarget().getId(), _u.distance + e.getWeight(), u);
 					queue.insert(_v);
 					discovered.put(_v.vertexId, _v);
+					_v.hopIdx = i;
 				} else if (_v.distance > _u.distance + e.getWeight()) {
 					queue.decreaseKey(_v, _u.distance + e.getWeight());
+					_v.hopIdx = i;
 					_v.parent = u;
 				}
 			}
@@ -71,9 +80,10 @@ class DijkstraAlgorithm {
 			return Integer.MAX_VALUE;
 		}
 		int distance = _t.distance;
-		shortestPathBuff.add(graph.getLevel(0).getVertex(targetId));
+		shortestPathBuff.addFirst(graph.getLevel(level).getVertex(targetId));
 		while (_t.parent != null) {
-			shortestPathBuff.add(_t.parent);
+			shortestPathBuff.addFirst(_t.parent);
+			hopIndicesBuff.addFirst(_t.hopIdx);
 			_t = discovered.get(_t.parent.getId());
 		}
 		return distance;
@@ -85,12 +95,14 @@ class DijkstraAlgorithm {
 		int distance;
 		LevelVertex parent;
 		int vertexId;
+		int hopIdx; // the index of the outbound edge lying on shortest path tree
 
 		public HeapItem(int vertexId, int distance, LevelVertex parent) {
 			this.vertexId = vertexId;
 			this.distance = distance;
 			this.parent = parent;
 			this.heapIdx = -1;
+			this.hopIdx = -1;
 		}
 
 		@Override
@@ -116,39 +128,45 @@ class DijkstraAlgorithm {
 
 	}
 
-	// public static void main(String[] args) throws IOException {
-	// String map = "berlin";
-	// int n = 10;
-	//
-	// LevelGraph graph = Serializer.deserialize(new File("berlin.levelGraph"));
-	//
-	// DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
-	// RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
-	// Color.BLACK);
-	// LinkedList<LevelVertex> sp = new LinkedList<LevelVertex>();
-	//
-	// Random rnd = new Random();
-	// long time = System.currentTimeMillis();
-	// for (int i = 0; i < n; i++) {
-	// int s = rnd.nextInt(graph.getLevel(0).numVertices());
-	// int t = rnd.nextInt(graph.getLevel(0).numVertices());
-	// int distance = d.getShortestPath(s, t, sp);
-	// for (LevelVertex v : sp) {
-	// LevelVertex v_ = graph.getLevel(0).getVertex(v.getId());
-	// //renderer.addCircle(new GeoCoordinate(v_.getLat(), v_.getLon()), Color.BLUE);
-	//
-	// LevelEdge e = v.getOutboundEdges()[0];
-	// Vertex et = graph.getLevel(0).getVertex(e.getTarget().getId());
-	// if (et.getIdLvlZero() != e.getTarget().getId()) {
-	// System.out.println("error");
-	// }
-	// }
-	// // renderer.addCircle(new GeoCoordinate(s.getLat(), s.getLon()), Color.GREEN);
-	// // renderer.addCircle(new GeoCoordinate(t.getLat(), t.getLon()), Color.GREEN);
-	// sp.clear();
-	// }
-	// System.out.println("num routes : " + n);
-	// System.out.println("cache misses : " + graph.numCacheMisses);
-	// System.out.println("exec time : " + (System.currentTimeMillis() - time) + "ms.");
-	// }
+	public static void main(String[] args) throws IOException, SQLException,
+			ClassNotFoundException {
+		String map = "berlin";
+		int n = 10;
+
+		// LevelGraph graph = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
+		// "berlin", "osm", "osm"));
+		// org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer.serialize(
+		// new File(map), graph);
+		LevelGraph graph = org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer
+				.deserialize(new File(map));
+
+		DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
+		LinkedList<LevelVertex> sp = new LinkedList<LevelVertex>();
+		LinkedList<Integer> hopIndices = new LinkedList<Integer>();
+
+		Random rnd = new Random();
+		long time = System.currentTimeMillis();
+		for (int i = 0; i < n; i++) {
+			int s = rnd.nextInt(graph.getLevel(0).numVertices());
+			int t = rnd.nextInt(graph.getLevel(0).numVertices());
+			int distance = d.getShortestPath(s, t, 0, sp, hopIndices, true, false);
+			System.out.print(s + " -> " + t + "  :  ");
+			for (LevelVertex v : sp) {
+				System.out.print(v.getId() + ",");
+			}
+			System.out.println();
+
+			System.out.print(s + " -> " + t + "  :  ");
+
+			LevelVertex v = graph.getLevel(0).getVertex(s);
+			System.out.print(v.getId());
+			for (int idx : hopIndices) {
+				v = v.getOutboundEdges()[idx].getTarget();
+				System.out.print("," + v.getId());
+			}
+			System.out.println();
+			sp.clear();
+			hopIndices.clear();
+		}
+	}
 }
