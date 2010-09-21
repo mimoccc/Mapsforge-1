@@ -223,6 +223,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final byte ZOOM_MAX = 21;
 
 	private ArrayList<Point> additionalCoastlinePoints;
+	private ArrayList<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
 	private float bboxLatitude2;
@@ -254,12 +255,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
 	private boolean islandSituation;
+	private LabelPlacement labelPlacement;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
 	private MapSymbols mapSymbols;
 	private boolean needHelperPoint;
 	private ArrayList<PointTextContainer> nodes;
-	private ArrayList<PointTextContainer> areaLabels;
 	private boolean noWaterBackground;
 	private int pathLengthInPixel;
 	private float previousX;
@@ -274,9 +275,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
-
-	// -----------------------------
-	private LabelPlacement labelPlacement = new LabelPlacement();
 
 	/**
 	 * Draws the name of an area if the zoomLevel level is high enough.
@@ -1554,7 +1552,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			return false;
 		}
 
-		this.nodes = labelPlacement.placeLabels(this.nodes, this.symbols, this.areaLabels,
+		this.nodes = this.labelPlacement.placeLabels(this.nodes, this.symbols, this.areaLabels,
 				this.currentTile);
 
 		drawMapSymbols(this.symbols);
@@ -3203,6 +3201,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	@Override
 	final void setup(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
+
+		this.labelPlacement = new LabelPlacement();
 
 		// create the MapSymbols
 		this.mapSymbols = new MapSymbols();

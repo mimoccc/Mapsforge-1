@@ -42,7 +42,6 @@ class PointTextContainer {
 	 * @param paintBack
 	 *            the paintBack for the point.
 	 */
-
 	PointTextContainer(String text, float x, float y, Paint paintFront, Paint paintBack) {
 		this.text = text;
 		this.x = x;
@@ -51,9 +50,8 @@ class PointTextContainer {
 		this.paintBack = paintBack;
 		this.symbol = null;
 
-		boundary = new android.graphics.Rect();
-		paintBack.getTextBounds(text, 0, text.length(), boundary);
-
+		this.boundary = new android.graphics.Rect();
+		paintBack.getTextBounds(text, 0, text.length(), this.boundary);
 	}
 
 	/**
@@ -82,9 +80,8 @@ class PointTextContainer {
 		this.paintBack = paintBack;
 		this.symbol = symbol;
 
-		boundary = new android.graphics.Rect();
-		paintBack.getTextBounds(text, 0, text.length(), boundary);
-
+		this.boundary = new android.graphics.Rect();
+		paintBack.getTextBounds(text, 0, text.length(), this.boundary);
 	}
 
 	/**
@@ -100,7 +97,6 @@ class PointTextContainer {
 	 * @param paintFront
 	 *            the paintFront for the point.
 	 */
-
 	PointTextContainer(String text, float x, float y, Paint paintFront) {
 		this.text = text;
 		this.x = x;
@@ -109,9 +105,7 @@ class PointTextContainer {
 		this.paintBack = null;
 		this.symbol = null;
 
-		boundary = new android.graphics.Rect();
-		paintFront.getTextBounds(text, 0, text.length(), boundary);
-
+		this.boundary = new android.graphics.Rect();
+		paintFront.getTextBounds(text, 0, text.length(), this.boundary);
 	}
-
 }
