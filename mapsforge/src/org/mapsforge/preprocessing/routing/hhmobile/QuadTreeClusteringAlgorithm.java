@@ -23,30 +23,95 @@ import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.hhmobile.QuadTreeClustering.QuadTreeCluster;
 
+/**
+ * This class clusters graph implementing this packages graph interface. The well known quad
+ * tree algorithm splits rectangles into four quadrants until the recursion anchor is reached,
+ * that is to say the rectangles are small enough. There are different heuristics to choose the
+ * point of reference. Three of them are implemented which differ only a little.
+ */
 class QuadTreeClusteringAlgorithm {
 
+	/**
+	 * the name of this alorithm.
+	 */
 	public static final String ALGORITHM_NAME = "quad_tree";
-
+	/**
+	 * This heuristic chooses the center of the rectangle as split coordinate.
+	 */
 	public static final int HEURISTIC_CENTER = 0;
+	/**
+	 * This heuristic chooses the medians of latitudes and longitudes as split coordinate.
+	 */
 	public static final int HEURISTIC_MEDIAN = 1;
-	public static final int HEURISTIC_AVERAGE = 2;
 
+	/**
+	 * This heuristic chooses the average latitude and average longitude as split coordinate.
+	 */
+	public static final int HEURISTIC_AVERAGE = 2;
+	/**
+	 * The default heuristic, used if an invalid heuristic is specified.
+	 */
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MEDIAN;
+	/**
+	 * Maps heuristic identifiers to heuristic names, used for console output.
+	 */
 	private static final String[] HEURISTIC_NAMES = new String[] { "center", "median",
 			"average" };
+	/**
+	 * A nice quicksort implementation.
+	 */
 	private static final QuickSort quicksort = new QuickSort();
 
-	public static QuadTreeClustering[] computeClustering(Graph[] graph, int[] lon, int[] lat,
+	/**
+	 * Computes the quad tree clustering.
+	 * 
+	 * @param graph
+	 *            a set of graphs, here each graph is a level of a multileveled graph.
+	 * @param longitudeE6
+	 *            the longitudes of all vertices of the graph.
+	 * @param latitudeE6
+	 *            the latitudes of all vertices of the graph.
+	 * @param heuristik
+	 *            have a look at the public static variables.
+	 * @param threshold
+	 *            limit on number of vertices, defining the recursion anchor.
+	 * @return the clustering of all levels.
+	 * @throws IllegalArgumentException
+	 *             if parameters are wrong.
+	 */
+	public static QuadTreeClustering[] computeClustering(Graph[] graph, int[] longitudeE6,
+			int[] latitudeE6,
 			int heuristik, int threshold) throws IllegalArgumentException {
 		QuadTreeClustering[] clustering = new QuadTreeClustering[graph.length];
 		for (int i = 0; i < graph.length; i++) {
-			clustering[i] = computeClustering(graph[i], lon, lat, heuristik, threshold,
+			clustering[i] = computeClustering(graph[i], longitudeE6, latitudeE6, heuristik,
+					threshold,
 					graph[0].numVertices());
 		}
 		return clustering;
 	}
 
-	public static QuadTreeClustering computeClustering(Graph graph, int[] lon, int[] lat,
+	/**
+	 * Compute the clustering for a single graph.
+	 * 
+	 * @param graph
+	 *            the graph to be clustered.
+	 * @param longitudeE6
+	 *            the longitudes of all vertices of the graph.
+	 * @param latitudeE6
+	 *            the latitudes of all vertices of the graph.
+	 * @param heuristik
+	 *            have a look at the public static variables.
+	 * @param threshold
+	 *            limit on number of vertices, defining the recursion anchor.
+	 * @param numVerticesLvlZero
+	 *            number of vertices in level 0
+	 * @return the clustering of the graph.
+	 * @throws IllegalArgumentException
+	 *             if parameters are wrong.
+	 */
+	public static QuadTreeClustering computeClustering(Graph graph, int[] longitudeE6,
+			int[] latitudeE6,
 			int heuristik, int threshold, int numVerticesLvlZero)
 			throws IllegalArgumentException {
 		System.out.println("computing quad-clustering (|V|=" + graph.numVertices()
@@ -59,8 +124,8 @@ class QuadTreeClusteringAlgorithm {
 		for (Iterator<? extends Vertex> iter = graph.getVertices(); iter.hasNext();) {
 			Vertex v = iter.next();
 			vertexId[i] = v.getId();
-			lon_[i] = lon[v.getId()];
-			lat_[i] = lat[v.getId()];
+			lon_[i] = longitudeE6[v.getId()];
+			lat_[i] = latitudeE6[v.getId()];
 			i++;
 		}
 
@@ -71,55 +136,81 @@ class QuadTreeClusteringAlgorithm {
 		return clustering;
 	}
 
-	private static void subdivide(int vertexId[], int lon[], int lat[], int l, int r,
+	/**
+	 * Recursive subdivision of rectangles.
+	 * 
+	 * @param vertexId
+	 *            the ids of the vertices.
+	 * @param longitudeE6
+	 *            the longitudes of the vertices.
+	 * @param latitudeE6
+	 *            the latitudes of the vertices.
+	 * @param l
+	 *            the left boundary of the range to be regarded. (array index)
+	 * @param r
+	 *            the right boundary of the range to be regarded. (array index)
+	 * @param heuristic
+	 *            split heuristic.
+	 * @param clustering
+	 *            the clustering which will be modified.
+	 * @param threshold
+	 *            recursive anchor, threshold oon number of vertices.
+	 */
+	private static void subdivide(int vertexId[], int longitudeE6[], int latitudeE6[], int l,
+			int r,
 			int heuristic, QuadTreeClustering clustering, int threshold) {
 		if ((r - l) > threshold) {
 			// subdivide
-			GeoCoordinate splitCoord = getSplitCoordinate(vertexId, lon, lat, l, r, heuristic);
+			GeoCoordinate splitCoord = getSplitCoordinate(vertexId, longitudeE6, latitudeE6, l,
+					r, heuristic);
 			int splitLon = splitCoord.getLongitudeE6();
 			int splitLat = splitCoord.getLatitudeE6();
-			SortableVertices s = new SortableVertices(vertexId, lon, lat);
+			SortableVertices s = new SortableVertices(vertexId, longitudeE6, latitudeE6);
 
 			// 1st quadrant
 			int j = l - 1;
 			for (int i = j + 1; i < r; i++) {
-				if (lat[i] >= splitLat && lon[i] <= splitLon) {
+				if (latitudeE6[i] >= splitLat && longitudeE6[i] <= splitLon) {
 					s.swap(i, ++j);
 				}
 			}
 			int l_ = l;
 			int r_ = j + 1;
-			subdivide(vertexId, lon, lat, l_, r_, heuristic, clustering, threshold);
+			subdivide(vertexId, longitudeE6, latitudeE6, l_, r_, heuristic, clustering,
+					threshold);
 
 			// 2nd quadrant
 			for (int i = j + 1; i < r; i++) {
-				if (lat[i] >= splitLat && lon[i] > splitLon) {
+				if (latitudeE6[i] >= splitLat && longitudeE6[i] > splitLon) {
 					s.swap(i, ++j);
 				}
 			}
 			l_ = r_;
 			r_ = j + 1;
-			subdivide(vertexId, lon, lat, l_, r_, heuristic, clustering, threshold);
+			subdivide(vertexId, longitudeE6, latitudeE6, l_, r_, heuristic, clustering,
+					threshold);
 
 			// 3rd quadrant
 			for (int i = j + 1; i < r; i++) {
-				if (lat[i] < splitLat && lon[i] <= splitLon) {
+				if (latitudeE6[i] < splitLat && longitudeE6[i] <= splitLon) {
 					s.swap(i, ++j);
 				}
 			}
 			l_ = r_;
 			r_ = j + 1;
-			subdivide(vertexId, lon, lat, l_, r_, heuristic, clustering, threshold);
+			subdivide(vertexId, longitudeE6, latitudeE6, l_, r_, heuristic, clustering,
+					threshold);
 
 			// 4rd quadrant
 			for (int i = j + 1; i < r; i++) {
-				if (lat[i] < splitLat && lon[i] > splitLon) {
+				if (latitudeE6[i] < splitLat && longitudeE6[i] > splitLon) {
 					s.swap(i, ++j);
 				}
 			}
 			l_ = r_;
 			r_ = j + 1;
-			subdivide(vertexId, lon, lat, l_, r_, heuristic, clustering, threshold);
+			subdivide(vertexId, longitudeE6, latitudeE6, l_, r_, heuristic, clustering,
+					threshold);
 
 		} else {
 			// recursive anchor - no subdivision - create new cluster if cluster is not empty
@@ -132,46 +223,93 @@ class QuadTreeClusteringAlgorithm {
 		}
 	}
 
-	private static GeoCoordinate getSplitCoordinate(int vertexId[], int lon[], int lat[],
+	/**
+	 * Gives the coordinate to split at, depending oon the given heuristic.
+	 * 
+	 * @param vertexId
+	 *            ids of all vertices.
+	 * @param longitudeE6
+	 *            latitudes of all vertices.
+	 * @param latitudeE6
+	 *            latitudes of all vertices.
+	 * @param l
+	 *            the left boundary of the range to be regarded. (array index)
+	 * @param r
+	 *            the right boundary of the range to be regarded. (array index)
+	 * @param heuristic
+	 *            split heuristic.
+	 * @return the coordinate to split at.
+	 */
+	private static GeoCoordinate getSplitCoordinate(int vertexId[], int longitudeE6[],
+			int latitudeE6[],
 			int l, int r, int heuristic) {
 		switch (heuristic) {
 			case HEURISTIC_CENTER:
-				return getCenterCoordinate(lon, lat, l, r);
+				return getCenterCoordinate(longitudeE6, latitudeE6, l, r);
 			case HEURISTIC_MEDIAN:
-				return getMedianCoordinate(vertexId, lon, lat, l, r);
+				return getMedianCoordinate(vertexId, longitudeE6, latitudeE6, l, r);
 			case HEURISTIC_AVERAGE:
-				return getAverageCoordinate(lon, lat, l, r);
+				return getAverageCoordinate(longitudeE6, latitudeE6, l, r);
 			default:
-				return getSplitCoordinate(vertexId, lon, lat, l, r, HEURISTIC_DEFAULT);
+				return getSplitCoordinate(vertexId, longitudeE6, latitudeE6, l, r,
+						HEURISTIC_DEFAULT);
 		}
 	}
 
-	private static GeoCoordinate getCenterCoordinate(int lon[], int lat[], int l, int r) {
-		long minLon = Integer.MAX_VALUE;
-		long minLat = Integer.MAX_VALUE;
-		long maxLon = Integer.MIN_VALUE;
-		long maxLat = Integer.MIN_VALUE;
+	/**
+	 * Gives the split coordinate for the center heuristic
+	 * 
+	 * @param longitudeE6
+	 *            the longitudes of the vertices.
+	 * @param latitudeE6
+	 *            the latitudes of the vertices.
+	 * @param l
+	 *            the left boundary of the range to be regarded. (array index)
+	 * @param r
+	 *            the right boundary of the range to be regarded. (array index)
+	 * @return Returns the split coordinate.
+	 */
+	private static GeoCoordinate getCenterCoordinate(int longitudeE6[], int latitudeE6[],
+			int l, int r) {
+		long minLongitude = Integer.MAX_VALUE;
+		long minLatitude = Integer.MAX_VALUE;
+		long maxLongitude = Integer.MIN_VALUE;
+		long maxLatitude = Integer.MIN_VALUE;
 
 		for (int i = l; i < r; i++) {
-			minLon = Math.min(lon[i], minLon);
-			minLat = Math.min(lat[i], minLat);
-			maxLon = Math.max(lon[i], maxLon);
-			maxLat = Math.max(lat[i], maxLat);
+			minLongitude = Math.min(longitudeE6[i], minLongitude);
+			minLatitude = Math.min(latitudeE6[i], minLatitude);
+			maxLongitude = Math.max(longitudeE6[i], maxLongitude);
+			maxLatitude = Math.max(latitudeE6[i], maxLatitude);
 		}
 
-		int longitude = (int) ((minLon + maxLon) / 2);
-		int latitude = (int) ((minLat + maxLat) / 2);
+		int longitude = (int) ((minLongitude + maxLongitude) / 2);
+		int latitude = (int) ((minLatitude + maxLatitude) / 2);
 
 		return new GeoCoordinate(latitude, longitude);
 	}
 
-	private static GeoCoordinate getAverageCoordinate(int lon[], int lat[], int l, int r) {
+	/**
+	 * Gives the split coordinate for the average heuristic
+	 * 
+	 * @param longitudeE6
+	 *            the longitudes of the vertices.
+	 * @param latitudeE6
+	 *            the latitudes of the vertices.
+	 * @param l
+	 *            the left boundary of the range to be regarded. (array index)
+	 * @param r
+	 *            the right boundary of the range to be regarded. (array index)
+	 * @return Returns the split coordinate.
+	 */
+	private static GeoCoordinate getAverageCoordinate(int longitudeE6[], int latitudeE6[],
+			int l, int r) {
 		double sumLon = 0d;
 		double sumLat = 0d;
 
 		for (int i = l; i < r; i++) {
-			sumLon += GeoCoordinate.intToDouble(lon[i]);
-			sumLat += GeoCoordinate.intToDouble(lat[i]);
+			sumLon += GeoCoordinate.intToDouble(longitudeE6[i]);
+			sumLat += GeoCoordinate.intToDouble(latitudeE6[i]);
 		}
 
 		double longitude = sumLon / (r - l);
@@ -180,37 +318,65 @@ class QuadTreeClusteringAlgorithm {
 		return new GeoCoordinate(latitude, longitude);
 	}
 
-	private static GeoCoordinate getMedianCoordinate(int[] vertexId, int lon[], int lat[],
+	/**
+	 * Gives the split coordinate for the median heuristic
+	 * 
+	 * @param vertexId
+	 *            ids of all vertices.
+	 * @param longitudeE6
+	 *            the longitudes of the vertices.
+	 * @param latitudeE6
+	 *            the latitudes of the vertices.
+	 * @param l
+	 *            the left boundary of the range to be regarded. (array index)
+	 * @param r
+	 *            the right boundary of the range to be regarded. (array index)
+	 * @return Returns the split coordinate.
+	 */
+	private static GeoCoordinate getMedianCoordinate(int[] vertexId, int longitudeE6[],
+			int latitudeE6[],
 			int l, int r) {
-		SortableVertices s = new SortableVertices(vertexId, lon, lat);
+		SortableVertices s = new SortableVertices(vertexId, longitudeE6, latitudeE6);
 		int medianIdx = l + ((r - l) / 2);
 
-		s.setSortByLon();
+		s.setSortByLongitude();
 		quicksort.sort(s, l, r);
-		int longitude = lon[medianIdx];
+		int longitude = longitudeE6[medianIdx];
 
-		s.setSortByLat();
+		s.setSortByLattitude();
 		quicksort.sort(s, l, r);
-		int latitude = lat[medianIdx];
+		int latitude = latitudeE6[medianIdx];
 
 		return new GeoCoordinate(latitude, longitude);
 	}
 
+	/**
+	 * Need to implement this interface for using the quicksort algorithm.
+	 */
 	private static class SortableVertices implements IndexedSortable {
 
+		/**
+		 * holds vertex ids, longitudes and latitudes.
+		 */
 		private final int[][] data;
 		private int sortDim;
 
-		public SortableVertices(int[] vertexId, int[] lon, int[] lat) {
-			this.data = new int[][] { vertexId, lon, lat };
+		public SortableVertices(int[] vertexId, int[] longitudeE6, int[] latitudeE6) {
+			this.data = new int[][] { vertexId, longitudeE6, latitudeE6 };
 			sortDim = 0;
 		}
 
-		public void setSortByLon() {
+		/**
+		 * sets the sort dimension to longitude.
+		 */
+		public void setSortByLongitude() {
 			sortDim = 1;
 		}
 
-		public void setSortByLat() {
+		/**
+		 * sets the sort dimension to longitude.
+		 */
+		public void setSortByLattitude() {
 			sortDim = 2;
 		}
 

@@ -21,6 +21,9 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Collection;
 
+/**
+ * Quad-tree specific implementation of a Clustering.
+ */
 class QuadTreeClustering implements Clustering {
 
 	private static final long serialVersionUID = 1L;
@@ -28,8 +31,15 @@ class QuadTreeClustering implements Clustering {
 	private final TIntObjectHashMap<QuadTreeCluster> clusters;
 	final int[] clusterIds;
 
+	/**
+	 * next cluster id to be assigned.
+	 */
 	private int nextClusterId;
 
+	/**
+	 * @param maxVertexId
+	 *            highest vertex id within the graph.
+	 */
 	public QuadTreeClustering(int maxVertexId) {
 		this.clusters = new TIntObjectHashMap<QuadTreeCluster>();
 		this.clusterIds = new int[maxVertexId + 1];
@@ -40,6 +50,11 @@ class QuadTreeClustering implements Clustering {
 		}
 	}
 
+	/**
+	 * Adds a new cluster to this clustering.
+	 * 
+	 * @return Returns the newly added cluster.
+	 */
 	public QuadTreeCluster addCluster() {
 		int clusterId = nextClusterId++;
 		QuadTreeCluster c = new QuadTreeCluster(clusterId);

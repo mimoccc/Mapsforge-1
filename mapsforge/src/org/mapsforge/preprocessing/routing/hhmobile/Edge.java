@@ -16,12 +16,24 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
+/**
+ * Package private Edge to allow reusing the clustering code on different graph implementations.
+ */
 interface Edge {
 
+	/**
+	 * @return Returns the source vertex of this edge.
+	 */
 	public Vertex getSource();
 
+	/**
+	 * @return Returns the target vertex of this edge.
+	 */
 	public Vertex getTarget();
 
+	/**
+	 * @return Returns the weight of this edge.
+	 */
 	public int getWeight();
 
 }

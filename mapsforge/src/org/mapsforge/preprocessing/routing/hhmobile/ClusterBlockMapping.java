@@ -22,11 +22,28 @@ import java.util.Collection;
 
 import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
 
+/**
+ * This class implements a mapping from cluster to blocks and vice versa. This is analog to a
+ * specialized double hash map. Additionally block ids can be reassigned by the swap operation.
+ */
 final class ClusterBlockMapping {
 
+	/**
+	 * maps cluster to block ids.
+	 */
 	private final TObjectIntHashMap<Cluster> blockIds;
+	/**
+	 * All clusters of all levels. The array index defines the block id of each cluster.
+	 * 
+	 */
 	private final Cluster[] clusters;
 
+	/**
+	 * Construct the bidirectional mapping between clusters and block ids.
+	 * 
+	 * @param clustering
+	 *            the clustering.
+	 */
 	public ClusterBlockMapping(Clustering[] clustering) {
 		this.clusters = new Cluster[ClusteringUtil.getGlobalNumClusters(clustering)];
 		this.blockIds = new TObjectIntHashMap<Cluster>();
@@ -40,12 +57,27 @@ final class ClusterBlockMapping {
 		}
 	}
 
+	/**
+	 * swaps the ids of the i-th and the j-th cluster.
+	 * 
+	 * @param i
+	 *            the first cluster to be swapped.
+	 * @param j
+	 *            the second cluster to be swapped.
+	 */
 	public void swapBlockIds(int i, int j) {
 		Utils.swap(clusters, i, j);
 		blockIds.put(clusters[i], i);
 		blockIds.put(clusters[j], j);
 	}
 
+	/**
+	 * Maps the given cluster to block ids.
+	 * 
+	 * @param col
+	 *            the clusters to be mapped to blcok ids.
+	 * @return return the block ids in the same order as the given clusters.
+	 */
 	public int[] getBlockIds(Collection<Cluster> col) {
 		int[] arr = new int[col.size()];
 		int i = 0;
@@ -55,14 +87,31 @@ final class ClusterBlockMapping {
 		return arr;
 	}
 
+	/**
+	 * Maps from cluster to the block id.
+	 * 
+	 * @param cluster
+	 *            input for mapping. Must not be null.
+	 * @return Returns the assigned block id.
+	 */
 	public int getBlockId(Cluster cluster) {
 		return blockIds.get(cluster);
 	}
 
+	/**
+	 * Maps from block id to cluster.
+	 * 
+	 * @param blockId
+	 *            must be valid.
+	 * @return Returns the associated cluster.
+	 */
 	public Cluster getCluster(int blockId) {
 		return clusters[blockId];
 	}
 
+	/**
+	 * @return Returns the number of clusters / blocks.
+	 */
 	public int size() {
 		return clusters.length;
 	}

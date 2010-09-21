@@ -18,14 +18,34 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 
 import java.util.Iterator;
 
+/**
+ * Package private graph to allow reusing the clustering code on different graph
+ * implementations.
+ */
 interface Graph {
 
+	/**
+	 * @return Iterator making available all vertices of this graph.
+	 */
 	public Iterator<? extends Vertex> getVertices();
 
+	/**
+	 * @return Returns the number of vertices in this graph.
+	 */
 	public int numVertices();
 
+	/**
+	 * @return Returns the number of edges in this graph.
+	 */
 	public int numEdges();
 
+	/**
+	 * Looks up the vertex of given id.
+	 * 
+	 * @param id
+	 *            identifier of the vertex.
+	 * @return the desired vertex.
+	 */
 	public Vertex getVertex(int id);
 
 }

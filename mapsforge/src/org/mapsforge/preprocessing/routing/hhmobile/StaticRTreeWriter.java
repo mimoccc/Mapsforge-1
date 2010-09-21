@@ -32,7 +32,14 @@ import org.mapsforge.preprocessing.routing.hhmobile.util.Utils;
  */
 class StaticRTreeWriter {
 
+	/**
+	 * The number of byte required for storing a single node entry.
+	 */
 	private static final int BYTES_PER_ENTRY = 20;
+	/**
+	 * The header magic bytes written at the start of the header of this r-tree. This is used
+	 * for checking if the file is likely contain a valid r-tree representation.
+	 */
 	private static final byte[] HEADER_MAGIC = HHGlobals.STATIC_RTREE_HEADER_MAGIC;
 
 	/**
@@ -277,81 +284,4 @@ class StaticRTreeWriter {
 			return minLon.length;
 		}
 	}
-
-	// private static BufferedCanvas canvas;
-	//
-	// private static void drawRect(Rect r, Color c) {
-	// canvas.drawLine(r.minLon, r.minLat, r.maxLon, r.minLat, c);
-	// canvas.drawLine(r.maxLon, r.minLat, r.maxLon, r.maxLat, c);
-	// canvas.drawLine(r.maxLon, r.maxLat, r.minLon, r.maxLat, c);
-	// canvas.drawLine(r.minLon, r.maxLat, r.minLon, r.minLat, c);
-	// }
-	//
-	// public static void main(String[] args) throws IOException {
-	// int width = 1600;
-	// int height = 1100;
-	// int n = 685;
-	// int blockSizeBytes = 4096;
-	// File targetFile = new File("rtree.dat");
-	// canvas = new BufferedCanvas(width, height);
-	// JFrame frame = new JFrame();
-	// frame.getContentPane().add(canvas);
-	// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	// frame.pack();
-	//
-	// System.out.println("generating rectangles");
-	// canvas.clear(Color.BLACK);
-	// int fac = 10;
-	// Rect[] rect = getRadomRects(0, width * fac, 0, height * fac, 4, 50, n);
-	// Color c = Color.WHITE;
-	// for (Rect r : rect) {
-	// drawRect(r, c);
-	// }
-	// frame.setVisible(true);
-	//
-	// int[] minLon = new int[n];
-	// int[] maxLon = new int[n];
-	// int[] minLat = new int[n];
-	// int[] maxLat = new int[n];
-	// int[] pointer = new int[n];
-	// for (int i = 0; i < n; i++) {
-	// minLon[i] = rect[i].minLon;
-	// maxLon[i] = rect[i].maxLon;
-	// minLat[i] = rect[i].minLat;
-	// maxLat[i] = rect[i].maxLat;
-	// pointer[i] = i;
-	// }
-	//
-	// System.out.println("pack rtree");
-	// packSortTileRecursive(minLon, maxLon, minLat, maxLat, pointer, blockSizeBytes,
-	// targetFile);
-	//
-	// System.out.println("query overlaps");
-	// StaticRTree tree = new StaticRTree(targetFile, 0);
-	// // Rect q = new Rect(100, 500, 100, 600);
-	// Rect q = new Rect(Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE,
-	// Integer.MAX_VALUE);
-	//
-	// LinkedList<Integer> list = tree.overlaps(q.minLon, q.maxLon, q.minLat, q.maxLat);
-	// for (int i : list) {
-	// drawRect(rect[i], Color.GREEN);
-	// }
-	// drawRect(q, Color.RED);
-	// System.out.println("ready");
-	// }
-	//
-	// private static Rect[] getRadomRects(int minLon, int maxLon, int minLat, int maxLat,
-	// int minDelta, int maxDelta, int n) {
-	// Random rnd = new Random();
-	// Rect[] rect = new Rect[n];
-	// for (int i = 0; i < rect.length; i++) {
-	// int rMinLon = minLon + rnd.nextInt(maxLon - minLon);
-	// int rMaxLon = rMinLon + minDelta + rnd.nextInt(maxDelta - minDelta);
-	// int rMinLat = minLat + rnd.nextInt(maxLat - minLat);
-	// int rMaxLat = rMinLat + minDelta + rnd.nextInt(maxDelta - minDelta);
-	//
-	// rect[i] = new Rect(rMinLon, rMaxLon, rMinLat, rMaxLat);
-	// }
-	// return rect;
-	// }
 }

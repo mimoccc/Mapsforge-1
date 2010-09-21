@@ -16,10 +16,20 @@
  */
 package org.mapsforge.preprocessing.routing.hhmobile;
 
+/**
+ * Package private vertex to allow reusing the clustering code on different graph
+ * implementations.
+ */
 interface Vertex {
 
+	/**
+	 * @return Returns the identifier of this vertex.
+	 */
 	public int getId();
 
+	/**
+	 * @return Returns the outgoing adjacency list of this vertex.
+	 */
 	public Edge[] getOutboundEdges();
 
 }
