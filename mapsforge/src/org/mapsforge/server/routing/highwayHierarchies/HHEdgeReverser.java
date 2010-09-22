@@ -34,7 +34,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * Hash index for finding reverse edges. This is usefull for all bidirected dijkstra
  * derivatives, to quickly determine the forward edge for a given backward edge.
  * 
- * @author Frank Viernau
+ * 
  */
 class HHEdgeReverser implements Serializable {
 

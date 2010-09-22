@@ -37,7 +37,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 /**
  * Maps vertex id|s to table rows / cols and hold distances in an array.
  * 
- * @author Frank Viernau
+ * 
  */
 public class DistanceTable implements Serializable {
 

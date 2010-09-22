@@ -42,7 +42,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
 /**
  * Maps shortcuts to low level edges by a multi leveled index.
  * 
- * @author Frank Viernau
+ * 
  */
 class HHEdgeExpanderRecursive implements Serializable {
 
