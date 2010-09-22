@@ -18,7 +18,6 @@ package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 
 import java.io.IOException;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitSerializer;
 
 /**
  * Bit-granular stream implemented on top of the BitSerializer class for writing arrays.

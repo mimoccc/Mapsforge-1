@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitSerializer;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.BitSerializer;
 
 /**
  * This class implements a run length encoded index of pointers, pointing to variable length

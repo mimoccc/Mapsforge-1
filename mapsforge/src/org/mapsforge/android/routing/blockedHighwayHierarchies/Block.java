@@ -16,7 +16,7 @@
  */
 package org.mapsforge.android.routing.blockedHighwayHierarchies;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitSerializer;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.BitSerializer;
 
 /**
  *
