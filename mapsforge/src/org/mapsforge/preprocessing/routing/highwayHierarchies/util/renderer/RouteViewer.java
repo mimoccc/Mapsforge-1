@@ -35,8 +35,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.jdesktop.swingx.JXMapKit;
-import org.jdesktop.swingx.JXMapKit.DefaultProviders;
 import org.jdesktop.swingx.JXMapViewer;
+import org.jdesktop.swingx.JXMapKit.DefaultProviders;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
 import org.mapsforge.core.GeoCoordinate;
@@ -45,13 +45,14 @@ import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
 import org.mapsforge.server.routing.RouterFactory;
 
-public class RouteViewer {
+class RouteViewer {
 
 	private static final long serialVersionUID = 1L;
 	private final JFrame frame;
-	private final JXMapKit mapKit;
-	private final RouteOverlay overlay;
-	private GeoPosition routeSource, routeDestination;
+	final JXMapKit mapKit;
+	final RouteOverlay overlay;
+	GeoPosition routeSource;
+	GeoPosition routeDestination;
 
 	public RouteViewer() {
 		this.frame = new JFrame("RouteViewer");
@@ -68,9 +69,6 @@ public class RouteViewer {
 		mapKit.getMainMap().addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				GeoPosition geoPoint = mapKit.getMainMap().convertPointToGeoPosition(
-						evt.getPoint());
-
 				mapKit.setAddressLocation((mapKit.getMainMap().convertPointToGeoPosition(evt
 						.getPoint())));
 			}
@@ -88,8 +86,8 @@ public class RouteViewer {
 		private static final long serialVersionUID = 1L;
 
 		private MouseAdapter mouseListener;
-		private Color cSelected = Color.green.darker().darker();
-		private Point position;
+		Color cSelected = Color.green.darker().darker();
+		Point position;
 
 		public PopMenu() {
 			super();
@@ -132,8 +130,7 @@ public class RouteViewer {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
 								routeSource.getLongitude()),
 								new GeoCoordinate(routeDestination.getLatitude(),
-										routeDestination.getLongitude()));
-						;
+								routeDestination.getLongitude()));
 						routeSource = null;
 						routeDestination = null;
 					}
@@ -161,8 +158,7 @@ public class RouteViewer {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
 								routeSource.getLongitude()),
 								new GeoCoordinate(routeDestination.getLatitude(),
-										routeDestination.getLongitude()));
-						;
+								routeDestination.getLongitude()));
 						routeSource = null;
 						routeDestination = null;
 					}
@@ -252,12 +248,12 @@ public class RouteViewer {
 									.getMainMap()
 									.getTileFactory()
 									.geoToPixel(new GeoPosition(cs),
-											mapKit.getMainMap().getZoom());
+									mapKit.getMainMap().getZoom());
 							Point2D t = mapKit
 									.getMainMap()
 									.getTileFactory()
 									.geoToPixel(new GeoPosition(ct),
-											mapKit.getMainMap().getZoom());
+									mapKit.getMainMap().getZoom());
 							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
 									(int) t.getY());
 						}
@@ -268,8 +264,4 @@ public class RouteViewer {
 		}
 	}
 
-	public static void main(String[] args) {
-
-		RouteViewer mf = new RouteViewer();
-	}
 }

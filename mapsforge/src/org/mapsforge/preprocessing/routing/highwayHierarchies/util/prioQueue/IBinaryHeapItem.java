@@ -17,12 +17,16 @@
 package org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue;
 
 /**
- * @author Frank Viernau
+ * To be used with the binary heap implementation. Each heap item can only be added to one heap.
+ * 
  * @param <K>
- *            the heap key.
+ *            class of the key
  */
 public interface IBinaryHeapItem<K extends Comparable<K>> {
 
+	/**
+	 * @return index within the array of the heap.
+	 */
 	public int getHeapIndex();
 
 	/**
@@ -41,5 +45,8 @@ public interface IBinaryHeapItem<K extends Comparable<K>> {
 	 */
 	public void setHeapKey(K key);
 
+	/**
+	 * @return the key of this item.
+	 */
 	public K getHeapKey();
 }

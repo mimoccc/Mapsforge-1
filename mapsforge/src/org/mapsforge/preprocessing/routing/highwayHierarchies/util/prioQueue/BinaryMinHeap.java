@@ -19,7 +19,6 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue;
 import java.util.ArrayList;
 
 /**
- * @author Frank Viernau
  * @param <I>
  *            Class holding heap data.
  * @param <K>
@@ -32,11 +31,19 @@ public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>
 	private ArrayList<I> array;
 	private int size;
 
+	/**
+	 * @param initialSize
+	 *            initial size of the array.
+	 */
 	public BinaryMinHeap(int initialSize) {
 		this.array = new ArrayList<I>(initialSize);
 		this.size = 0;
 	}
 
+	/**
+	 * @param item
+	 *            to insert.
+	 */
 	public void insert(I item) {
 		item.setHeapIndex(size);
 		array.add(item);
@@ -44,6 +51,12 @@ public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>
 		moveUpward(size - 1);
 	}
 
+	/**
+	 * @param item
+	 *            its key will be decreased.
+	 * @param newKey
+	 *            new key value.
+	 */
 	public void decreaseKey(I item, K newKey) {
 		if (newKey.compareTo(item.getHeapKey()) <= 0) {
 			item.setHeapKey(newKey);
@@ -51,6 +64,9 @@ public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>
 		}
 	}
 
+	/**
+	 * @return the item with minimum key value
+	 */
 	public I extractMin() {
 		if (size == 0)
 			return null;
@@ -70,15 +86,24 @@ public class BinaryMinHeap<I extends IBinaryHeapItem<K>, K extends Comparable<K>
 		return root;
 	}
 
+	/**
+	 * removes all items from this heap.
+	 */
 	public void clear() {
 		this.array.clear();
 		this.size = 0;
 	}
 
+	/**
+	 * @return true if siye is 0.
+	 */
 	public boolean isEmpty() {
 		return size == 0;
 	}
 
+	/**
+	 * @return number of items in this heap.
+	 */
 	public int size() {
 		return this.size;
 	}

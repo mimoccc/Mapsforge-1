@@ -26,20 +26,50 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 
+/**
+ * Wrapper for the serializable interface / object stream classes.
+ */
 public class Serializer {
 
+	/**
+	 * @param oStream
+	 *            stream to write to.
+	 * @param s
+	 *            object to be written.
+	 * @throws IOException
+	 *             write error
+	 */
 	public static void serialize(OutputStream oStream, Serializable s) throws IOException {
 		ObjectOutputStream out = new ObjectOutputStream(oStream);
 		out.writeObject(s);
 		out.flush();
 	}
 
+	/**
+	 * @param dst
+	 *            file to write to
+	 * @param s
+	 *            object to be written
+	 * @throws IOException
+	 *             write error
+	 */
 	public static void serialize(File dst, Serializable s) throws IOException {
 		FileOutputStream oStream = new FileOutputStream(dst);
 		serialize(oStream, s);
 		oStream.close();
 	}
 
+	/**
+	 * @param <S>
+	 *            class of the object to be read.
+	 * @param iStream
+	 *            stream to read object from
+	 * @return the read object.
+	 * @throws IOException
+	 *             read error.
+	 * @throws ClassNotFoundException
+	 *             cast error.
+	 */
 	public static <S extends Serializable> S deserialize(InputStream iStream)
 			throws IOException, ClassNotFoundException {
 		ObjectInputStream in = new ObjectInputStream(iStream);
@@ -48,6 +78,17 @@ public class Serializer {
 		return s;
 	}
 
+	/**
+	 * @param <S>
+	 *            class of the object to be read.
+	 * @param src
+	 *            file to read from
+	 * @return the read object.
+	 * @throws IOException
+	 *             read error.
+	 * @throws ClassNotFoundException
+	 *             cast error.
+	 */
 	public static <S extends Serializable> S deserialize(File src) throws IOException,
 			ClassNotFoundException {
 		FileInputStream iStream = new FileInputStream(src);

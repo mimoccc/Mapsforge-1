@@ -19,7 +19,9 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 import java.io.Serializable;
 
 /**
- * @author Frank Viernau
+ * dynamic growable int array, increases only by a constant amount of bytes, implementations i
+ * had seen always grow by a factor of current size, which may give out of memory exceptions too
+ * early.
  */
 public class IntArrayGrowable implements Serializable {
 
@@ -34,6 +36,10 @@ public class IntArrayGrowable implements Serializable {
 	private final int chunkSize;
 	static Runtime r = Runtime.getRuntime();
 
+	/**
+	 * @param chunkSize
+	 *            amount for increasing siye.
+	 */
 	public IntArrayGrowable(int chunkSize) {
 		this.chunkSize = chunkSize;
 		data = new int[1][chunkSize];
@@ -42,6 +48,10 @@ public class IntArrayGrowable implements Serializable {
 		numElements = 0;
 	}
 
+	/**
+	 * @param val
+	 *            added to the end
+	 */
 	public void add(int val) {
 		if (offsetJ == chunkSize) {
 			addChunk();
@@ -52,28 +62,37 @@ public class IntArrayGrowable implements Serializable {
 		numElements++;
 	}
 
+	/**
+	 * @param idx
+	 *            index of the value
+	 * @return the value at index.
+	 */
 	public int get(int idx) {
 		int i = idx / chunkSize;
 		int j = idx % chunkSize;
 		return data[i][j];
 	}
 
+	/**
+	 * @param idx
+	 *            the position to set the value.
+	 * @param val
+	 *            new value
+	 */
 	public void set(int idx, int val) {
 		int i = idx / chunkSize;
 		int j = idx % chunkSize;
 		data[i][j] = val;
 	}
 
+	/**
+	 * @return siye of this array
+	 */
 	public int size() {
 		return numElements;
 	}
 
 	private void addChunk() {
-		// System.out.println("addChunk "+data.length + " " + numElements);
-		// System.out.println("addChunk " + data.length + " " + numElements);
-		// System.out.println(r.maxMemory() + " - " + r.freeMemory() + " - " + r.totalMemory()
-		// + " used: " + (r.totalMemory() - r.freeMemory()));
-
 		int[][] tmp = new int[data.length + 1][];
 		for (int i = 0; i < data.length; i++) {
 			tmp[i] = data[i];

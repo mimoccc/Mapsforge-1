@@ -24,9 +24,9 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHD
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArraySynchronized;
 
 /**
- * @author Frank Viernau
+ * computes the highway network out of a core.
  */
-public final class ThreadedHighwayNetworkComputation extends ComputationThread {
+final class ThreadedHighwayNetworkComputation extends ComputationThread {
 
 	private final int lvl;
 	private final boolean fwd;

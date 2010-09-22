@@ -19,24 +19,29 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 import java.io.Serializable;
 
 /**
- * @author Frank Viernau
+ * dynamic growing array
  */
 public class UnsignedByteArrayGrowable implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 5352302212205236878L;
 	private final IntArrayGrowable data;
 	private int size;
 	private int fourByteOffset, byteOffset;
 
+	/**
+	 * @param chunkSize
+	 *            amount to increase in size
+	 */
 	public UnsignedByteArrayGrowable(int chunkSize) {
 		data = new IntArrayGrowable(chunkSize / 4);
 		data.add(0);
 		fourByteOffset = byteOffset = size = 0;
 	}
 
+	/**
+	 * @param val
+	 *            added to the end
+	 */
 	public void add(int val) {
 		val &= 0x000000ff;
 		if (byteOffset == 4) {
@@ -46,11 +51,17 @@ public class UnsignedByteArrayGrowable implements Serializable {
 		}
 		data.set(fourByteOffset,
 				(data.get(fourByteOffset) & (~(0x000000ff << (byteOffset * 8))))
-						| (val << (byteOffset * 8)));
+				| (val << (byteOffset * 8)));
 		byteOffset++;
 		size++;
 	}
 
+	/**
+	 * @param idx
+	 *            position
+	 * @param val
+	 *            new value put at position.
+	 */
 	public void set(int idx, int val) {
 		val &= 0x000000ff;
 		int offsetA = idx / 4;
@@ -59,28 +70,21 @@ public class UnsignedByteArrayGrowable implements Serializable {
 				| (val << (offsetB * 8)));
 	}
 
+	/**
+	 * @param idx
+	 *            position
+	 * @return value at index
+	 */
 	public int get(int idx) {
 		int offsetA = idx / 4;
 		int offsetB = idx % 4;
 		return (data.get(offsetA) >>> (offsetB * 8)) & 0x000000ff;
 	}
 
+	/**
+	 * @return size of this array
+	 */
 	public int size() {
 		return size;
-	}
-
-	public static void main(String[] args) {
-		UnsignedByteArrayGrowable a = new UnsignedByteArrayGrowable(100);
-		for (int i = 0; i < 10000; i++) {
-			a.add(i);
-		}
-		a.set(3, 244);
-		a.set(4, 255);
-		a.set(5, 246);
-		a.set(6, 247);
-		for (int i = 0; i < 10000; i++) {
-			System.out.println(a.get(i));
-		}
-
 	}
 }

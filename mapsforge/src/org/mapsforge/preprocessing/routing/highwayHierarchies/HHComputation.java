@@ -53,44 +53,41 @@ import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 //select x.c as degree, count(*) * 100.0 / (select count(*) from hh_vertex where lvl = 0) as count from (select source_id, count(*) as c from hh_edge group by source_id order by c) as x group by x.c order by degree;
 
 /**
- * @author Frank Viernau
  * 
- *         This class is responsible for the complete process of preprocessing. As input, it
- *         reads a properties file res/hhPreprocessing.properties. tuning params for
- *         preprocessing: (names similar to highway hierarchies paper)
+ * This class is responsible for the complete process of preprocessing. As input, it reads a
+ * properties file res/hhPreprocessing.properties. tuning params for preprocessing: (names
+ * similar to highway hierarchies paper)
  * 
- *         1. h = neighborhood size
+ * 1. h = neighborhood size
  * 
- *         2. c = contraction facor, see method isBypassable for details.
+ * 2. c = contraction facor, see method isBypassable for details.
  * 
- *         3. vertexThreshold = on number of core node, should be >>> 0 to use distance table
+ * 3. vertexThreshold = on number of core node, should be >>> 0 to use distance table
  * 
- *         4. hop limit = limit on number of edges of level l - 1 a shortcut of level l can
- *         represent
+ * 4. hop limit = limit on number of edges of level l - 1 a shortcut of level l can represent
  * 
- *         5. downgrade edge = downgrade edges leaving core (check of restriction 2 is no more
- *         needed during query)
+ * 5. downgrade edge = downgrade edges leaving core (check of restriction 2 is no more needed
+ * during query)
  */
 public final class HHComputation {
 
-	// neighborhood of vertices not in core :
+	/**
+	 * neighborhood of vertices not in core
+	 */
 	public static final int INFINITY_1 = Integer.MAX_VALUE;
-	// neighborhood of vertices belonging to the top level core :
+	/**
+	 * neighborhood of vertices belonging to the top level core.
+	 */
 	public static final int INFINITY_2 = Integer.MAX_VALUE - 1;
 
-	public static final int DEFAULT_H = 40;
-	public static final double DEFAULT_C = 2d;
-	public static final int DEFAULT_HOP_LIMIT = 10;
-	public static final int DEFAULT_NUM_THREADS = 2;
-	public static final boolean DEFAULT_DOWNGRADE_EDGES_LEAVING_CORE = true;
-	public static final int DEFAULT_VERTEX_THRESHOLD = 10000;
-
 	/* hierarchy construction parameters */
-	private static int H, HOP_LIMIT, NUM_THREADS, VERTEX_THRESHOLD;
+	private static int H;
+	static int HOP_LIMIT;
+	private static int NUM_THREADS, VERTEX_THRESHOLD;
 	private static boolean DOWNGRADE_EDGES_LEAVING_CORE;
-	private static double C;
+	static double C;
 
-	public static <V extends IRgVertex, E extends IRgEdge> void doPreprocessing(
+	private static <V extends IRgVertex, E extends IRgEdge> void doPreprocessing(
 			IRgDAO<V, E> rgDao, IRgWeightFunction<E> wFunc, int h, int hopLimit, double c,
 			int vertexThreshold, boolean downgradeEdges, int numThreads, Connection outputDb)
 			throws SQLException {
@@ -167,13 +164,7 @@ public final class HHComputation {
 		System.out.println("finished in " + df.format(minutes) + " minutes.");
 	}
 
-	public static HierarchyComputationResult computeHierarchy(HHDynamicGraph graph) {
-		return computeHierarchy(graph, DEFAULT_H, DEFAULT_HOP_LIMIT, DEFAULT_C,
-				DEFAULT_VERTEX_THRESHOLD, DEFAULT_DOWNGRADE_EDGES_LEAVING_CORE,
-				DEFAULT_NUM_THREADS);
-	}
-
-	public static HierarchyComputationResult computeHierarchy(HHDynamicGraph graph, int h,
+	private static HierarchyComputationResult computeHierarchy(HHDynamicGraph graph, int h,
 			int hopLimit, double c, int vertexThreshold, boolean downgradeEdgesLeavingCore,
 			int numThreads) {
 		H = h;
@@ -363,10 +354,10 @@ public final class HHComputation {
 	private static void addLevelInfo(HHDynamicGraph graph, LinkedList<HHLevelStats> levelInfo) {
 		levelInfo
 				.add(new HHLevelStats(graph.numLevels() - 2, graph
-						.numEdges(graph.numLevels() - 2), graph
-						.numVertices(graph.numLevels() - 2), graph
-						.numEdges(graph.numLevels() - 1), graph
-						.numVertices(graph.numLevels() - 1)));
+				.numEdges(graph.numLevels() - 2), graph
+				.numVertices(graph.numLevels() - 2), graph
+				.numEdges(graph.numLevels() - 1), graph
+				.numVertices(graph.numLevels() - 1)));
 	}
 
 	private static boolean verifyInputGraph(HHDynamicGraph graph) {
@@ -450,7 +441,7 @@ public final class HHComputation {
 				if ((!e.isBackward() || (e.isBackward() && e.getWeight() > dBwd.get(e
 						.getTarget().getId())))
 						&& (!e.isForward() || (e.isForward() && e.getWeight() > dFwd.get(e
-								.getTarget().getId())))) {
+						.getTarget().getId())))) {
 					graph.removeEdge(e, lvl);
 
 				}
@@ -570,12 +561,12 @@ public final class HHComputation {
 		// }
 	}
 
-	public static class HierarchyComputationResult {
+	static class HierarchyComputationResult {
 		public final HHLevelStats[] levelStats;
 		public final int[] originalVertexIdsToAssignedVertexId;
 		public final HHDynamicGraph highwayHierarchy;
 
-		private HierarchyComputationResult(LinkedList<HHLevelStats> levelInfo,
+		HierarchyComputationResult(LinkedList<HHLevelStats> levelInfo,
 				HHDynamicGraph highwayHierarchy, int[] originalVertexIdsToAssignedVertexId) {
 			this.levelStats = new HHLevelStats[levelInfo.size()];
 			levelInfo.toArray(this.levelStats);
@@ -593,6 +584,16 @@ public final class HHComputation {
 		}
 	}
 
+	/**
+	 * @param args
+	 *            1 argument, filename of the properties file.
+	 * @throws SQLException
+	 *             shit happens
+	 * @throws FileNotFoundException
+	 *             shit happens
+	 * @throws IOException
+	 *             shit happens
+	 */
 	public static void main(String[] args) throws SQLException, FileNotFoundException,
 			IOException {
 

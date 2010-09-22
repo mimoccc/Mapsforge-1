@@ -52,11 +52,14 @@ import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.Clustering;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.RouterFactory;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
 
+/**
+ * draws a graph on the a canvas.
+ * 
+ */
 public class RendererV2 {
 
 	private static Color[] CLUSTER_COLORS = { Color.GREEN, Color.BLUE, Color.RED, Color.YELLOW,
@@ -64,7 +67,7 @@ public class RendererV2 {
 
 	private static final double[] ZOOM_LEVELS = getZoomLevels(20);
 
-	public final static Projection PROJ = ProjectionFactory
+	private final static Projection PROJ = ProjectionFactory
 			.fromPROJ4Specification(new String[] { "+proj=cass", "+lat_0=52.41864827777778",
 			"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
 			"+datum=potsdam", "+units=m", "+no_defs" });
@@ -78,9 +81,9 @@ public class RendererV2 {
 		return tmp;
 	}
 
-	private final BufferedCanvas canvas;
+	final BufferedCanvas canvas;
 
-	private final IRouter router;
+	final IRouter router;
 	private final HashMap<IEdge[], Color> routes;
 	private Clustering clustering;
 	private HashMap<Cluster, Color> clusterColors;
@@ -88,14 +91,30 @@ public class RendererV2 {
 	private final HashMap<GeoCoordinate[], Color> multilines;
 	private final LinkedList<GeoCoordinate> circlesList;
 
-	private int zoomLevel;
-	private GeoCoordinate center;
-	private double screenW, screenH, metersPerPixel;
+	int zoomLevel;
+	GeoCoordinate center;
+	double screenW;
+
+	double screenH;
+
+	private double metersPerPixel;
 	private double minX, minY;
 	private int minLon, minLat, maxLon, maxLat;
 
 	private Color bgColor, fgColor;
 
+	/**
+	 * @param width
+	 *            pixels
+	 * @param height
+	 *            pixels
+	 * @param router
+	 *            gives render content.
+	 * @param bgColor
+	 *            background
+	 * @param fgColor
+	 *            foreground.
+	 */
 	public RendererV2(int width, int height, IRouter router, Color bgColor, Color fgColor) {
 		this.clustering = null;
 		this.screenW = width;
@@ -117,6 +136,12 @@ public class RendererV2 {
 		new RendererGui();
 	}
 
+	/**
+	 * @param center
+	 *            screen center.
+	 * @param zoomLevel
+	 *            zoom
+	 */
 	public void setRenderParam(GeoCoordinate center, int zoomLevel) {
 		this.center = center;
 		this.zoomLevel = zoomLevel;
@@ -156,14 +181,25 @@ public class RendererV2 {
 		canvas.update();
 	}
 
+	/**
+	 * @return number of zoom levels, minimum is 0.
+	 */
 	public int getNumZoomLevels() {
 		return ZOOM_LEVELS.length;
 	}
 
+	/**
+	 * @return current zoom level.
+	 */
 	public int getZoomLevel() {
 		return zoomLevel;
 	}
 
+	/**
+	 * @param zl
+	 *            new zoom level.
+	 * @return true if changed.
+	 */
 	public boolean setZoomLevel(int zl) {
 		if (zl >= 0 && zl < ZOOM_LEVELS.length && zl != zoomLevel) {
 			zoomLevel = zl;
@@ -173,6 +209,12 @@ public class RendererV2 {
 		return false;
 	}
 
+	/**
+	 * @param route
+	 *            route to add to the render context.
+	 * @param c
+	 *            color for drawing the given route.
+	 */
 	public void addRoute(IEdge[] route, Color c) {
 		if (route != null && c != null) {
 			synchronized (routes) {
@@ -183,15 +225,30 @@ public class RendererV2 {
 		}
 	}
 
+	/**
+	 * @param coords
+	 *            coordinates of the line to be added to the render context.
+	 * @param c
+	 *            color to draw the line.
+	 */
 	public void addMultiLine(GeoCoordinate[] coords, Color c) {
 		multilines.put(coords, c);
 	}
 
+	/**
+	 * @param coord
+	 *            center of circle
+	 * @param c
+	 *            color of circle.
+	 */
 	public void addCircle(GeoCoordinate coord, Color c) {
 		circles.put(coord, c);
 		circlesList.add(coord);
 	}
 
+	/**
+	 * remove routes from render context.
+	 */
 	public void clearRoutes() {
 		synchronized (routes) {
 			routes.clear();
@@ -199,6 +256,9 @@ public class RendererV2 {
 		}
 	}
 
+	/**
+	 * remove all lines.
+	 */
 	public void clearMultiLines() {
 		synchronized (multilines) {
 			multilines.clear();
@@ -206,6 +266,10 @@ public class RendererV2 {
 		}
 	}
 
+	/**
+	 * @param clustering
+	 *            the clustering to be drawn.
+	 */
 	public void setClustering(Clustering clustering) {
 		this.clustering = clustering;
 		if (clustering != null) {
@@ -214,21 +278,6 @@ public class RendererV2 {
 		drawRenderContent();
 		canvas.update();
 	}
-
-	// private void drawClustering() {
-	// if (clustering != null) {
-	// HashMap<Cluster, Color> colors = getClusterColors();
-	// for (Cluster c : colors.keySet()) {
-	// for (int v : c.getVertices()) {
-	// for (IEdge e : router.getVertex(v).getOutboundEdges()) {
-	// if (clustering.getCluster(e.getSource().getId()) == clustering
-	// .getCluster(e.getTarget().getId()))
-	// drawEdge(e, colors.get(c), 1);
-	// }
-	// }
-	// }
-	// }
-	// }
 
 	private HashMap<Cluster, Color> getClusterColors() {
 		HashMap<Cluster, Color> colors = new HashMap<Cluster, Color>();
@@ -356,7 +405,7 @@ public class RendererV2 {
 		return new ScreenCoordinate(scrX, scrY);
 	}
 
-	private GeoCoordinate screenToGeo(int scrX, int scrY) {
+	GeoCoordinate screenToGeo(int scrX, int scrY) {
 		// carthesian coordinate in meter units
 		double x = minX + (scrX * metersPerPixel);
 		double y = minY + (scrY * metersPerPixel);
@@ -370,7 +419,8 @@ public class RendererV2 {
 
 	private class ScreenCoordinate {
 
-		private final int x, y;
+		final int x;
+		final int y;
 
 		public ScreenCoordinate(int x, int y) {
 			this.x = x;
@@ -383,9 +433,11 @@ public class RendererV2 {
 		private static final long serialVersionUID = -7699248454662433016L;
 
 		private MapMouseAdapter mouseAdapter;
-		private JSlider zoomSlider;
+		JSlider zoomSlider;
 
-		private GeoCoordinate routeSource, routeDestination;
+		GeoCoordinate routeSource;
+
+		GeoCoordinate routeDestination;
 		private Object lockSrcTgt = new Boolean(true);
 
 		private final double SCROLL_FAC = 0.20;
@@ -424,7 +476,7 @@ public class RendererV2 {
 
 		}
 
-		private void setRouteSource(Point p) {
+		void setRouteSource(Point p) {
 			GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
 			synchronized (lockSrcTgt) {
 				routeSource = c;
@@ -432,7 +484,7 @@ public class RendererV2 {
 			}
 		}
 
-		private void setRouteTarget(Point p) {
+		void setRouteTarget(Point p) {
 			GeoCoordinate c = screenToGeo(p.x, (int) screenH - p.y);
 			synchronized (lockSrcTgt) {
 				routeDestination = c;
@@ -597,8 +649,8 @@ public class RendererV2 {
 			private static final long serialVersionUID = 1L;
 
 			private MouseAdapter mouseListener;
-			private Color cSelected = Color.green.darker().darker();
-			private Point position;
+			Color cSelected = Color.green.darker().darker();
+			Point position;
 
 			public PopMenu() {
 				super();
@@ -690,9 +742,4 @@ public class RendererV2 {
 		}
 	}
 
-	public static void main(String[] args) {
-		RendererV2 renderer = new RendererV2(1024, 768, RouterFactory.getRouter(), Color.WHITE,
-				Color.BLACK);
-		System.out.println("rendering center coord : " + renderer.center);
-	}
 }

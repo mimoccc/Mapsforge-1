@@ -21,9 +21,9 @@ import java.util.Iterator;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 
 /**
- * @author Frank Viernau
+ * computes vertex neighborhoods.
  */
-public final class ThreadedNeighborhoodComputation extends ComputationThread {
+final class ThreadedNeighborhoodComputation extends ComputationThread {
 
 	private final Iterator<HHDynamicVertex> vertices;
 	private final int lvl, h;

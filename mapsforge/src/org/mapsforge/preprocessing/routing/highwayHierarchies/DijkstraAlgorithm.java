@@ -28,11 +28,30 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
+/**
+ * iplementation dijkstra s' algorithm an some hh specific details.
+ * 
+ */
 public final class DijkstraAlgorithm {
 
 	private static final int INITIAL_HEAP_SIZE = 1000;
 	private static final int INITIAL_MAP_SIZE = 5000;
 
+	/**
+	 * dijkstra shortest distance.
+	 * 
+	 * @param source
+	 *            start node
+	 * @param target
+	 *            end node
+	 * @param forward
+	 *            search forward edge?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            the level to search in.
+	 * @return the sum of the weight along the shortest path.
+	 */
 	public static int shortestDistance(HHDynamicVertex source, HHDynamicVertex target,
 			boolean forward, boolean backward, int lvl) {
 		if (!forward && !backward) {
@@ -81,6 +100,21 @@ public final class DijkstraAlgorithm {
 		return distance;
 	}
 
+	/**
+	 * the distance form source to the rank-th settled vertex.
+	 * 
+	 * @param source
+	 *            start vertex.
+	 * @param rank
+	 *            specifies the rank-th closest vertex to the source.
+	 * @param forward
+	 *            search forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            to search in.
+	 * @return the distance.
+	 */
 	public static int shortestDistance(HHDynamicVertex source, int rank, boolean forward,
 			boolean backward, int lvl) {
 		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = getQueue();
@@ -123,6 +157,21 @@ public final class DijkstraAlgorithm {
 		return maxDistance;
 	}
 
+	/**
+	 * Edges of the the shortest path.
+	 * 
+	 * @param source
+	 *            start vertex
+	 * @param target
+	 *            end vertex
+	 * @param forward
+	 *            searhc forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            to search in.
+	 * @return the edges along the shortest path.
+	 */
 	public static LinkedList<HHDynamicEdge> shortestPathEdges(HHDynamicVertex source,
 			HHDynamicVertex target, boolean forward, boolean backward, int lvl) {
 		DijkstraTreeVertex currentVertex = shortestPath(source, target, forward, backward, lvl);
@@ -138,6 +187,20 @@ public final class DijkstraAlgorithm {
 		return list;
 	}
 
+	/**
+	 * 
+	 * @param source
+	 *            start vertex
+	 * @param target
+	 *            end vertex
+	 * @param forward
+	 *            searhc forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            to search in.
+	 * @return Vertices of the shortest path.
+	 */
 	public static LinkedList<HHDynamicVertex> shortestPathVertices(HHDynamicVertex source,
 			HHDynamicVertex target, boolean forward, boolean backward, int lvl) {
 		DijkstraTreeVertex currentVertex = shortestPath(source, target, forward, backward, lvl);
@@ -153,6 +216,17 @@ public final class DijkstraAlgorithm {
 		return list;
 	}
 
+	/**
+	 * @param source
+	 *            start vertex
+	 * @param forward
+	 *            search forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            to search in.
+	 * @return the complete shortest path tree.
+	 */
 	public static LinkedList<DijkstraTreeVertex> shortestPathTree(HHDynamicVertex source,
 			boolean forward, boolean backward, int lvl) {
 		BinaryMinHeap<DijkstraTreeVertex, Integer> queue = getQueue();
@@ -195,6 +269,20 @@ public final class DijkstraAlgorithm {
 		return settledVertices;
 	}
 
+	/**
+	 * 
+	 * @param source
+	 *            start vertex
+	 * @param target
+	 *            end vertex
+	 * @param forward
+	 *            search forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            to search in.
+	 * @return the indexes to adjacency lists describing the shortest path.
+	 */
 	public static LinkedList<Integer> shortestPathHopIndices(HHDynamicVertex source,
 			HHDynamicVertex target, boolean forward, boolean backward, int lvl) {
 		DijkstraTreeVertex currentVertex = shortestPath(source, target, forward, backward, lvl);
@@ -210,7 +298,7 @@ public final class DijkstraAlgorithm {
 		return list;
 	}
 
-	public static LinkedList<HHDynamicEdge> selectHighwayEdges(HHDynamicVertex source,
+	static LinkedList<HHDynamicEdge> selectHighwayEdges(HHDynamicVertex source,
 			boolean forward, boolean backward, int lvl) {
 		LinkedList<HHDynamicEdge> selectedEdges = new LinkedList<HHDynamicEdge>();
 		if (!forward && !backward) {
@@ -243,6 +331,23 @@ public final class DijkstraAlgorithm {
 		}
 		return selectedEdges;
 	}
+
+	/**
+	 * 
+	 * @param source
+	 *            start vertex
+	 * @param target
+	 *            end vertex
+	 * @param forward
+	 *            search forward edges?
+	 * @param backward
+	 *            search backward edges?
+	 * @param lvl
+	 *            of the graph.
+	 * @param eMinLvl
+	 *            minimum levels of all edges.
+	 * @return edges that must be in the next level.
+	 */
 
 	public static LinkedList<Integer> shortestPathHopIndices(HHStaticVertex source,
 			HHStaticVertex target, boolean forward, boolean backward, int lvl, int[] eMinLvl) {
@@ -440,13 +545,6 @@ public final class DijkstraAlgorithm {
 		return settledVertices;
 	}
 
-	/**
-	 * Sets the reference distance of x. References of all parent nodes need to be set properly
-	 * before calling.
-	 * 
-	 * @param x
-	 * @return
-	 */
 	private static int computeReferenceDistance(DijkstraSlackVertex x) {
 		// set a_(x) = max(a(parent(x))
 		int a_ = 0;
@@ -473,15 +571,6 @@ public final class DijkstraAlgorithm {
 
 	}
 
-	/**
-	 * Sets the border-distance of x, where border-distance of direct parents need to be set
-	 * before.
-	 * 
-	 * @param x
-	 * @param successorOfRoot
-	 * @param neighborhood
-	 * @return
-	 */
 	private static int computeBorderDistance(DijkstraSlackVertex x, boolean successorOfRoot,
 			int neighborhood) {
 		if (successorOfRoot) {
@@ -531,7 +620,7 @@ public final class DijkstraAlgorithm {
 		}
 	}
 
-	public static class DijkstraTreeVertex extends DijkstraDistanceVertex {
+	static class DijkstraTreeVertex extends DijkstraDistanceVertex {
 
 		public DijkstraTreeVertex parent;
 		public HHDynamicEdge edgeToParent;

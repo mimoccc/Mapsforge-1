@@ -19,16 +19,20 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 import java.io.Serializable;
 
 /**
- * @author Frank Viernau
+ * array based implementation requires about 1 bit per bit.
  */
 public class BitArray implements Serializable {
 
 	private static final long serialVersionUID = 5879036119351268170L;
 
-	protected static final int BITS = 32;
-	protected final int[] data;
-	protected final int size;
+	private static final int BITS = 32;
+	private final int[] data;
+	private final int size;
 
+	/**
+	 * @param size
+	 *            of this array
+	 */
 	public BitArray(int size) {
 		this.size = size;
 		int len = size / 32;
@@ -38,14 +42,29 @@ public class BitArray implements Serializable {
 		data = new int[len];
 	}
 
+	/**
+	 * @param i
+	 *            set bit i to 0
+	 */
 	public void clear(int i) {
 		data[i / BITS] &= ~(1 << (i % BITS));
 	}
 
+	/**
+	 * @param i
+	 *            index of the bit to return
+	 * @return true if bit is set.
+	 */
 	public boolean get(int i) {
 		return (data[i / BITS] & (1 << (i % BITS))) != 0;
 	}
 
+	/**
+	 * @param i
+	 *            index of the bit to manipulate
+	 * @param b
+	 *            the new value of the bit.
+	 */
 	public void set(int i, boolean b) {
 		if (b) {
 			set(i);
@@ -54,10 +73,19 @@ public class BitArray implements Serializable {
 		}
 	}
 
+	/**
+	 * Set bit to 1.
+	 * 
+	 * @param i
+	 *            index of the bit
+	 */
 	public void set(int i) {
 		data[i / BITS] |= (1 << (i % BITS));
 	}
 
+	/**
+	 * @return size of this bit array.
+	 */
 	public int size() {
 		return size;
 	}

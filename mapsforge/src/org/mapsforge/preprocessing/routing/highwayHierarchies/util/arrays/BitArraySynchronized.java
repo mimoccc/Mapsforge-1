@@ -17,12 +17,16 @@
 package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 
 /**
- * @author Frank Viernau
+ * synchroniyed wrapper class
  */
 public class BitArraySynchronized extends BitArray {
 
 	private static final long serialVersionUID = 6283194127482992676L;
 
+	/**
+	 * @param size
+	 *            of this array.
+	 */
 	public BitArraySynchronized(int size) {
 		super(size);
 	}

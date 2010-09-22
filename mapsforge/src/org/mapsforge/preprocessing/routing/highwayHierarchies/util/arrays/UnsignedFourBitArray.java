@@ -19,7 +19,7 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 import java.io.Serializable;
 
 /**
- * @author Frank Viernau
+ * 
  */
 public class UnsignedFourBitArray implements Serializable {
 
@@ -28,6 +28,10 @@ public class UnsignedFourBitArray implements Serializable {
 	private final int[] data;
 	private final int size;
 
+	/**
+	 * @param size
+	 *            of this array
+	 */
 	public UnsignedFourBitArray(int size) {
 		this.size = size;
 		int len = size / 8;
@@ -37,6 +41,12 @@ public class UnsignedFourBitArray implements Serializable {
 		data = new int[len];
 	}
 
+	/**
+	 * @param idx
+	 *            position the put value
+	 * @param val
+	 *            new value
+	 */
 	public void set(int idx, int val) {
 		val &= 0x0000000f;
 		int arrayOffset = idx / 8;
@@ -45,12 +55,20 @@ public class UnsignedFourBitArray implements Serializable {
 				| (val << bitOffset);
 	}
 
+	/**
+	 * @param idx
+	 *            postition.
+	 * @return value at position
+	 */
 	public int get(int idx) {
 		int arrayOffset = idx / 8;
 		int bitOffset = (idx % 8) * 4;
 		return (data[arrayOffset] >>> bitOffset) & 0x0000000f;
 	}
 
+	/**
+	 * @return this of this array
+	 */
 	public int size() {
 		return size;
 	}

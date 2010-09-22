@@ -19,7 +19,9 @@ package org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays;
 import java.io.Serializable;
 
 /**
- * @author Frank Viernau
+ * dynamic growable bit array, increases only by a constant amount of bytes, implementations i
+ * had seen always grow by a factor of current size, which may give out of memory exceptions too
+ * early.
  */
 public class BitArrayGrowable implements Serializable {
 
@@ -31,12 +33,20 @@ public class BitArrayGrowable implements Serializable {
 	private IntArrayGrowable data;
 	private int offsetA, offsetB;
 
+	/**
+	 * @param chunkSize
+	 *            amount to increase siye.
+	 */
 	public BitArrayGrowable(int chunkSize) {
 		this.data = new IntArrayGrowable(chunkSize / 32);
 		offsetA = -1;
 		offsetB = 32;
 	}
 
+	/**
+	 * @param b
+	 *            is added to the end of the array.
+	 */
 	public void add(boolean b) {
 		if (offsetB == 32) {
 			offsetA++;
@@ -51,12 +61,23 @@ public class BitArrayGrowable implements Serializable {
 		offsetB++;
 	}
 
+	/**
+	 * @param idx
+	 *            index of the bit.
+	 * @return the bit located at the given index.
+	 */
 	public boolean get(int idx) {
 		int fourByteOffset = idx / 32;
 		int bitOffset = idx % 32;
 		return (data.get(fourByteOffset) & (BIT << bitOffset)) != 0;
 	}
 
+	/**
+	 * @param idx
+	 *            index of the bit
+	 * @param b
+	 *            new value of the bit.
+	 */
 	public void set(int idx, boolean b) {
 		if (b) {
 			set(idx);
@@ -65,12 +86,24 @@ public class BitArrayGrowable implements Serializable {
 		}
 	}
 
+	/**
+	 * set to 1.
+	 * 
+	 * @param idx
+	 *            index of the bit
+	 */
 	public void set(int idx) {
 		int fourByteOffset = idx / 32;
 		int bitOffset = idx % 32;
 		data.set(fourByteOffset, data.get(fourByteOffset) | (BIT << bitOffset));
 	}
 
+	/**
+	 * set to 0.
+	 * 
+	 * @param idx
+	 *            of the bit.
+	 */
 	public void clear(int idx) {
 		int fourByteOffset = idx / 32;
 		int bitOffset = idx % 32;

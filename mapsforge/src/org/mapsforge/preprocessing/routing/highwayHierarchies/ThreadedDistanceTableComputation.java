@@ -26,7 +26,7 @@ import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 /**
  * computes the distance table.
  */
-public class ThreadedDistanceTableComputation extends ComputationThread {
+class ThreadedDistanceTableComputation extends ComputationThread {
 
 	private final Iterator<HHDynamicVertex> iter;
 	private final DistanceTable table;
