@@ -30,7 +30,7 @@ import org.mapsforge.core.Rect;
 import org.mapsforge.core.WGS84;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.HHGlobals;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**
  * This class implements the routing graph, the highway hierarchies algorithm directly works on.
@@ -430,7 +430,7 @@ final class HHRoutingGraph {
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		RendererV2 renderer = new RendererV2(1024, 768, RouterImpl
+		RendererV2 renderer = new RendererV2(1024, 768, HHRouterServerside
 				.deserialize(new FileInputStream("router/berlin.hh")), Color.BLACK,
 				Color.WHITE);
 

@@ -30,7 +30,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.Rend
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**
  * This class implements the router interface which is already used server sided. There is some
@@ -289,7 +289,7 @@ public class HHRouter implements IRouter {
 			System.out.println(e.getName() + " " + e.getRef());
 		}
 
-		RendererV2 renderer = new RendererV2(1024, 768, RouterImpl
+		RendererV2 renderer = new RendererV2(1024, 768, HHRouterServerside
 				.deserialize(new FileInputStream("router/berlin.hh")), Color.BLACK,
 				Color.WHITE);
 		Rect bbox = new Rect(13291880, 13456765, 52455694, 52509769);
