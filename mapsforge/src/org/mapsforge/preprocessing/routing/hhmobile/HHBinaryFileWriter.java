@@ -79,7 +79,7 @@ class HHBinaryFileWriter {
 			Clustering[] clustering;
 			if (clusteringAlgorithm.equals(QuadTreeClusteringAlgorithm.ALGORITHM_NAME)) {
 				clustering = QuadTreeClusteringAlgorithm.computeClustering(graph.getLevels(),
-						graph.getVertexLongitudes(), graph.getVertexLatitudes(),
+						graph.getVertexLongitudesE6(), graph.getVertexLatitudesE6(),
 						QuadTreeClusteringAlgorithm.HEURISTIC_CENTER,
 						quadtreeAlgorithmThreshold);
 

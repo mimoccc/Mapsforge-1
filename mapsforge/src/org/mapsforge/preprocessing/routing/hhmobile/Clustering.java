@@ -19,12 +19,28 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 import java.io.Serializable;
 import java.util.Collection;
 
+/**
+ * A Clustering represents a set of clusters, which are disjoint sets of vertices.
+ */
 public interface Clustering extends Serializable {
 
+	/**
+	 * Lookup the cluster the given vertex belongs to.
+	 * 
+	 * @param vertexId
+	 *            the vertex whose cluster is queried.
+	 * @return the cluster the given vertex belongs to.
+	 */
 	public Cluster getCluster(int vertexId);
 
+	/**
+	 * @return all clusters within this clustering.
+	 */
 	public Collection<? extends Cluster> getClusters();
 
+	/**
+	 * @return the number of clusters.
+	 */
 	public int size();
 
 }

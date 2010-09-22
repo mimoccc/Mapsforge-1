@@ -48,12 +48,12 @@ class ClusteringEvaluator {
 
 		// quad
 		QuadTreeClustering quadClustering = QuadTreeClusteringAlgorithm.computeClustering(
-				graph, levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
+				graph, levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
 				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, avgVerticesPerCluster * 2,
 				levelGraph.getLevel(0).numVertices());
 
 		quadClustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
-				levelGraph.getVertexLongitudes(), levelGraph.getVertexLatitudes(),
+				levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
 				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 1000)[2];
 
 		// verify

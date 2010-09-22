@@ -19,33 +19,62 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 import gnu.trove.set.hash.THashSet;
 import gnu.trove.set.hash.TIntHashSet;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.hhmobile.KCenterClustering.KCenterCluster;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.preprocessing.util.DBConnection;
 
+/**
+ * Implementation of the k-center clustering algorithm as proposed in the publication of the
+ * precomputed cluster distances shortest path algorithm. This is a randomized algorithm which
+ * reduces some negative effects drastically by first oversampling and afterwards sampling down
+ * to the specified number of clusters. The number of clusters can be specified in advance in
+ * contrast to other algorithm like e.g. quad tree algorithm.
+ */
 class KCenterClusteringAlgorithm {
-
+	/**
+	 * The name of this algorithm
+	 */
 	public static final String ALGORITHM_NAME = "k_center";
-
+	/**
+	 * interval for console output for cluster building.
+	 */
 	private static final int MSG_INT_BUILD_CLUSTERS = 100000;
+	/**
+	 * interval for console output for down sampling.
+	 */
 	private static final int MSG_INT_SAMPLE_DOWN = 1000;
-
+	/**
+	 * Down sampling heuristic, removes clusters of minimal size.
+	 */
 	public static final int HEURISTIC_MIN_SIZE = 0;
+	/**
+	 * Down sampling heuristic, removes cluster of minimal radius. The radius is defined as the
+	 * weight longest shortest path from the center of a cluster to some other vertex of the
+	 * same cluster.
+	 */
 	public static final int HEURISTIC_MIN_RADIUS = 1;
 
+	/**
+	 * The default heuristic to be used if an invalid heuristic is specified.
+	 */
 	private static final int HEURISTIC_DEFAULT = HEURISTIC_MIN_SIZE;
 
+	/**
+	 * Computes a clustering based on the given graph levels.
+	 * 
+	 * @param graph
+	 *            the levels of the graph.
+	 * @param avgVerticesPerCluster
+	 *            another way to specify the number of clusters to be computed.
+	 * @param heuristic
+	 *            see public static variables for available heuristics.
+	 * @return the clusterings for each level of the graph.
+	 */
 	public static KCenterClustering[] computeClustering(Graph[] graph,
 			int avgVerticesPerCluster, int heuristic) {
 		KCenterClustering[] clustering = new KCenterClustering[graph.length];
@@ -56,6 +85,17 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
+	/**
+	 * Computes a clustering based on the given graph levels.
+	 * 
+	 * @param graph
+	 *            the graph to be clustered
+	 * @param k
+	 *            number of clusters to be computed.
+	 * @param heuristic
+	 *            see public static variables for available heuristics.
+	 * @return the k-center clustering.
+	 */
 	public static KCenterClustering computeClustering(Graph graph, int k, int heuristic) {
 		k = Math.max(k, 1);
 		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(8)));
@@ -73,6 +113,16 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
+	/**
+	 * Randomly choose k_ centers.
+	 * 
+	 * @param graph
+	 *            the graph to choose center vertices from.
+	 * @param k_
+	 *            number of centers to choose.
+	 * @return a clustering containing k_ clusters, each of them contains only the choosen
+	 *         center vertex.
+	 */
 	private static KCenterClustering chooseRandomCenters(Graph graph, int k_) {
 
 		Random rnd = new Random(1);
@@ -97,6 +147,15 @@ class KCenterClusteringAlgorithm {
 		return clustering;
 	}
 
+	/**
+	 * After choosing centers, each cluster contains only one vertex, the center vertex. This
+	 * method assigns each unassigned vertex to the cluster with the nearest center.
+	 * 
+	 * @param graph
+	 *            the graph this clustering belongs to.
+	 * @param clustering
+	 *            the clustering having only one vertex per cluster.
+	 */
 	private static void expandClusters(Graph graph, KCenterClustering clustering) {
 		// map vertex id to heap item of enqueued vertex
 		HashMap<Integer, HeapItem> enqueuedVertices = new HashMap<Integer, HeapItem>();
@@ -155,6 +214,21 @@ class KCenterClusteringAlgorithm {
 				+ ((count / MSG_INT_BUILD_CLUSTERS) * MSG_INT_BUILD_CLUSTERS) + " - " + count);
 	}
 
+	/**
+	 * Iteratively remove one cluster after another until only k clusters are left. This is the
+	 * down sampling phase of the algorithm.
+	 * 
+	 * @param graph
+	 *            the graph the clustering belongs to.
+	 * @param clustering
+	 *            the over sampled clustering.
+	 * @param k
+	 *            number of cluster after sampling down.
+	 * @param k_
+	 *            number of clusters
+	 * @param heuristik
+	 *            the heuristic for choosing cluster for removal.
+	 */
 	private static void sampleDown(Graph graph, KCenterClustering clustering, int k, int k_,
 			int heuristik) {
 		int count = 0;
@@ -172,6 +246,17 @@ class KCenterClusteringAlgorithm {
 
 	}
 
+	/**
+	 * Removes a cluster, and assigns all vertices of this removed cluster to the neighbor
+	 * cluster with the nearest center to the respective vertex.
+	 * 
+	 * @param graph
+	 *            graph belonging to the clustering.
+	 * @param clustering
+	 *            the clustering (all vertices assined to a cluster)
+	 * @param cluster
+	 *            the cluster to be removed.
+	 */
 	private static void removeClusterAndRearrange(Graph graph, KCenterClustering clustering,
 			KCenterCluster cluster) {
 		// remove the cluster
@@ -234,6 +319,17 @@ class KCenterClusteringAlgorithm {
 		}
 	}
 
+	/**
+	 * Computes all clusters adjacent to the given cluster by at least one edge.
+	 * 
+	 * @param graph
+	 *            used for determining adjacency.
+	 * @param clustering
+	 *            the clustering
+	 * @param cluster
+	 *            the cluster for which the neighbors a queried.
+	 * @return all adjacent clusters.
+	 */
 	private static KCenterCluster[] getAdjacentClusters(Graph graph,
 			KCenterClustering clustering, KCenterCluster cluster) {
 		THashSet<KCenterCluster> set = new THashSet<KCenterCluster>();
@@ -250,6 +346,17 @@ class KCenterClusteringAlgorithm {
 		return adjClusters;
 	}
 
+	/**
+	 * Chose a cluster for removal based on the given heuristic.
+	 * 
+	 * @param graph
+	 *            .
+	 * @param clustering
+	 *            .
+	 * @param heuristik
+	 *            .
+	 * @return the choosen cluster.
+	 */
 	private static KCenterCluster chooseClusterForRemoval(Graph graph,
 			KCenterClustering clustering, int heuristik) {
 		switch (heuristik) {
@@ -274,6 +381,15 @@ class KCenterClusteringAlgorithm {
 		}
 	}
 
+	/**
+	 * Checks all clusters an gives the minimal one. The comparator must be transitive.
+	 * 
+	 * @param clustering
+	 *            contains the clusters to be checked.
+	 * @param comp
+	 *            transitive comparator.
+	 * @return the minimal cluster with regard to the given comparator.
+	 */
 	private static KCenterCluster getMinCluster(KCenterClustering clustering,
 			Comparator<KCenterCluster> comp) {
 		KCenterCluster min = clustering.getClusters().iterator().next();
@@ -285,13 +401,35 @@ class KCenterClusteringAlgorithm {
 		return min;
 	}
 
+	/**
+	 * Implementation of a heap item for dijkstra's algorithm.
+	 */
 	private static class HeapItem implements IBinaryHeapItem<Integer> {
-
+		/**
+		 * the id of the vertex this item is for.
+		 */
 		final int vertexId;
+		/**
+		 * the index within the array based heap, used for implementing the interface.
+		 */
 		private int heapIndex;
+		/**
+		 * the best distance found so far.
+		 */
 		int distance;
+		/**
+		 * the predecessor within the shortest path tree.
+		 */
 		int parent;
 
+		/**
+		 * @param vertexId
+		 *            the vertex this item is for.
+		 * @param distance
+		 *            the best distance found so far.
+		 * @param parent
+		 *            the predecessor within the current state of the shortest path tree.
+		 */
 		public HeapItem(int vertexId, int distance, int parent) {
 			this.heapIndex = -1;
 			this.distance = distance;
@@ -319,16 +457,5 @@ class KCenterClusteringAlgorithm {
 		public void setHeapKey(Integer key) {
 			this.distance = key;
 		}
-	}
-
-	public static void main(String[] args) throws SQLException, IOException {
-		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "germany",
-				"postgres", "admin");
-		LevelGraph levelGraph = new LevelGraph(conn);
-		int avgVerticesPerCluster = 1000;
-		KCenterClustering[] clustering = computeClustering(levelGraph.getLevels(),
-				avgVerticesPerCluster, HEURISTIC_MIN_SIZE);
-		Serializer.serialize(new File("clustering_ger"), clustering);
-		Serializer.serialize(new File("graph_ger"), levelGraph);
 	}
 }

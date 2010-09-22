@@ -18,21 +18,28 @@ package org.mapsforge.preprocessing.routing.hhmobile;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.LinkedList;
-import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
+/**
+ * A Binary Heap and hash map based implementation of the Algorithm of dijkstra.
+ */
 class DijkstraAlgorithm {
-
+	/**
+	 * The priority used for determining the order for processing vertices.
+	 */
 	private final BinaryMinHeap<HeapItem, Integer> queue;
+	/**
+	 * The graph to perform the searches on.
+	 */
 	private final LevelGraph graph;
+	/**
+	 * All vertices discovered during a search are put here.
+	 */
 	private final TIntObjectHashMap<HeapItem> discovered;
 
 	public DijkstraAlgorithm(LevelGraph graph) {
@@ -41,6 +48,30 @@ class DijkstraAlgorithm {
 		this.discovered = new TIntObjectHashMap<HeapItem>();
 	}
 
+	/**
+	 * Computes a shortest path between source and target within the specified level of the
+	 * multileveled graph.
+	 * 
+	 * @param sourceId
+	 *            the start vertex of the shortest path.
+	 * @param targetId
+	 *            the end vertex of the shortest path.
+	 * @param level
+	 *            the level of the graph to be searched.
+	 * @param shortestPathBuff
+	 *            all vertices of the shortest path are put here, sorted from source to target.
+	 * @param hopIndicesBuff
+	 *            hop indices are put here, this indices can be used as index to the adjacency
+	 *            lists, starting at the source vertex. This is another way for describing a
+	 *            path in a graph.
+	 * @param forward
+	 *            if the to true, edges must have the forward flag set, else they are ignored by
+	 *            the dijkstra search.
+	 * @param backward
+	 *            if the to true, edges must have the backward flag set, else they are ignored
+	 *            by the dijkstra search.
+	 * @return the sum of the edge weights along the shortest path.
+	 */
 	public int getShortestPath(int sourceId, int targetId, int level,
 			LinkedList<LevelVertex> shortestPathBuff, LinkedList<Integer> hopIndicesBuff,
 			boolean forward, boolean backward) {
@@ -89,14 +120,86 @@ class DijkstraAlgorithm {
 		return distance;
 	}
 
-	private class HeapItem implements IBinaryHeapItem<Integer> {
+	/**
+	 * Returns the identifier of rank-th visited vertex of a dijkstra search.
+	 * 
+	 * @param sourceId
+	 *            the id of the start vertex.
+	 * @param rank
+	 *            the rank of the vertex to be returned.
+	 * @return the id of the vertex with the desired rank, -1 if such a vertex does not exist.
+	 */
+	public int getVertexByDijkstraRank(int sourceId, int rank) {
+		this.queue.clear();
+		this.discovered.clear();
 
+		HeapItem s = new HeapItem(sourceId, 0, null);
+		queue.insert(s);
+		discovered.put(s.vertexId, s);
+		int numsettled = 0;
+		while (!queue.isEmpty()) {
+			HeapItem _u = queue.extractMin();
+			LevelVertex u = graph.getLevel(0).getVertex(_u.vertexId);
+			numsettled++;
+			if (numsettled == rank) {
+				return u.getId();
+			}
+			LevelEdge[] adjEdges = u.getOutboundEdges();
+			for (int i = 0; i < adjEdges.length; i++) {
+				LevelEdge e = adjEdges[i];
+				if (!e.isForward()) {
+					continue;
+				}
+				HeapItem _v = discovered.get(e.getTarget().getId());
+				if (_v == null) {
+					_v = new HeapItem(e.getTarget().getId(), _u.distance + e.getWeight(), u);
+					queue.insert(_v);
+					discovered.put(_v.vertexId, _v);
+					_v.hopIdx = i;
+				} else if (_v.distance > _u.distance + e.getWeight()) {
+					queue.decreaseKey(_v, _u.distance + e.getWeight());
+					_v.hopIdx = i;
+					_v.parent = u;
+				}
+			}
+		}
+		return -1;
+	}
+
+	private class HeapItem implements IBinaryHeapItem<Integer> {
+		/**
+		 * the array index within the heap, used for implementing the IBinaryHeapItem interface.
+		 */
 		private int heapIdx;
+		/**
+		 * the currently found minimal distance of this vertex to the source vertex, also used
+		 * as heap key.
+		 */
 		int distance;
+		/**
+		 * the predecessor within the shortest path tree.
+		 */
 		LevelVertex parent;
+		/**
+		 * the id of the vertex this heap item is for.
+		 */
 		int vertexId;
+		/**
+		 * the hop idx to the outgoing adjacency list of the parent vertex. This edge leads to
+		 * this vertex.
+		 */
 		int hopIdx; // the index of the outbound edge lying on shortest path tree
 
+		/**
+		 * This class holds information about each discovered / visited vertex.
+		 * 
+		 * @param vertexId
+		 *            the id of the discovered vertex.
+		 * @param distance
+		 *            the best distance found by dijkstra's algorithm till now.
+		 * @param parent
+		 *            the predecessor within the shortest path tree.
+		 */
 		public HeapItem(int vertexId, int distance, LevelVertex parent) {
 			this.vertexId = vertexId;
 			this.distance = distance;
@@ -126,47 +229,5 @@ class DijkstraAlgorithm {
 			distance = key;
 		}
 
-	}
-
-	public static void main(String[] args) throws IOException, SQLException,
-			ClassNotFoundException {
-		String map = "berlin";
-		int n = 10;
-
-		// LevelGraph graph = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
-		// "berlin", "osm", "osm"));
-		// org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer.serialize(
-		// new File(map), graph);
-		LevelGraph graph = org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer
-				.deserialize(new File(map));
-
-		DijkstraAlgorithm d = new DijkstraAlgorithm(graph);
-		LinkedList<LevelVertex> sp = new LinkedList<LevelVertex>();
-		LinkedList<Integer> hopIndices = new LinkedList<Integer>();
-
-		Random rnd = new Random();
-		long time = System.currentTimeMillis();
-		for (int i = 0; i < n; i++) {
-			int s = rnd.nextInt(graph.getLevel(0).numVertices());
-			int t = rnd.nextInt(graph.getLevel(0).numVertices());
-			int distance = d.getShortestPath(s, t, 0, sp, hopIndices, true, false);
-			System.out.print(s + " -> " + t + "  :  ");
-			for (LevelVertex v : sp) {
-				System.out.print(v.getId() + ",");
-			}
-			System.out.println();
-
-			System.out.print(s + " -> " + t + "  :  ");
-
-			LevelVertex v = graph.getLevel(0).getVertex(s);
-			System.out.print(v.getId());
-			for (int idx : hopIndices) {
-				v = v.getOutboundEdges()[idx].getTarget();
-				System.out.print("," + v.getId());
-			}
-			System.out.println();
-			sp.clear();
-			hopIndices.clear();
-		}
 	}
 }

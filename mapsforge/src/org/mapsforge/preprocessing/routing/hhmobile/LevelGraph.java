@@ -21,41 +21,128 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelEdge;
-import org.mapsforge.preprocessing.routing.hhmobile.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
 
+/**
+ * Multileveled array based graph implementation. For computing the binary file, it is necessary
+ * to have the whole data in main memory. This graph loads the complete highway hierarchies
+ * database and thus provides fast random access to the data.
+ */
 class LevelGraph implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	/**
+	 * index to the eDirection array.
+	 */
 	private static final int FWD = 0;
+	/**
+	 * index to the eDirection array.
+	 */
 	private static final int BWD = 1;
-
-	final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, vLon, vLat;
-	final int[] eSource, eTarget, eWeight, eMinLvl;
+	/**
+	 * first level vertex entry of each vertex.
+	 */
+	final int[] vFirstLvlVertex;
+	/**
+	 * level vertex neighborhood entries.
+	 */
+	final int[] vLvlVNh;
+	/**
+	 * points to the index of the first outgoing edge of a level vertex.
+	 */
+	final int[] vLvlFirstEdge;
+	/**
+	 * the longitudes of each vertex in micro degrees.
+	 */
+	final int[] vLon;
+	/**
+	 * the latitudes of each vertex in micro degrees.
+	 */
+	final int[] vLat;
+	/**
+	 * the source id of each edge.
+	 */
+	final int[] eSource;
+	/**
+	 * the target id of each edge.
+	 */
+	final int[] eTarget;
+	/**
+	 * the weight of each edge.
+	 */
+	final int[] eWeight;
+	/**
+	 * the minimum level the edges belong to.
+	 */
+	final int[] eMinLvl;
+	/**
+	 * edge direction, if the bit of the direction is that the edge is a forward / backward
+	 * edge.
+	 */
 	final BitArray[] eDirection;
+	/**
+	 * set to true if the edge is a shortcut.
+	 */
 	final BitArray eIsShortcut;
+	/**
+	 * edge names.
+	 */
 	final String[] eName;
+	/**
+	 * edge refs (names)
+	 */
 	final String[] eRef;
+	/**
+	 * set if edge belongs to a motorway link
+	 */
 	final BitArray eMotorwayLink;
+	/**
+	 * set if edge belongs to a roundabout.
+	 */
 	final BitArray eRoundabout;
+	/**
+	 * the way points .
+	 */
 	final int[][] eLatitudesE6;
+	/**
+	 * the way points .
+	 */
 	final int[][] eLongitudesE6;
+	/**
+	 * number of levels this graph has.
+	 */
 	private final int numLevels;
-
+	/**
+	 * number of vertices in this graph.
+	 */
 	final int numVertices;
-
-	private final int numLvlVertices, numEdges;
-
+	/**
+	 * number of level vertices in this graph.
+	 */
+	private final int numLvlVertices;
+	/**
+	 * number of edges in this graph.
+	 */
+	private final int numEdges;
+	/**
+	 * One graph instance for each level.
+	 */
 	private final Level[] levels;
 
+	/**
+	 * Constructs a graph by loading data from a database. the schema must conform to the
+	 * highway hierarchies schema and the osm2rg schema.
+	 * 
+	 * @param conn
+	 *            database to be read from.
+	 * @throws SQLException
+	 *             on error reading database.
+	 */
 	public LevelGraph(Connection conn) throws SQLException {
 		HHDbReader reader = new HHDbReader(conn);
 
@@ -150,20 +237,13 @@ class LevelGraph implements Serializable {
 		}
 	}
 
-	private void reverseInplace(int[] arr) {
-		if (arr != null) {
-			int i = 0;
-			int j = arr.length - 1;
-			while (i < j) {
-				int tmp = arr[i];
-				arr[i] = arr[j];
-				arr[j] = tmp;
-				i++;
-				j--;
-			}
-		}
-	}
-
+	/**
+	 * Converts degree to integer micro degree.
+	 * 
+	 * @param degree
+	 *            array of degree values.
+	 * @return array of micro degree values.
+	 */
 	private int[] toE6Waypoints(double[] degree) {
 		if (degree == null) {
 			return null;
@@ -175,30 +255,57 @@ class LevelGraph implements Serializable {
 		return tmp;
 	}
 
+	/**
+	 * Get the graph of the specified level of this hierarchy.
+	 * 
+	 * @param lvl
+	 *            must be in range.
+	 * @return the level.
+	 */
 	public Level getLevel(int lvl) {
 		return levels[lvl];
 	}
 
+	/**
+	 * @return all levels of this hierarchy.
+	 */
 	public Level[] getLevels() {
 		return levels;
 	}
 
+	/**
+	 * @return number of levels in this hierarchy.
+	 */
 	public int numLevels() {
 		return numLevels;
 	}
 
+	/**
+	 * @param id
+	 *            vertex identifier.
+	 * @return the maximum level the vertex belongs to.
+	 */
 	int getVertexLvl(int id) {
 		return (vFirstLvlVertex[id + 1] - vFirstLvlVertex[id]) - 1;
 	}
 
-	public int[] getVertexLongitudes() {
+	/**
+	 * @return longitudes in micro degrees of all vertices in this graph.
+	 */
+	public int[] getVertexLongitudesE6() {
 		return vLon;
 	}
 
-	public int[] getVertexLatitudes() {
+	/**
+	 * @return latitude in micro degrees of all vertices in this graph.
+	 */
+	public int[] getVertexLatitudesE6() {
 		return vLat;
 	}
 
+	/**
+	 * Each level implements the graph interface.
+	 */
 	public class Level implements Graph, Serializable {
 
 		private static final long serialVersionUID = 1L;
@@ -268,6 +375,10 @@ class LevelGraph implements Serializable {
 			return lvlNumVertices;
 		}
 
+		/**
+		 * lieghtweight vertex implementation.
+		 * 
+		 */
 		public class LevelVertex implements Vertex, Serializable {
 
 			private static final long serialVersionUID = 1L;
@@ -286,6 +397,9 @@ class LevelGraph implements Serializable {
 				return id;
 			}
 
+			/**
+			 * @return the highway hierarchies neighborhood.
+			 */
 			public int getNeighborhood() {
 				return vLvlVNh[vFirstLvlVertex[id] + lvl];
 			}
@@ -302,19 +416,31 @@ class LevelGraph implements Serializable {
 				return edges;
 			}
 
+			/**
+			 * @return the coordinate of this vertex.
+			 */
 			public GeoCoordinate getCoordinate() {
 				return new GeoCoordinate(vLat[id], vLon[id]);
 			}
 
+			/**
+			 * @return the level of this vertex.
+			 */
 			public int getLevel() {
 				return lvl;
 			}
 
+			/**
+			 * @return the maximum level this vertex belongs to.
+			 */
 			public int getMaxLevel() {
 				return vFirstLvlVertex[id + 1] - vFirstLvlVertex[id] - 1;
 			}
 		}
 
+		/**
+		 * Lightweight edge implementation.
+		 */
 		public class LevelEdge implements Edge, Serializable {
 
 			private static final long serialVersionUID = 1L;
@@ -325,6 +451,9 @@ class LevelGraph implements Serializable {
 				this.id = id;
 			}
 
+			/**
+			 * @return identifier of this edge.
+			 */
 			public int getId() {
 				return this.id;
 			}
@@ -344,38 +473,66 @@ class LevelGraph implements Serializable {
 				return eWeight[id];
 			}
 
+			/**
+			 * @return the minimum level this edge belongs to.
+			 */
 			public int getMinLevel() {
 				return eMinLvl[id];
 			}
 
+			/**
+			 * @return true if edge is in forward graph.
+			 */
 			public boolean isForward() {
 				return eDirection[FWD].get(id);
 			}
 
+			/**
+			 * @return true if edge is in backward graph.
+			 */
 			public boolean isBackward() {
 				return eDirection[BWD].get(id);
 			}
 
+			/**
+			 * @return true if edge is a shortcut.
+			 */
 			public boolean isShortcut() {
 				return eIsShortcut.get(id);
 			}
 
+			/**
+			 * @return the street name of this edge.
+			 */
 			public String getName() {
 				return eName[id];
 			}
 
+			/**
+			 * @return the ref name of this edge.
+			 */
 			public String getRef() {
 				return eRef[id];
 			}
 
+			/**
+			 * @return true if edge is part of a motorway link.
+			 */
 			public boolean isMotorwayLink() {
 				return eMotorwayLink.get(id);
 			}
 
+			/**
+			 * @return true if edge is part of a roundabout.
+			 */
 			public boolean isRoundabout() {
 				return eRoundabout.get(id);
 			}
 
+			/**
+			 * @return the way point coordinates excluding source and target coordinate ordered
+			 *         from source to target.
+			 */
 			public GeoCoordinate[] getWaypoints() {
 				if (eLatitudesE6[id] == null) {
 					return new GeoCoordinate[0];
@@ -387,19 +544,5 @@ class LevelGraph implements Serializable {
 				return waypoints;
 			}
 		}
-	}
-
-	public static void main(String[] args) throws SQLException {
-		LevelGraph lg = new LevelGraph(DBConnection.getJdbcConnectionPg("localhost", 5432,
-				"osm", "osm", "osm"));
-		Level l = lg.getLevel(0);
-		Iterator<LevelVertex> iter = l.getVertices();
-		while (iter.hasNext()) {
-			LevelVertex v = iter.next();
-			for (LevelEdge e : v.getOutboundEdges()) {
-				System.out.println(e);
-			}
-		}
-
 	}
 }
