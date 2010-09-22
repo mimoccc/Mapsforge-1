@@ -31,6 +31,9 @@ import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
+/**
+ * This class allows for object oriented reading of the hihway hierarchies database.
+ */
 public class HHDbReader {
 
 	private static final int FETCH_SIZE = 1000;
@@ -54,6 +57,15 @@ public class HHDbReader {
 	private final Connection conn;
 	private final int numVertices, numLevelVertices, numEdges, numLevels;
 
+	/**
+	 * This reader can only read from databases conform to the highway hierarchies schema AND
+	 * the osm2rg schema.
+	 * 
+	 * @param conn
+	 *            the database to read from.
+	 * @throws SQLException
+	 *             on error querying database.
+	 */
 	public HHDbReader(Connection conn) throws SQLException {
 		this.conn = conn;
 		this.conn.setAutoCommit(false);
@@ -76,18 +88,34 @@ public class HHDbReader {
 		numLevels = rs.getInt("count");
 	}
 
+	/**
+	 * @return the number of vertices in the hierarchy.
+	 */
 	public int numVertices() {
 		return numVertices;
 	}
 
+	/**
+	 * @return the number of level vertices in the hierarchy.
+	 */
 	public int numLevelVertices() {
 		return numLevelVertices;
 	}
 
+	/**
+	 * @return the number of edges in the hierarchy.
+	 */
 	public int numEdges() {
 		return numEdges;
 	}
 
+	/**
+	 * @param lvl
+	 *            specifies a level of the hierarchy.
+	 * @return the number of edges in the given level of the hierarchy.
+	 * @throws SQLException
+	 *             on error querying database.
+	 */
 	public int numEdges(int lvl) throws SQLException {
 		PreparedStatement pstmt = conn.prepareStatement(SQL_COUNT_EDGES_LVL);
 		pstmt.setInt(1, lvl);
@@ -104,10 +132,18 @@ public class HHDbReader {
 
 	}
 
+	/**
+	 * @return the number of levels the hierarchy has.
+	 */
 	public int numLevels() {
 		return numLevels;
 	}
 
+	/**
+	 * @return the distance table.
+	 * @throws SQLException
+	 *             on error querying the database.
+	 */
 	public DistanceTable getDistanceTable() throws SQLException {
 		String selectRowCount = "SELECT count(*) AS c FROM hh_distance_table_row;";
 		ResultSet rs = conn.createStatement().executeQuery(selectRowCount);
@@ -136,6 +172,11 @@ public class HHDbReader {
 
 	}
 
+	/**
+	 * @return the graph properties.
+	 * @throws SQLException
+	 *             on error querying the database.
+	 */
 	public HHGraphProperties getGraphProperties() throws SQLException {
 		HHLevelStats[] stats = new HHLevelStats[numLevels];
 		ResultSet rs = conn.createStatement().executeQuery(SQL_SELECT_LEVEL_STATS);
@@ -160,6 +201,11 @@ public class HHDbReader {
 
 	}
 
+	/**
+	 * The iterator may return null values in case of sql errors.
+	 * 
+	 * @return get all vertices of the hierarchy.
+	 */
 	public Iterator<HHVertex> getVertices() {
 		try {
 			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
@@ -203,7 +249,7 @@ public class HHDbReader {
 
 				@Override
 				public void remove() {
-
+					// only read data.
 				}
 			};
 		} catch (SQLException e) {
@@ -212,6 +258,11 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * The iterator may return null values in case of sql errors.
+	 * 
+	 * @return all level vertices of this hierarchy.
+	 */
 	public Iterator<HHVertexLvl> getVertexLvls() {
 		try {
 			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
@@ -255,7 +306,7 @@ public class HHDbReader {
 
 				@Override
 				public void remove() {
-
+					// only read
 				}
 			};
 		} catch (SQLException e) {
@@ -264,6 +315,11 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * The iterator may return null values in case of sql errors.
+	 * 
+	 * @return all edges of the hierarchy.
+	 */
 	public Iterator<HHEdge> getEdges() {
 		try {
 			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
@@ -275,6 +331,13 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * The iterator may return null values in case of sql errors.
+	 * 
+	 * @param lvl
+	 *            the level the edges are in.
+	 * @return all edges belonging to the given level of the graph.
+	 */
 	public Iterator<HHEdge> getEdges(int lvl) {
 		try {
 			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
@@ -289,6 +352,11 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * The iterator may return null values in case of sql errors.
+	 * 
+	 * @return all level edges of the graph.
+	 */
 	public Iterator<HHEdgeLvl> getEdgesLvl() {
 		try {
 			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
@@ -301,6 +369,15 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * Extracts a primitive double array out of an sql array.
+	 * 
+	 * @param a
+	 *            the sql array must contain an array of type Double[].
+	 * @return primitive double array, same order.
+	 * @throws SQLException
+	 *             on error accessing the array.
+	 */
 	static double[] toDoubleArray(Array a) throws SQLException {
 		if (a == null) {
 			return null;
@@ -364,7 +441,7 @@ public class HHDbReader {
 
 				@Override
 				public void remove() {
-
+					// only read.
 				}
 			};
 		} catch (SQLException e) {
@@ -415,7 +492,7 @@ public class HHDbReader {
 
 				@Override
 				public void remove() {
-
+					// read only.
 				}
 			};
 		} catch (SQLException e) {
@@ -424,12 +501,48 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * Immutable Highway hierarchies edge.
+	 */
 	public static class HHEdge {
+		/**
+		 * identifier of this edge
+		 */
+		public final int id;
+		/**
+		 * identifier of the source vertex of this edge.
+		 */
+		public final int sourceId;
+		/**
+		 * identifier of the target vertex of this edge.
+		 */
+		public final int targetId;
+		/**
+		 * weight of this edge.
+		 */
+		public final int weight;
+		/**
+		 * the minimum level of the graph, this edge belongs to.
+		 */
+		public final int minLvl;
+		/**
+		 * the maximum level of the graph this edge belongs to.
+		 */
+		public final int maxLvl;
+		/**
+		 * true if edge is in forward graph.
+		 */
+		public final boolean fwd;
+		/**
+		 * true if this edge is in backward graph.
+		 */
+		public final boolean bwd;
+		/**
+		 * true if this edge is a shortcut.
+		 */
+		public final boolean shortcut;
 
-		public final int id, sourceId, targetId, weight, minLvl, maxLvl;
-		public final boolean fwd, bwd, shortcut;
-
-		public HHEdge(int id, int sourceId, int targetId, int weight, int minLvl, int maxLvl,
+		HHEdge(int id, int sourceId, int targetId, int weight, int minLvl, int maxLvl,
 				boolean fwd, boolean bwd, boolean shortcut) {
 			this.id = id;
 			this.sourceId = sourceId;
@@ -443,18 +556,45 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * This immutable class represents an edge of a given level.
+	 */
 	public static class HHEdgeLvl extends HHEdge {
-
+		/**
+		 * the level of this edge.
+		 */
 		public final int lvl;
+		/**
+		 * street name of this edge.
+		 */
 		public final String name;
+		/**
+		 * ref name of this edge
+		 */
 		public final String ref;
-		public final double[] latitudes, longitudes;
-		public final boolean isReversed; // edge is reversed with regard to representation in
-		// the osm file
+		/**
+		 * the latitudes of the way points of this edge, excluding source an target coordinates.
+		 */
+		public final double[] latitudes;
+		/**
+		 * the longitudes of the way points of this edge, excluding source an target
+		 * coordinates.
+		 */
+		public final double[] longitudes;
+		/**
+		 * false if this exists in the osm xml in the same direction.
+		 */
+		public final boolean isReversed;
+		/**
+		 * true if this edge is part of a motorway link.
+		 */
 		public final boolean isMotorwayLink;
+		/**
+		 * true if this edge is part of a roundabout.
+		 */
 		public final boolean isRoundabout;
 
-		public HHEdgeLvl(int id, int sourceId, int targetId, int weight, int minLvl,
+		HHEdgeLvl(int id, int sourceId, int targetId, int weight, int minLvl,
 				int maxLvl, boolean fwd, boolean bwd, boolean shortcut, int lvl,
 				String name, String ref, double[] latitudes, double[] longitudes,
 				boolean isReversed,
@@ -471,22 +611,49 @@ public class HHDbReader {
 		}
 	}
 
+	/**
+	 * This immutable class holds level specific information of vertices.
+	 */
 	public static class HHVertexLvl {
+		/**
+		 * the identifier of the respective vertex. multiple level vertices can have the same
+		 * identifier!
+		 */
+		public final int id;
+		/**
+		 * the neighborhood value of this vertex level.
+		 */
+		public final int neighborhood;
+		/**
+		 * the level of this vertex level.
+		 */
+		public final int lvl;
 
-		public final int id, neighborhood, lvl;
-
-		public HHVertexLvl(int id, int neighborhood, int lvl) {
+		HHVertexLvl(int id, int neighborhood, int lvl) {
 			this.id = id;
 			this.neighborhood = neighborhood;
 			this.lvl = lvl;
 		}
 	}
 
+	/**
+	 * This immutable class represents a vertex within the highway hierarchy.
+	 */
 	public static class HHVertex {
+		/**
+		 * the identifier of this vertex.
+		 */
 		public final int id;
-		public final double longitude, latitude;
+		/**
+		 * the longitude in degrees of this vertex.
+		 */
+		public final double longitude;
+		/**
+		 * the latitude in derees of this vertex.
+		 */
+		public final double latitude;
 
-		public HHVertex(int id, double longitude, double latitude) {
+		HHVertex(int id, double longitude, double latitude) {
 			this.id = id;
 			this.longitude = longitude;
 			this.latitude = latitude;
