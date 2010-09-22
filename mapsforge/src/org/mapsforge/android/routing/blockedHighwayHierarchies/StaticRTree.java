@@ -24,7 +24,7 @@ import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.BlockedHHGlobals;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.HHGlobals;
 
 /**
  * This class implements a static rtree variant. It supports the overlaps query which is the key
@@ -73,10 +73,10 @@ final class StaticRTree {
 
 		// read header
 		raf.seek(startAddr);
-		byte[] headerMagic = new byte[BlockedHHGlobals.STATIC_RTREE_HEADER_MAGIC.length];
+		byte[] headerMagic = new byte[HHGlobals.STATIC_RTREE_HEADER_MAGIC.length];
 		raf.readFully(headerMagic);
 		for (int i = 0; i < headerMagic.length; i++) {
-			if (headerMagic[i] != BlockedHHGlobals.STATIC_RTREE_HEADER_MAGIC[i]) {
+			if (headerMagic[i] != HHGlobals.STATIC_RTREE_HEADER_MAGIC[i]) {
 				throw new IOException("Could not access RTree, invalid header.");
 			}
 		}

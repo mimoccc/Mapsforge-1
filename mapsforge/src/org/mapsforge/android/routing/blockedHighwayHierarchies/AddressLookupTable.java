@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArrayInputStream;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitSerializer;
 
 /**
  * This class implements a run length encoded index of pointers, pointing to variable length
@@ -99,23 +99,26 @@ final class AddressLookupTable {
 	 * @return pointer identified by the given id or bull if id is out of range.
 	 */
 	public Pointer getPointer(int blockId) {
-		try {
-			final int groupIdx = blockId / gSize;
-			final int blockOffset = blockId % gSize;
+		final int groupIdx = blockId / gSize;
+		final int blockOffset = blockId % gSize;
 
-			long blockStartAddr = gStartAddr[groupIdx];
-			int blockSize = gFirstBlockSize[groupIdx];
-
-			BitArrayInputStream stream = new BitArrayInputStream(encBlockSize);
-			stream.setPointer(gBlockEncOffs[groupIdx], 0);
-			for (int i = 0; i < blockOffset; i++) {
-				blockStartAddr += blockSize;
-				blockSize += stream.readUInt(gEncBits[groupIdx]);
-			}
-			return new Pointer(blockStartAddr, blockSize);
-		} catch (IOException e) {
-			return null;
+		long blockStartAddr = gStartAddr[groupIdx];
+		int blockSize = gFirstBlockSize[groupIdx];
+		/*
+		 * BitArrayInputStream stream = new BitArrayInputStream(encBlockSize);
+		 * stream.setPointer(gBlockEncOffs[groupIdx], 0); for (int i = 0; i < blockOffset; i++)
+		 * { blockStartAddr += blockSize; blockSize += stream.readUInt(gEncBits[groupIdx]); }
+		 */
+		int bitOffset = gBlockEncOffs[groupIdx] * 8;
+		for (int i = 0; i < blockOffset; i++) {
+			blockStartAddr += blockSize;
+			blockSize += BitSerializer.readUInt(encBlockSize, gEncBits[groupIdx],
+					bitOffset / 8, bitOffset % 8);
+			bitOffset += gEncBits[groupIdx];
 		}
+
+		return new Pointer(blockStartAddr, blockSize);
+
 	}
 
 	/**
