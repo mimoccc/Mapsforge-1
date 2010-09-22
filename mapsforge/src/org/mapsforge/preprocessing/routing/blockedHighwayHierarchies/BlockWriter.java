@@ -34,7 +34,6 @@ import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArrayOutputStream;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
 class BlockWriter {

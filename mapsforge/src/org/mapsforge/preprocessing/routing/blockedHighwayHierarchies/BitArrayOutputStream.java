@@ -14,16 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util;
+package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 
 import java.io.IOException;
 
-public class BitArrayOutputStream {
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitSerializer;
 
-	private int byteOffset, bitOffset;
+/**
+ * Bit-granular stream implemented on top of the BitSerializer class for writing arrays.
+ */
+class BitArrayOutputStream {
+	/**
+	 * byte offset for next write.
+	 */
+	private int byteOffset;
+	/**
+	 * bit offset for next write.
+	 */
+	private int bitOffset;
+	/**
+	 * the data array to write to.
+	 */
 	private byte[] buff;
+	/**
+	 * bits until the end of the array. this value is used for checking against array out of
+	 * bounds before writing.
+	 */
 	private long bitsRemain;
 
+	/**
+	 * @param buff
+	 *            the array to write to.
+	 */
 	public BitArrayOutputStream(byte[] buff) {
 		this.byteOffset = 0;
 		this.bitOffset = 0;
@@ -31,18 +53,30 @@ public class BitArrayOutputStream {
 		this.bitsRemain = buff.length * 8L;
 	}
 
+	/**
+	 * @return byte array offset
+	 */
 	public int getByteOffset() {
 		return byteOffset;
 	}
 
+	/**
+	 * @return bit array offset, a value in [0 .. 7]
+	 */
 	public int getBitOffset() {
 		return bitOffset;
 	}
 
+	/**
+	 * @return number of bits that can be written until the end of the array is reached.
+	 */
 	public long getBitsRemain() {
 		return bitsRemain;
 	}
 
+	/**
+	 * @return number of bytes written to this stream.
+	 */
 	public int numBytesWritten() {
 		if (bitOffset == 0) {
 			return byteOffset;
@@ -50,6 +84,12 @@ public class BitArrayOutputStream {
 		return byteOffset + 1;
 	}
 
+	/**
+	 * @param val
+	 *            true writes a 1
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeBit(boolean val) throws IOException {
 		if (bitsRemain >= 1) {
 			BitSerializer.writeBit(val, buff, byteOffset, bitOffset);
@@ -59,6 +99,12 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * @param val
+	 *            to be written
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeByte(byte val) throws IOException {
 		if (bitsRemain >= BitSerializer.BITS_PER_BYTE) {
 			BitSerializer.writeByte(val, buff, byteOffset, bitOffset);
@@ -68,6 +114,12 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * @param val
+	 *            to be written
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeShort(short val) throws IOException {
 		if (bitsRemain >= BitSerializer.BITS_PER_SHORT) {
 			BitSerializer.writeShort(val, buff, byteOffset, bitOffset);
@@ -77,6 +129,13 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * 
+	 * @param val
+	 *            to be written
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeInt(int val) throws IOException {
 		if (bitsRemain >= BitSerializer.BITS_PER_INT) {
 			BitSerializer.writeInt(val, buff, byteOffset, bitOffset);
@@ -86,6 +145,13 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * 
+	 * @param val
+	 *            to be written
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeLong(long val) throws IOException {
 		if (bitsRemain >= BitSerializer.BITS_PER_LONG) {
 			BitSerializer.writeLong(val, buff, byteOffset, bitOffset);
@@ -95,6 +161,15 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * 
+	 * @param val
+	 *            to be written
+	 * @param nBits
+	 *            number of least significant bits to write.
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void writeUInt(long val, int nBits) throws IOException {
 		if (bitsRemain >= nBits) {
 			BitSerializer.writeUInt(val, nBits, buff, byteOffset, bitOffset);
@@ -104,12 +179,28 @@ public class BitArrayOutputStream {
 		}
 	}
 
+	/**
+	 * 
+	 * @param b
+	 *            to be written
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void write(byte[] b) throws IOException {
 		for (int i = 0; i < b.length; i++) {
 			writeByte(b[i]);
 		}
 	}
 
+	/**
+	 * Move pointer forward, maybe skip some bit and move pointer to the next multiple of the
+	 * given alignment.
+	 * 
+	 * @param byteAlignment
+	 *            offset must be a multiple of this number.
+	 * @throws IOException
+	 *             if the end of the array is reached.
+	 */
 	public void alignPointer(int byteAlignment) throws IOException {
 		int _byteOffset = byteOffset;
 		if (bitOffset != 0) {

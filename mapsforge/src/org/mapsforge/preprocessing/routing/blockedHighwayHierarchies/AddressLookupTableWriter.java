@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArrayOutputStream;
 
 class AddressLookupTableWriter {
 
