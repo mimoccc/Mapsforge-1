@@ -48,7 +48,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHD
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArraySynchronized;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
-import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 //select x.c as degree, count(*) * 100.0 / (select count(*) from hh_vertex where lvl = 0) as count from (select source_id, count(*) as c from hh_edge group by source_id order by c) as x group by x.c order by degree;
 
@@ -688,7 +688,7 @@ public final class HHComputation {
 					outputFile.getAbsolutePath().lastIndexOf(File.separatorChar))
 					+ File.separatorChar);
 			dir.mkdirs();
-			RouterImpl router = RouterImpl.getFromDb(outputDb);
+			HHRouterServerside router = HHRouterServerside.getFromDb(outputDb);
 			router.serialize(new FileOutputStream(outputFile));
 			System.out.println("finished.");
 		}
