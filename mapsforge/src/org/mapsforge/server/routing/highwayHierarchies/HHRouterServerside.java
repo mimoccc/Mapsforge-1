@@ -41,7 +41,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * This class servers the highway hierarchies routing functionality to other packages, thus it
  * is the interface of this package.
  */
-public class RouterImpl implements IRouter {
+public class HHRouterServerside implements IRouter {
 
 	private static final String ALGORITHM_NAME = "Highway Hierarchies";
 
@@ -62,7 +62,7 @@ public class RouterImpl implements IRouter {
 	final RgEdgeNames edgeNames;
 	final EdgeIndex edgeIndex;
 
-	private RouterImpl(HHAlgorithm algorithm, HHStaticGraph routingGraph,
+	private HHRouterServerside(HHAlgorithm algorithm, HHStaticGraph routingGraph,
 			HHEdgeExpanderRecursive edgeExpander, DistanceTable distanceTable,
 			HHEdgeReverser edgeReverser, GeoCoordinateKDTree vertexIndex, EdgeMapper mapper,
 			RgEdgeNames edgeNames, EdgeIndex edgeIndex) {
@@ -108,7 +108,7 @@ public class RouterImpl implements IRouter {
 	 * @throws ClassNotFoundException
 	 *             error due to deserialization.
 	 */
-	public static RouterImpl deserialize(InputStream iStream) throws IOException,
+	public static HHRouterServerside deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
 		HHAlgorithm algorithm = new HHAlgorithm();
 		HHStaticGraph routingGraph = HHStaticGraph.deserialize(iStream);
@@ -126,7 +126,7 @@ public class RouterImpl implements IRouter {
 		RgEdgeNames edgeNames = RgEdgeNames.deserialize(iStream);
 		EdgeIndex edgeIndex = EdgeIndex.deserialize(iStream);
 
-		return new RouterImpl(algorithm, routingGraph, edgeExpander, distanceTable,
+		return new HHRouterServerside(algorithm, routingGraph, edgeExpander, distanceTable,
 				edgeReverser, vertexIndex, mapper, edgeNames, edgeIndex);
 	}
 
@@ -141,7 +141,7 @@ public class RouterImpl implements IRouter {
 	 * @throws SQLException
 	 *             on error reading from database.
 	 */
-	public static RouterImpl getFromDb(Connection conn) throws SQLException {
+	public static HHRouterServerside getFromDb(Connection conn) throws SQLException {
 		HHAlgorithm algorithm = new HHAlgorithm();
 		HHStaticGraph routingGraph = HHStaticGraph.getFromHHDb(conn);
 
@@ -159,7 +159,7 @@ public class RouterImpl implements IRouter {
 		RgEdgeNames edgeNames = RgEdgeNames.importFromDb(conn);
 		EdgeIndex edgeIndex = EdgeIndex.importFromDb(conn);
 
-		return new RouterImpl(algorithm, routingGraph, edgeExpander, distanceTable,
+		return new HHRouterServerside(algorithm, routingGraph, edgeExpander, distanceTable,
 				edgeReverser, vertexIndex, mapper, edgeNames, edgeIndex);
 	}
 

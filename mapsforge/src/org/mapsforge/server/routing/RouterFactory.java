@@ -27,7 +27,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.DBConnection;
-import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 public class RouterFactory {
 
@@ -62,11 +62,11 @@ public class RouterFactory {
 			return null;
 		}
 
-		RouterImpl hhRouter = null;
+		HHRouterServerside hhRouter = null;
 		// try read from file :
 		try {
 			FileInputStream iStream = new FileInputStream(filename);
-			hhRouter = RouterImpl.deserialize(iStream);
+			hhRouter = HHRouterServerside.deserialize(iStream);
 			iStream.close();
 
 		} catch (FileNotFoundException e) {
@@ -88,7 +88,7 @@ public class RouterFactory {
 
 				conn = DBConnection.getJdbcConnectionPg(hostName, port, dbName, username,
 						password);
-				hhRouter = RouterImpl.getFromDb(conn);
+				hhRouter = HHRouterServerside.getFromDb(conn);
 			} catch (SQLException e) {
 				logger.info("Could not load HHRouter from db.");
 			} catch (Exception e) {
