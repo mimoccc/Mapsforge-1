@@ -24,7 +24,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHD
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
 /**
- * @author Frank Viernau
+ * computes the distance table.
  */
 public class ThreadedDistanceTableComputation extends ComputationThread {
 
@@ -40,6 +40,15 @@ public class ThreadedDistanceTableComputation extends ComputationThread {
 		this.table = dt;
 	}
 
+	/**
+	 * @param graph
+	 *            highway hierarchy.
+	 * @param lvl
+	 *            the level for which the distance table shall be computed.
+	 * @param numThreads
+	 *            to use for computation.
+	 * @return all pairs distance table.
+	 */
 	public static DistanceTable computeCoreDistanceTable(HHDynamicGraph graph, int lvl,
 			int numThreads) {
 		LinkedList<Integer> coreVertices = new LinkedList<Integer>();
@@ -58,7 +67,7 @@ public class ThreadedDistanceTableComputation extends ComputationThread {
 		}
 		ThreadedComputation.executeThreads(threads, coreVertices.size(),
 				"computeDistanceTable(lvl=" + lvl + ",size=" + coreVertices.size() + "x"
-						+ coreVertices.size() + ")");
+				+ coreVertices.size() + ")");
 		return table;
 	}
 
