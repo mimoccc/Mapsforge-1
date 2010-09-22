@@ -225,7 +225,9 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 			// bufferArray[i] = tempByte;
 			// }
 
-			this.bitmap.copyPixelsFromBuffer(this.pixelBuffer);
+			if (!this.bitmap.isRecycled()) {
+				this.bitmap.copyPixelsFromBuffer(this.pixelBuffer);
+			}
 			this.frameReady = true;
 		}
 	}
