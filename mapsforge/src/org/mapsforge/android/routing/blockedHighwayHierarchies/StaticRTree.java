@@ -92,7 +92,7 @@ final class StaticRTree {
 		for (int i = 0; i < root.maxLatitudeE6.length; i++) {
 			minLat = Math.min(minLat, root.minLatitudeE6[i]);
 			minLon = Math.min(minLon, root.minLongitudeE6[i]);
-			maxLat = Math.max(maxLat, root.maxLongitudeE6[i]);
+			maxLat = Math.max(maxLat, root.maxLatitudeE6[i]);
 			maxLon = Math.max(maxLon, root.maxLongitudeE6[i]);
 		}
 		this.boundingBox = new Rect(minLon, maxLon, minLat, maxLat);
@@ -134,10 +134,12 @@ final class StaticRTree {
 	 * @throws IOException
 	 *             on error accessing file.
 	 */
-	public LinkedList<Integer> overlaps(int minLongitudeE6, int maxLongitudeE6, int minLatitudeE6, int maxLatitudeE6)
+	public LinkedList<Integer> overlaps(int minLongitudeE6, int maxLongitudeE6,
+			int minLatitudeE6, int maxLatitudeE6)
 			throws IOException {
 		LinkedList<Integer> buff = new LinkedList<Integer>();
-		overlaps(minLongitudeE6, maxLongitudeE6, minLatitudeE6, maxLatitudeE6, root, buff);
+		overlapsRecursive(minLongitudeE6, maxLongitudeE6, minLatitudeE6, maxLatitudeE6, root,
+				buff);
 		return buff;
 	}
 
@@ -159,7 +161,8 @@ final class StaticRTree {
 	 * @throws IOException
 	 *             on error accessing file.
 	 */
-	private void overlaps(int minLon, int maxLon, int minLat, int maxLat, RtreeNode node,
+	private void overlapsRecursive(int minLon, int maxLon, int minLat, int maxLat,
+			RtreeNode node,
 			LinkedList<Integer> buff) throws IOException {
 		for (int i = 0; i < node.minLongitudeE6.length; i++) {
 			boolean overlaps = Rect.overlaps(node.minLongitudeE6[i], node.maxLongitudeE6[i],
@@ -170,7 +173,7 @@ final class StaticRTree {
 					buff.add(node.pointer[i]);
 				} else {
 					RtreeNode child = readNode(node.pointer[i]);
-					overlaps(minLon, maxLon, minLat, maxLat, child, buff);
+					overlapsRecursive(minLon, maxLon, minLat, maxLat, child, buff);
 				}
 			}
 		}

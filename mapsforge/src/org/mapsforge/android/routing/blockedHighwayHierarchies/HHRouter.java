@@ -18,7 +18,6 @@ package org.mapsforge.android.routing.blockedHighwayHierarchies;
 
 import java.awt.Color;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -30,7 +29,6 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.Rend
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**
  * This class implements the router interface which is already used server sided. There is some
@@ -180,12 +178,15 @@ public class HHRouter implements IRouter {
 					if (edges[i].isForward) {
 						n++;
 					}
+					System.out.println(edges[i].isForward);
 				}
 				EdgeImpl[] result = new EdgeImpl[n];
 				int j = 0;
 				for (int i = 0; i < edges.length; i++) {
 					if (edges[i].isForward) {
 						result[j++] = new EdgeImpl(edges[i]);
+					} else {
+						routingGraph.releaseEdge(edges[i]);
 					}
 				}
 				return result;
@@ -205,7 +206,38 @@ public class HHRouter implements IRouter {
 
 		@Override
 		public GeoCoordinate[] getAllWaypoints() {
-			return new GeoCoordinate[0];
+			try {
+
+				GeoCoordinate[] waypoints = new GeoCoordinate[edge.waypoints.length / 2 + 2];
+				HHVertex source = routingGraph.getVertex(edge.sourceId);
+				HHVertex target =
+						routingGraph.getVertex(edge.targetId);
+				waypoints[0] = new
+						GeoCoordinate(source.latitudeE6, source.longitudeE6);
+				for (int i = 1; i < waypoints.length - 1; i++) {
+					waypoints[i] = new
+							GeoCoordinate(edge.waypoints[(i - 1) * 2],
+							edge.waypoints[((i - 1) * 2) +
+							1]);
+				}
+				waypoints[waypoints.length - 1] = new GeoCoordinate(target.latitudeE6,
+						target.longitudeE6);
+				routingGraph.releaseVertex(source);
+				routingGraph.releaseVertex(target);
+				return waypoints;
+
+				// GeoCoordinate[] waypoints = new GeoCoordinate[2];
+				// HHVertex source = routingGraph.getVertex(edge.sourceId);
+				// HHVertex target = routingGraph.getVertex(edge.targetId);
+				// waypoints[0] = new GeoCoordinate(source.latitudeE6, source.longitudeE6);
+				// waypoints[1] = new GeoCoordinate(target.latitudeE6, target.longitudeE6);
+				// return waypoints;
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+			}
+			return null;
 		}
 
 		@Override
@@ -251,7 +283,12 @@ public class HHRouter implements IRouter {
 
 		@Override
 		public GeoCoordinate[] getWaypoints() {
-			return new GeoCoordinate[0];
+			GeoCoordinate[] waypoints = new GeoCoordinate[edge.waypoints.length / 2];
+			for (int i = 0; i < waypoints.length; i++) {
+				waypoints[i] = new GeoCoordinate(edge.waypoints[i << 1],
+						edge.waypoints[i << 1 + 1]);
+			}
+			return waypoints;
 		}
 
 		@Override
@@ -277,27 +314,19 @@ public class HHRouter implements IRouter {
 	 *            not used.
 	 * @throws IOException
 	 *             if there is something wrong reading the file.
-	 * @throws ClassNotFoundException
-	 *             bla bla bla
 	 */
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		HHRouter router = new HHRouter(new File("berlin.hhmobile"), 1000 * 1024);
 		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
-		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
+		IEdge[] shortestPath = router.getShortestPath(target.getId(), source.getId());
 		for (IEdge e : shortestPath) {
 			System.out.println(e.getName() + " " + e.getRef());
 		}
 
-		RendererV2 renderer = new RendererV2(1024, 768, HHRouterServerside
-				.deserialize(new FileInputStream("router/berlin.hh")), Color.BLACK,
+		RendererV2 renderer = new RendererV2(1024, 768, router, Color.BLACK,
 				Color.WHITE);
-		Rect bbox = new Rect(13291880, 13456765, 52455694, 52509769);
-		for (Iterator<? extends IVertex> iter = router.getVerticesWithinBox(bbox); iter
-				.hasNext();) {
-			IVertex v = iter.next();
-			renderer.addCircle(v.getCoordinate(), Color.RED);
-		}
 
+		renderer.addRoute(shortestPath, Color.GREEN);
 	}
 }

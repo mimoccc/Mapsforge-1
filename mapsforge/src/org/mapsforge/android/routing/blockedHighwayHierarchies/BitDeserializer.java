@@ -18,6 +18,25 @@ package org.mapsforge.android.routing.blockedHighwayHierarchies;
 
 class BitDeserializer {
 
+	private final static byte[] BYTE_NTH_BIT_SET = new byte[] {
+			0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, (byte) 0x80
+			};
+
+	/**
+	 * Reads a bit from the given Offset
+	 * 
+	 * @param buff
+	 *            the array to read from
+	 * @param byteOffset
+	 *            offset to the array
+	 * @param bitOffset
+	 *            offset to the array.
+	 * @return true if bit is set.
+	 */
+	public static boolean readBit(byte[] buff, int byteOffset, int bitOffset) {
+		return 0 != (buff[byteOffset] & BYTE_NTH_BIT_SET[bitOffset]);
+	}
+
 	public static final int BITS_PER_BYTE = 8;
 	public static final int BITS_PER_SHORT = 16;
 	public static final int BITS_PER_INT = 32;
@@ -40,29 +59,6 @@ class BitDeserializer {
 		return (byte) ((val & 0xff) >>> nBits);
 	}
 
-	private static void shortToBytes(short val, byte[] buff) {
-		buff[0] = (byte) val;
-		buff[1] = (byte) (val >>> 8);
-	}
-
-	private static void intToBytes(int val, byte[] buff) {
-		buff[0] = (byte) val;
-		buff[1] = (byte) (val >>> 8);
-		buff[2] = (byte) (val >>> 16);
-		buff[3] = (byte) (val >>> 24);
-	}
-
-	private static void longToBytes(long val, byte[] buff) {
-		buff[0] = (byte) val;
-		buff[1] = (byte) (val >>> 8);
-		buff[2] = (byte) (val >>> 16);
-		buff[3] = (byte) (val >>> 24);
-		buff[4] = (byte) (val >>> 32);
-		buff[5] = (byte) (val >>> 40);
-		buff[6] = (byte) (val >>> 48);
-		buff[7] = (byte) (val >>> 56);
-	}
-
 	private static short bytesToShort(byte[] buffer) {
 		return (short) ((buffer[0] & 0xff) | ((buffer[1] & 0xff) << 8));
 	}
@@ -79,82 +75,6 @@ class BitDeserializer {
 				| ((buffer[7] & 0xffL) << 56);
 	}
 
-	private static void writeBits(byte val, int nBits, byte[] buff, int byteOffset,
-			int bitOffset) {
-		if (nBits + bitOffset >= BITS_PER_BYTE) {
-			buff[byteOffset] &= BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE - bitOffset];
-			buff[byteOffset] |= shl(val, bitOffset);
-
-			val = shr(val, BITS_PER_BYTE - bitOffset);
-			nBits -= (BITS_PER_BYTE - bitOffset);
-			bitOffset = 0;
-			byteOffset++;
-		}
-		if (nBits > 0) {
-			buff[byteOffset] = (byte) ((buff[byteOffset] & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
-					- bitOffset]) | (buff[byteOffset] & BITMAKS_BYTE_LOW_CLEARED[bitOffset
-					+ nBits]));
-			buff[byteOffset] |= shl((byte) (val & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
-					- nBits]), bitOffset);
-		}
-	}
-
-	public static void writeBit(boolean val, byte[] buff, int byteOffset, int bitOffset) {
-		if (val) {
-			buff[byteOffset] |= shl((byte) 1, bitOffset);
-		} else {
-			buff[byteOffset] &= ~shl((byte) 1, bitOffset);
-		}
-	}
-
-	public static void writeByte(byte val, byte[] buff, int byteOffset, int bitOffset) {
-		buff[byteOffset] = (byte) ((buff[byteOffset] & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
-				- bitOffset]) | shl(val, bitOffset));
-		buff[byteOffset + 1] = (byte) ((buff[byteOffset + 1] & BITMAKS_BYTE_LOW_CLEARED[bitOffset]) | shr(
-				val, BITS_PER_BYTE - bitOffset));
-	}
-
-	public static void writeShort(short val, byte[] buff, int byteOffset, int bitOffset) {
-		shortToBytes(val, BUFFER);
-		writeByte(BUFFER[0], buff, byteOffset, bitOffset);
-		writeByte(BUFFER[1], buff, byteOffset + 1, bitOffset);
-	}
-
-	public static void writeInt(int val, byte[] buff, int byteOffset, int bitOffset) {
-		intToBytes(val, BUFFER);
-		writeByte(BUFFER[0], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[1], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[2], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[3], buff, byteOffset++, bitOffset);
-	}
-
-	public static void writeLong(long val, byte[] buff, int byteOffset, int bitOffset) {
-		longToBytes(val, BUFFER);
-		writeByte(BUFFER[0], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[1], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[2], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[3], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[4], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[5], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[6], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[7], buff, byteOffset++, bitOffset);
-	}
-
-	public static void writeUInt(long val, int nBits, byte[] buff, int byteOffset, int bitOffset) {
-		assert (nBits < BITS_PER_LONG);
-		longToBytes(val, BUFFER);
-		int j = 0;
-
-		while (nBits >= BITS_PER_BYTE) {
-			writeByte(BUFFER[j++], buff, byteOffset++, bitOffset);
-			nBits -= BITS_PER_BYTE;
-
-		}
-		if (nBits > 0) {
-			writeBits(BUFFER[j], nBits, buff, byteOffset, bitOffset);
-		}
-	}
-
 	private static byte readBits(byte[] buff, int nBits, int byteOffset, int bitOffset) {
 		if (bitOffset + nBits > BITS_PER_BYTE) {
 			return (byte) (readByte(buff, byteOffset, bitOffset) & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
@@ -162,10 +82,6 @@ class BitDeserializer {
 		}
 		return (byte) (shr(buff[byteOffset], bitOffset) & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
 				- nBits]);
-	}
-
-	public static boolean readBit(byte[] buff, int byteOffset, int bitOffset) {
-		return 0 != (buff[byteOffset] & shl((byte) 1, bitOffset));
 	}
 
 	public static byte readByte(byte[] buff, int byteOffset, int bitOffset) {
@@ -216,5 +132,17 @@ class BitDeserializer {
 			BUFFER[j++] = 0;
 		}
 		return bytesToLong(BUFFER);
+	}
+
+	public static void main(String[] args) {
+		Byte b = (byte) (0x80);
+		System.out.println(readBit(new byte[] { 0x01 }, 0, 0));
+		System.out.println(readBit(new byte[] { 0x02 }, 0, 1));
+		System.out.println(readBit(new byte[] { 0x04 }, 0, 2));
+		System.out.println(readBit(new byte[] { 0x08 }, 0, 3));
+		System.out.println(readBit(new byte[] { 0x10 }, 0, 4));
+		System.out.println(readBit(new byte[] { 0x20 }, 0, 5));
+		System.out.println(readBit(new byte[] { 0x40 }, 0, 6));
+		System.out.println(readBit(new byte[] { (byte) 0x80 }, 0, 7));
 	}
 }
