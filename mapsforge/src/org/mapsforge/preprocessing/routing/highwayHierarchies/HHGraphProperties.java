@@ -20,20 +20,53 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @author Frank Viernau
+ * immutable class holding information about the hierarchy.
  */
 public class HHGraphProperties implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	/**
+	 * date of creation
+	 */
 	public final Date creationDate;
+	/**
+	 * the transport string specified during preprocessing.
+	 */
 	public final String transport;
-	public final int h, vertexThreshold, hopLimit, numThreads;
-	public final double c, compTimeMinutes;
+	/**
+	 * dijkstra rank for computing neighborhoods.
+	 */
+	public final int h;
+	/**
+	 * hh preprocessing param, recursion anchor on number of vertices.
+	 */
+	public final int vertexThreshold;
+	/**
+	 * maximum number of edes per shortcut.
+	 */
+	public final int hopLimit;
+	/**
+	 * number of threads used for preprocessing.
+	 */
+	public final int numThreads;
+	/**
+	 * the contraction factor.
+	 */
+	public final double c;
+	/**
+	 * time in minutes needed for computing the hierarchy.
+	 */
+	public final double compTimeMinutes;
+	/**
+	 * true if edges leaving the core were downgraded to the next lower level.
+	 */
 	public final boolean downgradedEdges;
+	/**
+	 * per level info about the graph.
+	 */
 	public final HHLevelStats[] levelStats;
 
-	public HHGraphProperties(Date creationDate, String transport, int h, int vertexThreshold,
+	HHGraphProperties(Date creationDate, String transport, int h, int vertexThreshold,
 			int hopLimit, int numThreads, double c, double compTimeMinutes,
 			boolean downgradedEdges, HHLevelStats[] levelStats) {
 		this.creationDate = creationDate;
@@ -61,13 +94,34 @@ public class HHGraphProperties implements Serializable {
 		return str;
 	}
 
+	/**
+	 * immutable per level info about the graph
+	 */
 	public static class HHLevelStats implements Serializable {
 
 		private static final long serialVersionUID = -6115864997731495133L;
+		/**
+		 * the level this class is about.
+		 */
+		public final int lvl;
+		/**
+		 * number of edges in the level.
+		 */
+		public final int numEdges;
+		/**
+		 * number of vertices in the level.
+		 */
+		public final int numVertices;
+		/**
+		 * number of core edges in the level.
+		 */
+		public final int numCoreEdges;
+		/**
+		 * number of core vertices in the level.
+		 */
+		public final int numCoreVertices;
 
-		public final int lvl, numEdges, numVertices, numCoreEdges, numCoreVertices;
-
-		public HHLevelStats(int lvl, int numEdges, int numVertices, int numCoreEdges,
+		HHLevelStats(int lvl, int numEdges, int numVertices, int numCoreEdges,
 				int numCoreVertices) {
 			this.lvl = lvl;
 			this.numEdges = numEdges;
