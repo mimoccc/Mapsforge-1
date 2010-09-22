@@ -47,8 +47,8 @@ import javax.swing.event.ChangeListener;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.routing.hhmobile.Cluster;
-import org.mapsforge.preprocessing.routing.hhmobile.Clustering;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.Cluster;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.Clustering;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
