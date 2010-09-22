@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArrayOutputStream;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.Utils;
 
 class AddressLookupTableWriter {
 
@@ -140,9 +139,23 @@ class AddressLookupTableWriter {
 	private static byte[] getGroupEncBits(int[] gMaxDiff) {
 		byte[] gEncBits = new byte[gMaxDiff.length];
 		for (int i = 0; i < gMaxDiff.length; i++) {
-			gEncBits[i] = Utils.numBitsToEncode(0, gMaxDiff[i]);
+			gEncBits[i] = numBitsToEncode(0, gMaxDiff[i]);
 		}
 		return gEncBits;
+	}
+
+	/**
+	 * How many bits needed to encode values of the given range.
+	 * 
+	 * @param minVal
+	 *            minimum value
+	 * @param maxVal
+	 *            maximum value
+	 * @return number of bits required.
+	 */
+	private static byte numBitsToEncode(int minVal, int maxVal) {
+		int interval = maxVal - minVal;
+		return (byte) (Math.floor(Math.log(interval) / Math.log(2)) + 1);
 	}
 
 	/**
@@ -174,7 +187,7 @@ class AddressLookupTableWriter {
 		int numG = getNumGroups(blockSize.length, gSize);
 		long[] gByteSize = new long[numG];
 		for (int i = 0; i < numG; i++) {
-			gByteSize[i] = Utils.sum(blockSize, i * gSize, Math.min((i + 1) * gSize,
+			gByteSize[i] = sum(blockSize, i * gSize, Math.min((i + 1) * gSize,
 					blockSize.length));
 		}
 		return gByteSize;
@@ -232,4 +245,25 @@ class AddressLookupTableWriter {
 		return numG;
 	}
 
+	/**
+	 * sum the interval [start .. end)
+	 * 
+	 * @param arr
+	 *            values to sum up
+	 * @param start
+	 *            index
+	 * @param end
+	 *            index
+	 * @return sum of values
+	 */
+	public static long sum(int[] arr, int start, int end) {
+		if (arr.length == 0) {
+			return 0;
+		}
+		long sum = 0;
+		for (int i = start; i < end; i++) {
+			sum += arr[i];
+		}
+		return sum;
+	}
 }

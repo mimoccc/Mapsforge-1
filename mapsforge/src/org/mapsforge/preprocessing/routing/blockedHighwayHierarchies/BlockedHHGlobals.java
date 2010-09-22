@@ -14,21 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util;
+package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 
 /**
- * All constants used by preprocessing and by the runtime classes on the mobile device are put
- * here.
+ * All constants shared between org.mapsforge.preprocessing.routing.blockedHighwayHierarchies
+ * and org.mapsforge.android.routing.blockedHighwayHierarchies.
  */
-public class HHGlobals {
-
-	public static final byte[] RLE_CLUSTER_BLOCKS_HEADER_MAGIC = "#MAPSFORGE_HH_RLE_CLUSTER_BLOCKS#"
-			.getBytes();
-	public static final int RLE_CLUSTER_BLOCKS_HEADER_LENGTH = 4096;
-
-	public final static byte[] BINARY_FILE_HEADER_MAGIC = "#MAPSFORGE_HH_BINARY#".getBytes();
+public class BlockedHHGlobals {
+	/**
+	 * length of the binary file header
+	 */
 	public final static int BINARY_FILE_HEADER_LENGTH = 4096;
 
+	/**
+	 * the first bytes of the hh binary file
+	 */
+	public final static byte[] BINARY_FILE_HEADER_MAGIC = "#MAPSFORGE_HH_BINARY#".getBytes();
+
+	/**
+	 * length of cluster blocks section header
+	 */
+	public static final int CLUSTER_BLOCKS_HEADER_LENGTH = 4096;
+
+	/**
+	 * the first bytes of the cluster blocks section of the hh binary file
+	 */
+	public static final byte[] CLUSTER_BLOCKS_HEADER_MAGIC = "#MAPSFORGE_HH_CLUSTER_BLOCKS#"
+			.getBytes();
+
+	/**
+	 * the first bytes of the rtree section
+	 */
 	public static final byte[] STATIC_RTREE_HEADER_MAGIC = "#MAPSFORE_HH_STATIC_RTREE#"
 			.getBytes();
 

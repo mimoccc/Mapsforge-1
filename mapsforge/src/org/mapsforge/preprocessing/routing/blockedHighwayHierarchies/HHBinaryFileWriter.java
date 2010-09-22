@@ -32,13 +32,12 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.HHGlobals;
 import org.mapsforge.preprocessing.util.DBConnection;
 
 class HHBinaryFileWriter {
 
-	private final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
-	private final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;
+	private final static byte[] HEADER_MAGIC = BlockedHHGlobals.BINARY_FILE_HEADER_MAGIC;
+	private final static int HEADER_LENGTH = BlockedHHGlobals.BINARY_FILE_HEADER_LENGTH;
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 

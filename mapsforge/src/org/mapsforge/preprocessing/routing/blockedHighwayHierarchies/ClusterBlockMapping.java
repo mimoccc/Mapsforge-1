@@ -20,8 +20,6 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.Collection;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.Utils;
-
 /**
  * This class implements a mapping from cluster to blocks and vice versa. This is analog to a
  * specialized double hash map. Additionally block ids can be reassigned by the swap operation.
@@ -45,7 +43,13 @@ final class ClusterBlockMapping {
 	 *            the clustering.
 	 */
 	public ClusterBlockMapping(Clustering[] clustering) {
-		this.clusters = new Cluster[ClusteringUtil.getGlobalNumClusters(clustering)];
+		// get number of clusters
+		int n = 0;
+		for (Clustering c : clustering) {
+			n += c.size();
+		}
+
+		this.clusters = new Cluster[n];
 		this.blockIds = new TObjectIntHashMap<Cluster>();
 		int blockId = 0;
 		for (int lvl = 0; lvl < clustering.length; lvl++) {
@@ -66,7 +70,7 @@ final class ClusterBlockMapping {
 	 *            the second cluster to be swapped.
 	 */
 	public void swapBlockIds(int i, int j) {
-		Utils.swap(clusters, i, j);
+		swap(clusters, i, j);
 		blockIds.put(clusters[i], i);
 		blockIds.put(clusters[j], j);
 	}
@@ -114,6 +118,24 @@ final class ClusterBlockMapping {
 	 */
 	public int size() {
 		return clusters.length;
+	}
+
+	/**
+	 * swaps the i-th and j-th element of the array.
+	 * 
+	 * @param <T>
+	 *            class type of array elements.
+	 * @param arr
+	 *            the array
+	 * @param i
+	 *            index
+	 * @param j
+	 *            index
+	 */
+	private static <T> void swap(T[] arr, int i, int j) {
+		T tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
 	}
 
 }

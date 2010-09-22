@@ -35,7 +35,6 @@ import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArrayOutputStream;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
 class BlockWriter {
@@ -70,10 +69,10 @@ class BlockWriter {
 		mapVertexIdToVertexOffset = mapVertexToVertexOffset(clustering);
 		mapClusterToLevel = mapClusterToLevel(clustering);
 		mapClusterToBlockId = mapping;
-		bitsPerBlockId = Utils.numBitsToEncode(0, mapClusterToBlockId.size());
-		bitsPerVertexOffset = Utils.numBitsToEncode(0,
+		bitsPerBlockId = numBitsToEncode(0, mapClusterToBlockId.size());
+		bitsPerVertexOffset = numBitsToEncode(0,
 				getMaxNumVerticesPerCluster(clustering) - 1);
-		bitsPerEdgeWeight = Utils.numBitsToEncode(0,
+		bitsPerEdgeWeight = numBitsToEncode(0,
 				getMaxEdgeWeight());
 
 		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
@@ -128,7 +127,7 @@ class BlockWriter {
 			@Override
 			public void swap(int i, int j) {
 				mapping.swapBlockIds(i, j);
-				Utils.swap(byteSize, i, j);
+				BlockWriter.swap(byteSize, i, j);
 			}
 
 			@Override
@@ -165,9 +164,9 @@ class BlockWriter {
 
 					@Override
 					public void swap(int i, int j) {
-						Utils.swap(level, i, j);
-						Utils.swap(nh, i, j);
-						Utils.swap(vertexIds, i, j);
+						BlockWriter.swap(level, i, j);
+						BlockWriter.swap(nh, i, j);
+						BlockWriter.swap(vertexIds, i, j);
 						c.swapVertices(i, j);
 					}
 
@@ -181,6 +180,26 @@ class BlockWriter {
 				}, 0, c.size());
 			}
 		}
+	}
+
+	static void swap(int[] arr, int i, int j) {
+		int tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
+	}
+
+	/**
+	 * How many bits needed to encode values of the given range.
+	 * 
+	 * @param minVal
+	 *            minimum value
+	 * @param maxVal
+	 *            maximum value
+	 * @return number of bits required.
+	 */
+	private static byte numBitsToEncode(int minVal, int maxVal) {
+		int interval = maxVal - minVal;
+		return (byte) (Math.floor(Math.log(interval) / Math.log(2)) + 1);
 	}
 
 	private static TIntIntHashMap[] mapVertexToVertexOffset(Clustering[] clustering) {
@@ -347,14 +366,14 @@ class BlockWriter {
 			out.writeInt(bbox.minLongitudeE6);
 
 			// bits per coordinate
-			byte bitsPerCoordinate = Utils.numBitsToEncode(bbox.minLatitudeE6,
+			byte bitsPerCoordinate = numBitsToEncode(bbox.minLatitudeE6,
 					bbox.maxLatitudeE6);
-			bitsPerCoordinate = (byte) Math.max(bitsPerCoordinate, Utils.numBitsToEncode(
+			bitsPerCoordinate = (byte) Math.max(bitsPerCoordinate, numBitsToEncode(
 					bbox.minLongitudeE6, bbox.maxLongitudeE6));
 			out.writeByte(bitsPerCoordinate);
 
 			// bit per neighborhood
-			byte bitsPerNeighborhood = Utils.numBitsToEncode(0, maxNeighborhood);
+			byte bitsPerNeighborhood = numBitsToEncode(0, maxNeighborhood);
 			out.writeByte(bitsPerNeighborhood);
 
 			/* VERTICES */

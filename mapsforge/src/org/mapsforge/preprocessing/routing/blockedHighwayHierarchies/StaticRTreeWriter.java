@@ -22,8 +22,6 @@ import java.io.RandomAccessFile;
 
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.HHGlobals;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.Utils;
 
 /**
  * This class implements a static r-tree for indexing two dimensional rectangles. Packing is
@@ -40,7 +38,7 @@ class StaticRTreeWriter {
 	 * The header magic bytes written at the start of the header of this r-tree. This is used
 	 * for checking if the file is likely contain a valid r-tree representation.
 	 */
-	private static final byte[] HEADER_MAGIC = HHGlobals.STATIC_RTREE_HEADER_MAGIC;
+	private static final byte[] HEADER_MAGIC = BlockedHHGlobals.STATIC_RTREE_HEADER_MAGIC;
 
 	/**
 	 * SortTileRecursive(STR) Algorithm for static r-tree packing. All given arrays must be of
@@ -250,13 +248,19 @@ class StaticRTreeWriter {
 
 		@Override
 		public void swap(int i, int j) {
-			Utils.swap(minLon, i, j);
-			Utils.swap(maxLon, i, j);
-			Utils.swap(minLat, i, j);
-			Utils.swap(maxLat, i, j);
-			Utils.swap(pointer, i, j);
-			Utils.swap(centerLon, i, j);
-			Utils.swap(centerLat, i, j);
+			swap(minLon, i, j);
+			swap(maxLon, i, j);
+			swap(minLat, i, j);
+			swap(maxLat, i, j);
+			swap(pointer, i, j);
+			swap(centerLon, i, j);
+			swap(centerLat, i, j);
+		}
+
+		private void swap(int[] arr, int i, int j) {
+			int tmp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = tmp;
 		}
 
 		@Override
