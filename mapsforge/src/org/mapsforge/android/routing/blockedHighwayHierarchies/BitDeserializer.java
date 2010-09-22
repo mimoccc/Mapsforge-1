@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
+package org.mapsforge.android.routing.blockedHighwayHierarchies;
 
-class BitSerializer {
+class BitDeserializer {
 
 	public static final int BITS_PER_BYTE = 8;
 	public static final int BITS_PER_SHORT = 16;

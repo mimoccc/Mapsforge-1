@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.BitSerializer;
-
 /**
  * This class implements a run length encoded index of pointers, pointing to variable length
  * blocks. Pointers have to be sorted by ascending block sizes. This reduces the compression
@@ -112,7 +110,7 @@ final class AddressLookupTable {
 		int bitOffset = gBlockEncOffs[groupIdx] * 8;
 		for (int i = 0; i < blockOffset; i++) {
 			blockStartAddr += blockSize;
-			blockSize += BitSerializer.readUInt(encBlockSize, gEncBits[groupIdx],
+			blockSize += BitDeserializer.readUInt(encBlockSize, gEncBits[groupIdx],
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += gEncBits[groupIdx];
 		}
