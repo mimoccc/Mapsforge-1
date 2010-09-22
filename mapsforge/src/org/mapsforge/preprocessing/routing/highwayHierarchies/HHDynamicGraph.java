@@ -36,14 +36,10 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.IntArr
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArrayGrowable;
 
 /**
- * @author Frank Viernau Array based Graph for use in preprocessing holding additional inbound
- *         adjacency lists.
+ * Array based Graph for use in preprocessing holding additional inbound adjacency lists.
  */
-public class HHDynamicGraph implements Serializable {
+class HHDynamicGraph implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -8913914656001216846L;
 	private static final int INITIAL_NEIGHBORHOOD = Integer.MAX_VALUE;
 	private static final int CHUNK_SIZE = 1000 * 1024;
@@ -57,12 +53,19 @@ public class HHDynamicGraph implements Serializable {
 	// -second value : num-inbound edges
 	// -other values : ids of adjacent edges,
 	// inbound edges are inserted before outbound edges
-	private final int[][][] vertices;
+	final int[][][] vertices;
 
 	// edge data
-	private final IntArrayGrowable eSource, eTarget, eWeight;
-	private final UnsignedByteArrayGrowable eHops, eMinLevel, eMaxLevel;
-	private final BitArrayGrowable eSlotUsed, eFwd, eBwd, eShortcut;
+	final IntArrayGrowable eSource;
+	final IntArrayGrowable eTarget;
+	final IntArrayGrowable eWeight;
+	final UnsignedByteArrayGrowable eHops;
+	final UnsignedByteArrayGrowable eMinLevel;
+	final UnsignedByteArrayGrowable eMaxLevel;
+	private final BitArrayGrowable eSlotUsed;
+	final BitArrayGrowable eFwd;
+	final BitArrayGrowable eBwd;
+	final BitArrayGrowable eShortcut;
 
 	// counts for each level
 	private int[] lvlNumVertices, lvlNumEdges;
@@ -177,7 +180,7 @@ public class HHDynamicGraph implements Serializable {
 
 			@Override
 			public synchronized void remove() {
-
+				// read only
 			}
 		};
 	}
@@ -652,7 +655,7 @@ public class HHDynamicGraph implements Serializable {
 
 		private static final long serialVersionUID = 4460568588598360461L;
 
-		private final int id;
+		final int id;
 
 		public HHDynamicEdge(int id) {
 			this.id = id;
@@ -711,7 +714,7 @@ public class HHDynamicGraph implements Serializable {
 
 		private static final long serialVersionUID = -5671641367450802170L;
 
-		private final int id;
+		final int id;
 
 		public HHDynamicVertex(int id) {
 			this.id = id;
