@@ -91,7 +91,7 @@ class BitArrayOutputStream {
 	 */
 	public void writeBit(boolean val) throws IOException {
 		if (bitsRemain >= 1) {
-			BitSerializer.writeBit(val, buff, byteOffset, bitOffset);
+			Serializer.writeBit(val, buff, byteOffset, bitOffset);
 			bitsWritten(1);
 		} else {
 			throw new IOException();
@@ -105,9 +105,9 @@ class BitArrayOutputStream {
 	 *             if the end of the array is reached.
 	 */
 	public void writeByte(byte val) throws IOException {
-		if (bitsRemain >= BitSerializer.BITS_PER_BYTE) {
-			BitSerializer.writeByte(val, buff, byteOffset, bitOffset);
-			bitsWritten(BitSerializer.BITS_PER_BYTE);
+		if (bitsRemain >= Serializer.BITS_PER_BYTE) {
+			Serializer.writeByte(val, buff, byteOffset, bitOffset);
+			bitsWritten(Serializer.BITS_PER_BYTE);
 		} else {
 			throw new IOException();
 		}
@@ -120,9 +120,9 @@ class BitArrayOutputStream {
 	 *             if the end of the array is reached.
 	 */
 	public void writeShort(short val) throws IOException {
-		if (bitsRemain >= BitSerializer.BITS_PER_SHORT) {
-			BitSerializer.writeShort(val, buff, byteOffset, bitOffset);
-			bitsWritten(BitSerializer.BITS_PER_SHORT);
+		if (bitsRemain >= Serializer.BITS_PER_SHORT) {
+			Serializer.writeShort(val, buff, byteOffset, bitOffset);
+			bitsWritten(Serializer.BITS_PER_SHORT);
 		} else {
 			throw new IOException();
 		}
@@ -136,9 +136,9 @@ class BitArrayOutputStream {
 	 *             if the end of the array is reached.
 	 */
 	public void writeInt(int val) throws IOException {
-		if (bitsRemain >= BitSerializer.BITS_PER_INT) {
-			BitSerializer.writeInt(val, buff, byteOffset, bitOffset);
-			bitsWritten(BitSerializer.BITS_PER_INT);
+		if (bitsRemain >= Serializer.BITS_PER_INT) {
+			Serializer.writeInt(val, buff, byteOffset, bitOffset);
+			bitsWritten(Serializer.BITS_PER_INT);
 		} else {
 			throw new IOException();
 		}
@@ -152,9 +152,9 @@ class BitArrayOutputStream {
 	 *             if the end of the array is reached.
 	 */
 	public void writeLong(long val) throws IOException {
-		if (bitsRemain >= BitSerializer.BITS_PER_LONG) {
-			BitSerializer.writeLong(val, buff, byteOffset, bitOffset);
-			bitsWritten(BitSerializer.BITS_PER_LONG);
+		if (bitsRemain >= Serializer.BITS_PER_LONG) {
+			Serializer.writeLong(val, buff, byteOffset, bitOffset);
+			bitsWritten(Serializer.BITS_PER_LONG);
 		} else {
 			throw new IOException();
 		}
@@ -171,7 +171,7 @@ class BitArrayOutputStream {
 	 */
 	public void writeUInt(long val, int nBits) throws IOException {
 		if (bitsRemain >= nBits) {
-			BitSerializer.writeUInt(val, nBits, buff, byteOffset, bitOffset);
+			Serializer.writeUInt(val, nBits, buff, byteOffset, bitOffset);
 			bitsWritten(nBits);
 		} else {
 			throw new IOException();

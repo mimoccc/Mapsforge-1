@@ -103,22 +103,22 @@ final class Block implements CacheItem {
 		this.routingGraph = routingGraph;
 
 		int bitOffset = 0;
-		this.level = BitDeserializer.readByte(data, bitOffset / 8, bitOffset % 8);
+		this.level = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 8;
-		this.numVerticesTypeA = BitDeserializer.readShort(data, bitOffset / 8, bitOffset % 8);
+		this.numVerticesTypeA = Deserializer.readShort(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 16;
-		this.numVerticesTypeB = BitDeserializer.readShort(data, bitOffset / 8, bitOffset % 8);
+		this.numVerticesTypeB = Deserializer.readShort(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 16;
-		this.numVerticesTypeC = BitDeserializer.readShort(data, bitOffset / 8, bitOffset % 8);
+		this.numVerticesTypeC = Deserializer.readShort(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 16;
-		this.minLatitudeE6 = BitDeserializer.readInt(data, bitOffset / 8, bitOffset % 8);
+		this.minLatitudeE6 = Deserializer.readInt(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 32;
-		this.minLongitudeE6 = BitDeserializer.readInt(data, bitOffset / 8, bitOffset % 8);
+		this.minLongitudeE6 = Deserializer.readInt(data, bitOffset / 8, bitOffset % 8);
 		bitOffset += 32;
-		this.bitsPerCoordinate = BitDeserializer.readByte(data, bitOffset / 8,
+		this.bitsPerCoordinate = Deserializer.readByte(data, bitOffset / 8,
 				bitOffset % 8);
 		bitOffset += 8;
-		this.encBitsPerNeighborhood = BitDeserializer.readByte(data, bitOffset / 8,
+		this.encBitsPerNeighborhood = Deserializer.readByte(data, bitOffset / 8,
 				bitOffset % 8);
 		bitOffset += 8;
 
@@ -176,10 +176,10 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
 						bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerBlockId;
-				int _vertexOffset = (int) BitDeserializer.readUInt(data,
+				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
 
@@ -190,22 +190,22 @@ final class Block implements CacheItem {
 			vertex.vertexIds[level] = routingGraph.getVertexId(blockId, vertexOffset);
 
 			// read vertex id of higher level
-			int _blockId = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerBlockId,
+			int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerBlockId;
-			int _vertexOffset = (int) BitDeserializer.readUInt(data,
+			int _vertexOffset = (int) Deserializer.readUInt(data,
 					routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerVertexOffset;
 
 			vertex.vertexIds[level + 1] = routingGraph.getVertexId(_blockId, _vertexOffset);
 
 			// read neighborhood
-			vertex.neighborhood = (int) BitDeserializer.readUInt(data, encBitsPerNeighborhood,
+			vertex.neighborhood = (int) Deserializer.readUInt(data, encBitsPerNeighborhood,
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += encBitsPerNeighborhood;
 
 			// read Bit-offset of first outbound edge
-			vertex.bitOffsetFirstOutboundEdge = BitDeserializer.readInt(data, bitOffset / 8,
+			vertex.bitOffsetFirstOutboundEdge = Deserializer.readInt(data, bitOffset / 8,
 					bitOffset % 8);
 			bitOffset += 32;
 
@@ -213,11 +213,11 @@ final class Block implements CacheItem {
 			vertex.latitudeE6 = -1;
 			vertex.longitudeE6 = -1;
 			if (level == 0) {
-				vertex.latitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.latitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLatitudeE6;
 				bitOffset += bitsPerCoordinate;
-				vertex.longitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.longitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLongitudeE6;
 				bitOffset += bitsPerCoordinate;
@@ -232,10 +232,10 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
 						bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerBlockId;
-				int _vertexOffset = (int) BitDeserializer.readUInt(data,
+				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
 
@@ -249,12 +249,12 @@ final class Block implements CacheItem {
 			vertex.vertexIds[level + 1] = -1;
 
 			// read neighborhood
-			vertex.neighborhood = (int) BitDeserializer.readUInt(data, encBitsPerNeighborhood,
+			vertex.neighborhood = (int) Deserializer.readUInt(data, encBitsPerNeighborhood,
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += encBitsPerNeighborhood;
 
 			// read Bit-offset of first outbound edge
-			vertex.bitOffsetFirstOutboundEdge = BitDeserializer.readInt(data, bitOffset / 8,
+			vertex.bitOffsetFirstOutboundEdge = Deserializer.readInt(data, bitOffset / 8,
 					bitOffset % 8);
 			bitOffset += 32;
 
@@ -262,11 +262,11 @@ final class Block implements CacheItem {
 			vertex.latitudeE6 = -1;
 			vertex.longitudeE6 = -1;
 			if (level == 0) {
-				vertex.latitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.latitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLatitudeE6;
 				bitOffset += bitsPerCoordinate;
-				vertex.longitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.longitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLongitudeE6;
 				bitOffset += bitsPerCoordinate;
@@ -282,10 +282,10 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
 						bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerBlockId;
-				int _vertexOffset = (int) BitDeserializer.readUInt(data,
+				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
 
@@ -302,7 +302,7 @@ final class Block implements CacheItem {
 			vertex.neighborhood = Integer.MAX_VALUE;
 
 			// read Bit-offset of first outbound edge
-			vertex.bitOffsetFirstOutboundEdge = BitDeserializer.readInt(data, bitOffset / 8,
+			vertex.bitOffsetFirstOutboundEdge = Deserializer.readInt(data, bitOffset / 8,
 					bitOffset % 8);
 			bitOffset += 32;
 
@@ -310,11 +310,11 @@ final class Block implements CacheItem {
 			vertex.latitudeE6 = -1;
 			vertex.longitudeE6 = -1;
 			if (level == 0) {
-				vertex.latitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.latitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLatitudeE6;
 				bitOffset += bitsPerCoordinate;
-				vertex.longitudeE6 = (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+				vertex.longitudeE6 = (int) Deserializer.readUInt(data, bitsPerCoordinate,
 						bitOffset / 8, bitOffset % 8)
 						+ minLongitudeE6;
 				bitOffset += bitsPerCoordinate;
@@ -334,11 +334,11 @@ final class Block implements CacheItem {
 		int bitOffset = vertex.bitOffsetFirstOutboundEdge;
 
 		// read number of edges in adjacency list
-		int numEdges = (int) BitDeserializer.readUInt(data, 4, bitOffset / 8, bitOffset % 8);
+		int numEdges = (int) Deserializer.readUInt(data, 4, bitOffset / 8, bitOffset % 8);
 		bitOffset += 4;
 
 		if (numEdges == 15) {
-			numEdges = (int) BitDeserializer.readUInt(data, 24, bitOffset / 8, bitOffset % 8);
+			numEdges = (int) Deserializer.readUInt(data, 24, bitOffset / 8, bitOffset % 8);
 			bitOffset += 24;
 		}
 
@@ -351,29 +351,29 @@ final class Block implements CacheItem {
 			edge.sourceId = vertex.vertexIds[vertex.vertexIds.length - 2];
 
 			// set weight
-			edge.weight = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerEdgeWeight,
+			edge.weight = (int) Deserializer.readUInt(data, routingGraph.bitsPerEdgeWeight,
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerEdgeWeight;
 
 			// set target id
-			int _blockId = (int) BitDeserializer.readUInt(data, routingGraph.bitsPerBlockId,
+			int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerBlockId;
-			int _vertexOffset = (int) BitDeserializer.readUInt(data,
+			int _vertexOffset = (int) Deserializer.readUInt(data,
 					routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerVertexOffset;
 			edge.targetId = routingGraph.getVertexId(_blockId, _vertexOffset);
 
 			// set forward
-			edge.isForward = BitDeserializer.readBit(data, bitOffset / 8, bitOffset % 8);
+			edge.isForward = Deserializer.readBit(data, bitOffset / 8, bitOffset % 8);
 			bitOffset += 1;
 
 			// set backward
-			edge.isBackward = BitDeserializer.readBit(data, bitOffset / 8, bitOffset % 8);
+			edge.isBackward = Deserializer.readBit(data, bitOffset / 8, bitOffset % 8);
 			bitOffset += 1;
 
 			// set core
-			edge.isCore = BitDeserializer.readBit(data, bitOffset / 8, bitOffset % 8);
+			edge.isCore = Deserializer.readBit(data, bitOffset / 8, bitOffset % 8);
 			bitOffset += 1;
 
 			// clear satellite data
@@ -385,57 +385,57 @@ final class Block implements CacheItem {
 			// set satellite data (only for level-0 forward edges)
 			if (level == 0 && edge.isForward) {
 				// set motor-way link
-				edge.isMotorwayLink = BitDeserializer.readBit(data, bitOffset / 8,
+				edge.isMotorwayLink = Deserializer.readBit(data, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 1;
 
 				// set roundabout
-				edge.isRoundAbout = BitDeserializer
+				edge.isRoundAbout = Deserializer
 						.readBit(data, bitOffset / 8, bitOffset % 8);
 				bitOffset += 1;
 
 				// set name
-				byte nameLen = BitDeserializer.readByte(data, bitOffset / 8, bitOffset % 8);
+				byte nameLen = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
 				bitOffset += 8;
 				if (nameLen > 0) {
 					edge.name = new byte[nameLen];
 					for (int j = 0; j < edge.name.length; j++) {
-						edge.name[j] = BitDeserializer.readByte(data, bitOffset / 8,
+						edge.name[j] = Deserializer.readByte(data, bitOffset / 8,
 								bitOffset % 8);
 						bitOffset += 8;
 					}
 				}
 
 				// set ref
-				byte refLen = BitDeserializer.readByte(data, bitOffset / 8, bitOffset % 8);
+				byte refLen = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
 				bitOffset += 8;
 				if (refLen > 0) {
 					edge.ref = new byte[refLen];
 					for (int j = 0; j < edge.ref.length; j++) {
-						edge.ref[j] = BitDeserializer
+						edge.ref[j] = Deserializer
 								.readByte(data, bitOffset / 8, bitOffset % 8);
 						bitOffset += 8;
 					}
 				}
 
 				// set waypoints
-				int numWaypoints = (int) BitDeserializer.readUInt(data, 4, bitOffset / 8,
+				int numWaypoints = (int) Deserializer.readUInt(data, 4, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 4;
 				if (numWaypoints == 15) {
-					numWaypoints = (int) BitDeserializer.readUInt(data, 16, bitOffset / 8,
+					numWaypoints = (int) Deserializer.readUInt(data, 16, bitOffset / 8,
 							bitOffset % 8);
 					bitOffset += 16;
 				}
 				edge.waypoints = new int[numWaypoints * 2];
 				for (int j = 0; j < numWaypoints; j++) {
 					edge.waypoints[j * 2] = minLatitudeE6
-							+ (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+							+ (int) Deserializer.readUInt(data, bitsPerCoordinate,
 							bitOffset / 8,
 							bitOffset % 8);
 					bitOffset += bitsPerCoordinate;
 					edge.waypoints[(j * 2) + 1] = minLongitudeE6
-							+ (int) BitDeserializer.readUInt(data, bitsPerCoordinate,
+							+ (int) Deserializer.readUInt(data, bitsPerCoordinate,
 							bitOffset / 8,
 							bitOffset % 8);
 					bitOffset += bitsPerCoordinate;
@@ -445,23 +445,23 @@ final class Block implements CacheItem {
 			// set minLevel
 			edge.minLevel = 0;
 			if (level > 0) {
-				edge.minLevel = BitDeserializer.readByte(data, bitOffset / 8, bitOffset % 8);
+				edge.minLevel = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
 				bitOffset += 8;
 			}
 
 			// set hop indices if this edge is a shortcut
 			edge.hopIndices = null;
 			if (edge.minLevel > 0 && routingGraph.hasShortcutHopIndices) {
-				int numHopIndices = (int) BitDeserializer.readUInt(data, 5, bitOffset / 8,
+				int numHopIndices = (int) Deserializer.readUInt(data, 5, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 5;
 				edge.hopIndices = new int[numHopIndices];
 				for (int j = 0; j < numHopIndices; j++) {
-					edge.hopIndices[j] = (int) BitDeserializer.readUInt(data, 4, bitOffset / 8,
+					edge.hopIndices[j] = (int) Deserializer.readUInt(data, 4, bitOffset / 8,
 							bitOffset % 8);
 					bitOffset += 4;
 					if (edge.hopIndices[j] == 15) {
-						edge.hopIndices[j] = (int) BitDeserializer.readUInt(data, 24,
+						edge.hopIndices[j] = (int) Deserializer.readUInt(data, 24,
 								bitOffset / 8,
 								bitOffset % 8);
 						bitOffset += 24;

@@ -84,7 +84,8 @@ final class AddressLookupTable {
 		}
 
 		int encBlockSizeLength = in.readInt();
-		this.encBlockSize = new byte[encBlockSizeLength];
+		// we need to read 4 bytes to much since the Deserializer Requires that.
+		this.encBlockSize = new byte[encBlockSizeLength + 4];
 		in.read(encBlockSize);
 		in.close();
 	}
@@ -110,7 +111,7 @@ final class AddressLookupTable {
 		int bitOffset = gBlockEncOffs[groupIdx] * 8;
 		for (int i = 0; i < blockOffset; i++) {
 			blockStartAddr += blockSize;
-			blockSize += BitDeserializer.readUInt(encBlockSize, gEncBits[groupIdx],
+			blockSize += Deserializer.readUInt(encBlockSize, gEncBits[groupIdx],
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += gEncBits[groupIdx];
 		}

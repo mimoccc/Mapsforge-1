@@ -27,7 +27,7 @@ import org.junit.Test;
  * JUnit tests for the BitSerializer
  * 
  */
-public class BitSerializerTest {
+public class SerializerTest {
 
 	private final static int N = 10000;
 
@@ -43,13 +43,13 @@ public class BitSerializerTest {
 
 		Random rnd = new Random(seed);
 		for (int i = 0; i < byteOffsets.length; i++) {
-			BitSerializer.writeByte((byte) rnd.nextInt(), buff, byteOffsets[i], bitOffset);
+			Serializer.writeByte((byte) rnd.nextInt(), buff, byteOffsets[i], bitOffset);
 		}
 
 		rnd = new Random(seed);
 		for (int i = 0; i < byteOffsets.length; i++) {
 			byte val = (byte) rnd.nextInt();
-			byte val_ = BitSerializer.readByte(buff, byteOffsets[i], bitOffset);
+			byte val_ = Serializer.readByte(buff, byteOffsets[i], bitOffset);
 			assertEquals(val, val_);
 		}
 	}
@@ -67,14 +67,14 @@ public class BitSerializerTest {
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
-				BitSerializer
+				Serializer
 						.writeShort((short) rnd.nextInt(), buff, byteOffsets[i], bitOffset);
 			}
 
 			rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
 				short val = (short) rnd.nextInt();
-				short val_ = BitSerializer.readShort(buff, byteOffsets[i], bitOffset);
+				short val_ = Serializer.readShort(buff, byteOffsets[i], bitOffset);
 				assertEquals(val, val_);
 			}
 		}
@@ -93,13 +93,13 @@ public class BitSerializerTest {
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
-				BitSerializer.writeInt(rnd.nextInt(), buff, byteOffsets[i], bitOffset);
+				Serializer.writeInt(rnd.nextInt(), buff, byteOffsets[i], bitOffset);
 			}
 
 			rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
 				int val = rnd.nextInt();
-				int val_ = BitSerializer.readInt(buff, byteOffsets[i], bitOffset);
+				int val_ = Serializer.readInt(buff, byteOffsets[i], bitOffset);
 				assertEquals(val, val_);
 			}
 		}
@@ -118,13 +118,13 @@ public class BitSerializerTest {
 		for (int bitOffset = 0; bitOffset < 8; bitOffset++) {
 			Random rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
-				BitSerializer.writeLong(rnd.nextLong(), buff, byteOffsets[i], bitOffset);
+				Serializer.writeLong(rnd.nextLong(), buff, byteOffsets[i], bitOffset);
 			}
 
 			rnd = new Random(seed);
 			for (int i = 0; i < byteOffsets.length; i++) {
 				long val = rnd.nextLong();
-				long val_ = BitSerializer.readLong(buff, byteOffsets[i], bitOffset);
+				long val_ = Serializer.readLong(buff, byteOffsets[i], bitOffset);
 				assertEquals(val, val_);
 			}
 		}
@@ -150,15 +150,15 @@ public class BitSerializerTest {
 		int[] order = getRandomOffsets(N, 1);
 		for (int i = 1; i < order.length; i++) {
 			int nBits = (int) Math.floor(Math.log(vals[order[i]]) / Math.log(2)) + 1;
-			BitSerializer.writeUInt(vals[order[i]], nBits, buff, byteOffset[order[i]],
+			Serializer.writeUInt(vals[order[i]], nBits, buff, byteOffset[order[i]],
 					bitOffset[order[i]]);
-			int val = (int) BitSerializer.readUInt(buff, nBits, byteOffset[order[i]],
+			int val = (int) Serializer.readUInt(buff, nBits, byteOffset[order[i]],
 					bitOffset[order[i]]);
 			assertEquals(vals[order[i]], val);
 		}
 		for (int i = 1; i < order.length; i++) {
 			int nBits = (int) Math.floor(Math.log(vals[order[i]]) / Math.log(2)) + 1;
-			int val = (int) BitSerializer.readUInt(buff, nBits, byteOffset[order[i]],
+			int val = (int) Serializer.readUInt(buff, nBits, byteOffset[order[i]],
 					bitOffset[order[i]]);
 			assertEquals(vals[order[i]], val);
 		}
@@ -174,7 +174,7 @@ public class BitSerializerTest {
 		int byteOffset = 0;
 		int bitOffset = 0;
 		for (int i = 0; i < bits.length; i++) {
-			BitSerializer.writeBit(bits[i], buff, byteOffset, bitOffset);
+			Serializer.writeBit(bits[i], buff, byteOffset, bitOffset);
 			bitOffset++;
 			if (bitOffset == 8) {
 				byteOffset++;
@@ -184,7 +184,7 @@ public class BitSerializerTest {
 		byteOffset = 0;
 		bitOffset = 0;
 		for (int i = 0; i < bits.length; i++) {
-			boolean b = BitSerializer.readBit(buff, byteOffset, bitOffset);
+			boolean b = Serializer.readBit(buff, byteOffset, bitOffset);
 			assertEquals(bits[i], b);
 			bitOffset++;
 			if (bitOffset == 8) {

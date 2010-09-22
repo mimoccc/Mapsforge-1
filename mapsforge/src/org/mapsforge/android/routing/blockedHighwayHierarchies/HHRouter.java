@@ -178,7 +178,6 @@ public class HHRouter implements IRouter {
 					if (edges[i].isForward) {
 						n++;
 					}
-					System.out.println(edges[i].isForward);
 				}
 				EdgeImpl[] result = new EdgeImpl[n];
 				int j = 0;
@@ -315,7 +314,7 @@ public class HHRouter implements IRouter {
 	 * @throws IOException
 	 *             if there is something wrong reading the file.
 	 */
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException {
 		HHRouter router = new HHRouter(new File("berlin.hhmobile"), 1000 * 1024);
 		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));

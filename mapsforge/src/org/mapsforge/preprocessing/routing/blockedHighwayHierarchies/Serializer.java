@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 
-class BitSerializer {
+class Serializer {
 
 	public static final int BITS_PER_BYTE = 8;
 	public static final int BITS_PER_SHORT = 16;
@@ -110,7 +110,8 @@ class BitSerializer {
 	public static void writeByte(byte val, byte[] buff, int byteOffset, int bitOffset) {
 		buff[byteOffset] = (byte) ((buff[byteOffset] & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
 				- bitOffset]) | shl(val, bitOffset));
-		buff[byteOffset + 1] = (byte) ((buff[byteOffset + 1] & BITMAKS_BYTE_LOW_CLEARED[bitOffset]) | shr(
+		buff[byteOffset + 1] = (byte) ((buff[byteOffset + 1] &
+				BITMAKS_BYTE_LOW_CLEARED[bitOffset]) | shr(
 				val, BITS_PER_BYTE - bitOffset));
 	}
 
@@ -164,32 +165,123 @@ class BitSerializer {
 				- nBits]);
 	}
 
-	public static boolean readBit(byte[] buff, int byteOffset, int bitOffset) {
-		return 0 != (buff[byteOffset] & shl((byte) 1, bitOffset));
+	private final static byte[] BYTE_NTH_BIT_SET = new byte[] {
+			0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, (byte) 0x80
+			};
+
+	private final static int[] INT_HIGH_CLEARED = new int[] { /** */
+	0xffffffff, 0x7fffffff, 0x3fffffff, 0x1fffffff, /** */
+	0x0fffffff, 0x07ffffff, 0x03ffffff, 0x01ffffff, /** */
+	0x00ffffff, 0x007fffff, 0x003fffff, 0x001fffff, /** */
+	0x000fffff, 0x0007ffff, 0x0003ffff, 0x0001ffff, /** */
+	0x0000ffff, 0x00007fff, 0x00003fff, 0x00001fff, /** */
+	0x00000fff, 0x000007ff, 0x000003ff, 0x000001ff, /** */
+	0x000000ff, 0x0000007f, 0x0000003f, 0x0000001f, /** */
+	0x0000000f, 0x00000007, 0x00000003, 0x00000001, /** */
+	};
+
+	/**
+	 * Reads a bit from the given array
+	 * 
+	 * @param buff
+	 *            the array to read from
+	 * @param byteOffset
+	 *            offset to the array
+	 * @param bitOffset
+	 *            offset to the array.
+	 * @return true if bit is set.
+	 */
+	public static final boolean readBit(byte[] buff, int byteOffset, int bitOffset) {
+		return 0 != (buff[byteOffset] & BYTE_NTH_BIT_SET[bitOffset]);
 	}
 
-	public static byte readByte(byte[] buff, int byteOffset, int bitOffset) {
+	/**
+	 * Reads a byte from the given array
+	 * 
+	 * @param buff
+	 *            the array to read from
+	 * @param byteOffset
+	 *            offset to the array
+	 * @param bitOffset
+	 *            offset to the array.
+	 * @return the value read.
+	 */
+	public static final byte readByte(byte[] buff, int byteOffset, int bitOffset) {
 		if (bitOffset == 0) {
 			return buff[byteOffset];
 		}
-		return (byte) (shr(buff[byteOffset], bitOffset) | shl(buff[byteOffset + 1],
-				BITS_PER_BYTE - bitOffset));
-
+		return (byte) (((buff[byteOffset] & 0xff) >>> bitOffset) | ((buff[byteOffset + 1] & 0xff) << (8 - bitOffset)));
 	}
 
-	public static short readShort(byte[] buff, int byteOffset, int bitOffset) {
-		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[1] = readByte(buff, byteOffset, bitOffset);
-		return bytesToShort(BUFFER);
+	/**
+	 * Reads a short from the array
+	 * 
+	 * @param buff
+	 *            array to read from
+	 * @param byteOffset
+	 *            offset to the array
+	 * @param bitOffset
+	 *            offset to the array.
+	 * @return the value read.
+	 */
+	public static final short readShort(byte[] buff, int byteOffset, int bitOffset) {
+		if (bitOffset == 0) {
+			return (short) ((buff[byteOffset] & 0xff) | ((buff[byteOffset + 1] & 0xff) << 8));
+		}
+		return (short) ((((buff[byteOffset] & 0xff) | ((buff[byteOffset + 1] & 0xff) << 8) | ((buff[byteOffset + 2] & 0xff) << 16)) >>> bitOffset) & 0x0000ffff);
 	}
 
 	public static int readInt(byte[] buff, int byteOffset, int bitOffset) {
-		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[1] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[2] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[3] = readByte(buff, byteOffset, bitOffset);
-		return bytesToInt(BUFFER);
+		if (bitOffset == 0) {
+			return (buff[byteOffset] & 0xff) | ((buff[byteOffset + 1] & 0xff) << 8)
+					| ((buff[byteOffset + 2] & 0xff) << 16)
+					| ((buff[byteOffset + 3] & 0xff) << 24);
+		}
+		return (int) ((((buff[byteOffset] & 0xffL)
+				| ((buff[byteOffset + 1] & 0xffL) << 8)
+				| ((buff[byteOffset + 2] & 0xffL) << 16)
+				| ((buff[byteOffset + 3] & 0xffL) << 24) | ((buff[byteOffset + 4] & 0xffL) << 32)) >> bitOffset) & 0xffffffffL);
+
 	}
+
+	public static long readUInt(byte[] buff, int nBits, int byteOffset, int bitOffset) {
+		if (bitOffset == 0) {
+			return ((buff[byteOffset] & 0xff) | ((buff[byteOffset + 1] & 0xff) << 8)
+					| ((buff[byteOffset + 2] & 0xff) << 16)
+					| ((buff[byteOffset + 3] & 0xff) << 24)) & INT_HIGH_CLEARED[32 - nBits];
+		}
+		return (int) ((((buff[byteOffset] & 0xffL)
+				| ((buff[byteOffset + 1] & 0xffL) << 8)
+				| ((buff[byteOffset + 2] & 0xffL) << 16)
+				| ((buff[byteOffset + 3] & 0xffL) << 24) | ((buff[byteOffset + 4] & 0xffL) << 32)) >>> bitOffset) & INT_HIGH_CLEARED[32 - nBits]);
+	}
+
+	// public static boolean readBit(byte[] buff, int byteOffset, int bitOffset) {
+	// return 0 != (buff[byteOffset] & shl((byte) 1, bitOffset));
+	// }
+	//
+	// public static byte readByte(byte[] buff, int byteOffset, int bitOffset) {
+	// if (bitOffset == 0) {
+	// return buff[byteOffset];
+	// }
+	// return (byte) (shr(buff[byteOffset], bitOffset) | shl(buff[byteOffset + 1],
+	// BITS_PER_BYTE - bitOffset));
+	//
+	// }
+	//
+	// public static short readShort(byte[] buff, int byteOffset, int bitOffset) {
+	// BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
+	// BUFFER[1] = readByte(buff, byteOffset, bitOffset);
+	// return bytesToShort(BUFFER);
+	// }
+
+	// public static int readInt(byte[] buff, int byteOffset, int bitOffset) {
+	// BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
+	// BUFFER[1] = readByte(buff, byteOffset++, bitOffset);
+	// BUFFER[2] = readByte(buff, byteOffset++, bitOffset);
+	// BUFFER[3] = readByte(buff, byteOffset, bitOffset);
+	// return bytesToInt(BUFFER);
+	// }
 
 	public static long readLong(byte[] buff, int byteOffset, int bitOffset) {
 		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
@@ -203,18 +295,18 @@ class BitSerializer {
 		return bytesToLong(BUFFER);
 	}
 
-	public static long readUInt(byte[] buff, int nBits, int byteOffset, int bitOffset) {
-		int j = 0;
-		while (nBits >= BITS_PER_BYTE) {
-			BUFFER[j++] = readByte(buff, byteOffset++, bitOffset);
-			nBits -= 8;
-		}
-		if (nBits > 0) {
-			BUFFER[j++] = readBits(buff, nBits, byteOffset, bitOffset);
-		}
-		while (j < 8) {
-			BUFFER[j++] = 0;
-		}
-		return bytesToLong(BUFFER);
-	}
+	// public static long readUInt(byte[] buff, int nBits, int byteOffset, int bitOffset) {
+	// int j = 0;
+	// while (nBits >= BITS_PER_BYTE) {
+	// BUFFER[j++] = readByte(buff, byteOffset++, bitOffset);
+	// nBits -= 8;
+	// }
+	// if (nBits > 0) {
+	// BUFFER[j++] = readBits(buff, nBits, byteOffset, bitOffset);
+	// }
+	// while (j < 8) {
+	// BUFFER[j++] = 0;
+	// }
+	// return bytesToLong(BUFFER);
+	// }
 }

@@ -422,7 +422,8 @@ final class HHRoutingGraph {
 		Pointer pointer = blockAddressTable.getPointer(blockId);
 		if (pointer != null) {
 			raf.seek(startAddrClusterBlocks + pointer.startAddr);
-			byte[] buff = new byte[pointer.lengthBytes];
+			// we need to read 4 bytes to much since the Deserializer requires that.
+			byte[] buff = new byte[pointer.lengthBytes + 4];
 			raf.readFully(buff);
 			return new Block(blockId, buff, this);
 		}
