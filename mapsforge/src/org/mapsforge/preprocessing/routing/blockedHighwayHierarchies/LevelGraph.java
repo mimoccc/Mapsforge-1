@@ -221,9 +221,10 @@ class LevelGraph implements Serializable {
 			eLatitudesE6[offset] = toE6Waypoints(e.latitudes);
 			eLongitudesE6[offset] = toE6Waypoints(e.longitudes);
 			if (e.isReversed) {
-				// reverseInplace(eLatitudesE6[offset]);
-				// reverseInplace(eLongitudesE6[offset]);
+				reverseInplace(eLatitudesE6[offset]);
+				reverseInplace(eLongitudesE6[offset]);
 			}
+
 			if (vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] == -1) {
 				vLvlFirstEdge[vFirstLvlVertex[e.sourceId] + e.lvl] = offset;
 			}
@@ -234,6 +235,22 @@ class LevelGraph implements Serializable {
 		for (int i = 0; i < levels.length; i++) {
 			levels[i] = new Level(i, reader.getGraphProperties().levelStats[i].numVertices,
 					reader.getGraphProperties().levelStats[i].numEdges);
+		}
+	}
+
+	private static void reverseInplace(int[] arr) {
+		if (arr == null) {
+			return;
+		}
+		int i = 0;
+		int j = arr.length - 1;
+		while (i < j) {
+			// swap
+			int tmp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = tmp;
+			i++;
+			j--;
 		}
 	}
 

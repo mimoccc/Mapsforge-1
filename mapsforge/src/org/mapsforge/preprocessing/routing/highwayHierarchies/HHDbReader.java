@@ -419,7 +419,7 @@ public class HHDbReader {
 								System.out.println("read HHEdgeLvl "
 										+ (count - MESSAGE_INTERVAL) + " - " + count);
 							}
-							boolean isReversed = rs.getInt("id") % 2 == 0;
+							boolean isReversed = rs.getInt("id") % 2 == 1;
 							double[] latitudes = toDoubleArray(rs.getArray("latitudes"));
 							double[] longitudes = toDoubleArray(rs.getArray("longitudes"));
 

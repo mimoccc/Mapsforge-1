@@ -316,8 +316,8 @@ class BlockWriter {
 		return new Rect(minLon, maxLon, minLat, maxLat);
 	}
 
-	private static void clearBuffer() {
-		for (int i = 0; i < BUFFER.length; i++) {
+	private static void clearBuffer(int n) {
+		for (int i = 0; i < n; i++) {
 			BUFFER[i] = 0x00;
 		}
 	}
@@ -332,7 +332,6 @@ class BlockWriter {
 
 		int[] vertexEdgeOffset = new int[cluster.size()];
 		BitArrayOutputStream out = new BitArrayOutputStream(BUFFER);
-		clearBuffer();
 
 		byte level = mapClusterToLevel.get(cluster);
 		Rect bbox = getBoundingBox(cluster);
@@ -340,7 +339,7 @@ class BlockWriter {
 
 		for (int run = 0; run < 2; run++) {
 			if (run == 1) {
-				clearBuffer();
+				clearBuffer(out.getByteOffset() + 1);
 				out = new BitArrayOutputStream(BUFFER);
 			}
 
@@ -537,6 +536,9 @@ class BlockWriter {
 		for (int i = 0; i < result.length; i++) {
 			result[i] = BUFFER[i];
 		}
+		// clear buffer
+		clearBuffer(out.getByteOffset());
+
 		return result;
 	}
 }
