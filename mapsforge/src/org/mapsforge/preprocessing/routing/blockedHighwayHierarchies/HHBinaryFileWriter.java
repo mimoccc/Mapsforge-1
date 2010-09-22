@@ -120,7 +120,7 @@ class HHBinaryFileWriter {
 
 		// write the graphs cluster blocks
 		ClusterBlockMapping mapping = new ClusterBlockMapping(clustering);
-		int[] blockSize = RleBlockWriter2.writeClusterBlocks(fBlocks, levelGraph, clustering,
+		int[] blockSize = BlockWriter.writeClusterBlocks(fBlocks, levelGraph, clustering,
 				mapping, includeHopIndices);
 
 		// write block index

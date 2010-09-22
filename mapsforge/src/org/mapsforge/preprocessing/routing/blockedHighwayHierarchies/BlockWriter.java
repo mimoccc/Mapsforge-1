@@ -38,7 +38,7 @@ import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.BitArr
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.Utils;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
-class RleBlockWriter2 {
+class BlockWriter {
 
 	private final static int BUFFER_SIZE = 25000000;
 	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
