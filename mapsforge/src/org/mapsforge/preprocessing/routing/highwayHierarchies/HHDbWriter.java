@@ -25,7 +25,7 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
 /**
- * @author Frank Viernau
+ * This class provides write access to the highway hierarchies database.
  */
 public class HHDbWriter {
 
@@ -41,6 +41,13 @@ public class HHDbWriter {
 			pstmtInsertDtRow;
 	private int insertEdgeCount, insertVertexCount, insertVertexLvlCount;
 
+	/**
+	 * @param conn
+	 *            connects the database to write to, must conform to the highway hierarchies db
+	 *            schema.
+	 * @throws SQLException
+	 *             on error accessing database.
+	 */
 	public HHDbWriter(Connection conn) throws SQLException {
 		this.conn = conn;
 		conn.setAutoCommit(false);
@@ -51,6 +58,12 @@ public class HHDbWriter {
 		insertEdgeCount = insertVertexCount = insertVertexLvlCount = 0;
 	}
 
+	/**
+	 * writes all unwritten updates.
+	 * 
+	 * @throws SQLException
+	 *             on error executing update.
+	 */
 	public void flush() throws SQLException {
 		System.out.println("flush batches : ");
 		System.out.println("execute batch inserts (hh_vertex) : "
@@ -68,6 +81,12 @@ public class HHDbWriter {
 		conn.commit();
 	}
 
+	/**
+	 * Truncates all tables of the highway hierarchies db schema.
+	 * 
+	 * @throws SQLException
+	 *             on error executing update.
+	 */
 	public void clearTables() throws SQLException {
 		String sql = "TRUNCATE TABLE hh_vertex CASCADE;"
 				+ "TRUNCATE TABLE hh_vertex_lvl CASCADE;" + "TRUNCATE TABLE hh_edge CASCADE;"
@@ -77,6 +96,30 @@ public class HHDbWriter {
 		conn.createStatement().executeUpdate(sql);
 	}
 
+	/**
+	 * Writes a highway hierarchies edge to the database.
+	 * 
+	 * @param id
+	 *            edge identifier
+	 * @param sourceId
+	 *            identifier of source vertex.
+	 * @param targetId
+	 *            identifier of target vertex.
+	 * @param weight
+	 *            of this edge
+	 * @param minLvl
+	 *            minimum level of this edge
+	 * @param maxLvl
+	 *            maximum level of this edge.
+	 * @param isForward
+	 *            true means the edge is in the forward graph.
+	 * @param isBackward
+	 *            true means the edge is in the backward graph.
+	 * @param isShortcut
+	 *            true means edge is a shortcut, not in the original routing graph!
+	 * @throws SQLException
+	 *             on execution update errors.
+	 */
 	public void writeEdge(int id, int sourceId, int targetId, int weight, int minLvl,
 			int maxLvl, boolean isForward, boolean isBackward, boolean isShortcut)
 			throws SQLException {
@@ -98,6 +141,18 @@ public class HHDbWriter {
 		}
 	}
 
+	/**
+	 * Write vertex level information.
+	 * 
+	 * @param id
+	 *            identifier of the vertex.
+	 * @param lvl
+	 *            level
+	 * @param neighborhood
+	 *            neighborhood of the vertex within the specified level.
+	 * @throws SQLException
+	 *             on executing the update.
+	 */
 	public void writeVertexLevel(int id, int lvl, int neighborhood) throws SQLException {
 		pstmtInsertVertexLvl.setInt(1, id);
 		pstmtInsertVertexLvl.setInt(2, lvl);
@@ -111,6 +166,18 @@ public class HHDbWriter {
 		}
 	}
 
+	/**
+	 * Writes a vertex.
+	 * 
+	 * @param id
+	 *            vertex identifier.
+	 * @param longitude
+	 *            in degree
+	 * @param latitude
+	 *            in degree
+	 * @throws SQLException
+	 *             on error executing the update.
+	 */
 	public void writeVertex(int id, double longitude, double latitude) throws SQLException {
 		pstmtInsertVertex.setInt(1, id);
 		pstmtInsertVertex.setDouble(2, longitude);
@@ -124,6 +191,14 @@ public class HHDbWriter {
 		}
 	}
 
+	/**
+	 * Write the graph properties.
+	 * 
+	 * @param props
+	 *            values to write.
+	 * @throws SQLException
+	 *             ...
+	 */
 	public void writeGraphProperties(HHGraphProperties props) throws SQLException {
 		String sql = "INSERT INTO hh_graph_properties (creation_date, transport, c, h, hoplimit, vertex_threshold, downgraded_edges, num_threads, comp_time_mins) "
 				+ "VALUES( "
@@ -159,6 +234,14 @@ public class HHDbWriter {
 		}
 	}
 
+	/**
+	 * Writes the distance table.
+	 * 
+	 * @param distanceTable
+	 *            the object to be written.
+	 * @throws SQLException
+	 *             argh
+	 */
 	public void writeDistanceTable(DistanceTable distanceTable) throws SQLException {
 		int msg_int = 1000;
 		int[] vertexIds = distanceTable.getVertexIds();
@@ -179,6 +262,14 @@ public class HHDbWriter {
 				+ distanceTable.size());
 	}
 
+	/**
+	 * Converts an in array to a sql string.
+	 * 
+	 * @param array
+	 *            hate the warnings
+	 * 
+	 * @return the sql string gepresenting the int array.
+	 */
 	private static String intArrayToSqlString(int[] array) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
