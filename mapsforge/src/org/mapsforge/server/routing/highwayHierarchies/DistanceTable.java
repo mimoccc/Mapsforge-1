@@ -46,6 +46,10 @@ public class DistanceTable implements Serializable {
 	private final TIntIntHashMap map;
 	private int[][] distances;
 
+	/**
+	 * @param vertexIds
+	 *            of all vertices to add to distance table.
+	 */
 	public DistanceTable(List<Integer> vertexIds) {
 		this.map = new TIntIntHashMap();
 		int idx = 0;
@@ -60,15 +64,39 @@ public class DistanceTable implements Serializable {
 		}
 	}
 
+	/**
+	 * @param oStream
+	 *            stream to write to.
+	 * @throws IOException
+	 *             guess what?
+	 * 
+	 */
 	public void serialize(OutputStream oStream) throws IOException {
 		Serializer.serialize(oStream, this);
 	}
 
+	/**
+	 * @param iStream
+	 *            stream to read from
+	 * @return the deserialized distance table
+	 * @throws IOException
+	 *             read error
+	 * @throws ClassNotFoundException
+	 *             cast error
+	 */
 	public static DistanceTable deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
 		return Serializer.deserialize(iStream);
 	}
 
+	/**
+	 * write this table to file.
+	 * 
+	 * @param f
+	 *            target.
+	 * @throws IOException
+	 *             write error.
+	 */
 	public void serialize(File f) throws IOException {
 		FileOutputStream fos = new FileOutputStream(f);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -77,6 +105,17 @@ public class DistanceTable implements Serializable {
 		fos.close();
 	}
 
+	/**
+	 * Read a table from file.
+	 * 
+	 * @param f
+	 *            source
+	 * @return the table
+	 * @throws IOException
+	 *             read
+	 * @throws ClassNotFoundException
+	 *             cast
+	 */
 	public static DistanceTable getFromSerialization(File f) throws IOException,
 			ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(f);
@@ -87,20 +126,45 @@ public class DistanceTable implements Serializable {
 		return dt;
 	}
 
+	/**
+	 * get table form db.
+	 * 
+	 * @param conn
+	 *            to read from.
+	 * @return the table
+	 * @throws SQLException
+	 *             sql error
+	 */
 	public static DistanceTable getFromHHDb(Connection conn) throws SQLException {
 		HHDbReader reader = new HHDbReader(conn);
 		return reader.getDistanceTable();
 	}
 
+	/**
+	 * construct table from all pairs distances.
+	 * 
+	 * @param distances
+	 *            all pairs distances
+	 * @param mapping
+	 *            maps vertex id to array index within the table.
+	 */
 	public DistanceTable(int[][] distances, TIntIntHashMap mapping) {
 		this.distances = distances;
 		this.map = mapping;
 	}
 
+	/**
+	 * @return all ids of vertices within this table
+	 */
 	public int[] getVertexIds() {
 		return map.keys();
 	}
 
+	/**
+	 * @param vertexId
+	 *            ..
+	 * @return array index of the vertex in this table.
+	 */
 	public int getRowColIndex(int vertexId) {
 		if (map.contains(vertexId)) {
 			return map.get(vertexId);
@@ -109,10 +173,29 @@ public class DistanceTable implements Serializable {
 
 	}
 
+	/**
+	 * Set the distance between a pair of vertices.
+	 * 
+	 * @param vId1
+	 *            source
+	 * @param vId2
+	 *            target
+	 * @param distance
+	 *            ..
+	 */
 	public void set(int vId1, int vId2, int distance) {
 		distances[map.get(vId1)][map.get(vId2)] = distance;
 	}
 
+	/**
+	 * get the distance
+	 * 
+	 * @param vId1
+	 *            source
+	 * @param vId2
+	 *            target
+	 * @return distance
+	 */
 	public int get(int vId1, int vId2) {
 		if (!map.containsKey(vId1) || !map.containsKey(vId2)) {
 			return Integer.MAX_VALUE;
@@ -120,10 +203,16 @@ public class DistanceTable implements Serializable {
 		return distances[map.get(vId1)][map.get(vId2)];
 	}
 
+	/**
+	 * @return the table
+	 */
 	public int[][] getDistances() {
 		return distances;
 	}
 
+	/**
+	 * @return number of vertices in this table
+	 */
 	public int size() {
 		return distances.length;
 	}

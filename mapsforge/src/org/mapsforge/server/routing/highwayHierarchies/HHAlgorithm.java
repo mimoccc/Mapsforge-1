@@ -27,21 +27,46 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdg
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
- * @author Frank Viernau
  * 
- *         Implementation of the highway hierarchies algorithm. Four versions are supported,
- *         combinations of distancetable avail. / NA and downgrade edges yes/ no are supported.
- *         Fastest is distanceTable + downgraded edges. This implementiation should be very
- *         close to the description in the dissertation on routeplanning in road networks from
- *         D. Schultes, see Trac.
+ * Implementation of the highway hierarchies algorithm. Four versions are supported,
+ * combinations of distancetable avail. / NA and downgrade edges yes/ no are supported. Fastest
+ * is distanceTable + downgraded edges. This implementiation should be very close to the
+ * description in the dissertation on routeplanning in road networks from D. Schultes, see Trac.
  * 
- *         Temporary data is not stored by direct adress tables but by using a hashtable, which
- *         saves memory especially important with regard to parallel queries. Performance loss
- *         not evaluated til now.
+ * Temporary data is not stored by direct adress tables but by using a hashtable, which saves
+ * memory especially important with regard to parallel queries. Performance loss not evaluated
+ * til now.
  * 
- *         For experimantal verification, two versions of dijkstra are implemented here too.
+ * For experimantal verification, two versions of dijkstra are implemented here too.
  */
 class HHAlgorithm {
+
+	// please the warning settings...
+	private static class MyHeap extends BinaryMinHeap<DiscoveredVertex, HeapKey> {
+
+		public MyHeap(int initialSize) {
+			super(initialSize);
+		}
+	}
+
+	// please the warning settings...
+	private static class MyHashMap extends TIntObjectHashMap<DiscoveredVertex> {
+
+		public MyHashMap(int initialCapacity) {
+			super(initialCapacity);
+		}
+
+	}
+
+	// please the warning settings...
+	static class MyList extends LinkedList<DiscoveredVertex> {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+	}
 
 	private static final int INFINITY_1 = HHComputation.INFINITY_1;
 	private static final int INFINITY_2 = HHComputation.INFINITY_2;
@@ -54,16 +79,16 @@ class HHAlgorithm {
 	private static final int BWD = 1;
 
 	private BinaryMinHeap<DiscoveredVertex, HeapKey>[] queue;
-	private TIntObjectHashMap<DiscoveredVertex>[] discoveredVertices;
+	private MyHashMap[] discoveredVertices;
 
 	@SuppressWarnings("unchecked")
 	public HHAlgorithm() {
-		queue = new BinaryMinHeap[] {
-				new BinaryMinHeap<DiscoveredVertex, HeapKey>(INITIAL_QUEUE_SIZE),
-				new BinaryMinHeap<DiscoveredVertex, HeapKey>(INITIAL_QUEUE_SIZE) };
-		discoveredVertices = new TIntObjectHashMap[] {
-				new TIntObjectHashMap<DiscoveredVertex>(INITIAL_MAP_SIZE),
-				new TIntObjectHashMap<DiscoveredVertex>(INITIAL_MAP_SIZE) };
+		queue = new MyHeap[] {
+				new MyHeap(INITIAL_QUEUE_SIZE),
+				new MyHeap(INITIAL_QUEUE_SIZE) };
+		discoveredVertices = new MyHashMap[] {
+				new MyHashMap(INITIAL_MAP_SIZE),
+				new MyHashMap(INITIAL_MAP_SIZE) };
 	}
 
 	/**
@@ -71,6 +96,7 @@ class HHAlgorithm {
 	 * at source to target. Edges in buffBwd are sorted starting at target to source.
 	 * 
 	 * @param graph
+	 *            to be searched
 	 * @param sourceId
 	 *            vertexId of target, not checked if valid.
 	 * @param targetId
@@ -117,8 +143,8 @@ class HHAlgorithm {
 		DiscoveredVertex minSearchScopeHit = null;
 
 		// clear queue
-		LinkedList<DiscoveredVertex>[] I = new LinkedList[] {
-				new LinkedList<DiscoveredVertex>(), new LinkedList<DiscoveredVertex>() };
+		MyList[] I = new MyList[] {
+				new MyList(), new MyList() };
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discoveredVertices[FWD].clear();
@@ -225,10 +251,17 @@ class HHAlgorithm {
 			addEdgesToAllParents(I[BWD].getFirst(), buffBwd);
 		} else if (d != Integer.MAX_VALUE) {
 			// shortest path is found in lower levels
-			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
-			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffBwd);
+			if (minSearchScopeHit != null) {
+				// this if check can never happen only for the warning settings
+				// and the broken window story..
+				addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffFwd);
+				addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffBwd);
+			}
+
 		}
 		return Math.min(d, d_);
 	}
@@ -246,8 +279,8 @@ class HHAlgorithm {
 		int d = Integer.MAX_VALUE;
 
 		// clear queue
-		LinkedList<DiscoveredVertex>[] I = new LinkedList[] {
-				new LinkedList<DiscoveredVertex>(), new LinkedList<DiscoveredVertex>() };
+		MyList[] I = new MyList[] {
+				new MyList(), new MyList() };
 		queue[FWD].clear();
 		queue[BWD].clear();
 		discoveredVertices[FWD].clear();
@@ -360,10 +393,16 @@ class HHAlgorithm {
 			addEdgesToAllParents(I[BWD].getFirst(), buffBwd);
 		} else if (d != Integer.MAX_VALUE) {
 			// shortest path is found in lower levels
-			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
-			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffBwd);
+			if (minSearchScopeHit != null) {
+				// this if check can never happen only for the warning settings
+				// and the broken window story..
+				addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffFwd);
+				addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffBwd);
+			}
 		}
 		return Math.min(d, d_);
 	}
@@ -473,10 +512,16 @@ class HHAlgorithm {
 			direction = (direction + 1) % 2;
 		}
 		if (d != Integer.MAX_VALUE) {
-			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
-			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffBwd);
+			if (minSearchScopeHit != null) {
+				// this if check can never happen only for the warning settings
+				// and the broken window story..
+				addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffFwd);
+				addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffBwd);
+			}
 		}
 		return d;
 	}
@@ -591,10 +636,16 @@ class HHAlgorithm {
 			direction = (direction + 1) % 2;
 		}
 		if (d != Integer.MAX_VALUE) {
-			addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex.getId()),
-					buffFwd);
-			addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex.getId()),
-					buffBwd);
+			if (minSearchScopeHit != null) {
+				// this if check can never happen only for the warning settings
+				// and the broken window story..
+				addEdgesToAllParents(discoveredVertices[FWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffFwd);
+				addEdgesToAllParents(discoveredVertices[BWD].get(minSearchScopeHit.vertex
+						.getId()),
+						buffBwd);
+			}
 		}
 
 		return d;
@@ -747,11 +798,11 @@ class HHAlgorithm {
 	}
 
 	private class DiscoveredVertex implements IBinaryHeapItem<HeapKey> {
-		private HHStaticVertex vertex;
-		private HHStaticEdge edgeToParent;
-		private DiscoveredVertex parent;
-		private HeapKey key;
-		private int heapIdx;
+		HHStaticVertex vertex;
+		HHStaticEdge edgeToParent;
+		DiscoveredVertex parent;
+		HeapKey key;
+		int heapIdx;
 
 		public DiscoveredVertex(HHStaticVertex vertex, HHStaticEdge edgeToParent,
 				DiscoveredVertex parent, HeapKey key) {
@@ -783,7 +834,9 @@ class HHAlgorithm {
 	}
 
 	private class HeapKey implements Comparable<HeapKey> {
-		private int distance, level, gap;
+		int distance;
+		int level;
+		int gap;
 
 		public HeapKey(int distance, int level, int gap) {
 			this.distance = distance;

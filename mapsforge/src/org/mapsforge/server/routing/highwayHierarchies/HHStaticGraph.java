@@ -30,9 +30,9 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
@@ -44,19 +44,27 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArr
  * 
  * Provide an object oriented access layer, a primitive type access layer and a low level access
  * layer. Data must not be written only read!!! Immutable and Thread safe.
- * 
- * @author Frank Viernau
  */
 public class HHStaticGraph implements Serializable {
-
+	/**
+	 * edge direction
+	 */
 	public static final int FWD = 0;
+	/**
+	 * edge direction
+	 */
 	public static final int BWD = 1;
 
 	private static final long serialVersionUID = 5052572584967363425L;
 
-	private final int[] vFirstLvlVertex, vLvlVNh, vLvlFirstEdge, eSource, eTarget, eWeight;
-	private final BitArray[] eDirection;
-	private final BitArray eShortcut;
+	final int[] vFirstLvlVertex;
+	final int[] vLvlVNh;
+	final int[] vLvlFirstEdge;
+	final int[] eSource;
+	final int[] eTarget;
+	final int[] eWeight;
+	final BitArray[] eDirection;
+	final BitArray eShortcut;
 	private final int numVertices, numLvlVertices, numEdges;
 	private final HHGraphProperties graphProperties;
 
@@ -79,7 +87,7 @@ public class HHStaticGraph implements Serializable {
 		eShortcut = new BitArray(numEdges);
 	}
 
-	public static HHStaticGraph getFromHHDb(Connection conn) throws SQLException {
+	static HHStaticGraph getFromHHDb(Connection conn) throws SQLException {
 		HHDbReader reader = new HHDbReader(conn);
 
 		HHStaticGraph g = new HHStaticGraph(reader.numVertices(), reader.numLevelVertices(),
@@ -115,16 +123,16 @@ public class HHStaticGraph implements Serializable {
 		return g;
 	}
 
-	public void serialize(OutputStream oStream) throws IOException {
+	void serialize(OutputStream oStream) throws IOException {
 		Serializer.serialize(oStream, this);
 	}
 
-	public static HHStaticGraph deserialize(InputStream iStream) throws IOException,
+	static HHStaticGraph deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
 		return Serializer.deserialize(iStream);
 	}
 
-	public void serialize(File f) throws IOException {
+	void serialize(File f) throws IOException {
 		FileOutputStream fos = new FileOutputStream(f);
 		ObjectOutputStream oos = new ObjectOutputStream(fos);
 		oos.writeObject(this);
@@ -132,7 +140,7 @@ public class HHStaticGraph implements Serializable {
 		fos.close();
 	}
 
-	public static HHStaticGraph getFromSerialization(File f) throws IOException,
+	static HHStaticGraph getFromSerialization(File f) throws IOException,
 			ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(f);
 		ObjectInputStream ois = new ObjectInputStream(fis);
@@ -142,27 +150,27 @@ public class HHStaticGraph implements Serializable {
 		return graph;
 	}
 
-	public HHStaticVertex getVertex(int id) {
+	HHStaticVertex getVertex(int id) {
 		return new HHStaticVertex(id);
 	}
 
-	public HHStaticEdge getEdge(int id) {
+	HHStaticEdge getEdge(int id) {
 		return new HHStaticEdge(id);
 	}
 
-	public int numVertices() {
+	int numVertices() {
 		return numVertices;
 	}
 
-	public int numEdges() {
+	int numEdges() {
 		return numEdges;
 	}
 
-	public int numLevels() {
+	int numLevels() {
 		return graphProperties.levelStats.length;
 	}
 
-	public HHGraphProperties getGraphPropterties() {
+	HHGraphProperties getGraphPropterties() {
 		return graphProperties;
 	}
 
@@ -175,18 +183,29 @@ public class HHStaticGraph implements Serializable {
 		return str;
 	}
 
+	/**
+	 * Lighweight vertex.
+	 */
 	public class HHStaticVertex {
 
 		private final int id;
 
-		public HHStaticVertex(int id) {
+		HHStaticVertex(int id) {
 			this.id = id;
 		}
 
+		/**
+		 * @return vertex id
+		 */
 		public int getId() {
 			return id;
 		}
 
+		/**
+		 * @param minLvl
+		 *            ingore edges below min level.
+		 * @return outgoing edges.
+		 */
 		public HHStaticEdge[] getAdjacentEdges(int minLvl) {
 			int startIdx = vLvlFirstEdge[vFirstLvlVertex[id] + minLvl];
 			int endIdx = vLvlFirstEdge[vFirstLvlVertex[id + 1]];
@@ -197,10 +216,18 @@ public class HHStaticGraph implements Serializable {
 			return e;
 		}
 
+		/**
+		 * @param hopIdx
+		 *            index of the edge
+		 * @return edge at index.
+		 */
 		public HHStaticEdge getAdjacentEdge(int hopIdx) {
 			return new HHStaticEdge(vLvlFirstEdge[vFirstLvlVertex[id]] + hopIdx);
 		}
 
+		/**
+		 * @return only level 0 outgoing forward edges.
+		 */
 		public HHStaticEdge[] getAdjacentLevel0Edges() {
 			int startIdx = vLvlFirstEdge[vFirstLvlVertex[id]];
 			int endIdx = vLvlFirstEdge[vFirstLvlVertex[id + 1]];
@@ -220,55 +247,98 @@ public class HHStaticGraph implements Serializable {
 			return e;
 		}
 
+		/**
+		 * @return size of the adjacency list.
+		 */
 		public int numAdjacentEdges() {
 			return vLvlFirstEdge[vFirstLvlVertex[id + 1]] - vLvlFirstEdge[vFirstLvlVertex[id]];
 		}
 
+		/**
+		 * @param lvl
+		 *            vertex level.
+		 * @return the neighborhood of this vertex within the given level.
+		 */
 		public int getNeighborhood(int lvl) {
 			return vLvlVNh[vFirstLvlVertex[id] + lvl];
 		}
 
+		/**
+		 * @return level of this vertex.
+		 */
 		public int getLevel() {
 			return (vFirstLvlVertex[id + 1] - vFirstLvlVertex[id]) - 1;
 		}
 	}
 
+	/**
+	 * lighweight edge.
+	 * 
+	 */
 	public class HHStaticEdge {
 
 		private final int id;
 
-		public HHStaticEdge(int id) {
+		HHStaticEdge(int id) {
 			this.id = id;
 		}
 
+		/**
+		 * @return id of this edge
+		 */
 		public int getId() {
 			return id;
 		}
 
+		/**
+		 * @return source vertex
+		 */
 		public HHStaticVertex getSource() {
 			return new HHStaticVertex(eSource[id]);
 		}
 
+		/**
+		 * @return target vertex
+		 */
 		public HHStaticVertex getTarget() {
 			return new HHStaticVertex(eTarget[id]);
 		}
 
+		/**
+		 * @return weight
+		 */
 		public int getWeight() {
 			return eWeight[id];
 		}
 
+		/**
+		 * @param direction
+		 *            forward or backward.
+		 * @return if edge supports the given direction
+		 */
 		public boolean getDirection(int direction) {
 			return eDirection[direction].get(id);
 		}
 
+		/**
+		 * @param lvl
+		 *            the reference level
+		 * @return true if edge level is greater or equal to the given level.
+		 */
 		public boolean isLvlGEQ(int lvl) {
 			return vLvlFirstEdge[vFirstLvlVertex[eSource[id]] + lvl] <= id;
 		}
 
+		/**
+		 * @return true if edge is a shortcut.
+		 */
 		public boolean isShortcut() {
 			return eShortcut.get(id);
 		}
 
+		/**
+		 * @return the level of this edge.
+		 */
 		public int getLvl() {
 			// no use in query algorithm, slow
 			int lvl = 0;
@@ -284,46 +354,4 @@ public class HHStaticGraph implements Serializable {
 		}
 
 	}
-
-	// public static void main(String[] args) throws SQLException, IOException,
-	// ClassNotFoundException {
-	// // StaticLevelGraph g = StaticLevelGraph.getFromHHDb(new
-	// HHDbReader(DbConnection.getBerlinDbConn()));
-	// // g.serialize(new File("x"));
-	// HHStaticGraph g = HHStaticGraph.getFromSerialization(new File("x"));
-	//
-	// HHAlgorithm a = new HHAlgorithm();
-	// Random rnd = new Random(20111981);
-	//
-	// int num = 10;
-	// int[] sources = new int[num];
-	// int[] targets = new int[num];
-	// for(int i=0;i<num;i++) {
-	// sources[i] = rnd.nextInt(g.numVertices());
-	// targets[i] = rnd.nextInt(g.numVertices());
-	// }
-	//
-	// long startTime = System.currentTimeMillis();
-	// for(int i=0;i<num;i++) {
-	// HHStaticVertex s = g.getVertex(sources[i]);
-	// HHStaticVertex t = g.getVertex(targets[i]);
-	// int d = a.shortestDistance(s, t);
-	// }
-	// long time = System.currentTimeMillis() - startTime;
-	// System.out.println("hh object layer " + time + "ms");
-	//
-	// startTime = System.currentTimeMillis();
-	// for(int i=0;i<num;i++) {
-	// int d = a.shortestDistanceFast(g, sources[i], targets[i]);
-	// }
-	// time = System.currentTimeMillis() - startTime;
-	// System.out.println("hh primitiv layer " + time + "ms");
-	//
-	// startTime = System.currentTimeMillis();
-	// for(int i=0;i<num;i++) {
-	// int d = a.shortestDistanceLowLevel(g, sources[i], targets[i]);
-	// }
-	// time = System.currentTimeMillis() - startTime;
-	// System.out.println("hh low  level layer " + time + "ms");
-	// }
 }

@@ -16,7 +16,6 @@
  */
 package org.mapsforge.server.routing;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -25,11 +24,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.DBConnection;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.highwayHierarchies.RouterImpl;
 
 public class RouterFactory {
@@ -132,25 +129,5 @@ public class RouterFactory {
 		} catch (IOException e) {
 		}
 		return props;
-	}
-
-	public static void main(String[] args) {
-		RouterImpl router = (RouterImpl) RouterFactory.getRouter();
-
-		Random rnd = new Random(1122);
-		RendererV2 renderer = new RendererV2(1024, 768, router, Color.WHITE, Color.BLACK);
-
-		for (int i = 0; i < 3; i++) {
-
-			int s = rnd.nextInt(router.routingGraph.numVertices());
-			int t = rnd.nextInt(router.routingGraph.numVertices());
-			System.out.println("s = " + s + " t = " + t);
-			IEdge[] sp = router.getShortestPath(s, t);
-			renderer.addRoute(sp, Color.BLUE);
-
-		}
-
-		System.out.println("ready");
-
 	}
 }

@@ -19,8 +19,6 @@ package org.mapsforge.server.routing.highwayHierarchies;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -49,20 +47,20 @@ public class RouterImpl implements IRouter {
 
 	// core
 	private final HHAlgorithm algorithm;
-	public final HHStaticGraph routingGraph;
+	final HHStaticGraph routingGraph;
 
 	// index structures
 	private final HHEdgeExpanderRecursive edgeExpander;
 	private final DistanceTable distanceTable;
 	private final HHEdgeReverser edgeReverser;
-	public final GeoCoordinateKDTree vertexIndex;
+	final GeoCoordinateKDTree vertexIndex;
 
 	// mapping between rgEdgeIds to hhEdgeIds and vice versa.
-	private final EdgeMapper mapper;
+	final EdgeMapper mapper;
 
 	// storage components indexed by routing graph edgeIds
-	private final RgEdgeNames edgeNames;
-	private final EdgeIndex edgeIndex;
+	final RgEdgeNames edgeNames;
+	final EdgeIndex edgeIndex;
 
 	private RouterImpl(HHAlgorithm algorithm, HHStaticGraph routingGraph,
 			HHEdgeExpanderRecursive edgeExpander, DistanceTable distanceTable,
@@ -418,15 +416,15 @@ public class RouterImpl implements IRouter {
 		}
 	}
 
-	public static void main(String[] args) throws FileNotFoundException, IOException,
-			ClassNotFoundException {
-		IRouter router = RouterImpl.deserialize(new FileInputStream("router/berlin.hh"));
-
-		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
-		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
-		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
-		for (IEdge e : shortestPath) {
-			System.out.println(e.getName() + " " + e.getRef());
-		}
-	}
+	// public static void main(final String[] args) throws FileNotFoundException, IOException,
+	// ClassNotFoundException {
+	// IRouter router = RouterImpl.deserialize(new FileInputStream("router/berlin.hh"));
+	//
+	// IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
+	// IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+	// IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
+	// for (IEdge e : shortestPath) {
+	// System.out.println(e.getName() + " " + e.getRef());
+	// }
+	// }
 }
