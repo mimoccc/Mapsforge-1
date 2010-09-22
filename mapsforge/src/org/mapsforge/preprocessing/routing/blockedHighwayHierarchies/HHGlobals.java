@@ -20,7 +20,7 @@ package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
  * All constants shared between org.mapsforge.preprocessing.routing.blockedHighwayHierarchies
  * and org.mapsforge.android.routing.blockedHighwayHierarchies.
  */
-public class BlockedHHGlobals {
+public class HHGlobals {
 	/**
 	 * length of the binary file header
 	 */

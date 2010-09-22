@@ -38,7 +38,7 @@ class StaticRTreeWriter {
 	 * The header magic bytes written at the start of the header of this r-tree. This is used
 	 * for checking if the file is likely contain a valid r-tree representation.
 	 */
-	private static final byte[] HEADER_MAGIC = BlockedHHGlobals.STATIC_RTREE_HEADER_MAGIC;
+	private static final byte[] HEADER_MAGIC = HHGlobals.STATIC_RTREE_HEADER_MAGIC;
 
 	/**
 	 * SortTileRecursive(STR) Algorithm for static r-tree packing. All given arrays must be of

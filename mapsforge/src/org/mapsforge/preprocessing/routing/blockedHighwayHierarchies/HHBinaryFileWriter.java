@@ -36,8 +36,8 @@ import org.mapsforge.preprocessing.util.DBConnection;
 
 class HHBinaryFileWriter {
 
-	private final static byte[] HEADER_MAGIC = BlockedHHGlobals.BINARY_FILE_HEADER_MAGIC;
-	private final static int HEADER_LENGTH = BlockedHHGlobals.BINARY_FILE_HEADER_LENGTH;
+	private final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
+	private final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 
