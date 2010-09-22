@@ -28,7 +28,7 @@ import java.util.LinkedList;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.core.WGS84;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.util.HHGlobals;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.BlockedHHGlobals;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
@@ -47,11 +47,11 @@ final class HHRoutingGraph {
 	 * header magic of the highway hierarchies binary file. Used for checking if the file might
 	 * be o.k.
 	 */
-	private static final byte[] BINARY_FILE_HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
+	private static final byte[] BINARY_FILE_HEADER_MAGIC = BlockedHHGlobals.BINARY_FILE_HEADER_MAGIC;
 	/**
 	 * header length of the highway hierarchies binary file.
 	 */
-	private static final int BINARY_FILE_HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;
+	private static final int BINARY_FILE_HEADER_LENGTH = BlockedHHGlobals.BINARY_FILE_HEADER_LENGTH;
 	/**
 	 * header length of the cluster blocks section of the file.
 	 */
