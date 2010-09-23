@@ -435,7 +435,7 @@ final class HHRoutingGraph {
 				.deserialize(new FileInputStream("router/berlin.hh")), Color.BLACK,
 				Color.WHITE);
 
-		File hhBinaryFile = new File("berlin.hhmobile");
+		File hhBinaryFile = new File("router/berlin.blockedHH");
 		HHRoutingGraph graph = new HHRoutingGraph(hhBinaryFile, 1000 * 1024);
 		HHVertex s = graph.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655), 300);
 		HHVertex t = graph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805), 300);

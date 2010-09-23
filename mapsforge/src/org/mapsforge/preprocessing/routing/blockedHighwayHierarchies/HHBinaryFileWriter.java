@@ -31,6 +31,7 @@ import java.util.Properties;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level;
+import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.util.DBConnection;
@@ -141,7 +142,8 @@ class HHBinaryFileWriter {
 		// ---------------- WRITE TEMPORARY FILES --------------------------
 
 		File fBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
-		File fBlockIndex = new File(targetFile.getAbsolutePath() + ".blockIdx");
+		File fileAddressLookupTable = new File(targetFile.getAbsolutePath()
+				+ ".addressLookupTable");
 		File fRTree = new File(targetFile.getAbsolutePath() + ".rtree");
 
 		// write the graphs cluster blocks
@@ -150,7 +152,8 @@ class HHBinaryFileWriter {
 				mapping, includeHopIndices);
 
 		// write block index
-		AddressLookupTableWriter.writeTable(blockSize, indexGroupSizeThreshold, fBlockIndex);
+		AddressLookupTableWriter.writeTable(blockSize, indexGroupSizeThreshold,
+				fileAddressLookupTable);
 
 		// construct and write r-tree (insert only level 0 clusters)
 		int[] minLat = new int[clustering[0].size()];
@@ -183,7 +186,7 @@ class HHBinaryFileWriter {
 		long endAddrGraph = startAddrGraph + fBlocks.length();
 
 		long startAddrBlockIdx = endAddrGraph;
-		long endAddrBlockIdx = startAddrBlockIdx + fBlockIndex.length();
+		long endAddrBlockIdx = startAddrBlockIdx + fileAddressLookupTable.length();
 
 		long startAddrRTree = endAddrBlockIdx;
 		long endAddrRTree = startAddrRTree + fRTree.length();
@@ -203,7 +206,7 @@ class HHBinaryFileWriter {
 
 		// write components
 		writeFile(fBlocks, out);
-		writeFile(fBlockIndex, out);
+		writeFile(fileAddressLookupTable, out);
 		writeFile(fRTree, out);
 
 		out.flush();
@@ -211,7 +214,7 @@ class HHBinaryFileWriter {
 
 		// ---------------- CLEAN UP TEMPORARY FILES --------------------------
 		fBlocks.delete();
-		fBlockIndex.delete();
+		fileAddressLookupTable.delete();
 		fRTree.delete();
 	}
 
@@ -229,6 +232,17 @@ class HHBinaryFileWriter {
 			maxLat = Math.max(coord.getLatitudeE6(), maxLat);
 			minLon = Math.min(coord.getLongitudeE6(), minLon);
 			maxLon = Math.max(coord.getLongitudeE6(), maxLon);
+			for (LevelEdge e : v.getOutboundEdges()) {
+				GeoCoordinate[] waypoints = e.getWaypoints();
+				if (waypoints != null) {
+					for (GeoCoordinate wp : waypoints) {
+						minLat = Math.min(wp.getLatitudeE6(), minLat);
+						maxLat = Math.max(wp.getLatitudeE6(), maxLat);
+						minLon = Math.min(wp.getLongitudeE6(), minLon);
+						maxLon = Math.max(wp.getLongitudeE6(), maxLon);
+					}
+				}
+			}
 		}
 		return new Rect(minLon, maxLon, minLat, maxLat);
 	}

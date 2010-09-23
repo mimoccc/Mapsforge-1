@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-
 class AddressLookupTableWriter {
 
 	private final static int MIN_G_SIZE = 5;
@@ -78,6 +77,7 @@ class AddressLookupTableWriter {
 		}
 		FileOutputStream out = new FileOutputStream(targetFile);
 		out.write(bestSerialization);
+		out.close();
 	}
 
 	/**

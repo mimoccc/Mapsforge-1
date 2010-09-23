@@ -224,13 +224,6 @@ public class HHRouter implements IRouter {
 				routingGraph.releaseVertex(source);
 				routingGraph.releaseVertex(target);
 				return waypoints;
-
-				// GeoCoordinate[] waypoints = new GeoCoordinate[2];
-				// HHVertex source = routingGraph.getVertex(edge.sourceId);
-				// HHVertex target = routingGraph.getVertex(edge.targetId);
-				// waypoints[0] = new GeoCoordinate(source.latitudeE6, source.longitudeE6);
-				// waypoints[1] = new GeoCoordinate(target.latitudeE6, target.longitudeE6);
-				// return waypoints;
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 			} catch (IOException e) {
@@ -315,7 +308,7 @@ public class HHRouter implements IRouter {
 	 *             if there is something wrong reading the file.
 	 */
 	public static void main(String[] args) throws IOException {
-		HHRouter router = new HHRouter(new File("berlin.hhmobile"), 1000 * 1024);
+		HHRouter router = new HHRouter(new File("router/berlin.blockedHH"), 1000 * 1024);
 		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		IEdge[] shortestPath = router.getShortestPath(target.getId(), source.getId());
