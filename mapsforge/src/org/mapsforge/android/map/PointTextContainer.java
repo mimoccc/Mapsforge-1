@@ -51,7 +51,11 @@ class PointTextContainer {
 		this.symbol = null;
 
 		this.boundary = new android.graphics.Rect();
-		paintBack.getTextBounds(text, 0, text.length(), this.boundary);
+		if (paintBack != null) {
+			paintBack.getTextBounds(text, 0, text.length(), this.boundary);
+		} else {
+			paintFront.getTextBounds(text, 0, text.length(), this.boundary);
+		}
 	}
 
 	/**
@@ -81,7 +85,11 @@ class PointTextContainer {
 		this.symbol = symbol;
 
 		this.boundary = new android.graphics.Rect();
-		paintBack.getTextBounds(text, 0, text.length(), this.boundary);
+		if (paintBack != null) {
+			paintBack.getTextBounds(text, 0, text.length(), this.boundary);
+		} else {
+			paintFront.getTextBounds(text, 0, text.length(), this.boundary);
+		}
 	}
 
 	/**

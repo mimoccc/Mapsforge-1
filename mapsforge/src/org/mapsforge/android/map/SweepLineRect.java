@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.mapsforge.android.map;
 
 import java.util.ArrayList;
@@ -26,12 +25,12 @@ class SweepLineRect {
 
 	LinkedList<Intersection> intersects = new LinkedList<Intersection>();
 
-	public class Intersection {
+	class Intersection {
 
 		Rectangle<?> a;
 		Rectangle<?> b;
 
-		public Intersection(Rectangle<?> a, Rectangle<?> b) {
+		Intersection(Rectangle<?> a, Rectangle<?> b) {
 			this.a = a;
 			this.b = b;
 		}
@@ -41,7 +40,7 @@ class SweepLineRect {
 		int time;
 		Rectangle<?> rectangle;
 
-		public Event(int time, Rectangle<?> rectangle) {
+		Event(int time, Rectangle<?> rectangle) {
 			this.time = time;
 			this.rectangle = rectangle;
 		}
@@ -66,34 +65,35 @@ class SweepLineRect {
 	IntervalTree set = new IntervalTree();
 	PriorityQueue<Event> pq;
 
-	public LinkedList<Intersection> sweep(ArrayList<Rectangle<?>> rectangles) {
-		pq = new PriorityQueue<Event>(rectangles.size() + rectangles.size() / 100 * 20,
+	LinkedList<Intersection> sweep(ArrayList<Rectangle<?>> rectangles) {
+		this.pq = new PriorityQueue<Event>(rectangles.size() + rectangles.size() / 100 * 20,
 				new EventComparator());
 		for (Rectangle<?> rectangle : rectangles) {
 			Event e1 = new Event(rectangle.rect.left, rectangle);
 			Event e2 = new Event(rectangle.rect.right, rectangle);
-			pq.add(e1);
-			pq.add(e2);
+			this.pq.add(e1);
+			this.pq.add(e2);
 		}
 
 		return processSweep();
 	}
 
-	public LinkedList<Intersection> processSweep() {
-		while (pq.size() != 0) {
-			Event e = pq.remove();
+	LinkedList<Intersection> processSweep() {
+		while (this.pq.size() != 0) {
+			Event e = this.pq.remove();
 			float sweep = e.time;
 			Rectangle<?> rectangle = e.rectangle;
 			if (sweep == rectangle.rect.right) {
-				set.remove(new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom));
+				this.set
+						.remove(new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom));
 
 			} else {
-				for (Interval<?> inters : set.searchAll(new Interval<Object>(
+				for (Interval<?> inters : this.set.searchAll(new Interval<Object>(
 						rectangle.rect.top,
 						rectangle.rect.bottom))) {
 					intersects.add(new Intersection(rectangle, (Rectangle<?>) inters.value));
 				}
-				set.put((new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom,
+				this.set.put((new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom,
 						rectangle)));
 			}
 		}
