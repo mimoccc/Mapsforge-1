@@ -22,6 +22,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Random;
 
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.KCenterClustering.KCenterCluster;
@@ -109,7 +110,12 @@ class KCenterClusteringAlgorithm {
 		expandClusters(graph, clustering);
 
 		System.out.println("sampling down to k = " + Math.min(k, k_) + " clusters");
-		sampleDown(graph, clustering, k, k_, heuristic);
+		sampleDown(graph, clustering, k, heuristic);
+
+		System.out.println("clustering unassigned vertices of unconnected componts");
+		int numClustersCreated = clusterUnconnectedComponents(graph, clustering);
+		System.out.println("created " + numClustersCreated + " additional clusters");
+
 		return clustering;
 	}
 
@@ -224,15 +230,13 @@ class KCenterClusteringAlgorithm {
 	 *            the over sampled clustering.
 	 * @param k
 	 *            number of cluster after sampling down.
-	 * @param k_
-	 *            number of clusters
 	 * @param heuristik
 	 *            the heuristic for choosing cluster for removal.
 	 */
-	private static void sampleDown(Graph graph, KCenterClustering clustering, int k, int k_,
+	private static void sampleDown(Graph graph, KCenterClustering clustering, int k,
 			int heuristik) {
 		int count = 0;
-		while (k_ - count > k) {
+		while (clustering.size() > k) {
 			KCenterCluster cluster = chooseClusterForRemoval(graph, clustering, heuristik);
 			removeClusterAndRearrange(graph, clustering, cluster);
 			count++;
@@ -399,6 +403,75 @@ class KCenterClusteringAlgorithm {
 			}
 		}
 		return min;
+	}
+
+	/**
+	 * If the graph is not connected, it may happen that a run of the normal algorithm does not
+	 * assign a cluster to vertices of some unconnected components.
+	 * 
+	 * To Fix this problem, this method iterates over all vertices and checks if a cluster is
+	 * assigned to it. if not, a breath first search from this vertex is performed. This bfs
+	 * only visits vertices not assigned to a cluster. All vertices visited are added to the
+	 * same cluster. Clusters build this way are much likely to be smaller than the desired
+	 * cluster size, so bfs is not a problem.
+	 * 
+	 * Each cluster build this way gets the radius 0. This allows distinguishing between regular
+	 * build clusters, and clusters build this way.
+	 * 
+	 * When this method is finished, each vertex is assigned to a cluster.
+	 * 
+	 * @param graph
+	 *            graph to be clustered
+	 * @param clustering
+	 *            has already been computed by the k-center algorithm for the given graph.
+	 * @return number of clusters added.
+	 */
+	private static int clusterUnconnectedComponents(Graph graph, KCenterClustering clustering) {
+		int numCreatedClusters = 0;
+		for (int v = 0; v < graph.numVertices(); v++) {
+			// find vertices not yet assigned to a cluster
+			if (clustering.getCluster(v) == null) {
+				// create a new cluster for such a vertex
+				KCenterCluster cluster = clustering.addCluster(v);
+				numCreatedClusters++;
+
+				// perform a breath first search from v
+				LinkedList<Integer> fifoQueue = new LinkedList<Integer>();
+				TIntHashSet discoveredVertices = new TIntHashSet();
+
+				// enqueue v
+				fifoQueue.addLast(v);
+				discoveredVertices.add(v);
+
+				while (!fifoQueue.isEmpty()) {
+					// dequeue
+					int vertexId = fifoQueue.removeFirst();
+
+					if (clustering.getCluster(vertexId) == null && vertexId != v) {
+						if (vertexId != v) {
+							cluster.addVertex(vertexId, 0);
+						}
+					} else if (vertexId != v) {
+						// current vertex is already assigned
+						// to a cluster, do not relax its
+						// outgoing edges
+						continue;
+					}
+
+					// relax adjacent edges
+					for (Edge e : graph.getVertex(vertexId).getOutboundEdges()) {
+						int targetId = e.getTarget().getId();
+						// enqueue edge target if it was not discovered before
+						if (!discoveredVertices.contains(targetId)) {
+							// enqueue
+							fifoQueue.addLast(targetId);
+							discoveredVertices.add(targetId);
+						}
+					}
+				}
+			}
+		}
+		return numCreatedClusters;
 	}
 
 	/**

@@ -17,6 +17,9 @@
 package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 
 import java.awt.Color;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -26,18 +29,19 @@ import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.RouterFactory;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 class ClusteringEvaluator {
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) throws SQLException, FileNotFoundException,
+			IOException, ClassNotFoundException {
 
 		// get data from db
 
 		Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432, "berlin",
-				"postgres", "admin");
+				"osm", "osm");
 		LevelGraph levelGraph = new LevelGraph(conn);
-		int lvl = 2;
+		int lvl = 0;
 		Level graph = levelGraph.getLevel(lvl);
 
 		// k-center
@@ -45,6 +49,11 @@ class ClusteringEvaluator {
 		int k = (int) Math.rint(graph.numVertices() / avgVerticesPerCluster);
 		KCenterClustering kCenterClustering = KCenterClusteringAlgorithm.computeClustering(
 				graph, k, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+		for (int v = 0; v < levelGraph.getLevel(0).numVertices(); v++) {
+			if (kCenterClustering.getCluster(v) == null) {
+				System.out.println("no cluster assigned for vertex : " + v);
+			}
+		}
 
 		// quad
 		QuadTreeClustering quadClustering = QuadTreeClusteringAlgorithm.computeClustering(
@@ -54,7 +63,7 @@ class ClusteringEvaluator {
 
 		quadClustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph.getLevels(),
 				levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
-				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 1000)[2];
+				QuadTreeClusteringAlgorithm.HEURISTIC_CENTER, 1000)[lvl];
 
 		// verify
 		int count = 0;
@@ -72,7 +81,8 @@ class ClusteringEvaluator {
 		}
 
 		// render
-		IRouter router = RouterFactory.getRouter();
+		IRouter router = HHRouterServerside
+				.deserialize(new FileInputStream("router/berlin.hh"));
 		renderClustering(router, kCenterClustering);
 		renderClustering(router, quadClustering);
 
