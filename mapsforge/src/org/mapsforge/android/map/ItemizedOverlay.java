@@ -30,18 +30,18 @@ import android.view.MotionEvent;
  * @author Karsten Groll
  */
 public abstract class ItemizedOverlay extends Overlay {
-	private Drawable defaultMarker;
-	private Canvas bitmapWrapper;
 	private Bitmap bitmap;
-	private Bitmap shaddowBitmap;
-	private Bitmap tempBitmapForSwap;
+	private Canvas bitmapWrapper;
+	private Drawable defaultMarker;
+	private Point displayPositonAfterDrawing;
+	private Point displayPositonBeforeDrawing;
+	private OverlayItem item;
 	private Drawable itemMarker;
 	private Point itemPixelPositon;
 	private Point itemPosOnDisplay;
-	private Point displayPositonBeforeDrawing;
-	private Point displayPositonAfterDrawing;
 	private Matrix matrix;
-	private OverlayItem item;
+	private Bitmap shaddowBitmap;
+	private Bitmap tempBitmapForSwap;
 
 	/**
 	 * Construct an Overlay
@@ -54,17 +54,31 @@ public abstract class ItemizedOverlay extends Overlay {
 		setup();
 	}
 
-	private void setup() {
-		this.matrix = new Matrix();
-		this.start();
+	/**
+	 * Add an overlayItem to this overlay.
+	 * 
+	 * @param overlayItem
+	 *            the new overlay item.
+	 */
+	public abstract void addOverLay(OverlayItem overlayItem);
+
+	@Override
+	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
+		canvas.drawBitmap(this.bitmap, this.matrix, null);
 	}
 
-	/**
-	 * Return the numbers of items.
-	 * 
-	 * @return numbers of items in this overlay.
-	 */
-	abstract public int size();
+	@Override
+	public boolean onTouchEvent(MotionEvent event, MapView mapview) {
+		// iterate over all overlay items
+		for (int i = 0; i < size(); i++) {
+			item = createItem(i);
+			if (hitTest(item, item.getMarker(), (int) event.getX(), (int) event.getY())) {
+				onTap(i);
+				return true;
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * Pause the Thread.
@@ -82,34 +96,112 @@ public abstract class ItemizedOverlay extends Overlay {
 	}
 
 	/**
-	 * Add an overlayItem to this overlay.
+	 * Return the numbers of items.
 	 * 
-	 * @param overlayItem
-	 *            the new overlay item.
+	 * @return numbers of items in this overlay.
 	 */
-	public abstract void addOverLay(OverlayItem overlayItem);
+	abstract public int size();
 
-	@Override
-	public boolean onTouchEvent(MotionEvent event, MapView mapview) {
-		// iterate over all overlay items
-		for (int i = 0; i < size(); i++) {
-			item = createItem(i);
-			if (hitTest(item, item.getMarker(), (int) event.getX(), (int) event.getY())) {
-				onTap(i);
-				return true;
-			}
-		}
-		return true;
+	private Point calculateDisplayPoint(GeoPoint geoPoint) {
+		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
+				this.internalMapView.zoomLevel) - this.internalMapView.getWidth() / 2,
+				(float) MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
+						this.internalMapView.zoomLevel) - this.internalMapView.getHeight() / 2);
 	}
 
-	/**
-	 * Access and create the actual Items.
-	 * 
-	 * @param i
-	 *            the index of the item.
-	 * @return the overlay item.
-	 */
-	abstract protected OverlayItem createItem(int i);
+	private Point calculateItemPoint(GeoPoint geoPoint) {
+		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
+				this.internalMapView.zoomLevel), (float) MercatorProjection.latitudeToPixelY(
+				geoPoint.getLatitude(), this.internalMapView.zoomLevel));
+	}
+
+	private Point calculateItemPostionRelativeToDisplay(GeoPoint itemPostion) {
+		Point itemPixelPosition = calculateItemPoint(itemPostion);
+		Point displayPixelPosition = calculateDisplayPoint(new GeoPoint(
+				this.internalMapView.latitude,
+				this.internalMapView.longitude));
+		Point distance = Point.substract(itemPixelPosition, displayPixelPosition);
+		return distance;
+	}
+
+	private void drawItem(OverlayItem currentItem) {
+		if (hasValidDisplayPosition(currentItem)) {
+			this.itemPixelPositon = currentItem.posOnDisplay;
+		} else {
+			currentItem.posOnDisplay = calculateItemPoint(currentItem.getPoint());
+			this.itemPixelPositon = currentItem.posOnDisplay;
+			currentItem.zoomLevel = this.internalMapView.zoomLevel;
+		}
+		this.itemPosOnDisplay = Point.substract(this.itemPixelPositon,
+				this.displayPositonBeforeDrawing);
+		setCostumOrDeaultItemMarker(currentItem);
+		if (isItemOnDisplay(this.itemPosOnDisplay)) {
+			boundCenter(this.itemMarker, this.itemPosOnDisplay).draw(this.bitmapWrapper);
+		}
+	}
+
+	private void drawItemsOnShaddowBitmap() {
+		this.shaddowBitmap.eraseColor(Color.TRANSPARENT);
+		this.bitmapWrapper.setBitmap(this.shaddowBitmap);
+		for (int i = 0; i < size(); i++) {
+			drawItem(createItem(i));
+		}
+	}
+
+	private boolean hasValidDisplayPosition(OverlayItem currentItem) {
+		boolean displayPositionValid = true;
+		displayPositionValid &= (this.internalMapView.zoomLevel == currentItem.zoomLevel);
+		return displayPositionValid;
+	}
+
+	private boolean isItemOnDisplay(Point itemPos) {
+		boolean isOnDisplay = true;
+		isOnDisplay &= itemPos.x > 0;
+		isOnDisplay &= itemPos.x < this.bitmap.getWidth();
+		isOnDisplay &= itemPos.y > 0;
+		isOnDisplay &= itemPos.y < this.bitmap.getHeight();
+		return isOnDisplay;
+	}
+
+	private void notifyMapViewToRedraw() {
+		this.internalMapView.postInvalidate();
+	}
+
+	private void saveDisplayPositionAfterDrawing() {
+		this.displayPositonAfterDrawing = calculateDisplayPoint(new GeoPoint(
+				this.internalMapView.latitude, this.internalMapView.longitude));
+	}
+
+	private void saveDisplayPositionBeforeDrawing() {
+		this.displayPositonBeforeDrawing = calculateDisplayPoint(new GeoPoint(
+				this.internalMapView.latitude, this.internalMapView.longitude));
+	}
+
+	private void setCostumOrDeaultItemMarker(OverlayItem item) {
+		if (item.getMarker() == null) {
+			this.itemMarker = this.defaultMarker;
+			item.setMarker(this.defaultMarker, 0);
+		} else {
+			this.itemMarker = item.getMarker();
+		}
+	}
+
+	private void setup() {
+		this.matrix = new Matrix();
+		this.start();
+	}
+
+	private void swapBitmapAndCorrectMatrix(Point displayPosBefore, Point displayPosAfter) {
+		synchronized (this.matrix) {
+			this.matrix.reset();
+			Point diff = Point.substract(displayPosBefore, displayPosAfter);
+			this.matrix.postTranslate(diff.x, diff.y);
+			// swap the two bitmaps
+			this.tempBitmapForSwap = this.bitmap;
+			this.bitmap = this.shaddowBitmap;
+			this.shaddowBitmap = this.tempBitmapForSwap;
+		}
+	}
 
 	/**
 	 * Adjusts a drawable of an item so that (0,0) is the center.
@@ -145,25 +237,24 @@ public abstract class ItemizedOverlay extends Overlay {
 	}
 
 	/**
-	 * Handle a tap event.
+	 * Access and create the actual Items.
 	 * 
-	 * @param index
-	 *            the position of the item.
-	 * 
-	 * @return true
+	 * @param i
+	 *            the index of the item.
+	 * @return the overlay item.
 	 */
-	abstract protected boolean onTap(int index);
-
-	@Override
-	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
-		canvas.drawBitmap(this.bitmap, this.matrix, null);
-	}
+	abstract protected OverlayItem createItem(int i);
 
 	@Override
 	final protected void createOverlayBitmapsAndCanvas(int width, int height) {
 		this.bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		this.shaddowBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		this.bitmapWrapper = new Canvas();
+	}
+
+	@Override
+	protected Matrix getMatrix() {
+		return this.matrix;
 	}
 
 	/**
@@ -193,18 +284,15 @@ public abstract class ItemizedOverlay extends Overlay {
 		return false;
 	}
 
-	private Point calculateItemPostionRelativeToDisplay(GeoPoint itemPostion) {
-		Point itemPixelPosition = calculateItemPoint(itemPostion);
-		Point displayPixelPosition = calculateDisplayPoint(new GeoPoint(this.mapView.latitude,
-				this.mapView.longitude));
-		Point distance = Point.substract(itemPixelPosition, displayPixelPosition);
-		return distance;
-	}
-
-	@Override
-	protected Matrix getMatrix() {
-		return this.matrix;
-	}
+	/**
+	 * Handle a tap event.
+	 * 
+	 * @param index
+	 *            the position of the item.
+	 * 
+	 * @return true
+	 */
+	abstract protected boolean onTap(int index);
 
 	@Override
 	final protected void prepareOverlayBitmap(MapView mapview) {
@@ -214,92 +302,5 @@ public abstract class ItemizedOverlay extends Overlay {
 		swapBitmapAndCorrectMatrix(this.displayPositonBeforeDrawing,
 				this.displayPositonAfterDrawing);
 		notifyMapViewToRedraw();
-	}
-
-	private void saveDisplayPositionBeforeDrawing() {
-		this.displayPositonBeforeDrawing = calculateDisplayPoint(new GeoPoint(
-				this.mapView.latitude, this.mapView.longitude));
-	}
-
-	private void saveDisplayPositionAfterDrawing() {
-		this.displayPositonAfterDrawing = calculateDisplayPoint(new GeoPoint(
-				this.mapView.latitude, this.mapView.longitude));
-	}
-
-	private void drawItemsOnShaddowBitmap() {
-		this.shaddowBitmap.eraseColor(Color.TRANSPARENT);
-		this.bitmapWrapper.setBitmap(this.shaddowBitmap);
-		for (int i = 0; i < size(); i++) {
-			drawItem(createItem(i));
-		}
-	}
-
-	private void drawItem(OverlayItem currentItem) {
-		if (hasValidDisplayPosition(currentItem)) {
-			this.itemPixelPositon = currentItem.posOnDisplay;
-		} else {
-			currentItem.posOnDisplay = calculateItemPoint(currentItem.getPoint());
-			this.itemPixelPositon = currentItem.posOnDisplay;
-			currentItem.zoomLevel = this.mapView.zoomLevel;
-		}
-		this.itemPosOnDisplay = Point.substract(this.itemPixelPositon,
-				this.displayPositonBeforeDrawing);
-		setCostumOrDeaultItemMarker(currentItem);
-		if (isItemOnDisplay(this.itemPosOnDisplay)) {
-			boundCenter(this.itemMarker, this.itemPosOnDisplay).draw(this.bitmapWrapper);
-		}
-	}
-
-	private boolean hasValidDisplayPosition(OverlayItem currentItem) {
-		boolean displayPositionValid = true;
-		displayPositionValid &= (this.mapView.zoomLevel == currentItem.zoomLevel);
-		return displayPositionValid;
-	}
-
-	private void setCostumOrDeaultItemMarker(OverlayItem item) {
-		if (item.getMarker() == null) {
-			this.itemMarker = this.defaultMarker;
-			item.setMarker(this.defaultMarker, 0);
-		} else {
-			this.itemMarker = item.getMarker();
-		}
-	}
-
-	private void swapBitmapAndCorrectMatrix(Point displayPosBefore, Point displayPosAfter) {
-		synchronized (this.matrix) {
-			this.matrix.reset();
-			Point diff = Point.substract(displayPosBefore, displayPosAfter);
-			this.matrix.postTranslate(diff.x, diff.y);
-			// swap the two MapViewBitmaps
-			this.tempBitmapForSwap = this.bitmap;
-			this.bitmap = this.shaddowBitmap;
-			this.shaddowBitmap = this.tempBitmapForSwap;
-		}
-	}
-
-	private void notifyMapViewToRedraw() {
-		this.mapView.postInvalidate();
-	}
-
-	private boolean isItemOnDisplay(Point itemPos) {
-		boolean isOnDisplay = true;
-		isOnDisplay &= itemPos.x > 0;
-		isOnDisplay &= itemPos.x < this.bitmap.getWidth();
-		isOnDisplay &= itemPos.y > 0;
-		isOnDisplay &= itemPos.y < this.bitmap.getHeight();
-		return isOnDisplay;
-	}
-
-	private Point calculateItemPoint(GeoPoint geoPoint) {
-		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.mapView.zoomLevel), (float) MercatorProjection.latitudeToPixelY(
-				geoPoint.getLatitude(), this.mapView.zoomLevel));
-	}
-
-	private Point calculateDisplayPoint(GeoPoint geoPoint) {
-		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.mapView.zoomLevel) - this.mapView.getWidth() / 2,
-				(float) MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
-						this.mapView.zoomLevel) - this.mapView.getHeight() / 2);
 	}
 }

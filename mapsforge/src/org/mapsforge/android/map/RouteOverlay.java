@@ -28,39 +28,37 @@ import android.graphics.Path;
  * a line.
  * 
  * @author Karsten Groll
- * 
  */
-
 public class RouteOverlay extends Overlay {
-	/** The bitmap the route is drawn onto. */
-	private Bitmap shadowBmp;
-	/** Temporary bitmap used for switching bmp and shadowBmp. */
-	private Bitmap tmpBmp;
+	/** Canvas used for drawing onto {@link #shadowBmp}. */
+	private Canvas internalCanvas;
 	/** Matrix used for translating the overlay. */
 	private Matrix matrix;
-	/** Canvas used for drawing onto {@link #shadowBmp}. */
-	private Canvas canvas;
-	/** Map's x-position before rendering. */
-	private double xPosBefore;
-	/** Map's y-position before rendering. */
-	private double yPosBefore;
-	/** Map's x-position after rendering. */
-	private double xPosAfter;
-	/** Map's y-position after rendering. */
-	private double yPosAfter;
 	/** Paint used for styling the path. */
 	private Paint paint;
-	/** Array holding the waypoints. */
-	private double routeData[][];
 	/** Path holding the waypoints pixel coordinates. */
 	private Path path;
+	/** Array holding the waypoints. */
+	private double routeData[][];
+	/** The bitmap the route is drawn onto. */
+	private Bitmap shadowBmp;
+	/** Temporary bitmap used for switching bitmap and shadowBmp. */
+	private Bitmap tmpBmp;
+	/** Map's x-position after rendering. */
+	private double xPosAfter;
+	/** Map's x-position before rendering. */
+	private double xPosBefore;
+	/** Map's y-position after rendering. */
+	private double yPosAfter;
+	/** Map's y-position before rendering. */
+	private double yPosBefore;
 
 	/**
 	 * Constructor
 	 */
 	public RouteOverlay() {
 		this.matrix = new Matrix();
-		this.canvas = new Canvas();
+		this.internalCanvas = new Canvas();
 
 		this.paint = new Paint();
 		this.paint.setColor(Color.BLUE);
@@ -80,14 +78,39 @@ public class RouteOverlay extends Overlay {
 		// Log.d("test", this.matrix.toShortString());
 	}
 
+	/**
+	 * Sets the route data (Array of waypoints).
+	 * 
+	 * @param routeData
+	 *            Array containing of arrays containing the route data. Structure
+	 * 
+	 *            <pre>
+	 * {{lat1, lon1}, {lat2, lon2}, ...}
+	 * </pre>
+	 */
+	public void setRouteData(double[][] routeData) {
+		this.routeData = routeData.clone();
+	}
+
+	@Override
+	protected void createOverlayBitmapsAndCanvas(int width, int height) {
+		this.bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		this.shadowBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+	}
+
+	@Override
+	protected Matrix getMatrix() {
+		return this.matrix;
+	}
+
 	@Override
 	protected void prepareOverlayBitmap(MapView mapView) {
 		if (this.routeData == null) {
 			return;
 		}
 
-		// Tell the canvas to use a new bmp
-		this.canvas.setBitmap(this.shadowBmp);
+		// Tell the internalCanvas to use a new bitmap
+		this.internalCanvas.setBitmap(this.shadowBmp);
 		// Erase the bmp's content
 		this.shadowBmp.eraseColor(Color.TRANSPARENT);
 
@@ -119,7 +142,7 @@ public class RouteOverlay extends Overlay {
 		}
 
 		// Draw the path
-		this.canvas.drawPath(this.path, this.paint);
+		this.internalCanvas.drawPath(this.path, this.paint);
 
 		// Save current position (again)
 		this.xPosAfter = mapView.mapViewPixelX;
@@ -128,44 +151,17 @@ public class RouteOverlay extends Overlay {
 		synchronized (this.bmp) {
 			// this.matrix.reset();
 
-			// Calculate how many pixels the mapview has been shifted since the beginning of the
+			// Calculate how many pixels the MapView has been shifted since the beginning of the
 			// calculation and fix the matrix according to it
 			this.matrix.postTranslate((float) (this.xPosBefore - this.xPosAfter),
 					(float) (this.yPosBefore - this.yPosAfter));
 			// Swap bitmaps
 			this.tmpBmp = this.bmp;
 			this.bmp = this.shadowBmp;
-			this.shadowBmp = this.bmp;
+			this.shadowBmp = this.tmpBmp;
 		}
 
 		// Force redraw
 		mapView.postInvalidate();
-
 	}
-
-	@Override
-	protected void createOverlayBitmapsAndCanvas(int width, int height) {
-		this.bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		this.shadowBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-	}
-
-	@Override
-	protected Matrix getMatrix() {
-		return this.matrix;
-	}
-
-	/**
-	 * Sets the route data (Array of waypoints).
-	 * 
-	 * @param routeData
-	 *            Array containing of arrays containing the route data. Structure
-	 * 
-	 *            <pre>
-	 * {{lat1, lon1}, {lat2, lon2}, ...}
-	 * </pre>
-	 */
-	public void setRouteData(double[][] routeData) {
-		this.routeData = routeData.clone();
-	}
-
 }

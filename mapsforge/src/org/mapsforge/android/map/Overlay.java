@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.mapsforge.android.map;
 
 import android.graphics.Bitmap;
@@ -22,24 +21,12 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 
 /**
- * This class represents an overlay which may be displayed over the {@link #mapView}
+ * This class represents an overlay which may be displayed over the {@link MapView}.
  * 
  * @author Karsten Groll
  * @author Sebastian Schlaak
- * 
  */
 public abstract class Overlay extends Thread {
-
-	/**
-	 * This is where the overlays are drawn on before the canvas is touched.
-	 */
-	protected Bitmap bmp;
-
-	/**
-	 * The reference to the mapview class.
-	 */
-	protected MapView mapView;
-
 	/**
 	 * The shadows x-offset. This feature is not yet implemented!
 	 */
@@ -51,20 +38,14 @@ public abstract class Overlay extends Thread {
 	protected static float SHADOW_Y_SKEW = 0.5f;
 
 	/**
-	 * Draws the overlay on the {@link MapView}.
-	 * 
-	 * @param canvas
-	 *            the canvas the overlay will be thrown onto.
-	 * 
-	 * @param mapview
-	 *            the {@link MapView} that called the draw-method.
-	 * 
-	 * @param shadow
-	 *            not yet implemented!
+	 * This is where the overlays are drawn on before the canvas is touched.
 	 */
-	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
-		// overwritten
-	}
+	protected Bitmap bmp;
+
+	/**
+	 * The reference to the MapView class.
+	 */
+	protected MapView internalMapView;
 
 	/**
 	 * Calls {@link Overlay#draw(Canvas, MapView, boolean)} and returns false.
@@ -83,12 +64,28 @@ public abstract class Overlay extends Thread {
 	 */
 	public boolean draw(android.graphics.Canvas canvas, MapView mapview, boolean shadow,
 			long when) {
-		draw(canvas, mapView, shadow);
+		draw(canvas, internalMapView, shadow);
 		return false;
 	}
 
 	/**
-	 * Handles behavior on keypress(Does nothing by default).
+	 * Draws the overlay on the {@link MapView}.
+	 * 
+	 * @param canvas
+	 *            the canvas the overlay will be thrown onto.
+	 * 
+	 * @param mapview
+	 *            the {@link MapView} that called the draw-method.
+	 * 
+	 * @param shadow
+	 *            not yet implemented!
+	 */
+	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
+		// overwritten
+	}
+
+	/**
+	 * Handles behavior on keypress (does nothing by default).
 	 * 
 	 * @param keyCode
 	 *            the keyCode of the event.
@@ -103,7 +100,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles behavior on keyrelease (Does nothing by default).
+	 * Handles behavior on keyrelease (does nothing by default).
 	 * 
 	 * @param keyCode
 	 *            the keyCode of the event.
@@ -118,7 +115,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles a touch event (Does nothing by default).
+	 * Handles a touch event (does nothing by default).
 	 * 
 	 * @param event
 	 *            the event.
@@ -143,58 +140,6 @@ public abstract class Overlay extends Thread {
 		return false;
 	}
 
-	/**
-	 * Prepares this overlay for drawing.
-	 * 
-	 * @param mapview
-	 *            the parent mapview.
-	 */
-	protected abstract void prepareOverlayBitmap(MapView mapview);
-
-	/**
-	 * 
-	 * Inits the overlay-bitmap and the related canvas.
-	 * 
-	 * @param width
-	 *            the width of the bitmap.
-	 * @param height
-	 *            the height of the bitmap.
-	 */
-	protected abstract void createOverlayBitmapsAndCanvas(int width, int height);
-
-	/**
-	 * Returns true if mapview is set.
-	 * 
-	 * @return true if mapview is set.
-	 */
-	protected boolean isMapViewSet() {
-		boolean ready = false;
-		if (this.mapView == null)
-			ready = false;
-		else {
-			ready = true;
-		}
-		return ready;
-	}
-
-	/**
-	 * Sets a reference to the mapview.
-	 * 
-	 * @param mapView
-	 *            a reference to the mapview class.
-	 */
-	protected void setMapViewAndCreateOverlayBitmaps(MapView mapView) {
-		this.mapView = mapView;
-		createOverlayBitmapsAndCanvas(mapView.getWidth(), mapView.getHeight());
-	}
-
-	/**
-	 * Returns the matrix of this overlay.
-	 * 
-	 * @return the matrix of this overlay.
-	 */
-	protected abstract Matrix getMatrix();
-
 	@Override
 	public final void run() {
 		while (!isInterrupted()) {
@@ -208,9 +153,61 @@ public abstract class Overlay extends Thread {
 			if (isInterrupted()) {
 				break;
 			}
-			prepareOverlayBitmap(this.mapView);
+			prepareOverlayBitmap(this.internalMapView);
 		}
 		if (this.bmp != null)
 			this.bmp.recycle();
+	}
+
+	/**
+	 * 
+	 * Initialises the overlay-bitmap and the related canvas.
+	 * 
+	 * @param width
+	 *            the width of the bitmap.
+	 * @param height
+	 *            the height of the bitmap.
+	 */
+	protected abstract void createOverlayBitmapsAndCanvas(int width, int height);
+
+	/**
+	 * Returns the matrix of this overlay.
+	 * 
+	 * @return the matrix of this overlay.
+	 */
+	protected abstract Matrix getMatrix();
+
+	/**
+	 * Returns true if MapView is set.
+	 * 
+	 * @return true if MapView is set.
+	 */
+	protected boolean isMapViewSet() {
+		boolean ready = false;
+		if (this.internalMapView == null)
+			ready = false;
+		else {
+			ready = true;
+		}
+		return ready;
+	}
+
+	/**
+	 * Prepares this overlay for drawing.
+	 * 
+	 * @param mapview
+	 *            the parent MapView.
+	 */
+	protected abstract void prepareOverlayBitmap(MapView mapview);
+
+	/**
+	 * Sets a reference to the MapView.
+	 * 
+	 * @param mapView
+	 *            a reference to the MapView class.
+	 */
+	protected void setMapViewAndCreateOverlayBitmaps(MapView mapView) {
+		this.internalMapView = mapView;
+		createOverlayBitmapsAndCanvas(mapView.getWidth(), mapView.getHeight());
 	}
 }
