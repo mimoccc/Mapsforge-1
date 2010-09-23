@@ -311,7 +311,7 @@ public class HHRouter implements IRouter {
 		HHRouter router = new HHRouter(new File("router/berlin.blockedHH"), 1000 * 1024);
 		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
-		IEdge[] shortestPath = router.getShortestPath(target.getId(), source.getId());
+		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
 		for (IEdge e : shortestPath) {
 			System.out.println(e.getName() + " " + e.getRef());
 		}
