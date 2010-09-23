@@ -55,7 +55,7 @@ final class HHRoutingGraph {
 	/**
 	 * header length of the cluster blocks section of the file.
 	 */
-	private static final int CLUSTER_BLOCKS_HEADER_LENGTH = 4096;
+	private static final int CLUSTER_BLOCKS_HEADER_LENGTH = HHGlobals.CLUSTER_BLOCKS_HEADER_LENGTH;
 	/**
 	 * the initial size of the vertex pool.
 	 */
