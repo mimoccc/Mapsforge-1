@@ -16,10 +16,25 @@
  */
 package org.mapsforge.server.poi.persistence;
 
+/**
+ * Implements singleton pattern. Use {@link #getInstance()} method to retrieve instance. Used in
+ * patched perst version to count page loads and nodes touched as well as time elapsed during a
+ * POI query.
+ * 
+ * @author weise
+ * 
+ */
+/**
+ * @author weise
+ * 
+ */
 public class PerstQueryTracer {
 
 	private static PerstQueryTracer instance;
 
+	/**
+	 * @return instance of {@link PerstQueryTracer}
+	 */
 	public static synchronized PerstQueryTracer getInstance() {
 		if (instance == null) {
 			instance = new PerstQueryTracer();
@@ -32,14 +47,23 @@ public class PerstQueryTracer {
 	private long start = 0;
 	private long stop = 0;
 
+	/**
+	 * Increments count for number of pages loaded.
+	 */
 	public void incrementPages() {
 		pages++;
 	}
 
+	/**
+	 * Increments count for number of nodes touched.
+	 */
 	public void incrementNodes() {
 		nodes++;
 	}
 
+	/**
+	 * Resets all count values to 0 and start timer.
+	 */
 	public void start() {
 		pages = 0;
 		nodes = 0;
@@ -47,22 +71,38 @@ public class PerstQueryTracer {
 		start = System.currentTimeMillis();
 	}
 
+	/**
+	 * Stops timer.
+	 */
 	public void stop() {
 		stop = System.currentTimeMillis();
 	}
 
+	/**
+	 * @return number of nodes touched between calls of {@link #start()} and {@link #stop()}.
+	 */
 	public int nodesTouched() {
 		return nodes;
 	}
 
+	/**
+	 * @return number of pages loaded between calls of {@link #start()} and {@link #stop()}.
+	 */
 	public int pagesLoaded() {
 		return pages;
 	}
 
+	/**
+	 * @return number of non node pages loaded between calls of {@link #start()} and
+	 *         {@link #stop()}.
+	 */
 	public int noneNodePagesLoaded() {
 		return pages - nodes;
 	}
 
+	/**
+	 * @return time in ms elapsed between calls of {@link #start()} and {@link #stop()}.
+	 */
 	public long queryTime() {
 		return stop - start;
 	}

@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.garret.perst.Assert;
 import org.garret.perst.GenericIndex;
 import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
@@ -215,8 +214,9 @@ public class MultiRtreePersistenceManager extends
 			destinationManager.insertPointOfInterest(iterator.next());
 		}
 
-		Assert.that(destinationManager.root.getSpatialIndex("Root").size() == root
-				.getSpatialIndex("Root").size());
+		System.out.println(destinationManager.root.getSpatialIndex("Root").size() + " =? "
+				+ root
+						.getSpatialIndex("Root").size());
 
 		destinationManager.close();
 	}

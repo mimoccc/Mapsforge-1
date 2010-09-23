@@ -57,10 +57,10 @@ public class Benchmark {
 	 *            none used
 	 */
 	public static void main(String[] args) {
+		String file = args[0];
 		IPersistenceManager persistenceManager = PersistenceManagerFactory
-				.getPerstMultiRtreePersistenceManager("c:/users/weise/Desktop/berlin.dbs");
-		Benchmark benchmark = new Benchmark(persistenceManager,
-				"c:/users/weise/Desktop/berlin.dbs.csv");
+				.getPerstMultiRtreePersistenceManager(file);
+		Benchmark benchmark = new Benchmark(persistenceManager, file + ".csv");
 		try {
 			benchmark.run();
 		} catch (IOException e) {
