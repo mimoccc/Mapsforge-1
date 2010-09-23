@@ -575,12 +575,8 @@ public class BinaryFileWriter {
 			int maxDiffLat = 0;
 			int maxDiffLon = 0;
 
-			byte currentZoom;
-
 			for (long tileY = upperLeft.y; tileY <= bottomRight.y; tileY++) {
 				for (long tileX = upperLeft.x; tileX <= bottomRight.x; tileX++) {
-
-					currentZoom = (byte) (upperLeft.zoomLevel + 3);
 
 					tileVertices = Utils.getBoundingBox(tileX, tileY, bottomRight.zoomLevel,
 							true).getEnvelope().getCoordinates();
@@ -967,7 +963,7 @@ public class BinaryFileWriter {
 							waynodesAmount = wayNodes.size();
 
 							if (wayType >= 2 && waynodesAmount >= 4 && name.equals("")
-									&& polygonClipping) {
+									&& polygonClipping && !writeLowerZoomLevel) {
 								for (int t = 0; t < tileVertices.length - 1; t++) {
 									wayNodes = Utils.clipPolygonToTile(tileVertices[t],
 											tileVertices[t + 1], wayNodes);
@@ -1314,9 +1310,13 @@ public class BinaryFileWriter {
 	 * 
 	 * @param tags
 	 *            the tags of the current way
+	 * @param wayNodeCompressionType
+	 *            indicates how many bytes are used for the way node coordinates
+	 * 
 	 * @return a byte
 	 */
-	private byte buildRenderTagWayNodeCompressionByte(String[] tags, short wayNodeCompression) {
+	private byte buildRenderTagWayNodeCompressionByte(String[] tags,
+			short wayNodeCompressionType) {
 		byte infoByte = 0;
 		short counter = 0;
 
@@ -1330,16 +1330,16 @@ public class BinaryFileWriter {
 			infoByte = (byte) (counter << 5);
 		}
 
-		if (wayNodeCompression == 0) {
+		if (wayNodeCompressionType == 0) {
 			infoByte |= BITMAP_WAYNODECOMPRESSION_4_BYTE;
 		}
-		if (wayNodeCompression == 1) {
+		if (wayNodeCompressionType == 1) {
 			infoByte |= BITMAP_WAYNODECOMPRESSION_3_BYTE;
 		}
-		if (wayNodeCompression == 2) {
+		if (wayNodeCompressionType == 2) {
 			infoByte |= BITMAP_WAYNODECOMPRESSION_2_BYTE;
 		}
-		if (wayNodeCompression == 3) {
+		if (wayNodeCompressionType == 3) {
 			infoByte |= BITMAP_WAYNODECOMPRESSION_1_BYTE;
 		}
 

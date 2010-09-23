@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 import org.mapsforge.core.MercatorProjection;
 
@@ -46,8 +45,6 @@ class Utils {
 
 	private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
-
-	private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
 	/**
 	 * Get the bounding box of a tile.
@@ -199,7 +196,7 @@ class Utils {
 	 * @return a set of tiles which contain the whole way or a part of the way
 	 * 
 	 */
-	static Set<Tile> wayToTilesWay(Geometry geoWay, long wayId, int wayType, byte zoom) {
+	static Set<Tile> wayToTilesWay(Geometry geoWay, int wayType, byte zoom) {
 		Set<Tile> wayTiles = new HashSet<Tile>();
 
 		Tile parentTile = null;
@@ -288,7 +285,6 @@ class Utils {
 			}
 			return wayTiles;
 		} catch (NullPointerException e) {
-			logger.info("NullPointerException while accessing geometry for way: " + wayId);
 			e.printStackTrace();
 			return wayTiles;
 		}

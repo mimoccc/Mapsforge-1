@@ -602,9 +602,6 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							// list
 							currentNode.zoomLevel = poiTagWhiteList.get(tag);
 							if (currentNode.zoomLevel == Byte.MAX_VALUE) {
-								// FIXME should zoom level of elements with 127 bet set to base
-								// zoom
-								// level or to maxZoom?
 								currentNode.zoomLevel = maxZoomHigh;
 							}
 							tempTags.add(tag);
@@ -839,8 +836,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 							geoWay = Utils.createWay(currentWay, wayNodes);
 
 							// calculate all tiles which are related to a way
-							wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
-									currentWay.wayType, zoom_high);
+							wayTiles = Utils.wayToTilesWay(geoWay, currentWay.wayType,
+									zoom_high);
 
 							// calculate all subtiles of the tiles which are related to the way
 							// and
@@ -863,8 +860,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 								geoWay = Utils.createWay(currentWay, wayNodes);
 
 								// calculate all tiles which are related to a way
-								wayTiles = Utils.wayToTilesWay(geoWay, currentWay.id,
-										currentWay.wayType, zoom_low); // lower base zoom
+								wayTiles = Utils.wayToTilesWay(geoWay, currentWay.wayType,
+										zoom_low); // lower base zoom
 
 								// calculate all subtiles of the tiles which are related to the
 								// way
