@@ -45,13 +45,13 @@ public class EarClippingTriangulation {
 	EarClippingTriangulation(float[] polyCoords) {
 
 		boolean clockwise = CoastlineWay.isClockWise(polyCoords);
-		num = polyCoords.length / 2;
+		this.num = polyCoords.length / 2;
 		int i;
 
 		/* closed polygon? skip duplicate coordinate */
 		if ((polyCoords[0] == polyCoords[polyCoords.length - 2])
 				&& (polyCoords[1] == polyCoords[polyCoords.length - 1])) {
-			num--;
+			this.num--;
 		}
 
 		// if (clockwise) {
@@ -60,21 +60,22 @@ public class EarClippingTriangulation {
 		// System.out.println("is anti-clockwise");
 		// }
 
-		xCoords = new float[num];
-		yCoords = new float[num];
-		trianglePoints = new ArrayList<Point>((num - 2) * 3); // any polygon triangulation has
+		this.xCoords = new float[this.num];
+		this.yCoords = new float[this.num];
+		this.trianglePoints = new ArrayList<Point>((this.num - 2) * 3); // any polygon
+		// triangulation has
 		// n-2 triangles
 
-		for (i = 0; i < num; i++) {
+		for (i = 0; i < this.num; i++) {
 			if (clockwise) {
 				// split into x and y coords
-				xCoords[i] = polyCoords[i * 2];
-				yCoords[i] = polyCoords[i * 2 + 1];
+				this.xCoords[i] = polyCoords[i * 2];
+				this.yCoords[i] = polyCoords[i * 2 + 1];
 			} else {
 				// anti-clockwise order
 				// split into x and y coords in reverse order
-				xCoords[num - 1 - i] = polyCoords[i * 2];
-				yCoords[num - 1 - i] = polyCoords[i * 2 + 1];
+				this.xCoords[this.num - 1 - i] = polyCoords[i * 2];
+				this.yCoords[this.num - 1 - i] = polyCoords[i * 2 + 1];
 			}
 		}
 		doTriangulation();
@@ -85,7 +86,7 @@ public class EarClippingTriangulation {
 	 * @return triangle points as ArrayList of Points
 	 */
 	ArrayList<Point> getTriangles() {
-		return trianglePoints;
+		return this.trianglePoints;
 	}
 
 	/**
@@ -94,11 +95,11 @@ public class EarClippingTriangulation {
 	 * @return coordinates as float array
 	 */
 	float[] getTrianglesAsFloatArray() {
-		int s = trianglePoints.size();
+		int s = this.trianglePoints.size();
 		float[] coords = new float[s * 2];
 
 		for (int i = 0; i < s; i++) {
-			Point p = trianglePoints.get(i);
+			Point p = this.trianglePoints.get(i);
 			coords[i * 2] = p.x;
 			coords[i * 2 + 1] = p.y;
 		}
@@ -117,7 +118,7 @@ public class EarClippingTriangulation {
 		// + num);
 
 		if (p == -1) {
-			for (int x = 0; x < num; x++) {
+			for (int x = 0; x < this.num; x++) {
 				// Logger.d(xCoords[x] + " " + yCoords[x]);
 				// if (((x + 1) % 2) == 0)
 				// Logger.d("");
@@ -127,28 +128,31 @@ public class EarClippingTriangulation {
 		/*
 		 * add the new triangle to the list
 		 */
-		if ((p > 0) && (p < num - 1)) {
-			trianglePoints.add(new Point(xCoords[p - 1], yCoords[p - 1]));
-			trianglePoints.add(new Point(xCoords[p], yCoords[p]));
-			trianglePoints.add(new Point(xCoords[p + 1], yCoords[p + 1]));
+		if ((p > 0) && (p < this.num - 1)) {
+			this.trianglePoints.add(new Point(this.xCoords[p - 1], this.yCoords[p - 1]));
+			this.trianglePoints.add(new Point(this.xCoords[p], this.yCoords[p]));
+			this.trianglePoints.add(new Point(this.xCoords[p + 1], this.yCoords[p + 1]));
 		} else if (0 == p) {
-			trianglePoints.add(new Point(xCoords[num - 1], yCoords[num - 1]));
-			trianglePoints.add(new Point(xCoords[0], yCoords[0]));
-			trianglePoints.add(new Point(xCoords[1], yCoords[1]));
-		} else if (num - 1 == p) {
-			trianglePoints.add(new Point(xCoords[num - 2], yCoords[num - 2]));
-			trianglePoints.add(new Point(xCoords[num - 1], yCoords[num - 1]));
-			trianglePoints.add(new Point(xCoords[0], yCoords[0]));
+			this.trianglePoints.add(new Point(this.xCoords[this.num - 1],
+					this.yCoords[this.num - 1]));
+			this.trianglePoints.add(new Point(this.xCoords[0], this.yCoords[0]));
+			this.trianglePoints.add(new Point(this.xCoords[1], this.yCoords[1]));
+		} else if (this.num - 1 == p) {
+			this.trianglePoints.add(new Point(this.xCoords[this.num - 2],
+					this.yCoords[this.num - 2]));
+			this.trianglePoints.add(new Point(this.xCoords[this.num - 1],
+					this.yCoords[this.num - 1]));
+			this.trianglePoints.add(new Point(this.xCoords[0], this.yCoords[0]));
 		}
 
 		/* remove point from x and y coordinate arrays */
-		for (int i = p; i < num - 1; i++) {
-			xCoords[i] = xCoords[i + 1];
-			yCoords[i] = yCoords[i + 1];
+		for (int i = p; i < this.num - 1; i++) {
+			this.xCoords[i] = this.xCoords[i + 1];
+			this.yCoords[i] = this.yCoords[i + 1];
 		}
 		/* adjust number of points left in the polygon */
 
-		num--;
+		this.num--;
 	}
 
 	/**
@@ -190,14 +194,17 @@ public class EarClippingTriangulation {
 	 */
 	private boolean isConvexPoint(int p) {
 		if (p == 0) {
-			return isConvex(xCoords[num - 1], yCoords[num - 1], xCoords[0], yCoords[0],
-					xCoords[1], yCoords[1]);
-		} else if (p == num - 1) {
-			return isConvex(xCoords[num - 2], yCoords[num - 2], xCoords[num - 1],
-					yCoords[num - 1], xCoords[0], yCoords[0]);
+			return isConvex(this.xCoords[this.num - 1], this.yCoords[this.num - 1],
+					this.xCoords[0], this.yCoords[0],
+					this.xCoords[1], this.yCoords[1]);
+		} else if (p == this.num - 1) {
+			return isConvex(this.xCoords[this.num - 2], this.yCoords[this.num - 2],
+					this.xCoords[this.num - 1],
+					this.yCoords[this.num - 1], this.xCoords[0], this.yCoords[0]);
 		}
-		return isConvex(xCoords[p - 1], yCoords[p - 1], xCoords[p], yCoords[p], xCoords[p + 1],
-				yCoords[p + 1]);
+		return isConvex(this.xCoords[p - 1], this.yCoords[p - 1], this.xCoords[p],
+				this.yCoords[p], this.xCoords[p + 1],
+				this.yCoords[p + 1]);
 	}
 
 	/**
@@ -241,15 +248,18 @@ public class EarClippingTriangulation {
 	private boolean earAtPoint(int p) {
 		// System.out.println("check for ear at point " + p);
 		if (p == 0) {
-			return isEar(xCoords[num - 1], yCoords[num - 1], xCoords[0], yCoords[0],
-					xCoords[1], yCoords[1]);
-		} else if (p == num - 1) {
-			return isEar(xCoords[num - 2], yCoords[num - 2], xCoords[num - 1],
-					yCoords[num - 1], xCoords[0], yCoords[0]);
+			return isEar(this.xCoords[this.num - 1], this.yCoords[this.num - 1],
+					this.xCoords[0], this.yCoords[0],
+					this.xCoords[1], this.yCoords[1]);
+		} else if (p == this.num - 1) {
+			return isEar(this.xCoords[this.num - 2], this.yCoords[this.num - 2],
+					this.xCoords[this.num - 1],
+					this.yCoords[this.num - 1], this.xCoords[0], this.yCoords[0]);
 		}
 
-		return isEar(xCoords[p - 1], yCoords[p - 1], xCoords[p], yCoords[p], xCoords[p + 1],
-				yCoords[p + 1]);
+		return isEar(this.xCoords[p - 1], this.yCoords[p - 1], this.xCoords[p],
+				this.yCoords[p], this.xCoords[p + 1],
+				this.yCoords[p + 1]);
 	}
 
 	/**
@@ -275,14 +285,14 @@ public class EarClippingTriangulation {
 	private boolean pointInsideTriangle(float x1, float y1, float x2, float y2, float x3,
 			float y3) {
 
-		for (int i = 0; i < num; i++) {
+		for (int i = 0; i < this.num; i++) {
 			if ((!isConvexPoint(i)) /* point is concave */
-					&& (((xCoords[i] != x1) && (yCoords[i] != y1))
-							|| ((xCoords[i] != x2) && (yCoords[i] != y2)) || ((xCoords[i] != x3) && (yCoords[i] != y3)))) {
+					&& (((this.xCoords[i] != x1) && (this.yCoords[i] != y1))
+							|| ((this.xCoords[i] != x2) && (this.yCoords[i] != y2)) || ((this.xCoords[i] != x3) && (this.yCoords[i] != y3)))) {
 
-				boolean convex1 = isConvex(x1, y1, x2, y2, xCoords[i], yCoords[i]);
-				boolean convex2 = isConvex(x2, y2, x3, y3, xCoords[i], yCoords[i]);
-				boolean convex3 = isConvex(x3, y3, x1, y1, xCoords[i], yCoords[i]);
+				boolean convex1 = isConvex(x1, y1, x2, y2, this.xCoords[i], this.yCoords[i]);
+				boolean convex2 = isConvex(x2, y2, x3, y3, this.xCoords[i], this.yCoords[i]);
+				boolean convex3 = isConvex(x3, y3, x1, y1, this.xCoords[i], this.yCoords[i]);
 
 				if ((!convex1 && !convex2 && !convex3) || (convex1 && convex2 && convex3)) {
 					return true;
@@ -300,14 +310,14 @@ public class EarClippingTriangulation {
 
 		int pos;
 
-		while (num > 3) {
+		while (this.num > 3) {
 			// as long as there are more than 2 points (at least 1 triangle)
 
 			pos = 0;
 			// find position to clip
 			// TODO: for negative coordinates this does not always find an ear (convex test
 			// wrong)
-			for (int i = 0; i < num; i++) {
+			for (int i = 0; i < this.num; i++) {
 				// find position to clip an ear
 				if (earAtPoint(i)) {
 					pos = i;
@@ -317,7 +327,7 @@ public class EarClippingTriangulation {
 			clipEarAtPosition(pos);
 		}
 		// if 3 points are left, clip this last triangle anywhere
-		if (num == 3) {
+		if (this.num == 3) {
 			clipEarAtPosition(0);
 		}
 	}

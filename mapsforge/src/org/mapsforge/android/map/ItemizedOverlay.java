@@ -71,8 +71,9 @@ public abstract class ItemizedOverlay extends Overlay {
 	public boolean onTouchEvent(MotionEvent event, MapView mapview) {
 		// iterate over all overlay items
 		for (int i = 0; i < size(); i++) {
-			item = createItem(i);
-			if (hitTest(item, item.getMarker(), (int) event.getX(), (int) event.getY())) {
+			this.item = createItem(i);
+			if (hitTest(this.item, this.item.getMarker(), (int) event.getX(), (int) event
+					.getY())) {
 				onTap(i);
 				return true;
 			}
@@ -272,7 +273,7 @@ public abstract class ItemizedOverlay extends Overlay {
 	 */
 	protected boolean hitTest(OverlayItem currentItem, Drawable marker, int hitX, int hitY) {
 		Point eventPos = new Point(hitX, hitY);
-		Point itemHitPosOnDisplay = calculateItemPostionRelativeToDisplay(item.getPoint());
+		Point itemHitPosOnDisplay = calculateItemPostionRelativeToDisplay(this.item.getPoint());
 		Point distance = Point.substract(eventPos, itemHitPosOnDisplay);
 		if (marker == null) {
 			marker = this.defaultMarker;

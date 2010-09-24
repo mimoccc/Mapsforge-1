@@ -64,7 +64,7 @@ public abstract class Overlay extends Thread {
 	 */
 	public boolean draw(android.graphics.Canvas canvas, MapView mapview, boolean shadow,
 			long when) {
-		draw(canvas, internalMapView, shadow);
+		draw(canvas, this.internalMapView, shadow);
 		return false;
 	}
 

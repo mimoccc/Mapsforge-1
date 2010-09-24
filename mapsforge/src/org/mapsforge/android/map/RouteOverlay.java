@@ -126,13 +126,15 @@ public class RouteOverlay extends Overlay {
 		double dx = mapView.mapViewPixelX;
 		double dy = mapView.mapViewPixelY;
 
-		x1 = (float) (MercatorProjection.longitudeToPixelX(routeData[0][1], mapView.zoomLevel) - dx);
-		y1 = (float) (MercatorProjection.latitudeToPixelY(routeData[0][0], mapView.zoomLevel) - dy);
+		x1 = (float) (MercatorProjection.longitudeToPixelX(this.routeData[0][1],
+				mapView.zoomLevel) - dx);
+		y1 = (float) (MercatorProjection.latitudeToPixelY(this.routeData[0][0],
+				mapView.zoomLevel) - dy);
 		this.path.moveTo(x1, y1);
-		for (int i = 1; i < routeData.length; i++) {
-			x2 = (float) (MercatorProjection.longitudeToPixelX(routeData[i][1],
+		for (int i = 1; i < this.routeData.length; i++) {
+			x2 = (float) (MercatorProjection.longitudeToPixelX(this.routeData[i][1],
 					mapView.zoomLevel) - dx);
-			y2 = (float) (MercatorProjection.latitudeToPixelY(routeData[i][0],
+			y2 = (float) (MercatorProjection.latitudeToPixelY(this.routeData[i][0],
 					mapView.zoomLevel) - dy);
 
 			this.path.lineTo(x2, y2);

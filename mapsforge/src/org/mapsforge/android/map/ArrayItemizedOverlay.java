@@ -37,13 +37,13 @@ public class ArrayItemizedOverlay extends ItemizedOverlay {
 
 	@Override
 	protected OverlayItem createItem(int i) {
-		return mOverlays.get(i);
+		return this.mOverlays.get(i);
 	}
 
 	@Override
 	protected boolean onTap(int index) {
-		OverlayItem item = mOverlays.get(index);
-		AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+		OverlayItem item = this.mOverlays.get(index);
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this.context);
 		dialog.setTitle(item.getTitle());
 		dialog.setMessage(item.getSnippet());
 		dialog.show();
@@ -52,6 +52,6 @@ public class ArrayItemizedOverlay extends ItemizedOverlay {
 
 	@Override
 	public int size() {
-		return mOverlays.size();
+		return this.mOverlays.size();
 	}
 }

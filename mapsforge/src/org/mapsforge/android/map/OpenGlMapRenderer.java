@@ -72,7 +72,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 				this.wayList = this.shapePaintContainers.get(this.currentLevel);
 				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
-					objectsToDraw.add(this.shapePaintContainer);
+					this.objectsToDraw.add(this.shapePaintContainer);
 				}
 			}
 		}
@@ -100,8 +100,9 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 					this.circleVertexBuffer.put(new float[] {
 							(this.circleContainer.x / 128 - 1.0f),
 							(this.circleContainer.y / 128 - 1.0f), 0f,
-							(float) Color.red(color) / 256, (float) Color.green(color) / 256,
-							(float) Color.blue(color) / 256, 1.0f });
+							(float) Color.red(this.color) / 256,
+							(float) Color.green(this.color) / 256,
+							(float) Color.blue(this.color) / 256, 1.0f });
 
 					this.circleVertexBuffer.flip();
 
@@ -109,7 +110,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 					this.mGL11.glPointSize(this.circleContainer.radius * 2);
 
 					// bind the vertex buffer
-					this.mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, circleBufferHandle);
+					this.mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, this.circleBufferHandle);
 					// transfer data into video memory
 					this.mGL11.glBufferData(GL11.GL_ARRAY_BUFFER, 4 * 7 * 1,
 							this.circleVertexBuffer, GL11.GL_DYNAMIC_DRAW);
@@ -171,37 +172,38 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 							// TODO: BufferOverflow exception on next line
 							this.vertices.put(new float[] { (nodes[i] / 128 - 1.0f),
 									(nodes[i + 1] / 128 - 1.0f), 0f,
-									(float) Color.red(color) / 256,
-									(float) Color.green(color) / 256,
-									(float) Color.blue(color) / 256, 1.0f });
+									(float) Color.red(this.color) / 256,
+									(float) Color.green(this.color) / 256,
+									(float) Color.blue(this.color) / 256, 1.0f });
 						}
 						this.vertices.flip();
 
 						// bind the buffer
-						mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, vboHandle);
-						mGL11.glBufferData(GL11.GL_ARRAY_BUFFER, 4 * 7 * i / 2, vertices,
+						this.mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, this.vboHandle);
+						this.mGL11.glBufferData(GL11.GL_ARRAY_BUFFER, 4 * 7 * i / 2,
+								this.vertices,
 								GL11.GL_DYNAMIC_DRAW);
 
-						mGL11.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-						mGL11.glEnableClientState(GL10.GL_COLOR_ARRAY);
-						mGL11.glVertexPointer(3, GL10.GL_FLOAT, 7 * 4, 0);
-						mGL11.glColorPointer(4, GL10.GL_FLOAT, 7 * 4, 3 * 4);
+						this.mGL11.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+						this.mGL11.glEnableClientState(GL10.GL_COLOR_ARRAY);
+						this.mGL11.glVertexPointer(3, GL10.GL_FLOAT, 7 * 4, 0);
+						this.mGL11.glColorPointer(4, GL10.GL_FLOAT, 7 * 4, 3 * 4);
 
-						mGL11.glLineWidth(this.paint.getStrokeWidth());
+						this.mGL11.glLineWidth(this.paint.getStrokeWidth());
 						// mGL11.glLineWidth(1.0f);
 						this.mGL11.glPointSize(this.paint.getStrokeWidth());
 
-						mGL11.glDrawArrays(GL10.GL_POINTS, 0, i / 2);
+						this.mGL11.glDrawArrays(GL10.GL_POINTS, 0, i / 2);
 
 						if (fillWay) {
-							mGL11.glDrawArrays(GL10.GL_LINE_LOOP, 0, i / 2);
-							mGL11.glDrawArrays(GL10.GL_TRIANGLES, 0, i / 2);
+							this.mGL11.glDrawArrays(GL10.GL_LINE_LOOP, 0, i / 2);
+							this.mGL11.glDrawArrays(GL10.GL_TRIANGLES, 0, i / 2);
 						} else {
-							mGL11.glDrawArrays(GL10.GL_LINE_STRIP, 0, i / 2);
+							this.mGL11.glDrawArrays(GL10.GL_LINE_STRIP, 0, i / 2);
 						}
 
 						// unbind the buffer
-						mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, 0);
+						this.mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, 0);
 					}
 					break;
 			}
@@ -265,7 +267,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		// set up buffers for VBOs
 		this.vbuffer = ByteBuffer.allocateDirect(4 * 7 * 10000);
 		this.vbuffer.order(ByteOrder.nativeOrder());
-		this.vertices = vbuffer.asFloatBuffer();
+		this.vertices = this.vbuffer.asFloatBuffer();
 
 		this.circleByteBuffer = ByteBuffer.allocateDirect(4 * 7 * 100);
 		this.circleByteBuffer.order(ByteOrder.nativeOrder());
