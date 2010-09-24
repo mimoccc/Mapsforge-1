@@ -18,6 +18,7 @@ package org.mapsforge.applications.android.demomapviewer;
 
 import java.util.List;
 
+import org.mapsforge.android.map.ArrayItemizedOverlay;
 import org.mapsforge.android.map.GeoPoint;
 import org.mapsforge.android.map.ItemizedOverlay;
 import org.mapsforge.android.map.MapActivity;
@@ -51,7 +52,7 @@ public class BasicOverlayMapViewer extends MapActivity {
 		Drawable marker = getResources().getDrawable(R.drawable.btn_star);
 
 		// create the overlay
-		ItemizedOverlay myOverlay = new ItemizedOverlay(marker, this);
+		ItemizedOverlay myOverlay = new ArrayItemizedOverlay(marker, this);
 
 		// create item
 		OverlayItem item = new OverlayItem(geoPoint, "title", "short decripiton of this item");
@@ -59,8 +60,8 @@ public class BasicOverlayMapViewer extends MapActivity {
 		// add item to overlay
 		myOverlay.addOverLay(item);
 
-		// add overlay to mapview
-		List<Overlay> overlays = mapView.getOverlays();
+		// add overlay to MapView
+		List<Overlay> overlays = this.mapView.getOverlays();
 		overlays.add(myOverlay);
 	}
 }
