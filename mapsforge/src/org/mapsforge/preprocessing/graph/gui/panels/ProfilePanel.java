@@ -56,8 +56,8 @@ public class ProfilePanel extends JPanel {
 	 */
 	private DatabaseService dbs;
 
-	private JComboBox cbChooseProfile;
-	private JComboBox cbChooseTransportOnManagePanel;
+	JComboBox cbChooseProfile;
+	JComboBox cbChooseTransportOnManagePanel;
 	private JComboBox cbChooseTransportOnConfigurationPanel;
 	private JComboBox cbChooseHeuristic;
 	private JTextField tfProfileName;
@@ -299,7 +299,7 @@ public class ProfilePanel extends JPanel {
 	/*
 	 * This method update an existing profile in the database.
 	 */
-	private void updateProfileToDB() {
+	void updateProfileToDB() {
 		Profile p = null;
 		try {
 			p = getProfileFromInput();
@@ -330,7 +330,7 @@ public class ProfilePanel extends JPanel {
 	/*
 	 * This method creates a new profile in the database
 	 */
-	private void createProfilInDB() {
+	void createProfilInDB() {
 		Profile p = null;
 		try {
 			p = getProfileFromInput();
@@ -347,7 +347,7 @@ public class ProfilePanel extends JPanel {
 	/*
 	 * This method delete an existing profile of the database
 	 */
-	private void deleteProfileFromDB() {
+	void deleteProfileFromDB() {
 		// get name of profile that should be deleted
 		String name = tfProfileName.getText();
 		if (name.equals(null) || name.equals("")) {
@@ -377,7 +377,7 @@ public class ProfilePanel extends JPanel {
 	/*
 	 * This method show the attributes of a selected profile
 	 */
-	private void showChoosenProfile(Profile p) {
+	void showChoosenProfile(Profile p) {
 
 		// no profile so no attributes must shown
 		if (p == null) {
@@ -409,7 +409,7 @@ public class ProfilePanel extends JPanel {
 	 * after choosing a transport, we must get all profiles of this one an add them to the
 	 * profile choosing field
 	 */
-	private void setComboBoxChooseProfile(Transport transport) {
+	void setComboBoxChooseProfile(Transport transport) {
 		cbChooseProfile.removeAllItems();
 		ArrayList<Profile> alProfiles = null;
 		if (transport == null) {

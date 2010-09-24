@@ -54,10 +54,10 @@ public class ConfigurationFilePanel extends JPanel {
 
 	private static final long serialVersionUID = -489116927561664972L;
 	private DatabaseService dbs;
-	private JFileChooser fc;
+	JFileChooser fc;
 
 	private JComboBox cbChooseProfile;
-	private JTextField tfFilePath;
+	JTextField tfFilePath;
 
 	/**
 	 * The constructor to create a configuration tab.
@@ -175,7 +175,7 @@ public class ConfigurationFilePanel extends JPanel {
 	 * This method creates checked all parameters and create a writer object to create a
 	 * configuration file
 	 */
-	private void createNewConfigurationFile() {
+	void createNewConfigurationFile() {
 
 		// check if profile is selected
 		Profile profile = (Profile) cbChooseProfile.getSelectedItem();

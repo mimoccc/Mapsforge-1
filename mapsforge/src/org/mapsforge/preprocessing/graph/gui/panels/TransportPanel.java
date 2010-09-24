@@ -70,11 +70,11 @@ public class TransportPanel extends JPanel {
 	 */
 	private DatabaseService dbs;
 
-	private JComboBox cbChooseTransport;
+	JComboBox cbChooseTransport;
 	private JTextField tfTransportName;
 	private JFormattedTextField ftfTransportMaxSpeed;
-	private JList jlTransportUsableWays;
-	private JList jlAllUsableWays;
+	JList jlTransportUsableWays;
+	JList jlAllUsableWays;
 	private DefaultListModel dlmListModel;
 
 	/**
@@ -291,7 +291,7 @@ public class TransportPanel extends JPanel {
 	 * the model of the jl_TransportUseableWays. There are only this objects added, which are
 	 * not in the list before.
 	 */
-	private void addTagsToList(Object[] selectedValues) {
+	void addTagsToList(Object[] selectedValues) {
 
 		for (Object obj : selectedValues) {
 			if (dlmListModel.lastIndexOf(obj) == -1) {
@@ -307,7 +307,7 @@ public class TransportPanel extends JPanel {
 	/*
 	 * This method deletes all the selected of the jl_TransportUseableWays.
 	 */
-	private void deleteTagsFromList(Object[] selectedValues) {
+	void deleteTagsFromList(Object[] selectedValues) {
 
 		for (Object obj : selectedValues) {
 			dlmListModel.removeElement(obj);
@@ -319,7 +319,7 @@ public class TransportPanel extends JPanel {
 	 * like the database connection get lost or the table did not exists, then an info panel
 	 * informed the user.
 	 */
-	private void createTransportInDB() {
+	void createTransportInDB() {
 
 		Transport t = null;
 		try {
@@ -339,7 +339,7 @@ public class TransportPanel extends JPanel {
 	 * This method update an existing configuration. If any error occurred the user would be
 	 * informed. After updating the panel elements would be updated.
 	 */
-	private void updateTransportToDB() {
+	void updateTransportToDB() {
 		Transport t = null;
 		try {
 			// call the method which parse the input
@@ -367,7 +367,7 @@ public class TransportPanel extends JPanel {
 	 * would be asked if he really want do delete this. Depending on his answer the action would
 	 * be done. The user would also be informed if no configuration with the given name exists.
 	 */
-	private void deleteTransportFromDB() {
+	void deleteTransportFromDB() {
 		// get the name of the configuration which would deleted
 		String name = tfTransportName.getText();
 		if (name.equals(null) || name.equals("")) {
@@ -508,7 +508,7 @@ public class TransportPanel extends JPanel {
 	 * This method show the attributes at the corresponding attribute fields of the chosen
 	 * transport configuration
 	 */
-	private void showChoosenTransport(Transport t) {
+	void showChoosenTransport(Transport t) {
 
 		if (t == null) {
 			tfTransportName.setText("");

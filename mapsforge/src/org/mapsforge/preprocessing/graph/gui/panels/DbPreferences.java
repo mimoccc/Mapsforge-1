@@ -171,7 +171,7 @@ public class DbPreferences extends JFrame {
 	}
 
 	// get the default database configuration to draw it to the panel
-	private void loadDbConfig() {
+	void loadDbConfig() {
 		drawDbConfig(dbs.getDefaultDbConfig());
 	}
 
@@ -202,7 +202,7 @@ public class DbPreferences extends JFrame {
 	/*
 	 * save the actual input to the database
 	 */
-	private void saveDbConfig() {
+	void saveDbConfig() {
 
 		String host, dbname, username, password;
 		int port = 0;

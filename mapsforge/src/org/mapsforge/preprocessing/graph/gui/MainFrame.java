@@ -47,7 +47,7 @@ import org.mapsforge.preprocessing.graph.gui.util.JDBCConnection;
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 3109971929230077879L;
-	private static DatabaseService dbs;
+	static DatabaseService dbs;
 
 	/**
 	 * This is the constructor of the main window. It creates the window and starts all
