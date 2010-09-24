@@ -47,4 +47,14 @@ interface Cache<I extends CacheItem> {
 	 */
 	public void clear();
 
+	/**
+	 * @return number of cache items in cache
+	 */
+	public int size();
+
+	/**
+	 * @return byte siye of all items in cache.
+	 */
+	public int sizeBytes();
+
 }

@@ -28,6 +28,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 final class DummyCache<I extends CacheItem> implements Cache<I> {
 
 	private TIntObjectHashMap<I> map;
+	private int sizeBytes;
 
 	/**
 	 * Create the cache.
@@ -44,11 +45,22 @@ final class DummyCache<I extends CacheItem> implements Cache<I> {
 	@Override
 	public void putItem(I item) {
 		map.put(item.getId(), item);
+		sizeBytes += item.getSizeBytes();
 	}
 
 	@Override
 	public void clear() {
 		map.clear();
+	}
+
+	@Override
+	public int size() {
+		return map.size();
+	}
+
+	@Override
+	public int sizeBytes() {
+		return sizeBytes;
 	}
 
 }

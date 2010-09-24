@@ -183,6 +183,7 @@ final class HHRoutingGraph {
 		this.blockAddressTable = new AddressLookupTable(startAddrBlockIndex, endAddrBlockIndex,
 				hhBinaryFile);
 		this.blockCache = new LRUCache<Block>(cacheSizeBytes);
+		// this.blockCache = new DummyCache<Block>();
 		this.vertexPool = new ObjectPool<HHVertex>(new ObjectPool.PoolableFactory<HHVertex>() {
 
 			@Override
@@ -353,6 +354,7 @@ final class HHRoutingGraph {
 				}
 			}
 		}
+
 		return result;
 	}
 
@@ -416,7 +418,7 @@ final class HHRoutingGraph {
 	 *            the identifier of the desired block. Must be valid!
 	 * @return the desired block.
 	 * @throws IOException
-	 *             on error readin file.
+	 *             on error reading file.
 	 */
 	private Block readBlock(int blockId) throws IOException {
 		Pointer pointer = blockAddressTable.getPointer(blockId);

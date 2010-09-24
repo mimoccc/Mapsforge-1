@@ -46,10 +46,6 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 	 * the sum of byte sizes of all items currently cached in.
 	 */
 	private int currentSizeBytes;
-	/**
-	 * number of cache misses occurred after last call to clear().
-	 */
-	private int numCacheMisses;
 
 	/**
 	 * Construct a LRU Cache with the specified maximum size.
@@ -62,7 +58,6 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 		this.map = new TIntObjectHashMap<ListNode<I>>();
 		this.cacheSizeBytes = cacheSizeBytes;
 		this.currentSizeBytes = 0;
-		this.numCacheMisses = 0;
 	}
 
 	@Override
@@ -70,14 +65,6 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 		this.list.clear();
 		this.map.clear();
 		this.currentSizeBytes = 0;
-		this.numCacheMisses = 0;
-	}
-
-	/**
-	 * @return Returns the number of cache misses occurred after the last call to clear().
-	 */
-	public int getNumCacheMisses() {
-		return numCacheMisses;
 	}
 
 	@Override
@@ -88,7 +75,6 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 			list.addFirst(ci);
 			return ci.item;
 		}
-		numCacheMisses++;
 		return null;
 	}
 
@@ -103,6 +89,16 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 			map.remove(last.item.getId());
 			currentSizeBytes -= last.item.getSizeBytes();
 		}
+	}
+
+	@Override
+	public int size() {
+		return list.size();
+	}
+
+	@Override
+	public int sizeBytes() {
+		return currentSizeBytes;
 	}
 
 	/**

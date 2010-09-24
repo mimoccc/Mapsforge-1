@@ -308,17 +308,20 @@ public class HHRouter implements IRouter {
 	 *             if there is something wrong reading the file.
 	 */
 	public static void main(String[] args) throws IOException {
-		HHRouter router = new HHRouter(new File("router/berlin.blockedHH"), 1000 * 1024);
-		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655));
+		HHRouter router = new HHRouter(new File("router/germany.blockedHH"), 1000 * 1024);
+		IVertex source = router.getNearestVertex(new GeoCoordinate(50.509769, 10.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+		long startTime = System.currentTimeMillis();
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
+		long time = System.currentTimeMillis() - startTime;
+
 		for (IEdge e : shortestPath) {
 			System.out.println(e.getName() + " " + e.getRef());
 		}
-
 		RendererV2 renderer = new RendererV2(1024, 768, router, Color.BLACK,
 				Color.WHITE);
 
 		renderer.addRoute(shortestPath, Color.GREEN);
+		System.out.println(time + "ms");
 	}
 }

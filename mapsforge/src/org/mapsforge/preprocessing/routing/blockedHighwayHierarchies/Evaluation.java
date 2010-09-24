@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Random;
 
 import org.mapsforge.core.DBConnection;
@@ -88,7 +89,7 @@ class Evaluation {
 
 	static void serializeLevelGraphs()
 			throws SQLException, IOException {
-		for (int i = 1; i < GRAPHS_COUNT; i++) {
+		for (int i = 27; i <= GRAPHS_COUNT; i++) {
 
 			String graphName = GRAPHS_NAME_PREFIX;
 			if (i < 10) {
@@ -96,10 +97,15 @@ class Evaluation {
 			}
 			graphName += i;
 			Connection conn = getConnection(graphName);
-			System.out.println("serializing graph : '" + graphName + "'");
+			Date date = new Date(System.currentTimeMillis());
+			System.out.println("serializing graph : '" + graphName + "'" + " "
+					+ date.getHours() + ":" + date.getMinutes() + "h");
 			LevelGraph levelGraph = new LevelGraph(conn);
 			Serializer.serialize(new File("evaluation/graphs/" + graphName + ".levelGraph"),
 					levelGraph);
+			levelGraph = null;
+			conn.close();
+			System.gc();
 		}
 	}
 
@@ -111,12 +117,12 @@ class Evaluation {
 
 	public static void main(String[] args) throws SQLException, IOException {
 		// generate routes
-		LevelGraph levelGraph = new LevelGraph(getConnection("berlin"));
-		generateRoutes(levelGraph);
-		levelGraph = null;
+		// LevelGraph levelGraph = new LevelGraph(getConnection("berlin"));
+		// generateRoutes(levelGraph);
+		// levelGraph = null;
 
 		// serialize graphs
-		// serializeLevelGraphs();
+		serializeLevelGraphs();
 
 	}
 }
