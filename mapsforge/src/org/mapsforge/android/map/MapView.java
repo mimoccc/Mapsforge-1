@@ -591,6 +591,16 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the projection that is currently in use to convert pixel coordinates to
+	 * geographical coordinates on the map.
+	 * 
+	 * @return The projection of the MapView. Do not keep this object for a longer time.
+	 */
+	public Projection getProjection() {
+		return new MercatorProjection(this);
+	}
+
+	/**
 	 * Returns the current zoom level of the map.
 	 * 
 	 * @return the current zoom level.

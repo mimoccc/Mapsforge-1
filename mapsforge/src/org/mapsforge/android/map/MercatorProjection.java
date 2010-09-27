@@ -17,9 +17,9 @@
 package org.mapsforge.android.map;
 
 /**
- * A static class that implements spherical mercator projection.
+ * A performance optimised implementation of the spherical mercator projection.
  */
-class MercatorProjection {
+class MercatorProjection implements Projection {
 	/**
 	 * Calculate the distance on the ground that is represented by a single pixel on the map.
 	 * 
@@ -166,5 +166,24 @@ class MercatorProjection {
 	 */
 	static double tileYToLatitude(long tileY, byte zoom) {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoom);
+	}
+
+	private MapView mapView;
+
+	MercatorProjection(MapView mapView) {
+		this.mapView = mapView;
+	}
+
+	@Override
+	public GeoPoint fromPixels(int x, int y) {
+		// calculate the pixel coordinates relative to the top left corner
+		double pixelX = longitudeToPixelX(this.mapView.longitude, this.mapView.zoomLevel)
+				- (mapView.getWidth() >> 1) + x;
+		double pixelY = latitudeToPixelY(this.mapView.latitude, this.mapView.zoomLevel)
+				- (mapView.getHeight() >> 1) + y;
+
+		// convert the pixel coordinates to a GeoPoint
+		return new GeoPoint(pixelYToLatitude(pixelY, this.mapView.zoomLevel),
+				pixelXToLongitude(pixelX, this.mapView.zoomLevel));
 	}
 }
