@@ -193,8 +193,6 @@ public class SimpleOSM2DBParser {
 				currentWayPoints.clear();
 
 				currentWay = Long.parseLong(attributes.getValue("id"));
-			} else if (qName.equals("relation")) {
-
 			} else if (qName.equals("tag")) {
 				if (!"created_by".equals(attributes.getValue("k"))) {
 					currentTags.add(attributes.getValue("k"));
@@ -202,8 +200,6 @@ public class SimpleOSM2DBParser {
 				}
 			} else if (qName.equals("nd")) {
 				currentWayPoints.add(Long.parseLong(attributes.getValue("ref")));
-			} else if (qName.equals("member")) {
-
 			}
 		}
 
