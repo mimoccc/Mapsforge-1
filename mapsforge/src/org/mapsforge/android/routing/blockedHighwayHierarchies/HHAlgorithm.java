@@ -55,9 +55,6 @@ final class HHAlgorithm {
 	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff)
 			throws IOException {
 
-		discovered[FWD].clear();
-		discovered[BWD].clear();
-
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
 		int searchScopeHitId = -1;
@@ -119,6 +116,15 @@ final class HHAlgorithm {
 			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
 					.get(searchScopeHitId), shortestPathBuff);
 		}
+
+		// clear temporary data
+		this.discovered[FWD].clear();
+		this.discovered[BWD].clear();
+		this.queue[FWD].clear();
+		this.queue[BWD].clear();
+		this.queueDijkstra.clear();
+		this.discoveredDijkstra.clear();
+
 		return distance;
 	}
 
