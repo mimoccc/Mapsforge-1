@@ -7,15 +7,14 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 /**
- * Implementation of the Overlay class using an arrayList as data-structure.
+ * Implementation of the ItemizedOverlay class using an ArrayList as data structure.
  * 
  * @author Sebastian Schlaak
  * @author Karsten Groll
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay {
-
-	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Context context;
+	private ArrayList<OverlayItem> overlayItems = new ArrayList<OverlayItem>();
 
 	/**
 	 * Constructs an overlay.
@@ -32,26 +31,26 @@ public class ArrayItemizedOverlay extends ItemizedOverlay {
 
 	@Override
 	public void addOverLay(OverlayItem overlayItem) {
-		this.mOverlays.add(overlayItem);
+		this.overlayItems.add(overlayItem);
+	}
+
+	@Override
+	public int size() {
+		return this.overlayItems.size();
 	}
 
 	@Override
 	protected OverlayItem createItem(int i) {
-		return this.mOverlays.get(i);
+		return this.overlayItems.get(i);
 	}
 
 	@Override
 	protected boolean onTap(int index) {
-		OverlayItem item = this.mOverlays.get(index);
+		OverlayItem item = this.overlayItems.get(index);
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this.context);
 		dialog.setTitle(item.getTitle());
 		dialog.setMessage(item.getSnippet());
 		dialog.show();
 		return false;
-	}
-
-	@Override
-	public int size() {
-		return this.mOverlays.size();
 	}
 }

@@ -21,7 +21,7 @@ package org.mapsforge.android.map;
  */
 public enum MapViewMode {
 	/**
-	 * Map tiles are rendered using the {@link android.graphics android.graphics} package.
+	 * Map tiles are rendered using the android.graphics package.
 	 */
 	CANVAS_RENDERER,
 	/**

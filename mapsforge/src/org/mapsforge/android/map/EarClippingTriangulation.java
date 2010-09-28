@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * @author jonas.hoffmann
  * 
  */
-public class EarClippingTriangulation {
+class EarClippingTriangulation {
 
 	/* x coordinates of the input polygon */
 	private float[] xCoords;
