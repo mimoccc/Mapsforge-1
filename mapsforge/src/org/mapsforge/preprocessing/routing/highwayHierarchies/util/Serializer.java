@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.routing.highwayHierarchies.util;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -91,7 +92,8 @@ public class Serializer {
 	 */
 	public static <S extends Serializable> S deserialize(File src) throws IOException,
 			ClassNotFoundException {
-		FileInputStream iStream = new FileInputStream(src);
+		InputStream iStream = new BufferedInputStream(new FileInputStream(src),
+				64 * 1000 * 1024);
 		S s = deserialize(iStream);
 		iStream.close();
 		return s;

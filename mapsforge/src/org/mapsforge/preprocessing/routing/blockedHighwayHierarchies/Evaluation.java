@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Properties;
 import java.util.Random;
 
 import org.mapsforge.core.DBConnection;
@@ -43,9 +44,16 @@ class Evaluation {
 	private static final int GRAPHS_COUNT = 27;
 	private static final String GRAPHS_NAME_PREFIX = "ger_";
 
+	// binary file parameters
+	private static final int[] quadClusteringVertexThreshold = new int[] { 100, 200, 300, 400 };
+	private static final int[] kCenterAverageVerticesPerCluster = new int[] { 100, 200, 300,
+			400 };
+
 	// test routes
 	private static final int ROUTES_COUNT = 1000;
-	private static final int[] ROUTES_RANKS = new int[] { 1000, 10000 };
+	private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 10),
+			(int) Math.pow(2, 12), (int) Math.pow(2, 14), (int) Math.pow(2, 16),
+			(int) Math.pow(2, 18), (int) Math.pow(2, 20) };
 
 	static void generateRoutes(LevelGraph levelGraph) throws IOException {
 		for (int rank : ROUTES_RANKS) {
@@ -89,13 +97,9 @@ class Evaluation {
 
 	static void serializeLevelGraphs()
 			throws SQLException, IOException {
-		for (int i = 27; i <= GRAPHS_COUNT; i++) {
+		for (int i = 1; i <= GRAPHS_COUNT; i++) {
 
-			String graphName = GRAPHS_NAME_PREFIX;
-			if (i < 10) {
-				graphName += "0";
-			}
-			graphName += i;
+			String graphName = getGraphFileName(i);
 			Connection conn = getConnection(graphName);
 			Date date = new Date(System.currentTimeMillis());
 			System.out.println("serializing graph : '" + graphName + "'" + " "
@@ -109,20 +113,94 @@ class Evaluation {
 		}
 	}
 
+	static String getGraphFileName(int i) {
+		String graphName = GRAPHS_NAME_PREFIX;
+		if (i < 10) {
+			graphName += "0";
+		}
+		graphName += i;
+		return graphName;
+	}
+
+	static void createBinaryFiles() {
+		Properties conf = new Properties();
+		// not used
+		conf.setProperty("blockedHH.input.db.host", "0");
+		conf.setProperty("blockedHH.input.db.port", "0");
+		conf.setProperty("blockedHH.input.db.name", "0");
+		conf.setProperty("blockedHH.input.db.user", "0");
+		conf.setProperty("blockedHH.input.db.password", "0");
+		conf.setProperty("blockedHH.clustering.avgVerticesPerCluster", "0");
+		conf.setProperty("blockedHH.clustering.vertexThreshold", "0");
+
+		// commonly used
+		conf.setProperty("blockedHH.rtree.blockSize", "4096");
+		conf.setProperty("blockedHH.addressLookupTable.maxGroupSize", "50");
+		conf.setProperty("blockedHH.clustering.oversamplingFac", "8");
+
+		// quad tree binaries
+		for (int i = 27; i <= GRAPHS_COUNT; i++) {
+			boolean incluedHopIndices = true;
+			for (int k = 0; k < 2; k++) {
+				String graphName = getGraphFileName(i);
+				String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
+				conf.setProperty("blockedHH.input.file", inputFile);
+
+				for (int vertexThreshold : quadClusteringVertexThreshold) {
+					String algorithmName = "quad_tree";
+					String outputFile = "evaluation/binaries/" + graphName + "_"
+							+ algorithmName + "_" + vertexThreshold + "_" + incluedHopIndices
+							+ ".blockedHH";
+
+					conf.setProperty("blockedHH.clustering.algorithm", algorithmName);
+					conf.setProperty("blockedHH.output.file", outputFile);
+					conf.setProperty("blockedHH.clustering.vertexThreshold", ""
+							+ vertexThreshold);
+					HHBinaryFileWriter.writeBinaryFile(conf);
+				}
+				incluedHopIndices = !incluedHopIndices;
+			}
+		}
+
+		// k-center binaries
+		// for (int i = 3; i <= GRAPHS_COUNT; i++) {
+		// boolean incluedHopIndices = true;
+		// for (int k = 0; k < 2; k++) {
+		// String graphName = getGraphFileName(i);
+		// String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
+		// conf.setProperty("blockedHH.input.file", inputFile);
+		//
+		// for (int averageVerticesPerCluster : kCenterAverageVerticesPerCluster) {
+		// String algorithmName = "k_center";
+		// String outputFile = "evaluation/binaries/" + graphName + "_"
+		// + algorithmName + "_" + averageVerticesPerCluster + "_"
+		// + incluedHopIndices + ".blockedHH";
+		// conf.setProperty("blockedHH.clustering.algorithm", algorithmName);
+		// conf.setProperty("blockedHH.output.file", outputFile);
+		// conf.setProperty("blockedHH.clustering.avgVerticesPerCluster", ""
+		// + averageVerticesPerCluster);
+		// HHBinaryFileWriter.writeBinaryFile(conf);
+		// }
+		// incluedHopIndices = !incluedHopIndices;
+		// }
+		// }
+	}
+
 	static Connection getConnection(String dbName) throws SQLException {
 		return DBConnection.getJdbcConnectionPg(DB_HOST, DB_PORT, dbName,
 				DB_USER,
 				DB_PASS);
 	}
 
-	public static void main(String[] args) throws SQLException, IOException {
-		// generate routes
-		// LevelGraph levelGraph = new LevelGraph(getConnection("berlin"));
-		// generateRoutes(levelGraph);
-		// levelGraph = null;
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		/* generate routes */
+		LevelGraph levelGraph = Serializer.deserialize(new File(
+				"evaluation/graphs/ger_01.levelGraph"));
+		generateRoutes(levelGraph);
+		levelGraph = null;
 
-		// serialize graphs
-		serializeLevelGraphs();
-
+		/* serialize graphs */
+		// serializeLevelGraphs();
+		// createBinaryFiles();
 	}
 }

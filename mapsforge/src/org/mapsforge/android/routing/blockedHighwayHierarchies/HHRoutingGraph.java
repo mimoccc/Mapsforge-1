@@ -407,6 +407,9 @@ final class HHRoutingGraph {
 		if (block == null) {
 			block = readBlock(blockId);
 			blockCache.putItem(block);
+		} else {
+			// REMOVE THIS LATER
+			Evaluation.notifyCacheHit();
 		}
 		return block;
 	}
@@ -423,10 +426,16 @@ final class HHRoutingGraph {
 	private Block readBlock(int blockId) throws IOException {
 		Pointer pointer = blockAddressTable.getPointer(blockId);
 		if (pointer != null) {
-			raf.seek(startAddrClusterBlocks + pointer.startAddr);
-			// we need to read 4 bytes to much since the Deserializer requires that.
-			byte[] buff = new byte[pointer.lengthBytes + 4];
+			long startAddr = startAddrClusterBlocks + pointer.startAddr;
+			// need to read 4 bytes to much since the Deserializer requires that.
+			int nBytes = pointer.lengthBytes + 4;
+			raf.seek(startAddr);
+			byte[] buff = new byte[nBytes];
 			raf.readFully(buff);
+
+			// REMOVE THIS LATER
+			Evaluation.notifyBlockRead(startAddr, startAddr + nBytes);
+
 			return new Block(blockId, buff, this);
 		}
 		return null;
@@ -448,7 +457,7 @@ final class HHRoutingGraph {
 
 		HHAlgorithm hh = new HHAlgorithm(graph);
 		LinkedList<HHEdge> spHH = new LinkedList<HHEdge>();
-		int distanceHH = hh.getShortestPath(s.vertexIds[0], t.vertexIds[0], spHH);
+		int distanceHH = hh.getShortestPath(s.vertexIds[0], t.vertexIds[0], spHH, false);
 
 		// System.out.println(distanceDijkstra + " " + distanceHH);
 		// 11327 is correct!!!

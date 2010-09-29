@@ -38,8 +38,8 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
 class BlockWriter {
 
-	private final static int BUFFER_SIZE = 25000000;
-	private final static byte[] BUFFER = new byte[BUFFER_SIZE];
+	private static final int BUFFER_SIZE = 25000000;
+	private static final byte[] BUFFER = new byte[BUFFER_SIZE];
 	private static final int OUTPUT_BUFFER_SIZE = 16 * 1000 * 1024;
 	private static final int HEADER_LENGTH = 4096;
 	private static final int MESSAGE_INTEVAL = 100;
@@ -114,6 +114,14 @@ class BlockWriter {
 		}
 		out.flush();
 		out.close();
+
+		// release resources
+		_levelGraph = null;
+		_clustering = null;
+		mapVertexIdToVertexOffset = null;
+		mapClusterToLevel = null;
+		mapClusterToBlockId = null;
+		dijkstraAlgorithm = null;
 
 		return blockSize;
 	}

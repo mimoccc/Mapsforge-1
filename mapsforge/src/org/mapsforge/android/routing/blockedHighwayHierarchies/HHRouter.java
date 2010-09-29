@@ -95,7 +95,7 @@ public class HHRouter implements IRouter {
 	public IEdge[] getShortestPath(int sourceId, int targetId) {
 		try {
 			LinkedList<HHEdge> shortestPath = new LinkedList<HHEdge>();
-			hhAlgorithm.getShortestPath(sourceId, targetId, shortestPath);
+			hhAlgorithm.getShortestPath(sourceId, targetId, shortestPath, false);
 			EdgeImpl[] edges = new EdgeImpl[shortestPath.size()];
 			int i = 0;
 			for (HHEdge e : shortestPath) {
@@ -308,7 +308,8 @@ public class HHRouter implements IRouter {
 	 *             if there is something wrong reading the file.
 	 */
 	public static void main(String[] args) throws IOException {
-		HHRouter router = new HHRouter(new File("router/germany.blockedHH"), 1000 * 1024);
+		HHRouter router = new HHRouter(new File(
+				"evaluation/binaries/ger_02_k_center_400_true.blockedHH"), 1000 * 1024);
 		IVertex source = router.getNearestVertex(new GeoCoordinate(50.509769, 10.4567655));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		long startTime = System.currentTimeMillis();

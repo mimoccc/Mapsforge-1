@@ -72,16 +72,18 @@ class KCenterClusteringAlgorithm {
 	 *            the levels of the graph.
 	 * @param avgVerticesPerCluster
 	 *            another way to specify the number of clusters to be computed.
+	 * @param oversamplingFac
+	 *            factor for number of blocks to create in the over sampling phase.
 	 * @param heuristic
 	 *            see public static variables for available heuristics.
 	 * @return the clusterings for each level of the graph.
 	 */
 	public static KCenterClustering[] computeClustering(Graph[] graph,
-			int avgVerticesPerCluster, int heuristic) {
+			int avgVerticesPerCluster, int oversamplingFac, int heuristic) {
 		KCenterClustering[] clustering = new KCenterClustering[graph.length];
 		for (int i = 0; i < graph.length; i++) {
 			clustering[i] = computeClustering(graph[i], graph[i].numVertices()
-					/ avgVerticesPerCluster, heuristic);
+					/ avgVerticesPerCluster, oversamplingFac, heuristic);
 		}
 		return clustering;
 	}
@@ -93,14 +95,16 @@ class KCenterClusteringAlgorithm {
 	 *            the graph to be clustered
 	 * @param k
 	 *            number of clusters to be computed.
+	 * @param oversamplingFac
+	 *            factor for number of blocks to create in the over sampling phase.
 	 * @param heuristic
 	 *            see public static variables for available heuristics.
 	 * @return the k-center clustering.
 	 */
-	public static KCenterClustering computeClustering(Graph graph, int k, int heuristic) {
+	public static KCenterClustering computeClustering(Graph graph, int k, int oversamplingFac,
+			int heuristic) {
 		k = Math.max(k, 1);
-		int k_ = (int) Math.rint(k * (Math.log(k) / Math.log(8)));
-		k_ = Math.max(k, k_);
+		int k_ = Math.min(graph.numVertices(), k * oversamplingFac);
 		System.out.println("computing k-center clustering (k = " + k + ", k' = " + k_ + ")");
 
 		System.out.println("randomly choosing k' centers");
@@ -428,7 +432,8 @@ class KCenterClusteringAlgorithm {
 	 */
 	private static int clusterUnconnectedComponents(Graph graph, KCenterClustering clustering) {
 		int numCreatedClusters = 0;
-		for (int v = 0; v < graph.numVertices(); v++) {
+		for (Iterator<? extends Vertex> iter = graph.getVertices(); iter.hasNext();) {
+			int v = iter.next().getId();
 			// find vertices not yet assigned to a cluster
 			if (clustering.getCluster(v) == null) {
 				// create a new cluster for such a vertex

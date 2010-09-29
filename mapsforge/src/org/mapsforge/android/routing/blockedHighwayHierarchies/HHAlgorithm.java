@@ -52,8 +52,12 @@ final class HHAlgorithm {
 				INITIAL_DIJKSTRA_MAP_SIZE);
 	}
 
-	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff)
+	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff,
+			boolean clearCacheAfterPhaseA)
 			throws IOException {
+		// REMOVE THIS LATER
+		Evaluation.setPhase(Evaluation.PHASE_A);
+		graph.clearCache();
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
@@ -72,11 +76,18 @@ final class HHAlgorithm {
 		graph.releaseVertex(t);
 
 		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
+			// REMOVE THIS LATER
+			Evaluation.notifyHeapSizeChanged(queue[FWD].size()
+					+ queue[BWD].size());
+
 			if (queue[direction].isEmpty()) {
 				direction = (direction + 1) % 2;
 			}
 			HHHeapItem uItem = queue[direction].extractMin();
 			uItem.heapIdx = HEAP_IDX_SETTLED;
+
+			// REMOVE THIS LATER
+			Evaluation.notifyVertexSettled();
 
 			if (uItem.distance > distance) {
 				queue[direction].clear();
@@ -113,6 +124,13 @@ final class HHAlgorithm {
 			graph.releaseVertex(u);
 		}
 		if (searchScopeHitId != -1) {
+			// REMOVE THIS LATER
+			Evaluation.setPhase(Evaluation.PHASE_B);
+
+			if (clearCacheAfterPhaseA) {
+				graph.clearCache();
+			}
+
 			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
 					.get(searchScopeHitId), shortestPathBuff);
 		}
@@ -295,12 +313,19 @@ final class HHAlgorithm {
 			queueDijkstra.insert(sItem);
 
 			while (!queueDijkstra.isEmpty()) {
+				// REMOVE THIS LATER
+				Evaluation.notifyHeapSizeChanged(queueDijkstra.size()
+						+ queue[BWD].size());
+
 				DijkstraHeapItem uItem = queueDijkstra.extractMin();
 				if (uItem.id == t.vertexIds[e.minLevel - 1]) {
 					// found target
 					break;
 				}
 				HHVertex u = graph.getVertex(uItem.id);
+
+				// REMOVE THIS LATER
+				Evaluation.notifyVertexSettled();
 
 				// relax edges
 				HHEdge[] adjEdges = graph.getOutboundEdges(u);

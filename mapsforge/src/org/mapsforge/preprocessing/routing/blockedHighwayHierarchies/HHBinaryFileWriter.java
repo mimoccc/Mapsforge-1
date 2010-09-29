@@ -63,6 +63,10 @@ class HHBinaryFileWriter {
 					.getProperty("blockedHH.clustering.vertexThreshold"));
 			int kcenterAvgVerticesPerCluster = Integer.parseInt(props
 					.getProperty("blockedHH.clustering.avgVerticesPerCluster"));
+			int kcenterOversamplingFac = Integer
+					.parseInt(props
+					.getProperty("blockedHH.clustering.oversamplingFac"));
+
 			int addressLookupTableMaxGroupSize = Integer.parseInt(props
 					.getProperty("blockedHH.addressLookupTable.maxGroupSize"));
 			boolean hopIndices = Boolean.parseBoolean(props
@@ -92,6 +96,7 @@ class HHBinaryFileWriter {
 						dbUser,
 						dbPassword);
 				levelGraph = new LevelGraph(conn);
+				conn.close();
 			}
 
 			// compute clustering
@@ -110,8 +115,7 @@ class HHBinaryFileWriter {
 				System.out.println("algorithm = k_center");
 				System.out.println("verticesPerCluster = " + kcenterAvgVerticesPerCluster);
 				clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph
-						.getLevels(),
-						kcenterAvgVerticesPerCluster,
+						.getLevels(), kcenterAvgVerticesPerCluster, kcenterOversamplingFac,
 						KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 			} else {
 				System.out.println("invalid clustering algorithm specified in properties.");

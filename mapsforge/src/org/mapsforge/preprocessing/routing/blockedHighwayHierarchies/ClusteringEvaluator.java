@@ -47,8 +47,9 @@ class ClusteringEvaluator {
 		// k-center
 		int avgVerticesPerCluster = 500;
 		int k = (int) Math.rint(graph.numVertices() / avgVerticesPerCluster);
+		int overSamplingFac = 10;
 		KCenterClustering kCenterClustering = KCenterClusteringAlgorithm.computeClustering(
-				graph, k, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+				graph, k, overSamplingFac, KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
 		for (int v = 0; v < levelGraph.getLevel(0).numVertices(); v++) {
 			if (kCenterClustering.getCluster(v) == null) {
 				System.out.println("no cluster assigned for vertex : " + v);
