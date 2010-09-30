@@ -92,10 +92,12 @@ abstract class MapGenerator extends Thread {
 						break;
 					}
 
-					// copy the tile to the MapView
-					this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
-							this.currentTileBitmap, true);
-					this.mapView.postInvalidate();
+					if (this.mapView != null) {
+						// copy the tile to the MapView
+						this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
+								this.currentTileBitmap, true);
+						this.mapView.postInvalidate();
+					}
 
 					// put the tile image in the cache
 					this.imageFileCache
@@ -104,7 +106,8 @@ abstract class MapGenerator extends Thread {
 			}
 
 			// if the job queue is empty, ask the MapView for more jobs
-			if (!isInterrupted() && this.jobQueue1.isEmpty() && this.requestMoreJobs) {
+			if (!isInterrupted() && this.jobQueue1.isEmpty() && this.requestMoreJobs
+					&& this.mapView != null) {
 				this.mapView.requestMoreJobs();
 			}
 		}
@@ -139,13 +142,15 @@ abstract class MapGenerator extends Thread {
 	 * Schedules all jobs in the queue.
 	 */
 	private void schedule() {
-		while (!this.jobQueue1.isEmpty()) {
-			this.jobQueue2.offer(this.mapView.setJobPriority(this.jobQueue1.poll()));
+		if (this.mapView != null) {
+			while (!this.jobQueue1.isEmpty()) {
+				this.jobQueue2.offer(this.mapView.setJobPriority(this.jobQueue1.poll()));
+			}
+			// swap the two job queues
+			this.tempQueue = this.jobQueue1;
+			this.jobQueue1 = this.jobQueue2;
+			this.jobQueue2 = this.tempQueue;
 		}
-		// swap the two job queues
-		this.tempQueue = this.jobQueue1;
-		this.jobQueue1 = this.jobQueue2;
-		this.jobQueue2 = this.tempQueue;
 	}
 
 	/**
@@ -207,6 +212,15 @@ abstract class MapGenerator extends Thread {
 	 * @return the maximum zoom level.
 	 */
 	abstract byte getMaxZoomLevel();
+
+	/**
+	 * Returns the number of jobs that are already in the queue.
+	 * 
+	 * @return the number of jobs in the queue.
+	 */
+	final synchronized int getNumberOfJobs() {
+		return this.jobQueue1.size();
+	}
 
 	/**
 	 * Returns the name of the MapGenerator. It will be used as the name for the thread.

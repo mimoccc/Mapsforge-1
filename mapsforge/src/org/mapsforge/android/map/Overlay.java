@@ -147,6 +147,7 @@ public abstract class Overlay extends Thread {
 				try {
 					this.wait();
 				} catch (InterruptedException e) {
+					// restore the interrupted status
 					interrupt();
 				}
 			}

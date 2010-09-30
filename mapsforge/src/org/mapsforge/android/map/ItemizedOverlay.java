@@ -91,6 +91,7 @@ public abstract class ItemizedOverlay extends Overlay {
 		try {
 			Thread.sleep(pauseInSeconds * 1000);
 		} catch (InterruptedException e) {
+			// restore the interrupted status
 			interrupt();
 			Logger.e(new Exception("Not Implemented"));
 		}
