@@ -24,6 +24,7 @@ import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.poi.persistence.IPersistenceManager;
 import org.mapsforge.server.poi.persistence.PersistenceManagerFactory;
+import org.mapsforge.server.routing.IEdge;
 
 /**
  * This is kind of a factory for Landmarks in certain rectangle
@@ -32,69 +33,120 @@ import org.mapsforge.server.poi.persistence.PersistenceManagerFactory;
  */
 public class LandmarksFromPerst {
 
+	IPersistenceManager persistenceManager;
+
 	/**
-	 * @param args
-	 *            unused
+	 * construct a new landmark generator, so to speak
+	 * 
+	 * @param databaseFileURI
+	 *            the file path of the database
 	 */
-	public static void main(String[] args) {
-		// TODO: Use IEdge to find rectangle(s) around
-		// DummyEdge e = new DummyEdge(null, KottbusserStr);
+	public LandmarksFromPerst(String databaseFileURI) {
+		this.persistenceManager = PersistenceManagerFactory
+				.getPerstMultiRtreePersistenceManager(databaseFileURI);
+	}
 
-		// tilted rectangle around Schönleinstr - Kottbusser Tor
-		GeoCoordinate p1 = new GeoCoordinate(52.49958, 13.41682);
-		GeoCoordinate p2 = new GeoCoordinate(52.49961, 13.41898);
-		GeoCoordinate p3 = new GeoCoordinate(52.49274, 13.42295);
-		GeoCoordinate p4 = new GeoCoordinate(52.49234, 13.42169);
-		// junction Kottbusser Tor / kottbusser str
-		GeoCoordinate vertex = new GeoCoordinate(52.49886, 13.41841);
+	@Override
+	public void finalize() {
+		// free resources
+		persistenceManager.close();
+	}
 
+	/**
+	 * get a landmark near the end of the street / edge
+	 * 
+	 * @param e
+	 *            the street which is to be used
+	 * @return a landmark near the end or null
+	 */
+	public PointOfInterest getPOINearStreet(IEdge e) {
+
+		GeoCoordinate source = e.getSource().getCoordinate();
+		GeoCoordinate target = e.getTarget().getCoordinate();
+
+		double length = source.sphericalDistance(target);
+		MathVector streetVector = new MathVector(
+				MercatorProjection.longitudeToMetersX(target.getLongitude()) -
+						MercatorProjection.longitudeToMetersX(source.getLongitude()),
+				MercatorProjection.latitudeToMetersY(target.getLatitude()) -
+						MercatorProjection.latitudeToMetersY(source.getLatitude()), length);
+		MathVector streetNormalVector = streetVector.getNormalVector();
+
+		double d = 40.0;
+
+		// Here a bounding box around the source and the target is calculated, which follows the
+		// direction of the street
+		// These are the 2 front Coordinates
+		GeoCoordinate p1 = getOrthogonalGeoCoordinate(target, streetNormalVector, -d);
+		GeoCoordinate p2 = getOrthogonalGeoCoordinate(target, streetNormalVector, d);
+		// These are the 2 rear Coordinates
+		GeoCoordinate p3 = getOrthogonalGeoCoordinate(source, streetNormalVector, d);
+		GeoCoordinate p4 = getOrthogonalGeoCoordinate(source, streetNormalVector, -d);
+		// additionally, go a short distance ahead onto the junction
+		p1 = getOrthogonalGeoCoordinate(p1, streetVector, d);
+		p2 = getOrthogonalGeoCoordinate(p2, streetVector, d);
+
+		// Calculate the outer bounding box of the tilted box
 		GeoCoordinate boundingboxCoordinate1 = getBoundingBoxSouthWest(p1, p2, p3, p4);
 		GeoCoordinate boundingboxCoordinate2 = getBoundingBoxNorthEast(p1, p2, p3, p4);
 
-		// initialize persistenceManager
-		String filename = "c:/uni/berlin_landmarks.dbs.clustered";
-		IPersistenceManager persistenceManager =
-				PersistenceManagerFactory.getPerstMultiRtreePersistenceManager(filename);
-
-		// Get all landmarks within the bounding box of the coordinates
+		// Get all landmarks within the outer bounding box of the coordinates
 		Collection<PointOfInterest> poisInBoundingBox =
-				persistenceManager.findInRect(boundingboxCoordinate1, boundingboxCoordinate2,
+				persistenceManager.findInRect(
+						boundingboxCoordinate1,
+						boundingboxCoordinate2,
 						"Landmark");
 
-		// Resourcen freigeben
-		persistenceManager.close();
-
-		// Keep only the landmarks which are within the rectangle
+		// Keep only the landmarks which are within the inner bounding box (tilted rectangle)
 		// and put them in a map sorted by distance from vertex
 		TreeMap<Double, PointOfInterest> poisInRectangle = new TreeMap<Double, PointOfInterest>();
 		for (PointOfInterest poi : poisInBoundingBox) {
 			if (isInsideRectangle(p1, p2, p3, p4, poi.getGeoCoordinate())) {
-				poisInRectangle.put(vertex.sphericalDistance(poi.getGeoCoordinate()), poi);
+				poisInRectangle.put(target.sphericalDistance(poi.getGeoCoordinate()), poi);
 			}
 		}
-
-		for (PointOfInterest poi : poisInRectangle.values()) {
-			System.out.println(java.lang.Math.round(vertex.sphericalDistance(poi
-					.getGeoCoordinate()))
-					+ " m " + poi.getCategory().getTitle() + " " + poi.getName());
+		if (poisInRectangle.isEmpty()) {
+			return null;
 		}
-
+		return poisInRectangle.firstEntry().getValue();
 	}
 
+	private static GeoCoordinate getOrthogonalGeoCoordinate(GeoCoordinate target,
+			MathVector normalVector, double d) {
+		return new GeoCoordinate(
+				MercatorProjection.metersYToLatitude(
+						MercatorProjection.latitudeToMetersY(target.getLatitude())
+								+ d * normalVector.y),
+				MercatorProjection.metersXToLongitude(
+						MercatorProjection.longitudeToMetersX(target.getLongitude())
+								+ d * normalVector.x));
+	}
+
+	/**
+	 * This function checks if {@link GeoCoordinate} t is on one side or the other of a line
+	 * formed by the first two parameters.
+	 * 
+	 * It is used at the core of the function which checks if a {@link GeoCoordinate} is inside
+	 * a rectangle.
+	 * 
+	 * @param p1
+	 *            first point of the line
+	 * @param p2
+	 *            second point of the line
+	 * @param t
+	 *            the point be checked
+	 * @return -1 for one side or 1 for the other
+	 */
 	private static short whichSide(GeoCoordinate p1, GeoCoordinate p2, GeoCoordinate t) {
 		if (p2.getLongitude() == p1.getLongitude()) {
 			if (t.getLongitude() > p1.getLongitude())
 				return -1;
 			return 1;
 		}
-		if (MercatorProjection.latitudeToMetersY(t.getLatitude())
-				- MercatorProjection.latitudeToMetersY(p1.getLatitude())
-				- (MercatorProjection.latitudeToMetersY(p2.getLatitude()) -
-						MercatorProjection.latitudeToMetersY(p1.getLatitude()))
-				/ (MercatorProjection.longitudeToMetersX(p2.getLongitude()) -
-						MercatorProjection.longitudeToMetersX(p1.getLongitude()))
-				* (MercatorProjection.longitudeToMetersX(t.getLongitude()) -
-						MercatorProjection.longitudeToMetersX(p1.getLongitude())) < 0) {
+		if (t.getLatitude() - p1.getLatitude() -
+				(p2.getLatitude() - p1.getLatitude())
+				/ (p2.getLongitude() - p1.getLongitude())
+				* (t.getLongitude() - p1.getLongitude()) < 0) {
 			return -1;
 		}
 		return 1;
@@ -165,5 +217,29 @@ public class LandmarksFromPerst {
 		if (p4.getLongitude() > east)
 			east = p4.getLongitude();
 		return new GeoCoordinate(north, east);
+	}
+
+	// private boolean isNorthOf()
+}
+
+class MathVector {
+	double x;
+	double y;
+	double l;
+
+	public MathVector(double x, double y, double l) {
+		this.x = x / l;
+		this.y = y / l;
+		this.l = l;
+	}
+
+	public MathVector(double x, double y) {
+		this.x = x;
+		this.y = y;
+		this.l = 1;
+	}
+
+	public MathVector getNormalVector() {
+		return new MathVector(y, -x);
 	}
 }

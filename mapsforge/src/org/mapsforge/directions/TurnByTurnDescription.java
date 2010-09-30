@@ -35,6 +35,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -53,7 +54,7 @@ import org.w3c.dom.Element;
  */
 public class TurnByTurnDescription {
 	Vector<TurnByTurnStreet> streets = new Vector<TurnByTurnStreet>();
-	LandmarkBuilder landmarkBuilder;
+	LandmarksFromPerst landmarkService;
 
 	/**
 	 * Constructs a TurnByTurnDirectionsObject from an array of IEdges as the are provided by
@@ -61,16 +62,16 @@ public class TurnByTurnDescription {
 	 * 
 	 * @param routeEdges
 	 *            is the IEdges array to convert to directions
-	 * @param landmarkBuilder
+	 * @param landmarkService
 	 *            is the instance to get Landmarks from
 	 * @throws InvalidAttributeValueException
 	 *             if any parameter is null
 	 */
-	public TurnByTurnDescription(IEdge[] routeEdges, LandmarkBuilder landmarkBuilder)
+	public TurnByTurnDescription(IEdge[] routeEdges, LandmarksFromPerst landmarkService)
 			throws InvalidAttributeValueException {
-		if (landmarkBuilder == null)
+		if (landmarkService == null)
 			throw new InvalidAttributeValueException();
-		this.landmarkBuilder = landmarkBuilder;
+		this.landmarkService = landmarkService;
 		generate(routeEdges);
 	}
 
@@ -486,7 +487,7 @@ public class TurnByTurnDescription {
 		Vector<GeoCoordinate> points = new Vector<GeoCoordinate>();
 		String name = "";
 		String ref = "";
-		Landmark nearestLandmark;
+		PointOfInterest nearestLandmark;
 		int exitCount = 0;
 
 		/**
@@ -502,10 +503,8 @@ public class TurnByTurnDescription {
 			isMotorwayLink = edge.isMotorWayLink();
 			appendCoordinatesFromEdge(edge);
 
-			if (landmarkBuilder != null) {
-				nearestLandmark = landmarkBuilder
-						.getNearestLandMark(edge.getSource().getCoordinate());
-
+			if (landmarkService != null) {
+				nearestLandmark = landmarkService.getPOINearStreet(edge);
 			}
 		}
 
@@ -531,7 +530,18 @@ public class TurnByTurnDescription {
 			int delta = (int) java.lang.Math.round(angleFromPreviousStreet / 45);
 			String turnInstruction = "";
 			if (nearestLandmark != null) {
-				turnInstruction += "Near " + nearestLandmark + ".\n";
+				double targetLandmarkDistance = points.lastElement().sphericalDistance(
+						nearestLandmark.getGeoCoordinate());
+				String landmarkName = nearestLandmark.getCategory().getTitle();
+				if (nearestLandmark.getName() != null)
+					landmarkName += " " + nearestLandmark.getName();
+				landmarkName += "\n";
+				if (targetLandmarkDistance <= 50) {
+					turnInstruction += "Close to " + landmarkName;
+				} else if (targetLandmarkDistance <= 100) {
+					turnInstruction += java.lang.Math.round(targetLandmarkDistance / 10) * 10
+							+ " m after " + landmarkName;
+				}
 			}
 			switch (delta) {
 				case 0:
@@ -577,9 +587,9 @@ public class TurnByTurnDescription {
 						result += ref;
 					}
 				}
-				result += ".\n";
+				result += ",\n";
 				length = java.lang.Math.round(length / 10) * 10;
-				result += "Stay on it for ";
+				result += "stay on it for ";
 				if (length > 1000) {
 					length = java.lang.Math.round(length / 100) / 10;
 					result += length + " km.";
@@ -592,8 +602,8 @@ public class TurnByTurnDescription {
 				else
 					result += turnInstruction + "motorway link";
 			} else if (isRoundabout) {
-				result = "Go onto the roundabout " + name + "\n";
-				result += "Take the ";
+				result = "go onto the roundabout " + name + "\n";
+				result += "take the ";
 				exitCount++;
 				switch (exitCount) {
 					case 1:
@@ -625,17 +635,18 @@ public class TurnByTurnDescription {
 		time = System.currentTimeMillis() - time;
 		System.out.println("Loaded Router in " + time + " ms");
 		time = System.currentTimeMillis();
-		LandmarkBuilder lb = new LandmarkBuilder();
+		String filename = "c:/uni/berlin_landmarks.dbs.clustered";
+		LandmarksFromPerst landmarkService = new LandmarksFromPerst(filename);
 		time = System.currentTimeMillis() - time;
 		System.out.println("Loaded LandmarkBuilder in " + time + " ms");
 		int source = router
-				.getNearestVertex(new GeoCoordinate(52.512008302373, 13.31718394829)).getId();
+				.getNearestVertex(new GeoCoordinate(52.53156, 13.40274)).getId();
 		int target = router.getNearestVertex(
-				new GeoCoordinate(52.516657072923, 13.354906535874)).getId();
+				new GeoCoordinate(52.49246, 13.41722)).getId();
 		IEdge[] sp = router.getShortestPath(source, target);
 		try {
 			time = System.currentTimeMillis() - time;
-			TurnByTurnDescription tbtd = new TurnByTurnDescription(sp, lb);
+			TurnByTurnDescription tbtd = new TurnByTurnDescription(sp, landmarkService);
 			time = System.currentTimeMillis() - time;
 			System.out.println("Route directions built in " + time + " ms");
 			System.out.println();

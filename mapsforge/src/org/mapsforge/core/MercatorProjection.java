@@ -36,6 +36,29 @@ public class MercatorProjection {
 	}
 
 	/**
+	 * Convert a meter measure to a longitude
+	 * 
+	 * @param x
+	 *            in meters
+	 * @return longitude in degrees in spherical mercator projection
+	 */
+	public static double metersXToLongitude(double x) {
+		return java.lang.Math.toDegrees(x / WGS84.EQUATORIALRADIUS);
+	}
+
+	/**
+	 * Convert a meter measure to a latitude
+	 * 
+	 * @param y
+	 *            in meters
+	 * @return latitude in degrees in spherical mercator projection
+	 */
+	public static double metersYToLatitude(double y) {
+		return java.lang.Math.toDegrees(java.lang.Math.atan(java.lang.Math.sinh(y
+				/ WGS84.EQUATORIALRADIUS)));
+	}
+
+	/**
 	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the
 	 * equator
 	 * 
