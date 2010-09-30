@@ -26,10 +26,12 @@
  */
 package org.mapsforge.server.ws;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -39,8 +41,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.IVertex;
 import org.mapsforge.server.routing.RouterFactory;
 
+import org.mapsforge.directions.LandmarkBuilder;
+import org.mapsforge.directions.LandmarksFromPerst;
 import org.mapsforge.directions.TurnByTurnDescription;
 
 /**
@@ -50,16 +55,30 @@ public class HHRoutingWebservice extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	private static IRouter router;
+
+	private LandmarksFromPerst landmarkService; 
 	private String propertiesURI;
 	
 	public void init() {
 		try {
-			propertiesURI = getServletContext().getRealPath("/WEB-INF/routerFactory.properties");
-			System.out.println("Loading from: " + propertiesURI);
+			propertiesURI = getServletContext().getRealPath("/WEB-INF/routerSettings.properties");
+			FileInputStream fis = new FileInputStream(propertiesURI);
+			Properties props = new Properties();
+			props.load(fis);
+			fis.close();
+			String hhFilename = props.getProperty("hh.file");
+			System.out.print("Loaded Router from " + hhFilename);
 			long t = System.currentTimeMillis();
 			router = RouterFactory.getRouter(propertiesURI);
 			t = System.currentTimeMillis() - t;
-			System.out.println("Loaded in " + t + " milliseconds");
+			System.out.println(" in " + t + " milliseconds");
+			
+			t = System.currentTimeMillis();
+			String landmarksFilename = props.getProperty("landmarksPerstDBFile");
+			System.out.print("Loaded landmarks from " + landmarksFilename );
+			landmarkService = new LandmarksFromPerst(landmarksFilename );
+			t = System.currentTimeMillis() - t;
+			System.out.println(" in " + t + " milliseconds");
 		} catch (Exception e) {
 			System.err.print(e.toString());
 		}
@@ -76,13 +95,20 @@ public class HHRoutingWebservice extends HttpServlet {
 			// ToDo: handle any number of stops along the way
 			// for now its just source and destination
 
+			boolean use_landmarks = request.getParameter("landmarks") != null;
+
 			IEdge[] routeEdges = router.getShortestPath(pointIds.get(0), pointIds.get(1));
 			if (routeEdges == null || routeEdges.length == 0) {
 				response.setStatus(500);
 				out.print("<error>It seems like I was not able to find a route. Sorry about that!</error>");
 				return;
 			}
-			TurnByTurnDescription turnByTurn = new TurnByTurnDescription(routeEdges);
+			TurnByTurnDescription turnByTurn;
+			if (use_landmarks) {
+				turnByTurn = new TurnByTurnDescription(routeEdges, landmarkService);
+			} else {
+				turnByTurn = new TurnByTurnDescription(routeEdges);
+			}
 			String format = request.getParameter("format");
 			if (format.equalsIgnoreCase("json")) {
 				response.setContentType("application/json; charset=UTF-8");
@@ -94,7 +120,9 @@ public class HHRoutingWebservice extends HttpServlet {
 			} else if (format.equalsIgnoreCase("kml")) {
 				response.setContentType("application/vnd.google-earth.kml+xml");
 				out.write(turnByTurn.toKML());
-//				response.getOutputStream().
+			} else if (format.equalsIgnoreCase("txt")) {
+				response.setContentType("text/plain");
+				out.write(turnByTurn.toString());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,8 +143,11 @@ public class HHRoutingWebservice extends HttpServlet {
 		for (int i = 0; i < alternatingCoordinates.length - (alternatingCoordinates.length%2); i += 2) {
 			double lon = Double.valueOf(alternatingCoordinates[i]);
 			double lat = Double.valueOf(alternatingCoordinates[i+1]);
-			int id = router.getNearestVertex(new GeoCoordinate(lat, lon)).getId();
-			pp.add(id);
+			IVertex nv = router.getNearestVertex(new GeoCoordinate(lat, lon));
+			if (nv != null) {
+				int id = nv.getId();
+				pp.add(id);
+			}
 		}
 		return pp;
 	}	
