@@ -3,7 +3,7 @@
 	package="org.mapsforge.applications.android.demomapviewer"
 	android:versionCode="1" android:versionName="0.1"
 	android:installLocation="auto">
-	<application>
+	<application android:debuggable="true">
 		<activity android:name=".BasicMapViewer" android:label="BasicMapViewer">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -17,7 +17,20 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity android:name=".BasicOverlayMapViewer"
+			android:label="BasicOverlayMapViewer">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
 		<activity android:name=".DualMapViewer" android:label="DualMapViewer">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".RouteOverlayMapViewer" android:label="RouteOverlayMapViewer">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
