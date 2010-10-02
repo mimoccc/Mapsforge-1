@@ -238,9 +238,25 @@ abstract class MapGenerator extends Thread {
 		return this.ready;
 	}
 
-	abstract void onAttachedToWindow();
+	/**
+	 * This method is called each time the MapView gets attached to the window. The method may
+	 * be overridden by subclasses to react on this event.
+	 * 
+	 * The default implementation of this method is empty.
+	 */
+	void onAttachedToWindow() {
+		// do nothing
+	}
 
-	abstract void onDetachedFromWindow();
+	/**
+	 * This method is called each time the MapView gets detached from the window. The method may
+	 * be overridden by subclasses to react on this event.
+	 * 
+	 * The default implementation of this method is empty.
+	 */
+	void onDetachedFromWindow() {
+		// do nothing
+	}
 
 	/**
 	 * Request the MapGenerator to stop working.

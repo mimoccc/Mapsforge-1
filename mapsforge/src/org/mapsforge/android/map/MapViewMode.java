@@ -17,19 +17,52 @@
 package org.mapsforge.android.map;
 
 /**
- * An enumeration of all possible MapView operating modes.
+ * An enumeration of all possible MapView operating modes. To check if a MapViewMode requires an
+ * Internet connection, use the {@link #requiresInternetConnection()} method.
  */
 public enum MapViewMode {
 	/**
-	 * Map tiles are rendered using the android.graphics package.
+	 * Map tiles are rendered using the android.graphics package (Skia library).
 	 */
 	CANVAS_RENDERER,
 	/**
-	 * Map tiles are rendered using OpenGL ES. This mode is unstable and for testing only.
+	 * Map tiles are downloaded from the Mapnik server. Requires an Internet connection.
+	 */
+	MAPNIK_TILE_DOWNLOAD,
+	/**
+	 * Map tiles are rendered with OpenGL ES. <b>This mode is unstable and for testing only</b>.
 	 */
 	OPENGL_RENDERER,
 	/**
-	 * Map tiles are downloaded from the OpenStreetMap server. Requires an Internet connection.
+	 * Map tiles are downloaded from the Osmarender server. Requires an Internet connection.
 	 */
-	TILE_DOWNLOAD
+	OSMARENDER_TILE_DOWNLOAD;
+
+	/**
+	 * This method determines, if a working connection to the Internet is required for the given
+	 * MapViewMode or not.
+	 * 
+	 * @param mapViewMode
+	 *            the MapViewMode to check.
+	 * @return true if the MapViewMode requires an Internet connection, false otherwise.
+	 */
+	public static boolean requiresInternetConnection(MapViewMode mapViewMode) {
+		switch (mapViewMode) {
+			case MAPNIK_TILE_DOWNLOAD:
+				return true;
+			case OSMARENDER_TILE_DOWNLOAD:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Convenience method to check if this MapViewMode requires an Internet connection.
+	 * 
+	 * @return true if this MapViewMode requires an Internet connection, false otherwise.
+	 */
+	public boolean requiresInternetConnection() {
+		return requiresInternetConnection(this);
+	}
 }

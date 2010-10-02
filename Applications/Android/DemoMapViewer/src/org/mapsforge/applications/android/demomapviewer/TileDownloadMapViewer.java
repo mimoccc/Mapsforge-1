@@ -23,7 +23,7 @@ import org.mapsforge.android.map.MapViewMode;
 import android.os.Bundle;
 
 /**
- * A simple application which demonstrates how to use the MapView in TILE_DOWNLOAD mode.
+ * A simple application which demonstrates how to use the MapView in download mode.
  */
 public class TileDownloadMapViewer extends MapActivity {
 	private MapView mapView;
@@ -31,7 +31,7 @@ public class TileDownloadMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.mapView = new MapView(this, MapViewMode.TILE_DOWNLOAD);
+		this.mapView = new MapView(this, MapViewMode.OSMARENDER_TILE_DOWNLOAD);
 		this.mapView.setClickable(true);
 		this.mapView.setBuiltInZoomControls(true);
 		setContentView(this.mapView);

@@ -471,8 +471,10 @@ public class MapView extends ViewGroup {
 		if (attributeValue == null) {
 			// no mode specified, use default
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
-		} else if (attributeValue.equals(MapViewMode.TILE_DOWNLOAD.name())) {
-			this.mapViewMode = MapViewMode.TILE_DOWNLOAD;
+		} else if (attributeValue.equals(MapViewMode.MAPNIK_TILE_DOWNLOAD.name())) {
+			this.mapViewMode = MapViewMode.MAPNIK_TILE_DOWNLOAD;
+		} else if (attributeValue.equals(MapViewMode.OSMARENDER_TILE_DOWNLOAD.name())) {
+			this.mapViewMode = MapViewMode.OSMARENDER_TILE_DOWNLOAD;
 		} else if (attributeValue.equals(MapViewMode.OPENGL_RENDERER.name())) {
 			this.mapViewMode = MapViewMode.OPENGL_RENDERER;
 		} else {
@@ -526,10 +528,10 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @return the map database.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	public MapDatabase getMapDatabase() {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return this.database;
@@ -540,10 +542,10 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @return the map file.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	public String getMapFile() {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapFile;
@@ -554,10 +556,10 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @return the server name.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode with a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	public String getMapTileDownloadServer() {
-		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD) {
+		if (!this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return ((TileDownloadMapGenerator) this.mapGenerator).getServerHostName();
@@ -614,10 +616,10 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @return true if the MapView currently has a valid map file, false otherwise.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	public boolean hasValidMapFile() {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapFile != null;
@@ -737,10 +739,10 @@ public class MapView extends ViewGroup {
 	 * @param newMapFile
 	 *            the path to the new map file.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	public void setMapFile(String newMapFile) {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		if (newMapFile == null) {
@@ -1078,10 +1080,14 @@ public class MapView extends ViewGroup {
 				this.mapGenerator = new OpenGlMapGenerator(this.mapActivity, this);
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
-			case TILE_DOWNLOAD:
-				this.mapGenerator = new TileDownloadMapGenerator();
+			case MAPNIK_TILE_DOWNLOAD:
+				this.mapGenerator = new MapnikDownloadMapGenerator();
+				break;
+			case OSMARENDER_TILE_DOWNLOAD:
+				this.mapGenerator = new OsmarenderDownloadMapGenerator();
 				break;
 		}
+
 		if (this.attachedToWindow) {
 			this.mapGenerator.onAttachedToWindow();
 		}
@@ -1356,7 +1362,7 @@ public class MapView extends ViewGroup {
 	 *            true if called from the UI thread, false otherwise.
 	 */
 	void handleTiles(boolean calledByUiThread) {
-		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD && this.mapFile == null) {
+		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
@@ -1425,7 +1431,7 @@ public class MapView extends ViewGroup {
 		} else if (Double.isNaN(this.longitude) || this.longitude > LONGITUDE_MAX
 				|| this.longitude < LONGITUDE_MIN) {
 			return false;
-		} else if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD
+		} else if (!this.mapViewMode.requiresInternetConnection()
 				&& (this.database == null || this.database.getMapBoundary() == null || !this.database
 						.getMapBoundary().contains(getMapCenter()))) {
 			return false;
@@ -1526,7 +1532,7 @@ public class MapView extends ViewGroup {
 	 * This method is called by the MapGenerator when its job queue is empty.
 	 */
 	void requestMoreJobs() {
-		if (this.mapViewMode != MapViewMode.TILE_DOWNLOAD && this.mapFile == null) {
+		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
@@ -1587,7 +1593,7 @@ public class MapView extends ViewGroup {
 	}
 
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD
+		if (this.mapViewMode.requiresInternetConnection()
 				|| (this.database != null && this.database.getMapBoundary() != null && this.database
 						.getMapBoundary().contains(point))) {
 			synchronized (this) {
@@ -1660,10 +1666,10 @@ public class MapView extends ViewGroup {
 	 * @param newMapFile
 	 *            the path to the new map file.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView operates in a mode without a map file.
+	 *             if the current MapView mode works with an Internet connection.
 	 */
 	void setMapFileFromPreferences(String newMapFile) {
-		if (this.mapViewMode == MapViewMode.TILE_DOWNLOAD) {
+		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		if (newMapFile != null && this.database != null && this.database.openFile(newMapFile)) {

@@ -24,23 +24,19 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 /**
- * A MapGenerator that downloads map tiles from the openstreetmap server.
+ * A MapGenerator that downloads map tiles from a server. To build an implementation for a
+ * certain tile server, extend this class and implement the abstract methods.
  */
-class TileDownloadMapGenerator extends MapGenerator {
-	private static final short DOWNLOAD_TILE_SIZE = 256;
-	private static final String SERVER_HOST_NAME = "tah.openstreetmap.org";
+abstract class TileDownloadMapGenerator extends MapGenerator {
 	private static final String THREAD_NAME = "TileDownloadMapGenerator";
-	private static final byte ZOOM_MAX = 17;
 	private Bitmap decodedBitmap;
 	private InputStream inputStream;
 	private int[] pixelColors;
-	private StringBuilder stringBuilder;
 	private Bitmap tileBitmap;
 
 	@Override
-	void cleanup() {
+	final void cleanup() {
 		this.tileBitmap = null;
-
 		if (this.decodedBitmap != null) {
 			this.decodedBitmap.recycle();
 			this.decodedBitmap = null;
@@ -48,17 +44,10 @@ class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
-	boolean executeJob(MapGeneratorJob mapGeneratorJob) {
-		// build the relative path to the tile
-		this.stringBuilder.append(mapGeneratorJob.tile.zoomLevel);
-		this.stringBuilder.append("/");
-		this.stringBuilder.append(mapGeneratorJob.tile.x);
-		this.stringBuilder.append("/");
-		this.stringBuilder.append(mapGeneratorJob.tile.y);
-		this.stringBuilder.append(".png");
+	final boolean executeJob(MapGeneratorJob mapGeneratorJob) {
 		try {
-			// read the data from the assembled URL
-			this.inputStream = new URL(this.stringBuilder.toString()).openStream();
+			// read the data from the tile URL
+			this.inputStream = new URL(getTilePath(mapGeneratorJob.tile)).openStream();
 			this.decodedBitmap = BitmapFactory.decodeStream(this.inputStream);
 			this.inputStream.close();
 
@@ -68,60 +57,47 @@ class TileDownloadMapGenerator extends MapGenerator {
 			}
 
 			// copy all pixels from the decoded bitmap to the tile bitmap
-			this.decodedBitmap.getPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
-					DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
+			this.decodedBitmap.getPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
+					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			this.decodedBitmap.recycle();
 			if (this.tileBitmap != null) {
-				this.tileBitmap.setPixels(this.pixelColors, 0, DOWNLOAD_TILE_SIZE, 0, 0,
-						DOWNLOAD_TILE_SIZE, DOWNLOAD_TILE_SIZE);
+				this.tileBitmap.setPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
+						Tile.TILE_SIZE, Tile.TILE_SIZE);
 			}
 			return true;
 		} catch (IOException e) {
+			Logger.e(e);
 			return false;
 		}
 	}
 
 	@Override
-	byte getMaxZoomLevel() {
-		return ZOOM_MAX;
-	}
+	abstract byte getMaxZoomLevel();
 
 	/**
 	 * Returns the host name of the tile download server.
 	 * 
 	 * @return the server name.
 	 */
-	String getServerHostName() {
-		return SERVER_HOST_NAME;
-	}
+	abstract String getServerHostName();
 
 	@Override
-	String getThreadName() {
+	final String getThreadName() {
 		return THREAD_NAME;
 	}
 
-	@Override
-	void onAttachedToWindow() {
-		// do nothing
-	}
+	/**
+	 * Builds the absolute path to the image file for the requested tile.
+	 * 
+	 * @param tile
+	 *            the tile which requires an image.
+	 * @return the absolute address where the image can be downloaded from.
+	 */
+	abstract String getTilePath(Tile tile);
 
 	@Override
-	void onDetachedFromWindow() {
-		// do nothing
-	}
-
-	@Override
-	void prepareMapGeneration() {
-		this.stringBuilder.setLength(0);
-		this.stringBuilder.append("http://");
-		this.stringBuilder.append(SERVER_HOST_NAME);
-		this.stringBuilder.append("/Tiles/tile/");
-	}
-
-	@Override
-	void setup(Bitmap bitmap) {
+	final void setup(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
-		this.pixelColors = new int[DOWNLOAD_TILE_SIZE * DOWNLOAD_TILE_SIZE];
-		this.stringBuilder = new StringBuilder(128);
+		this.pixelColors = new int[Tile.TILE_SIZE * Tile.TILE_SIZE];
 	}
 }

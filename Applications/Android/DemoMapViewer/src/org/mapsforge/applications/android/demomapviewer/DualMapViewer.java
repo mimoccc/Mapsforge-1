@@ -60,7 +60,7 @@ public class DualMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.mapView1 = new MapView(this, MapViewMode.TILE_DOWNLOAD);
+		this.mapView1 = new MapView(this, MapViewMode.OSMARENDER_TILE_DOWNLOAD);
 		this.mapView1.setClickable(true);
 		this.mapView1.setBuiltInZoomControls(true);
 		this.mapView1.setMoveSpeed(3);

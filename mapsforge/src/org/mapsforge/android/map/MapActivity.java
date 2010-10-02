@@ -58,7 +58,7 @@ public abstract class MapActivity extends Activity {
 
 			editor.clear();
 			if (currentMapView.hasValidCenter()) {
-				if (currentMapView.getMapViewMode() != MapViewMode.TILE_DOWNLOAD
+				if (!currentMapView.getMapViewMode().requiresInternetConnection()
 						&& currentMapView.hasValidMapFile()) {
 					// save the map file
 					editor.putString("mapFile", currentMapView.getMapFile());
@@ -103,7 +103,7 @@ public abstract class MapActivity extends Activity {
 			if (preferences.contains("latitude") && preferences.contains("longitude")
 					&& preferences.contains("zoomLevel")) {
 				try {
-					if (mapView.getMapViewMode() != MapViewMode.TILE_DOWNLOAD
+					if (!mapView.getMapViewMode().requiresInternetConnection()
 							&& preferences.contains("mapFile")) {
 						// get and set the map file
 						mapView.setMapFileFromPreferences(preferences
