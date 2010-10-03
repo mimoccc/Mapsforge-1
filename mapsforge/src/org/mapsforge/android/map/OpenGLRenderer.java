@@ -26,14 +26,14 @@ import android.view.ViewGroup;
 /**
  * A map renderer which uses a OpenGL for drawing.
  */
-class OpenGlMapGenerator extends DatabaseMapGenerator {
-	private static final String THREAD_NAME = "OpenGlMapGenerator";
+class OpenGLRenderer extends DatabaseMapGenerator {
+	private static final String THREAD_NAME = "OpenGLRenderer";
 	private Context context;
 	private GLSurfaceView glSurfaceView;
 	private MapView mapView;
 	private OpenGlMapRenderer renderer;
 
-	OpenGlMapGenerator(Context context, MapView mapView) {
+	OpenGLRenderer(Context context, MapView mapView) {
 		this.context = context;
 		this.mapView = mapView;
 	}

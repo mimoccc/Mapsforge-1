@@ -1073,18 +1073,18 @@ public class MapView extends ViewGroup {
 	private void startMapGeneratorThread() {
 		switch (this.mapViewMode) {
 			case CANVAS_RENDERER:
-				this.mapGenerator = new CanvasMapGenerator();
+				this.mapGenerator = new CanvasRenderer();
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
 			case OPENGL_RENDERER:
-				this.mapGenerator = new OpenGlMapGenerator(this.mapActivity, this);
+				this.mapGenerator = new OpenGLRenderer(this.mapActivity, this);
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
 			case MAPNIK_TILE_DOWNLOAD:
-				this.mapGenerator = new MapnikDownloadMapGenerator();
+				this.mapGenerator = new MapnikTileDownload();
 				break;
 			case OSMARENDER_TILE_DOWNLOAD:
-				this.mapGenerator = new OsmarenderDownloadMapGenerator();
+				this.mapGenerator = new OsmarenderTileDownload();
 				break;
 		}
 

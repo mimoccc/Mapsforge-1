@@ -26,9 +26,9 @@ import android.graphics.Path;
 /**
  * A map renderer which uses a Canvas for drawing.
  */
-class CanvasMapGenerator extends DatabaseMapGenerator {
+class CanvasRenderer extends DatabaseMapGenerator {
 	private static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final String THREAD_NAME = "CanvasMapGenerator";
+	private static final String THREAD_NAME = "CanvasRenderer";
 	private int arrayListIndex;
 	private Canvas canvas;
 	private CircleContainer circleContainer;
@@ -37,8 +37,8 @@ class CanvasMapGenerator extends DatabaseMapGenerator {
 	private byte currentLayer;
 	private byte currentLevel;
 	private Path path;
-	private PointTextContainer pointTextContainer;
 	private WayTextContainer pathTextContainer;
+	private PointTextContainer pointTextContainer;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private SymbolContainer symbolContainer;

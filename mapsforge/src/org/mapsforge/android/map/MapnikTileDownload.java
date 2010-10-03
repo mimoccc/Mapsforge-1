@@ -17,14 +17,15 @@
 package org.mapsforge.android.map;
 
 /**
- * A MapGenerator that downloads map tiles from the Osmarender/Tiles@home openstreetmap server.
+ * A MapGenerator that downloads map tiles from the Mapnik openstreetmap server.
  */
-class OsmarenderDownloadMapGenerator extends TileDownloadMapGenerator {
-	private static final String SERVER_HOST_NAME = "tah.openstreetmap.org";
-	private static final byte ZOOM_MAX = 17;
+class MapnikTileDownload extends TileDownloadMapGenerator {
+	private static final String SERVER_HOST_NAME = "tile.openstreetmap.org";
+	private static final String THREAD_NAME = "MapnikTileDownload";
+	private static final byte ZOOM_MAX = 18;
 	private StringBuilder stringBuilder;
 
-	OsmarenderDownloadMapGenerator() {
+	MapnikTileDownload() {
 		this.stringBuilder = new StringBuilder(128);
 	}
 
@@ -36,6 +37,11 @@ class OsmarenderDownloadMapGenerator extends TileDownloadMapGenerator {
 	@Override
 	String getServerHostName() {
 		return SERVER_HOST_NAME;
+	}
+
+	@Override
+	final String getThreadName() {
+		return THREAD_NAME;
 	}
 
 	@Override
@@ -56,6 +62,6 @@ class OsmarenderDownloadMapGenerator extends TileDownloadMapGenerator {
 		this.stringBuilder.setLength(0);
 		this.stringBuilder.append("http://");
 		this.stringBuilder.append(SERVER_HOST_NAME);
-		this.stringBuilder.append("/Tiles/tile/");
+		this.stringBuilder.append("/");
 	}
 }

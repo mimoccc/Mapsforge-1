@@ -28,7 +28,6 @@ import android.graphics.BitmapFactory;
  * certain tile server, extend this class and implement the abstract methods.
  */
 abstract class TileDownloadMapGenerator extends MapGenerator {
-	private static final String THREAD_NAME = "TileDownloadMapGenerator";
 	private Bitmap decodedBitmap;
 	private InputStream inputStream;
 	private int[] pixelColors;
@@ -80,11 +79,6 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	 * @return the server name.
 	 */
 	abstract String getServerHostName();
-
-	@Override
-	final String getThreadName() {
-		return THREAD_NAME;
-	}
 
 	/**
 	 * Builds the absolute path to the image file for the requested tile.
