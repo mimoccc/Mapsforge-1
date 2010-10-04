@@ -168,6 +168,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final Paint PAINT_MILITARY_BARRACKS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_NAVAL_BASE_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_10_C = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -494,7 +495,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	private void addWayName(String wayName) {
 		// calculate the approximate way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_10.measureText(wayName) + 10;
+		this.wayNameWidth = PAINT_NAME_BLACK_10_C.measureText(wayName) + 10;
 
 		this.previousX = this.coordinates[0][0];
 		this.previousY = this.coordinates[0][1];
@@ -531,7 +532,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						this.wayNamePath[3] = this.previousY;
 					}
 					this.wayNames.add(new WayTextContainer(this.wayNamePath, wayName,
-							PAINT_NAME_BLACK_10));
+							PAINT_NAME_BLACK_10_C));
 					this.wayNameRendered = true;
 					this.skipSegments = 4;
 				}
@@ -565,7 +566,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				}
 			}
 			this.wayNames.add(new WayTextContainer(this.coordinates[0], wayName,
-					PAINT_NAME_BLACK_10));
+					PAINT_NAME_BLACK_10_C));
 		}
 	}
 
@@ -1041,12 +1042,16 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_BLACK_10.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_10.setTextSize(10);
 		PAINT_NAME_BLACK_10.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_10_C.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_10_C.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_10_C.setTextSize(10);
+		PAINT_NAME_BLACK_10_C.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_NAME_BLACK_12.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_12.setTextSize(12);
 		PAINT_NAME_BLACK_12.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_13.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_13.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_13.setTextSize(13);
 		PAINT_NAME_BLACK_13.setColor(Color.rgb(0, 0, 0));
 		PAINT_NAME_BLACK_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
@@ -1094,7 +1099,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		PAINT_NAME_WHITE_STROKE_11.setTextSize(11);
 		PAINT_NAME_WHITE_STROKE_11.setColor(Color.rgb(255, 255, 255));
 		PAINT_NAME_WHITE_STROKE_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_12.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_12.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_12.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_12.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_12.setTextSize(12);
