@@ -100,7 +100,7 @@ public class TurnByTurnDescriptionTest {
 	public void testTurnByTurnDescription() {
 		assertTrue(twoStreets.streets.size() == 2);
 		assertTrue(uTurnCase0.streets.size() == 4);
-		assertTrue(uTurnCase0.streets.get(2).angleFromPreviousStreet == 180d);
+		assertTrue(uTurnCase0.streets.get(2).angleFromStreetLastStreet == 180d);
 		assertFalse(uTurnCase1.toString().contains("between"));
 		assertFalse(shortStreet2LaneCase0.toString().contains("between"));
 	}

@@ -28,25 +28,23 @@ import org.mapsforge.server.routing.IVertex;
 public class DummyEdge implements IEdge {
 	GeoCoordinate[] wayPoints;
 	int id;
-	String name, ref = "";
-	boolean isMotorWayLink, isRoundabout = false;
+	String name = "";
+	String ref = "";
+	String type = "";
+	boolean roundabout = false;
 
-	/**
-	 * @param wayPoints
-	 * @param name
-	 */
 	public DummyEdge(GeoCoordinate[] wayPoints, String name) {
 		this.wayPoints = wayPoints;
 		this.name = name;
 	}
 
-	public DummyEdge(GeoCoordinate[] wayPoints, String name, String ref,
-			boolean isMotorwayLink, boolean isRoundabout) {
+	public DummyEdge(GeoCoordinate[] wayPoints, String name, String ref, String type,
+			boolean roundabout) {
 		this.wayPoints = wayPoints;
 		this.name = name;
 		this.ref = ref;
-		this.isMotorWayLink = isMotorwayLink;
-		this.isRoundabout = isRoundabout;
+		this.type = type;
+		this.roundabout = roundabout;
 	}
 
 	@Override
@@ -66,12 +64,14 @@ public class DummyEdge implements IEdge {
 
 	@Override
 	public IVertex getSource() {
-		return null;
+		DummyVertex src = new DummyVertex(wayPoints[0]);
+		return src;
 	}
 
 	@Override
 	public IVertex getTarget() {
-		return null;
+		DummyVertex target = new DummyVertex(wayPoints[wayPoints.length - 1]);
+		return target;
 	}
 
 	@Override
@@ -90,13 +90,13 @@ public class DummyEdge implements IEdge {
 	}
 
 	@Override
-	public boolean isMotorWayLink() {
-		return isMotorWayLink;
+	public String getType() {
+		return type;
 	}
 
 	@Override
 	public boolean isRoundabout() {
-		return isRoundabout;
+		return roundabout;
 	}
 
 }

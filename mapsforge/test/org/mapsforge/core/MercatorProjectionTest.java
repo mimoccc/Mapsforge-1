@@ -19,7 +19,6 @@ package org.mapsforge.core;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.mapsforge.core.MercatorProjection;
 
 /**
  * Test the MercatorProjection Class
@@ -56,5 +55,40 @@ public class MercatorProjectionTest {
 		assertTrue(java.lang.Math
 				.abs(MercatorProjection.latitudeToMetersY(8.946573850543412) - 1000000.0) < 0.01);
 
+	}
+
+	/**
+	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/
+	 */
+	@Test
+	public void testInverseFunctions() {
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.longitudeToMetersX(
+						MercatorProjection.metersXToLongitude(1000))
+						- 1000) < 0.01);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.longitudeToMetersX(
+						MercatorProjection.metersXToLongitude(123456))
+						- 123456) < 0.01);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.metersXToLongitude(
+						MercatorProjection.longitudeToMetersX(75))
+						- 75) < 0.01);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.metersXToLongitude(
+						MercatorProjection.longitudeToMetersX(13.41862))
+						- 13.41862) < 0.0001);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.latitudeToMetersY(
+						MercatorProjection.metersYToLatitude(1000))
+						- 1000) < 0.01);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.metersYToLatitude(
+						MercatorProjection.latitudeToMetersY(75))
+						- 75) < 0.01);
+		assertTrue(java.lang.Math.abs(
+				MercatorProjection.metersYToLatitude(
+						MercatorProjection.latitudeToMetersY(52.4988))
+						- 52.4988) < 0.0001);
 	}
 }
