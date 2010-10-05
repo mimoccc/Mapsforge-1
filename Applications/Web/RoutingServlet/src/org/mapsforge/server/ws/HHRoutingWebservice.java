@@ -42,9 +42,8 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.RouterFactory;
+import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
-import org.mapsforge.directions.LandmarkBuilder;
 import org.mapsforge.directions.LandmarksFromPerst;
 import org.mapsforge.directions.TurnByTurnDescription;
 
@@ -69,7 +68,9 @@ public class HHRoutingWebservice extends HttpServlet {
 			String hhFilename = props.getProperty("hh.file");
 			System.out.print("Loaded Router from " + hhFilename);
 			long t = System.currentTimeMillis();
-			router = RouterFactory.getRouter(propertiesURI);
+			FileInputStream iStream = new FileInputStream(hhFilename);
+			router = HHRouterServerside.deserialize(iStream);
+			iStream.close();
 			t = System.currentTimeMillis() - t;
 			System.out.println(" in " + t + " milliseconds");
 			
