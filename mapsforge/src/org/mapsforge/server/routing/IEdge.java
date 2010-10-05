@@ -56,6 +56,16 @@ public interface IEdge {
 	public String getName();
 
 	/**
+	 * @return Returns the type of the street. For example motorway, trunk, residential...
+	 */
+	public String getType();
+
+	/**
+	 * @return Returns the type of the street. For example motorway, trunk, residential...
+	 */
+	public boolean isRoundabout();
+
+	/**
 	 * @return Returns the Ref of the street, this can be names of the streets which are higher
 	 *         within the naming hierarchy, e.g. names of motorways.
 	 */
@@ -65,15 +75,5 @@ public interface IEdge {
 	 * @return The weight of this edge representing the costs to travel along this edge.
 	 */
 	public int getWeight();
-
-	/**
-	 * @return Returns true if and only if this edge is part of a roundabout.
-	 */
-	public boolean isRoundabout();
-
-	/**
-	 * @return Returns true if this edge is part of a motorway link.
-	 */
-	public boolean isMotorWayLink();
 
 }

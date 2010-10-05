@@ -34,6 +34,9 @@ import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 
 class RgEdgeNames implements Serializable {
 
+	private static final int HIGHWAYLEVEL_BITMASK = 31;
+	private static final int ROUNDABOUT_BIT = 64;
+
 	private static final long serialVersionUID = 2122661604323386224L;
 
 	private final String[] names;
@@ -65,12 +68,12 @@ class RgEdgeNames implements Serializable {
 		return refs[refsIndex[rgEdgeId]];
 	}
 
-	public boolean isMotorWayLink(int rgEdgeId) {
-		return (flags[rgEdgeId] & 1) == 1;
+	public String getHighwayLevel(int rgEdgeId) {
+		return TagHighway.vk[flags[rgEdgeId] & HIGHWAYLEVEL_BITMASK];
 	}
 
 	public boolean isRoundabout(int rgEdgeId) {
-		return (flags[rgEdgeId] & 2) == 2;
+		return (flags[rgEdgeId] & ROUNDABOUT_BIT) == ROUNDABOUT_BIT;
 	}
 
 	public int size() {
@@ -121,11 +124,9 @@ class RgEdgeNames implements Serializable {
 			}
 			// Set additional flags
 			byte flagByte = 0;
-			if (e.getHighwayLevel().equals(TagHighway.MOTORWAY_LINK)) {
-				flagByte = 1;
-			}
+			flagByte = TagHighway.kv.get(e.getHighwayLevel());
 			if (e.isRoundabout()) {
-				flagByte = (byte) (flagByte + 2);
+				flagByte = (byte) (flagByte + ROUNDABOUT_BIT);
 			}
 			flags[e.getId()] = flagByte;
 		}
@@ -148,8 +149,8 @@ class RgEdgeNames implements Serializable {
 				"osm", "osm");
 		RgEdgeNames edgeNames = importFromDb(conn);
 		for (int i = 0; i < edgeNames.size(); i++) {
-
-			// System.out.println(edgeNames.getName(i) + " " + edgeNames.getRef(i));
+			System.out.println(edgeNames.getName(i) + " " + edgeNames.getRef(i) + " "
+						+ edgeNames.getHighwayLevel(i));
 		}
 	}
 }

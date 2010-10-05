@@ -216,8 +216,8 @@ public class HHRouter implements IRouter {
 				for (int i = 1; i < waypoints.length - 1; i++) {
 					waypoints[i] = new
 							GeoCoordinate(edge.waypoints[(i - 1) * 2],
-							edge.waypoints[((i - 1) * 2) +
-							1]);
+									edge.waypoints[((i - 1) * 2) +
+									1]);
 				}
 				waypoints[waypoints.length - 1] = new GeoCoordinate(target.latitudeE6,
 						target.longitudeE6);
@@ -289,14 +289,16 @@ public class HHRouter implements IRouter {
 		}
 
 		@Override
-		public boolean isMotorWayLink() {
-			return edge.isMotorwayLink;
+		public String getType() {
+			// TODO Auto-generated method stub
+			return "";
 		}
 
 		@Override
 		public boolean isRoundabout() {
 			return edge.isRoundAbout;
 		}
+
 	}
 
 	/**

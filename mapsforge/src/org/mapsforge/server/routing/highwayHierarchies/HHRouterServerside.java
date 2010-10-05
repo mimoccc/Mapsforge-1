@@ -381,9 +381,9 @@ public class HHRouterServerside implements IRouter {
 		}
 
 		@Override
-		public boolean isMotorWayLink() {
+		public String getType() {
 			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
-			return edgeNames.isMotorWayLink(mapping.rgEdgeId);
+			return edgeNames.getHighwayLevel(mapping.rgEdgeId);
 		}
 	}
 
