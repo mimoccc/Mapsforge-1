@@ -22,6 +22,7 @@ import java.util.Vector;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
+import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -37,13 +38,25 @@ import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
  * @author Eike Send
  */
 public class TurnByTurnDescription {
-	private static final int NO_MODE = -1;
-	private static final int MOTORWAY_MODE = 0;
-	private static final int CITY_MODE = 1;
-	private static final int REGIONAL_MODE = 2;
-	private static final double VERY_SHORT_STREET_LENGTH = 30;
+	/** Navigation mode: Not set */
+	public static final int NO_MODE = -1;
+	/** Navigation mode: motorway */
+	public static final int MOTORWAY_MODE = 0;
+	/** Navigation mode: city */
+	public static final int CITY_MODE = 1;
+	/** Navigation mode: regional */
+	public static final int REGIONAL_MODE = 2;
+	private static final double VERY_SHORT_STREET_LENGTH = 20;
 	Vector<TurnByTurnStreet> streets = new Vector<TurnByTurnStreet>();
-	LandmarksFromPerst landmarkService;
+
+	/** landmark generator */
+	public static LandmarksFromPerst landmarkService;
+	private boolean debugstatus = false;
+
+	private void debug(String msg) {
+		if (debugstatus)
+			System.out.println(msg);
+	}
 
 	/**
 	 * Constructs a TurnByTurnDirectionsObject from an array of IEdges as the are provided by
@@ -75,6 +88,7 @@ public class TurnByTurnDescription {
 		TurnByTurnCity endCity = getCityFromCoords(endPoint);
 		// this contains concatenated IEdges and represents the current street / road
 		TurnByTurnStreet currentStreet = new TurnByTurnStreet(edges[0]);
+		PointOfInterest nearestLandmark;
 		// What navigational mode is the current and what was the last one
 		int routingMode = NO_MODE;
 		int lastRoutingMode = NO_MODE;
@@ -125,6 +139,7 @@ public class TurnByTurnDescription {
 			// Now that the mode of travel has been determined we need to figure out if a new
 			// street is to be started
 			startANewStreet = false;
+			debug("EdgeName: " + edgeBeforePoint.getName());
 			switch (routingMode) {
 				case CITY_MODE:
 					startANewStreet = startNewStreetCityMode(lastEdge, edgeBeforePoint,
@@ -143,21 +158,37 @@ public class TurnByTurnDescription {
 			if (lastRoutingMode == NO_MODE) {
 				lastRoutingMode = routingMode;
 			}
-			if (lastRoutingMode != routingMode) {
-				startANewStreet = true;
-			}
+			/*
+			 * if (lastRoutingMode != routingMode) { startANewStreet = true; }
+			 */
 			if (startANewStreet) {
-				if (currentStreet.angleFromStreetLastStreet == -360) {
-					double delta = getAngleOfStreets(lastEdge, edgeBeforePoint);
-					currentStreet.angleFromStreetLastStreet = delta;
-				}
+				currentStreet.addLandmark(routingMode, landmarkService);
+				nearestLandmark = landmarkService.getPOINearStreet(currentStreet.points,
+						routingMode);
+				currentStreet.turnByturnText = getTextDescription(edgeBeforePoint,
+						edgeAfterPoint, nearestLandmark, routingMode);
 				streets.add(currentStreet);
-				if (edgeAfterPoint != null)
+				if (edgeAfterPoint != null) {
 					currentStreet = new TurnByTurnStreet(edgeAfterPoint);
+					if (currentStreet.angleFromStreetLastStreet == -360) {
+						double delta = getAngleOfStreets(edgeBeforePoint, edgeAfterPoint);
+						currentStreet.angleFromStreetLastStreet = delta;
+					}
+				}
 			} else {
+				if (currentStreet.isRoundabout
+						&& decisionPointVertex.getOutboundEdges().length > 1) {
+					currentStreet.exitCount++;
+				}
 				currentStreet.appendCoordinatesFromEdge(edgeAfterPoint);
 			}
 		}
+	}
+
+	private String getTextDescription(IEdge edgeBeforePoint, IEdge edgeAfterPoint,
+			PointOfInterest nearestLandmark, int routingMode) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private boolean isInStartOrDestinationCity(TurnByTurnCity start, TurnByTurnCity end,
@@ -179,51 +210,68 @@ public class TurnByTurnDescription {
 		// also U-Turns are really the sum of two right angle turns
 		if (isUTurn(lastEdge, edgeBeforePoint, edgeAfterPoint)) {
 			currentStreet.angleFromStreetLastStreet = 180;
+			debug("Decision: false, 2nd part of U-turn");
 			return false;
 		}
 		if (haveSameName(edgeBeforePoint, edgeAfterPoint)) {
 			// If a U-Turn is performed an instruction is needed
 			if (isUTurn(edgeBeforePoint, edgeAfterPoint, nextEdge)) {
+				debug("Decision: true, U-turn");
 				return true;
 			}
+			if (isRightAngle(getAngleOfStreets(edgeBeforePoint, edgeAfterPoint))) {
+				debug("Decision: true, right angle in road");
+				return true;
+			}
+			debug("Decision: false, Same Name");
 			return false;
 		}
 		if (isInTwoLaneJunction(lastEdge, edgeBeforePoint, edgeAfterPoint, nextEdge,
 				currentStreet)) {
+
+			debug("Decision: false, two lane junction");
+			return false;
+		}
+
+		debug("Decision: true, default");
+		return true;
+	}
+
+	private boolean startNewStreetRegionalMode(IEdge lastEdge, IEdge edgeBeforePoint,
+			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+		return true;
+	}
+
+	private boolean startNewStreetMotorwayMode(IEdge lastEdge, IEdge edgeBeforePoint,
+			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+		if (haveSameRef(edgeBeforePoint, edgeAfterPoint)) {
 			return false;
 		}
 		return true;
 	}
 
-	private boolean isInTwoLaneJunction(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
-		// If the edge after the decision point is very short and followed by a right angle,
-		// the edgeAfterPoint is part of a two lane junction where the name is the one of
-		// the street coming from the other direction
-		if (isRightAngle(getAngleOfStreets(edgeAfterPoint, nextEdge))
-				&& isVeryShortEdge(edgeAfterPoint)) {
+	private boolean haveSameName(IEdge edge1, IEdge edge2) {
+		if (edge2 == null)
+			return false;
+		if (edge1 == null)
+			return false;
+		if (edge1.getName() == null && edge2.getName() == null)
 			return true;
-		}
-		// If there was a right angle turn between the last edge and the edge before the
-		// decision point and this edge is very short, the edgeBeforePoint is part of a two lane
-		// junction and no instruction is needed, only the name should be that of the actual
-		// street
-		if (isRightAngle(getAngleOfStreets(lastEdge, edgeBeforePoint))
-				&& isVeryShortEdge(edgeBeforePoint) && edgeAfterPoint != null) {
-			currentStreet.name = edgeAfterPoint.getName();
-			return true;
-		}
-		return false;
+		if (edge1.getName() == null || edge2.getName() == null)
+			return false;
+		return edge1.getName().equalsIgnoreCase(edge2.getName());
 	}
 
-	private boolean startNewStreetRegionalMode(IEdge lastEdge, IEdge currentEdge,
-			IEdge nextEdge, IEdge secondNextEdge, TurnByTurnStreet currentStreet) {
-		return true;
-	}
-
-	private boolean startNewStreetMotorwayMode(IEdge lastEdge, IEdge currentEdge,
-			IEdge nextEdge, IEdge secondNextEdge, TurnByTurnStreet currentStreet) {
-		return true;
+	private boolean haveSameRef(IEdge edge1, IEdge edge2) {
+		if (edge2 == null)
+			return false;
+		if (edge1 == null)
+			return false;
+		if (edge1.getRef() == null && edge2.getRef() == null)
+			return true;
+		if (edge1.getRef() == null || edge2.getRef() == null)
+			return false;
+		return edge1.getRef().equalsIgnoreCase(edge2.getRef());
 	}
 
 	private boolean isVeryShortEdge(IEdge edge) {
@@ -237,16 +285,27 @@ public class TurnByTurnDescription {
 				|| (270d - 45d < angle && angle < 270d + 45d);
 	}
 
-	private boolean haveSameName(IEdge edge1, IEdge edge2) {
-		if (edge2 == null)
-			return false;
-		if (edge1 == null)
-			return false;
-		if (edge1.getName() == null && edge2.getName() == null)
+	private boolean isInTwoLaneJunction(IEdge lastEdge, IEdge edgeBeforePoint,
+			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+		// If the edge after the decision point is very short and followed by a right angle,
+		// the edgeAfterPoint is part of a two lane junction where the name is the one of
+		// the street coming from the other direction
+		if (isRightAngle(getAngleOfStreets(edgeAfterPoint, nextEdge))
+				&& isVeryShortEdge(edgeAfterPoint)) {
+			debug("Two lane junction: before");
 			return true;
-		if (edge1.getName() == null || edge2.getName() == null)
-			return false;
-		return edge1.getName().equalsIgnoreCase(edge2.getName());
+		}
+		// If there was a right angle turn between the last edge and the edge before the
+		// decision point and this edge is very short, the edgeBeforePoint is part of a two lane
+		// junction and no instruction is needed, only the name should be that of the actual
+		// street
+		if (isRightAngle(getAngleOfStreets(lastEdge, edgeBeforePoint))
+				&& isVeryShortEdge(edgeBeforePoint) && edgeAfterPoint != null) {
+			debug("Two lane junction: after");
+			currentStreet.name = edgeAfterPoint.getName();
+			return true;
+		}
+		return false;
 	}
 
 	private boolean isMotorway(IEdge curEdge) {
@@ -359,8 +418,8 @@ public class TurnByTurnDescription {
 			System.out.println("Loaded Router in " + time + " ms");
 			time = System.currentTimeMillis();
 			String filename = "c:/uni/berlin_landmarks.dbs.clustered";
-			LandmarksFromPerst landmarkService = new LandmarksFromPerst(filename);
-			TurnByTurnStreet.landmarkService = landmarkService;
+			landmarkService = new LandmarksFromPerst(filename);
+			// TurnByTurnStreet.landmarkService = landmarkService;
 			time = System.currentTimeMillis() - time;
 			System.out.println("Loaded LandmarkBuilder in " + time + " ms");
 			int source = router

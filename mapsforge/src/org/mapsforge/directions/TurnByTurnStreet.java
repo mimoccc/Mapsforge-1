@@ -29,7 +29,7 @@ import org.mapsforge.server.routing.IEdge;
  * 
  * @author Eike
  */
-public class TurnByTurnStreet {
+class TurnByTurnStreet {
 	double length = 0;
 	double angleFromStreetLastStreet = -360;
 	boolean isRoundabout, isMotorwayLink = false;
@@ -39,7 +39,7 @@ public class TurnByTurnStreet {
 	String type = "";
 	PointOfInterest nearestLandmark;
 	int exitCount = 0;
-	public static LandmarksFromPerst landmarkService;
+	String turnByturnText;
 
 	/**
 	 * Constructor for using a single IEdge
@@ -53,11 +53,6 @@ public class TurnByTurnStreet {
 		isRoundabout = edge.isRoundabout();
 		isMotorwayLink = edge.getType() == TagHighway.MOTORWAY_LINK;
 		appendCoordinatesFromEdge(edge);
-
-		if (landmarkService != null) {
-			nearestLandmark = landmarkService.getPOINearStreet(edge);
-		}
-
 	}
 
 	/**
@@ -174,5 +169,10 @@ public class TurnByTurnStreet {
 			}
 		}
 		return result;
+	}
+
+	public void addLandmark(int routingMode, LandmarksFromPerst landmarkService) {
+		if (landmarkService != null)
+			nearestLandmark = landmarkService.getPOINearStreet(this.points, routingMode);
 	}
 }
