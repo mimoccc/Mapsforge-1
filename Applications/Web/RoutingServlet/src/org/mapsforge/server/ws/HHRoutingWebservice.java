@@ -46,6 +46,8 @@ import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 import org.mapsforge.directions.LandmarksFromPerst;
 import org.mapsforge.directions.TurnByTurnDescription;
+import org.mapsforge.directions.TurnByTurnDescriptionToString;
+import org.mapsforge.directions.TurnByTurnStreet;
 
 /**
  * Servlet implementation class HHRoutingWebservice
@@ -104,23 +106,23 @@ public class HHRoutingWebservice extends HttpServlet {
 				out.print("<error>It seems like I was not able to find a route. Sorry about that!</error>");
 				return;
 			}
-			TurnByTurnDescription turnByTurn;
 			if (use_landmarks) {
-				turnByTurn = new TurnByTurnDescription(routeEdges, landmarkService);
-			} else {
-				turnByTurn = new TurnByTurnDescription(routeEdges);
+				TurnByTurnStreet.landmarkService = landmarkService;
 			}
+			TurnByTurnDescription turnByTurn = new TurnByTurnDescription(routeEdges);
+			TurnByTurnDescriptionToString converter = new TurnByTurnDescriptionToString(turnByTurn);
+			
 			String format = request.getParameter("format");
 			if (format.equalsIgnoreCase("json")) {
 				response.setContentType("application/json; charset=UTF-8");
-				out.write(turnByTurn.toJSONString());
+				out.write(converter.toJSONString());
 			} else if (format.equalsIgnoreCase("gpx")) {
 				response.setHeader("Content-Disposition", "attachment; filename=route.gpx");
 				response.setContentType("application/gpx+xml");
-				out.write(turnByTurn.toGPX());
+				out.write(converter.toGPX());
 			} else if (format.equalsIgnoreCase("kml")) {
 				response.setContentType("application/vnd.google-earth.kml+xml");
-				out.write(turnByTurn.toKML());
+				out.write(converter.toKML());
 			} else if (format.equalsIgnoreCase("txt")) {
 				response.setContentType("text/plain");
 				out.write(turnByTurn.toString());
