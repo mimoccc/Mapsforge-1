@@ -35,23 +35,25 @@ public class LineSideTest {
 	@Test
 	public void testUpsideRect() {
 		// These Points form a square
-		GeoCoordinate p1 = new GeoCoordinate(52.5290001, 13.40); // links oben
-		GeoCoordinate p2 = new GeoCoordinate(52.529, 13.410001); // rechts oben
-		GeoCoordinate p3 = new GeoCoordinate(52.5250001, 13.41); // rechts unten
-		GeoCoordinate p4 = new GeoCoordinate(52.525, 13.400001); // links unten
+		GeoCoordinate[] coords = new GeoCoordinate[4];
+		coords[0] = new GeoCoordinate(52.5290001, 13.40); // links oben
+		coords[1] = new GeoCoordinate(52.529, 13.410001); // rechts oben
+		coords[2] = new GeoCoordinate(52.5250001, 13.41); // rechts unten
+		coords[3] = new GeoCoordinate(52.525, 13.400001); // links unten
 
 		// should be in the square
 		GeoCoordinate t1 = new GeoCoordinate(52.527, 13.405);
+
 		// should not be in the square
 		GeoCoordinate f1 = new GeoCoordinate(52.52793, 13.41739);
 		GeoCoordinate f2 = new GeoCoordinate(52.52278, 13.40649);
 		GeoCoordinate f3 = new GeoCoordinate(52.52566, 13.38602);
 		GeoCoordinate f4 = new GeoCoordinate(52.53529, 13.40743);
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t1));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f1));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f2));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f3));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f4));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t1));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f1));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f2));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f3));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f4));
 	}
 
 	/**
@@ -60,10 +62,11 @@ public class LineSideTest {
 	@Test
 	public void testUpsideRectZero() {
 		// These Points form a square
-		GeoCoordinate p1 = new GeoCoordinate(52.529, 13.40); // links oben
-		GeoCoordinate p2 = new GeoCoordinate(52.529, 13.41); // rechts oben
-		GeoCoordinate p3 = new GeoCoordinate(52.525, 13.41); // rechts unten
-		GeoCoordinate p4 = new GeoCoordinate(52.525, 13.40); // links unten
+		GeoCoordinate[] coords = new GeoCoordinate[4];
+		coords[0] = new GeoCoordinate(52.529, 13.40); // links oben
+		coords[1] = new GeoCoordinate(52.529, 13.41); // rechts oben
+		coords[2] = new GeoCoordinate(52.525, 13.41); // rechts unten
+		coords[3] = new GeoCoordinate(52.525, 13.40); // links unten
 
 		// should be in the square
 		GeoCoordinate t1 = new GeoCoordinate(52.527, 13.405);
@@ -72,11 +75,11 @@ public class LineSideTest {
 		GeoCoordinate f2 = new GeoCoordinate(52.52278, 13.40649);
 		GeoCoordinate f3 = new GeoCoordinate(52.52566, 13.38602);
 		GeoCoordinate f4 = new GeoCoordinate(52.53529, 13.40743);
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t1));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f1));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f2));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f3));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f4));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t1));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f1));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f2));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f3));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f4));
 	}
 
 	/**
@@ -85,10 +88,11 @@ public class LineSideTest {
 	@Test
 	public void testTiltedRect() {
 		// These Points form roughly tilted a rectangle
-		GeoCoordinate p1 = new GeoCoordinate(52.52004, 13.40484); // links
-		GeoCoordinate p2 = new GeoCoordinate(52.52381, 13.41194); // oben
-		GeoCoordinate p3 = new GeoCoordinate(52.52187, 13.41658); // rechts
-		GeoCoordinate p4 = new GeoCoordinate(52.51744, 13.40847); // unten
+		GeoCoordinate[] coords = new GeoCoordinate[4];
+		coords[0] = new GeoCoordinate(52.52004, 13.40484); // links
+		coords[1] = new GeoCoordinate(52.52381, 13.41194); // oben
+		coords[2] = new GeoCoordinate(52.52187, 13.41658); // rechts
+		coords[3] = new GeoCoordinate(52.51744, 13.40847); // unten
 
 		// should be in the square
 		GeoCoordinate t1 = new GeoCoordinate(52.52108, 13.41012);
@@ -108,18 +112,18 @@ public class LineSideTest {
 		GeoCoordinate f7 = new GeoCoordinate(52.52230, 13.40752);
 		GeoCoordinate f8 = new GeoCoordinate(52.52317, 13.41512);
 
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t1));
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t2));
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t3));
-		assertTrue(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, t4));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f1));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f2));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f3));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f4));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f5));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f6));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f7));
-		assertFalse(LandmarksFromPerst.isInsideRectangle(p1, p2, p3, p4, f8));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t1));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t2));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t3));
+		assertTrue(LandmarksFromPerst.isInsideRectangle(coords, t4));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f1));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f2));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f3));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f4));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f5));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f6));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f7));
+		assertFalse(LandmarksFromPerst.isInsideRectangle(coords, f8));
 	}
 
 }
