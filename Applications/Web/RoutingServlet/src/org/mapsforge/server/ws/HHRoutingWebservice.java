@@ -47,7 +47,6 @@ import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 import org.mapsforge.directions.LandmarksFromPerst;
 import org.mapsforge.directions.TurnByTurnDescription;
 import org.mapsforge.directions.TurnByTurnDescriptionToString;
-import org.mapsforge.directions.TurnByTurnStreet;
 
 /**
  * Servlet implementation class HHRoutingWebservice
@@ -107,7 +106,7 @@ public class HHRoutingWebservice extends HttpServlet {
 				return;
 			}
 			if (use_landmarks) {
-				TurnByTurnStreet.landmarkService = landmarkService;
+				TurnByTurnDescription.landmarkService = landmarkService;
 			}
 			TurnByTurnDescription turnByTurn = new TurnByTurnDescription(routeEdges);
 			TurnByTurnDescriptionToString converter = new TurnByTurnDescriptionToString(turnByTurn);
