@@ -33,6 +33,7 @@ import org.mapsforge.server.routing.IEdge;
  */
 public class LandmarksFromPerst {
 
+	private static final double MAX_DISTANCE_FROM_STREET = 50d;
 	IPersistenceManager persistenceManager;
 
 	/**
@@ -72,19 +73,21 @@ public class LandmarksFromPerst {
 						MercatorProjection.latitudeToMetersY(source.getLatitude()), length);
 		MathVector streetNormalVector = streetVector.getNormalVector();
 
-		double d = 40.0;
-
 		// Here a bounding box around the source and the target is calculated, which follows the
 		// direction of the street
 		// These are the 2 front Coordinates
-		GeoCoordinate p1 = getOrthogonalGeoCoordinate(target, streetNormalVector, -d);
-		GeoCoordinate p2 = getOrthogonalGeoCoordinate(target, streetNormalVector, d);
+		GeoCoordinate p1 = getOrthogonalGeoCoordinate(target, streetNormalVector,
+				-MAX_DISTANCE_FROM_STREET);
+		GeoCoordinate p2 = getOrthogonalGeoCoordinate(target, streetNormalVector,
+				MAX_DISTANCE_FROM_STREET);
 		// These are the 2 rear Coordinates
-		GeoCoordinate p3 = getOrthogonalGeoCoordinate(source, streetNormalVector, d);
-		GeoCoordinate p4 = getOrthogonalGeoCoordinate(source, streetNormalVector, -d);
+		GeoCoordinate p3 = getOrthogonalGeoCoordinate(source, streetNormalVector,
+				MAX_DISTANCE_FROM_STREET);
+		GeoCoordinate p4 = getOrthogonalGeoCoordinate(source, streetNormalVector,
+				-MAX_DISTANCE_FROM_STREET);
 		// additionally, go a short distance ahead onto the junction
-		p1 = getOrthogonalGeoCoordinate(p1, streetVector, d);
-		p2 = getOrthogonalGeoCoordinate(p2, streetVector, d);
+		p1 = getOrthogonalGeoCoordinate(p1, streetVector, MAX_DISTANCE_FROM_STREET);
+		p2 = getOrthogonalGeoCoordinate(p2, streetVector, MAX_DISTANCE_FROM_STREET);
 
 		// Calculate the outer bounding box of the tilted box
 		GeoCoordinate boundingboxCoordinate1 = getBoundingBoxSouthWest(p1, p2, p3, p4);

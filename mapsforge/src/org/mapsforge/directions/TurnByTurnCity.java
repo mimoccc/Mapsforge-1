@@ -18,10 +18,36 @@ package org.mapsforge.directions;
 
 import org.mapsforge.core.GeoCoordinate;
 
-public class City {
+/**
+ * A lot like a landmark / poi but it has radius as it's a large area
+ * 
+ * @author Eike
+ */
+public class TurnByTurnCity {
 	GeoCoordinate location;
+	String name;
 	int radius;
 
+	/**
+	 * @param location
+	 *            where it's at
+	 * @param name
+	 *            what it's called
+	 * @param radius
+	 *            how far it extends from the center
+	 */
+	public TurnByTurnCity(GeoCoordinate location, String name, int radius) {
+		super();
+		this.location = location;
+		this.name = name;
+		this.radius = radius;
+	}
+
+	/**
+	 * @param decisionPointCoord
+	 *            is the coordinate to be looked at
+	 * @return true if the given coordinate is within the radius of the city
+	 */
 	public boolean contains(GeoCoordinate decisionPointCoord) {
 		// TODO Auto-generated method stub
 		return false;
