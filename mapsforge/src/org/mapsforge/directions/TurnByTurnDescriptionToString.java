@@ -32,6 +32,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
+import org.mapsforge.server.poi.PointOfInterest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -53,12 +55,147 @@ public class TurnByTurnDescriptionToString {
 		this.streets = model.streets;
 	}
 
+	static String getTextDescription(TurnByTurnStreet currentStreet,
+			TurnByTurnStreet lastStreet, int routingMode) {
+		String result = "";
+		String lengthText = "";
+		lengthText = readableLength(currentStreet.length);
+		String turnInstruction = "";
+		// System.out.println(currentStreet.name + " " + currentStreet.ref + " "
+		// + currentStreet.type + " " + currentStreet.routingmode);
+		switch (routingMode) {
+			case TurnByTurnDescription.REGIONAL_MODE:
+				result += "(R)\n\n";
+				break;
+			case TurnByTurnDescription.MOTORWAY_MODE:
+				if (currentStreet.type == TagHighway.MOTORWAY_LINK
+						|| currentStreet.type == TagHighway.TRUNK_LINK) {
+					if (!currentStreet.ref.isEmpty()) {
+						// exiting the motorway
+						result += "Use exit number " + currentStreet.ref + " for " + lengthText;
+					} else {
+						// entering the motorway
+						result += "Go on the motorway link.";
+					}
+				} else {
+					if (currentStreet.type == TagHighway.MOTORWAY
+							|| currentStreet.type == TagHighway.TRUNK) {
+						// is motorway or trunk
+						result = "Go on " + currentStreet.ref + " for " + lengthText;
+					} else {
+						// is primary road
+						result += angleToText(currentStreet.angleFromStreetLastStreet) + "\n";
+						result += "Go on " + currentStreet.ref + " for " + lengthText;
+					}
+				}
+				result += " (M)\n\n";
+				break;
+			case TurnByTurnDescription.CITY_MODE:
+			default:
+				String landmarkText = getCityLandmarkText(currentStreet);
+				turnInstruction = angleToText(currentStreet.angleFromStreetLastStreet);
+				if (currentStreet.isRoundabout) {
+					result += "On roundabout " + currentStreet.name + ", ";
+					result += "take exit " + currentStreet.exitCount + ".\n\n";
+				} else {
+					if (lastStreet == null || lastStreet.isRoundabout) {
+						result += "Go on ";
+					} else {
+						result += turnInstruction + "onto ";
+					}
+					result += currentStreet.name + " for " + lengthText
+							+ ". (C)\n\n";
+					result += landmarkText;
+				}
+				break;
+		}
+		return result;
+	}
+
+	private static String getCityLandmarkText(TurnByTurnStreet currentStreet) {
+		String result = "";
+		if (currentStreet != null && currentStreet.nearestLandmark != null) {
+			PointOfInterest landmark = currentStreet.nearestLandmark;
+			double landmarkBearing = TurnByTurnDescription.getAngleOfCoords(
+					currentStreet.points.firstElement(),
+					currentStreet.points.lastElement(),
+					landmark.getGeoCoordinate());
+			double distanceToJunction = currentStreet.points.lastElement()
+					.sphericalDistance(landmark.getGeoCoordinate());
+			String landmarkName = landmark.getCategory().getTitle();
+			if (landmark.getName() != null)
+				landmarkName += " " + landmark.getName();
+			if (landmarkBearing < 90 || landmarkBearing > 270
+					|| distanceToJunction < LandmarksFromPerst.MAX_DISTANCE_AROUND_JUNCTION) {
+				result += "At the corner of " + landmarkName;
+			} else {
+				result += readableLength(distanceToJunction) + " after " + landmarkName;
+				if (landmarkBearing < 180) {
+					result += " (right side)";
+				} else {
+					result += " (left side)";
+				}
+			}
+			result += "\n";
+		}
+		return result;
+	}
+
+	private static String angleToText(double angle) {
+		int delta = (int) java.lang.Math.round(angle / 45);
+		String turnInstruction = "";
+		switch (delta) {
+			case 0:
+			case 8:
+				turnInstruction += "Go straight ";
+				break;
+			case 1:
+				turnInstruction += "Make a slight right turn ";
+				break;
+			case 2:
+				turnInstruction += "Make a right turn ";
+				break;
+			case 3:
+				turnInstruction += "Make a sharp right turn ";
+				break;
+			case 4:
+				turnInstruction += "Make U-Turn ";
+				break;
+			case 5:
+				turnInstruction += "Make a sharp left turn ";
+				break;
+			case 6:
+				turnInstruction += "Make a left turn ";
+				break;
+			case 7:
+				turnInstruction += "Make slight left turn ";
+				break;
+			default:
+				turnInstruction += "";
+		}
+		return turnInstruction;
+	}
+
+	private static String readableLength(double length) {
+		double result = java.lang.Math.round(length / 10) * 10;
+		String lengthText;
+		if (result > 1000) {
+			result = java.lang.Math.round(result / 100) / 10;
+			lengthText = result + " km";
+		} else {
+			lengthText = (int) result + " m";
+		}
+		return lengthText;
+	}
+
 	@Override
 	public String toString() {
 		String result = "";
-		for (TurnByTurnStreet street : streets) {
-			result += street;
+		for (int i = 0; i < streets.size(); i++) {
+			TurnByTurnStreet s = streets.elementAt(i);
+			result += s.turnByTurnText;
 		}
+		result += "You have reached your destination.\n";
 		return result;
 	}
 
@@ -92,10 +229,9 @@ public class TurnByTurnDescriptionToString {
 					.put("Ref", street.ref)
 					.put("Length", street.length)
 					.put("Angle", street.angleFromStreetLastStreet)
-					// .put("Landmark_Type", street.nearestLandmark.value)
-					// .put("Landmark_Name", street.nearestLandmark.name)
 					.put("Roundabout", street.isRoundabout)
-					.put("Motorway_Link", street.isMotorwayLink));
+					.put("Directions", street.turnByTurnText)
+					.put("Type", street.type));
 			jsonfeatures.put(jsonstreet);
 		}
 		return json.toString(2);

@@ -33,15 +33,16 @@ import org.mapsforge.server.poi.persistence.PersistenceManagerFactory;
  */
 public class LandmarksFromPerst {
 
-	private static final double MAX_SIDE_DISTANCE_FROM_STREET_CITY_MODE = 40d;
+	private static final double MAX_SIDE_DISTANCE_FROM_STREET_CITY_MODE = 20d;
 	private static final double MAX_SIDE_DISTANCE_FROM_STREET_REGIONAL_MODE = 800;
 	private static final double MAX_SIDE_DISTANCE_FROM_STREET_MOTORWAY_MODE = 0;
 
-	private static final double MAX_REAR_DISTANCE_FROM_STREET_CITY_MODE = 300d;
+	private static final double MAX_REAR_DISTANCE_FROM_STREET_CITY_MODE = 150d;
 	private static final double MAX_REAR_DISTANCE_FROM_STREET_REGIONAL_MODE = 5000;
 	private static final double MAX_REAR_DISTANCE_FROM_STREET_MOTORWAY_MODE = 0;
 
-	private static final double MAX_DISTANCE_TO_THE_FRONT = 40d;
+	/** */
+	public static final double MAX_DISTANCE_AROUND_JUNCTION = 30d;
 
 	private static double[] maxDistanceToTheRearArray = new double[3];
 	private static double[] maxDistanceToTheSideArray = new double[3];
@@ -157,10 +158,10 @@ public class LandmarksFromPerst {
 		// additionally, go a short distance ahead onto the junction
 		result[0] = getOrthogonalGeoCoordinate(result[0],
 				streetVector,
-				MAX_DISTANCE_TO_THE_FRONT);
+				MAX_DISTANCE_AROUND_JUNCTION);
 		result[1] = getOrthogonalGeoCoordinate(result[1],
 				streetVector,
-				MAX_DISTANCE_TO_THE_FRONT);
+				MAX_DISTANCE_AROUND_JUNCTION);
 
 		return result;
 	}

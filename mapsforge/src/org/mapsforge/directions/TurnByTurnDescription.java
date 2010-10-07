@@ -22,7 +22,6 @@ import java.util.Vector;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
-import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
@@ -38,6 +37,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
  * @author Eike Send
  */
 public class TurnByTurnDescription {
+	private static final int MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING = 10;
 	/** Navigation mode: Not set */
 	public static final int NO_MODE = -1;
 	/** Navigation mode: motorway */
@@ -51,9 +51,9 @@ public class TurnByTurnDescription {
 
 	/** landmark generator */
 	public static LandmarksFromPerst landmarkService;
-	private boolean debugstatus = false;
+	private static boolean debugstatus = false;
 
-	private void debug(String msg) {
+	private static void debug(String msg) {
 		if (debugstatus)
 			System.out.println(msg);
 	}
@@ -70,7 +70,7 @@ public class TurnByTurnDescription {
 	}
 
 	void generateDirectionsFromPath(IEdge[] edges) {
-		if (edges.length == 0)
+		if (edges == null || edges.length == 0)
 			return;
 		// These are the edges which are used to make decisions based on local information
 		IEdge lastEdge;
@@ -88,7 +88,7 @@ public class TurnByTurnDescription {
 		TurnByTurnCity endCity = getCityFromCoords(endPoint);
 		// this contains concatenated IEdges and represents the current street / road
 		TurnByTurnStreet currentStreet = new TurnByTurnStreet(edges[0]);
-		PointOfInterest nearestLandmark;
+		TurnByTurnStreet lastStreet = null;
 		// What navigational mode is the current and what was the last one
 		int routingMode = NO_MODE;
 		int lastRoutingMode = NO_MODE;
@@ -119,6 +119,7 @@ public class TurnByTurnDescription {
 			// Now the variables are set up.
 			// First determine which kind of navigational level we're on
 			lastRoutingMode = routingMode;
+
 			// if we're on a motorway
 			if (isMotorway(edgeBeforePoint)) {
 				routingMode = MOTORWAY_MODE;
@@ -139,14 +140,12 @@ public class TurnByTurnDescription {
 			// Now that the mode of travel has been determined we need to figure out if a new
 			// street is to be started
 			startANewStreet = false;
-			debug("EdgeName: " + edgeBeforePoint.getName());
 			switch (routingMode) {
 				case CITY_MODE:
 					startANewStreet = startNewStreetCityMode(lastEdge, edgeBeforePoint,
 							edgeAfterPoint, nextEdge, currentStreet);
 					break;
 				case REGIONAL_MODE:
-
 					startANewStreet = startNewStreetRegionalMode(lastEdge, edgeBeforePoint,
 							edgeAfterPoint, nextEdge, currentStreet);
 					break;
@@ -158,20 +157,21 @@ public class TurnByTurnDescription {
 			if (lastRoutingMode == NO_MODE) {
 				lastRoutingMode = routingMode;
 			}
-			/*
-			 * if (lastRoutingMode != routingMode) { startANewStreet = true; }
-			 */
+			if (lastRoutingMode != routingMode) {
+				startANewStreet = true;
+			}
+
 			if (startANewStreet) {
 				currentStreet.addLandmark(routingMode, landmarkService);
-				nearestLandmark = landmarkService.getPOINearStreet(currentStreet.points,
-						routingMode);
-				currentStreet.turnByturnText = getTextDescription(edgeBeforePoint,
-						edgeAfterPoint, nearestLandmark, routingMode);
+				currentStreet.turnByTurnText = TurnByTurnDescriptionToString
+						.getTextDescription(currentStreet, lastStreet, routingMode);
 				streets.add(currentStreet);
+				lastStreet = currentStreet;
 				if (edgeAfterPoint != null) {
 					currentStreet = new TurnByTurnStreet(edgeAfterPoint);
+					currentStreet.routingmode = routingMode;
 					if (currentStreet.angleFromStreetLastStreet == -360) {
-						double delta = getAngleOfStreets(edgeBeforePoint, edgeAfterPoint);
+						double delta = getAngleOfEdges(edgeBeforePoint, edgeAfterPoint);
 						currentStreet.angleFromStreetLastStreet = delta;
 					}
 				}
@@ -183,12 +183,6 @@ public class TurnByTurnDescription {
 				currentStreet.appendCoordinatesFromEdge(edgeAfterPoint);
 			}
 		}
-	}
-
-	private String getTextDescription(IEdge edgeBeforePoint, IEdge edgeAfterPoint,
-			PointOfInterest nearestLandmark, int routingMode) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private boolean isInStartOrDestinationCity(TurnByTurnCity start, TurnByTurnCity end,
@@ -204,12 +198,12 @@ public class TurnByTurnDescription {
 	}
 
 	private boolean startNewStreetCityMode(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint,
-			IEdge nextEdge, TurnByTurnStreet currentStreet) {
+			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
 		// Only one instruction per U-turn is necessary
 		// also U-Turns are really the sum of two right angle turns
 		if (isUTurn(lastEdge, edgeBeforePoint, edgeAfterPoint)) {
 			currentStreet.angleFromStreetLastStreet = 180;
+			currentStreet.name = nextEdge.getName();
 			debug("Decision: false, 2nd part of U-turn");
 			return false;
 		}
@@ -219,7 +213,7 @@ public class TurnByTurnDescription {
 				debug("Decision: true, U-turn");
 				return true;
 			}
-			if (isRightAngle(getAngleOfStreets(edgeBeforePoint, edgeAfterPoint))) {
+			if (isRightAngle(getAngleOfEdges(edgeBeforePoint, edgeAfterPoint))) {
 				debug("Decision: true, right angle in road");
 				return true;
 			}
@@ -228,11 +222,9 @@ public class TurnByTurnDescription {
 		}
 		if (isInTwoLaneJunction(lastEdge, edgeBeforePoint, edgeAfterPoint, nextEdge,
 				currentStreet)) {
-
 			debug("Decision: false, two lane junction");
 			return false;
 		}
-
 		debug("Decision: true, default");
 		return true;
 	}
@@ -274,10 +266,40 @@ public class TurnByTurnDescription {
 		return edge1.getRef().equalsIgnoreCase(edge2.getRef());
 	}
 
-	private boolean isVeryShortEdge(IEdge edge) {
-		GeoCoordinate source = edge.getSource().getCoordinate();
-		GeoCoordinate destination = edge.getTarget().getCoordinate();
-		return source.sphericalDistance(destination) < VERY_SHORT_STREET_LENGTH;
+	private boolean isInTwoLaneJunction(IEdge lastEdge, IEdge edgeBeforePoint,
+			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+		//
+		// debug("isInTwoLaneJunction: " + edgeBeforePoint.getName());
+		// debug("angle before: " +
+		// getAngleOfEdges(lastEdge, edgeBeforePoint));
+		// debug("angle after: " +
+		// getAngleOfEdges(edgeAfterPoint, nextEdge));
+		// debug("isStraight: " +
+		// isStraight(getAngleOfEdges(edgeBeforePoint, edgeAfterPoint)));
+
+		// Case I
+		// If the edge after the decision point is very short and followed by a right angle,
+		// the edgeAfterPoint is part of a two lane junction where the name is the one of
+		// the street coming from the other direction
+		if (isRightAngle(getAngleOfEdges(edgeAfterPoint, nextEdge))
+				&& isStraight(getAngleOfEdges(edgeBeforePoint, edgeAfterPoint))
+				&& isVeryShortEdge(edgeAfterPoint)) {
+			debug("Two lane junction: before / case 1");
+			return true;
+		}
+		// Case II
+		// If there was a right angle turn between the last edge and the edge before the
+		// decision point and this edge is very short, the edgeBeforePoint is part of a two lane
+		// junction and no instruction is needed, only the name should be that of the actual
+		// street
+		if (isRightAngle(getAngleOfEdges(lastEdge, edgeBeforePoint))
+				&& isStraight(getAngleOfEdges(edgeBeforePoint, edgeAfterPoint))
+				&& isVeryShortEdge(edgeBeforePoint) && edgeAfterPoint != null) {
+			debug("Two lane junction: after / case 2");
+			currentStreet.name = edgeAfterPoint.getName();
+			return true;
+		}
+		return false;
 	}
 
 	private boolean isRightAngle(double angle) {
@@ -285,37 +307,24 @@ public class TurnByTurnDescription {
 				|| (270d - 45d < angle && angle < 270d + 45d);
 	}
 
-	private boolean isInTwoLaneJunction(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
-		// If the edge after the decision point is very short and followed by a right angle,
-		// the edgeAfterPoint is part of a two lane junction where the name is the one of
-		// the street coming from the other direction
-		if (isRightAngle(getAngleOfStreets(edgeAfterPoint, nextEdge))
-				&& isVeryShortEdge(edgeAfterPoint)) {
-			debug("Two lane junction: before");
-			return true;
-		}
-		// If there was a right angle turn between the last edge and the edge before the
-		// decision point and this edge is very short, the edgeBeforePoint is part of a two lane
-		// junction and no instruction is needed, only the name should be that of the actual
-		// street
-		if (isRightAngle(getAngleOfStreets(lastEdge, edgeBeforePoint))
-				&& isVeryShortEdge(edgeBeforePoint) && edgeAfterPoint != null) {
-			debug("Two lane junction: after");
-			currentStreet.name = edgeAfterPoint.getName();
-			return true;
-		}
-		return false;
+	private boolean isStraight(double angle) {
+		return (360d - 45d < angle || angle < 45d);
 	}
 
-	private boolean isMotorway(IEdge curEdge) {
+	private boolean isVeryShortEdge(IEdge edge) {
+		GeoCoordinate source = edge.getSource().getCoordinate();
+		GeoCoordinate destination = edge.getTarget().getCoordinate();
+		return source.sphericalDistance(destination) < VERY_SHORT_STREET_LENGTH;
+	}
+
+	static boolean isMotorway(IEdge curEdge) {
 		return curEdge.getType() == TagHighway.MOTORWAY ||
 				curEdge.getType() == TagHighway.MOTORWAY_LINK ||
 				curEdge.getType() == TagHighway.TRUNK ||
 				curEdge.getType() == TagHighway.TRUNK_LINK;
 	}
 
-	private boolean isPrimary(IEdge curEdge) {
+	boolean isPrimary(IEdge curEdge) {
 		return curEdge.getType() == TagHighway.PRIMARY ||
 				curEdge.getType() == TagHighway.PRIMARY_LINK;
 	}
@@ -331,10 +340,10 @@ public class TurnByTurnDescription {
 	 *            current Edge
 	 * @return true if the edges form a u-turn around the 2nd edge
 	 */
-	boolean isUTurn(IEdge edge1, IEdge edge2, IEdge edge3) {
+	private boolean isUTurn(IEdge edge1, IEdge edge2, IEdge edge3) {
 		if (edge1 == null || edge2 == null || edge3 == null)
 			return false;
-		double angleSum = (getAngleOfStreets(edge1, edge2) + getAngleOfStreets(
+		double angleSum = (getAngleOfEdges(edge1, edge2) + getAngleOfEdges(
 				edge2, edge3)) % 360;
 		if (haveSameName(edge1, edge3)
 				&& (170 < angleSum && angleSum < 190)
@@ -353,54 +362,99 @@ public class TurnByTurnDescription {
 	 *            the IEdge of the street after the crossing
 	 * @return the angle between the given streets
 	 */
-	static double getAngleOfStreets(IEdge edge1, IEdge edge2) {
-		double delta = -360.0;
+	private double getAngleOfEdges(IEdge edge1, IEdge edge2) {
 		if (edge1 != null && edge2 != null) {
 			// Let's see if i can get the angle between the last street and this
 			// This is the crossing
 			GeoCoordinate crossingCoordinate = edge2.getAllWaypoints()[0];
 			// The following is the last coordinate before the crossing
-			GeoCoordinate lastCoordinate = edge1.getAllWaypoints()[edge1
+			GeoCoordinate coordinateBefore = edge1.getAllWaypoints()[edge1
 					.getAllWaypoints().length - 2];
 			// Take a coordinate further away from the crossing if it's too close
-			if (lastCoordinate.sphericalDistance(crossingCoordinate) < 10
+			if (coordinateBefore.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
 					&& edge1.getAllWaypoints().length > 2) {
-				lastCoordinate = edge1.getAllWaypoints()[edge1
-						.getAllWaypoints().length - 3];
+				coordinateBefore = edge1.getAllWaypoints()
+						[edge1.getAllWaypoints().length - 3];
 			}
 			// Here comes the first coordinate after the crossing
-			GeoCoordinate firstCoordinate = edge2.getAllWaypoints()[1];
-			if (firstCoordinate.sphericalDistance(crossingCoordinate) < 10
+			GeoCoordinate coordinateAfter = edge2.getAllWaypoints()[1];
+			if (coordinateAfter.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
 					&& edge2.getAllWaypoints().length > 2) {
-				firstCoordinate = edge2.getAllWaypoints()[2];
+				coordinateAfter = edge2.getAllWaypoints()[2];
 			}
-			// calculate angles of the incoming street
-			double deltaY = MercatorProjection.latitudeToMetersY(crossingCoordinate
-					.getLatitude())
-					- MercatorProjection.latitudeToMetersY(lastCoordinate.getLatitude());
-			double deltaX = MercatorProjection.longitudeToMetersX(crossingCoordinate
-					.getLongitude())
-					- MercatorProjection.longitudeToMetersX(lastCoordinate.getLongitude());
-			double alpha = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
-			if (deltaY < 0)
-				alpha += 180; // this compensates for the atan result being between -90 and +90
-			// deg
-			// calculate angles of the outgoing street
-			deltaY = MercatorProjection.latitudeToMetersY(firstCoordinate.getLatitude())
-					- MercatorProjection.latitudeToMetersY(crossingCoordinate.getLatitude());
-			deltaX = MercatorProjection.longitudeToMetersX(firstCoordinate.getLongitude())
-					- MercatorProjection.longitudeToMetersX(crossingCoordinate.getLongitude());
-			double beta = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
-			if (deltaY < 0)
-				beta += 180; // this compensates for the atan result being between -90 and +90
-			// deg
-			// the angle difference is angle of the turn,
-			delta = alpha - beta;
-			// For some reason the angle is conterclockwise, so it's turned around
-			delta = 360 - delta;
-			// make sure there are no values above 360 or below 0
-			delta = java.lang.Math.round((delta + 360) % 360);
+			double delta = getAngleOfCoords(coordinateBefore, crossingCoordinate,
+					coordinateAfter);
+			return delta;
 		}
+		return -360;
+	}
+
+	/**
+	 * Calculate the angle between two TurnByTurnStreet objects
+	 * 
+	 * @param street1
+	 *            the TurnByTurnStreet of the street before the crossing
+	 * @param street2
+	 *            the TurnByTurnStreet of the street after the crossing
+	 * @return the angle between the given streets
+	 */
+	private double getAngleOfStreets(TurnByTurnStreet street1, TurnByTurnStreet street2) {
+		if (street1 != null && street2 != null) {
+			// Let's see if i can get the angle between the last street and this
+			// This is the crossing
+			GeoCoordinate crossingCoordinate = street2.points.firstElement();
+
+			// The following is the last coordinate before the crossing
+			GeoCoordinate coordinateBefore = street1.points.get(street1.points.size() - 2);
+			// Take a coordinate further away from the crossing if it's too close
+			if (coordinateBefore.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
+					&& street1.points.size() > 2) {
+				coordinateBefore = street1.points.get(street1.points.size() - 3);
+			}
+
+			// Here comes the first coordinate after the crossing
+			GeoCoordinate coordinateAfter = street2.points.get(1);
+			// Take a coordinate further away from the crossing if it's too close
+			if (coordinateAfter.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
+					&& street2.points.size() > 2) {
+				coordinateAfter = street2.points.get(2);
+			}
+			double delta = getAngleOfCoords(coordinateBefore, crossingCoordinate,
+					coordinateAfter);
+			return delta;
+		}
+		return -360;
+	}
+
+	static double getAngleOfCoords(GeoCoordinate lastCoordinate,
+			GeoCoordinate crossingCoordinate, GeoCoordinate firstCoordinate) {
+		double delta;
+		// calculate angles of the incoming street
+		double deltaY = MercatorProjection.latitudeToMetersY(crossingCoordinate
+				.getLatitude())
+				- MercatorProjection.latitudeToMetersY(lastCoordinate.getLatitude());
+		double deltaX = MercatorProjection.longitudeToMetersX(crossingCoordinate
+				.getLongitude())
+				- MercatorProjection.longitudeToMetersX(lastCoordinate.getLongitude());
+		double alpha = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
+		if (deltaY < 0)
+			alpha += 180; // this compensates for the atan result being between -90 and +90
+		// deg
+		// calculate angles of the outgoing street
+		deltaY = MercatorProjection.latitudeToMetersY(firstCoordinate.getLatitude())
+				- MercatorProjection.latitudeToMetersY(crossingCoordinate.getLatitude());
+		deltaX = MercatorProjection.longitudeToMetersX(firstCoordinate.getLongitude())
+				- MercatorProjection.longitudeToMetersX(crossingCoordinate.getLongitude());
+		double beta = java.lang.Math.toDegrees(java.lang.Math.atan(deltaX / deltaY));
+		if (deltaY < 0)
+			beta += 180; // this compensates for the atan result being between -90 and +90
+		// deg
+		// the angle difference is angle of the turn,
+		delta = alpha - beta;
+		// For some reason the angle is conterclockwise, so it's turned around
+		delta = 360 - delta;
+		// make sure there are no values above 360 or below 0
+		delta = java.lang.Math.round((delta + 360) % 360);
 		return delta;
 	}
 
@@ -415,24 +469,24 @@ public class TurnByTurnDescription {
 			IRouter router = HHRouterServerside.deserialize(iStream);
 			iStream.close();
 			time = System.currentTimeMillis() - time;
-			System.out.println("Loaded Router in " + time + " ms");
+			debug("Loaded Router in " + time + " ms");
 			time = System.currentTimeMillis();
 			String filename = "c:/uni/berlin_landmarks.dbs.clustered";
 			landmarkService = new LandmarksFromPerst(filename);
-			// TurnByTurnStreet.landmarkService = landmarkService;
 			time = System.currentTimeMillis() - time;
-			System.out.println("Loaded LandmarkBuilder in " + time + " ms");
-			int source = router
-						.getNearestVertex(new GeoCoordinate(52.53156, 13.40274)).getId();
+			debug("Loaded LandmarkBuilder in " + time + " ms");
+			int source = router.getNearestVertex(
+					new GeoCoordinate(52.491300151248, 13.29112072938)).getId();
 			int target = router.getNearestVertex(
-						new GeoCoordinate(52.49246, 13.41722)).getId();
+					new GeoCoordinate(52.474508242192, 13.385945407712)).getId();
+			// int target = router.getNearestVertex(
+			// new GeoCoordinate(52.513011299314, 13.288249038565)).getId();
 			IEdge[] shortestPath = router.getShortestPath(source, target);
 
 			time = System.currentTimeMillis() - time;
 			TurnByTurnDescription directions = new TurnByTurnDescription(shortestPath);
 			time = System.currentTimeMillis() - time;
-			System.out.println("Route directions built in " + time + " ms");
-			System.out.println();
+			debug("Route directions built in " + time + " ms");
 			System.out.println(new TurnByTurnDescriptionToString(directions));
 			landmarkService.persistenceManager.close();
 		} catch (Exception e) {

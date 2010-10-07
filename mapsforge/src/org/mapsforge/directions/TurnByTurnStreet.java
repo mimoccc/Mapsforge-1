@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.server.poi.PointOfInterest;
 import org.mapsforge.server.routing.IEdge;
 
@@ -32,14 +31,15 @@ import org.mapsforge.server.routing.IEdge;
 class TurnByTurnStreet {
 	double length = 0;
 	double angleFromStreetLastStreet = -360;
-	boolean isRoundabout, isMotorwayLink = false;
+	boolean isRoundabout = false;
 	Vector<GeoCoordinate> points = new Vector<GeoCoordinate>();
 	String name = "";
 	String ref = "";
 	String type = "";
 	PointOfInterest nearestLandmark;
-	int exitCount = 0;
-	String turnByturnText;
+	int exitCount = 1;
+	int routingmode;
+	String turnByTurnText;
 
 	/**
 	 * Constructor for using a single IEdge
@@ -50,8 +50,9 @@ class TurnByTurnStreet {
 	TurnByTurnStreet(IEdge edge) {
 		name = edge.getName();
 		ref = edge.getRef();
+		type = edge.getType();
 		isRoundabout = edge.isRoundabout();
-		isMotorwayLink = edge.getType() == TagHighway.MOTORWAY_LINK;
+		routingmode = TurnByTurnDescription.isMotorway(edge) ? 0 : 1;
 		appendCoordinatesFromEdge(edge);
 	}
 
@@ -70,105 +71,6 @@ class TurnByTurnStreet {
 		for (int i = 0; i < newWaypoints.length - 1; i++) {
 			length += newWaypoints[i].sphericalDistance(newWaypoints[i + 1]);
 		}
-	}
-
-	@Override
-	public String toString() {
-		int delta = (int) java.lang.Math.round(angleFromStreetLastStreet / 45);
-		String turnInstruction = "";
-		switch (delta) {
-			case 0:
-			case 8:
-				turnInstruction += "Go straight on ";
-				break;
-			case 1:
-				turnInstruction += "Make a slight right turn onto ";
-				break;
-			case 2:
-				turnInstruction += "Make a right turn onto ";
-				break;
-			case 3:
-				turnInstruction += "Make a sharp right turn onto ";
-				break;
-			case 4:
-				turnInstruction += "Make U-Turn and stay on ";
-				break;
-			case 5:
-				turnInstruction += "Make a sharp left turn onto ";
-				break;
-			case 6:
-				turnInstruction += "Make a left turn onto ";
-				break;
-			case 7:
-				turnInstruction += "Make slight left turn onto ";
-				break;
-			default:
-				turnInstruction += "Go on ";
-		}
-		String result = "";
-		if (!isMotorwayLink && !isRoundabout) {
-			result += turnInstruction;
-			if (!name.equals("")) {
-				result += name;
-				if (!ref.equals("")) {
-					result += " (" + ref + ")";
-				}
-			} else {
-				if (ref.equals("")) {
-					result += "current street";
-				} else {
-					result += ref;
-				}
-			}
-			result += ",\n";
-			length = java.lang.Math.round(length / 10) * 10;
-			result += "stay on it for ";
-			if (length > 1000) {
-				length = java.lang.Math.round(length / 100) / 10;
-				result += length + " km.";
-			} else {
-				result += (int) length + " m.";
-			}
-		} else if (isMotorwayLink) {
-			if (!ref.equals(""))
-				result = "Use motorway link " + ref + " " + name;
-			else
-				result += turnInstruction + "motorway link";
-		} else if (isRoundabout) {
-			result = "go onto the roundabout " + name + "\n";
-			result += "take the ";
-			exitCount++;
-			switch (exitCount) {
-				case 1:
-					result += "first";
-					break;
-				case 2:
-					result += "second";
-					break;
-				case 3:
-					result += "third";
-					break;
-				default:
-					result += exitCount + "th";
-			}
-			result += " exit.";
-		}
-		result += "\n\n";
-		if (nearestLandmark != null) {
-			double targetLandmarkDistance = points.lastElement().sphericalDistance(
-					nearestLandmark.getGeoCoordinate());
-			String landmarkName = nearestLandmark.getCategory().getTitle();
-			if (nearestLandmark.getName() != null)
-				landmarkName += " " + nearestLandmark.getName();
-			landmarkName += "\n";
-			if (targetLandmarkDistance <= 50) {
-				result += "Close to " + landmarkName;
-			} else if (targetLandmarkDistance <= 100) {
-				result += java.lang.Math.round(targetLandmarkDistance / 10) * 10
-						+ " m after " + landmarkName;
-			}
-		}
-		return result;
 	}
 
 	public void addLandmark(int routingMode, LandmarksFromPerst landmarkService) {
