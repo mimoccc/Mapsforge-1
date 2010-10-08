@@ -100,7 +100,7 @@
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
 				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IEdge.*" />
 				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IEdge.*" />
 				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IVertex.*" />
