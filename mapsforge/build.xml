@@ -153,4 +153,18 @@
 		</java>
 	</target>
 	
+	<target name="mapsforge-poi-osmosis.jar create">
+			<mkdir dir="dist" />
+			<!-- Include source code and generated class files, avoid duplicates -->
+			<jar destfile="dist/mapsforge-poi-osmosis-${mapsforge.version}.jar" duplicate="preserve">
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/osmosis/poi/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/osmosis/poi/" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/poi/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/poi/" />
+				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
+				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
+				<fileset refid="info" />
+			</jar>
+	</target>
+	
 </project>

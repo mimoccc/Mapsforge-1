@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.poi.PointOfInterest;
+import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.server.routing.IEdge;
 
 /**

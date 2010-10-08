@@ -21,6 +21,7 @@ import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;

@@ -22,9 +22,9 @@ import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.server.poi.PointOfInterest;
-import org.mapsforge.server.poi.persistence.IPersistenceManager;
-import org.mapsforge.server.poi.persistence.PersistenceManagerFactory;
+import org.mapsforge.poi.PointOfInterest;
+import org.mapsforge.poi.persistence.IPersistenceManager;
+import org.mapsforge.poi.persistence.PersistenceManagerFactory;
 
 /**
  * This is kind of a factory for Landmarks in certain rectangle

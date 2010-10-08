@@ -32,8 +32,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
-import org.mapsforge.server.poi.PointOfInterest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
