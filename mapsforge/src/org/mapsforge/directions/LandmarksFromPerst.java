@@ -76,6 +76,44 @@ public class LandmarksFromPerst {
 	}
 
 	/**
+	 * Finds the nearest City/Town/Village
+	 * 
+	 * @param coord
+	 *            where to look
+	 * @return nearest City
+	 */
+	public PointOfInterest getCity(GeoCoordinate coord) {
+		TreeMap<Double, PointOfInterest> poisByDistance = new TreeMap<Double, PointOfInterest>();
+
+		double latm = MercatorProjection.latitudeToMetersY(coord.getLatitude());
+		double lonm = MercatorProjection.longitudeToMetersX(coord.getLongitude());
+		GeoCoordinate searchBoundingBoxNE = new GeoCoordinate(
+				MercatorProjection.metersYToLatitude(latm + 15000),
+				MercatorProjection.metersXToLongitude(lonm + 15000)
+				);
+		GeoCoordinate searchBoundingBoxSW = new GeoCoordinate(
+				MercatorProjection.metersYToLatitude(latm - 15000),
+				MercatorProjection.metersXToLongitude(lonm - 15000)
+				);
+		Collection<PointOfInterest> poisInBoundingBox =
+				persistenceManager.findInRect(searchBoundingBoxNE, searchBoundingBoxSW,
+						"Settlement");
+		for (PointOfInterest poi : poisInBoundingBox) {
+			double dist = coord.sphericalDistance(poi.getGeoCoordinate());
+			String type = poi.getCategory().getTitle();
+			if ((type.equalsIgnoreCase("village") && dist < 1000) ||
+					(type.equalsIgnoreCase("town") && dist < 2000) ||
+					(type.equalsIgnoreCase("city") && dist < 10000)) {
+				poisByDistance.put(dist, poi);
+			}
+		}
+		if (poisByDistance.isEmpty()) {
+			return null;
+		}
+		return poisByDistance.firstEntry().getValue();
+	}
+
+	/**
 	 * get a landmark near the end of the street / edge
 	 * 
 	 * @param points
@@ -110,9 +148,9 @@ public class LandmarksFromPerst {
 			MathVector streetVector = getVectorFromCoords(source, target, currentLength);
 			MathVector streetNormalVector = streetVector.getNormalVector();
 
-			// Here a bounding box around the source and the target is calculated, which follows
-			// the
-			// direction of the street section
+			// Here a bounding box around the street is calculated, which follows
+			// the direction of the street, ie. it is not parallel to the latitude/longitude
+			// lines
 			pointsAroundStreet = getPointsAroundStreet(maxDistanceToTheSide, source, target,
 					streetVector, streetNormalVector);
 
@@ -257,6 +295,14 @@ public class LandmarksFromPerst {
 		GeoCoordinate sw = new GeoCoordinate(south, west);
 		GeoCoordinate ne = new GeoCoordinate(north, east);
 		return new GeoCoordinate[] { sw, ne };
+	}
+
+	public static void main(String[] args) {
+		LandmarksFromPerst l = new LandmarksFromPerst("c:/uni/berlin_umland_landmarks.perst");
+		PointOfInterest x = l.getCity(new GeoCoordinate(52.8214, 13.3848));
+		if (x != null) {
+			System.out.println(x);
+		}
 	}
 }
 

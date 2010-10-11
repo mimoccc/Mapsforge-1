@@ -65,14 +65,20 @@ public class TurnByTurnDescriptionToString {
 		// + currentStreet.type + " " + currentStreet.routingmode);
 		switch (routingMode) {
 			case TurnByTurnDescription.REGIONAL_MODE:
+				turnInstruction = angleToText(currentStreet.angleFromStreetLastStreet);
+				result += turnInstruction + "onto " + currentStreet.name + " "
+						+ currentStreet.ref;
+				result += passingThroughText(currentStreet);
 				result += "(R)\n\n";
+				result += getTownDescription(currentStreet, lastStreet);
 				break;
 			case TurnByTurnDescription.MOTORWAY_MODE:
 				if (currentStreet.type == TagHighway.MOTORWAY_LINK
 						|| currentStreet.type == TagHighway.TRUNK_LINK) {
 					if (!currentStreet.ref.isEmpty()) {
 						// exiting the motorway
-						result += "Use exit number " + currentStreet.ref + " for " + lengthText;
+						result += "Use exit number " + currentStreet.ref + " ("
+								+ currentStreet.name + ") for " + lengthText;
 					} else {
 						// entering the motorway
 						result += "Go on the motorway link.";
@@ -108,6 +114,31 @@ public class TurnByTurnDescriptionToString {
 					result += landmarkText;
 				}
 				break;
+		}
+		return result;
+	}
+
+	private static String passingThroughText(TurnByTurnStreet currentStreet) {
+		String result = "";
+		if (currentStreet.towns.size() > 0) {
+			for (String town : currentStreet.towns) {
+				if (town != null && !currentStreet.town.getName().equals(town)) {
+					result += town + " ";
+				}
+			}
+			if (result.length() > 0) {
+				result = "\nPassing through " + result + "\n";
+			}
+		}
+		return result;
+	}
+
+	private static String getTownDescription(TurnByTurnStreet currentStreet,
+			TurnByTurnStreet lastStreet) {
+		String result = "";
+		if (currentStreet.town != null
+				&& (lastStreet != null && lastStreet.town != currentStreet.town)) {
+			result = "In " + currentStreet.town.getName() + "\n";
 		}
 		return result;
 	}

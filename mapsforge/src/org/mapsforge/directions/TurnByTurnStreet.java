@@ -40,6 +40,8 @@ class TurnByTurnStreet {
 	int exitCount = 1;
 	int routingmode;
 	String turnByTurnText;
+	PointOfInterest town;
+	Vector<String> towns = new Vector<String>();
 
 	/**
 	 * Constructor for using a single IEdge
@@ -76,5 +78,11 @@ class TurnByTurnStreet {
 	public void addLandmark(int routingMode, LandmarksFromPerst landmarkService) {
 		if (landmarkService != null)
 			nearestLandmark = landmarkService.getPOINearStreet(this.points, routingMode);
+	}
+
+	public void addtown(PointOfInterest city) {
+		if (city != null && !towns.contains(city.getName())) {
+			towns.add(city.getName());
+		}
 	}
 }
