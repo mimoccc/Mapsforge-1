@@ -14,7 +14,9 @@
 	<property name="mapsforge.advancemapviewer.lib.dir"
 	          value="${basedir}/../AdvancedMapViewer/lib" />
 	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
-	
+	<property name="mapsforge.routingservlet.lib.dir"
+	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
+
 	<!-- Path to the properties file that includes the keystore parameters -->
 	<property file="../mapsforge-keystore.properties" />
 
@@ -40,7 +42,7 @@
 	</target>
 
 
-	<!-- Create javadoc for the map package -->
+	<!-- Create javadoc for the android.maps package -->
 	<target name="mapsforge-map javadoc">
 		<mkdir dir="doc/${mapsforge.version}" />
 		<javadoc destdir="doc/${mapsforge.version}"
@@ -48,7 +50,7 @@
 		         access="protected"
 		         additionalparam="-quiet"
 		         classpathref="classpath">
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/*.java" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/maps/*.java" />
 			<!-- Add links to the online Android javadoc reference -->
 			<link href="http://developer.android.com/reference"
 			      offline="true"
@@ -69,14 +71,14 @@
 		<eclipse.refreshLocal resource="DemoMapViewer/lib" depth="infinite" />
 	</target>
 
-	
+
 	<!-- Build, sign and verify the JAR file for mapsforge-map -->
 	<target name="mapsforge-map.jar create">
 		<mkdir dir="dist" />
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="dist/mapsforge-map-${mapsforge.version}.jar" duplicate="preserve">
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/map/" />
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/map/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/maps/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/maps/" />
 			<fileset refid="info" />
 		</jar>
 		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar"
@@ -90,41 +92,48 @@
 			<arg value="dist/mapsforge-map-${mapsforge.version}.jar" />
 		</exec>
 	</target>
-	
+
+
 	<target name="mapsforge-routing.jar create">
-			<mkdir dir="dist" />
-			<!-- Include source code and generated class files, avoid duplicates -->
-			<jar destfile="dist/mapsforge-routing-${mapsforge.version}.jar" duplicate="preserve">
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/graph/osm2rg/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/osm2rg/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IEdge.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IEdge.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IVertex.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IVertex.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IRouter.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IRouter.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/highwayHierarchies/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/DBConnection.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/DBConnection.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/GeoCoordinate.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/GeoCoordinate.*" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/Rect.*" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/Rect.*" />
-				<fileset refid="info" />
-				<manifest>
-					<attribute name="Main-Class" value="org/mapsforge/preprocessing/graph/osm2rg/RgExtractor"/>
-		        </manifest>
-			</jar>
+		<mkdir dir="dist" />
+		<!-- Include source code and generated class files, avoid duplicates -->
+		<jar destfile="dist/mapsforge-routing-${mapsforge.version}.jar" duplicate="preserve">
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/preprocessing/graph/osm2rg/" />
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/preprocessing/graph/osm2rg/" />
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/preprocessing/graph/routingGraphInterface/" />
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IEdge.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IEdge.*" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IVertex.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IVertex.*" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IRouter.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IRouter.*" />
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/server/routing/highwayHierarchies/" />
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/server/routing/highwayHierarchies/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/DBConnection.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/DBConnection.*" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/GeoCoordinate.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/GeoCoordinate.*" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/Rect.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/Rect.*" />
+			<fileset refid="info" />
+			<manifest>
+				<attribute name="Main-Class"
+				           value="org/mapsforge/preprocessing/graph/osm2rg/RgExtractor" />
+			</manifest>
+		</jar>
 	</target>
 
-
-	<property name="mapsforge.routingservlet.lib.dir"
-	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
 
 	<!-- Copy the newly created routing JAR file to the routing servlet project -->
 	<target name="mapsforge-routing.jar copy" depends="mapsforge-routing.jar create">
@@ -134,37 +143,42 @@
 		<eclipse.refreshLocal resource="HHRoutingWebservice" depth="infinite" />
 	</target>
 
+
 	<target name="build highway highrarchies routing file">
 		<java fork="true" classname="org.mapsforge.preprocessing.graph.osm2rg.RgExtractor">
-			<arg value="${basedir}/res/conf/osm2rg.properties" />         
+			<arg value="${basedir}/res/conf/osm2rg.properties" />
 			<classpath>
-				<pathelement location="${mapsforge.bin}"/>
-				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar"/>
-				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar"/>
+				<pathelement location="${mapsforge.bin}" />
+				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar" />
+				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar" />
 			</classpath>
 		</java>
-		<java fork="true" classname="org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation">
-			<arg value="${basedir}/res/conf/hhPreprocessing.properties" />         
+		<java fork="true"
+		      classname="org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation">
+			<arg value="${basedir}/res/conf/hhPreprocessing.properties" />
 			<classpath>
-				<pathelement location="${mapsforge.bin}"/>
-				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar"/>
-				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar"/>
+				<pathelement location="${mapsforge.bin}" />
+				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar" />
+				<pathelement location="${mapsforge.lib}/trove-3.0.0a3.jar" />
 			</classpath>
 		</java>
 	</target>
-	
+
+
 	<target name="mapsforge-poi-osmosis.jar create">
-			<mkdir dir="dist" />
-			<!-- Include source code and generated class files, avoid duplicates -->
-			<jar destfile="dist/mapsforge-poi-osmosis-${mapsforge.version}.jar" duplicate="preserve">
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/osmosis/poi/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/osmosis/poi/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/poi/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/poi/" />
-				<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
-				<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
-				<fileset refid="info" />
-			</jar>
+		<mkdir dir="dist" />
+		<!-- Include source code and generated class files, avoid duplicates -->
+		<jar destfile="dist/mapsforge-poi-osmosis-${mapsforge.version}.jar"
+		     duplicate="preserve">
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/preprocessing/osmosis/poi/" />
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/preprocessing/osmosis/poi/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/poi/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/poi/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
+			<fileset refid="info" />
+		</jar>
 	</target>
-	
 </project>
