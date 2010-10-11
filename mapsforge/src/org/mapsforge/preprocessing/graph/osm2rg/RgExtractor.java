@@ -38,6 +38,7 @@ import org.mapsforge.preprocessing.graph.osm2rg.osmxml.IOsmWayListener;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmNode;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmWay;
 import org.mapsforge.preprocessing.graph.osm2rg.osmxml.OsmXmlParser;
+import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
 import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 import org.xml.sax.SAXException;
@@ -132,7 +133,7 @@ public class RgExtractor {
 								writer.insertVertex(new RgVertex(id,
 										intCoordinateDegreeToDouble(longitudes[id]),
 										intCoordinateDegreeToDouble(latitudes[id]), node
-										.getId()));
+												.getId()));
 							} catch (SQLException e) {
 								e.printStackTrace();
 								while (e.getNextException() != null) {
@@ -223,7 +224,8 @@ public class RgExtractor {
 									}
 								}
 								String wayName = way.getName();
-								if (wayName == null || wayName.equals("")) {
+								if (way.getHighwayLevel() == TagHighway.MOTORWAY_LINK
+										&& (wayName == null || wayName.equals(""))) {
 									if (nodeNames.get(sourceId) != null) {
 										wayName = nodeNames.get(sourceId);
 									}
