@@ -122,7 +122,9 @@ public class TurnByTurnDescriptionToString {
 		String result = "";
 		if (currentStreet.towns.size() > 0) {
 			for (String town : currentStreet.towns) {
-				if (town != null && !currentStreet.town.getName().equals(town)) {
+				if (town != null && currentStreet.town != null
+						&& currentStreet.town.getName() != null
+						&& !currentStreet.town.getName().equals(town)) {
 					result += town + " ";
 				}
 			}
@@ -260,7 +262,6 @@ public class TurnByTurnDescriptionToString {
 					.put("Ref", street.ref)
 					.put("Length", street.length)
 					.put("Angle", street.angleFromStreetLastStreet)
-					.put("Roundabout", street.isRoundabout)
 					.put("Directions", street.turnByTurnText)
 					.put("Type", street.type));
 			jsonfeatures.put(jsonstreet);

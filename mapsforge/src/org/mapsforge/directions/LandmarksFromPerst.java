@@ -296,14 +296,6 @@ public class LandmarksFromPerst {
 		GeoCoordinate ne = new GeoCoordinate(north, east);
 		return new GeoCoordinate[] { sw, ne };
 	}
-
-	public static void main(String[] args) {
-		LandmarksFromPerst l = new LandmarksFromPerst("c:/uni/berlin_umland_landmarks.perst");
-		PointOfInterest x = l.getCity(new GeoCoordinate(52.8214, 13.3848));
-		if (x != null) {
-			System.out.println(x);
-		}
-	}
 }
 
 class MathVector {

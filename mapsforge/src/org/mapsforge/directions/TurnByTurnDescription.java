@@ -52,7 +52,7 @@ public class TurnByTurnDescription {
 
 	/** landmark generator */
 	public static LandmarksFromPerst landmarkService;
-	private static boolean debugstatus = true;
+	private static boolean debugstatus = false;
 
 	private static void debug(String msg) {
 		if (debugstatus)
@@ -84,7 +84,7 @@ public class TurnByTurnDescription {
 		// These don't change in the process, they are the beginning and end of the route
 		GeoCoordinate startPoint = edges[0].getSource().getCoordinate();
 		GeoCoordinate endPoint = edges[edges.length - 1].getTarget().getCoordinate();
-		// TODO: get start and finishing city with radius
+
 		PointOfInterest startCity = landmarkService.getCity(startPoint);
 		PointOfInterest endCity = landmarkService.getCity(endPoint);
 		debug("start:" + startCity);
@@ -196,6 +196,19 @@ public class TurnByTurnDescription {
 				.getCity(decisionPointCoord)));
 	}
 
+	/**
+	 * @param lastEdge
+	 *            the edge before the edge before the decision point
+	 * @param edgeBeforePoint
+	 *            the edge before the decision point
+	 * @param edgeAfterPoint
+	 *            the edge after the decision point
+	 * @param nextEdge
+	 *            the edge after that
+	 * @param currentStreet
+	 *            the current street as a whole
+	 * @return if a new street should be started
+	 */
 	private boolean startNewStreetCityMode(IEdge lastEdge, IEdge edgeBeforePoint,
 			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
 		// Only one instruction per U-turn is necessary
@@ -228,6 +241,19 @@ public class TurnByTurnDescription {
 		return true;
 	}
 
+	/**
+	 * @param lastEdge
+	 *            the edge before the edge before the decision point
+	 * @param edgeBeforePoint
+	 *            the edge before the decision point
+	 * @param edgeAfterPoint
+	 *            the edge after the decision point
+	 * @param nextEdge
+	 *            the edge after that
+	 * @param currentStreet
+	 *            the current street as a whole
+	 * @return if a new street should be started
+	 */
 	private boolean startNewStreetRegionalMode(IEdge lastEdge, IEdge edgeBeforePoint,
 			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
 		// haveSameRef(edgeBeforePoint, edgeAfterPoint)
@@ -244,6 +270,19 @@ public class TurnByTurnDescription {
 		return true;
 	}
 
+	/**
+	 * @param lastEdge
+	 *            the edge before the edge before the decision point
+	 * @param edgeBeforePoint
+	 *            the edge before the decision point
+	 * @param edgeAfterPoint
+	 *            the edge after the decision point
+	 * @param nextEdge
+	 *            the edge after that
+	 * @param currentStreet
+	 *            the current street as a whole
+	 * @return if a new street should be started
+	 */
 	private boolean startNewStreetMotorwayMode(IEdge lastEdge, IEdge edgeBeforePoint,
 			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
 		if (haveSameRef(edgeBeforePoint, edgeAfterPoint)) {
@@ -391,43 +430,6 @@ public class TurnByTurnDescription {
 			if (coordinateAfter.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
 					&& edge2.getAllWaypoints().length > 2) {
 				coordinateAfter = edge2.getAllWaypoints()[2];
-			}
-			double delta = getAngleOfCoords(coordinateBefore, crossingCoordinate,
-					coordinateAfter);
-			return delta;
-		}
-		return -360;
-	}
-
-	/**
-	 * Calculate the angle between two TurnByTurnStreet objects
-	 * 
-	 * @param street1
-	 *            the TurnByTurnStreet of the street before the crossing
-	 * @param street2
-	 *            the TurnByTurnStreet of the street after the crossing
-	 * @return the angle between the given streets
-	 */
-	private double getAngleOfStreets(TurnByTurnStreet street1, TurnByTurnStreet street2) {
-		if (street1 != null && street2 != null) {
-			// Let's see if i can get the angle between the last street and this
-			// This is the crossing
-			GeoCoordinate crossingCoordinate = street2.points.firstElement();
-
-			// The following is the last coordinate before the crossing
-			GeoCoordinate coordinateBefore = street1.points.get(street1.points.size() - 2);
-			// Take a coordinate further away from the crossing if it's too close
-			if (coordinateBefore.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
-					&& street1.points.size() > 2) {
-				coordinateBefore = street1.points.get(street1.points.size() - 3);
-			}
-
-			// Here comes the first coordinate after the crossing
-			GeoCoordinate coordinateAfter = street2.points.get(1);
-			// Take a coordinate further away from the crossing if it's too close
-			if (coordinateAfter.sphericalDistance(crossingCoordinate) < MIN_DISTANCE_TO_JUNCTION_FOR_ANGLE_MEASURING
-					&& street2.points.size() > 2) {
-				coordinateAfter = street2.points.get(2);
 			}
 			double delta = getAngleOfCoords(coordinateBefore, crossingCoordinate,
 					coordinateAfter);
