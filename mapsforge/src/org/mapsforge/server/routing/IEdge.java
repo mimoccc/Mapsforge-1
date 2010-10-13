@@ -72,6 +72,11 @@ public interface IEdge {
 	public String getRef();
 
 	/**
+	 * @return Returns the Destination of the street, usually only available on motorways
+	 */
+	public String getDestination();
+
+	/**
 	 * @return The weight of this edge representing the costs to travel along this edge.
 	 */
 	public int getWeight();

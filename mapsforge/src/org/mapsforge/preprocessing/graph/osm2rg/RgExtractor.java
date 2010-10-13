@@ -110,8 +110,11 @@ public class RgExtractor {
 			latitudes = new int[idMapping.size()];
 			longitudes = new int[idMapping.size()];
 
+			// The HashMap can save the tags of a node.
+
 			final HashMap<Integer, String> nodeRefs = new HashMap<Integer, String>();
 			final HashMap<Integer, String> nodeNames = new HashMap<Integer, String>();
+			final HashMap<Integer, HashMap<String, String>> nodeTags = new HashMap<Integer, HashMap<String, String>>();
 
 			writer.clearTables();
 			writer.flush();
@@ -142,12 +145,22 @@ public class RgExtractor {
 								}
 							}
 						}
-						if (node.getTag("ref") != null) {
-							nodeRefs.put(id, node.getTag("ref"));
+						HashMap<String, String> currentNodeTags = new HashMap<String, String>();
+						// Only save the highway exit numbers and names:
+						if (node.getTag("highway") != null
+								&& node.getTag("highway").equals("motorway_junction")
+								&& ((node.getTag("name") != null) || (node.getTag("ref") != null))) {
+							currentNodeTags.put("highway", node.getTag("highway"));
+							if (node.getTag("ref") != null) {
+								currentNodeTags.put("ref", node.getTag("ref"));
+							}
+							if (node.getTag("name") != null) {
+								currentNodeTags.put("name", node.getTag("name"));
+							}
+							System.out.println(node.getTag("highway") + " "
+									+ node.getTag("ref") + " " + node.getTag("name"));
 						}
-						if (node.getTag("name") != null) {
-							nodeNames.put(id, node.getTag("name"));
-						}
+						nodeTags.put(id, currentNodeTags);
 					}
 				}
 			});
@@ -217,15 +230,32 @@ public class RgExtractor {
 									targetId = idMapping.get(way.getNodeRefs().get(end));
 									oneway = way.isOneway() == 1;
 								}
+								String wayName = way.getName();
+								// this is for motorways and primary roads
 								String wayRef = way.getRef();
-								if (wayRef == null || wayRef.equals("")) {
-									if (nodeRefs.get(sourceId) != null) {
-										wayRef = nodeRefs.get(sourceId);
+								// this is for motorway links which lead onto a highway
+								String wayDestination = way.getTag("destination");
+
+								HashMap<String, String> sourceNodeTags = nodeTags.get(sourceId);
+								if (way.getHighwayLevel().equals(TagHighway.MOTORWAY_LINK)) {
+									// This is for highway exits
+									if (sourceNodeTags.containsKey("highway") &&
+											sourceNodeTags.get("highway")
+													.equals("motorway_junction")) {
+										if (sourceNodeTags.containsKey("name")) {
+											wayName = sourceNodeTags.get("name");
+										}
+										if (sourceNodeTags.containsKey("ref")) {
+											wayRef = sourceNodeTags.get("ref");
+										}
 									}
 								}
-								String wayName = way.getName();
-								if (way.getHighwayLevel() == TagHighway.MOTORWAY_LINK
-										&& (wayName == null || wayName.equals(""))) {
+								if (way.getHighwayLevel() == TagHighway.MOTORWAY_LINK &&
+										nodeRefs.get(sourceId) != null) {
+									wayRef = nodeRefs.get(sourceId);
+
+								}
+								if (way.getHighwayLevel() == TagHighway.MOTORWAY_LINK) {
 									if (nodeNames.get(sourceId) != null) {
 										wayName = nodeNames.get(sourceId);
 									}
@@ -233,7 +263,8 @@ public class RgExtractor {
 
 								writer.insertEdge(new RgEdge(nextEdgeId++, sourceId, targetId,
 										lon, lat, !oneway, way.isUrban(), way.getId(), wayName,
-										distanceMeters, hwyLvl, wayRef, way.isRoundabout()));
+										distanceMeters, hwyLvl, wayRef, way.isRoundabout(),
+										wayDestination));
 
 								if (debug) {
 									System.out.println(sourceId + " -> " + targetId);

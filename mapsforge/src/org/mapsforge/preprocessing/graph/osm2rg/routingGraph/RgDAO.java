@@ -38,7 +38,7 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 	private static final String SQL_COUNT_WAYPOINTS = "SELECT sum(array_length(longitudes, 1) - 2) AS count FROM rg_edge;";
 	private static final String SQL_SELECT_HIGHWAY_LEVELS = "SELECT id, name FROM rg_hwy_lvl;";
 	private static final String SQL_SELECT_VERTICES = "SELECT id, osm_node_id, lon, lat FROM rg_vertex ORDER BY id;";
-	private static final String SQL_SELECT_EDGES = "SELECT id, osm_way_id, source_id, target_id, length_meters, longitudes, latitudes, name, ref, hwy_lvl, undirected, urban, roundabout FROM rg_edge ORDER BY id;";
+	private static final String SQL_SELECT_EDGES = "SELECT id, osm_way_id, source_id, target_id, length_meters, longitudes, latitudes, name, ref, destination, hwy_lvl, undirected, urban, roundabout FROM rg_edge ORDER BY id;";
 
 	private final Connection conn;
 	final HashMap<Integer, String> hwyLvlInt2S;
@@ -222,12 +222,13 @@ public class RgDAO implements IRgDAO<RgVertex, RgEdge> {
 							lon_[i] = lon[i];
 							lat_[i] = lat[i];
 						}
-						return new RgEdge(rs.getInt("id"), rs.getInt("source_id"), rs
-								.getInt("target_id"), lon_, lat_, rs.getBoolean("undirected"),
-								rs.getBoolean("urban"), rs.getLong("osm_way_id"), rs
-										.getString("name"), rs.getDouble("length_meters"),
-								hwyLvlInt2S.get(rs.getInt("hwy_lvl")), rs.getString("ref"), rs
-										.getBoolean("roundabout"));
+						return new RgEdge(rs.getInt("id"), rs.getInt("source_id"),
+								rs.getInt("target_id"), lon_, lat_,
+								rs.getBoolean("undirected"), rs.getBoolean("urban"),
+								rs.getLong("osm_way_id"), rs.getString("name"),
+								rs.getDouble("length_meters"),
+								hwyLvlInt2S.get(rs.getInt("hwy_lvl")), rs.getString("ref"),
+								rs.getBoolean("roundabout"), rs.getString("destination"));
 					}
 					return null;
 

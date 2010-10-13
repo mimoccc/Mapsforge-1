@@ -34,18 +34,21 @@ class RgDbWriter {
 
 	private static final int BATCH_SIZE = 1000;
 
-	private static final String SQL_INSERT_VERTEX = "INSERT INTO rg_vertex (" + "id, "
-			+ "osm_node_id, " + "lon, " + "lat " + ") VALUES (" + "?, " + "?, " + "?, " + "? "
-			+ ");";
+	private static final String SQL_INSERT_VERTEX =
+			"INSERT INTO rg_vertex "
+					+ "(id, osm_node_id, lon, lat) VALUES "
+					+ "(?, ?, ?, ?);";
 
-	private final static String SQL_INSERT_EDGE = "INSERT INTO rg_edge ( " + "id, "
-			+ "source_id, " + "target_id, " + "osm_way_id, " + "name, " + "ref, "
-			+ "length_meters, " + "undirected, " + "urban, " + "roundabout, " + "hwy_lvl, "
-			+ "longitudes, " + "latitudes " + ") VALUES ( " + "?, " + "?, " + "?, " + "?, "
-			+ "?, " + "?, " + "?, " + "?, " + "?, " + "?, " + "?, "
-			+ "? :: DOUBLE PRECISION[], " + "? :: DOUBLE PRECISION[] " + ");";
-	private final static String SQL_INSERT_EDGE_CLASSES = "INSERT INTO rg_hwy_lvl (" + "id, "
-			+ "name " + ") VALUES (" + "?, " + "? " + ");";
+	private final static String SQL_INSERT_EDGE =
+			"INSERT INTO rg_edge "
+					+ "(id, source_id, target_id, osm_way_id, name, ref, destination,"
+					+ "length_meters, undirected, urban, roundabout, hwy_lvl, "
+					+ "longitudes, latitudes ) VALUES "
+					+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+					+ "? :: DOUBLE PRECISION[], ? :: DOUBLE PRECISION[]);";
+
+	private final static String SQL_INSERT_EDGE_CLASSES =
+			"INSERT INTO rg_hwy_lvl (id, name) VALUES (?, ?);";
 
 	private final Connection conn;
 	private final PreparedStatement pstmtInsertVertex, pstmtInsertEdge;
@@ -101,13 +104,14 @@ class RgDbWriter {
 		pstmtInsertEdge.setLong(4, e.getOsmWayId());
 		pstmtInsertEdge.setString(5, e.getName());
 		pstmtInsertEdge.setString(6, e.getRef());
-		pstmtInsertEdge.setDouble(7, e.getLengthMeters());
-		pstmtInsertEdge.setBoolean(8, e.isUndirected());
-		pstmtInsertEdge.setBoolean(9, e.isUrban());
-		pstmtInsertEdge.setBoolean(10, e.isRoundabout());
-		pstmtInsertEdge.setInt(11, highwayLevelToId.get(e.getHighwayLevel()));
-		pstmtInsertEdge.setString(12, doubleArrayToSqlString(e.getLongitudes()));
-		pstmtInsertEdge.setString(13, doubleArrayToSqlString(e.getLatitudes()));
+		pstmtInsertEdge.setString(7, e.getDestination());
+		pstmtInsertEdge.setDouble(8, e.getLengthMeters());
+		pstmtInsertEdge.setBoolean(9, e.isUndirected());
+		pstmtInsertEdge.setBoolean(10, e.isUrban());
+		pstmtInsertEdge.setBoolean(11, e.isRoundabout());
+		pstmtInsertEdge.setInt(12, highwayLevelToId.get(e.getHighwayLevel()));
+		pstmtInsertEdge.setString(13, doubleArrayToSqlString(e.getLongitudes()));
+		pstmtInsertEdge.setString(14, doubleArrayToSqlString(e.getLatitudes()));
 		pstmtInsertEdge.addBatch();
 		if ((++insertEdgeCount) % BATCH_SIZE == 0) {
 			pstmtInsertEdge.executeBatch();

@@ -99,4 +99,10 @@ public class DummyEdge implements IEdge {
 		return roundabout;
 	}
 
+	@Override
+	public String getDestination() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

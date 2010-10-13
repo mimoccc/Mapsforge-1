@@ -185,15 +185,20 @@ public class RGGenerator {
 						// which should be added TODO : add missing values!
 						edges
 								.add(new RgEdge(edge_id++, graph_nodes
-								.get(previous_junction_node
-								.getId()), graph_nodes
-								.get(current_node.getId()), longitudes
-								.toArray(), latitudes.toArray(), !current_way.isOneway(),
-								current_way
-										.isUrban(), current_way.getId(), current_way.getName(),
-								edge_length,
-								current_way.getHighwayLevel().toString(), "" /* TODO ref */,
-								false /* TODO is roundabout */));
+										.get(previous_junction_node
+												.getId()), graph_nodes
+										.get(current_node.getId()), longitudes
+										.toArray(), latitudes.toArray(), !current_way
+										.isOneway(),
+										current_way
+												.isUrban(), current_way.getId(), current_way
+												.getName(),
+										edge_length,
+										current_way.getHighwayLevel().toString(),
+										current_way
+												.getTag("ref"),
+										false /* TODO is roundabout */, current_way
+												.getTag("destination")));
 
 						// current node is now previous junction node
 						previous_junction_node = current_node;

@@ -31,6 +31,7 @@ public class RgEdge implements IRgEdge {
 	private final long osmWayId;
 	private final String name;
 	private final String ref; // See http://wiki.openstreetmap.org/wiki/Map_Features#References
+	private final String destination; // See http://wiki.openstreetmap.org/wiki/Key:destination
 	private final String hwyLevel;
 
 	/**
@@ -60,10 +61,13 @@ public class RgEdge implements IRgEdge {
 	 *            The ref key as it is found in the OSM data
 	 * @param isRoundabout
 	 *            Whether or not this is a roundabout
+	 * @param destination
+	 *            Motorway links have a destination which can be used to identify the link
 	 */
 	public RgEdge(int id, int sourceId, int targetId, double[] longitudes, double[] latitudes,
 			boolean isUndirected, boolean isUrban, long osmWayId, String name,
-			double lengthMeters, String hwyLevel, String ref, boolean isRoundabout) {
+			double lengthMeters, String hwyLevel, String ref, boolean isRoundabout,
+			String destination) {
 		this.id = id;
 		this.sourceId = sourceId;
 		this.targetId = targetId;
@@ -75,6 +79,7 @@ public class RgEdge implements IRgEdge {
 		this.osmWayId = osmWayId;
 		this.name = name;
 		this.ref = ref;
+		this.destination = destination;
 		this.lengthMeters = lengthMeters;
 		this.hwyLevel = hwyLevel;
 	}
@@ -144,6 +149,13 @@ public class RgEdge implements IRgEdge {
 	 */
 	public String getRef() {
 		return ref;
+	}
+
+	/**
+	 * @return destination of motorway or motorway link
+	 */
+	public String getDestination() {
+		return destination;
 	}
 
 	/**

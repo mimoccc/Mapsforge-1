@@ -36,6 +36,7 @@ class TurnByTurnStreet {
 	String name = "";
 	String ref = "";
 	String type = "";
+	String destination = "";
 	PointOfInterest nearestLandmark;
 	int exitCount = 1;
 	int routingmode;
@@ -53,6 +54,7 @@ class TurnByTurnStreet {
 		name = edge.getName();
 		ref = edge.getRef();
 		type = edge.getType();
+		destination = edge.getDestination();
 		isRoundabout = edge.isRoundabout();
 		routingmode = TurnByTurnDescription.isMotorway(edge) ? 0 : 1;
 		appendCoordinatesFromEdge(edge);
@@ -65,13 +67,15 @@ class TurnByTurnStreet {
 	 *            The edge to take the GeoCoordinates from
 	 */
 	void appendCoordinatesFromEdge(IEdge edge) {
-		GeoCoordinate[] newWaypoints = edge.getAllWaypoints();
-		if (points.size() > 0 && newWaypoints[0].equals(points.lastElement())) {
-			points.removeElementAt(points.size() - 1);
-		}
-		points.addAll(Arrays.asList(edge.getAllWaypoints()));
-		for (int i = 0; i < newWaypoints.length - 1; i++) {
-			length += newWaypoints[i].sphericalDistance(newWaypoints[i + 1]);
+		if (edge != null) {
+			GeoCoordinate[] newWaypoints = edge.getAllWaypoints();
+			if (points.size() > 0 && newWaypoints[0].equals(points.lastElement())) {
+				points.removeElementAt(points.size() - 1);
+			}
+			points.addAll(Arrays.asList(edge.getAllWaypoints()));
+			for (int i = 0; i < newWaypoints.length - 1; i++) {
+				length += newWaypoints[i].sphericalDistance(newWaypoints[i + 1]);
+			}
 		}
 	}
 

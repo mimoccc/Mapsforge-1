@@ -84,11 +84,14 @@ public class TurnByTurnDescription {
 		// These don't change in the process, they are the beginning and end of the route
 		GeoCoordinate startPoint = edges[0].getSource().getCoordinate();
 		GeoCoordinate endPoint = edges[edges.length - 1].getTarget().getCoordinate();
-
-		PointOfInterest startCity = landmarkService.getCity(startPoint);
-		PointOfInterest endCity = landmarkService.getCity(endPoint);
-		debug("start:" + startCity);
-		debug("end:" + endCity);
+		PointOfInterest startCity = null;
+		PointOfInterest endCity = null;
+		if (landmarkService != null) {
+			startCity = landmarkService.getCity(startPoint);
+			endCity = landmarkService.getCity(endPoint);
+			debug("start:" + startCity);
+			debug("end:" + endCity);
+		}
 
 		// this contains concatenated IEdges and represents the current street / road
 		TurnByTurnStreet currentStreet = new TurnByTurnStreet(edges[0]);
@@ -192,8 +195,11 @@ public class TurnByTurnDescription {
 	private boolean isInStartOrDestinationCity(PointOfInterest startCity,
 			PointOfInterest endCity,
 			GeoCoordinate decisionPointCoord) {
-		return ((startCity == landmarkService.getCity(decisionPointCoord)) || (endCity == landmarkService
-				.getCity(decisionPointCoord)));
+		if (landmarkService != null) {
+			return ((startCity == landmarkService.getCity(decisionPointCoord)) || (endCity == landmarkService
+					.getCity(decisionPointCoord)));
+		}
+		return false;
 	}
 
 	/**
@@ -257,16 +263,20 @@ public class TurnByTurnDescription {
 	private boolean startNewStreetRegionalMode(IEdge lastEdge, IEdge edgeBeforePoint,
 			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
 		// haveSameRef(edgeBeforePoint, edgeAfterPoint)
-		currentStreet.addtown(landmarkService.getCity(
-				edgeBeforePoint.getTarget().getCoordinate()));
+		if (landmarkService != null) {
+			currentStreet.addtown(landmarkService.getCity(
+					edgeBeforePoint.getTarget().getCoordinate()));
+		}
 		if (isStraight(getAngleOfEdges(edgeBeforePoint, edgeAfterPoint))) {
 			// System.out.println("Regional mode: "
 			// + landmarkService.getCity(edgeAfterPoint.getTarget().getCoordinate()));
 
 			return false;
 		}
-		currentStreet.town = landmarkService.getCity(
-				edgeBeforePoint.getTarget().getCoordinate());
+		if (landmarkService != null) {
+			currentStreet.town = landmarkService.getCity(
+					edgeBeforePoint.getTarget().getCoordinate());
+		}
 		return true;
 	}
 
@@ -477,14 +487,14 @@ public class TurnByTurnDescription {
 	public static void main(String[] args) {
 		try {
 			long time = System.currentTimeMillis();
-			FileInputStream iStream = new FileInputStream("C:/uni/bb_car.hh");
+			FileInputStream iStream = new FileInputStream("C:/uni/niedersachsen_car.hh");
 			IRouter router = HHRouterServerside.deserialize(iStream);
 			iStream.close();
 			time = System.currentTimeMillis() - time;
 			debug("Loaded Router in " + time + " ms");
 			time = System.currentTimeMillis();
 			// String filename = "c:/uni/berlin_landmarks.dbs.clustered";
-			String filename = "c:/uni/berlin_umland_landmarks.perst";
+			String filename = "c:/uni/niedersachsen.perst";
 
 			landmarkService = new LandmarksFromPerst(filename);
 			time = System.currentTimeMillis() - time;
@@ -497,9 +507,9 @@ public class TurnByTurnDescription {
 			// new GeoCoordinate(52.513011299314, 13.288249038565)).getId();
 			// Long haul using all modes of travel:
 			int source = router.getNearestVertex(
-					new GeoCoordinate(52.564135686471, 12.563350837384)).getId();
+					new GeoCoordinate(53.032582591161, 8.6618994748688)).getId();
 			int target = router.getNearestVertex(
-					new GeoCoordinate(52.375907595881, 12.933628485536)).getId();
+					new GeoCoordinate(53.134937444613, 8.2331393661737)).getId();
 			IEdge[] shortestPath = router.getShortestPath(source, target);
 
 			time = System.currentTimeMillis() - time;

@@ -78,6 +78,13 @@ CREATE TABLE hh_lvl_stats
 	CONSTRAINT chk CHECK (lvl >= 0)  
 );
 
+ALTER TABLE hh_edge OWNER TO osm;
+ALTER TABLE hh_vertex OWNER TO osm;
+ALTER TABLE hh_vertex_lvl OWNER TO osm;
+ALTER TABLE hh_lvl_stats OWNER TO osm;
+ALTER TABLE hh_graph_properties OWNER TO osm;
+ALTER TABLE hh_distance_table_row OWNER TO osm;
+
 /* DIRTY POSTGRES 8.3.? WORKAROUND FOR THE MISSING FUCNTION 'array_length'
 
 CREATE OR REPLACE FUNCTION array_length(arr DOUBLE PRECISION[], dimension INTEGER)
@@ -91,11 +98,5 @@ BEGIN
 	RETURN ret;
 END;
 $$ LANGUAGE 'plpgsql';
-
-*/
-
-
-
-
 
 */

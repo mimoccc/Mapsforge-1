@@ -164,4 +164,15 @@ public class OsmWay extends OsmElement {
 		return v;
 	}
 
+	/**
+	 * @return destination tag, stating which way it is going
+	 */
+	public String getDestination() {
+		String v = getTag("destination");
+		if (v == null) {
+			return DEFAULT_TAG_VALUE_NAME;
+		}
+		return v;
+	}
+
 }

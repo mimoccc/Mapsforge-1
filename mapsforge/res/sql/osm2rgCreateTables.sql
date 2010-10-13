@@ -22,6 +22,7 @@
 		osm_way_id BIGINT NOT NULL,
 	 	name VARCHAR NOT NULL, 
 	 	ref VARCHAR NOT NULL, 
+	 	destination VARCHAR, 
 	 	length_meters DOUBLE PRECISION NOT NULL,
 		undirected BOOLEAN NOT NULL,
 		urban BOOLEAN NOT NULL, 

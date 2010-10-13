@@ -43,15 +43,19 @@ class RgEdgeNames implements Serializable {
 	private final int[] namesIndex;
 	private final String[] refs;
 	private final int[] refsIndex;
+	private final String[] destinations;
+	private final int[] destinationIndex;
 	private final byte[] flags;
 
 	private RgEdgeNames(String[] names, int[] namesIndex, String[] refs, int[] refsIndex,
-			byte[] flags) {
+			byte[] flags, String[] destinations, int[] destinationIndex) {
 		this.names = names;
 		this.namesIndex = namesIndex;
 		this.refs = refs;
 		this.refsIndex = refsIndex;
 		this.flags = flags;
+		this.destinations = destinations;
+		this.destinationIndex = destinationIndex;
 	}
 
 	public String getName(int rgEdgeId) {
@@ -66,6 +70,14 @@ class RgEdgeNames implements Serializable {
 			return "";
 		}
 		return refs[refsIndex[rgEdgeId]];
+	}
+
+	public String getDestination(int rgEdgeId) {
+		if (rgEdgeId < 0 || rgEdgeId >= destinationIndex.length
+				|| destinationIndex[rgEdgeId] == -1) {
+			return "";
+		}
+		return destinations[destinationIndex[rgEdgeId]];
 	}
 
 	public String getHighwayLevel(int rgEdgeId) {
@@ -94,16 +106,19 @@ class RgEdgeNames implements Serializable {
 
 		int[] namesIndex = new int[rg.getNumEdges()];
 		int[] refsIndex = new int[rg.getNumEdges()];
+		int[] destinationIndex = new int[rg.getNumEdges()];
 		byte[] flags = new byte[rg.getNumEdges()];
 
 		int counter = 0;
 		// put all names on a map
 		TObjectIntHashMap<String> namesMap = new TObjectIntHashMap<String>();
 		TObjectIntHashMap<String> refsMap = new TObjectIntHashMap<String>();
+		TObjectIntHashMap<String> destinationMap = new TObjectIntHashMap<String>();
 		for (Iterator<RgEdge> iter = rg.getEdges().iterator(); iter.hasNext();) {
 			RgEdge e = iter.next();
 			String name = e.getName();
 			String ref = e.getRef();
+			String destination = e.getDestination();
 			if (name != null && !name.isEmpty()) {
 				if (!namesMap.containsKey(name)) {
 					namesMap.put(name, counter++);
@@ -122,6 +137,15 @@ class RgEdgeNames implements Serializable {
 			} else {
 				refsIndex[e.getId()] = -1;
 			}
+			if (destination != null && !destination.isEmpty()) {
+				if (!destinationMap.containsKey(destination)) {
+					destinationMap.put(destination, counter++);
+				}
+				int offset = destinationMap.get(destination);
+				destinationIndex[e.getId()] = offset;
+			} else {
+				destinationIndex[e.getId()] = -1;
+			}
 			// Set additional flags
 			byte flagByte = 0;
 			flagByte = TagHighway.kv.get(e.getHighwayLevel());
@@ -133,6 +157,7 @@ class RgEdgeNames implements Serializable {
 
 		String[] names = new String[counter];
 		String[] refs = new String[counter];
+		String[] destinations = new String[counter];
 		for (Object s : namesMap.keys()) {
 			String s1 = (String) s;
 			names[namesMap.get(s)] = s1;
@@ -141,7 +166,13 @@ class RgEdgeNames implements Serializable {
 			String s1 = (String) s;
 			refs[refsMap.get(s)] = s1;
 		}
-		return new RgEdgeNames(names, namesIndex, refs, refsIndex, flags);
+		for (Object s : destinationMap.keys()) {
+			String s1 = (String) s;
+			destinations[destinationMap.get(s)] = s1;
+		}
+
+		return new RgEdgeNames(names, namesIndex, refs, refsIndex, flags, destinations,
+				destinationIndex);
 	}
 
 	public static void main(String[] args) throws SQLException {
@@ -149,8 +180,9 @@ class RgEdgeNames implements Serializable {
 				"osm", "osm");
 		RgEdgeNames edgeNames = importFromDb(conn);
 		for (int i = 0; i < edgeNames.size(); i++) {
-			System.out.println(edgeNames.getName(i) + " " + edgeNames.getRef(i) + " "
-						+ edgeNames.getHighwayLevel(i));
+			if (!edgeNames.getDestination(i).isEmpty())
+				System.out.println(edgeNames.getName(i) + " " + edgeNames.getRef(i) + " "
+						+ edgeNames.getHighwayLevel(i) + " " + edgeNames.getDestination(i));
 		}
 	}
 }

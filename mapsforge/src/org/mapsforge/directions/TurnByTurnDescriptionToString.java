@@ -77,17 +77,27 @@ public class TurnByTurnDescriptionToString {
 						|| currentStreet.type == TagHighway.TRUNK_LINK) {
 					if (!currentStreet.ref.isEmpty()) {
 						// exiting the motorway
-						result += "Use exit number " + currentStreet.ref + " ("
-								+ currentStreet.name + ") for " + lengthText;
+						result += "Use exit number " + currentStreet.ref + " ";
+						if (!currentStreet.name.isEmpty()) {
+							result += "(" + currentStreet.name + ") ";
+						}
+						result += "for " + lengthText;
 					} else {
 						// entering the motorway
-						result += "Go on the motorway link.";
+						result += "Go on the motorway ";
+						if (currentStreet.destination != null) {
+							result += "going to " + currentStreet.destination;
+						}
 					}
 				} else {
 					if (currentStreet.type == TagHighway.MOTORWAY
 							|| currentStreet.type == TagHighway.TRUNK) {
 						// is motorway or trunk
-						result = "Go on " + currentStreet.ref + " for " + lengthText;
+						result += "Go on " + currentStreet.ref + " ";
+						if (!currentStreet.destination.isEmpty()) {
+							result += "(" + currentStreet.destination + ") ";
+						}
+						result += "for " + lengthText;
 					} else {
 						// is primary road
 						result += angleToText(currentStreet.angleFromStreetLastStreet) + "\n";

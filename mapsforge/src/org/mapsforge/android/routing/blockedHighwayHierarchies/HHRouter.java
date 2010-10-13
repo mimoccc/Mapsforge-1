@@ -299,6 +299,12 @@ public class HHRouter implements IRouter {
 			return edge.isRoundAbout;
 		}
 
+		@Override
+		public String getDestination() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
 	}
 
 	/**

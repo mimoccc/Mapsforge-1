@@ -375,6 +375,12 @@ public class HHRouterServerside implements IRouter {
 		}
 
 		@Override
+		public String getDestination() {
+			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
+			return edgeNames.getDestination(mapping.rgEdgeId);
+		}
+
+		@Override
 		public boolean isRoundabout() {
 			EdgeMapping mapping = mapper.mapFromHHEdgeId(e.getId());
 			return edgeNames.isRoundabout(mapping.rgEdgeId);
