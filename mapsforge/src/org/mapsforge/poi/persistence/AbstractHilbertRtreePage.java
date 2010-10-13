@@ -243,11 +243,11 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	public void find(S shape, ArrayList<T> result, int level) {
 		PerstQueryTracer.getInstance().incrementNodes();
 
-		if (--level != 0) { /* this is an internal node in the tree */
+		if (level - 1 != 0) { /* this is an internal node in the tree */
 			for (int i = 0; i < n; i++) {
 				if (shape.intersects(getShape(i))) {
 					this.<AbstractHilbertRtreePage<T, S>> getBranch(i).find(shape, result,
-							level);
+							level - 1);
 				}
 			}
 		} else { /* this is a leaf node */
@@ -267,9 +267,9 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	}
 
 	private AbstractHilbertRtreePage<T, S> chooseLeaf(int level, long hilbert) {
-		if (--level != 0) { /* this is an internal node in the tree */
+		if (level - 1 != 0) { /* this is an internal node in the tree */
 			int pos = findPositionInBranch(hilbert);
-			return this.<AbstractHilbertRtreePage<T, S>> getBranch(pos).chooseLeaf(level,
+			return this.<AbstractHilbertRtreePage<T, S>> getBranch(pos).chooseLeaf(level - 1,
 					hilbert);
 		}
 		return this;
@@ -277,9 +277,9 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	@Override
 	public void purge(int level) {
-		if (--level != 0) { /* this is an internal node in the tree */
+		if (level - 1 != 0) { /* this is an internal node in the tree */
 			for (int i = 0; i < n; i++) {
-				this.<AbstractHilbertRtreePage<T, S>> getBranch(i).purge(level);
+				this.<AbstractHilbertRtreePage<T, S>> getBranch(i).purge(level - 1);
 			}
 		}
 		deallocate();
@@ -597,11 +597,11 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	}
 
 	private AbstractHilbertRtreePage<T, S> findContainingLeaf(S shape, int level) {
-		if (--level != 0) { /* this is an internal node in the tree */
+		if (level - 1 != 0) { /* this is an internal node in the tree */
 			for (int i = 0; i < n; i++) {
 				if (shape.intersects(getShape(i))) {
 					return this.<AbstractHilbertRtreePage<T, S>> getBranch(i)
-							.findContainingLeaf(shape, level);
+							.findContainingLeaf(shape, level - 1);
 				}
 			}
 			return null;
