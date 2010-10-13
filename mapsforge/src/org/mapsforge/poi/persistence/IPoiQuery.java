@@ -18,15 +18,15 @@ package org.mapsforge.poi.persistence;
 
 import java.util.Collection;
 
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
 
 /**
  * Abstracts from an underlying storage DB for points of interest by providing methods for
- * searching points of interest near a {@link GeoPoint} or in a rectangle specified by two
- * {@link GeoPoint} objects.<br/>
+ * searching points of interest near a {@link GeoCoordinate} or in a rectangle specified by two
+ * {@link GeoCoordinate} objects.<br/>
  * <br/>
  * Remember to call the {@link #close()} methods after you are done querying in order to release
  * resources that might have been claimed by this {@link IPoiQuery}.

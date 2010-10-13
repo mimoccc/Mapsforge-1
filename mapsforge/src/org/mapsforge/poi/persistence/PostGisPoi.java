@@ -16,7 +16,7 @@
  */
 package org.mapsforge.poi.persistence;
 
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
@@ -48,14 +48,12 @@ class PostGisPoi implements PointOfInterest {
 
 	@Override
 	public GeoCoordinate getGeoCoordinate() {
-		// TODO Auto-generated method stub
-		return null;
+		return new GeoCoordinate(latitude, longitude);
 	}
 
 	@Override
 	public GeoPoint getGeoPoint() {
-		// TODO Auto-generated method stub
-		return null;
+		return new GeoPoint(latitude, longitude);
 	}
 
 	@Override

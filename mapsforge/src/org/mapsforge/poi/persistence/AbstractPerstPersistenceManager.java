@@ -159,16 +159,14 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 
 		ArrayList<PointOfInterest> filtered = new ArrayList<PointOfInterest>();
 
-		// // delete pois from result that are in the bounding box but not within the radius;
-		// for (PointOfInterest poi : result) {
-		// if (point.sphericalDistance(poi.getGeoCoordinate()) <= radius) {
-		// filtered.add(poi);
-		// }
-		// }
-		//
-		// return filtered;
+		// delete pois from result that are in the bounding box but not within the radius;
+		for (PointOfInterest poi : result) {
+			if (point.sphericalDistance(poi.getGeoCoordinate()) <= radius) {
+				filtered.add(poi);
+			}
+		}
 
-		return result;
+		return filtered;
 	}
 
 	@Override

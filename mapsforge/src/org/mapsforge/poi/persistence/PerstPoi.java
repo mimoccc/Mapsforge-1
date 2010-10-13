@@ -22,7 +22,7 @@ import org.garret.perst.Persistent;
 import org.garret.perst.PerstInputStream;
 import org.garret.perst.PerstOutputStream;
 import org.garret.perst.SelfSerializable;
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;

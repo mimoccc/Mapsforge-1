@@ -16,7 +16,7 @@
  */
 package org.mapsforge.poi;
 
-import org.mapsforge.android.map.GeoPoint;
+import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.core.GeoCoordinate;
 
 /**
