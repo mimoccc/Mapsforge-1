@@ -13,7 +13,7 @@
 
 	<property name="mapsforge.advancemapviewer.lib.dir"
 	          value="${basedir}/../AdvancedMapViewer/lib" />
-	<property name="mapsforge.demomapviewer.lib.dir" value="${basedir}/../DemoMapViewer/lib" />
+	<property name="mapsforge.samples.lib.dir" value="${basedir}/../Samples/lib" />
 	<property name="mapsforge.routingservlet.lib.dir"
 	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
 
@@ -61,14 +61,12 @@
 
 	<!-- Copy the newly created map JAR file to the dependent projects -->
 	<target name="mapsforge-map.jar copy" depends="mapsforge-map.jar create">
-		<mkdir dir="${mapsforge.advancemapviewer.lib.dir}" />
-		<mkdir dir="${mapsforge.demomapviewer.lib.dir}" />
 		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
 		      todir="${mapsforge.advancemapviewer.lib.dir}" />
 		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
-		      todir="${mapsforge.demomapviewer.lib.dir}" />
+		      todir="${mapsforge.samples.lib.dir}" />
 		<eclipse.refreshLocal resource="AdvancedMapViewer/lib" depth="infinite" />
-		<eclipse.refreshLocal resource="DemoMapViewer/lib" depth="infinite" />
+		<eclipse.refreshLocal resource="Samples/lib" depth="infinite" />
 	</target>
 
 
