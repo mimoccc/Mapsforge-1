@@ -27,8 +27,6 @@ import android.graphics.Bitmap;
 abstract class MapGenerator extends Thread {
 	private MapGeneratorJob currentMapGeneratorJob;
 	private Bitmap currentTileBitmap;
-	private ImageBitmapCache imageBitmapCache;
-	private ImageFileCache imageFileCache;
 	private PriorityQueue<MapGeneratorJob> jobQueue1;
 	private PriorityQueue<MapGeneratorJob> jobQueue2;
 	private MapView mapView;
@@ -37,6 +35,8 @@ abstract class MapGenerator extends Thread {
 	private boolean requestMoreJobs;
 	private boolean scheduleNeeded;
 	private PriorityQueue<MapGeneratorJob> tempQueue;
+	private TileMemoryCardCache tileMemoryCardCache;
+	private TileRAMCache tileRAMCache;
 
 	MapGenerator() {
 		// set up the two job queues
@@ -84,8 +84,8 @@ abstract class MapGenerator extends Thread {
 			}
 
 			// check if the current job can be skipped or must be processed
-			if (!this.imageBitmapCache.containsKey(this.currentMapGeneratorJob)
-					&& !this.imageFileCache.containsKey(this.currentMapGeneratorJob)) {
+			if (!this.tileRAMCache.containsKey(this.currentMapGeneratorJob)
+					&& !this.tileMemoryCardCache.containsKey(this.currentMapGeneratorJob)) {
 				// check if the tile was generated successfully
 				if (executeJob(this.currentMapGeneratorJob)) {
 					if (isInterrupted()) {
@@ -100,7 +100,7 @@ abstract class MapGenerator extends Thread {
 					}
 
 					// put the tile image in the cache
-					this.imageFileCache
+					this.tileMemoryCardCache
 							.put(this.currentMapGeneratorJob, this.currentTileBitmap);
 				}
 			}
@@ -122,8 +122,8 @@ abstract class MapGenerator extends Thread {
 
 		// set some fields to null to avoid memory leaks
 		this.mapView = null;
-		this.imageBitmapCache = null;
-		this.imageFileCache = null;
+		this.tileRAMCache = null;
+		this.tileMemoryCardCache = null;
 
 		if (this.jobQueue1 != null) {
 			this.jobQueue1.clear();
@@ -286,19 +286,6 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * Sets the image caches that the MapGenerator should use.
-	 * 
-	 * @param imageBitmapCache
-	 *            the ImageBitmapCache.
-	 * @param imageFileCache
-	 *            the ImageFileCache.
-	 */
-	final void setImageCaches(ImageBitmapCache imageBitmapCache, ImageFileCache imageFileCache) {
-		this.imageBitmapCache = imageBitmapCache;
-		this.imageFileCache = imageFileCache;
-	}
-
-	/**
 	 * Sets the MapView for the MapGenerator.
 	 * 
 	 * @param mapView
@@ -306,6 +293,19 @@ abstract class MapGenerator extends Thread {
 	 */
 	final void setMapView(MapView mapView) {
 		this.mapView = mapView;
+	}
+
+	/**
+	 * Sets the tile caches that the MapGenerator should use.
+	 * 
+	 * @param tileRAMCache
+	 *            the TileRAMCache.
+	 * @param tileMemoryCardCache
+	 *            the TileMemoryCardCache.
+	 */
+	final void setTileCaches(TileRAMCache tileRAMCache, TileMemoryCardCache tileMemoryCardCache) {
+		this.tileRAMCache = tileRAMCache;
+		this.tileMemoryCardCache = tileMemoryCardCache;
 	}
 
 	/**

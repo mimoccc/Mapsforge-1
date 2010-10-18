@@ -26,7 +26,7 @@ import android.graphics.Bitmap;
 /**
  * A cache for bitmap images with a fixed size and LRU policy.
  */
-class ImageBitmapCache {
+class TileRAMCache {
 	/**
 	 * The load factor of the internal HashMap.
 	 */
@@ -45,7 +45,7 @@ class ImageBitmapCache {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	ImageBitmapCache(int capacity) {
+	TileRAMCache(int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -69,7 +69,7 @@ class ImageBitmapCache {
 			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
-					ImageBitmapCache.this.bitmapPool.add(eldest.getValue());
+					TileRAMCache.this.bitmapPool.add(eldest.getValue());
 				}
 				return false;
 			}

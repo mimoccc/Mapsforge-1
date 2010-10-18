@@ -186,7 +186,6 @@ public class MapView extends ViewGroup {
 
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			// TODO: some tuning for pinch and zoom is needed
 			this.scaleFactor *= detector.getScaleFactor();
 			MapView.this.matrix.setScale(this.scaleFactor, this.scaleFactor, this.focusX,
 					this.focusY);
@@ -311,11 +310,10 @@ public class MapView extends ViewGroup {
 		abstract boolean handleTouchEvent(MotionEvent event);
 	}
 
-	private static final int BITMAP_CACHE_SIZE = 20;
-	private static final int DEFAULT_FILE_CACHE_SIZE = 100;
 	private static final int DEFAULT_MAP_MOVE_DELTA = 10;
 	private static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
 	private static final int DEFAULT_MOVE_SPEED = 10;
+	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
 	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
 	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
@@ -331,6 +329,7 @@ public class MapView extends ViewGroup {
 	private static final Paint PAINT_MAP_SCALE_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MAP_SCALE_TEXT_WHITE_STROKE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final int TILE_RAM_CACHE_SIZE = 20;
 	private static final float TRACKBALL_MOVE_SPEED = 40;
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
@@ -379,12 +378,9 @@ public class MapView extends ViewGroup {
 	private long currentTime;
 	private MapDatabase database;
 	private boolean drawTileFrames;
-	private int fileCacheSize;
 	private int fps;
 	private Paint fpsPaint;
 	private short frame_counter;
-	private ImageBitmapCache imageBitmapCache;
-	private ImageFileCache imageFileCache;
 	private MapController mapController;
 	private String mapFile;
 	private MapGenerator mapGenerator;
@@ -415,6 +411,9 @@ public class MapView extends ViewGroup {
 	private Bitmap swapMapViewBitmap;
 	private Bitmap tileBitmap;
 	private ByteBuffer tileBuffer;
+	private TileMemoryCardCache tileMemoryCardCache;
+	private int tileMemoryCardCacheSize;
+	private TileRAMCache tileRAMCache;
 	private long tileX;
 	private long tileY;
 	private TouchEventHandler touchEventHandler;
@@ -705,23 +704,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the new size of the file cache. If the cache already contains more items than the
-	 * new capacity allows, items are discarded based on the cache policy.
-	 * 
-	 * @param newCacheSize
-	 *            the new capacity of the file cache.
-	 * @throws IllegalArgumentException
-	 *             if the new capacity is negative.
-	 */
-	public void setFileCacheSize(int newCacheSize) {
-		if (newCacheSize < 0) {
-			throw new IllegalArgumentException();
-		}
-		this.fileCacheSize = newCacheSize;
-		this.imageFileCache.setCapacity(this.fileCacheSize);
-	}
-
-	/**
 	 * Sets the visibility of the frame rate.
 	 * 
 	 * @param showFpsCounter
@@ -811,6 +793,23 @@ public class MapView extends ViewGroup {
 			clearMapView();
 			handleTiles(true);
 		}
+	}
+
+	/**
+	 * Sets the new size of the memory card cache. If the cache already contains more items than
+	 * the new capacity allows, items are discarded based on the cache policy.
+	 * 
+	 * @param newCacheSize
+	 *            the new capacity of the file cache.
+	 * @throws IllegalArgumentException
+	 *             if the new capacity is negative.
+	 */
+	public void setMemoryCardCacheSize(int newCacheSize) {
+		if (newCacheSize < 0) {
+			throw new IllegalArgumentException();
+		}
+		this.tileMemoryCardCacheSize = newCacheSize;
+		this.tileMemoryCardCache.setCapacity(this.tileMemoryCardCacheSize);
 	}
 
 	/**
@@ -980,7 +979,7 @@ public class MapView extends ViewGroup {
 			this.touchEventHandler = new MultiTouchHandler();
 		}
 
-		this.fileCacheSize = DEFAULT_FILE_CACHE_SIZE;
+		this.tileMemoryCardCacheSize = DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE;
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 		this.mapMoveDelta = DEFAULT_MAP_MOVE_DELTA
 				* this.mapActivity.getResources().getDisplayMetrics().density;
@@ -1005,13 +1004,13 @@ public class MapView extends ViewGroup {
 		this.tileBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 
 		// create the image bitmap cache
-		this.imageBitmapCache = new ImageBitmapCache(BITMAP_CACHE_SIZE);
+		this.tileRAMCache = new TileRAMCache(TILE_RAM_CACHE_SIZE);
 
 		// create the image file cache with a unique directory
-		this.imageFileCache = new ImageFileCache(Environment.getExternalStorageDirectory()
-				.getAbsolutePath()
+		this.tileMemoryCardCache = new TileMemoryCardCache(Environment
+				.getExternalStorageDirectory().getAbsolutePath()
 				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
-				this.fileCacheSize);
+				this.tileMemoryCardCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -1091,7 +1090,7 @@ public class MapView extends ViewGroup {
 		if (this.attachedToWindow) {
 			this.mapGenerator.onAttachedToWindow();
 		}
-		this.mapGenerator.setImageCaches(this.imageBitmapCache, this.imageFileCache);
+		this.mapGenerator.setTileCaches(this.tileRAMCache, this.tileMemoryCardCache);
 		this.mapGenerator.setMapView(this);
 		this.mapGenerator.start();
 	}
@@ -1316,15 +1315,15 @@ public class MapView extends ViewGroup {
 		}
 
 		// destroy the image bitmap cache
-		if (this.imageBitmapCache != null) {
-			this.imageBitmapCache.destroy();
-			this.imageBitmapCache = null;
+		if (this.tileRAMCache != null) {
+			this.tileRAMCache.destroy();
+			this.tileRAMCache = null;
 		}
 
 		// destroy the image file cache
-		if (this.imageFileCache != null) {
-			this.imageFileCache.destroy();
-			this.imageFileCache = null;
+		if (this.tileMemoryCardCache != null) {
+			this.tileMemoryCardCache.destroy();
+			this.tileMemoryCardCache = null;
 		}
 
 		// close the map file
@@ -1392,13 +1391,13 @@ public class MapView extends ViewGroup {
 					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
 					this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
 							this.mapFile, this.drawTileFrames);
-					if (this.imageBitmapCache.containsKey(this.currentJob)) {
+					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
-						putTileOnBitmap(this.currentJob, this.imageBitmapCache
+						putTileOnBitmap(this.currentJob, this.tileRAMCache
 								.get(this.currentJob), false);
-					} else if (this.imageFileCache.containsKey(this.currentJob)) {
+					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// file cache hit
-						this.imageFileCache.get(this.currentJob, this.tileBuffer);
+						this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer);
 						this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
 						putTileOnBitmap(this.currentJob, this.tileBitmap, true);
 					} else {
@@ -1481,11 +1480,11 @@ public class MapView extends ViewGroup {
 	 *            the job with the tile.
 	 * @param bitmap
 	 *            the bitmap to be drawn.
-	 * @param putToBitmapCache
-	 *            true if the bitmap may be put in the cache, false otherwise.
+	 * @param putToTileRAMCache
+	 *            true if the bitmap should be stored in the RAM cache, false otherwise.
 	 */
 	synchronized void putTileOnBitmap(MapGeneratorJob mapGeneratorJob, Bitmap bitmap,
-			boolean putToBitmapCache) {
+			boolean putToTileRAMCache) {
 		// check if the tile and the current MapView rectangle intersect
 		if (this.mapViewPixelX - mapGeneratorJob.tile.pixelX > Tile.TILE_SIZE
 				|| this.mapViewPixelX + getWidth() < mapGeneratorJob.tile.pixelX) {
@@ -1501,8 +1500,8 @@ public class MapView extends ViewGroup {
 		}
 
 		// check if the bitmap should go to the image bitmap cache
-		if (putToBitmapCache) {
-			this.imageBitmapCache.put(mapGeneratorJob, bitmap);
+		if (putToTileRAMCache) {
+			this.tileRAMCache.put(mapGeneratorJob, bitmap);
 		}
 
 		if (!this.matrix.isIdentity()) {
@@ -1536,7 +1535,7 @@ public class MapView extends ViewGroup {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
-		} else if (this.fileCacheSize < this.numberOfTiles * 3) {
+		} else if (this.tileMemoryCardCacheSize < this.numberOfTiles * 3) {
 			// the capacity of the file cache is to small, skip preprocessing
 			return;
 		} else if (this.zoomLevel == 0) {
@@ -1550,7 +1549,7 @@ public class MapView extends ViewGroup {
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
 						this.mapFile, this.drawTileFrames);
-				if (!this.imageFileCache.containsKey(this.currentJob)) {
+				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
 				}
@@ -1558,7 +1557,7 @@ public class MapView extends ViewGroup {
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
 						this.mapFile, this.drawTileFrames);
-				if (!this.imageFileCache.containsKey(this.currentJob)) {
+				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
 				}
@@ -1569,7 +1568,7 @@ public class MapView extends ViewGroup {
 				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
 						this.mapFile, this.drawTileFrames);
-				if (!this.imageFileCache.containsKey(this.currentJob)) {
+				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
 				}
@@ -1577,7 +1576,7 @@ public class MapView extends ViewGroup {
 				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
 						this.mapFile, this.drawTileFrames);
-				if (!this.imageFileCache.containsKey(this.currentJob)) {
+				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
 				}

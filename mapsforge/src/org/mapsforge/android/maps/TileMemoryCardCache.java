@@ -29,7 +29,7 @@ import android.graphics.Bitmap;
 /**
  * A cache for image files with a fixed size and LRU policy.
  */
-class ImageFileCache {
+class TileMemoryCardCache {
 	/**
 	 * The load factor of the internal HashMap.
 	 */
@@ -53,7 +53,7 @@ class ImageFileCache {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	ImageFileCache(String tempDir, int capacity) {
+	TileMemoryCardCache(String tempDir, int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}
