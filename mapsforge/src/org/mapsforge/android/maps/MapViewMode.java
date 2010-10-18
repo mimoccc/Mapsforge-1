@@ -25,14 +25,22 @@ public enum MapViewMode {
 	 * Map tiles are rendered using the android.graphics package (Skia library).
 	 */
 	CANVAS_RENDERER,
+
 	/**
 	 * Map tiles are downloaded from the Mapnik server. Requires an Internet connection.
 	 */
 	MAPNIK_TILE_DOWNLOAD,
+
+	/**
+	 * Map tiles are downloaded from the OpenCycleMap server. Requires an Internet connection.
+	 */
+	OPENCYCLEMAP_TILE_DOWNLOAD,
+
 	/**
 	 * Map tiles are rendered with OpenGL ES. <b>This mode is unstable and for testing only</b>.
 	 */
 	OPENGL_RENDERER,
+
 	/**
 	 * Map tiles are downloaded from the Osmarender server. Requires an Internet connection.
 	 */
@@ -49,6 +57,8 @@ public enum MapViewMode {
 	public static boolean requiresInternetConnection(MapViewMode mapViewMode) {
 		switch (mapViewMode) {
 			case MAPNIK_TILE_DOWNLOAD:
+				return true;
+			case OPENCYCLEMAP_TILE_DOWNLOAD:
 				return true;
 			case OSMARENDER_TILE_DOWNLOAD:
 				return true;

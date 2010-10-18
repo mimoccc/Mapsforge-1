@@ -40,7 +40,7 @@ class MapnikTileDownload extends TileDownloadMapGenerator {
 	}
 
 	@Override
-	final String getThreadName() {
+	String getThreadName() {
 		return THREAD_NAME;
 	}
 
@@ -53,7 +53,7 @@ class MapnikTileDownload extends TileDownloadMapGenerator {
 		this.stringBuilder.append("/");
 		this.stringBuilder.append(tile.y);
 		this.stringBuilder.append(".png");
-		return stringBuilder.toString();
+		return this.stringBuilder.toString();
 	}
 
 	@Override

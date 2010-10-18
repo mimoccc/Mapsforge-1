@@ -17,15 +17,15 @@
 package org.mapsforge.android.maps;
 
 /**
- * A MapGenerator that downloads map tiles from the Osmarender/Tiles@home openstreetmap server.
+ * A MapGenerator that downloads map tiles from the OpenCycleMapTile server.
  */
-class OsmarenderTileDownload extends TileDownloadMapGenerator {
-	private static final String SERVER_HOST_NAME = "tah.openstreetmap.org";
-	private static final String THREAD_NAME = "OsmarenderTileDownload";
-	private static final byte ZOOM_MAX = 17;
+class OpenCycleMapTileDownload extends TileDownloadMapGenerator {
+	private static final String SERVER_HOST_NAME = "tile.opencyclemap.org";
+	private static final String THREAD_NAME = "OpenCycleMapTileDownload";
+	private static final byte ZOOM_MAX = 18;
 	private StringBuilder stringBuilder;
 
-	OsmarenderTileDownload() {
+	OpenCycleMapTileDownload() {
 		this.stringBuilder = new StringBuilder(128);
 	}
 
@@ -62,6 +62,6 @@ class OsmarenderTileDownload extends TileDownloadMapGenerator {
 		this.stringBuilder.setLength(0);
 		this.stringBuilder.append("http://");
 		this.stringBuilder.append(SERVER_HOST_NAME);
-		this.stringBuilder.append("/Tiles/tile/");
+		this.stringBuilder.append("/cycle/");
 	}
 }

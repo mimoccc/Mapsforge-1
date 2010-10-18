@@ -466,18 +466,18 @@ public class MapView extends ViewGroup {
 			throw new IllegalArgumentException();
 		}
 		this.mapActivity = (MapActivity) context;
-		String attributeValue = attrs.getAttributeValue(null, "mode");
-		if (attributeValue == null) {
+		String modeValue = attrs.getAttributeValue(null, "mode");
+		if (modeValue == null) {
 			// no mode specified, use default
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
-		} else if (attributeValue.equals(MapViewMode.MAPNIK_TILE_DOWNLOAD.name())) {
-			this.mapViewMode = MapViewMode.MAPNIK_TILE_DOWNLOAD;
-		} else if (attributeValue.equals(MapViewMode.OSMARENDER_TILE_DOWNLOAD.name())) {
-			this.mapViewMode = MapViewMode.OSMARENDER_TILE_DOWNLOAD;
-		} else if (attributeValue.equals(MapViewMode.OPENGL_RENDERER.name())) {
-			this.mapViewMode = MapViewMode.OPENGL_RENDERER;
 		} else {
-			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
+			try {
+				// try to use the specified mode
+				this.mapViewMode = MapViewMode.valueOf(modeValue);
+			} catch (IllegalArgumentException e) {
+				// invalid mode, use default
+				this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
+			}
 		}
 		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
@@ -1075,12 +1075,15 @@ public class MapView extends ViewGroup {
 				this.mapGenerator = new CanvasRenderer();
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
 				break;
+			case MAPNIK_TILE_DOWNLOAD:
+				this.mapGenerator = new MapnikTileDownload();
+				break;
+			case OPENCYCLEMAP_TILE_DOWNLOAD:
+				this.mapGenerator = new OpenCycleMapTileDownload();
+				break;
 			case OPENGL_RENDERER:
 				this.mapGenerator = new OpenGLRenderer(this.mapActivity, this);
 				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
-				break;
-			case MAPNIK_TILE_DOWNLOAD:
-				this.mapGenerator = new MapnikTileDownload();
 				break;
 			case OSMARENDER_TILE_DOWNLOAD:
 				this.mapGenerator = new OsmarenderTileDownload();
