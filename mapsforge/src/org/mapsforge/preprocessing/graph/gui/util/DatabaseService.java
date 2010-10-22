@@ -42,26 +42,46 @@ public class DatabaseService implements IDatabaseService {
 
 	private static Connection con;
 
+	/**
+	 * Constructor to create a new database service.
+	 * 
+	 * @param con
+	 *            the database connection.
+	 */
 	public DatabaseService(Connection con) {
 		DatabaseService.setCon(con);
 	}
 
 	// Getter
 
+	/**
+	 * Returns the database connection.
+	 * 
+	 * @return the database connection.
+	 */
 	public Connection getCon() {
 		return con;
 	}
 
 	// Setter
-
+	/**
+	 * Sets the database connection.
+	 * 
+	 * @param con
+	 *            the database connection.
+	 */
 	public static void setCon(Connection con) {
 		DatabaseService.con = con;
 	}
 
-	// initialize the database. would be needed for the first start at a new system.
+	/**
+	 * This method initialize the database. This would be needed for the first start at a new
+	 * system.
+	 */
 	public void init() {
 
 		createTables();
+		checkDefaultDbConfig();
 	}
 
 	@Override
@@ -385,10 +405,18 @@ public class DatabaseService implements IDatabaseService {
 			pstmt.executeUpdate();
 			pstmt.close();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 
+	/**
+	 * This method adds a given database property to the database.
+	 * 
+	 * @param dbProps
+	 *            the database properties that should be saved.
+	 * @throws Exception
+	 *             an Exception if something faild.
+	 */
 	public void addDatabaseConfig(DatabaseProperties dbProps) throws Exception {
 
 		String sql = "UPDATE DbConfigurations SET id = ?, host = ?, dbname = ?, username = ?, password = ?, port = ? WHERE id ="
@@ -456,6 +484,18 @@ public class DatabaseService implements IDatabaseService {
 		}
 	}
 
+	// TODO just a workaround, bug must be fixed
+	private void checkDefaultDbConfig() {
+
+		// System.out.println("check");
+		// DatabaseProperties dbprops = getDefaultDbConfig();
+		// System.out.println(dbprops);
+
+		setDefaultDatabaseConfig(new DatabaseProperties("localhost", 5432, "osm_base",
+				"postgres", "bachelor"));
+
+	}
+
 	/*
 	 * this method is to drop all tables
 	 */
@@ -476,6 +516,12 @@ public class DatabaseService implements IDatabaseService {
 
 	}
 
+	/**
+	 * The main method, just for testing and initializing with test data.
+	 * 
+	 * @param args
+	 *            not needed.
+	 */
 	public static void main(String[] args) {
 
 		DatabaseService dbs = new DatabaseService(new JDBCConnection().getConnection());

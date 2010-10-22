@@ -75,9 +75,10 @@ public class MainFrame extends JFrame {
 	 * This method initialize the main window. That contains the composing of all components and
 	 * the adjustment of the visual appearance.
 	 */
-	protected void init() {
+	private void init() {
 
 		// check if the database is initialized
+		// System.out.println("init");
 		dbs.init();
 
 		// set the local because this is another workaround for the bugged jfilechooser
@@ -135,7 +136,7 @@ public class MainFrame extends JFrame {
 		});
 
 		mainPanel.addTab("transport configuration", transportPanel);
-		mainPanel.addTab("profil configuration", profilePanel);
+		mainPanel.addTab("profile configuration", profilePanel);
 		mainPanel.add("create configuration file", configurationFilePanel);
 
 		this.add(mainPanel);

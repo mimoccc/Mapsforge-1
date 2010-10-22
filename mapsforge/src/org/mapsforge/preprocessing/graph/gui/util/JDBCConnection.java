@@ -46,10 +46,21 @@ public class JDBCConnection {
 
 	}
 
+	/**
+	 * Returns the JDBC database connection.
+	 * 
+	 * @return JDBCConnection the JDBC database connection.
+	 */
 	public Connection getConnection() {
 		return this.con;
 	}
 
+	/**
+	 * Sets the JDBC database connection.
+	 * 
+	 * @param con
+	 *            the JDBC database connection that should be set.
+	 */
 	public void setConnection(Connection con) {
 		this.con = con;
 	}

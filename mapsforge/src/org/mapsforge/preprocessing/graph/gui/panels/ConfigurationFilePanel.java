@@ -112,7 +112,7 @@ public class ConfigurationFilePanel extends JPanel {
 	// get all profiles
 	private void getProfiles() {
 		ArrayList<Profile> alProfiles = dbs.getAllProfiles();
-
+		cbChooseProfile.removeAllItems();
 		for (Profile p : alProfiles) {
 			cbChooseProfile.addItem(p);
 		}

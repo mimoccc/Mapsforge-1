@@ -16,8 +16,6 @@
  */
 package org.mapsforge.preprocessing.graph;
 
-import java.io.File;
-
 import org.mapsforge.preprocessing.graph.gui.GuiMain;
 import org.mapsforge.preprocessing.graph.interpreter.InterpreterMain;
 
@@ -41,9 +39,6 @@ public class Main {
 	 *            the configuration file if the the interpreter should be started
 	 */
 	public static void main(String[] args) {
-		// just a test
-		File pfad = new File("");
-		System.out.println(pfad.getAbsolutePath());
 
 		// if there is no argument, we start the gui. otherwise we start the interpreter. more
 		// than one parameter is an illegal input.

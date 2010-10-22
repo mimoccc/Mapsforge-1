@@ -43,16 +43,23 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class SimpleRoutingConfigurationParser extends DefaultHandler {
 
-	private Profile profil;
+	private Profile profile;
 	private Transport transport;
 	private DatabaseProperties dbprops;
 	private String osmUrl;
 
 	private String currentObject, characters;
-	String transportName, profilName, key, value, username, password, dbname, host;
+	String transportName, profileName, key, value, username, password, dbname, host;
 	int maxSpeed, port;
 	HashSet<EHighwayLevel> highways = new HashSet<EHighwayLevel>();
 
+	/**
+	 * Constructor to create a parser to get the routing configurations of the configuration
+	 * file.
+	 * 
+	 * @param is
+	 *            input stream for parsing
+	 */
 	public SimpleRoutingConfigurationParser(InputStream is) {
 
 		createParser(is);
@@ -84,7 +91,7 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	public void startDocument() throws SAXException {
 		super.startDocument();
 		currentObject = null;
-		transportName = profilName = key = value = username = password = dbname = host = "";
+		transportName = profileName = key = value = username = password = dbname = host = "";
 		maxSpeed = port = -1;
 	}
 
@@ -96,7 +103,7 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 
-		if (qName.toLowerCase().equals("profil") || qName.toLowerCase().equals("transport")) {
+		if (qName.toLowerCase().equals("profile") || qName.toLowerCase().equals("transport")) {
 			currentObject = qName.toLowerCase();
 		}
 	}
@@ -105,12 +112,12 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 	public void endElement(String uri, String localName, String qName) {
 		EHighwayLevel currenHwyLvl = null;
 
-		if (qName.toLowerCase().equals("profil")) {
-			if (profilName == "" || transport == null || dbprops == null) {
+		if (qName.toLowerCase().equals("profile")) {
+			if (profileName == "" || transport == null || dbprops == null) {
 				System.err.println("This profil has some illegal values.");
 				System.exit(-1);
 			} else {
-				profil = new Profile(profilName, null, transport, null, dbprops);
+				profile = new Profile(profileName, null, transport, null, dbprops);
 			}
 			currentObject = null;
 		} else if (qName.toLowerCase().equals("transport")) {
@@ -120,7 +127,7 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 			} else {
 				transport = new Transport(transportName, maxSpeed, highways);
 			}
-			currentObject = "profil";
+			currentObject = "profile";
 
 		} else if (qName.toLowerCase().equals("dbprops")) {
 			if (host == "" || dbname == "" || username == "" || password == "" || port < 0) {
@@ -132,8 +139,8 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 			}
 
 		} else if (qName.toLowerCase().equals("name")) {
-			if (currentObject.equals("profil")) {
-				profilName = characters;
+			if (currentObject.equals("profile")) {
+				profileName = characters;
 			} else if (currentObject.equals("transport")) {
 				transportName = characters;
 			}
@@ -190,50 +197,94 @@ public class SimpleRoutingConfigurationParser extends DefaultHandler {
 		}
 	}
 
-	public void setTransport(Transport transport) {
-		this.transport = transport;
-	}
-
+	/**
+	 * Returns the Transport that would be parsed.
+	 * 
+	 * @return the Transport object.
+	 */
 	public Transport getTransport() {
 		return transport;
 	}
 
-	public void setOsmUrl(String osmUrl) {
-		this.osmUrl = osmUrl;
-	}
-
+	/**
+	 * Returns the URL to the OSM file.
+	 * 
+	 * @return the URL to the OSM file
+	 */
 	public String getOsmUrl() {
 		return osmUrl;
 	}
 
-	public void setProfil(Profile profil) {
-		this.profil = profil;
+	/**
+	 * Returns the Profile that would be parsed.
+	 * 
+	 * @return the Profile object.
+	 */
+	public Profile getProfile() {
+		return profile;
 	}
 
-	public Profile getProfil() {
-		return profil;
+	/**
+	 * Returns the database properties that would be parsed.
+	 * 
+	 * @return the database properties.
+	 */
+	public DatabaseProperties getDbprops() {
+		return dbprops;
 	}
 
-	public static void main(String[] args) {
-
-		/*
-		 * File file = new File("U:\\berlin.osm\\testprofil.profil"); if (!file.exists() ||
-		 * !file.isFile() || !file.canRead()) {
-		 * System.out.println("Can not read file. Maybe istn't one."); System.exit(-1); }
-		 * SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(file);
-		 * System.out.println("profil name: " + parser.profil.getName());
-		 * System.out.println("transport name: " + parser.profil.getTransport().getName());
-		 * System.out.println("transport ways: " +
-		 * parser.profil.getTransport().getUseableWaysSerialized());
-		 */
+	/**
+	 * Sets the Transport object.
+	 * 
+	 * @param transport
+	 *            the transport object, that should be set.
+	 */
+	public void setTransport(Transport transport) {
+		this.transport = transport;
 	}
 
+	/**
+	 * Sets the osm URL.
+	 * 
+	 * @param osmUrl
+	 *            the URL, that should be set.
+	 */
+	public void setOsmUrl(String osmUrl) {
+		this.osmUrl = osmUrl;
+	}
+
+	/**
+	 * Sets the Profile.
+	 * 
+	 * @param profile
+	 *            the URL, that should be set.
+	 */
+	public void setProfile(Profile profile) {
+		this.profile = profile;
+	}
+
+	/**
+	 * Sets the database properties.
+	 * 
+	 * @param dbprops
+	 *            the database properties, that should be set.
+	 */
 	public void setDbprops(DatabaseProperties dbprops) {
 		this.dbprops = dbprops;
 	}
 
-	public DatabaseProperties getDbprops() {
-		return dbprops;
-	}
+	// public static void main(String[] args) {
+
+	/*
+	 * File file = new File("U:\\berlin.osm\\testprofil.profil"); if (!file.exists() ||
+	 * !file.isFile() || !file.canRead()) {
+	 * System.out.println("Can not read file. Maybe istn't one."); System.exit(-1); }
+	 * SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(file);
+	 * System.out.println("profil name: " + parser.profil.getName());
+	 * System.out.println("transport name: " + parser.profil.getTransport().getName());
+	 * System.out.println("transport ways: " +
+	 * parser.profil.getTransport().getUseableWaysSerialized());
+	 */
+	// }
 
 }

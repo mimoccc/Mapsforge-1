@@ -22,9 +22,6 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.mapsforge.preprocessing.graph.interpreter.osm2db.SimpleOSM2DBParser;
-import org.mapsforge.preprocessing.graph.interpreter.routingGraph.RGGenerator;
-import org.mapsforge.preprocessing.graph.interpreter.util.FileLoader;
 import org.mapsforge.preprocessing.graph.model.gui.Profile;
 import org.mapsforge.preprocessing.util.DBConnection;
 import org.xml.sax.SAXException;
@@ -48,11 +45,11 @@ public class SimpleRoutingInterpreter implements IInterpreter {
 		// first we must parse the xml profile file
 		SimpleRoutingConfigurationParser parser = new SimpleRoutingConfigurationParser(
 				xmlConfigFile);
-		Profile profile = parser.getProfil();
+		Profile profile = parser.getProfile();
 
 		// debugging
-		System.out.println("name: " + profile.getDbProberties().getDbName() + "; host: "
-				+ profile.getDbProberties().getHost());
+		// System.out.println("name: " + profile.getDbProberties().getDbName() + "; host: "
+		// + profile.getDbProberties().getHost());
 
 		// now we create a database connection because that would needed later
 		Connection conn = null;
@@ -66,7 +63,7 @@ public class SimpleRoutingInterpreter implements IInterpreter {
 		}
 		// TODO check if file exists
 		File osm = getOsmFile(profile.getUrl());
-		System.out.println(osm.getAbsolutePath());
+		// System.out.println(osm.getAbsolutePath());
 
 		try {
 			// parse osm file an insert into db
@@ -105,6 +102,12 @@ public class SimpleRoutingInterpreter implements IInterpreter {
 		System.out.println("Usage: SimpleRoutingInterpreter <profile file>");
 	}
 
+	/**
+	 * Main method, just for testing the execution.
+	 * 
+	 * @param args
+	 *            the configuration file.
+	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
 			usage();

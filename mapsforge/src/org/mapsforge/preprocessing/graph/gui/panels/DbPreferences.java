@@ -175,20 +175,12 @@ public class DbPreferences extends JFrame {
 		drawDbConfig(dbs.getDefaultDbConfig());
 	}
 
-	// private void restoreToDefaultDbConfig() {
-	// org.mapsforge.preprocessing.graph.model.gui.DatabaseProperties dbProps = new
-	// DatabaseProperties(
-	// "localhost", 5432, "osm_base", "postgres", "bachelor");
-	// drawDbConfig(dbProps);
-	// saveDbConfig();
-	// }
-
 	/*
 	 * This method draws the given props on the panel
 	 */
 	private void drawDbConfig(DatabaseProperties dbProps) {
 		if (dbProps == null) {
-			String message = ("There isn't any database configuration.");
+			String message = ("There exists no default database configuration.");
 			JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -215,8 +207,10 @@ public class DbPreferences extends JFrame {
 			port = ((Number) ftf_port.getValue()).intValue();
 		} catch (Exception e) {
 
+			e.printStackTrace();
 			String message = ("There was insert an invaild value for the port.");
 			JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 
 		if (host == "" || dbname == "" || username == "" || password == "") {

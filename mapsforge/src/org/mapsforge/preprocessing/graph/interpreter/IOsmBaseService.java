@@ -16,21 +16,19 @@
  */
 package org.mapsforge.preprocessing.graph.interpreter;
 
-import java.io.InputStream;
+import java.sql.SQLException;
+import java.util.LinkedList;
 
-/**
- * Interface for an interpreter implementation of the routing preprocessing.
- * 
- * @author kunis
- * 
- */
-public interface IInterpreter {
+import org.mapsforge.preprocessing.graph.model.osmxml.OsmWay_withNodes;
+import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
+import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgVertex;
 
-	/**
-	 * The start method fot the interpreter execution.
-	 * 
-	 * @param xmlConfigFile
-	 *            the configuration file that configured the interpreter execution.
-	 */
-	void startPreprocessing(InputStream xmlConfigFile);
+public interface IOsmBaseService {
+
+	public LinkedList<OsmWay_withNodes> getAllWaysFromDB() throws SQLException;
+
+	public void insertVertices(LinkedList<RgVertex> vertices) throws SQLException;
+
+	public void insertEdges(LinkedList<RgEdge> edges) throws SQLException;
+
 }
