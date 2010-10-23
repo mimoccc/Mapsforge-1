@@ -61,7 +61,7 @@ public interface IEdge {
 	public String getType();
 
 	/**
-	 * @return Returns the type of the street. For example motorway, trunk, residential...
+	 * @return Returns true if the street is part of a roundabout.
 	 */
 	public boolean isRoundabout();
 
