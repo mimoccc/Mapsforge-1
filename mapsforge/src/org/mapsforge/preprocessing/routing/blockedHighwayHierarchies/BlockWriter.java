@@ -60,7 +60,10 @@ class BlockWriter {
 	private static byte bitsPerBlockId;
 	private static byte bitsPerVertexOffset;
 	private static byte bitsPerEdgeWeight;
+	private static byte bitsPerStreetType;
 	private static DijkstraAlgorithm dijkstraAlgorithm;
+	private static String[] streetTypes;
+	private static HashMap<String, Integer> streetTypeIds;
 
 	public static int[] writeClusterBlocks(File targetFile, LevelGraph levelGraph,
 			Clustering[] clustering, ClusterBlockMapping mapping, int includeHopIndices)
@@ -84,6 +87,12 @@ class BlockWriter {
 				getMaxNumVerticesPerCluster(clustering) - 1);
 		bitsPerEdgeWeight = numBitsToEncode(0,
 				getMaxEdgeWeight());
+		streetTypes = levelGraph.getAllOsmStreetTypes();
+		streetTypeIds = new HashMap<String, Integer>();
+		for (int i = 0; i < streetTypes.length; i++) {
+			streetTypeIds.put(streetTypes[i], i);
+		}
+		bitsPerStreetType = numBitsToEncode(0, streetTypes.length - 1);
 
 		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
 				new FileOutputStream(
@@ -94,7 +103,17 @@ class BlockWriter {
 		out.writeByte(bitsPerBlockId);
 		out.writeByte(bitsPerVertexOffset);
 		out.writeByte(bitsPerEdgeWeight);
+		out.writeByte(bitsPerStreetType);
 		out.writeInt(includeHopIndices);
+
+		out.writeByte(streetTypes.length);
+		for (int i = 0; i < streetTypes.length; i++) {
+			if (streetTypes[i] != null) {
+				out.write(streetTypes[i].getBytes());
+			}
+			out.write(new byte[] { (byte) 0 });
+		}
+
 		out.write(new byte[HEADER_LENGTH - out.size()]);
 
 		// serialize blocks only to get byte sizes
@@ -494,9 +513,6 @@ class BlockWriter {
 								bitsPerIndirectBlockRef);
 						out.writeUInt(vertexOffset, bitsPerVertexOffset);
 
-						if (mapClusterToBlockId.getBlockId(cluster) == 312) {
-							System.out.println("ref " + referencedBlocksIdx.get(blockId));
-						}
 					}
 
 					// neighborhood
@@ -566,9 +582,9 @@ class BlockWriter {
 										&& e.getTarget().getNeighborhood() != HHComputation.INFINITY_1);
 
 						if (level == 0 && e.isForward()) {
-							// isMotorwayLink
-							out
-									.writeBit(e.isMotorwayLink());
+							// osm street type
+							out.writeUInt(streetTypeIds.get(e.getOsmStreetType()),
+									bitsPerStreetType);
 
 							// isRoundabout
 							out.writeBit(e.isRoundabout());
@@ -644,21 +660,12 @@ class BlockWriter {
 			}
 
 			/* REFERENCED BLOCKS */
-			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
-				System.out.println("S " + out.getByteOffset());
-			}
 			out.alignPointer(1);
 			offsetReferencedBlocks = out.getByteOffset();
 			for (Integer blockId : referencedBlocks) {
 				out.writeUInt(blockId, bitsPerBlockId);
 			}
 			out.alignPointer(1);
-			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
-				System.out.println("refs " + referencedBlocks.size());
-			}
-			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
-				System.out.println("E " + out.getByteOffset());
-			}
 		}
 
 		// copy written data from buffer and return it

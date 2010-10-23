@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.mapsforge.core.DBConnection;
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
@@ -429,9 +428,8 @@ public class HHDbReader {
 									rs.getBoolean("fwd"), rs.getBoolean("bwd"),
 									rs.getBoolean("shortcut"), rs.getInt("lvl"),
 									rs.getString("name"), rs.getString("ref"),
-									latitudes, longitudes, isReversed, TagHighway.MOTORWAY_LINK
-									.equals(rs.getString("hwy_lvl")), rs
-									.getBoolean("roundabout"));
+									latitudes, longitudes, isReversed, rs.getString("hwy_lvl"),
+									rs.getBoolean("roundabout"));
 						}
 					} catch (SQLException e) {
 						e.printStackTrace();
@@ -586,19 +584,19 @@ public class HHDbReader {
 		 */
 		public final boolean isReversed;
 		/**
-		 * true if this edge is part of a motorway link.
-		 */
-		public final boolean isMotorwayLink;
-		/**
 		 * true if this edge is part of a roundabout.
 		 */
 		public final boolean isRoundabout;
+		/**
+		 * e.g. motorway, trunk, primary etc.
+		 */
+		public final String osmStreetType;
 
 		HHEdgeLvl(int id, int sourceId, int targetId, int weight, int minLvl,
 				int maxLvl, boolean fwd, boolean bwd, boolean shortcut, int lvl,
 				String name, String ref, double[] latitudes, double[] longitudes,
 				boolean isReversed,
-				boolean isMotorwayLink, boolean isRoundabout) {
+				String osmStreetType, boolean isRoundabout) {
 			super(id, sourceId, targetId, weight, minLvl, maxLvl, fwd, bwd, shortcut);
 			this.lvl = lvl;
 			this.name = name;
@@ -606,7 +604,7 @@ public class HHDbReader {
 			this.latitudes = latitudes;
 			this.longitudes = longitudes;
 			this.isReversed = isReversed;
-			this.isMotorwayLink = isMotorwayLink;
+			this.osmStreetType = osmStreetType;
 			this.isRoundabout = isRoundabout;
 		}
 	}

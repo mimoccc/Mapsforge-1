@@ -55,9 +55,9 @@ final class HHEdge implements Poolable {
 	 */
 	boolean isCore;
 	/**
-	 * true if this edge is part of a motorway link (osm tag).
+	 * osm street type mapped to a byte, by the routingraph.
 	 */
-	boolean isMotorwayLink;
+	byte osmStreetType;
 	/**
 	 * true if this ede is part of a roundabout (osm tag).
 	 */

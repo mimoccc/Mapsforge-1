@@ -290,8 +290,10 @@ public class HHRouter implements IRouter {
 
 		@Override
 		public String getType() {
-			// TODO Auto-generated method stub
-			return "";
+			if (edge.osmStreetType == -1) {
+				return null;
+			}
+			return routingGraph.streetTypes[edge.osmStreetType];
 		}
 
 		@Override
@@ -304,7 +306,6 @@ public class HHRouter implements IRouter {
 			// TODO Auto-generated method stub
 			return null;
 		}
-
 	}
 
 	/**
@@ -326,7 +327,7 @@ public class HHRouter implements IRouter {
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
 		long time = System.currentTimeMillis() - startTime;
 		for (IEdge e : shortestPath) {
-			System.out.println(e.getName() + " " + e.getRef());
+			System.out.println(e.getName() + " " + e.getRef() + " " + e.getType());
 		}
 		RendererV2 renderer = new RendererV2(1024, 768, router, Color.BLACK,
 				Color.WHITE);

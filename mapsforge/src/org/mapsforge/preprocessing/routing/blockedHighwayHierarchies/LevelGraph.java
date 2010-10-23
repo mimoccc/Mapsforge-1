@@ -19,6 +19,7 @@ package org.mapsforge.preprocessing.routing.blockedHighwayHierarchies;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
@@ -98,10 +99,6 @@ class LevelGraph implements Serializable {
 	 */
 	final String[] eRef;
 	/**
-	 * set if edge belongs to a motorway link
-	 */
-	final BitArray eMotorwayLink;
-	/**
 	 * set if edge belongs to a roundabout.
 	 */
 	final BitArray eRoundabout;
@@ -113,6 +110,10 @@ class LevelGraph implements Serializable {
 	 * the way points .
 	 */
 	final int[][] eLongitudesE6;
+	/**
+	 * osm street type, mapped by the hashmaps of this class
+	 */
+	final byte[] eOsmStreetType;
 	/**
 	 * number of levels this graph has.
 	 */
@@ -133,6 +134,14 @@ class LevelGraph implements Serializable {
 	 * One graph instance for each level.
 	 */
 	private final Level[] levels;
+	/**
+	 * use to get an int for storing
+	 */
+	final HashMap<String, Byte> osmStreetTypeToByte;
+	/**
+	 * 
+	 */
+	final HashMap<Byte, String> byteToOsmStreetType;
 
 	/**
 	 * Constructs a graph by loading data from a database. the schema must conform to the
@@ -172,11 +181,14 @@ class LevelGraph implements Serializable {
 		eIsShortcut = new BitArray(numEdges);
 		eName = new String[numEdges];
 		eRef = new String[numEdges];
-		eMotorwayLink = new BitArray(numEdges);
+		eOsmStreetType = new byte[numEdges];
 		eRoundabout = new BitArray(numEdges);
 		eLatitudesE6 = new int[numEdges][];
 		eLongitudesE6 = new int[numEdges][];
 		levels = new Level[numLevels];
+
+		osmStreetTypeToByte = new HashMap<String, Byte>();
+		byteToOsmStreetType = new HashMap<Byte, String>();
 
 		// copy data to arrays
 
@@ -207,6 +219,11 @@ class LevelGraph implements Serializable {
 		offset = 0;
 		for (Iterator<HHEdgeLvl> iter = reader.getEdgesLvl(); iter.hasNext();) {
 			HHEdgeLvl e = iter.next();
+			if (!osmStreetTypeToByte.containsKey(e.osmStreetType)) {
+				osmStreetTypeToByte.put(e.osmStreetType, (byte) osmStreetTypeToByte.size());
+				byteToOsmStreetType.put((byte) osmStreetTypeToByte.size(), e.osmStreetType);
+			}
+
 			eSource[offset] = e.sourceId;
 			eTarget[offset] = e.targetId;
 			eWeight[offset] = e.weight;
@@ -216,7 +233,7 @@ class LevelGraph implements Serializable {
 			eIsShortcut.set(offset, e.minLvl > 0);
 			eName[offset] = e.name;
 			eRef[offset] = e.ref;
-			eMotorwayLink.set(offset, e.isMotorwayLink);
+			eOsmStreetType[offset] = osmStreetTypeToByte.get(e.osmStreetType);
 			eRoundabout.set(offset, e.isRoundabout);
 			eLatitudesE6[offset] = toE6Waypoints(e.latitudes);
 			eLongitudesE6[offset] = toE6Waypoints(e.longitudes);
@@ -295,6 +312,15 @@ class LevelGraph implements Serializable {
 	 */
 	public int numLevels() {
 		return numLevels;
+	}
+
+	/**
+	 * @return all osm street types within this graph, no duplicates.
+	 */
+	public String[] getAllOsmStreetTypes() {
+		String[] arr = new String[osmStreetTypeToByte.size()];
+		osmStreetTypeToByte.keySet().toArray(arr);
+		return arr;
 	}
 
 	/**
@@ -533,10 +559,10 @@ class LevelGraph implements Serializable {
 			}
 
 			/**
-			 * @return true if edge is part of a motorway link.
+			 * @return osm street type like, motorway trunk etc.
 			 */
-			public boolean isMotorwayLink() {
-				return eMotorwayLink.get(id);
+			public String getOsmStreetType() {
+				return byteToOsmStreetType.get(eOsmStreetType[id]);
 			}
 
 			/**

@@ -435,7 +435,7 @@ final class Block implements CacheItem {
 			bitOffset += 1;
 
 			// clear satellite data
-			edge.isMotorwayLink = false;
+			edge.osmStreetType = -1;
 			edge.isRoundAbout = false;
 			edge.name = null;
 			edge.ref = null;
@@ -444,9 +444,11 @@ final class Block implements CacheItem {
 			// set satellite data (only for level-0 forward edges)
 			if (level == 0 && edge.isForward) {
 				// set motor-way link
-				edge.isMotorwayLink = Deserializer.readBit(data, bitOffset / 8,
+				edge.osmStreetType = (byte) Deserializer.readUInt(data,
+						routingGraph.bitsPerStreetType,
+						bitOffset / 8,
 						bitOffset % 8);
-				bitOffset += 1;
+				bitOffset += routingGraph.bitsPerStreetType;
 
 				// set roundabout
 				edge.isRoundAbout = Deserializer
@@ -521,6 +523,7 @@ final class Block implements CacheItem {
 				int numHopIndices = (int) Deserializer.readUInt(data, 5, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 5;
+
 				edge.hopIndices = new int[numHopIndices];
 				for (int j = 0; j < numHopIndices; j++) {
 					edge.hopIndices[j] = (int) Deserializer.readUInt(data, 4, bitOffset / 8,

@@ -131,10 +131,18 @@ final class HHRoutingGraph {
 	 */
 	final byte bitsPerEdgeWeight;
 	/**
+	 * number of bits used for encoding street type.
+	 */
+	final byte bitsPerStreetType;
+	/**
 	 * true if the graph stores hop indices, which can be used to expand shortcuts recursively
 	 * without using dijkstra's algorithm.
 	 */
 	final int hasShortcutHopIndices;
+	/**
+	 * osm street types.
+	 */
+	final String[] streetTypes;
 
 	private Cache<Block> evalSpeedupCache = new DummyCache<Block>();
 
@@ -182,7 +190,26 @@ final class HHRoutingGraph {
 		this.bitsPerBlockId = iStream.readByte();
 		this.bitsPerVertexOffset = iStream.readByte();
 		this.bitsPerEdgeWeight = iStream.readByte();
+		this.bitsPerStreetType = iStream.readByte();
 		this.hasShortcutHopIndices = iStream.readInt();
+
+		int numStreetTypes = iStream.readByte();
+		this.streetTypes = new String[numStreetTypes];
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < numStreetTypes; i++) {
+			byte b = iStream.readByte();
+			while (b != (byte) 0) {
+				sb.append((char) b);
+				b = iStream.readByte();
+			}
+			if (sb.length() > 0) {
+				streetTypes[i] = sb.toString();
+			} else {
+				streetTypes[i] = null;
+			}
+			sb.setLength(0);
+		}
+
 		iStream.close();
 		this.bitMask = getBitmask(bitsPerVertexOffset);
 		this.startAddrClusterBlocks = startAddrGraph + CLUSTER_BLOCKS_HEADER_LENGTH;
