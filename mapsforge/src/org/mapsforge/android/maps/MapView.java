@@ -43,7 +43,30 @@ import android.view.ViewGroup;
 import android.widget.ZoomControls;
 
 /**
- * An implementation of the MapView class from the Google Maps library.
+ * A MapView shows a map on the display of the device. It handles all user input and touch
+ * gestures to move and zoom the map. This MapView also comes with an integrated scale bar,
+ * which can be activated via the {@link #setScaleBar(boolean)} method. The built-in zoom
+ * controls can be enabled with the {@link #setBuiltInZoomControls(boolean)} method. The
+ * {@link #getController()} method returns a <code>MapController</code> to programmatically
+ * modify the position and zoom level of the map.
+ * <p>
+ * This implementation supports offline map rendering as well as downloading map images (tiles)
+ * over an Internet connection. All possible operation modes are listed in the
+ * {@link MapViewMode} enumeration. The operation mode of a MapView can be set in the
+ * constructor and changed at runtime with the {@link #setMapViewMode(MapViewMode)} method. In
+ * offline rendering mode a special database file is required which contains the map data. Such
+ * map files can be stored in any readable folder. The current map file for a MapView is set by
+ * calling the {@link #setMapFile(String)} method.
+ * <p>
+ * Map tiles are automatically cached in a separate directory on the memory card. The size of
+ * this cache may be adjusted via the {@link #setMemoryCardCacheSize(int)} method.
+ * <p>
+ * To draw an {@link Overlay} on top of the map, add it to the list returned by
+ * {@link #getOverlays()}. More than one Overlay can be used at the same time to display
+ * geographical data such as points and ways.
+ * <p>
+ * All text strings in the user interface of a MapView are customizable via the
+ * {@link #setText(String, String)} method. The default texts are in English.
  */
 public class MapView extends ViewGroup {
 	/**
@@ -406,7 +429,7 @@ public class MapView extends ViewGroup {
 	private long previousTime;
 	private long previousTimeSinceDrawOverlays;
 	private boolean showFpsCounter;
-	private boolean showMapScale;
+	private boolean showScaleBar;
 	private boolean showZoomControls;
 	private Bitmap swapMapViewBitmap;
 	private Bitmap tileBitmap;
@@ -764,21 +787,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the visibility of the map scale.
-	 * 
-	 * @param showMapScale
-	 *            true if the map scale should be visible, false otherwise.
-	 */
-	public void setMapScale(boolean showMapScale) {
-		this.showMapScale = showMapScale;
-		if (showMapScale) {
-			renderMapScale();
-		}
-		// invalidate the MapView
-		invalidate();
-	}
-
-	/**
 	 * Sets a new operation mode for the MapView.
 	 * 
 	 * @param newMapViewMode
@@ -825,6 +833,21 @@ public class MapView extends ViewGroup {
 			throw new IllegalArgumentException();
 		}
 		this.moveSpeedFactor = moveSpeedFactor;
+	}
+
+	/**
+	 * Sets the visibility of the scale bar.
+	 * 
+	 * @param showScaleBar
+	 *            true if the scale bar should be visible, false otherwise.
+	 */
+	public void setScaleBar(boolean showScaleBar) {
+		this.showScaleBar = showScaleBar;
+		if (showScaleBar) {
+			renderScaleBar();
+		}
+		// invalidate the MapView
+		invalidate();
 	}
 
 	/**
@@ -885,7 +908,7 @@ public class MapView extends ViewGroup {
 		return zoom;
 	}
 
-	private void renderMapScale() {
+	private void renderScaleBar() {
 		// check if recalculating and drawing of the map scale is necessary
 		if (this.zoomLevel == this.mapScalePreviousZoomLevel
 				&& Math.abs(this.latitude - this.mapScalePreviousLatitude) < 0.2) {
@@ -1161,7 +1184,7 @@ public class MapView extends ViewGroup {
 			// draw the map and the map scale
 			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 
-			if (this.showMapScale) {
+			if (this.showScaleBar) {
 				canvas.drawBitmap(this.mapScaleBitmap, 5, getHeight() - MAP_SCALE_HEIGHT - 5,
 						null);
 			}
@@ -1411,8 +1434,8 @@ public class MapView extends ViewGroup {
 			}
 		}
 
-		if (this.showMapScale) {
-			renderMapScale();
+		if (this.showScaleBar) {
+			renderScaleBar();
 		}
 
 		// invalidate the MapView

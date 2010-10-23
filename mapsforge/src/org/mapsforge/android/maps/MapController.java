@@ -20,11 +20,19 @@ import android.view.KeyEvent;
 import android.view.View;
 
 /**
- * An implementation of the MapController class from the Google Maps library.
+ * A MapController is used to programmatically modify the position and zoom level of a map. Each
+ * MapController is assigned to a single MapView instance. To retrieve a MapController for a
+ * given MapView, call the {@link MapView#getController()} method.
  */
 public final class MapController implements android.view.View.OnKeyListener {
 	private MapView mapView;
 
+	/**
+	 * Constructs a new MapController for interacting with the given MapView.
+	 * 
+	 * @param mapView
+	 *            the MapView that should be controlled with this MapController.
+	 */
 	MapController(MapView mapView) {
 		this.mapView = mapView;
 	}
@@ -42,39 +50,40 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * Sets the center of the MapView.
+	 * Sets the center of the MapView without an animation to the given point.
 	 * 
 	 * @param point
-	 *            the new center point.
+	 *            the new center point of the map.
 	 */
 	public void setCenter(GeoPoint point) {
 		this.mapView.setCenter(point);
 	}
 
 	/**
-	 * Sets the zoom level of the MapView.
+	 * Sets the zoom level of the MapView without an animation.
 	 * 
 	 * @param zoomLevel
-	 *            the new zoom level. This will be limited by the maximum possible zoom level.
+	 *            the new zoom level. This value will be limited by the maximum and minimum
+	 *            possible zoom level.
 	 * @return the new zoom level.
 	 */
-	public int setZoom(byte zoomLevel) {
-		return this.mapView.setZoom(zoomLevel);
+	public int setZoom(int zoomLevel) {
+		return this.mapView.setZoom((byte) zoomLevel);
 	}
 
 	/**
-	 * Increases the zoom level of the MapView.
+	 * Increases the zoom level of the MapView, unless the maximum zoom level has been reached.
 	 * 
-	 * @return true, if the zoom level was changed, false otherwise.
+	 * @return true, if the zoom level has been changed, false otherwise.
 	 */
 	public boolean zoomIn() {
 		return this.mapView.zoom((byte) 1);
 	}
 
 	/**
-	 * Decreases the zoom level of the MapView.
+	 * Decreases the zoom level of the MapView, unless the minimum zoom level has been reached.
 	 * 
-	 * @return true, if the zoom level was changed, false otherwise.
+	 * @return true, if the zoom level has been changed, false otherwise.
 	 */
 	public boolean zoomOut() {
 		return this.mapView.zoom((byte) -1);
