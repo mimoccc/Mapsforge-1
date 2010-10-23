@@ -43,9 +43,8 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
-import org.mapsforge.server.routing.RouterFactory;
 
-class RouteViewer {
+public class RouteViewer {
 
 	private static final long serialVersionUID = 1L;
 	private final JFrame frame;
@@ -54,7 +53,9 @@ class RouteViewer {
 	GeoPosition routeSource;
 	GeoPosition routeDestination;
 
-	public RouteViewer() {
+	private LinkedList<IEdge> edges = new LinkedList<IEdge>();
+
+	public RouteViewer(IRouter router) {
 		this.frame = new JFrame("RouteViewer");
 		this.frame.setSize(800, 600);
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,7 +64,7 @@ class RouteViewer {
 		mapKit.setDefaultProvider(DefaultProviders.OpenStreetMaps);
 		mapKit.setDataProviderCreditShown(true);
 
-		this.overlay = new RouteOverlay(RouterFactory.getRouter(), Color.RED.darker(),
+		this.overlay = new RouteOverlay(router, Color.RED.darker(),
 				Color.BLUE.darker().darker());
 		mapKit.getMainMap().setOverlayPainter(overlay);
 		mapKit.getMainMap().addMouseListener(new java.awt.event.MouseAdapter() {
@@ -79,6 +80,10 @@ class RouteViewer {
 
 		this.frame.add(mapKit);
 		frame.setVisible(true);
+	}
+
+	public void drawEdges(LinkedList<IEdge> edges) {
+		this.edges.addAll(edges);
 	}
 
 	private class PopMenu extends JPopupMenu {
@@ -181,7 +186,7 @@ class RouteViewer {
 		public RouteOverlay(IRouter router, Color cRoute, Color cSearchSpace) {
 			this.router = router;
 			this.searchSpace = new LinkedList<IEdge>();
-			this.route = router.getShortestPathDebug(10, 50, searchSpace);
+			this.route = null;
 			this.cRoute = cRoute;
 			this.cSearchSpace = cSearchSpace;
 		}
@@ -206,6 +211,22 @@ class RouteViewer {
 					RenderingHints.VALUE_ANTIALIAS_ON);
 			g.setStroke(new BasicStroke(2));
 			synchronized (this) {
+				for (IEdge e : edges) {
+					GeoCoordinate[] coords = e.getAllWaypoints();
+					for (int j = 1; j < coords.length; j++) {
+						double[] cs = new double[] { coords[j - 1].getLatitude(),
+								coords[j - 1].getLongitude() };
+						double[] ct = new double[] { coords[j].getLatitude(),
+								coords[j].getLongitude() };
+						Point2D s = mapKit.getMainMap().getTileFactory()
+								.geoToPixel(new GeoPosition(cs), mapKit.getMainMap().getZoom());
+						Point2D t = mapKit.getMainMap().getTileFactory()
+								.geoToPixel(new GeoPosition(ct), mapKit.getMainMap().getZoom());
+						g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
+								(int) t.getY());
+					}
+				}
+
 				for (IEdge e : searchSpace) {
 					GeoCoordinate[] coords = new GeoCoordinate[e.getWaypoints().length + 2];
 					coords[0] = e.getSource().getCoordinate();

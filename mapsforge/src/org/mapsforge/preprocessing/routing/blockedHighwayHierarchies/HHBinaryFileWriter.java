@@ -55,7 +55,12 @@ class HHBinaryFileWriter {
 			String dbUser = props.getProperty("blockedHH.input.db.user");
 			String dbPassword = props.getProperty("blockedHH.input.db.password");
 
-			File inputFile = new File(props.getProperty("blockedHH.input.file"));
+			File inputFile;
+			try {
+				inputFile = new File(props.getProperty("blockedHH.input.file"));
+			} catch (NullPointerException e) {
+				inputFile = null;
+			}
 			File outputFile = new File(props.getProperty("blockedHH.output.file"));
 
 			String clusteringAlgorithm = props.getProperty("blockedHH.clustering.algorithm");
@@ -69,7 +74,7 @@ class HHBinaryFileWriter {
 
 			int addressLookupTableMaxGroupSize = Integer.parseInt(props
 					.getProperty("blockedHH.addressLookupTable.maxGroupSize"));
-			boolean hopIndices = Boolean.parseBoolean(props
+			int hopIndices = Integer.parseInt(props
 					.getProperty("blockedHH.hopIndices"));
 			int rtreeBlockSize = Integer.parseInt(props
 					.getProperty("blockedHH.rtree.blockSize"));
@@ -77,7 +82,7 @@ class HHBinaryFileWriter {
 			System.out.println("create blocked highway hierarchies binary :'"
 					+ outputFile.getAbsolutePath() + "'");
 			LevelGraph levelGraph = null;
-			if (inputFile.exists() && inputFile.isFile()) {
+			if (inputFile != null && inputFile.exists() && inputFile.isFile()) {
 				// load graph from file
 				try {
 					System.out.print("loading the graph : '" + inputFile.getAbsolutePath()
@@ -141,7 +146,7 @@ class HHBinaryFileWriter {
 
 	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
 			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize,
-			boolean includeHopIndices) throws IOException {
+			int includeHopIndices) throws IOException {
 
 		// ---------------- WRITE TEMPORARY FILES --------------------------
 

@@ -17,12 +17,15 @@ package org.mapsforge.android.routing.blockedHighwayHierarchies;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedList;
 
 import org.mapsforge.core.DBConnection;
@@ -30,82 +33,11 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
 
+/**
+ * ATTENTION : dirty coded CONSTRAINT use only one instance!!!
+ * 
+ */
 class Evaluation {
-
-	private static class Result {
-		double numGraphBlockReads;
-		double numFileSystemBlockReads;
-		double numSettledVertices;
-		double numCacheHits;
-		double maxHeapSize;
-
-		Result() {
-			this.numGraphBlockReads = 0;
-			this.numFileSystemBlockReads = 0;
-			this.numSettledVertices = 0;
-			this.numCacheHits = 0;
-			this.maxHeapSize = 0;
-		}
-
-		public Result(double numGraphBlockReads, double numFileSystemBlockReads,
-				double numSettledVertices, double numCacheHits, double maxHeapSize) {
-			this.numGraphBlockReads = numGraphBlockReads;
-			this.numFileSystemBlockReads = numFileSystemBlockReads;
-			this.numSettledVertices = numSettledVertices;
-			this.numCacheHits = numCacheHits;
-			this.maxHeapSize = maxHeapSize;
-		}
-
-		@Override
-		public String toString() {
-			return "Result(" + "\n"
-					+ "  numGraphBlockReads = " + numGraphBlockReads + "\n"
-					+ "  numFileSystemBlockReads = " + numFileSystemBlockReads + "\n"
-					+ "  numSettledVertices = " + numSettledVertices + "\n"
-					+ "  numCacheHits = " + numCacheHits + "\n"
-					+ "  maxHeapSize = " + maxHeapSize + "\n"
-					+ ")";
-		}
-
-		void addValues(Result other) {
-			numGraphBlockReads += other.numGraphBlockReads;
-			numFileSystemBlockReads += other.numFileSystemBlockReads;
-			numSettledVertices += other.numSettledVertices;
-			numCacheHits += other.numCacheHits;
-			maxHeapSize += other.maxHeapSize;
-		}
-
-		void divValues(double scalar) {
-			numGraphBlockReads /= scalar;
-			numFileSystemBlockReads /= scalar;
-			numSettledVertices /= scalar;
-			numCacheHits /= scalar;
-			maxHeapSize /= scalar;
-		}
-
-		void minValues(Result other) {
-			numGraphBlockReads = Math.min(numGraphBlockReads, other.numGraphBlockReads);
-			numFileSystemBlockReads = Math.min(numFileSystemBlockReads,
-					other.numFileSystemBlockReads);
-			numSettledVertices = Math.min(numSettledVertices, other.numSettledVertices);
-			numCacheHits = Math.min(numCacheHits, other.numCacheHits);
-			maxHeapSize = Math.min(maxHeapSize, other.maxHeapSize);
-		}
-
-		void maxValues(Result other) {
-			numGraphBlockReads = Math.max(numGraphBlockReads, other.numGraphBlockReads);
-			numFileSystemBlockReads = Math.max(numFileSystemBlockReads,
-					other.numFileSystemBlockReads);
-			numSettledVertices = Math.max(numSettledVertices, other.numSettledVertices);
-			numCacheHits = Math.max(numCacheHits, other.numCacheHits);
-			maxHeapSize = Math.max(maxHeapSize, other.maxHeapSize);
-		}
-
-		Result getCopy() {
-			return new Result(numGraphBlockReads, numFileSystemBlockReads, numSettledVertices,
-					numCacheHits, maxHeapSize);
-		}
-	}
 
 	private static class TestRoute {
 		final HHVertex source;
@@ -117,11 +49,32 @@ class Evaluation {
 		}
 	}
 
+	private static class Result {
+		int numGraphBlockReads;
+		int numFileSystemBlockReads;
+		int numSettledVertices;
+		int numCacheHits;
+		int maxHeapSize;
+
+		Result() {
+			this.numGraphBlockReads = 0;
+			this.numFileSystemBlockReads = 0;
+			this.numSettledVertices = 0;
+			this.numCacheHits = 0;
+			this.maxHeapSize = 0;
+		}
+	}
+
 	public static final int PHASE_A = 0;
 	public static final int PHASE_B = 1;
 
 	private static int currentPhase = PHASE_A;
 	private static Result[] currentResult = getEmptyResult();
+
+	private static final String SQL_INSERT_BINARY_FILE = "INSERT INTO hh_binary (file_name, c, h, hop_limit, hop_indices, clustering, clustering_threshold) VALUES(?, ?, ?, ?, ?, ?, ?);";
+	private static final String SQL_INSERT_TEST_ROUTE = "INSERT INTO test_route (file_name, rank, test_route_id, p1_num_settled, p1_max_heap_size, p1_num_fs_block_reads, p1_num_cluster_reads, p1_num_cache_hits, p2_num_settled, p2_max_heap_size, p2_num_fs_block_reads, p2_num_cluster_reads, p2_num_cache_hits) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	private static final String SQL_TRUNCATE_BINARY_FILE_TABLE = "TRUNCATE TABLE hh_binary CASCADE;";
+	private static final String SQL_TRUNCATE_TEST_ROUTE_TABLE = "TRUNCATE TABLE test_route CASCADE;";
 
 	// database
 	private static final String DB_HOST = "localhost";
@@ -132,6 +85,10 @@ class Evaluation {
 	// general configuration
 	private static final int FILE_SYSTEM_BLOCK_SIZE = 4096;
 	private static final int CACHE_SIZE = 400 * 1000 * 1024; // 400MB big enough to cache it all
+
+	private static Result[] getEmptyResult() {
+		return new Result[] { new Result(), new Result() };
+	}
 
 	static void setPhase(int phase) {
 		if (phase == PHASE_A || phase == PHASE_B) {
@@ -164,36 +121,111 @@ class Evaluation {
 				currentResult[currentPhase].maxHeapSize, currentHeapSize);
 	}
 
-	static Result[] getEmptyResult() {
-		return new Result[] { new Result(), new Result() };
+	private final Connection evalDbConnection;
+	private final PreparedStatement pstmtInsertBinaryFile;
+	private final PreparedStatement pstmtInsertTestRoute;
+
+	public Evaluation(Connection evalDbConnection) throws SQLException {
+		this.evalDbConnection = evalDbConnection;
+		this.pstmtInsertBinaryFile = this.evalDbConnection
+				.prepareStatement(SQL_INSERT_BINARY_FILE);
+		this.pstmtInsertTestRoute = this.evalDbConnection
+				.prepareStatement(SQL_INSERT_TEST_ROUTE);
 	}
 
-	static Connection getConnection(String dbName) throws SQLException {
-		return DBConnection.getJdbcConnectionPg(DB_HOST, DB_PORT, dbName, DB_USER, DB_PASS);
-	}
+	void executeTestRoutesWriteToDb(File[] hhBinaryFiles, File[] testRouteFiles)
+			throws IOException, SQLException {
+		System.out.println("truncate tables");
 
-	static HHGraphProperties getHHPropertiesFromDb(Connection conn) throws SQLException {
-		HHDbReader reader = new HHDbReader(conn);
-		return reader.getGraphProperties();
-	}
+		Statement stmt = evalDbConnection.createStatement();
+		stmt.executeUpdate(SQL_TRUNCATE_BINARY_FILE_TABLE);
+		stmt.executeUpdate(SQL_TRUNCATE_TEST_ROUTE_TABLE);
+		stmt.close();
 
-	static String getDbName(File hhBinaryFile) {
-		return hhBinaryFile.getName().substring(0, 6);
-	}
+		for (File hhBinaryFile : hhBinaryFiles) {
+			if (getHasHopindicesFromFileName(hhBinaryFile)) {
+				continue;
+			}
 
-	static String getClusteringAlgorithmName(File hhBinaryFile) {
-		String s = hhBinaryFile.getName().substring(6);
-		if (s.startsWith("quad_tree")) {
-			return "quad_tree";
+			System.out.println("executing testroutes on file : '" + hhBinaryFile.getName()
+					+ "'");
+			Connection conn = getConnection(getDbNameFromFileName(hhBinaryFile));
+			HHGraphProperties props = getHHPropertiesFromDb(conn);
+			conn.close();
+
+			// (file_name, c, h, hop_limit, hop_indices)
+			pstmtInsertBinaryFile.setString(1, hhBinaryFile.getName());
+			pstmtInsertBinaryFile.setDouble(2, props.c);
+			pstmtInsertBinaryFile.setInt(3, props.h);
+			pstmtInsertBinaryFile.setInt(4, props.hopLimit);
+			pstmtInsertBinaryFile.setBoolean(5, getHasHopindicesFromFileName(hhBinaryFile));
+			pstmtInsertBinaryFile.setString(6,
+					getClusteringAlgorithmNameFromFileName(hhBinaryFile));
+			pstmtInsertBinaryFile.setInt(7, getClusteringThresholdFromFileName(hhBinaryFile));
+			pstmtInsertBinaryFile.executeUpdate();
+
+			for (File testRoutesFile : testRouteFiles) {
+				System.out.println(Integer.parseInt(testRoutesFile.getName()
+						.substring(0, testRoutesFile.getName().length() - 4)));
+				LinkedList<Result[]> result = executeTestRouteBinaryFile(hhBinaryFile,
+						testRoutesFile);
+				int testRouteId = 0;
+				for (Result[] r : result) {
+					pstmtInsertTestRoute.setString(1, hhBinaryFile.getName());
+					pstmtInsertTestRoute.setInt(2, Integer.parseInt(testRoutesFile.getName()
+							.substring(0, testRoutesFile.getName().length() - 4)));
+					pstmtInsertTestRoute.setInt(3, testRouteId++);
+
+					pstmtInsertTestRoute.setInt(4, r[0].numSettledVertices);
+					pstmtInsertTestRoute.setInt(5, r[0].maxHeapSize);
+					pstmtInsertTestRoute.setInt(6, r[0].numFileSystemBlockReads);
+					pstmtInsertTestRoute.setInt(7, r[0].numGraphBlockReads);
+					pstmtInsertTestRoute.setInt(8, r[0].numCacheHits);
+
+					pstmtInsertTestRoute.setInt(9, r[1].numSettledVertices);
+					pstmtInsertTestRoute.setInt(10, r[1].maxHeapSize);
+					pstmtInsertTestRoute.setInt(11, r[1].numFileSystemBlockReads);
+					pstmtInsertTestRoute.setInt(12, r[1].numGraphBlockReads);
+					pstmtInsertTestRoute.setInt(13, r[1].numCacheHits);
+
+					pstmtInsertTestRoute.addBatch();
+				}
+				pstmtInsertTestRoute.executeBatch();
+			}
 		}
-		return "k_center";
 	}
 
-	static LinkedList<TestRoute> getTestRoutes(File testRoutesFile, HHRoutingGraph routingGraph)
+	private LinkedList<Result[]> executeTestRouteBinaryFile(File hhBinaryFile,
+			File testRoutesFile)
+			throws IOException {
+		HHRoutingGraph routingGraph = new HHRoutingGraph(hhBinaryFile, CACHE_SIZE);
+		System.out.println(routingGraph.hasShortcutHopIndices);
+		HHAlgorithm algo = new HHAlgorithm(routingGraph);
+		LinkedList<TestRoute> testRoutes = getTestRoutesFromFile(testRoutesFile, routingGraph);
+		LinkedList<Result[]> results = new LinkedList<Result[]>();
+
+		int count = 0;
+		for (TestRoute testRoute : testRoutes) {
+			currentResult = getEmptyResult();
+			algo.getShortestPath(testRoute.source.vertexIds[0], testRoute.target.vertexIds[0],
+					new LinkedList<HHEdge>(), true);
+			results.add(currentResult);
+
+			if (count % 10 == 0) {
+				System.out.println(count + "/" + testRoutes.size());
+			}
+			count++;
+		}
+		return results;
+	}
+
+	private LinkedList<TestRoute> getTestRoutesFromFile(File testRoutesFile,
+			HHRoutingGraph routingGraph)
 			throws IOException {
 		final int maxDistance = 300;
 		LinkedList<TestRoute> testRoutes = new LinkedList<TestRoute>();
-		LineNumberReader lnr = new LineNumberReader(new FileReader(testRoutesFile));
+		LineNumberReader lnr = new LineNumberReader(new BufferedReader(new FileReader(
+				testRoutesFile)));
 		String line;
 		while ((line = lnr.readLine()) != null) {
 			String[] coords = line.split(";");
@@ -208,91 +240,58 @@ class Evaluation {
 		return testRoutes;
 	}
 
-	static LinkedList<Result[]> evaluateTestRoutes(File hhBinaryFile, File testRoutesFile)
-			throws IOException {
-		HHRoutingGraph routingGraph = new HHRoutingGraph(hhBinaryFile, CACHE_SIZE);
-		HHAlgorithm algo = new HHAlgorithm(routingGraph);
-		LinkedList<TestRoute> testRoutes = getTestRoutes(testRoutesFile, routingGraph);
-		LinkedList<Result[]> results = new LinkedList<Result[]>();
-
-		int count = 0;
-		for (TestRoute testRoute : testRoutes) {
-			currentResult = getEmptyResult();
-			algo.getShortestPath(testRoute.source.vertexIds[0], testRoute.target.vertexIds[0],
-					new LinkedList<HHEdge>(), true);
-			results.add(currentResult);
-
-			if (count++ == 10) {
-				break;
-			}
-		}
-		return results;
+	private Connection getConnection(String dbName) throws SQLException {
+		return DBConnection.getJdbcConnectionPg(DB_HOST, DB_PORT, dbName, DB_USER, DB_PASS);
 	}
 
-	// static LinkedList<Result[]> evaluateAllFiles(File testRoutesFile)
-	// throws IOException, SQLException {
-	// int rank = Integer.parseInt(testRoutesFile.getName().split(".")[0]);
-	//
-	// File outputFile = new File("binaryEvaluation_" + rank + ".txt");
-	// PrintWriter writer = new PrintWriter(new FileWriter(outputFile));
-	//
-	// File[] hhBinaryFiles = new File("evaluation/binaries").listFiles();
-	// for (File hhBinaryFile : hhBinaryFiles) {
-	// String clusteringAlgorithmName = getClusteringAlgorithmName(hhBinaryFile);
-	// HHGraphProperties props = getHHPropertiesFromDb(getConnection(getDbName(hhBinaryFile)));
-	// LinkedList<Result[]> results = evaluateTestRoutes(hhBinaryFile, testRoutesFile);
-	// Result[] minResult = getMinResult(results);
-	// Result[] maxResult = getMaxResult(results);
-	// Result[] avgResult = getAverageResult(results);
-	// writer
-	// .println("c;h;hopLimit;clustering;clusteringAnchor;hasHopIndices;"
-	// + "blockReadsPhaseA;4kReadsPhaseA;SettledPhaseA;cacheHitsPhaseA;heapSizePhaseA;"
-	// + "blockReadsPhaseB;4kReadsPhaseB;SettledPhaseB;cacheHitsPhaseB;heapSizePhaseB;");
-	// writer.print(props.c + ";");
-	// writer.print(props.h + ";");
-	// writer.print(props.hopLimit + ";");
-	// writer.print(clusteringAlgorithmName + ";");
-	//
-	// }
-	//
-	// }
-
-	static Result[] getAverageResult(LinkedList<Result[]> results) {
-		Result[] avg = getEmptyResult();
-		for (Result[] r : results) {
-			avg[0].addValues(r[0]);
-			avg[1].addValues(r[1]);
-		}
-		avg[0].divValues(results.size());
-		avg[1].divValues(results.size());
-		return avg;
+	private HHGraphProperties getHHPropertiesFromDb(Connection conn) throws SQLException {
+		HHDbReader reader = new HHDbReader(conn);
+		return reader.getGraphProperties();
 	}
 
-	static Result[] getMinResult(LinkedList<Result[]> results) {
-		Result[] min = { results.getFirst()[0].getCopy(), results.getFirst()[1].getCopy() };
-		for (Result[] r : results) {
-			min[0].minValues(r[0]);
-			min[1].minValues(r[1]);
-		}
-		return min;
+	private String getDbNameFromFileName(File hhBinaryFile) {
+		return hhBinaryFile.getName().substring(0, 6);
 	}
 
-	static Result[] getMaxResult(LinkedList<Result[]> results) {
-		Result[] max = { results.getFirst()[0].getCopy(), results.getFirst()[1].getCopy() };
-		for (Result[] r : results) {
-			max[0].maxValues(r[0]);
-			max[1].maxValues(r[1]);
+	private String getClusteringAlgorithmNameFromFileName(File hhBinaryFile) {
+		String s = hhBinaryFile.getName().substring(7);
+		if (s.startsWith("quad_tree")) {
+			return "quad_tree";
 		}
-		return max;
+		return "k_center";
+	}
+
+	private int getClusteringThresholdFromFileName(File hhBinaryFile) {
+		return Integer.parseInt(hhBinaryFile.getName().split("_")[4]);
+	}
+
+	private boolean getHasHopindicesFromFileName(File hhBinaryFile) {
+		return hhBinaryFile.getName().split("_")[5].startsWith("true");
 	}
 
 	public static void main(String[] args) throws IOException {
-		File hhBinaryFile = new File("evaluation/binaries/ger_02_k_center_400_true.blockedHH");
-		File testRoutesFile = new File("evaluation/routes/1048576.txt");
-		LinkedList<Result[]> result = evaluateTestRoutes(hhBinaryFile, testRoutesFile);
+		try {
+			File[] hhBinaryFiles = new File[] { new File(
+					"evaluation/binaries/ger_12_quad_tree_400_false.blockedHH") };
+			for (int i = 0; i < hhBinaryFiles.length; i++) {
+				System.out.println("enqueue " + hhBinaryFiles[i].getName());
+			}
+			File[] testRoutesFiles = new File("evaluation/routes/").listFiles();
+			Connection conn = DBConnection.getJdbcConnectionPg("localhost", 5432,
+					"eval_single",
+					"osm", "osm");
+			Evaluation eval = new Evaluation(conn);
+			eval.executeTestRoutesWriteToDb(hhBinaryFiles,
+					testRoutesFiles);
+			conn.commit();
+			conn.close();
 
-		for (Result[] r : result) {
-			System.out.println(r[0] + "\n" + r[1] + "\n-");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			while (e.getNextException() != null) {
+				e = e.getNextException();
+				e.printStackTrace();
+			}
 		}
 	}
 }

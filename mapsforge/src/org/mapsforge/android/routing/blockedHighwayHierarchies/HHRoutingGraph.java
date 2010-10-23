@@ -43,6 +43,13 @@ import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
  * Furthermore some satellite data e.g. edge names are stored.
  */
 final class HHRoutingGraph {
+	/** no hop indices, edges are expanded using dijkstra */
+	public static final int HOP_INDICES_NONE = 0;
+	/** recursive mapping to the respective subjacent layer of the edge */
+	public static final int HOP_INDICES_RECURSIVE = 1;
+	/** direct mapping to level 0 */
+	public static final int HOP_INDICES_DIRECT = 2;
+
 	/**
 	 * header magic of the highway hierarchies binary file. Used for checking if the file might
 	 * be o.k.
@@ -127,7 +134,9 @@ final class HHRoutingGraph {
 	 * true if the graph stores hop indices, which can be used to expand shortcuts recursively
 	 * without using dijkstra's algorithm.
 	 */
-	final boolean hasShortcutHopIndices;
+	final int hasShortcutHopIndices;
+
+	private Cache<Block> evalSpeedupCache = new DummyCache<Block>();
 
 	/**
 	 * @param hhBinaryFile
@@ -173,7 +182,7 @@ final class HHRoutingGraph {
 		this.bitsPerBlockId = iStream.readByte();
 		this.bitsPerVertexOffset = iStream.readByte();
 		this.bitsPerEdgeWeight = iStream.readByte();
-		this.hasShortcutHopIndices = iStream.readBoolean();
+		this.hasShortcutHopIndices = iStream.readInt();
 		iStream.close();
 		this.bitMask = getBitmask(bitsPerVertexOffset);
 		this.startAddrClusterBlocks = startAddrGraph + CLUSTER_BLOCKS_HEADER_LENGTH;
@@ -199,12 +208,17 @@ final class HHRoutingGraph {
 			}
 
 		}, INITIAL_POOL_SIZE_EDGES);
+
+		for (int i = 0; i < blockAddressTable.size(); i++) {
+			readBlock(i);
+		}
+		clearCache();
 	}
 
 	/**
 	 * @return Returns true if this graph stores hop indices.
 	 */
-	public boolean hasShortcutHopIndices() {
+	public int hasShortcutHopIndices() {
 		return hasShortcutHopIndices;
 	}
 
@@ -429,14 +443,19 @@ final class HHRoutingGraph {
 			long startAddr = startAddrClusterBlocks + pointer.startAddr;
 			// need to read 4 bytes to much since the Deserializer requires that.
 			int nBytes = pointer.lengthBytes + 4;
-			raf.seek(startAddr);
-			byte[] buff = new byte[nBytes];
-			raf.readFully(buff);
 
 			// REMOVE THIS LATER
 			Evaluation.notifyBlockRead(startAddr, startAddr + nBytes);
 
-			return new Block(blockId, buff, this);
+			Block block = evalSpeedupCache.getItem(blockId);
+			if (block == null) {
+				raf.seek(startAddr);
+				byte[] buff = new byte[nBytes];
+				raf.readFully(buff);
+				block = new Block(blockId, buff, this);
+				evalSpeedupCache.putItem(block);
+			}
+			return block;
 		}
 		return null;
 	}

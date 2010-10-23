@@ -51,9 +51,9 @@ class Evaluation {
 
 	// test routes
 	private static final int ROUTES_COUNT = 1000;
-	private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 10),
-			(int) Math.pow(2, 12), (int) Math.pow(2, 14), (int) Math.pow(2, 16),
-			(int) Math.pow(2, 18), (int) Math.pow(2, 20) };
+	private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 11),
+			(int) Math.pow(2, 13), (int) Math.pow(2, 15), (int) Math.pow(2, 17),
+			(int) Math.pow(2, 19) };
 
 	static void generateRoutes(LevelGraph levelGraph) throws IOException {
 		for (int rank : ROUTES_RANKS) {
@@ -163,27 +163,27 @@ class Evaluation {
 		}
 
 		// k-center binaries
-		// for (int i = 3; i <= GRAPHS_COUNT; i++) {
-		// boolean incluedHopIndices = true;
-		// for (int k = 0; k < 2; k++) {
-		// String graphName = getGraphFileName(i);
-		// String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
-		// conf.setProperty("blockedHH.input.file", inputFile);
-		//
-		// for (int averageVerticesPerCluster : kCenterAverageVerticesPerCluster) {
-		// String algorithmName = "k_center";
-		// String outputFile = "evaluation/binaries/" + graphName + "_"
-		// + algorithmName + "_" + averageVerticesPerCluster + "_"
-		// + incluedHopIndices + ".blockedHH";
-		// conf.setProperty("blockedHH.clustering.algorithm", algorithmName);
-		// conf.setProperty("blockedHH.output.file", outputFile);
-		// conf.setProperty("blockedHH.clustering.avgVerticesPerCluster", ""
-		// + averageVerticesPerCluster);
-		// HHBinaryFileWriter.writeBinaryFile(conf);
-		// }
-		// incluedHopIndices = !incluedHopIndices;
-		// }
-		// }
+		for (int i = 3; i <= GRAPHS_COUNT; i++) {
+			boolean incluedHopIndices = true;
+			for (int k = 0; k < 2; k++) {
+				String graphName = getGraphFileName(i);
+				String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
+				conf.setProperty("blockedHH.input.file", inputFile);
+
+				for (int averageVerticesPerCluster : kCenterAverageVerticesPerCluster) {
+					String algorithmName = "k_center";
+					String outputFile = "evaluation/binaries/" + graphName + "_"
+							+ algorithmName + "_" + averageVerticesPerCluster + "_"
+							+ incluedHopIndices + ".blockedHH";
+					conf.setProperty("blockedHH.clustering.algorithm", algorithmName);
+					conf.setProperty("blockedHH.output.file", outputFile);
+					conf.setProperty("blockedHH.clustering.avgVerticesPerCluster", ""
+							+ averageVerticesPerCluster);
+					HHBinaryFileWriter.writeBinaryFile(conf);
+				}
+				incluedHopIndices = !incluedHopIndices;
+			}
+		}
 	}
 
 	static Connection getConnection(String dbName) throws SQLException {

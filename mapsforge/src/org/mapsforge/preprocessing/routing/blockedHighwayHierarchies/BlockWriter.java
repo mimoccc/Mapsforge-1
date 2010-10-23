@@ -20,10 +20,12 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectByteHashMap;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -37,6 +39,11 @@ import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 
 class BlockWriter {
+
+	public static final int HOP_INDICES_NONE = 0;
+	public static final int HOP_INDICES_RECURSIVE = 1;
+	public static final int HOP_INDICES_DIRECT = 2;
+	public static final int HOP_INDICES_DEFAULT = HOP_INDICES_NONE;
 
 	private static final int BUFFER_SIZE = 25000000;
 	private static final byte[] BUFFER = new byte[BUFFER_SIZE];
@@ -56,8 +63,12 @@ class BlockWriter {
 	private static DijkstraAlgorithm dijkstraAlgorithm;
 
 	public static int[] writeClusterBlocks(File targetFile, LevelGraph levelGraph,
-			Clustering[] clustering, ClusterBlockMapping mapping, boolean includeHopIndices)
+			Clustering[] clustering, ClusterBlockMapping mapping, int includeHopIndices)
 			throws IOException {
+		if (includeHopIndices != HOP_INDICES_NONE && includeHopIndices != HOP_INDICES_RECURSIVE
+				&& includeHopIndices != HOP_INDICES_DIRECT) {
+			includeHopIndices = HOP_INDICES_DEFAULT;
+		}
 
 		_levelGraph = levelGraph;
 		_clustering = clustering;
@@ -83,7 +94,7 @@ class BlockWriter {
 		out.writeByte(bitsPerBlockId);
 		out.writeByte(bitsPerVertexOffset);
 		out.writeByte(bitsPerEdgeWeight);
-		out.writeBoolean(includeHopIndices);
+		out.writeInt(includeHopIndices);
 		out.write(new byte[HEADER_LENGTH - out.size()]);
 
 		// serialize blocks only to get byte sizes
@@ -330,20 +341,84 @@ class BlockWriter {
 		}
 	}
 
-	private static byte[] serializeBlock(Cluster cluster, boolean includeHopIndices)
+	private static byte[] serializeBlock(Cluster cluster, int includeHopIndices)
 			throws IOException {
 
 		// write everything two times,
-		// during the first run, the edge offsets stored
-		// at each vertex are unknown
-		// in the second run these values are known from the first run
-
+		// during the first run, the following three values are not known
 		int[] vertexEdgeOffset = new int[cluster.size()];
+		int offsetStreetNames = 0;
+		int offsetReferencedBlocks = 0;
+
 		BitArrayOutputStream out = new BitArrayOutputStream(BUFFER);
 
 		byte level = mapClusterToLevel.get(cluster);
 		Rect bbox = getBoundingBox(cluster);
 		int maxNeighborhood = getMaxNeighborHood(cluster);
+
+		// put all street names on a map,
+		// each name is map to offset where it is stored
+		byte[] streetNamesBytes;
+		HashMap<String, Integer> streetNames = new HashMap<String, Integer>();
+		{
+			int[] vertexIds = cluster.getVertices();
+
+			ByteArrayOutputStream arrOut = new ByteArrayOutputStream();
+			DataOutputStream dArrOut = new DataOutputStream(arrOut);
+
+			for (int i = 0; i < vertexIds.length; i++) {
+				LevelVertex v = _levelGraph.getLevel(level).getVertex(vertexIds[i]);
+				for (LevelEdge e : v.getOutboundEdges()) {
+					String name = e.getName();
+					String ref = e.getRef();
+					if (name != null && !name.equals("") && !streetNames.containsKey(name)) {
+						streetNames.put(name, dArrOut.size());
+						dArrOut.write(name.getBytes());
+						dArrOut.writeByte(0);
+					}
+					if (ref != null && !ref.equals("") && !streetNames.containsKey(ref)) {
+						streetNames.put(ref, dArrOut.size());
+						dArrOut.write(ref.getBytes());
+						dArrOut.writeByte(0);
+					}
+				}
+			}
+			dArrOut.flush();
+			streetNamesBytes = arrOut.toByteArray();
+		}
+		// put all referenced blocks on a map
+		HashMap<Integer, Integer> referencedBlocksIdx = new HashMap<Integer, Integer>();
+		LinkedList<Integer> referencedBlocks = new LinkedList<Integer>();
+		{
+			int[] vertexIds = cluster.getVertices();
+			for (int i = 0; i < vertexIds.length; i++) {
+				LevelVertex v = _levelGraph.getLevel(level).getVertex(vertexIds[i]);
+				for (int j = 0; j < level; j++) {
+					int blockId = mapClusterToBlockId
+							.getBlockId(_clustering[j].getCluster(v.getId()));
+					if (!referencedBlocksIdx.containsKey(blockId)) {
+						referencedBlocksIdx.put(blockId, referencedBlocks.size());
+						referencedBlocks.addLast(blockId);
+					}
+				}
+				if (v.getMaxLevel() > level) {
+					int blockId = mapClusterToBlockId.getBlockId(_clustering[level + 1]
+							.getCluster(v.getId()));
+					if (!referencedBlocksIdx.containsKey(blockId)) {
+						referencedBlocksIdx.put(blockId, referencedBlocks.size());
+						referencedBlocks.addLast(blockId);
+					}
+				}
+				for (LevelEdge e : v.getOutboundEdges()) {
+					int blockId = mapClusterToBlockId.getBlockId(_clustering[level]
+							.getCluster(e.getTarget().getId()));
+					if (!referencedBlocksIdx.containsKey(blockId)) {
+						referencedBlocksIdx.put(blockId, referencedBlocks.size());
+						referencedBlocks.addLast(blockId);
+					}
+				}
+			}
+		}
 
 		for (int run = 0; run < 2; run++) {
 			if (run == 1) {
@@ -382,6 +457,19 @@ class BlockWriter {
 			byte bitsPerNeighborhood = numBitsToEncode(0, maxNeighborhood);
 			out.writeByte(bitsPerNeighborhood);
 
+			// bits per street name offset
+			byte bitsPerStreetNameOffset = numBitsToEncode(0, streetNamesBytes.length);
+			out.writeByte(bitsPerStreetNameOffset);
+
+			byte bitsPerIndirectBlockRef = numBitsToEncode(0, referencedBlocks.size());
+			out.writeByte(bitsPerIndirectBlockRef);
+
+			// offset street names
+			out.writeUInt(offsetStreetNames, 24);
+
+			// offset referencedBlocks
+			out.writeUInt(offsetReferencedBlocks, 24);
+
 			/* VERTICES */
 			{
 				int[] vertexIds = cluster.getVertices();
@@ -392,7 +480,8 @@ class BlockWriter {
 						int blockId = mapClusterToBlockId
 								.getBlockId(_clustering[j].getCluster(v.getId()));
 						int vertexOffset = mapVertexIdToVertexOffset[j].get(v.getId());
-						out.writeUInt(blockId, bitsPerBlockId);
+						out.writeUInt(referencedBlocksIdx.get(blockId),
+								bitsPerIndirectBlockRef);
 						out.writeUInt(vertexOffset, bitsPerVertexOffset);
 					}
 
@@ -401,8 +490,13 @@ class BlockWriter {
 						int blockId = mapClusterToBlockId.getBlockId(_clustering[level + 1]
 								.getCluster(v.getId()));
 						int vertexOffset = mapVertexIdToVertexOffset[level + 1].get(v.getId());
-						out.writeUInt(blockId, bitsPerBlockId);
+						out.writeUInt(referencedBlocksIdx.get(blockId),
+								bitsPerIndirectBlockRef);
 						out.writeUInt(vertexOffset, bitsPerVertexOffset);
+
+						if (mapClusterToBlockId.getBlockId(cluster) == 312) {
+							System.out.println("ref " + referencedBlocksIdx.get(blockId));
+						}
 					}
 
 					// neighborhood
@@ -444,13 +538,20 @@ class BlockWriter {
 					for (LevelEdge e : v.getOutboundEdges()) {
 						// weight
 						out.writeUInt(e.getWeight(), bitsPerEdgeWeight);
+						// is internal
+						boolean isInternal = _clustering[level].getCluster(
+								e.getTarget().getId()).equals(cluster);
+						out.writeBit(isInternal);
+
 						// target id
 						int blockId = mapClusterToBlockId.getBlockId(_clustering[level]
 								.getCluster(e.getTarget().getId()));
 						int vertexOffset = mapVertexIdToVertexOffset[level].get(e.getTarget()
 								.getId());
-
-						out.writeUInt(blockId, bitsPerBlockId);
+						if (!isInternal) {
+							out.writeUInt(referencedBlocksIdx.get(blockId),
+									bitsPerIndirectBlockRef);
+						}
 						out.writeUInt(vertexOffset, bitsPerVertexOffset);
 
 						// is forward
@@ -472,27 +573,25 @@ class BlockWriter {
 							// isRoundabout
 							out.writeBit(e.isRoundabout());
 
-							// name
-							String name = e.getName();
-							if (name == null) {
-								name = "";
-							}
-							if (name.length() > 30) {
-								name = name.substring(0, 30);
-							}
-							out.writeByte((byte) name.getBytes().length);
-							out.write(name.getBytes());
+							// hasName
+							boolean hasName = e.getName() != null && !e.getName().equals("");
+							out.writeBit(hasName);
 
-							// ref
-							String ref = e.getRef();
-							if (ref == null) {
-								ref = "";
+							// hasRef
+							boolean hasRef = e.getRef() != null && !e.getRef().equals("");
+							out.writeBit(hasRef);
+
+							// name byte offset from block start
+							if (hasName) {
+								int nameOffset = streetNames.get(e.getName());
+								out.writeUInt(nameOffset, bitsPerStreetNameOffset);
 							}
-							if (ref.length() > 30) {
-								ref = ref.substring(0, 30);
+
+							// ref byte offset from block start
+							if (hasRef) {
+								int refOffset = streetNames.get(e.getRef());
+								out.writeUInt(refOffset, bitsPerStreetNameOffset);
 							}
-							out.writeByte((byte) ref.getBytes().length);
-							out.write(ref.getBytes());
 
 							// way points
 							GeoCoordinate[] waypoints = e.getWaypoints();
@@ -517,7 +616,7 @@ class BlockWriter {
 						}
 
 						// write hop indices for expanding shortcuts
-						if (e.getMinLevel() > 0 && includeHopIndices) {
+						if (e.getMinLevel() > 0 && includeHopIndices == HOP_INDICES_RECURSIVE) {
 							LinkedList<Integer> hopIndices = new LinkedList<Integer>();
 							dijkstraAlgorithm.getShortestPath(e.getSource().getId(), e
 									.getTarget().getId(), e.getMinLevel() - 1,
@@ -536,6 +635,30 @@ class BlockWriter {
 					}
 				}
 			}
+
+			/* STREET NAMES */
+			out.alignPointer(1);
+			offsetStreetNames = out.getByteOffset();
+			if (level == 0) {
+				out.write(streetNamesBytes);
+			}
+
+			/* REFERENCED BLOCKS */
+			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
+				System.out.println("S " + out.getByteOffset());
+			}
+			out.alignPointer(1);
+			offsetReferencedBlocks = out.getByteOffset();
+			for (Integer blockId : referencedBlocks) {
+				out.writeUInt(blockId, bitsPerBlockId);
+			}
+			out.alignPointer(1);
+			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
+				System.out.println("refs " + referencedBlocks.size());
+			}
+			if (mapClusterToBlockId.getBlockId(cluster) == 312) {
+				System.out.println("E " + out.getByteOffset());
+			}
 		}
 
 		// copy written data from buffer and return it
@@ -544,9 +667,9 @@ class BlockWriter {
 		for (int i = 0; i < result.length; i++) {
 			result[i] = BUFFER[i];
 		}
+
 		// clear buffer
 		clearBuffer(out.getByteOffset());
-
 		return result;
 	}
 }

@@ -20,11 +20,10 @@ package org.mapsforge.android.routing.blockedHighwayHierarchies;
  *
  */
 final class Block implements CacheItem {
-
 	/**
 	 * Bit offset to the first vertex of this block.
 	 */
-	private static final short FIRST_VERTEX_OFFSET = 17 * 8;
+	private static final short FIRST_VERTEX_OFFSET = 25 * 8;
 	/**
 	 * the id of this block
 	 */
@@ -73,7 +72,13 @@ final class Block implements CacheItem {
 	/**
 	 * number of bits for encoding the neighborhood of the vertices.
 	 */
-	private final byte encBitsPerNeighborhood;
+	private final byte bitsPerNeighborhood;
+
+	private final byte bitsPerStreetNameOffset;
+	private final int offsetStreetNames;
+	private final int offsetReferencedBlocks;
+	private final byte bitsPerIndirectBlockRef;
+
 	/**
 	 * Number of bits for encoding a vertex of type A.
 	 */
@@ -118,14 +123,26 @@ final class Block implements CacheItem {
 		this.bitsPerCoordinate = Deserializer.readByte(data, bitOffset / 8,
 				bitOffset % 8);
 		bitOffset += 8;
-		this.encBitsPerNeighborhood = Deserializer.readByte(data, bitOffset / 8,
+		this.bitsPerNeighborhood = Deserializer.readByte(data, bitOffset / 8,
 				bitOffset % 8);
 		bitOffset += 8;
+		this.bitsPerStreetNameOffset = Deserializer.readByte(data, bitOffset / 8,
+				bitOffset % 8);
+		bitOffset += 8;
+		this.bitsPerIndirectBlockRef = Deserializer.readByte(data, bitOffset / 8,
+				bitOffset % 8);
+		bitOffset += 8;
+		this.offsetStreetNames = (int) Deserializer.readUInt(data, 24, bitOffset / 8,
+				bitOffset % 8);
+		bitOffset += 24;
+		this.offsetReferencedBlocks = (int) Deserializer.readUInt(data, 24, bitOffset / 8,
+				bitOffset % 8);
+		bitOffset += 24;
 
-		this.bitsPerVertexTypeC = ((routingGraph.bitsPerBlockId + routingGraph.bitsPerVertexOffset) * level)
+		this.bitsPerVertexTypeC = ((bitsPerIndirectBlockRef + routingGraph.bitsPerVertexOffset) * level)
 				+ 32 + (level == 0 ? (2 * bitsPerCoordinate) : 0);
-		this.bitsPerVertexTypeB = bitsPerVertexTypeC + encBitsPerNeighborhood;
-		this.bitsPerVertexTypeA = bitsPerVertexTypeB + routingGraph.bitsPerBlockId
+		this.bitsPerVertexTypeB = bitsPerVertexTypeC + bitsPerNeighborhood;
+		this.bitsPerVertexTypeA = bitsPerVertexTypeB + bitsPerIndirectBlockRef
 				+ routingGraph.bitsPerVertexOffset;
 	}
 
@@ -164,6 +181,7 @@ final class Block implements CacheItem {
 		if (vertexOffset >= getNumVertices()) {
 			return null;
 		}
+
 		// here, the first vertex of this block is stored.
 		int bitOffset = FIRST_VERTEX_OFFSET;
 
@@ -176,9 +194,13 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
 						bitOffset / 8, bitOffset % 8);
-				bitOffset += routingGraph.bitsPerBlockId;
+				bitOffset += bitsPerIndirectBlockRef;
+				int _bitOffset = (offsetReferencedBlocks * 8)
+						+ (blockIdx * routingGraph.bitsPerBlockId);
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+						_bitOffset / 8, _bitOffset % 8);
 				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
@@ -186,13 +208,17 @@ final class Block implements CacheItem {
 				vertex.vertexIds[i] = routingGraph.getVertexId(_blockId, _vertexOffset);
 			}
 
-			// read vertex id of current level
+			// get vertex id of current level
 			vertex.vertexIds[level] = routingGraph.getVertexId(blockId, vertexOffset);
 
 			// read vertex id of higher level
-			int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+			int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
 					bitOffset / 8, bitOffset % 8);
-			bitOffset += routingGraph.bitsPerBlockId;
+			bitOffset += bitsPerIndirectBlockRef;
+			int _bitOffset = (offsetReferencedBlocks * 8)
+					+ (blockIdx * routingGraph.bitsPerBlockId);
+			int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+					_bitOffset / 8, _bitOffset % 8);
 			int _vertexOffset = (int) Deserializer.readUInt(data,
 					routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerVertexOffset;
@@ -200,9 +226,9 @@ final class Block implements CacheItem {
 			vertex.vertexIds[level + 1] = routingGraph.getVertexId(_blockId, _vertexOffset);
 
 			// read neighborhood
-			vertex.neighborhood = (int) Deserializer.readUInt(data, encBitsPerNeighborhood,
+			vertex.neighborhood = (int) Deserializer.readUInt(data, bitsPerNeighborhood,
 					bitOffset / 8, bitOffset % 8);
-			bitOffset += encBitsPerNeighborhood;
+			bitOffset += bitsPerNeighborhood;
 
 			// read Bit-offset of first outbound edge
 			vertex.bitOffsetFirstOutboundEdge = Deserializer.readInt(data, bitOffset / 8,
@@ -232,9 +258,13 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
 						bitOffset / 8, bitOffset % 8);
-				bitOffset += routingGraph.bitsPerBlockId;
+				bitOffset += bitsPerIndirectBlockRef;
+				int _bitOffset = (offsetReferencedBlocks * 8)
+						+ (blockIdx * routingGraph.bitsPerBlockId);
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+						_bitOffset / 8, _bitOffset % 8);
 				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
@@ -242,16 +272,16 @@ final class Block implements CacheItem {
 				vertex.vertexIds[i] = routingGraph.getVertexId(_blockId, _vertexOffset);
 			}
 
-			// read vertex id of current level
+			// get vertex id of current level
 			vertex.vertexIds[level] = routingGraph.getVertexId(blockId, vertexOffset);
 
 			// read vertex id of higher level
 			vertex.vertexIds[level + 1] = -1;
 
 			// read neighborhood
-			vertex.neighborhood = (int) Deserializer.readUInt(data, encBitsPerNeighborhood,
+			vertex.neighborhood = (int) Deserializer.readUInt(data, bitsPerNeighborhood,
 					bitOffset / 8, bitOffset % 8);
-			bitOffset += encBitsPerNeighborhood;
+			bitOffset += bitsPerNeighborhood;
 
 			// read Bit-offset of first outbound edge
 			vertex.bitOffsetFirstOutboundEdge = Deserializer.readInt(data, bitOffset / 8,
@@ -282,9 +312,13 @@ final class Block implements CacheItem {
 			// read vertex id of lower levels
 			vertex.vertexIds = new int[level + 2];
 			for (int i = 0; i < level; i++) {
-				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+				int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
 						bitOffset / 8, bitOffset % 8);
-				bitOffset += routingGraph.bitsPerBlockId;
+				bitOffset += bitsPerIndirectBlockRef;
+				int _bitOffset = (offsetReferencedBlocks * 8)
+						+ (blockIdx * routingGraph.bitsPerBlockId);
+				int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+						_bitOffset / 8, _bitOffset % 8);
 				int _vertexOffset = (int) Deserializer.readUInt(data,
 						routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 				bitOffset += routingGraph.bitsPerVertexOffset;
@@ -292,7 +326,7 @@ final class Block implements CacheItem {
 				vertex.vertexIds[i] = routingGraph.getVertexId(_blockId, _vertexOffset);
 			}
 
-			// read vertex id of current level
+			// get vertex id of current level
 			vertex.vertexIds[level] = routingGraph.getVertexId(blockId, vertexOffset);
 
 			// read vertex id of higher level
@@ -321,6 +355,18 @@ final class Block implements CacheItem {
 			}
 		}
 		return vertex;
+	}
+
+	private byte[] getZeroTerminatedString(int byteOffset) {
+		int i = byteOffset;
+		while (data[i] != (byte) 0x00) {
+			i++;
+		}
+		byte[] b = new byte[i - byteOffset];
+		for (int j = 0; j < b.length; j++) {
+			b[j] = data[byteOffset + j];
+		}
+		return b;
 	}
 
 	/**
@@ -355,10 +401,22 @@ final class Block implements CacheItem {
 					bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerEdgeWeight;
 
+			boolean isInternal = Deserializer.readBit(data, bitOffset / 8, bitOffset % 8);
+			bitOffset += 1;
+
 			// set target id
-			int _blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
-					bitOffset / 8, bitOffset % 8);
-			bitOffset += routingGraph.bitsPerBlockId;
+			int _blockId;
+			if (!isInternal) {
+				int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
+						bitOffset / 8, bitOffset % 8);
+				bitOffset += bitsPerIndirectBlockRef;
+				int _bitOffset = (offsetReferencedBlocks * 8)
+						+ (blockIdx * routingGraph.bitsPerBlockId);
+				_blockId = (int) Deserializer.readUInt(data, routingGraph.bitsPerBlockId,
+						_bitOffset / 8, _bitOffset % 8);
+			} else {
+				_blockId = blockId;
+			}
 			int _vertexOffset = (int) Deserializer.readUInt(data,
 					routingGraph.bitsPerVertexOffset, bitOffset / 8, bitOffset % 8);
 			bitOffset += routingGraph.bitsPerVertexOffset;
@@ -382,6 +440,7 @@ final class Block implements CacheItem {
 			edge.name = null;
 			edge.ref = null;
 			edge.waypoints = null;
+
 			// set satellite data (only for level-0 forward edges)
 			if (level == 0 && edge.isForward) {
 				// set motor-way link
@@ -394,28 +453,34 @@ final class Block implements CacheItem {
 						.readBit(data, bitOffset / 8, bitOffset % 8);
 				bitOffset += 1;
 
+				// hasName ?
+				boolean hasName = Deserializer
+						.readBit(data, bitOffset / 8, bitOffset % 8);
+				bitOffset += 1;
+
+				// hasRef ?
+				boolean hasRef = Deserializer
+						.readBit(data, bitOffset / 8, bitOffset % 8);
+				bitOffset += 1;
+
 				// set name
-				byte nameLen = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
-				bitOffset += 8;
-				if (nameLen > 0) {
-					edge.name = new byte[nameLen];
-					for (int j = 0; j < edge.name.length; j++) {
-						edge.name[j] = Deserializer.readByte(data, bitOffset / 8,
-								bitOffset % 8);
-						bitOffset += 8;
-					}
+				if (hasName) {
+					int byteOffset = (int) Deserializer.readUInt(data,
+							bitsPerStreetNameOffset,
+							bitOffset / 8,
+							bitOffset % 8);
+					bitOffset += bitsPerStreetNameOffset;
+					edge.name = getZeroTerminatedString(offsetStreetNames + byteOffset);
 				}
 
 				// set ref
-				byte refLen = Deserializer.readByte(data, bitOffset / 8, bitOffset % 8);
-				bitOffset += 8;
-				if (refLen > 0) {
-					edge.ref = new byte[refLen];
-					for (int j = 0; j < edge.ref.length; j++) {
-						edge.ref[j] = Deserializer
-								.readByte(data, bitOffset / 8, bitOffset % 8);
-						bitOffset += 8;
-					}
+				if (hasRef) {
+					int byteOffset = (int) Deserializer.readUInt(data,
+							bitsPerStreetNameOffset,
+							bitOffset / 8,
+							bitOffset % 8);
+					bitOffset += bitsPerStreetNameOffset;
+					edge.ref = getZeroTerminatedString(offsetStreetNames + byteOffset);
 				}
 
 				// set waypoints
@@ -451,7 +516,8 @@ final class Block implements CacheItem {
 
 			// set hop indices if this edge is a shortcut
 			edge.hopIndices = null;
-			if (edge.minLevel > 0 && routingGraph.hasShortcutHopIndices) {
+			if (edge.minLevel > 0
+					&& routingGraph.hasShortcutHopIndices != HHRoutingGraph.HOP_INDICES_NONE) {
 				int numHopIndices = (int) Deserializer.readUInt(data, 5, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 5;

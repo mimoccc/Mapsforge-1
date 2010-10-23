@@ -216,8 +216,8 @@ public class HHRouter implements IRouter {
 				for (int i = 1; i < waypoints.length - 1; i++) {
 					waypoints[i] = new
 							GeoCoordinate(edge.waypoints[(i - 1) * 2],
-									edge.waypoints[((i - 1) * 2) +
-									1]);
+							edge.waypoints[((i - 1) * 2) +
+							1]);
 				}
 				waypoints[waypoints.length - 1] = new GeoCoordinate(target.latitudeE6,
 						target.longitudeE6);
@@ -317,13 +317,14 @@ public class HHRouter implements IRouter {
 	 */
 	public static void main(String[] args) throws IOException {
 		HHRouter router = new HHRouter(new File(
-				"evaluation/binaries/ger_02_k_center_400_true.blockedHH"), 1000 * 1024);
-		IVertex source = router.getNearestVertex(new GeoCoordinate(50.509769, 10.4567655));
-		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+				"router/berlin.blockedHH"), 1000 * 1024);
+		// IVertex source = router.getNearestVertex(new GeoCoordinate(50.509769, 10.4567655));
+		// IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.456766));
+		IVertex target = router.getNearestVertex(new GeoCoordinate(52.454685, 13.29188));
 		long startTime = System.currentTimeMillis();
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
 		long time = System.currentTimeMillis() - startTime;
-
 		for (IEdge e : shortestPath) {
 			System.out.println(e.getName() + " " + e.getRef());
 		}
