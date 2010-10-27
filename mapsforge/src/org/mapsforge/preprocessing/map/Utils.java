@@ -34,15 +34,16 @@ import com.vividsolutions.jts.geom.LinearRing;
 
 class Utils {
 	private static GeometryFactory geoFac = new GeometryFactory();
+
+	// values for the tile bit mask which indicate on which sub tile a way has to be rendered
 	private static final int[] tileBitMaskValues = new int[] { 32768, 16384, 2048, 1024, 8192,
 			4096, 512, 256, 128, 64, 8, 4, 32, 16, 2, 1 };
 
-	// private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0.01,
-	// 0.003, 0.001, 0.0008, 0.00025, 0.00012, 0.0001, 0, 0 };
-
+	// list of values for extending a tile on the base zoom level
 	private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0.0006, 0.00025, 0.00013, 0.00006 };
 
+	// list of values for extending a sub tile
 	private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
 
@@ -55,26 +56,42 @@ class Utils {
 	 *            the Y number of the tile.
 	 * @param zoom
 	 *            the zoom level at which the bounding box should be calculated.
-	 * @return the bounding box of this tile.
+	 * @return a geometry object which represents the bounding box of this tile
 	 */
 	static LinearRing getBoundingBox(long tileX, long tileY, byte zoom) {
+		// project the tile coordinates to latitude and longitude
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
+		// create a geometry object which represents the bounding box
 		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
 				new Coordinate(minLat, minLon), new Coordinate(minLat, maxLon),
 				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
 	}
 
-	static LinearRing getBoundingBox(long tileX, long tileY, byte zoom, boolean bigger) {
+	/**
+	 * Get the bounding box of a tile.
+	 * 
+	 * @param tileX
+	 *            the X number of the tile.
+	 * @param tileY
+	 *            the Y number of the tile.
+	 * @param zoom
+	 *            the zoom level at which the bounding box should be calculated.
+	 * @param enlarged
+	 *            indicates if a enlarged bounding box should be created
+	 * @return a geometry object which represents the bounding box of this tile
+	 */
+	static LinearRing getBoundingBox(long tileX, long tileY, byte zoom, boolean enlarged) {
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
-		if (bigger) {
+		if (enlarged) {
+			// if the bounding box should be bigger, add a certain epsilon to the coordinates
 			Coordinate[] c = new Coordinate[] {
 					new Coordinate(maxLat + tileEpsilon[zoom - 1], minLon
 							- tileEpsilon[zoom - 1]),
@@ -86,20 +103,35 @@ class Utils {
 							+ tileEpsilon[zoom - 1]),
 					new Coordinate(maxLat + tileEpsilon[zoom - 1], minLon
 							- tileEpsilon[zoom - 1]) };
+			// create a geometry object which represents the bounding box
 			return geoFac.createLinearRing(c);
 		}
+		// create a geometry object which represents the bounding box
 		return geoFac.createLinearRing(new Coordinate[] { new Coordinate(maxLat, minLon),
 				new Coordinate(minLat, minLon), new Coordinate(minLat, maxLon),
 				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
 	}
 
-	static LinearRing getSubTileBoundingBox(long tileX, long tileY, byte zoom, boolean bigger) {
+	/**
+	 * Get the bounding box of a sub tile.
+	 * 
+	 * @param tileX
+	 *            the X number of the tile.
+	 * @param tileY
+	 *            the Y number of the tile.
+	 * @param zoom
+	 *            the zoom level at which the bounding box should be calculated.
+	 * @param enlarged
+	 *            indicates if a enlarged bounding box should be created
+	 * @return a geometry object which represents the bounding box of this tile
+	 */
+	static LinearRing getSubTileBoundingBox(long tileX, long tileY, byte zoom, boolean enlarged) {
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
-		if (bigger) {
+		if (enlarged) {
 			Coordinate[] c = new Coordinate[] {
 					new Coordinate(maxLat + subTileEpsilon[zoom - 1], minLon
 							- subTileEpsilon[zoom - 1]),
@@ -118,6 +150,17 @@ class Utils {
 				new Coordinate(maxLat, maxLon), new Coordinate(maxLat, minLon) });
 	}
 
+	/**
+	 * Get the coordinates of the bounding box of a tile.
+	 * 
+	 * @param tileX
+	 *            the X number of the tile.
+	 * @param tileY
+	 *            the Y number of the tile.
+	 * @param zoom
+	 *            the zoom level at which the bounding box should be calculated.
+	 * @return an array containing the coordinates of the bounding box of this tile
+	 */
 	static double[] getBoundingBoxArray(long tileX, long tileY, byte zoom) {
 		double[] result = new double[4];
 
@@ -135,16 +178,16 @@ class Utils {
 	}
 
 	/**
-	 * Returns all subtiles of a given tile on a configurable higher zoom level. The resulting
-	 * list is computed by recursively calling getSubtiles() on all four subtiles of the given
+	 * Returns all sub tiles of a given tile on a configurable higher zoom level. The resulting
+	 * list is computed by recursively calling getSubtiles() on all four sub tiles of the given
 	 * tile. On each recursive call the second parameter is decremented by one until zero is
 	 * reached.
 	 * 
 	 * @param currentTile
-	 *            the starting tile for the computation of the subtiles.
+	 *            the starting tile for the computation of the sub tiles.
 	 * @param zoomLevelDistance
-	 *            how many zoom levels higher the subtiles should be.
-	 * @return a list containing all subtiles on the higher zoom level.
+	 *            how many zoom levels higher the sub tiles should be.
+	 * @return a list containing all sub tiles on the higher zoom level.
 	 * @throws InvalidParameterException
 	 *             if {@code zoomLevelDistance} is less than zero.
 	 */
@@ -213,6 +256,7 @@ class Utils {
 		}
 
 		try {
+			// get the bounding box of the current way
 			Geometry boundingBox = geoWay.getEnvelope();
 			Coordinate[] bBoxCoords = boundingBox.getCoordinates();
 
@@ -239,14 +283,16 @@ class Utils {
 				max = bBoxCoords[1];
 			}
 
-			// get the minimal and maximal tile coordinates
+			// get the minimal and maximal tile coordinates for the tiles that cover the corners
+			// of the bounding box
 			minTileX = (int) MercatorProjection.longitudeToTileX(min.y, zoom);
 			minTileY = (int) MercatorProjection.latitudeToTileY(min.x, zoom);
 
 			maxTileX = (int) MercatorProjection.longitudeToTileX(max.y, zoom);
 			maxTileY = (int) MercatorProjection.latitudeToTileY(max.x, zoom);
 
-			// calculate the tile coordinates and the corresponding bounding boxes
+			// calculate the tile coordinates and the corresponding bounding boxes for the tiles
+			// that cover the bounding box
 			Map<Coordinate, Geometry> tiles = new HashMap<Coordinate, Geometry>();
 			for (long i = minTileX; i <= maxTileX; i++) {
 				for (long j = minTileY; j <= maxTileY; j++) {
@@ -255,30 +301,28 @@ class Utils {
 				}
 			}
 
-			// check for every tile in the set if the tile contains the given way
+			// check for every tile in the set if the tile is related to the given way
 			Set<Entry<Coordinate, Geometry>> set = tiles.entrySet();
 			for (Entry<Coordinate, Geometry> e : set) {
 				Coordinate c = e.getKey();
-				// logger.info("tilecoordinates: " + c.x + " " + c.y);
 				Geometry currentTile = e.getValue();
+				// the current way is open
 				if (wayType == 1) {
 					if (geoWay.crosses(currentTile) || geoWay.within(currentTile)
 							|| geoWay.intersects(currentTile) || currentTile.contains(geoWay)
 							|| currentTile.contains(geoWay) || currentTile.intersects(geoWay)) {
-						// logger.info("crosses -1");
+						// if the tile is related to the way add the tile to the result list
 						parentTile = new Tile((long) c.x, (long) c.y, zoom);
-						// logger.info("parentTile: " + parentTile.toString());
 						wayTiles.add(parentTile);
-						// wayTiles.put(new Tile((long) c.x, (long) c.y, zoom), (short) 0);
 					}
 				}
+				// the current way is closed or part of a multipolygon
 				if (wayType != 1) {
 					if (currentTile.within(geoWay) || currentTile.intersects(geoWay)
 							|| currentTile.contains(geoWay) || geoWay.contains(currentTile)
 							|| geoWay.crosses(currentTile)) {
-						// logger.info("crosses -2");
+						// if the tile is related to the way add the tile to the result list
 						parentTile = new Tile((long) c.x, (long) c.y, zoom);
-						// logger.info("parentTile: " + parentTile.toString());
 						wayTiles.add(parentTile);
 					}
 				}
@@ -301,14 +345,17 @@ class Utils {
 	 */
 	static Geometry createWay(MapElementWay way, Coordinate[] wayNodes) {
 		Geometry geoWay;
+
 		if (wayNodes.length < 2) {
 			return null;
 		}
 
 		if (way.wayType == 1) {
+			// open way
 			geoWay = geoFac.createLineString(wayNodes);
 		} else {
 			if (wayNodes.length < 4) {
+				// a closed way has to have at least four way nodes
 				return null;
 			}
 			geoWay = geoFac.createPolygon(geoFac.createLinearRing(wayNodes), null);
@@ -318,7 +365,7 @@ class Utils {
 	}
 
 	/**
-	 * Calculates for each way that is related to a given tile a tile bitmask. The bitmask
+	 * Calculates for each way that is related to a given tile a tile bit mask. The bit mask
 	 * determines for which tiles on zoom level initialTile.zoom+2 the way is needed for
 	 * rendering.
 	 * 
@@ -329,12 +376,12 @@ class Utils {
 	 * @param wayType
 	 *            the type of the way, 1 = simple way, 2 = closed way/area, 3 = part of a
 	 *            multipolygon
-	 * @return a map containing tiles and the calculated tile bitmask
+	 * @return a map containing tiles and the calculated tile bit mask
 	 */
 	static Map<Tile, Short> getTileBitMask(Geometry geoWay, Set<Tile> wayTiles, short wayType) {
 		Map<Tile, Short> result = new HashMap<Tile, Short>();
 		short tileCounter;
-		short bitmap;
+		short bitMask;
 		short tmp = 0;
 
 		Geometry subTile;
@@ -343,27 +390,40 @@ class Utils {
 			return result;
 		}
 
+		// for every tile to which the current way is related
 		for (Tile p : wayTiles) {
+			// get all sixteen sub tiles
 			List<Tile> currentSubTiles = getSubtiles(new Tile(p.x, p.y, p.zoomLevel), (byte) 2);
 			tileCounter = 0;
-			bitmap = 0;
+			bitMask = 0;
 			result.put(p, (short) 0);
+
+			// for every sub tile
 			for (Tile csb : currentSubTiles) {
+				// get the bounding box of the sub tile
 				subTile = geoFac.createPolygon(Utils.getSubTileBoundingBox(csb.x, csb.y,
 						(byte) (p.zoomLevel + 2), true), null);
+
+				// check the relation between the current way and the sub tile
+				// the way is open
 				if (wayType == 1) {
 					if (geoWay.crosses(subTile) || geoWay.within(subTile)
 							|| geoWay.intersects(subTile)) {
+						// if the way is related to the sub tile add the corresponding value to
+						// the bit mask
 						tmp = result.get(p);
 						tmp |= tileBitMaskValues[tileCounter];
 						result.put(p, tmp);
 					}
 				}
+				// the way is closed or part of a multipolygon
 				if (wayType != 1) {
 					if (subTile.within(geoWay) || subTile.intersects(geoWay)
 							|| subTile.contains(geoWay)) {
-						bitmap = bitmap |= tileBitMaskValues[tileCounter];
-						result.put(p, bitmap);
+						// if the way is related to the sub tile add the corresponding value to
+						// the bit mask
+						bitMask = bitMask |= tileBitMaskValues[tileCounter];
+						result.put(p, bitMask);
 					}
 				}
 				tileCounter++;
@@ -390,10 +450,10 @@ class Utils {
 
 		ArrayList<Coordinate> output = new ArrayList<Coordinate>();
 
-		Coordinate lastPoint;
-		Coordinate currentPoint;
+		Coordinate lastNode;
+		Coordinate currentNode;
 
-		Coordinate tmpPoint;
+		Coordinate intersectionPoint;
 
 		if (polygonNodes.size() == 0) {
 			return output;
@@ -401,49 +461,49 @@ class Utils {
 			return polygonNodes;
 		}
 
-		// get the last polygon point
-		lastPoint = polygonNodes.get(polygonNodes.size() - 1);
+		// get the last polygon node
+		lastNode = polygonNodes.get(polygonNodes.size() - 1);
 
-		// for every point of the polygon
+		// for every node of the polygon
 		for (int j = 0; j < polygonNodes.size(); j++) {
-			// get the current point
-			currentPoint = polygonNodes.get(j);
+			// get the current node
+			currentNode = polygonNodes.get(j);
 
-			if (pointInsideTile(currentPoint, tileA, tileB)) {
-				// the current point lies inside the clipping region
-				if (pointInsideTile(lastPoint, tileA, tileB)) {
-					// the last point lies inside the clipping region
-					// add the current point to the output list
-					output.add(currentPoint);
+			if (nodeInsideTile(currentNode, tileA, tileB)) {
+				// the current node lies inside the clipping region
+				if (nodeInsideTile(lastNode, tileA, tileB)) {
+					// the last node lies inside the clipping region
+					// add the current node to the output list
+					output.add(currentNode);
 
 				} else {
-					// the last point lies outside the clipping region
+					// the last node lies outside the clipping region
 
-					// calculate the intersection point of the edges (lastPoint,currentPoint)
+					// calculate the intersection point of the edges (lastNode, currentNode)
 					// and (tileA,tileB)
-					tmpPoint = intersection(lastPoint, currentPoint, tileA, tileB);
+					intersectionPoint = intersection(lastNode, currentNode, tileA, tileB);
 
 					// add the intersection point to the output list
-					output.add(tmpPoint);
-					// add also the current point to the output list
-					output.add(currentPoint);
+					output.add(intersectionPoint);
+					// add also the current node to the output list
+					output.add(currentNode);
 				}
 			} else {
-				// the current point lies outside the clipping region
-				if (pointInsideTile(lastPoint, tileA, tileB)) {
-					// the lastPoint lies inside the clipping region
+				// the current node lies outside the clipping region
+				if (nodeInsideTile(lastNode, tileA, tileB)) {
+					// the last node lies inside the clipping region
 
-					// calculate the intersection point of the edges (lastPoint,currentPoint)
+					// calculate the intersection point of the edges (lastNode,currentNode)
 					// and (tileA,tileB)
-					tmpPoint = intersection(lastPoint, currentPoint, tileA, tileB);
+					intersectionPoint = intersection(lastNode, currentNode, tileA, tileB);
 					// add the intersection point to the output list
-					output.add(tmpPoint);
+					output.add(intersectionPoint);
 				}
-				// if lastPoint and currentPoint are both outside the clipping region, no point
+				// if lastNode and currentNode are both outside the clipping region, no node
 				// is added to the output list
 			}
-			// set lastPoint to currentPoint
-			lastPoint = currentPoint;
+			// set lastNode to currentNode
+			lastNode = currentNode;
 		}
 
 		return output;
@@ -453,7 +513,7 @@ class Utils {
 	 * calculates whether a given point lies inside the clipping region (i.e. on the left side
 	 * of the clipping edge)
 	 * 
-	 * @param pointA
+	 * @param node
 	 *            point for which the position should be tested
 	 * @param tileA
 	 *            first point of the clipping edge
@@ -461,30 +521,24 @@ class Utils {
 	 *            second point of the clipping edge
 	 * @return true if the given point lies in the clipping region, else false
 	 */
-	static boolean pointInsideTile(Coordinate pointA, Coordinate tileA, Coordinate tileB) {
-		// note: the vertices of the tile edges are ordered counterclockwise
-
+	static boolean nodeInsideTile(Coordinate node, Coordinate tileA, Coordinate tileB) {
 		if (tileB.x > tileA.x) {
-			// left line
-			if (pointA.y <= tileA.y) {
+			if (node.y <= tileA.y) {
 				return true;
 			}
 		}
 		if (tileB.x < tileA.x) {
-			// right line
-			if (pointA.y >= tileA.y) {
+			if (node.y >= tileA.y) {
 				return true;
 			}
 		}
 		if (tileB.y > tileA.y) {
-			// bottom line
-			if (pointA.x >= tileB.x) {
+			if (node.x >= tileB.x) {
 				return true;
 			}
 		}
 		if (tileB.y < tileA.y) {
-			// top line
-			if (pointA.x <= tileB.x) {
+			if (node.x <= tileB.x) {
 				return true;
 			}
 		}
@@ -514,16 +568,16 @@ class Utils {
 		Coordinate intersectionPoint = new Coordinate();
 
 		if (tileA.x == tileB.x) {
-			// tile edge is horizontal
-			// this means that the y coordinate of the intersection point is equal to the values
-			// of the y coordinate of the tile edge vertices
+			// tile edge is vertical
+			// this means that the x coordinate of the intersection point is equal to the values
+			// of the x coordinate of the tile edge vertices
 
 			intersectionPoint.x = tileA.x;
 			intersectionPoint.y = polygonA.y + (tileA.x - polygonA.x)
 					* (polygonB.y - polygonA.y) / (polygonB.x - polygonA.x);
 		} else {
-			// tile edge is vertical
-			// this means that the x coordinate of the intersection point is equal to the values
+			// tile edge is horizontal
+			// this means that the y coordinate of the intersection point is equal to the values
 			// of the y coordinates of the tile edge vertices
 
 			intersectionPoint.x = polygonA.x + (tileA.y - polygonA.y)
@@ -534,8 +588,9 @@ class Utils {
 	}
 
 	/**
-	 * This method filters the way nodes of a way and returns only those way nodes which do not
-	 * lie on the same pixel at the given zoom level.
+	 * This method filters the way nodes of a way and returns only those way nodes which are not
+	 * projected to the same pixel at the given zoom level. The first and the last way node of a
+	 * way are always added to the result list.
 	 * 
 	 * @param wayNodes
 	 *            list of way nodes
@@ -543,34 +598,41 @@ class Utils {
 	 *            zoom level for which the calculations are made
 	 * @return a list of way nodes
 	 */
-	static ArrayList<Coordinate> compressWay(ArrayList<Coordinate> wayNodes, byte zoom) {
-		// zoom: maxzoom for certain base zoom level
+	static ArrayList<Coordinate> filterWaynodesOnSamePixel(ArrayList<Coordinate> wayNodes,
+			byte zoom) {
+		// zoom: maximal zoom level concerning a certain base zoom level
 		ArrayList<Coordinate> result = new ArrayList<Coordinate>();
 		int wayLength;
 		float delta = 2;
-		double xOld;
-		double yOld;
-		double x;
-		double y;
+		double pixelXPrev;
+		double pixelYPrev;
+		double pixelX;
+		double pixelY;
 
 		wayLength = wayNodes.size();
 
-		xOld = MercatorProjection.longitudeToPixelX(wayNodes.get(0).y, zoom);
-		yOld = MercatorProjection.latitudeToPixelY(wayNodes.get(0).x, zoom);
+		pixelXPrev = MercatorProjection.longitudeToPixelX(wayNodes.get(0).y, zoom);
+		pixelYPrev = MercatorProjection.latitudeToPixelY(wayNodes.get(0).x, zoom);
 
+		// add the first way node to the result list
 		result.add(wayNodes.get(0));
 
 		for (int i = 1; i < wayLength - 1; i++) {
-			x = MercatorProjection.longitudeToPixelX(wayNodes.get(i).y, zoom);
-			y = MercatorProjection.latitudeToPixelY(wayNodes.get(i).x, zoom);
+			// calculate the pixel coordinates for the current way node
+			pixelX = MercatorProjection.longitudeToPixelX(wayNodes.get(i).y, zoom);
+			pixelY = MercatorProjection.latitudeToPixelY(wayNodes.get(i).x, zoom);
 
-			if (Math.abs(x - xOld) > delta || Math.abs(y - yOld) > delta) {
-				xOld = x;
-				yOld = y;
+			// if one of the pixel coordinates is more than delta pixels away from the way
+			// node which was most recently added to the result list, add the current way node
+			// to the result list
+			if (Math.abs(pixelX - pixelXPrev) > delta || Math.abs(pixelY - pixelYPrev) > delta) {
+				pixelXPrev = pixelX;
+				pixelYPrev = pixelY;
 				result.add(wayNodes.get(i));
 			}
 		}
 
+		// add the last way node to the result list
 		result.add(wayNodes.get(wayLength - 1));
 
 		return result;
@@ -578,11 +640,11 @@ class Utils {
 
 	/**
 	 * Calculates the distance between two way nodes as an integer offset to the previous way
-	 * node. The first way node is always stored with its complete latitude and longitude
-	 * coordinates. All following coordinates are offsets. At the end the maximum values for
-	 * latitude and longitude offsets are added to the list.
+	 * node. The first way node is always stored with its complete resolution of latitude and
+	 * longitude coordinates. All following coordinates are offsets. At the end the maximum
+	 * values for latitude and longitude offsets are added to the list.
 	 * 
-	 * @param waynodes
+	 * @param wayNodes
 	 *            list of all way nodes of a way
 	 * @param maxValues
 	 *            specifies if the maximum values of the latitude and longitude offsets should
@@ -592,40 +654,45 @@ class Utils {
 	 *         calculating the coordinates of the following way nodes and the maximum values for
 	 *         latitude and longitude offsets for this way.
 	 */
-	static ArrayList<Integer> compressWayDiffs(ArrayList<Integer> waynodes, boolean maxValues) {
-		int diffLat;
-		int diffLon;
+	static ArrayList<Integer> compressWayNodeDistances(ArrayList<Integer> wayNodes,
+			boolean maxValues) {
+		int distanceLat;
+		int distanceLon;
 
 		int maxDiffLat = 0;
 		int maxDiffLon = 0;
 
 		ArrayList<Integer> result = new ArrayList<Integer>();
 
-		if (waynodes.isEmpty())
+		if (wayNodes.isEmpty())
 			return result;
 
-		result.add(waynodes.get(0));
-		result.add(waynodes.get(1));
+		// add the first way node to the result list
+		result.add(wayNodes.get(0));
+		result.add(wayNodes.get(1));
 
-		for (int i = 2; i < waynodes.size(); i += 2) {
+		for (int i = 2; i < wayNodes.size(); i += 2) {
 
-			diffLat = (-1) * (waynodes.get(i - 2) - waynodes.get(i));
-			result.add(diffLat);
+			// calculate the distances and add them to the result list
+			distanceLat = (-1) * (wayNodes.get(i - 2) - wayNodes.get(i));
+			result.add(distanceLat);
 
-			diffLon = (-1) * (waynodes.get(i - 1) - waynodes.get(i + 1));
-			result.add(diffLon);
+			distanceLon = (-1) * (wayNodes.get(i - 1) - wayNodes.get(i + 1));
+			result.add(distanceLon);
 
-			diffLat = Math.abs(diffLat);
-			diffLon = Math.abs(diffLon);
+			distanceLat = Math.abs(distanceLat);
+			distanceLon = Math.abs(distanceLon);
 
-			if (diffLat > maxDiffLat) {
-				maxDiffLat = diffLat;
+			// compare the current distances with the present maximum distances
+			if (distanceLat > maxDiffLat) {
+				maxDiffLat = distanceLat;
 			}
-			if (diffLon > maxDiffLon) {
-				maxDiffLon = diffLon;
+			if (distanceLon > maxDiffLon) {
+				maxDiffLon = distanceLon;
 			}
 		}
 
+		// if maxValues is true add the maximum values for the distances to the result list
 		if (maxValues) {
 			result.add(maxDiffLat);
 			result.add(maxDiffLon);

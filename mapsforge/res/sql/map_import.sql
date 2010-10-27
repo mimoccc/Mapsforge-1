@@ -26,13 +26,13 @@ CREATE TABLE metadata (
     minlon integer,
     minlat integer,
     maxlon integer,
-    zoom smallint,
-    tile_size smallint,
+    base_zoom_level smallint,
     min_zoom_level smallint,
     max_zoom_level smallint,
-    zoom_low smallint,
+    base_zoom_level_low smallint,
     min_zoom_level_low smallint,
-    max_zoom_level_low smallint
+    max_zoom_level_low smallint,
+    tile_size smallint
 );
 
 
@@ -45,9 +45,10 @@ ALTER TABLE public.metadata OWNER TO osm;
 CREATE TABLE multipolygons (
     outer_way_id bigint NOT NULL,
     inner_way_sequence smallint NOT NULL,
+    waynode_sequence smallint,
     latitude integer,
-    longitude integer,
-    waynode_sequence smallint
+    longitude integer
+    
 );
 
 
@@ -64,10 +65,10 @@ CREATE TABLE pois (
     name_length smallint,
     name text DEFAULT ''::text,
     tags_amount smallint,
+    tags text,
     layer smallint,
     elevation smallint,
-    housenumber text DEFAULT ''::text,
-    tags text
+    housenumber text DEFAULT ''::text    
 );
 
 
@@ -100,10 +101,10 @@ CREATE TABLE pois_to_tiles (
 ALTER TABLE public.pois_to_tiles OWNER TO osm;
 
 --
--- Name: pois_to_tiles_less_data; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
+-- Name: pois_to_tiles_low; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
 --
 
-CREATE TABLE pois_to_tiles_less_data (
+CREATE TABLE pois_to_tiles_low (
     poi_id bigint,
     tile_x integer,
     tile_y integer,
@@ -111,7 +112,7 @@ CREATE TABLE pois_to_tiles_less_data (
 );
 
 
-ALTER TABLE public.pois_to_tiles_less_data OWNER TO osm;
+ALTER TABLE public.pois_to_tiles_low OWNER TO osm;
 
 --
 -- Name: waynodes; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
@@ -128,20 +129,6 @@ CREATE TABLE waynodes (
 ALTER TABLE public.waynodes OWNER TO osm;
 
 --
--- Name: waynodes_diff; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE TABLE waynodes_diff (
-    way_id bigint NOT NULL,
-    waynode_sequence smallint NOT NULL,
-    diff_lat bigint,
-    diff_lon bigint
-);
-
-
-ALTER TABLE public.waynodes_diff OWNER TO osm;
-
---
 -- Name: ways; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
 --
 
@@ -150,14 +137,15 @@ CREATE TABLE ways (
     name_length smallint,
     name text DEFAULT ''::text,
     tags_amount smallint,
+    tags text,
     layer smallint,
     waynodes_amount integer,
     way_type smallint DEFAULT (1)::smallint,
-    tags text,
     convexness smallint,
     label_pos_lat integer,
     label_pos_lon integer,
-    inner_way_amount smallint
+    inner_way_amount smallint,
+    ref text DEFAULT ''::text
 );
 
 
@@ -191,10 +179,10 @@ CREATE TABLE ways_to_tiles (
 ALTER TABLE public.ways_to_tiles OWNER TO osm;
 
 --
--- Name: ways_to_tiles_less_data; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
+-- Name: ways_to_tiles_low; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
 --
 
-CREATE TABLE ways_to_tiles_less_data (
+CREATE TABLE ways_to_tiles_low (
     way_id bigint,
     tile_x integer,
     tile_y integer,
@@ -203,18 +191,7 @@ CREATE TABLE ways_to_tiles_less_data (
 );
 
 
-ALTER TABLE public.ways_to_tiles_less_data OWNER TO osm;
-
---
--- Name: zoom_level; Type: TABLE; Schema: public; Owner: osm; Tablespace: 
---
-
-CREATE TABLE zoom_level (
-    zoom_level smallint
-);
-
-
-ALTER TABLE public.zoom_level OWNER TO osm;
+ALTER TABLE public.ways_to_tiles_low OWNER TO osm;
 
 --
 -- Name: pk_poi_id; Type: CONSTRAINT; Schema: public; Owner: osm; Tablespace: 
@@ -230,14 +207,6 @@ ALTER TABLE ONLY pois
 
 ALTER TABLE ONLY ways
     ADD CONSTRAINT pk_ways_id PRIMARY KEY (id);
-
-
---
--- Name: pkey; Type: CONSTRAINT; Schema: public; Owner: osm; Tablespace: 
---
-
-ALTER TABLE ONLY waynodes_diff
-    ADD CONSTRAINT pkey PRIMARY KEY (way_id, waynode_sequence);
 
 
 --
@@ -326,11 +295,11 @@ ALTER TABLE ONLY multipolygons
 
 
 --
--- Name: fk_pois_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
+-- Name: fk_pois_low; Type: FK CONSTRAINT; Schema: public; Owner: osm
 --
 
-ALTER TABLE ONLY pois_to_tiles_less_data
-    ADD CONSTRAINT fk_pois_less_data FOREIGN KEY (poi_id) REFERENCES pois(id) ON DELETE CASCADE;
+ALTER TABLE ONLY pois_to_tiles_low
+    ADD CONSTRAINT fk_pois_low FOREIGN KEY (poi_id) REFERENCES pois(id) ON DELETE CASCADE;
 
 
 --
@@ -350,11 +319,11 @@ ALTER TABLE ONLY waynodes
 
 
 --
--- Name: fk_ways_less_data; Type: FK CONSTRAINT; Schema: public; Owner: osm
+-- Name: fk_ways_low; Type: FK CONSTRAINT; Schema: public; Owner: osm
 --
 
-ALTER TABLE ONLY ways_to_tiles_less_data
-    ADD CONSTRAINT fk_ways_less_data FOREIGN KEY (way_id) REFERENCES ways(id) ON DELETE CASCADE;
+ALTER TABLE ONLY ways_to_tiles_low
+    ADD CONSTRAINT fk_ways_low FOREIGN KEY (way_id) REFERENCES ways(id) ON DELETE CASCADE;
 
 
 --
