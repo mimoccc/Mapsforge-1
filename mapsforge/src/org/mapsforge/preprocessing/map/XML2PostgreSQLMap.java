@@ -201,6 +201,8 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private String[] splittedTags;
 
 	private StringBuffer sb;
+	
+	Tile mainTileForPOI;
 
 	private TLongArrayList currentInnerWays;
 	private TLongArrayList currentOuterWays;
@@ -659,7 +661,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 				}
 
 				// calculate the tile in which the poi is located
-				Tile mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
+				mainTileForPOI = new Tile(MercatorProjection.longitudeToTileX(
 						(double) currentNode.longitude / 1000000, zoom_high),
 						MercatorProjection.latitudeToTileY(
 								(double) currentNode.latitude / 1000000, zoom_high),
