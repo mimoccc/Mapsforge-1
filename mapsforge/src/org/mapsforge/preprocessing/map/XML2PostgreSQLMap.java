@@ -39,8 +39,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -201,7 +201,7 @@ public class XML2PostgreSQLMap extends DefaultHandler {
 	private String[] splittedTags;
 
 	private StringBuffer sb;
-	
+
 	Tile mainTileForPOI;
 
 	private TLongArrayList currentInnerWays;

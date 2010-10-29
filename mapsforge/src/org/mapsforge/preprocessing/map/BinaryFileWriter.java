@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
