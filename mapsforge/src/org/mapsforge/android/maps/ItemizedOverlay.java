@@ -16,293 +16,192 @@
  */
 package org.mapsforge.android.maps;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 
 /**
- * Custom implementation of the ItemizedOverlay class from the google maps library.
+ * ItemizedOverlay is an abstract base class to display a list of OverlayItems.
  * 
- * @author Sebastian Schlaak
- * @author Karsten Groll
+ * @param <Item>
+ *            the type of items handled by this Overlay.
  */
-public abstract class ItemizedOverlay extends Overlay {
-	private Bitmap bitmap;
-	private Canvas bitmapWrapper;
-	private Drawable defaultMarker;
-	private Point displayPositonAfterDrawing;
-	private Point displayPositonBeforeDrawing;
-	private OverlayItem item;
+public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay {
+	private static final String THREAD_NAME = "ItemizedOverlay";
+
+	private int bottom;
+	private final Drawable defaultMarker;
+	private Item hitTestItem;
+	private Drawable hitTestMarker;
+	private Point hitTestPosition;
 	private Drawable itemMarker;
-	private Point itemPixelPositon;
-	private Point itemPosOnDisplay;
-	private Matrix matrix;
-	private Bitmap shaddowBitmap;
-	private Bitmap tempBitmapForSwap;
+	private final Point itemPosition;
+	private int left;
+	private Item overlayItem;
+	private int right;
+	private int top;
 
 	/**
-	 * Construct an Overlay
+	 * Constructs a new ItemizedOverlay.
 	 * 
 	 * @param defaultMarker
-	 *            the default drawable for each item in the overlay.
+	 *            the default marker for each item.
 	 */
 	public ItemizedOverlay(Drawable defaultMarker) {
 		this.defaultMarker = defaultMarker;
-		setup();
-	}
-
-	/**
-	 * Add an overlayItem to this overlay.
-	 * 
-	 * @param overlayItem
-	 *            the new overlay item.
-	 */
-	public abstract void addOverLay(OverlayItem overlayItem);
-
-	@Override
-	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
-		canvas.drawBitmap(this.bitmap, this.matrix, null);
+		this.itemPosition = new Point();
 	}
 
 	@Override
-	public boolean onTouchEvent(MotionEvent event, MapView mapview) {
-		// iterate over all overlay items
-		for (int i = 0; i < size(); i++) {
-			this.item = createItem(i);
-			if (hitTest(this.item, this.item.getMarker(), (int) event.getX(), (int) event
-					.getY())) {
+	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+		// iterate over all items
+		for (int i = size() - 1; i >= 0; --i) {
+			// get the current item
+			this.hitTestItem = createItem(i);
+
+			if (hitTest(this.hitTestItem, this.hitTestItem.getMarker(), (int) event.getX(),
+					(int) event.getY())) {
 				onTap(i);
+				// abort the testing at the first hit
 				return true;
 			}
 		}
-		return true;
+		// no hit
+		return false;
 	}
 
 	/**
-	 * Pause the Thread.
+	 * Returns the numbers of items in this Overlay.
 	 * 
-	 * @param pauseInSeconds
-	 *            time in seconds to sleep.
+	 * @return the numbers of items in this Overlay.
 	 */
-	public void pause(int pauseInSeconds) {
-		try {
-			Thread.sleep(pauseInSeconds * 1000);
-		} catch (InterruptedException e) {
-			// restore the interrupted status
-			interrupt();
-			Logger.e(new Exception("Not Implemented"));
-		}
-	}
+	public abstract int size();
 
 	/**
-	 * Return the numbers of items.
-	 * 
-	 * @return numbers of items in this overlay.
-	 */
-	abstract public int size();
-
-	private Point calculateDisplayPoint(GeoPoint geoPoint) {
-		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.internalMapView.zoomLevel) - this.internalMapView.getWidth() / 2,
-				(float) MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
-						this.internalMapView.zoomLevel) - this.internalMapView.getHeight() / 2);
-	}
-
-	private Point calculateItemPoint(GeoPoint geoPoint) {
-		return new Point((float) MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-				this.internalMapView.zoomLevel), (float) MercatorProjection.latitudeToPixelY(
-				geoPoint.getLatitude(), this.internalMapView.zoomLevel));
-	}
-
-	private Point calculateItemPostionRelativeToDisplay(GeoPoint itemPostion) {
-		Point itemPixelPosition = calculateItemPoint(itemPostion);
-		Point displayPixelPosition = calculateDisplayPoint(new GeoPoint(
-				this.internalMapView.latitude,
-				this.internalMapView.longitude));
-		Point distance = Point.substract(itemPixelPosition, displayPixelPosition);
-		return distance;
-	}
-
-	private void drawItem(OverlayItem currentItem) {
-		if (hasValidDisplayPosition(currentItem)) {
-			this.itemPixelPositon = currentItem.posOnDisplay;
-		} else {
-			currentItem.posOnDisplay = calculateItemPoint(currentItem.getPoint());
-			this.itemPixelPositon = currentItem.posOnDisplay;
-			currentItem.zoomLevel = this.internalMapView.zoomLevel;
-		}
-		this.itemPosOnDisplay = Point.substract(this.itemPixelPositon,
-				this.displayPositonBeforeDrawing);
-		setCostumOrDeaultItemMarker(currentItem);
-		if (isItemOnDisplay(this.itemPosOnDisplay)) {
-			boundCenter(this.itemMarker, this.itemPosOnDisplay).draw(this.bitmapWrapper);
-		}
-	}
-
-	private void drawItemsOnShaddowBitmap() {
-		this.shaddowBitmap.eraseColor(Color.TRANSPARENT);
-		this.bitmapWrapper.setBitmap(this.shaddowBitmap);
-		for (int i = 0; i < size(); i++) {
-			drawItem(createItem(i));
-		}
-	}
-
-	private boolean hasValidDisplayPosition(OverlayItem currentItem) {
-		boolean displayPositionValid = true;
-		displayPositionValid &= (this.internalMapView.zoomLevel == currentItem.zoomLevel);
-		return displayPositionValid;
-	}
-
-	private boolean isItemOnDisplay(Point itemPos) {
-		boolean isOnDisplay = true;
-		isOnDisplay &= itemPos.x > 0;
-		isOnDisplay &= itemPos.x < this.bitmap.getWidth();
-		isOnDisplay &= itemPos.y > 0;
-		isOnDisplay &= itemPos.y < this.bitmap.getHeight();
-		return isOnDisplay;
-	}
-
-	private void notifyMapViewToRedraw() {
-		this.internalMapView.postInvalidate();
-	}
-
-	private void saveDisplayPositionAfterDrawing() {
-		this.displayPositonAfterDrawing = calculateDisplayPoint(new GeoPoint(
-				this.internalMapView.latitude, this.internalMapView.longitude));
-	}
-
-	private void saveDisplayPositionBeforeDrawing() {
-		this.displayPositonBeforeDrawing = calculateDisplayPoint(new GeoPoint(
-				this.internalMapView.latitude, this.internalMapView.longitude));
-	}
-
-	private void setCostumOrDeaultItemMarker(OverlayItem item) {
-		if (item.getMarker() == null) {
-			this.itemMarker = this.defaultMarker;
-			item.setMarker(this.defaultMarker, 0);
-		} else {
-			this.itemMarker = item.getMarker();
-		}
-	}
-
-	private void setup() {
-		this.matrix = new Matrix();
-		this.start();
-	}
-
-	private void swapBitmapAndCorrectMatrix(Point displayPosBefore, Point displayPosAfter) {
-		synchronized (this.matrix) {
-			this.matrix.reset();
-			Point diff = Point.substract(displayPosBefore, displayPosAfter);
-			this.matrix.postTranslate(diff.x, diff.y);
-			// swap the two bitmaps
-			this.tempBitmapForSwap = this.bitmap;
-			this.bitmap = this.shaddowBitmap;
-			this.shaddowBitmap = this.tempBitmapForSwap;
-		}
-	}
-
-	/**
-	 * Adjusts a drawable of an item so that (0,0) is the center.
-	 * 
-	 * @param balloon
-	 *            the drawable to center.
-	 * @param itemPosRelative
-	 *            the position of the item.
-	 * @return the adjusted drawable.
-	 */
-	protected Drawable boundCenter(Drawable balloon, Point itemPosRelative) {
-		balloon.setBounds((int) itemPosRelative.x - balloon.getIntrinsicWidth() / 2,
-				(int) itemPosRelative.y - balloon.getIntrinsicHeight() / 2,
-				(int) itemPosRelative.x + balloon.getIntrinsicWidth() / 2,
-				(int) itemPosRelative.y + balloon.getIntrinsicHeight() / 2);
-		return balloon;
-	}
-
-	/**
-	 * Adjusts the drawable of an item so that (0,0) is the center of the bottom row.
-	 * 
-	 * @param balloon
-	 *            the drawable to center.
-	 * @param itemPosRelative
-	 *            the position of the item.
-	 * @return the adjusted drawable.
-	 */
-	protected Drawable boundCenterBottom(Drawable balloon, Point itemPosRelative) {
-		balloon.setBounds((int) itemPosRelative.x - balloon.getIntrinsicWidth() / 2,
-				(int) itemPosRelative.y - balloon.getIntrinsicHeight(), (int) itemPosRelative.x
-						+ balloon.getIntrinsicWidth() / 2, (int) itemPosRelative.y);
-		return balloon;
-	}
-
-	/**
-	 * Access and create the actual Items.
+	 * Creates an item in the Overlay.
 	 * 
 	 * @param i
 	 *            the index of the item.
-	 * @return the overlay item.
+	 * @return the item.
 	 */
-	abstract protected OverlayItem createItem(int i);
-
-	@Override
-	final protected void createOverlayBitmapsAndCanvas(int width, int height) {
-		this.bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		this.shaddowBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		this.bitmapWrapper = new Canvas();
-	}
-
-	@Override
-	protected Matrix getMatrix() {
-		return this.matrix;
-	}
+	protected abstract Item createItem(int i);
 
 	/**
-	 * Calculate if a given point is within the bounds of an item.
+	 * Calculates if the given point is within the bounds of an item.
 	 * 
-	 * @param currentItem
+	 * @param item
 	 *            the item to test.
 	 * @param marker
 	 *            the marker of the item.
 	 * @param hitX
-	 *            the x-coordinate of the point.
+	 *            the x coordinate of the point.
 	 * @param hitY
-	 *            the y-coordinate of the point.
+	 *            the y coordinate of the point.
 	 * @return true if the point is within the bounds of the item.
 	 */
-	protected boolean hitTest(OverlayItem currentItem, Drawable marker, int hitX, int hitY) {
-		Point eventPos = new Point(hitX, hitY);
-		Point itemHitPosOnDisplay = calculateItemPostionRelativeToDisplay(this.item.getPoint());
-		Point distance = Point.substract(eventPos, itemHitPosOnDisplay);
-		if (marker == null) {
-			marker = this.defaultMarker;
+	protected boolean hitTest(Item item, Drawable marker, int hitX, int hitY) {
+		// check if the item has a position
+		if (item.getPoint() == null) {
+			return false;
 		}
-		if (Math.abs(distance.x) < marker.getIntrinsicWidth() / 2
-				&& Math.abs(distance.y) < marker.getIntrinsicHeight() / 2) {
+		this.hitTestPosition = this.projection.toPixels(item.getPoint(), this.hitTestPosition);
+
+		// select the correct marker for the item
+		if (marker == null) {
+			this.hitTestMarker = this.defaultMarker;
+		} else {
+			this.hitTestMarker = marker;
+		}
+
+		// check if the hit position is within the bounds of the marker
+		if (Math.abs(this.hitTestPosition.x - hitX) <= this.hitTestMarker.getIntrinsicWidth() / 2
+				&& Math.abs(this.hitTestPosition.y - hitY) <= this.hitTestMarker
+						.getIntrinsicHeight() / 2) {
 			return true;
 		}
 		return false;
 	}
 
 	/**
-	 * Handle a tap event.
+	 * Handles a tap event.
+	 * <p>
+	 * The default implementation of this method does nothing and returns false.
 	 * 
 	 * @param index
 	 *            the position of the item.
 	 * 
-	 * @return true
+	 * @return true if the event was handled, false otherwise.
 	 */
-	abstract protected boolean onTap(int index);
+	protected boolean onTap(int index) {
+		return false;
+	}
+
+	/**
+	 * This method should be called after items have been added to the Overlay.
+	 */
+	protected final void populate() {
+		super.requestRedraw();
+	}
 
 	@Override
-	final protected void prepareOverlayBitmap(MapView mapview) {
-		saveDisplayPositionBeforeDrawing();
-		drawItemsOnShaddowBitmap();
-		saveDisplayPositionAfterDrawing();
-		swapBitmapAndCorrectMatrix(this.displayPositonBeforeDrawing,
-				this.displayPositonAfterDrawing);
-		notifyMapViewToRedraw();
+	final void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
+		if (size() < 1) {
+			// no items to draw
+			return;
+		}
+
+		// draw the Overlay items
+		for (int i = 0; i < size(); ++i) {
+			// get the current item
+			this.overlayItem = createItem(i);
+
+			// check if the item has a position
+			if (this.overlayItem.getPoint() == null) {
+				continue;
+			}
+
+			// make sure that the cached item position is valid
+			if (drawZoomLevel != this.overlayItem.cachedZoomLevel) {
+				this.overlayItem.cachedMapPosition = this.projection.toPoint(this.overlayItem
+						.getPoint(), this.overlayItem.cachedMapPosition, drawZoomLevel);
+				this.overlayItem.cachedZoomLevel = drawZoomLevel;
+			}
+
+			// calculate the relative item position on the display
+			this.itemPosition.x = this.overlayItem.cachedMapPosition.x - drawPosition.x;
+			this.itemPosition.y = this.overlayItem.cachedMapPosition.y - drawPosition.y;
+
+			// get the correct marker for the item
+			if (this.overlayItem.getMarker() == null) {
+				this.itemMarker = this.defaultMarker;
+			} else {
+				this.itemMarker = this.overlayItem.getMarker();
+			}
+
+			// calculate the bounding box of the centered marker
+			this.left = this.itemPosition.x - (this.itemMarker.getIntrinsicWidth() / 2);
+			this.right = this.itemPosition.x + (this.itemMarker.getIntrinsicWidth() / 2);
+			this.top = this.itemPosition.y - (this.itemMarker.getIntrinsicHeight() / 2);
+			this.bottom = this.itemPosition.y + (this.itemMarker.getIntrinsicHeight() / 2);
+
+			// check if the bounding box of the marker intersects with the canvas
+			if (this.right >= 0 && this.left <= this.internalCanvas.getWidth()
+					&& this.bottom >= 0 && this.top <= this.internalCanvas.getHeight()) {
+				// set the relative center position of the marker
+				this.itemMarker.setBounds(this.itemPosition.x
+						- this.itemMarker.getIntrinsicWidth() / 2, this.itemPosition.y
+						- this.itemMarker.getIntrinsicHeight() / 2, this.itemPosition.x
+						+ this.itemMarker.getIntrinsicWidth() / 2, this.itemPosition.y
+						+ this.itemMarker.getIntrinsicHeight() / 2);
+
+				// draw the item marker on the canvas
+				this.itemMarker.draw(this.internalCanvas);
+			}
+		}
+	}
+
+	@Override
+	final String getThreadName() {
+		return THREAD_NAME;
 	}
 }

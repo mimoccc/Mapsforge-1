@@ -19,13 +19,38 @@ package org.mapsforge.android.maps;
 import android.graphics.Paint;
 
 class PointTextContainer {
-	final Paint paintFront;
+	android.graphics.Rect boundary;
 	final Paint paintBack;
+	final Paint paintFront;
+	SymbolContainer symbol;
 	String text;
 	float x;
 	float y;
-	SymbolContainer symbol;
-	android.graphics.Rect boundary;
+
+	/**
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
+	 * and one paint objects.
+	 * 
+	 * @param text
+	 *            the text of the point.
+	 * @param x
+	 *            the x coordinate of the point.
+	 * @param y
+	 *            the y coordinate of the point.
+	 * @param paintFront
+	 *            the paintFront for the point.
+	 */
+	PointTextContainer(String text, float x, float y, Paint paintFront) {
+		this.text = text;
+		this.x = x;
+		this.y = y;
+		this.paintFront = paintFront;
+		this.paintBack = null;
+		this.symbol = null;
+
+		this.boundary = new android.graphics.Rect();
+		paintFront.getTextBounds(text, 0, text.length(), this.boundary);
+	}
 
 	/**
 	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
@@ -90,30 +115,5 @@ class PointTextContainer {
 		} else {
 			paintFront.getTextBounds(text, 0, text.length(), this.boundary);
 		}
-	}
-
-	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
-	 * and one paint objects.
-	 * 
-	 * @param text
-	 *            the text of the point.
-	 * @param x
-	 *            the x coordinate of the point.
-	 * @param y
-	 *            the y coordinate of the point.
-	 * @param paintFront
-	 *            the paintFront for the point.
-	 */
-	PointTextContainer(String text, float x, float y, Paint paintFront) {
-		this.text = text;
-		this.x = x;
-		this.y = y;
-		this.paintFront = paintFront;
-		this.paintBack = null;
-		this.symbol = null;
-
-		this.boundary = new android.graphics.Rect();
-		paintFront.getTextBounds(text, 0, text.length(), this.boundary);
 	}
 }

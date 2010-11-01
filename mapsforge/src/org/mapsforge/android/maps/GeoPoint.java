@@ -17,17 +17,37 @@
 package org.mapsforge.android.maps;
 
 /**
- * An implementation of the GeoPoint class from the Google Maps library.
+ * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values
+ * are internally stored as integer numbers.
  */
 public class GeoPoint implements Comparable<GeoPoint> {
-	private static final int MULTIPLICATION_FACTOR = 1000000;
+	/**
+	 * Conversion factor from degrees to microdegrees.
+	 */
+	private static final int CONVERSION_FACTOR = 1000000;
+
+	/**
+	 * Stores the hash value of this GeoPoint.
+	 */
 	private final int hashCode;
+
+	/**
+	 * Stores the latitude value in microdegrees.
+	 */
 	private final int latitudeE6;
+
+	/**
+	 * Stores the longitude value in microdegrees.
+	 */
 	private final int longitudeE6;
+
+	/**
+	 * Used to compare this GeoPoint with others in the {@link #equals(Object)} method.
+	 */
 	private GeoPoint other;
 
 	/**
-	 * Creates a new GeoPoint with the given latitude and longitude, measured in degrees.
+	 * Constructs a new GeoPoint with the given latitude and longitude, measured in degrees.
 	 * 
 	 * @param latitude
 	 *            the latitude of the point. This will be limited by the minimum and maximum
@@ -37,13 +57,14 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	 *            possible longitude value.
 	 */
 	public GeoPoint(double latitude, double longitude) {
-		this.latitudeE6 = clipLatitude((int) (latitude * MULTIPLICATION_FACTOR));
-		this.longitudeE6 = clipLongitude((int) (longitude * MULTIPLICATION_FACTOR));
+		this.latitudeE6 = clipLatitude((int) (latitude * CONVERSION_FACTOR));
+		this.longitudeE6 = clipLongitude((int) (longitude * CONVERSION_FACTOR));
 		this.hashCode = calculateHashCode();
 	}
 
 	/**
-	 * Creates a new GeoPoint with the given latitude and longitude, measured in microdegrees.
+	 * Constructs a new GeoPoint with the given latitude and longitude, measured in microdegrees
+	 * (degrees * 10^6).
 	 * 
 	 * @param latitudeE6
 	 *            the latitude of the point in microdegrees. This will be limited by the minimum
@@ -90,16 +111,16 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Gets the latitude value of this GeoPoint in degrees.
+	 * Returns the latitude value of this GeoPoint in degrees.
 	 * 
 	 * @return the latitude value in degrees.
 	 */
 	public double getLatitude() {
-		return this.latitudeE6 / (double) 1000000;
+		return this.latitudeE6 / (double) CONVERSION_FACTOR;
 	}
 
 	/**
-	 * Gets the latitude value of this GeoPoint in microdegrees.
+	 * Returns the latitude value of this GeoPoint in microdegrees (degrees * 10^6).
 	 * 
 	 * @return the latitude value in microdegrees.
 	 */
@@ -108,16 +129,16 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Gets the longitude value of this GeoPoint in degrees.
+	 * Returns the longitude value of this GeoPoint in degrees.
 	 * 
 	 * @return the longitude value in degrees.
 	 */
 	public double getLongitude() {
-		return this.longitudeE6 / (double) 1000000;
+		return this.longitudeE6 / (double) CONVERSION_FACTOR;
 	}
 
 	/**
-	 * Gets the longitude value of this GeoPoint in microdegrees.
+	 * Returns the longitude value of this GeoPoint in microdegrees (degrees * 10^6).
 	 * 
 	 * @return the longitude value in microdegrees.
 	 */
@@ -148,20 +169,20 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	private int clipLatitude(int latitude) {
-		if (latitude < MapView.LATITUDE_MIN * MULTIPLICATION_FACTOR) {
-			return (int) (MapView.LATITUDE_MIN * MULTIPLICATION_FACTOR);
-		} else if (latitude > MapView.LATITUDE_MAX * MULTIPLICATION_FACTOR) {
-			return (int) (MapView.LATITUDE_MAX * MULTIPLICATION_FACTOR);
+		if (latitude < MapView.LATITUDE_MIN * CONVERSION_FACTOR) {
+			return (int) (MapView.LATITUDE_MIN * CONVERSION_FACTOR);
+		} else if (latitude > MapView.LATITUDE_MAX * CONVERSION_FACTOR) {
+			return (int) (MapView.LATITUDE_MAX * CONVERSION_FACTOR);
 		} else {
 			return latitude;
 		}
 	}
 
 	private int clipLongitude(int longitude) {
-		if (longitude < MapView.LONGITUDE_MIN * MULTIPLICATION_FACTOR) {
-			return (int) (MapView.LONGITUDE_MIN * MULTIPLICATION_FACTOR);
-		} else if (longitude > MapView.LONGITUDE_MAX * MULTIPLICATION_FACTOR) {
-			return (int) (MapView.LONGITUDE_MAX * MULTIPLICATION_FACTOR);
+		if (longitude < MapView.LONGITUDE_MIN * CONVERSION_FACTOR) {
+			return (int) (MapView.LONGITUDE_MIN * CONVERSION_FACTOR);
+		} else if (longitude > MapView.LONGITUDE_MAX * CONVERSION_FACTOR) {
+			return (int) (MapView.LONGITUDE_MAX * CONVERSION_FACTOR);
 		} else {
 			return longitude;
 		}

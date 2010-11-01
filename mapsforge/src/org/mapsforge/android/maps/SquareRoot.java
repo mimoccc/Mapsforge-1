@@ -35,7 +35,7 @@ class SquareRoot {
 			249, 250, 250, 251, 251, 252, 252, 253, 253, 254, 254, 255 };
 
 	/**
-	 * A faster replacement for (int)(java.lang.Math.sqrt(x)). Completely accurate for x <
+	 * A faster replacement for (int)(java.lang.Math.sqrt(x)). Completely accurate for x < *
 	 * 2147483648 (i.e. 2^31).
 	 * 
 	 * @param x

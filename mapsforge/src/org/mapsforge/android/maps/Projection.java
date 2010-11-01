@@ -16,12 +16,16 @@
  */
 package org.mapsforge.android.maps;
 
+import android.graphics.Point;
+
 /**
- * An implementation of the Projection interface from the Google Maps library.
+ * A Projection translates between the pixel coordinate system on the screen and geographical
+ * points on the earth. To retrieve the currently used Projection for a given MapView, call the
+ * {@link MapView#getProjection()} method.
  */
 public interface Projection {
 	/**
-	 * Translates a coordinate on the screen to a GeoPoint.
+	 * Translates the given screen coordinates to a GeoPoint.
 	 * 
 	 * @param x
 	 *            the pixel x coordinate on the screen.
@@ -30,4 +34,30 @@ public interface Projection {
 	 * @return a new GeoPoint which is relative to the top-left of the MapView.
 	 */
 	GeoPoint fromPixels(int x, int y);
+
+	/**
+	 * Translates the given GeoPoint to relative pixel coordinates on the screen.
+	 * 
+	 * @param in
+	 *            the geographical point to convert.
+	 * @param out
+	 *            an already existing object to use for the output. If this parameter is null, a
+	 *            new Point object will be created and returned.
+	 * @return a Point which is relative to the top-left of the MapView.
+	 */
+	Point toPixels(GeoPoint in, Point out);
+
+	/**
+	 * Translates the given GeoPoint to absolute pixel coordinates on the world map.
+	 * 
+	 * @param in
+	 *            the geographical point to convert.
+	 * @param out
+	 *            an already existing object to use for the output. If this parameter is null, a
+	 *            new Point object will be created and returned.
+	 * @param zoom
+	 *            the zoom level at which the point should be converted.
+	 * @return a Point which is relative to the top-left of the world map.
+	 */
+	Point toPoint(GeoPoint in, Point out, byte zoom);
 }

@@ -28,7 +28,7 @@ class Logger {
 	 * @param str
 	 *            the log message to be printed.
 	 */
-	static synchronized void d(String str) {
+	static void d(String str) {
 		Log.d("osm", Thread.currentThread().getName() + ": " + str);
 	}
 
@@ -38,7 +38,7 @@ class Logger {
 	 * @param e
 	 *            the exception which should be printed.
 	 */
-	static synchronized void e(Exception e) {
+	static void e(Exception e) {
 		StringBuilder stringBuilder = new StringBuilder(512);
 		stringBuilder.append("Exception in thread \"" + Thread.currentThread().getName()
 				+ "\" " + e.toString());

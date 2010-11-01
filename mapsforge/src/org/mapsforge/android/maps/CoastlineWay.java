@@ -16,6 +16,12 @@
  */
 package org.mapsforge.android.maps;
 
+/**
+ * A CoastlineWay is a special way to outline a sea or an island.
+ * 
+ * @see <a
+ *      href="http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline">Tag:natural=coastline</a>
+ */
 class CoastlineWay {
 	private static final byte BOTTOM = 1;
 	private static final byte LEFT = 2;
@@ -74,8 +80,8 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Calculates the orientation of a coastline segments by calculating the signed area. As the
-	 * origin is in the top left corner, a positive area means clockwise.
+	 * Calculates the orientation of the given coastline segment by calculating the signed area.
+	 * As the origin is in the top left corner, a positive area means clockwise.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -93,7 +99,7 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Checks if a given coastline segment is closed.
+	 * Checks if the given coastline segment is closed.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -105,11 +111,11 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Checks if a given coastline segment starts and ends outside of the tile.
+	 * Checks if the given coastline segment starts and ends outside of the tile.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
-	 * @return true, if first and last point are outside tile, false otherwise.
+	 * @return true if first and last point are outside tile, false otherwise.
 	 */
 	static boolean isValid(float[] coastline) {
 		return (coastline[0] <= 0 || coastline[0] >= Tile.TILE_SIZE || coastline[1] <= 0 || coastline[1] >= Tile.TILE_SIZE)
@@ -184,14 +190,33 @@ class CoastlineWay {
 		return newCoastline;
 	}
 
+	/**
+	 * The way node coordinates of the clipped coastline way.
+	 */
 	final float[] data;
+
+	/**
+	 * The angle at which the clipped coastline way enters the tile.
+	 */
 	final double entryAngle;
+
+	/**
+	 * The side on which the clipped coastline way enters the tile.
+	 */
 	final byte entrySide;
+
+	/**
+	 * The angle at which the clipped coastline way leaves the tile.
+	 */
 	final double exitAngle;
+
+	/**
+	 * The side on which the clipped coastline way leaves the tile.
+	 */
 	final byte exitSide;
 
 	/**
-	 * Constructs a new CoastlineWay object with the given coordinates.
+	 * Constructs a new CoastlineWay with the given coordinates.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.

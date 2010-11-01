@@ -18,9 +18,9 @@
 package org.mapsforge.android.maps;
 
 class Interval<Type> {
-	Type value;
-	final int low;
 	final int high;
+	final int low;
+	Type value;
 
 	// precondition: left <= right
 	Interval(int low, int high) {
@@ -39,23 +39,6 @@ class Interval<Type> {
 			this.value = value;
 		} else
 			throw new IllegalArgumentException("Illegal interval");
-	}
-
-	// does this interval a intersect b?
-	boolean intersects(Interval<?> b) {
-		Interval<Type> a = this;
-		if (((a.low < b.low) || (a.low <
-				b.high))
-				&& ((a.high > b.low) || (a.high >
-				b.high))) {
-			return true;
-		}
-		return false;
-	}
-
-	// does this interval a intersect b?
-	boolean contains(int x) {
-		return (this.low <= x) && (x <= this.high);
 	}
 
 	@Override
@@ -77,6 +60,20 @@ class Interval<Type> {
 	@Override
 	public int hashCode() {
 		return super.hashCode();
+	}
+
+	// does this interval a intersect b?
+	boolean contains(int x) {
+		return (this.low <= x) && (x <= this.high);
+	}
+
+	// does this interval a intersect b?
+	boolean intersects(Interval<?> b) {
+		Interval<Type> a = this;
+		if (((a.low < b.low) || (a.low < b.high)) && ((a.high > b.low) || (a.high > b.high))) {
+			return true;
+		}
+		return false;
 	}
 
 }

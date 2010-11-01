@@ -24,15 +24,24 @@ import android.opengl.GLSurfaceView;
 import android.view.ViewGroup;
 
 /**
- * A map renderer which uses a OpenGL for drawing.
+ * A map renderer which uses a OpenGL for drawing. <b>This implementation is unstable and for
+ * testing only.</b>
  */
 class OpenGLRenderer extends DatabaseMapGenerator {
 	private static final String THREAD_NAME = "OpenGLRenderer";
 	private Context context;
 	private GLSurfaceView glSurfaceView;
 	private MapView mapView;
-	private OpenGlMapRenderer renderer;
+	private OpenGLMapRenderer renderer;
 
+	/**
+	 * Creates a new map renderer that uses OpenGL for drawing.
+	 * 
+	 * @param context
+	 *            the application context.
+	 * @param mapView
+	 *            the enclosing MapView instance.
+	 */
 	OpenGLRenderer(Context context, MapView mapView) {
 		this.context = context;
 		this.mapView = mapView;
@@ -62,7 +71,6 @@ class OpenGLRenderer extends DatabaseMapGenerator {
 	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer) {
 		this.renderer.drawWays(drawWays, layers, levelsPerLayer);
-
 	}
 
 	@Override
@@ -89,7 +97,7 @@ class OpenGLRenderer extends DatabaseMapGenerator {
 	@Override
 	void onAttachedToWindow() {
 		Logger.d("onAttachedToWindow called");
-		this.renderer = new OpenGlMapRenderer();
+		this.renderer = new OpenGLMapRenderer();
 		this.glSurfaceView = new GLSurfaceView(this.context);
 		this.glSurfaceView.setRenderer(this.renderer);
 		this.glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
@@ -106,7 +114,7 @@ class OpenGLRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	synchronized void onDetachedFromWindow() {
+	void onDetachedFromWindow() {
 		Logger.d("onDetachedFromWindow called");
 		// TODO: remove the GLSurfaceView from the view hierarchy
 		this.context = null;
@@ -130,20 +138,16 @@ class OpenGLRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void setupMapGenerator(Bitmap bitmap) {
-
 		Logger.d("setupMapGenerator called");
-
-		// TODO: in some cases the renderer is null here
-		// and we have to wait forever
-		while (this.renderer == null) {
-			try {
-				synchronized (this) {
-					wait(20);
+		// TODO: in some cases the renderer is null here and we have to wait forever
+		synchronized (this) {
+			while (this.renderer == null) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					interrupt();
 				}
-				// Logger.d("wating 20msec for renderer to be created...");
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 		this.renderer.setBitmap(bitmap);

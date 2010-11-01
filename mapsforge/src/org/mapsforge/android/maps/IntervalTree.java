@@ -21,15 +21,13 @@ import java.util.LinkedList;
 
 class IntervalTree {
 
-	private Node root; // root of the BST
-
 	// BST helper node data type
 	private class Node {
 		Interval<?> interval; // key
 
 		Node left, right; // left and right subtrees
-		int N; // size of subtree this.rooted at this node
 		int max; // max endpoint in subtree this.rooted at this node
+		int N; // size of subtree this.rooted at this node
 
 		Node(Interval<?> interval) {
 			this.interval = interval;
@@ -39,17 +37,43 @@ class IntervalTree {
 		}
 	}
 
-	/*
-	 * BST search
-	 */
-	boolean contains(Interval<?> interval) {
-		return (get(interval) != null);
+	private Node root; // root of the BST
+
+	// check integrity of count fields
+	private boolean checkCount() {
+		return checkCount(this.root);
 	}
 
-	// return value associated with the given key
-	// if no such value, return null
-	Interval<?> get(Interval<?> interval) {
-		return get(this.root, interval);
+	private boolean checkCount(Node x) {
+		if (x == null) {
+			return true;
+		}
+		return checkCount(x.left) && checkCount(x.right)
+				&& (x.N == 1 + size(x.left) + size(x.right));
+	}
+
+	private boolean checkMax() {
+		return checkMax(this.root);
+	}
+
+	private boolean checkMax(Node x) {
+		if (x == null) {
+			return true;
+		}
+		return x.max == max3(x.interval.high, max(x.left), max(x.right));
+	}
+
+	private boolean eq(Interval<?> a, Interval<?> b) {
+		return (a.low == b.low) && (a.high == b.high);
+	}
+
+	// fix auxilliar information (subtree count and max fields)
+	private void fix(Node x) {
+		if (x == null) {
+			return;
+		}
+		x.N = 1 + size(x.left) + size(x.right);
+		x.max = max3(x.interval.high, max(x.left), max(x.right));
 	}
 
 	private Interval<?> get(Node x, Interval<?> interval) {
@@ -64,48 +88,6 @@ class IntervalTree {
 		}
 
 		return get(x.right, interval);
-	}
-
-	/*
-	 * randomized insertion
-	 */
-	void put(Interval<?> interval) {
-		if (contains(interval)) {
-			System.out.println("duplicate");
-			remove(interval);
-		}
-		this.root = randomizedInsert(this.root, interval);
-	}
-
-	// make new node the this.root with uniform probability
-	private Node randomizedInsert(Node x, Interval<?> interval) {
-		if (x == null) {
-			return new Node(interval);
-		}
-		if (Math.random() * size(x) < 1.0) {
-			return rootInsert(x, interval);
-		}
-		if (less(interval, x.interval)) {
-			x.left = randomizedInsert(x.left, interval);
-		} else {
-			x.right = randomizedInsert(x.right, interval);
-		}
-		fix(x);
-		return x;
-	}
-
-	private Node rootInsert(Node x, Interval<?> interval) {
-		if (x == null) {
-			return new Node(interval);
-		}
-		if (less(interval, x.interval)) {
-			x.left = rootInsert(x.left, interval);
-			x = rotR(x);
-		} else {
-			x.right = rootInsert(x.right, interval);
-			x = rotL(x);
-		}
-		return x;
 	}
 
 	/* deletion */
@@ -128,12 +110,47 @@ class IntervalTree {
 		return b;
 	}
 
-	// remove and return value associated with given interval;
-	// if no such interval exists return null
-	Interval<?> remove(Interval<?> interval) {
-		Interval<?> value = get(interval);
-		this.root = remove(this.root, interval);
-		return value;
+	// is left endpoint of a less than left endpoint of a?
+	// break ties with right endpoint
+	private boolean less(Interval<?> a, Interval<?> b) {
+		if (a.low < b.low) {
+			return true;
+		} else if (a.low > b.low) {
+			return false;
+		} else if (a.high < b.high) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private int max(Node x) {
+		if (x == null) {
+			return Integer.MIN_VALUE;
+		}
+		return x.max;
+	}
+
+	// precondition: a is not null
+	private int max3(int a, int b, int c) {
+		return Math.max(a, Math.max(b, c));
+	}
+
+	// make new node the this.root with uniform probability
+	private Node randomizedInsert(Node x, Interval<?> interval) {
+		if (x == null) {
+			return new Node(interval);
+		}
+		if (Math.random() * size(x) < 1.0) {
+			return rootInsert(x, interval);
+		}
+		if (less(interval, x.interval)) {
+			x.left = randomizedInsert(x.left, interval);
+		} else {
+			x.right = randomizedInsert(x.right, interval);
+		}
+		fix(x);
+		return x;
 	}
 
 	private Node remove(Node h, Interval<?> interval) {
@@ -151,6 +168,97 @@ class IntervalTree {
 		}
 		fix(h);
 		return h;
+	}
+
+	private Node rootInsert(Node x, Interval<?> interval) {
+		if (x == null) {
+			return new Node(interval);
+		}
+		if (less(interval, x.interval)) {
+			x.left = rootInsert(x.left, interval);
+			x = rotR(x);
+		} else {
+			x.right = rootInsert(x.right, interval);
+			x = rotL(x);
+		}
+		return x;
+	}
+
+	// left rotate
+	private Node rotL(Node h) {
+		Node x = h.right;
+		h.right = x.left;
+		x.left = h;
+		fix(h);
+		fix(x);
+		return x;
+	}
+
+	// right rotate
+	private Node rotR(Node h) {
+		Node x = h.left;
+		h.left = x.right;
+		x.right = h;
+		fix(h);
+		fix(x);
+		return x;
+	}
+
+	private int size(Node x) {
+		if (x == null) {
+			return 0;
+		}
+
+		return x.N;
+	}
+
+	// check integrity of subtree count fields
+	boolean check() {
+		return checkCount() && checkMax();
+	}
+
+	/*
+	 * BST search
+	 */
+	boolean contains(Interval<?> interval) {
+		return (get(interval) != null);
+	}
+
+	// return value associated with the given key
+	// if no such value, return null
+	Interval<?> get(Interval<?> interval) {
+		return get(this.root, interval);
+	}
+
+	// height of tree (empty tree height = 0)
+	int height() {
+		return height(this.root);
+	}
+
+	int height(Node x) {
+		if (x == null) {
+			return 0;
+		}
+		return 1 + Math.max(height(x.left), height(x.right));
+	}
+
+	/*
+	 * randomized insertion
+	 */
+	void put(Interval<?> interval) {
+		if (contains(interval)) {
+			System.out.println("duplicate");
+			remove(interval);
+		}
+		this.root = randomizedInsert(this.root, interval);
+	}
+
+	// remove and return value associated with given interval;
+	// if no such interval exists return null
+	Interval<?> remove(Interval<?> interval) {
+		Interval<?> value = get(interval);
+		this.root = remove(this.root, interval);
+		return value;
 	}
 
 	/*
@@ -209,114 +317,6 @@ class IntervalTree {
 	// return number of nodes in subtree this.rooted at x
 	int size() {
 		return size(this.root);
-	}
-
-	private int size(Node x) {
-		if (x == null) {
-			return 0;
-		}
-
-		return x.N;
-	}
-
-	// height of tree (empty tree height = 0)
-	int height() {
-		return height(this.root);
-	}
-
-	int height(Node x) {
-		if (x == null) {
-			return 0;
-		}
-		return 1 + Math.max(height(x.left), height(x.right));
-	}
-
-	// fix auxilliar information (subtree count and max fields)
-	private void fix(Node x) {
-		if (x == null) {
-			return;
-		}
-		x.N = 1 + size(x.left) + size(x.right);
-		x.max = max3(x.interval.high, max(x.left), max(x.right));
-	}
-
-	private int max(Node x) {
-		if (x == null) {
-			return Integer.MIN_VALUE;
-		}
-		return x.max;
-	}
-
-	// precondition: a is not null
-	private int max3(int a, int b, int c) {
-		return Math.max(a, Math.max(b, c));
-	}
-
-	// right rotate
-	private Node rotR(Node h) {
-		Node x = h.left;
-		h.left = x.right;
-		x.right = h;
-		fix(h);
-		fix(x);
-		return x;
-	}
-
-	// left rotate
-	private Node rotL(Node h) {
-		Node x = h.right;
-		h.right = x.left;
-		x.left = h;
-		fix(h);
-		fix(x);
-		return x;
-	}
-
-	// check integrity of subtree count fields
-	boolean check() {
-		return checkCount() && checkMax();
-	}
-
-	// check integrity of count fields
-	private boolean checkCount() {
-		return checkCount(this.root);
-	}
-
-	private boolean checkCount(Node x) {
-		if (x == null) {
-			return true;
-		}
-		return checkCount(x.left) && checkCount(x.right)
-				&& (x.N == 1 + size(x.left) + size(x.right));
-	}
-
-	private boolean checkMax() {
-		return checkMax(this.root);
-	}
-
-	private boolean checkMax(Node x) {
-		if (x == null) {
-			return true;
-		}
-		return x.max == max3(x.interval.high, max(x.left), max(x.right));
-	}
-
-	// is left endpoint of a less than left endpoint of a?
-	// break ties with right endpoint
-	private boolean less(Interval<?> a, Interval<?> b) {
-		if (a.low < b.low) {
-			return true;
-		} else if (a.low > b.low) {
-			return false;
-		} else if (a.high < b.high) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private boolean eq(Interval<?> a, Interval<?> b) {
-		return (a.low == b.low) && (a.high == b.high);
 	}
 
 }

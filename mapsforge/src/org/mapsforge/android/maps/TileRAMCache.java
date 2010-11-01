@@ -24,17 +24,22 @@ import java.util.Map;
 import android.graphics.Bitmap;
 
 /**
- * A cache for bitmap images with a fixed size and LRU policy.
+ * A thread-safe cache for bitmap images with a fixed size and LRU policy.
  */
 class TileRAMCache {
 	/**
 	 * The load factor of the internal HashMap.
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
+
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
 	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
 	private Bitmap tempBitmap;
+
+	/**
+	 * List of all Bitmaps which are used for object pooling.
+	 */
 	final LinkedList<Bitmap> bitmapPool;
 
 	/**
@@ -76,6 +81,12 @@ class TileRAMCache {
 		};
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image whose presence in the cache should be tested.
+	 * @return true if the cache contains an image for the specified key, false otherwise.
+	 * @see Map#containsKey(Object)
+	 */
 	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
 		return this.map.containsKey(mapGeneratorJob);
 	}
@@ -96,10 +107,23 @@ class TileRAMCache {
 		}
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image whose data should be returned.
+	 * @return the data of the image.
+	 * @see Map#get(Object)
+	 */
 	synchronized Bitmap get(MapGeneratorJob mapGeneratorJob) {
 		return this.map.get(mapGeneratorJob);
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image which should be added to the cache.
+	 * @param bitmap
+	 *            the data of the image that should be cached.
+	 * @see Map#put(Object, Object)
+	 */
 	synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
 			if (this.map.get(mapGeneratorJob) != null) {

@@ -27,13 +27,14 @@ import java.util.Map;
 import android.graphics.Bitmap;
 
 /**
- * A cache for image files with a fixed size and LRU policy.
+ * A thread-safe cache for image files with a fixed size and LRU policy.
  */
 class TileMemoryCardCache {
 	/**
 	 * The load factor of the internal HashMap.
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
+
 	private final ByteBuffer bitmapBuffer;
 	private int cacheId;
 	private int capacity;
@@ -96,6 +97,12 @@ class TileMemoryCardCache {
 		};
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image whose presence in the cache should be tested.
+	 * @return true if the cache contains an image for the specified key, false otherwise.
+	 * @see Map#containsKey(Object)
+	 */
 	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
 		return this.map.containsKey(mapGeneratorJob);
 	}
@@ -122,6 +129,13 @@ class TileMemoryCardCache {
 		}
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image whose data should be returned.
+	 * @param buffer
+	 *            the buffer in which the image data should be copied.
+	 * @see Map#get(Object)
+	 */
 	synchronized void get(MapGeneratorJob mapGeneratorJob, ByteBuffer buffer) {
 		try {
 			this.fileInputStream = new FileInputStream(this.map.get(mapGeneratorJob));
@@ -135,6 +149,13 @@ class TileMemoryCardCache {
 		}
 	}
 
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image which should be added to the cache.
+	 * @param bitmap
+	 *            the data of the image that should be cached.
+	 * @see Map#put(Object, Object)
+	 */
 	synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
 			// write the image to a temporary file

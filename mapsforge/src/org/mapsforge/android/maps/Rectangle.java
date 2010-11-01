@@ -24,14 +24,12 @@ package org.mapsforge.android.maps;
  *            references an object, which should be checked with the sweep line algorithm
  */
 class Rectangle<E> {
-
-	public E value;
 	android.graphics.Rect rect;
+	E value;
 
-	public Rectangle(E value, android.graphics.Rect rect) {
+	Rectangle(E value, android.graphics.Rect rect) {
 		this.value = value;
 		this.rect = rect;
 
 	}
-
 }

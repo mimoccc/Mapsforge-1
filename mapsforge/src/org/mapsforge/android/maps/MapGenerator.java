@@ -25,6 +25,8 @@ import android.graphics.Bitmap;
  * actions and provides the queue for jobs, which need to be processed and scheduled.
  */
 abstract class MapGenerator extends Thread {
+	private static final GeoPoint DEFAULT_START_POINT = new GeoPoint(51.33, 10.45);
+	private static final byte DEFAULT_ZOOM_LEVEL = 5;
 	private MapGeneratorJob currentMapGeneratorJob;
 	private Bitmap currentTileBitmap;
 	private PriorityQueue<MapGeneratorJob> jobQueue1;
@@ -38,6 +40,9 @@ abstract class MapGenerator extends Thread {
 	private TileMemoryCardCache tileMemoryCardCache;
 	private TileRAMCache tileRAMCache;
 
+	/**
+	 * Abstract default constructor that must be called by subclasses.
+	 */
 	MapGenerator() {
 		// set up the two job queues
 		this.jobQueue1 = new PriorityQueue<MapGeneratorJob>(64);
@@ -100,8 +105,8 @@ abstract class MapGenerator extends Thread {
 					}
 
 					// put the tile image in the cache
-					this.tileMemoryCardCache
-							.put(this.currentMapGeneratorJob, this.currentTileBitmap);
+					this.tileMemoryCardCache.put(this.currentMapGeneratorJob,
+							this.currentTileBitmap);
 				}
 			}
 
@@ -189,21 +194,21 @@ abstract class MapGenerator extends Thread {
 	abstract boolean executeJob(MapGeneratorJob mapGeneratorJob);
 
 	/**
-	 * Returns the default starting point on the map.
+	 * Returns the default starting point on the map. May be overridden by subclasses.
 	 * 
 	 * @return the default starting point.
 	 */
 	GeoPoint getDefaultStartPoint() {
-		return new GeoPoint(51.33, 10.45);
+		return DEFAULT_START_POINT;
 	}
 
 	/**
-	 * Returns the default zoom level of the map.
+	 * Returns the default zoom level of the map. May be overridden by subclasses.
 	 * 
 	 * @return the default zoom level.
 	 */
 	byte getDefaultZoomLevel() {
-		return 5;
+		return DEFAULT_ZOOM_LEVEL;
 	}
 
 	/**
@@ -239,20 +244,20 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method is called each time the MapView gets attached to the window. The method may
-	 * be overridden by subclasses to react on this event.
-	 * 
-	 * The default implementation of this method is empty.
+	 * This method is called each time the MapView gets attached to the window. May be
+	 * overridden by subclasses to react on this event.
+	 * <p>
+	 * The default implementation of this method does nothing.
 	 */
 	void onAttachedToWindow() {
 		// do nothing
 	}
 
 	/**
-	 * This method is called each time the MapView gets detached from the window. The method may
-	 * be overridden by subclasses to react on this event.
-	 * 
-	 * The default implementation of this method is empty.
+	 * This method is called each time the MapView gets detached from the window. May be
+	 * overridden by subclasses to react on this event.
+	 * <p>
+	 * The default implementation of this method does nothing.
 	 */
 	void onDetachedFromWindow() {
 		// do nothing
@@ -280,13 +285,11 @@ abstract class MapGenerator extends Thread {
 	final synchronized void requestSchedule(boolean askForMoreJobs) {
 		this.scheduleNeeded = true;
 		this.requestMoreJobs = askForMoreJobs;
-		if (!this.jobQueue1.isEmpty()) {
-			this.notify();
-		}
+		notify();
 	}
 
 	/**
-	 * Sets the MapView for the MapGenerator.
+	 * Sets the MapView for this MapGenerator.
 	 * 
 	 * @param mapView
 	 *            the MapView.
@@ -322,8 +325,6 @@ abstract class MapGenerator extends Thread {
 	 */
 	final synchronized void unpause() {
 		this.pause = false;
-		if (!this.jobQueue1.isEmpty()) {
-			this.notify();
-		}
+		notify();
 	}
 }

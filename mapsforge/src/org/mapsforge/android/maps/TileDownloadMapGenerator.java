@@ -31,7 +31,15 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	private Bitmap decodedBitmap;
 	private InputStream inputStream;
 	private int[] pixelColors;
+	private StringBuilder stringBuilder;
 	private Bitmap tileBitmap;
+
+	/**
+	 * Abstract default constructor that must be called by subclasses.
+	 */
+	TileDownloadMapGenerator() {
+		this.stringBuilder = new StringBuilder(128);
+	}
 
 	@Override
 	final void cleanup() {
@@ -45,8 +53,9 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	@Override
 	final boolean executeJob(MapGeneratorJob mapGeneratorJob) {
 		try {
+			getTilePath(mapGeneratorJob.tile, this.stringBuilder);
 			// read the data from the tile URL
-			this.inputStream = new URL(getTilePath(mapGeneratorJob.tile)).openStream();
+			this.inputStream = new URL(this.stringBuilder.toString()).openStream();
 			this.decodedBitmap = BitmapFactory.decodeStream(this.inputStream);
 			this.inputStream.close();
 
@@ -55,10 +64,12 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 				return false;
 			}
 
-			// copy all pixels from the decoded bitmap to the tile bitmap
+			// copy all pixels from the decoded bitmap to the color array
 			this.decodedBitmap.getPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
 					Tile.TILE_SIZE, Tile.TILE_SIZE);
 			this.decodedBitmap.recycle();
+
+			// copy all pixels from the color array to the tile bitmap
 			if (this.tileBitmap != null) {
 				this.tileBitmap.setPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
 						Tile.TILE_SIZE, Tile.TILE_SIZE);
@@ -70,9 +81,6 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 		}
 	}
 
-	@Override
-	abstract byte getMaxZoomLevel();
-
 	/**
 	 * Returns the host name of the tile download server.
 	 * 
@@ -81,13 +89,19 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	abstract String getServerHostName();
 
 	/**
-	 * Builds the absolute path to the image file for the requested tile.
+	 * Stores the absolute path to the requested tile in the given StringBuilder.
 	 * 
 	 * @param tile
-	 *            the tile which requires an image.
-	 * @return the absolute address where the image can be downloaded from.
+	 *            the tile for which an image is required.
+	 * @param imagePath
+	 *            the StringBuilder to store the URL to the image.
 	 */
-	abstract String getTilePath(Tile tile);
+	abstract void getTilePath(Tile tile, StringBuilder imagePath);
+
+	@Override
+	final void prepareMapGeneration() {
+		this.stringBuilder.setLength(0);
+	}
 
 	@Override
 	final void setup(Bitmap bitmap) {

@@ -16,9 +16,12 @@
  */
 package org.mapsforge.android.maps;
 
-class Point implements Comparable<Point> {
+/**
+ * An ImmutablePoint represents an fixed pair of float coordinates.
+ */
+class ImmutablePoint implements Comparable<ImmutablePoint> {
 	/**
-	 * Substracts the x and y coordinates of one point from another point.
+	 * Subtracts the x and y coordinates of one point from another point.
 	 * 
 	 * @param minuend
 	 *            the minuend.
@@ -26,31 +29,46 @@ class Point implements Comparable<Point> {
 	 *            the subtrahend.
 	 * @return a new Point object.
 	 */
-	static Point substract(Point minuend, Point subtrahend) {
-		return new Point(minuend.x - subtrahend.x, minuend.y - subtrahend.y);
+	static ImmutablePoint substract(ImmutablePoint minuend, ImmutablePoint subtrahend) {
+		return new ImmutablePoint(minuend.x - subtrahend.x, minuend.y - subtrahend.y);
 	}
 
+	/**
+	 * Stores the hash value of this GeoPoint.
+	 */
 	private final int hashCode;
-	private Point other;
+
+	/**
+	 * Used to compare this point with others in the {@link #equals(Object)} method.
+	 */
+	private ImmutablePoint other;
+
+	/**
+	 * The x coordinate of this point.
+	 */
 	final float x;
+
+	/**
+	 * The y coordinate of this point.
+	 */
 	final float y;
 
 	/**
-	 * Constructs a new Point object with the given x and y coordinates.
+	 * Constructs a new ImmutablePoint with the given x and y coordinates.
 	 * 
 	 * @param x
 	 *            the x coordinate of the point.
 	 * @param y
 	 *            the y coordinate of the point.
 	 */
-	Point(float x, float y) {
+	ImmutablePoint(float x, float y) {
 		this.x = x;
 		this.y = y;
 		this.hashCode = calculateHashCode();
 	}
 
 	@Override
-	public int compareTo(Point point) {
+	public int compareTo(ImmutablePoint point) {
 		if (this.x > point.x) {
 			return 1;
 		} else if (this.x < point.x) {
@@ -67,10 +85,10 @@ class Point implements Comparable<Point> {
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (!(obj instanceof Point)) {
+		} else if (!(obj instanceof ImmutablePoint)) {
 			return false;
 		} else {
-			this.other = (Point) obj;
+			this.other = (ImmutablePoint) obj;
 			if (this.x != this.other.x) {
 				return false;
 			} else if (this.y != this.other.y) {

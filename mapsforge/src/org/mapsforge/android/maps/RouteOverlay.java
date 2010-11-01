@@ -16,154 +16,97 @@
  */
 package org.mapsforge.android.maps;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Point;
 
 /**
- * This overlay is intended for visualizing routes. A route is a collection of waypoints forming
- * a line.
- * 
- * @author Karsten Groll
+ * RouteOverlay is a special Overlay to display a sequence of way nodes. To draw an arbitrary
+ * polygon, add a way node sequence where the first and the last way node are equal.
+ * <p>
+ * All rendering parameters like color, stroke width, pattern and transparency can be configured
+ * via the {@link android.graphics.Paint Paint} object in the {@link #RouteOverlay(Paint)
+ * constructor}. Anti-aliasing is always used to improve the visual quality of the image.
  */
 public class RouteOverlay extends Overlay {
-	/** Canvas used for drawing onto {@link #shadowBmp}. */
-	private Canvas internalCanvas;
-	/** Matrix used for translating the overlay. */
-	private Matrix matrix;
-	/** Paint used for styling the path. */
-	private Paint paint;
-	/** Path holding the waypoints pixel coordinates. */
-	private Path path;
-	/** Array holding the waypoints. */
-	private double routeData[][];
-	/** The bitmap the route is drawn onto. */
-	private Bitmap shadowBmp;
-	/** Temporary bitmap used for switching bitmap and shadowBmp. */
-	private Bitmap tmpBmp;
-	/** Map's x-position after rendering. */
-	private double xPosAfter;
-	/** Map's x-position before rendering. */
-	private double xPosBefore;
-	/** Map's y-position after rendering. */
-	private double yPosAfter;
-	/** Map's y-position before rendering. */
-	private double yPosBefore;
+	private static final String THREAD_NAME = "RouteOverlay";
+
+	private Point[] cachedWayPositions;
+	private byte cachedZoomLevel;
+	private final Paint paint;
+	private final Path path;
+	private GeoPoint[] wayNodes;
 
 	/**
-	 * Constructor
+	 * Constructs a new RouteOverlay.
+	 * 
+	 * @param paint
+	 *            the paint object which will be used to draw the route.
 	 */
-	public RouteOverlay() {
-		this.matrix = new Matrix();
-		this.internalCanvas = new Canvas();
-
-		this.paint = new Paint();
-		this.paint.setColor(Color.BLUE);
-		this.paint.setAlpha(100);
-		this.paint.setStyle(Paint.Style.STROKE);
-		this.paint.setStrokeJoin(Paint.Join.ROUND);
-		this.paint.setStrokeCap(Paint.Cap.ROUND);
-		this.paint.setStrokeWidth(5);
+	public RouteOverlay(Paint paint) {
+		this.paint = paint;
+		if (this.paint != null) {
+			this.paint.setAntiAlias(true);
+		}
 		this.path = new Path();
-
-		this.start();
-	}
-
-	@Override
-	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		canvas.drawBitmap(this.bmp, this.matrix, null);
-		// Log.d("test", this.matrix.toShortString());
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**
-	 * Sets the route data (Array of waypoints).
+	 * Sets the way nodes of the route.
 	 * 
-	 * @param routeData
-	 *            Array containing of arrays containing the route data. Structure
-	 * 
-	 *            <pre>
-	 * {{lat1, lon1}, {lat2, lon2}, ...}
-	 * </pre>
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes.
 	 */
-	public void setRouteData(double[][] routeData) {
-		this.routeData = routeData.clone();
+	public void setRouteData(GeoPoint[] wayNodes) {
+		this.wayNodes = wayNodes;
+		if (this.wayNodes != null) {
+			// create the array for the cached way node positions
+			this.cachedWayPositions = new Point[this.wayNodes.length];
+		}
+	}
+
+	/**
+	 * This method should be called after way nodes have been added to the Overlay.
+	 */
+	protected final void populate() {
+		super.requestRedraw();
 	}
 
 	@Override
-	protected void createOverlayBitmapsAndCanvas(int width, int height) {
-		this.bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		this.shadowBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-	}
-
-	@Override
-	protected Matrix getMatrix() {
-		return this.matrix;
-	}
-
-	@Override
-	protected void prepareOverlayBitmap(MapView mapView) {
-		if (this.routeData == null) {
+	final void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
+		if (this.cachedWayPositions == null || this.cachedWayPositions.length < 1) {
+			// no way nodes to draw
+			return;
+		} else if (this.paint == null) {
+			// no paint to draw
 			return;
 		}
 
-		// Tell the internalCanvas to use a new bitmap
-		this.internalCanvas.setBitmap(this.shadowBmp);
-		// Erase the bmp's content
-		this.shadowBmp.eraseColor(Color.TRANSPARENT);
+		// make sure that the cached way node positions are valid
+		if (drawZoomLevel != this.cachedZoomLevel) {
+			for (int i = 0; i < this.cachedWayPositions.length; ++i) {
+				this.cachedWayPositions[i] = this.projection.toPoint(this.wayNodes[i],
+						this.cachedWayPositions[i], drawZoomLevel);
+			}
+			this.cachedZoomLevel = drawZoomLevel;
+		}
 
-		// Save current position
-		this.xPosBefore = mapView.mapViewPixelX;
-		this.yPosBefore = mapView.mapViewPixelY;
-
-		// Create our path
+		// assemble the path
 		this.path.reset();
-		this.matrix.reset();
-
-		float x1, y1, x2, y2;
-		double dx = mapView.mapViewPixelX;
-		double dy = mapView.mapViewPixelY;
-
-		x1 = (float) (MercatorProjection.longitudeToPixelX(this.routeData[0][1],
-				mapView.zoomLevel) - dx);
-		y1 = (float) (MercatorProjection.latitudeToPixelY(this.routeData[0][0],
-				mapView.zoomLevel) - dy);
-		this.path.moveTo(x1, y1);
-		for (int i = 1; i < this.routeData.length; i++) {
-			x2 = (float) (MercatorProjection.longitudeToPixelX(this.routeData[i][1],
-					mapView.zoomLevel) - dx);
-			y2 = (float) (MercatorProjection.latitudeToPixelY(this.routeData[i][0],
-					mapView.zoomLevel) - dy);
-
-			this.path.lineTo(x2, y2);
-
-			x1 = x2;
-			y1 = y2;
+		this.path.moveTo(this.cachedWayPositions[0].x - drawPosition.x,
+				this.cachedWayPositions[0].y - drawPosition.y);
+		for (int i = 1; i < this.cachedWayPositions.length; ++i) {
+			this.path.lineTo(this.cachedWayPositions[i].x - drawPosition.x,
+					this.cachedWayPositions[i].y - drawPosition.y);
 		}
 
-		// Draw the path
+		// draw the path on the canvas
 		this.internalCanvas.drawPath(this.path, this.paint);
+	}
 
-		// Save current position (again)
-		this.xPosAfter = mapView.mapViewPixelX;
-		this.yPosAfter = mapView.mapViewPixelY;
-
-		synchronized (this.bmp) {
-			// this.matrix.reset();
-
-			// Calculate how many pixels the MapView has been shifted since the beginning of the
-			// calculation and fix the matrix according to it
-			this.matrix.postTranslate((float) (this.xPosBefore - this.xPosAfter),
-					(float) (this.yPosBefore - this.yPosAfter));
-			// Swap bitmaps
-			this.tmpBmp = this.bmp;
-			this.bmp = this.shadowBmp;
-			this.shadowBmp = this.tmpBmp;
-		}
-
-		// Force redraw
-		mapView.postInvalidate();
+	@Override
+	String getThreadName() {
+		return THREAD_NAME;
 	}
 }

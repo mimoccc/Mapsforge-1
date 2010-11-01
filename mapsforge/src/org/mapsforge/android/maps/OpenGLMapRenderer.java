@@ -29,7 +29,10 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
+/**
+ * <b>This implementation is unstable and for testing only.</b>
+ */
+class OpenGLMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 	private int arrayListIndex;
 	private Bitmap bitmap;
 	private int circleBufferHandle;
@@ -46,44 +49,27 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 	private ArrayList<ShapePaintContainer> objectsToDraw;
 	private Paint paint;
 	private ByteBuffer pixelBuffer;
-	// private Random random;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private int vboHandle;
 	private ByteBuffer vbuffer;
 	private FloatBuffer vertices;
 	private ArrayList<ShapePaintContainer> wayList;
+
+	/**
+	 * Flag to indicate the status of the current frame.
+	 */
 	boolean frameReady;
 
-	OpenGlMapRenderer() {
-		Logger.d("OpenGlMapRenderer called");
-		// this.random = new Random();
+	/**
+	 * Creates a new OpenGlMapRenderer.
+	 */
+	OpenGLMapRenderer() {
 		this.objectsToDraw = new ArrayList<ShapePaintContainer>(1024);
-	}
-
-	public void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays,
-			byte layers, byte levelsPerLayer) {
-
-		// extract all ways in all layers and all levels and add them to objectsToDraw()
-		// ArrayList
-		for (this.currentLayer = 0; this.currentLayer < layers; ++this.currentLayer) {
-			this.shapePaintContainers = drawWays.get(this.currentLayer);
-			for (this.currentLevel = 0; this.currentLevel < levelsPerLayer; ++this.currentLevel) {
-				this.wayList = this.shapePaintContainers.get(this.currentLevel);
-				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
-					this.objectsToDraw.add(this.shapePaintContainer);
-				}
-			}
-		}
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		// Logger.d("onDrawFrame called");
-
-		// gl.glClearColor(this.random.nextFloat(), this.random.nextFloat(), this.random
-		// .nextFloat(), 1);
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glLoadIdentity(); // Reset The Current Modelview Matrix
 
@@ -168,7 +154,6 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 						// + " vertices.remaining==" + vertices.remaining() + " limit=="
 						// + vertices.limit());
 						for (i = 0; i < nodes.length; i += 2) {
-
 							// TODO: BufferOverflow exception on next line
 							this.vertices.put(new float[] { (nodes[i] / 128 - 1.0f),
 									(nodes[i + 1] / 128 - 1.0f), 0f,
@@ -181,8 +166,7 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 						// bind the buffer
 						this.mGL11.glBindBuffer(GL11.GL_ARRAY_BUFFER, this.vboHandle);
 						this.mGL11.glBufferData(GL11.GL_ARRAY_BUFFER, 4 * 7 * i / 2,
-								this.vertices,
-								GL11.GL_DYNAMIC_DRAW);
+								this.vertices, GL11.GL_DYNAMIC_DRAW);
 
 						this.mGL11.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 						this.mGL11.glEnableClientState(GL10.GL_COLOR_ARRAY);
@@ -280,6 +264,27 @@ class OpenGlMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 		this.circleBufferHandle = handle[1];
 	}
 
+	/**
+	 * @see DatabaseMapGenerator#drawWays(ArrayList, byte, byte)
+	 */
+	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
+			byte levelsPerLayer) {
+		// extract all ways in all layers and all levels and add them to ArrayList
+		for (this.currentLayer = 0; this.currentLayer < layers; ++this.currentLayer) {
+			this.shapePaintContainers = drawWays.get(this.currentLayer);
+			for (this.currentLevel = 0; this.currentLevel < levelsPerLayer; ++this.currentLevel) {
+				this.wayList = this.shapePaintContainers.get(this.currentLevel);
+				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
+					this.objectsToDraw.add(this.shapePaintContainer);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @see DatabaseMapGenerator#setupMapGenerator(Bitmap)
+	 */
 	void setBitmap(Bitmap bitmap) {
 		this.bitmap = bitmap;
 		byte[] bytes = new byte[2 * this.bitmap.getHeight() * this.bitmap.getWidth()];

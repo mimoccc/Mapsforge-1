@@ -33,7 +33,7 @@ class Rect {
 	}
 
 	/**
-	 * Returns true, if the given GeoPoint is inside this rectangle, false otherwise.
+	 * Returns true if the given GeoPoint is inside this rectangle, false otherwise.
 	 * 
 	 * @param geoPoint
 	 *            the GeoPoint to be checked.
@@ -55,7 +55,7 @@ class Rect {
 	}
 
 	/**
-	 * Returns true, if left >= right or top <= bottom.
+	 * Returns true if left >= right or top <= bottom.
 	 * 
 	 * @return true if this rectangle is empty, false otherwise.
 	 */

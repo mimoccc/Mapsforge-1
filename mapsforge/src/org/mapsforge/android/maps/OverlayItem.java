@@ -16,93 +16,82 @@
  */
 package org.mapsforge.android.maps;
 
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 
 /**
- * This is the basic element of {@link Overlay}.
- * 
- * @author Sebastian Schlaak
- * @author Karsten Groll
+ * An OverlayItem holds all parameters of a single element on an {@link ItemizedOverlay}.
  */
 public class OverlayItem {
-
 	/**
-	 * State bitset bit. This feature is not yet implemented!
-	 */
-	static int ITEM_STATE_FOCUSED_MASK;
-	/**
-	 * State bitset bit. This feature is not yet implemented!
-	 */
-	static int ITEM_STATE_PRESSED_MASK;
-	/**
-	 * State bitset bit. This feature is not yet implemented!
-	 */
-	static int ITEM_STATE_SELECTED_MASK;
-	/**
-	 * The marker used to indicate the item.
+	 * Marker used to indicate the item.
 	 */
 	protected Drawable marker;
-	/**
-	 * The position of the item as {@link GeoPoint}.
-	 */
-	protected GeoPoint point;
-	/**
-	 *The position relative to display
-	 */
-	protected Point posOnDisplay;
 
 	/**
-	 * The zoomlevel of posOnDisplay.
+	 * Geographical position of the item.
 	 */
-	protected int zoomLevel;
+	protected final GeoPoint point;
 
 	/**
-	 * A short description.
+	 * Short description of the item.
 	 */
-	protected String snippet;
-	/**
-	 * The title of the item.
-	 */
-	protected String title;
+	protected final String snippet;
 
 	/**
-	 * Construct an overlay item.
+	 * Title of the item.
+	 */
+	protected final String title;
+
+	/**
+	 * Cached position of the item on the map.
+	 */
+	Point cachedMapPosition;
+
+	/**
+	 * Zoom level of the cached map position.
+	 */
+	byte cachedZoomLevel;
+
+	/**
+	 * Constructs a new OverlayItem.
 	 * 
 	 * @param point
-	 *            position of the item.
+	 *            the geographical position of the item.
 	 * @param title
-	 *            title of the item.
+	 *            the title of the item.
 	 * @param snippet
-	 *            snippet-text of the item.
+	 *            the short description of the item.
 	 */
 	public OverlayItem(GeoPoint point, String title, String snippet) {
 		this.point = point;
 		this.title = title;
 		this.snippet = snippet;
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**
-	 * Returns the overlay marker used to indicate the item.
+	 * Returns the marker used to indicate the item (may be null).
 	 * 
-	 * @return the overlay marker.
+	 * @return the marker used to indicate the item.
 	 */
 	public Drawable getMarker() {
 		return this.marker;
 	}
 
 	/**
-	 * Returns the position of the item as {@link GeoPoint}.
+	 * Returns the position of the item.
 	 * 
-	 * @return the GeoPoint.
+	 * @return the position of the item.
 	 */
 	public GeoPoint getPoint() {
 		return this.point;
 	}
 
 	/**
-	 * Returns the snippet-text of the item.
+	 * Returns the short description of the item.
 	 * 
-	 * @return the Snippet-text.
+	 * @return the short description of the item.
 	 */
 	public String getSnippet() {
 		return this.snippet;
@@ -111,33 +100,20 @@ public class OverlayItem {
 	/**
 	 * Returns the title of the item.
 	 * 
-	 * @return the title.
+	 * @return the title of the item.
 	 */
 	public String getTitle() {
 		return this.title;
 	}
 
 	/**
-	 * Returns the position of the item as map-routable {@link String}.
+	 * Sets the marker that is drawn on the map for this item. If the item marker is null, the
+	 * default marker will be drawn instead.
 	 * 
-	 * @return not yet implemented!
+	 * @param marker
+	 *            the marker that is drawn on the map for this item.
 	 */
-	public String routableAddress() {
-		Logger.e(new Exception("Not Implemented"));
-		return null;
-	}
-
-	/**
-	 * Sets the marker to draw this item on the {@link MapView}.
-	 * 
-	 * @param drawable
-	 *            the marker to draw.
-	 * 
-	 * @param stateBitset
-	 *            not yet implemented!
-	 */
-	public void setMarker(Drawable drawable, int stateBitset) {
-		this.marker = drawable;
-		Logger.e(new Exception("Not Implemented"));
+	public void setMarker(Drawable marker) {
+		this.marker = marker;
 	}
 }

@@ -21,10 +21,10 @@ package org.mapsforge.android.maps;
  * compare segments by looking at their first and last point.
  */
 class EndPoints {
-	private final Point end;
+	private final ImmutablePoint end;
 	private final int hashCode;
 	private EndPoints other;
-	private final Point start;
+	private final ImmutablePoint start;
 
 	/**
 	 * Creates a new EndPoints instance with the given points.
@@ -34,7 +34,7 @@ class EndPoints {
 	 * @param end
 	 *            the end point.
 	 */
-	EndPoints(Point start, Point end) {
+	EndPoints(ImmutablePoint start, ImmutablePoint end) {
 		this.start = start;
 		this.end = end;
 		this.hashCode = calculateHashCode();

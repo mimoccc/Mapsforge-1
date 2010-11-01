@@ -24,12 +24,12 @@ import java.util.Map;
  * final byte to speed up the rendering process.
  */
 final class TagIdsWays {
+	static final short ADMIN_LEVEL$10 = 5;
 	static final short ADMIN_LEVEL$2 = 0;
 	static final short ADMIN_LEVEL$4 = 1;
 	static final short ADMIN_LEVEL$6 = 2;
 	static final short ADMIN_LEVEL$8 = 3;
 	static final short ADMIN_LEVEL$9 = 4;
-	static final short ADMIN_LEVEL$10 = 5;
 	static final short AERIALWAY$CABLE_CAR = 6;
 	static final short AERIALWAY$CHAIR_LIFT = 7;
 	static final short AEROWAY$AERODROME = 8;
@@ -130,6 +130,7 @@ final class TagIdsWays {
 	static final short NATURAL$SCRUB = 103;
 	static final short NATURAL$WATER = 104;
 	static final short NATURAL$WOOD = 105;
+	static final short NUMBER_OF_WAY_TAGS = 135;
 	static final short PLACE$LOCALITY = 106;
 	static final short POWER$STATION = 107;
 	static final short POWER$SUB_STATION = 108;
@@ -159,7 +160,6 @@ final class TagIdsWays {
 	static final short WATERWAY$RIVER = 132;
 	static final short WATERWAY$RIVERBANK = 133;
 	static final short WATERWAY$STREAM = 134;
-	static final short NUMBER_OF_WAY_TAGS = 135;
 
 	static final Map<String, Short> getMap() {
 		Map<String, Short> map = new HashMap<String, Short>();

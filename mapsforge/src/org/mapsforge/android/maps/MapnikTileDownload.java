@@ -17,17 +17,13 @@
 package org.mapsforge.android.maps;
 
 /**
- * A MapGenerator that downloads map tiles from the Mapnik openstreetmap server.
+ * A MapGenerator that downloads tiles from the Mapnik server at OpenStreetMap.
  */
 class MapnikTileDownload extends TileDownloadMapGenerator {
 	private static final String SERVER_HOST_NAME = "tile.openstreetmap.org";
 	private static final String THREAD_NAME = "MapnikTileDownload";
+	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME + "/";
 	private static final byte ZOOM_MAX = 18;
-	private StringBuilder stringBuilder;
-
-	MapnikTileDownload() {
-		this.stringBuilder = new StringBuilder(128);
-	}
 
 	@Override
 	byte getMaxZoomLevel() {
@@ -45,23 +41,13 @@ class MapnikTileDownload extends TileDownloadMapGenerator {
 	}
 
 	@Override
-	String getTilePath(Tile tile) {
-		// add the path of the requested tile image to the address
-		this.stringBuilder.append(tile.zoomLevel);
-		this.stringBuilder.append("/");
-		this.stringBuilder.append(tile.x);
-		this.stringBuilder.append("/");
-		this.stringBuilder.append(tile.y);
-		this.stringBuilder.append(".png");
-		return this.stringBuilder.toString();
-	}
-
-	@Override
-	void prepareMapGeneration() {
-		// add the general part of the URL to the address
-		this.stringBuilder.setLength(0);
-		this.stringBuilder.append("http://");
-		this.stringBuilder.append(SERVER_HOST_NAME);
-		this.stringBuilder.append("/");
+	void getTilePath(Tile tile, StringBuilder imagePath) {
+		imagePath.append(URL_FIRST_PART);
+		imagePath.append(tile.zoomLevel);
+		imagePath.append("/");
+		imagePath.append(tile.x);
+		imagePath.append("/");
+		imagePath.append(tile.y);
+		imagePath.append(".png");
 	}
 }

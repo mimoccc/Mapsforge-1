@@ -33,8 +33,8 @@ final class TagIdsPOIs {
 	static final short AMENITY$CAFE = 6;
 	static final short AMENITY$CINEMA = 7;
 	static final short AMENITY$FAST_FOOD = 8;
-	static final short AMENITY$FOUNTAIN = 9;
 	static final short AMENITY$FIRE_STATION = 10;
+	static final short AMENITY$FOUNTAIN = 9;
 	static final short AMENITY$FUEL = 11;
 	static final short AMENITY$HOSPITAL = 12;
 	static final short AMENITY$LIBRARY = 13;
@@ -71,6 +71,7 @@ final class TagIdsPOIs {
 	static final short NATURAL$PEAK = 44;
 	static final short NATURAL$SPRING = 45;
 	static final short NATURAL$TREE = 46;
+	static final short NUMBER_OF_POI_TAGS = 70;
 	static final short PLACE$CITY = 47;
 	static final short PLACE$ISLAND = 48;
 	static final short PLACE$SUBURB = 49;
@@ -94,7 +95,6 @@ final class TagIdsPOIs {
 	static final short TOURISM$INFORMATION = 67;
 	static final short TOURISM$MUSEUM = 68;
 	static final short TOURISM$VIEWPOINT = 69;
-	static final short NUMBER_OF_POI_TAGS = 70;
 
 	static final Map<String, Short> getMap() {
 		Map<String, Short> map = new HashMap<String, Short>();

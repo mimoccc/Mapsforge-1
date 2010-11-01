@@ -45,6 +45,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final short BITMAP_RAILWAY = 0x40;
 	private static final short BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
+	private static final byte DEFAULT_ZOOM_LEVEL = 15;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -223,7 +224,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
-	private ArrayList<Point> additionalCoastlinePoints;
+	private ArrayList<ImmutablePoint> additionalCoastlinePoints;
 	private ArrayList<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
@@ -232,12 +233,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private float bboxLongitude2;
 	private CoastlineWay coastlineEnd;
 	private int coastlineEndLength;
-	private Point coastlineEndPoint;
-	private TreeMap<Point, float[]> coastlineEnds;
+	private ImmutablePoint coastlineEndPoint;
+	private TreeMap<ImmutablePoint, float[]> coastlineEnds;
 	private CoastlineWay coastlineStart;
 	private int coastlineStartLength;
-	private Point coastlineStartPoint;
-	private TreeMap<Point, float[]> coastlineStarts;
+	private ImmutablePoint coastlineStartPoint;
+	private TreeMap<ImmutablePoint, float[]> coastlineStarts;
 	private Comparator<CoastlineWay> coastlineWayComparator;
 	private ArrayList<CoastlineWay> coastlineWays;
 	private float[][] coordinates;
@@ -252,7 +253,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private float distanceY;
 	private EndPoints endPoints;
 	private HashSet<EndPoints> handledCoastlineSegments;
-	private Point[] helperPoints;
+	private ImmutablePoint[] helperPoints;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
 	private boolean islandSituation;
@@ -285,7 +286,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * @param wayLabelPosition
 	 *            the position of the area label (may be null).
 	 * @param nameColor
-	 *            the area name colour mode.
+	 *            the area name color mode.
 	 * @param nameOffset
 	 *            the vertical offset from the area center.
 	 */
@@ -1591,7 +1592,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 	@Override
 	final byte getDefaultZoomLevel() {
-		return 15;
+		return DEFAULT_ZOOM_LEVEL;
 	}
 
 	@Override
@@ -1656,8 +1657,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pub);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_RED_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_RED_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1665,8 +1665,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cinema);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1674,8 +1673,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.theatre);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1683,8 +1681,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.firebrigade);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1692,8 +1689,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.shelter);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1701,8 +1697,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.school);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1710,8 +1705,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.university);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1719,8 +1713,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.church);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1728,8 +1721,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.atm);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1737,8 +1729,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.library);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1746,8 +1737,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fastfood);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1756,8 +1746,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1765,8 +1754,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hospital);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1774,8 +1762,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.restaurant);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1783,8 +1770,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bank);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1792,8 +1778,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.cafe);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1810,8 +1795,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus_sta);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1857,8 +1841,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		}
 
@@ -1877,8 +1860,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.peak);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_12,
-						PAINT_NAME_WHITE_STROKE_12));
+						this.currentNodeY, PAINT_NAME_BLACK_12, PAINT_NAME_WHITE_STROKE_12));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1943,8 +1925,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 										PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
 					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY, PAINT_NAME_RED_13,
-							PAINT_NAME_WHITE_STROKE_13));
+							this.currentNodeY, PAINT_NAME_RED_13, PAINT_NAME_WHITE_STROKE_13));
 				}
 			}
 		} else if (nodeTagIds[TagIdsPOIs.RAILWAY$HALT]
@@ -1956,8 +1937,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_RED_11,
-						PAINT_NAME_WHITE_STROKE_11));
+						this.currentNodeY, PAINT_NAME_RED_11, PAINT_NAME_WHITE_STROKE_11));
 			}
 		}
 
@@ -1966,23 +1946,20 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bakery);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
 		} else if (nodeTagIds[TagIdsPOIs.SHOP$ORGANIC]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (nodeTagIds[TagIdsPOIs.SHOP$SUPERMARKET]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.supermarket);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -1994,15 +1971,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$MUSEUM]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (nodeTagIds[TagIdsPOIs.TOURISM$HOSTEL]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hostel);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -2010,8 +1985,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.hotel);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbols.get(this.symbols
 						.size() - 1);
 			}
@@ -2885,8 +2859,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			} else if (wayTagIds[TagIdsWays.NATURAL$COASTLINE]) {
 				// all coastline segments are accumulated and merged together if possible
 				float[] nodesSequence = this.coordinates[0];
-				this.coastlineStartPoint = new Point(nodesSequence[0], nodesSequence[1]);
-				this.coastlineEndPoint = new Point(nodesSequence[nodesSequence.length - 2],
+				this.coastlineStartPoint = new ImmutablePoint(nodesSequence[0],
+						nodesSequence[1]);
+				this.coastlineEndPoint = new ImmutablePoint(
+						nodesSequence[nodesSequence.length - 2],
 						nodesSequence[nodesSequence.length - 1]);
 				this.endPoints = new EndPoints(this.coastlineStartPoint, this.coastlineEndPoint);
 
@@ -2910,7 +2886,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
 								matchPath.length);
 						nodesSequence = newPath;
-						this.coastlineEndPoint = new Point(
+						this.coastlineEndPoint = new ImmutablePoint(
 								nodesSequence[nodesSequence.length - 2],
 								nodesSequence[nodesSequence.length - 1]);
 					}
@@ -2926,7 +2902,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 							System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
 									nodesSequence.length);
 							nodesSequence = newPath;
-							this.coastlineStartPoint = new Point(nodesSequence[0],
+							this.coastlineStartPoint = new ImmutablePoint(nodesSequence[0],
 									nodesSequence[1]);
 						}
 					}
@@ -3177,8 +3153,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.areaLabels = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
-		this.coastlineEnds = new TreeMap<Point, float[]>();
-		this.coastlineStarts = new TreeMap<Point, float[]>();
+		this.coastlineEnds = new TreeMap<ImmutablePoint, float[]>();
+		this.coastlineStarts = new TreeMap<ImmutablePoint, float[]>();
 		this.handledCoastlineSegments = new HashSet<EndPoints>(64);
 		this.coastlineWayComparator = new Comparator<CoastlineWay>() {
 			@Override
@@ -3191,12 +3167,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		};
 
 		// create the four helper points at the tile corners
-		this.helperPoints = new Point[4];
-		this.helperPoints[0] = new Point(Tile.TILE_SIZE, Tile.TILE_SIZE);
-		this.helperPoints[1] = new Point(0, Tile.TILE_SIZE);
-		this.helperPoints[2] = new Point(0, 0);
-		this.helperPoints[3] = new Point(Tile.TILE_SIZE, 0);
-		this.additionalCoastlinePoints = new ArrayList<Point>(4);
+		this.helperPoints = new ImmutablePoint[4];
+		this.helperPoints[0] = new ImmutablePoint(Tile.TILE_SIZE, Tile.TILE_SIZE);
+		this.helperPoints[1] = new ImmutablePoint(0, Tile.TILE_SIZE);
+		this.helperPoints[2] = new ImmutablePoint(0, 0);
+		this.helperPoints[3] = new ImmutablePoint(Tile.TILE_SIZE, 0);
+		this.additionalCoastlinePoints = new ArrayList<ImmutablePoint>(4);
 		this.coastlineWays = new ArrayList<CoastlineWay>(4);
 
 		setupMapGenerator(this.tileBitmap);

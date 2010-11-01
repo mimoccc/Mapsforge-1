@@ -16,12 +16,14 @@
  */
 package org.mapsforge.android.maps;
 
+import android.graphics.Point;
+
 /**
- * A performance optimised implementation of the spherical mercator projection.
+ * A performance optimized implementation of the spherical Mercator projection.
  */
 class MercatorProjection implements Projection {
 	/**
-	 * Calculate the distance on the ground that is represented by a single pixel on the map.
+	 * Calculates the distance on the ground that is represented by a single pixel on the map.
 	 * 
 	 * @param latitude
 	 *            the latitude coordinate at which the resolution should be calculated.
@@ -35,7 +37,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom
+	 * Converts a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom
 	 * level.
 	 * 
 	 * @param latitude
@@ -50,7 +52,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a latitude coordinate (in degrees) to a tile Y number at a certain zoom level.
+	 * Converts a latitude coordinate (in degrees) to a tile Y number at a certain zoom level.
 	 * 
 	 * @param latitude
 	 *            the latitude coordinate that should be converted.
@@ -63,7 +65,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom
+	 * Converts a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom
 	 * level.
 	 * 
 	 * @param longitude
@@ -77,7 +79,8 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a longitude coordinate (in degrees) to the tile X number at a certain zoom level.
+	 * Converts a longitude coordinate (in degrees) to the tile X number at a certain zoom
+	 * level.
 	 * 
 	 * @param longitude
 	 *            the longitude coordinate that should be converted.
@@ -90,7 +93,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a pixel X coordinate at a certain zoom level to a longitude coordinate.
+	 * Converts a pixel X coordinate at a certain zoom level to a longitude coordinate.
 	 * 
 	 * @param pixelX
 	 *            the pixel X coordinate that should be converted.
@@ -103,7 +106,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a pixel X coordinate to the tile X number.
+	 * Converts a pixel X coordinate to the tile X number.
 	 * 
 	 * @param pixelX
 	 *            the pixel X coordinate that should be converted.
@@ -116,7 +119,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a pixel Y coordinate at a certain zoom level to a latitude coordinate.
+	 * Converts a pixel Y coordinate at a certain zoom level to a latitude coordinate.
 	 * 
 	 * @param pixelY
 	 *            the pixel Y coordinate that should be converted.
@@ -143,7 +146,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a tile X number at a certain zoom level to a longitude coordinate.
+	 * Converts a tile X number at a certain zoom level to a longitude coordinate.
 	 * 
 	 * @param tileX
 	 *            the tile X number that should be converted.
@@ -156,7 +159,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Convert a tile Y number at a certain zoom level to a latitude coordinate.
+	 * Converts a tile Y number at a certain zoom level to a latitude coordinate.
 	 * 
 	 * @param tileY
 	 *            the tile Y number that should be converted.
@@ -168,22 +171,81 @@ class MercatorProjection implements Projection {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoom);
 	}
 
-	private MapView mapView;
+	private GeoPoint mapCenter1;
+	private GeoPoint mapCenter2;
+	private final MapView mapView;
+	private byte mapZoomLevel1;
+	private byte mapZoomLevel2;
+	private double pixelX1;
+	private double pixelX2;
+	private double pixelY1;
+	private double pixelY2;
+	private Point returnPoint2;
+	private Point returnPoint3;
 
+	/**
+	 * Constructs a new MercatorProjection that uses the parameters of the given MapView.
+	 * 
+	 * @param mapView
+	 *            the MapView on which this instance should operate.
+	 */
 	MercatorProjection(MapView mapView) {
 		this.mapView = mapView;
 	}
 
 	@Override
 	public GeoPoint fromPixels(int x, int y) {
-		// calculate the pixel coordinates relative to the top left corner
-		double pixelX = longitudeToPixelX(this.mapView.longitude, this.mapView.zoomLevel)
-				- (mapView.getWidth() >> 1) + x;
-		double pixelY = latitudeToPixelY(this.mapView.latitude, this.mapView.zoomLevel)
-				- (mapView.getHeight() >> 1) + y;
+		// save the current position and zoom level of the map
+		this.mapCenter1 = this.mapView.getMapCenter();
+		this.mapZoomLevel1 = this.mapView.getZoomLevel();
+
+		// calculate the pixel coordinates of the top left corner
+		this.pixelX1 = longitudeToPixelX(this.mapCenter1.getLongitude(), this.mapZoomLevel1)
+				- (this.mapView.getWidth() >> 1);
+		this.pixelY1 = latitudeToPixelY(this.mapCenter1.getLatitude(), this.mapZoomLevel1)
+				- (this.mapView.getHeight() >> 1);
 
 		// convert the pixel coordinates to a GeoPoint
-		return new GeoPoint(pixelYToLatitude(pixelY, this.mapView.zoomLevel),
-				pixelXToLongitude(pixelX, this.mapView.zoomLevel));
+		return new GeoPoint(pixelYToLatitude(this.pixelY1 + y, this.mapZoomLevel1),
+				pixelXToLongitude(this.pixelX1 + x, this.mapZoomLevel1));
+	}
+
+	@Override
+	public Point toPixels(GeoPoint in, Point out) {
+		// save the current position and zoom level of the map
+		this.mapCenter2 = this.mapView.getMapCenter();
+		this.mapZoomLevel2 = this.mapView.getZoomLevel();
+
+		// calculate the pixel coordinates of the top left corner
+		this.pixelX2 = longitudeToPixelX(this.mapCenter2.getLongitude(), this.mapZoomLevel2)
+				- (this.mapView.getWidth() >> 1);
+		this.pixelY2 = latitudeToPixelY(this.mapCenter2.getLatitude(), this.mapZoomLevel2)
+				- (this.mapView.getHeight() >> 1);
+
+		if (out == null) {
+			// create a new point object
+			this.returnPoint2 = new Point();
+		} else {
+			// reuse the existing point object
+			this.returnPoint2 = out;
+		}
+
+		this.returnPoint2.x = (int) (longitudeToPixelX(in.getLongitude(), this.mapZoomLevel2) - this.pixelX2);
+		this.returnPoint2.y = (int) (latitudeToPixelY(in.getLatitude(), this.mapZoomLevel2) - this.pixelY2);
+		return this.returnPoint2;
+	}
+
+	@Override
+	public Point toPoint(GeoPoint in, Point out, byte zoom) {
+		if (out == null) {
+			// create a new point object
+			this.returnPoint3 = new Point();
+		} else {
+			// reuse the existing point object
+			this.returnPoint3 = out;
+		}
+		this.returnPoint3.x = (int) longitudeToPixelX(in.getLongitude(), zoom);
+		this.returnPoint3.y = (int) latitudeToPixelY(in.getLatitude(), zoom);
+		return this.returnPoint3;
 	}
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2010 mapsforge.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
@@ -7,30 +23,36 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 /**
- * Implementation of the ItemizedOverlay class using an ArrayList as data structure.
- * 
- * @author Sebastian Schlaak
- * @author Karsten Groll
+ * Implementation of the ItemizedOverlay class using an {@link ArrayList} as data structure.
  */
-public class ArrayItemizedOverlay extends ItemizedOverlay {
-	private Context context;
-	private ArrayList<OverlayItem> overlayItems = new ArrayList<OverlayItem>();
+public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
+	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+
+	private final Context context;
+	private OverlayItem item;
+	private final ArrayList<OverlayItem> overlayItems;
 
 	/**
-	 * Constructs an overlay.
+	 * Constructs a new ArrayItemizedOverlay.
 	 * 
 	 * @param defaultMarker
 	 *            the default marker.
 	 * @param context
-	 *            the context for the alert-dialog.
+	 *            the reference to the application context.
 	 */
 	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
 		super(defaultMarker);
 		this.context = context;
+		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);
 	}
 
-	@Override
-	public void addOverLay(OverlayItem overlayItem) {
+	/**
+	 * Adds the given item to the Overlay.
+	 * 
+	 * @param overlayItem
+	 *            the item that should be added to the Overlay.
+	 */
+	public void addOverlay(OverlayItem overlayItem) {
 		this.overlayItems.add(overlayItem);
 	}
 
@@ -46,11 +68,11 @@ public class ArrayItemizedOverlay extends ItemizedOverlay {
 
 	@Override
 	protected boolean onTap(int index) {
-		OverlayItem item = this.overlayItems.get(index);
+		this.item = this.overlayItems.get(index);
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this.context);
-		dialog.setTitle(item.getTitle());
-		dialog.setMessage(item.getSnippet());
+		dialog.setTitle(this.item.getTitle());
+		dialog.setMessage(this.item.getSnippet());
 		dialog.show();
-		return false;
+		return true;
 	}
 }

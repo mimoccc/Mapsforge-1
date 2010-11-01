@@ -23,22 +23,9 @@ import java.util.PriorityQueue;
 
 class SweepLineRect {
 
-	LinkedList<Intersection> intersects = new LinkedList<Intersection>();
-
-	class Intersection {
-
-		Rectangle<?> a;
-		Rectangle<?> b;
-
-		Intersection(Rectangle<?> a, Rectangle<?> b) {
-			this.a = a;
-			this.b = b;
-		}
-	}
-
 	private class Event {
-		int time;
 		Rectangle<?> rectangle;
+		int time;
 
 		Event(int time, Rectangle<?> rectangle) {
 			this.time = time;
@@ -62,21 +49,21 @@ class SweepLineRect {
 
 	}
 
-	IntervalTree set = new IntervalTree();
-	PriorityQueue<Event> pq;
+	class Intersection {
 
-	LinkedList<Intersection> sweep(ArrayList<Rectangle<?>> rectangles) {
-		this.pq = new PriorityQueue<Event>(rectangles.size() + rectangles.size() / 100 * 20,
-				new EventComparator());
-		for (Rectangle<?> rectangle : rectangles) {
-			Event e1 = new Event(rectangle.rect.left, rectangle);
-			Event e2 = new Event(rectangle.rect.right, rectangle);
-			this.pq.add(e1);
-			this.pq.add(e2);
+		Rectangle<?> a;
+		Rectangle<?> b;
+
+		Intersection(Rectangle<?> a, Rectangle<?> b) {
+			this.a = a;
+			this.b = b;
 		}
-
-		return processSweep();
 	}
+
+	LinkedList<Intersection> intersects = new LinkedList<Intersection>();
+
+	PriorityQueue<Event> pq;
+	IntervalTree set = new IntervalTree();
 
 	LinkedList<Intersection> processSweep() {
 		while (this.pq.size() != 0) {
@@ -89,8 +76,7 @@ class SweepLineRect {
 
 			} else {
 				for (Interval<?> inters : this.set.searchAll(new Interval<Object>(
-						rectangle.rect.top,
-						rectangle.rect.bottom))) {
+						rectangle.rect.top, rectangle.rect.bottom))) {
 					intersects.add(new Intersection(rectangle, (Rectangle<?>) inters.value));
 				}
 				this.set.put((new Interval<Object>(rectangle.rect.top, rectangle.rect.bottom,
@@ -98,5 +84,18 @@ class SweepLineRect {
 			}
 		}
 		return intersects;
+	}
+
+	LinkedList<Intersection> sweep(ArrayList<Rectangle<?>> rectangles) {
+		this.pq = new PriorityQueue<Event>(rectangles.size() + rectangles.size() / 100 * 20,
+				new EventComparator());
+		for (Rectangle<?> rectangle : rectangles) {
+			Event e1 = new Event(rectangle.rect.left, rectangle);
+			Event e2 = new Event(rectangle.rect.right, rectangle);
+			this.pq.add(e1);
+			this.pq.add(e2);
+		}
+
+		return processSweep();
 	}
 }

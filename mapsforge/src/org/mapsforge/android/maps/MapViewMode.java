@@ -38,7 +38,7 @@ public enum MapViewMode {
 	OPENCYCLEMAP_TILE_DOWNLOAD,
 
 	/**
-	 * Map tiles are rendered with OpenGL ES. <b>This mode is unstable and for testing only</b>.
+	 * Map tiles are rendered with OpenGL ES. <b>This mode is unstable and for testing only.</b>
 	 */
 	OPENGL_RENDERER,
 
