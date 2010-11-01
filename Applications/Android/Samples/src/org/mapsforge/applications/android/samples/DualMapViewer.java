@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.demomapviewer;
+package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
@@ -28,7 +28,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 /**
- * A simple application which demonstrates how to use two MapViews at the same time.
+ * An application which demonstrates how to use two MapView instances at the same time.
  */
 public class DualMapViewer extends MapActivity {
 	private MapView mapView1;
@@ -63,13 +63,13 @@ public class DualMapViewer extends MapActivity {
 		this.mapView1 = new MapView(this, MapViewMode.CANVAS_RENDERER);
 		this.mapView1.setClickable(true);
 		this.mapView1.setBuiltInZoomControls(true);
-		this.mapView1.setMapFile("/sdcard/germany_30_09.map");
+		this.mapView1.setMapFile("/sdcard/germany.map");
 		this.mapView1.setMoveSpeed(3);
 
 		this.mapView2 = new MapView(this, MapViewMode.CANVAS_RENDERER);
 		this.mapView2.setClickable(true);
 		this.mapView2.setBuiltInZoomControls(true);
-		this.mapView2.setMapFile("/sdcard/berlin_z14_17_09.map");
+		this.mapView2.setMapFile("/sdcard/berlin.map");
 		this.mapView2.setMoveSpeed(3);
 
 		// create a LineaLayout that holds both MapViews

@@ -14,26 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.demomapviewer;
+package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.MapViewMode;
 
 import android.os.Bundle;
 
 /**
- * A simple application which demonstrates how to use the MapView in download mode.
+ * A simple application which demonstrates how to use a MapView.
  */
-public class TileDownloadMapViewer extends MapActivity {
-	private MapView mapView;
-
+public class BasicMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.mapView = new MapView(this, MapViewMode.OSMARENDER_TILE_DOWNLOAD);
-		this.mapView.setClickable(true);
-		this.mapView.setBuiltInZoomControls(true);
-		setContentView(this.mapView);
+		MapView mapView = new MapView(this);
+		mapView.setClickable(true);
+		mapView.setBuiltInZoomControls(true);
+		mapView.setMapFile("/sdcard/berlin.map");
+		setContentView(mapView);
 	}
 }

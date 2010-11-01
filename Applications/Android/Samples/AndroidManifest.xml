@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.mapsforge.applications.android.demomapviewer"
+	package="org.mapsforge.applications.android.samples"
 	android:versionCode="1" android:versionName="0.1"
 	android:installLocation="auto">
 	<application>
@@ -10,14 +10,20 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".TileDownloadMapViewer"
-			android:label="TileDownloadMapViewer">
+		<activity android:name=".DualMapViewer" android:label="DualMapViewer">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".DualMapViewer" android:label="DualMapViewer">
+		<activity android:name=".OverlayMapViewer" android:label="OverlayMapViewer">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name=".TileDownloadMapViewer"
+			android:label="TileDownloadMapViewer">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
