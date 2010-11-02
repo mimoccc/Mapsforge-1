@@ -200,6 +200,7 @@ public class MapView extends ViewGroup {
 		private float focusX;
 		private float focusY;
 		private float scaleFactor;
+		private float scaleFactorApplied;
 
 		/**
 		 * Empty constructor with default visibility to avoid a synthetic method.
@@ -210,9 +211,16 @@ public class MapView extends ViewGroup {
 
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
-			this.scaleFactor *= detector.getScaleFactor();
-			MapView.this.matrixSetScale(this.scaleFactor, this.scaleFactor, this.focusX,
+			this.scaleFactor = detector.getScaleFactor();
+			this.scaleFactorApplied *= this.scaleFactor;
+			MapView.this.matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX,
 					this.focusY);
+			synchronized (MapView.this.overlays) {
+				for (Overlay overlay : MapView.this.overlays) {
+					overlay.matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX,
+							this.focusY);
+				}
+			}
 			invalidate();
 			return true;
 		}
@@ -221,6 +229,7 @@ public class MapView extends ViewGroup {
 		public boolean onScaleBegin(ScaleGestureDetector detector) {
 			// reset the current scale factor
 			this.scaleFactor = 1;
+			this.scaleFactorApplied = this.scaleFactor;
 
 			// save the focal point of the gesture
 			this.focusX = detector.getFocusX();
@@ -230,11 +239,16 @@ public class MapView extends ViewGroup {
 
 		@Override
 		public void onScaleEnd(ScaleGestureDetector detector) {
-			if (this.scaleFactor <= 0.5f || this.scaleFactor >= 2) {
+			if (this.scaleFactorApplied <= 0.5f || this.scaleFactorApplied >= 2) {
 				// change the zoom level according to the scale gesture
-				zoom((byte) (Math.log(this.scaleFactor) / Math.log(2)));
+				zoom((byte) (Math.log(this.scaleFactorApplied) / Math.log(2)));
 			} else {
 				// the gesture was too small for a zoom level change
+				synchronized (MapView.this.overlays) {
+					for (Overlay overlay : MapView.this.overlays) {
+						overlay.requestRedraw();
+					}
+				}
 				handleTiles(true);
 			}
 		}
@@ -813,8 +827,8 @@ public class MapView extends ViewGroup {
 
 			// move the map and the Overlays
 			this.moveMap(this.mapMoveX, this.mapMoveY);
-			synchronized (MapView.this.overlays) {
-				for (Overlay overlay : MapView.this.overlays) {
+			synchronized (this.overlays) {
+				for (Overlay overlay : this.overlays) {
 					overlay.requestRedraw();
 				}
 			}
@@ -1655,22 +1669,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * @param sx
-	 *            the horizontal scale.
-	 * @param sy
-	 *            the vertical scale.
-	 * @param px
-	 *            the horizontal pivot point.
-	 * @param py
-	 *            the vertical pivot point.
-	 */
-	void matrixSetScale(float sx, float sy, float px, float py) {
-		synchronized (this.matrix) {
-			this.matrix.setScale(sx, sy, px, py);
-		}
-	}
-
-	/**
 	 * Moves the map by the given amount of pixels.
 	 * 
 	 * @param moveHorizontal
@@ -1882,8 +1880,8 @@ public class MapView extends ViewGroup {
 				this.longitude = point.getLongitude();
 				this.zoomLevel = getValidZoomLevel(zoom);
 			}
-			synchronized (MapView.this.overlays) {
-				for (Overlay overlay : MapView.this.overlays) {
+			synchronized (this.overlays) {
+				for (Overlay overlay : this.overlays) {
 					overlay.requestRedraw();
 				}
 			}
@@ -1956,8 +1954,8 @@ public class MapView extends ViewGroup {
 		synchronized (this) {
 			this.zoomLevel = getValidZoomLevel(zoomLevel);
 		}
-		synchronized (MapView.this.overlays) {
-			for (Overlay overlay : MapView.this.overlays) {
+		synchronized (this.overlays) {
+			for (Overlay overlay : this.overlays) {
 				overlay.requestRedraw();
 			}
 		}
@@ -2021,8 +2019,8 @@ public class MapView extends ViewGroup {
 		synchronized (this) {
 			this.zoomLevel += zoomLevelDiff;
 		}
-		synchronized (MapView.this.overlays) {
-			for (Overlay overlay : MapView.this.overlays) {
+		synchronized (this.overlays) {
+			for (Overlay overlay : this.overlays) {
 				overlay.requestRedraw();
 			}
 		}
