@@ -23,12 +23,14 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 /**
- * Implementation of the ItemizedOverlay class using an {@link ArrayList} as data structure.
+ * Thread-safe implementation of the {@link ItemizedOverlay} class using an {@link ArrayList} as
+ * internal data structure.
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 
 	private final Context context;
+	private AlertDialog.Builder dialog;
 	private OverlayItem item;
 	private final ArrayList<OverlayItem> overlayItems;
 
@@ -52,27 +54,27 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param overlayItem
 	 *            the item that should be added to the Overlay.
 	 */
-	public void addOverlay(OverlayItem overlayItem) {
+	public synchronized void addOverlay(OverlayItem overlayItem) {
 		this.overlayItems.add(overlayItem);
 	}
 
 	@Override
-	public int size() {
+	public synchronized int size() {
 		return this.overlayItems.size();
 	}
 
 	@Override
-	protected OverlayItem createItem(int i) {
+	protected synchronized OverlayItem createItem(int i) {
 		return this.overlayItems.get(i);
 	}
 
 	@Override
-	protected boolean onTap(int index) {
+	protected synchronized boolean onTap(int index) {
 		this.item = this.overlayItems.get(index);
-		AlertDialog.Builder dialog = new AlertDialog.Builder(this.context);
-		dialog.setTitle(this.item.getTitle());
-		dialog.setMessage(this.item.getSnippet());
-		dialog.show();
+		this.dialog = new AlertDialog.Builder(this.context);
+		this.dialog.setTitle(this.item.getTitle());
+		this.dialog.setMessage(this.item.getSnippet());
+		this.dialog.show();
 		return true;
 	}
 }

@@ -33,7 +33,7 @@ public class RouteOverlay extends Overlay {
 
 	private Point[] cachedWayPositions;
 	private byte cachedZoomLevel;
-	private final Paint paint;
+	private Paint paint;
 	private final Path path;
 	private GeoPoint[] wayNodes;
 
@@ -44,12 +44,22 @@ public class RouteOverlay extends Overlay {
 	 *            the paint object which will be used to draw the route.
 	 */
 	public RouteOverlay(Paint paint) {
+		setPaint(paint);
+		this.path = new Path();
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+	}
+
+	/**
+	 * Sets the paint object which will be used to draw the route.
+	 * 
+	 * @param paint
+	 *            the paint object which will be used to draw the route.
+	 */
+	public synchronized void setPaint(Paint paint) {
 		this.paint = paint;
 		if (this.paint != null) {
 			this.paint.setAntiAlias(true);
 		}
-		this.path = new Path();
-		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**
@@ -58,7 +68,7 @@ public class RouteOverlay extends Overlay {
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes.
 	 */
-	public void setRouteData(GeoPoint[] wayNodes) {
+	public synchronized void setRouteData(GeoPoint[] wayNodes) {
 		this.wayNodes = wayNodes;
 		if (this.wayNodes != null) {
 			// create the array for the cached way node positions
@@ -74,7 +84,7 @@ public class RouteOverlay extends Overlay {
 	}
 
 	@Override
-	final void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
+	final synchronized void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
 		if (this.cachedWayPositions == null || this.cachedWayPositions.length < 1) {
 			// no way nodes to draw
 			return;

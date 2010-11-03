@@ -37,6 +37,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	private Drawable itemMarker;
 	private final Point itemPosition;
 	private int left;
+	private int numberOfItems;
 	private Item overlayItem;
 	private int right;
 	private int top;
@@ -53,7 +54,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	@Override
-	public boolean onTouchEvent(MotionEvent event, MapView mapView) {
+	public synchronized boolean onTouchEvent(MotionEvent event, MapView mapView) {
 		// iterate over all items
 		for (int i = size() - 1; i >= 0; --i) {
 			// get the current item
@@ -61,9 +62,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 			if (hitTest(this.hitTestItem, this.hitTestItem.getMarker(), (int) event.getX(),
 					(int) event.getY())) {
-				onTap(i);
 				// abort the testing at the first hit
-				return true;
+				return onTap(i);
 			}
 		}
 		// no hit
@@ -144,14 +144,15 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	@Override
-	final void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
-		if (size() < 1) {
+	final synchronized void drawOverlayBitmap(Point drawPosition, byte drawZoomLevel) {
+		this.numberOfItems = size();
+		if (this.numberOfItems < 1) {
 			// no items to draw
 			return;
 		}
 
 		// draw the Overlay items
-		for (int i = 0; i < size(); ++i) {
+		for (int i = 0; i < this.numberOfItems; ++i) {
 			// get the current item
 			this.overlayItem = createItem(i);
 

@@ -17,6 +17,7 @@
 package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.ArrayItemizedOverlay;
+import org.mapsforge.android.maps.CircleOverlay;
 import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
@@ -42,33 +43,53 @@ public class OverlayMapViewer extends MapActivity {
 		setContentView(mapView);
 
 		// create some points to be shown on top of the map
-		GeoPoint geoPoint1 = new GeoPoint(52.514446, 13.350150);
-		GeoPoint geoPoint2 = new GeoPoint(52.516272, 13.377722);
-		OverlayItem item1 = new OverlayItem(geoPoint1, "Victory Column",
-				"a major tourist attraction");
-		OverlayItem item2 = new OverlayItem(geoPoint2, "Brandenburg Gate",
-				"one of the main symbols of Berlin");
+		GeoPoint geoPoint1 = new GeoPoint(52.514446, 13.350150); // Victory Column
+		GeoPoint geoPoint2 = new GeoPoint(52.516272, 13.377722); // Brandenburg Gate
+		GeoPoint geoPoint3 = new GeoPoint(52.525, 13.369444); // Berlin Central Station
+
+		// create the paint objects for the CircleOverlay and set all parameters
+		Paint circleFillPaint = new Paint();
+		circleFillPaint.setStyle(Paint.Style.FILL);
+		circleFillPaint.setColor(Color.CYAN);
+		circleFillPaint.setAlpha(64);
+
+		Paint circleOutlinePaint = new Paint();
+		circleOutlinePaint.setStyle(Paint.Style.STROKE);
+		circleOutlinePaint.setColor(Color.CYAN);
+		circleOutlinePaint.setAlpha(128);
+		circleOutlinePaint.setStrokeWidth(3);
+
+		// create the CircleOverlay and set the parameters
+		CircleOverlay circleOverlay = new CircleOverlay(circleFillPaint, circleOutlinePaint);
+		circleOverlay.setCircleData(geoPoint3, 100);
 
 		// create the paint object for the RouteOverlay and set all parameters
-		Paint paint = new Paint();
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setColor(Color.BLUE);
-		paint.setAlpha(128);
-		paint.setStrokeWidth(6);
-		paint.setStrokeCap(Paint.Cap.ROUND);
-		paint.setStrokeJoin(Paint.Join.ROUND);
+		Paint routePaint = new Paint();
+		routePaint.setStyle(Paint.Style.STROKE);
+		routePaint.setColor(Color.BLUE);
+		routePaint.setAlpha(160);
+		routePaint.setStrokeWidth(6);
+		routePaint.setStrokeCap(Paint.Cap.ROUND);
+		routePaint.setStrokeJoin(Paint.Join.ROUND);
 
 		// create the RouteOverlay and set the way nodes
-		RouteOverlay routeOverlay = new RouteOverlay(paint);
+		RouteOverlay routeOverlay = new RouteOverlay(routePaint);
 		routeOverlay.setRouteData(new GeoPoint[] { geoPoint1, geoPoint2 });
 
 		// create the ItemizedOverlay and set the items
 		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(getResources()
 				.getDrawable(R.drawable.btn_star), this);
+
+		OverlayItem item1 = new OverlayItem(geoPoint1, "Victory Column",
+				"a major tourist attraction");
+		OverlayItem item2 = new OverlayItem(geoPoint2, "Brandenburg Gate",
+				"one of the main symbols of Berlin");
+
 		itemizedOverlay.addOverlay(item1);
 		itemizedOverlay.addOverlay(item2);
 
-		// add both Overlays to the MapView
+		// add all Overlays to the MapView
+		mapView.getOverlays().add(circleOverlay);
 		mapView.getOverlays().add(routeOverlay);
 		mapView.getOverlays().add(itemizedOverlay);
 	}
