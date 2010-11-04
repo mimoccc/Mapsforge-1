@@ -35,6 +35,7 @@ class MapElementWay implements Comparable<MapElementWay> {
 	int wayType = 1;
 	int convexness;
 	short tileBitmask;
+	String ref = "";
 
 	MapElementWay(long id) {
 		this.id = id;
