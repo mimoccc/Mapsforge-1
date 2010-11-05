@@ -41,14 +41,14 @@ public class MapDatabase {
 	private static final int BINARY_OSM_VERSION_MIN = 1;
 
 	/**
-	 * The flag to indicate, if the binary map file contains debug signatures.
+	 * The size of the fixed header in a binary map file in bytes. // TODO: set back to 38
 	 */
-	private static final boolean DEBUG_FILE = !false;
+	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 48;
 
 	/**
-	 * The size of the fixed header in a binary map file in bytes.
+	 * Bitmask for the debug flag.
 	 */
-	private static final int FIXED_HEADER_SIZE = BINARY_OSM_MAGIC_BYTE.length() + 37;
+	private static final int FLAG_BITMASK_DEBUG = 0x80;
 
 	/**
 	 * The amount of cache blocks that the index cache should store.
@@ -205,6 +205,7 @@ public class MapDatabase {
 	private long currentColumn;
 	private long currentRow;
 	private MapDatabaseIndexCache databaseIndexCache;
+	private boolean debugFile;
 	private boolean[] defaultNodeTagIds;
 	private boolean[] defaultWayTagIds;
 	private short elementCounter;
@@ -230,6 +231,7 @@ public class MapDatabase {
 	private MapFileParameters[] mapFilesList;
 	private MapFileParameters[] mapFilesLookupTable;
 	private int maximumBlockSize;
+	private byte metaFlags;
 	private long nextBlockPointer;
 	private String nodeElevation;
 	private byte nodeFeatureByte;
@@ -248,6 +250,8 @@ public class MapDatabase {
 	private short nodeTagId;
 	private boolean[] nodeTagIds;
 	private byte numberOfMapFiles;
+	private short numberOfNodeTags;
+	private short numberOfWayTags;
 	private long parentTileX;
 	private long parentTileY;
 	private boolean queryReadWayNames;
@@ -346,7 +350,7 @@ public class MapDatabase {
 	 */
 	private void processBlock(DatabaseMapGenerator mapGenerator)
 			throws IndexOutOfBoundsException, UnsupportedEncodingException {
-		if (DEBUG_FILE) {
+		if (this.debugFile) {
 			// check read and the block signature
 			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
 					SIGNATURE_LENGTH_BLOCK, "UTF-8");
@@ -376,7 +380,7 @@ public class MapDatabase {
 		this.bufferPosition += 4;
 		if (this.firstWayOffset > this.readBuffer.length) {
 			Logger.d("invalid first way offset: " + this.firstWayOffset);
-			if (DEBUG_FILE) {
+			if (this.debugFile) {
 				Logger.d("block signature: " + this.blockSignature);
 			}
 			return;
@@ -384,7 +388,7 @@ public class MapDatabase {
 
 		// read nodes
 		for (this.elementCounter = this.nodesOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
-			if (DEBUG_FILE) {
+			if (this.debugFile) {
 				// read and check the node signature
 				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
 						SIGNATURE_LENGTH_NODE, "UTF-8");
@@ -421,7 +425,7 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
 					Logger.d("invalid node tag ID: " + this.nodeTagId);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("node signature: " + this.nodeSignature);
 					}
 					continue;
@@ -440,7 +444,7 @@ public class MapDatabase {
 
 			// check if the node has a name
 			if (this.nodeFeatureName) {
-				// get the length of the node name (2 bytes)
+				// get and check the length of the node name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
 				if (this.stringLength > 0) {
@@ -450,7 +454,7 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("node signature: " + this.nodeSignature);
 					}
 					this.nodeName = null;
@@ -473,7 +477,7 @@ public class MapDatabase {
 
 			// check if the node has a house number
 			if (this.nodeFeatureHouseNumber) {
-				// get the length of the node house number (2 bytes)
+				// get and check the length of the node house number (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
 				if (this.stringLength > 0) {
@@ -483,7 +487,7 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("node signature: " + this.nodeSignature);
 					}
 					this.nodeHouseNumber = null;
@@ -503,7 +507,7 @@ public class MapDatabase {
 		if (this.bufferPosition > this.firstWayOffset) {
 			Logger.d("invalid buffer position:" + this.bufferPosition + " - "
 					+ this.firstWayOffset);
-			if (DEBUG_FILE) {
+			if (this.debugFile) {
 				Logger.d("block signature: " + this.blockSignature);
 			}
 			return;
@@ -513,7 +517,7 @@ public class MapDatabase {
 
 		// read ways
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
-			if (DEBUG_FILE) {
+			if (this.debugFile) {
 				// read and check the way signature
 				this.waySignature = new String(this.readBuffer, this.bufferPosition,
 						SIGNATURE_LENGTH_WAY, "UTF-8");
@@ -536,7 +540,7 @@ public class MapDatabase {
 				// check if the way is inside the requested tile
 				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
 					// skip the rest of the way and continue with the next way
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						this.bufferPosition += this.waySize - 6 - SIGNATURE_LENGTH_WAY;
 					} else {
 						this.bufferPosition += this.waySize - 6;
@@ -580,7 +584,7 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
 					Logger.d("invalid way tag ID: " + this.wayTagId);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
 					}
 					continue;
@@ -595,7 +599,7 @@ public class MapDatabase {
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
-				if (DEBUG_FILE) {
+				if (this.debugFile) {
 					Logger.d("way signature: " + this.waySignature);
 				}
 				return;
@@ -697,7 +701,7 @@ public class MapDatabase {
 
 				default:
 					Logger.d("invalid way node compression mode");
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
 					}
 					break;
@@ -715,7 +719,7 @@ public class MapDatabase {
 
 			// check if the way has a name
 			if (this.wayFeatureName) {
-				// get the length of the way name (2 bytes)
+				// get and check the length of the way name (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
 				if (this.stringLength > 0) {
@@ -729,7 +733,7 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
 					}
 					this.wayName = null;
@@ -741,7 +745,7 @@ public class MapDatabase {
 
 			// check if the way has a reference
 			if (this.wayFeatureRef) {
-				// get the length of the way reference (2 bytes)
+				// get and check the length of the way reference (2 bytes)
 				this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 				this.bufferPosition += 2;
 				if (this.stringLength > 0) {
@@ -755,7 +759,7 @@ public class MapDatabase {
 					this.bufferPosition += this.stringLength;
 				} else {
 					Logger.d("invalid string length: " + this.stringLength);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
 					}
 					this.wayRef = null;
@@ -801,7 +805,7 @@ public class MapDatabase {
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 							Logger.d("invalid inner way number of way nodes: "
 									+ this.innerWayNumberOfWayNodes);
-							if (DEBUG_FILE) {
+							if (this.debugFile) {
 								Logger.d("way signature: " + this.waySignature);
 							}
 							return;
@@ -903,7 +907,7 @@ public class MapDatabase {
 
 							default:
 								Logger.d("invalid way node compression mode");
-								if (DEBUG_FILE) {
+								if (this.debugFile) {
 									Logger.d("way signature: " + this.waySignature);
 								}
 								break;
@@ -914,7 +918,7 @@ public class MapDatabase {
 					}
 				} else {
 					Logger.d("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
-					if (DEBUG_FILE) {
+					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
 					}
 					this.wayInnerWays = null;
@@ -964,6 +968,12 @@ public class MapDatabase {
 			return false;
 		}
 
+		// get the meta-information byte that encodes multiple flags (1 byte)
+		this.metaFlags = this.readBuffer[this.bufferPosition];
+		this.bufferPosition += 1;
+		// extract the debug information
+		this.debugFile = (this.metaFlags & FLAG_BITMASK_DEBUG) != 0;
+
 		// get and check the number of contained map files (1 byte)
 		this.numberOfMapFiles = this.readBuffer[this.bufferPosition];
 		this.bufferPosition += 1;
@@ -971,6 +981,9 @@ public class MapDatabase {
 			Logger.d("invalid number of contained map files: " + this.numberOfMapFiles);
 			return false;
 		}
+
+		// FIXME: skip the next 10 bytes (just a hack to skip the projection info)
+		this.bufferPosition += 10;
 
 		// get and check the tile pixel size (2 bytes)
 		this.tilePixelSize = Deserializer.toShort(this.readBuffer, this.bufferPosition);
@@ -1032,7 +1045,75 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get the length of the comment text (2 bytes)
+		// get and check the number of node tags
+		this.numberOfNodeTags = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+		this.bufferPosition += 2;
+		if (this.numberOfNodeTags < 0) {
+			Logger.d("invalid number of node tags: " + this.numberOfNodeTags);
+			return false;
+		}
+
+		// get the node tags mappings
+		for (this.tempShort = 0; this.tempShort < this.numberOfNodeTags; ++this.tempShort) {
+			// get and check the node tag ID (2 bytes)
+			this.nodeTagId = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 2;
+			if (this.nodeTagId < 0) {
+				Logger.d("invalid node tag ID: " + this.nodeTagId);
+				return false;
+			}
+
+			// get and check the length of the node tag (2 bytes)
+			this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 2;
+			if (this.stringLength < 1) {
+				Logger.d("invalid node tag length: " + this.stringLength);
+				return false;
+			}
+
+			// make sure that the read buffer for the node tag is large enough
+			if (this.readBuffer.length < this.stringLength) {
+				this.readBuffer = new byte[this.stringLength];
+			}
+
+			// get the node tag
+		}
+
+		// get and check the number of way tags
+		this.numberOfWayTags = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+		this.bufferPosition += 2;
+		if (this.numberOfWayTags < 0) {
+			Logger.d("invalid number of way tags: " + this.numberOfWayTags);
+			return false;
+		}
+
+		// get the way tags mappings
+		for (this.tempShort = 0; this.tempShort < this.numberOfWayTags; ++this.tempShort) {
+			// get and check the way tag ID (2 bytes)
+			this.wayTagId = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 2;
+			if (this.wayTagId < 0) {
+				Logger.d("invalid way tag ID: " + this.wayTagId);
+				return false;
+			}
+
+			// get and check the length of the way tag (2 bytes)
+			this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
+			this.bufferPosition += 2;
+			if (this.stringLength < 1) {
+				Logger.d("invalid way tag length: " + this.stringLength);
+				return false;
+			}
+
+			// make sure that the read buffer for the way tag is large enough
+			if (this.readBuffer.length < this.stringLength) {
+				this.readBuffer = new byte[this.stringLength];
+			}
+
+			// get the way tag
+		}
+
+		// get and check the length of the comment text (2 bytes)
 		this.stringLength = Deserializer.toShort(this.readBuffer, this.bufferPosition);
 		this.bufferPosition += 2;
 		if (this.stringLength > 0) {
@@ -1108,7 +1189,7 @@ public class MapDatabase {
 				return false;
 			}
 
-			if (DEBUG_FILE) {
+			if (this.debugFile) {
 				// the map file has an index signature before the index
 				this.indexStartAddress = this.startAddress + SIGNATURE_LENGTH_INDEX;
 			} else {
