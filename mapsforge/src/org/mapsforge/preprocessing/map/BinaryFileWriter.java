@@ -27,8 +27,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.DBConnection;
@@ -46,6 +48,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 public class BinaryFileWriter {
 
 	private static final String MAGIC_BYTE = "mapsforge binary OSM";
+	private static final String PROJECTION = "Mercator";
 
 	private static final Logger logger = Logger.getLogger(BinaryFileWriter.class.getName());
 
@@ -156,6 +159,12 @@ public class BinaryFileWriter {
 	private static final short BITMAP_NATURAL = 2;
 	private static final short BITMAP_WATERWAY = 1;
 
+	// bitmap flags for file features
+	private static final short BITMAP_DEBUG = 128;
+	private static final short BITMAP_WAYNODE_FILTERING = 64;
+	private static final short BITMAP_POLYGON_CLIPPING = 32;
+	private static final short BITMAP_WAYNODE_COMPRESSION = 16;
+
 	// maximal value of three bytes
 	private static final int MAX_VALUE_THREE_BYTES = 8388607;
 
@@ -193,6 +202,9 @@ public class BinaryFileWriter {
 	private static short maxZoom;
 	private static short minZoomLow;
 	private static short maxZoomLow;
+
+	byte infoByte;
+	short counter;
 
 	private static long startTime;
 
@@ -394,14 +406,20 @@ public class BinaryFileWriter {
 
 			// write global file header
 			// magic byte
-			byte[] magicBytes = MAGIC_BYTE.getBytes();
-			raf.write(magicBytes);
+			raf.write(MAGIC_BYTE.getBytes());
 
 			// version number of the binary file format
 			raf.writeInt(version);
 
+			// meta info byte
+			raf.writeByte(buildMetaInfoByte(debugStrings, wayNodePixelFilter, polygonClipping,
+					wayNodeCompression));
+
 			// amount of sub files in this binary file
 			raf.writeByte(fileAmount);
+
+			// projection
+			raf.writeUTF(PROJECTION);
 
 			// width and height of a tile in pixel
 			raf.writeShort(tilePixel);
@@ -421,17 +439,35 @@ public class BinaryFileWriter {
 			biggestTileSizePosition = raf.getFilePointer();
 			raf.seek(biggestTileSizePosition + 4);
 
+			// store the mapping of tags to tag ids
+			Map<String, Short> tagIdsPois = TagIdsPOIs.getMap();
+			Map<String, Short> tagIdsWays = TagIdsWays.getMap();
+
+			// amount of map entries
+			raf.writeShort(tagIdsPois.size());
+			Iterator<Entry<String, Short>> it = tagIdsPois.entrySet().iterator();
+			Entry<String, Short> e;
+			while (it.hasNext()) {
+				e = it.next();
+				raf.writeShort(e.getValue());
+				raf.writeUTF(e.getKey());
+			}
+
+			// amount of map entries
+			raf.writeShort(tagIdsWays.size());
+			it = tagIdsWays.entrySet().iterator();
+			while (it.hasNext()) {
+				e = it.next();
+				raf.writeShort(e.getValue());
+				raf.writeUTF(e.getKey());
+			}
+
 			// comment
 			if (!mapFileComment.equals("")) {
 				raf.writeUTF(mapFileComment);
 			} else {
 				raf.writeUTF("");
 			}
-			// if (!comment.equals("")) {
-			// raf.writeUTF(comment);
-			// } else {
-			// raf.writeUTF("");
-			// }
 
 			// base zoom level (low)
 			raf.writeByte(zoom_level_low);
@@ -1232,7 +1268,7 @@ public class BinaryFileWriter {
 	 * @return a byte where certain bits are set to 1 if the current poi has the feature
 	 */
 	private byte buildInfoByteForPOI(short nameLength, int elevation, int housenumberLength) {
-		byte infoByte = 0;
+		infoByte = 0;
 
 		if (nameLength != 0) {
 			infoByte |= BITMAP_NAME;
@@ -1263,7 +1299,7 @@ public class BinaryFileWriter {
 	 */
 	private byte buildInfoByteForWay(short nameLength, int labelPosLat, int labelPosLon,
 			short wayType, int referenceLength) {
-		byte infoByte = 0;
+		infoByte = 0;
 
 		if (nameLength != 0) {
 			infoByte |= BITMAP_NAME;
@@ -1292,7 +1328,7 @@ public class BinaryFileWriter {
 	 * @return a byte that holds the specified information
 	 */
 	private byte buildLayerTagAmountByte(byte layer, short tagAmount) {
-		byte infoByte = 0;
+		infoByte = 0;
 
 		infoByte = (byte) (layer << 4 | tagAmount);
 
@@ -1311,8 +1347,8 @@ public class BinaryFileWriter {
 	 */
 	private byte buildRenderTagWayNodeCompressionByte(String[] tags,
 			short wayNodeCompressionType) {
-		byte infoByte = 0;
-		short counter = 0;
+		infoByte = 0;
+		counter = 0;
 
 		if (tags != null) {
 			for (String tag : tags) {
@@ -1349,7 +1385,7 @@ public class BinaryFileWriter {
 	 * @return a byte where the bits are set to 1 if the current way has certain tags
 	 */
 	private byte buildTagBitmapByte(String[] tags) {
-		byte infoByte = 0;
+		infoByte = 0;
 		String key;
 
 		for (String tag : tags) {
@@ -1376,6 +1412,22 @@ public class BinaryFileWriter {
 				infoByte |= BITMAP_WATERWAY;
 			}
 		}
+
+		return infoByte;
+	}
+
+	private byte buildMetaInfoByte(boolean debug, boolean filtering, boolean clipping,
+			boolean compression) {
+		infoByte = 0;
+
+		if (debug)
+			infoByte |= BITMAP_DEBUG;
+		if (filtering)
+			infoByte |= BITMAP_WAYNODE_FILTERING;
+		if (clipping)
+			infoByte |= BITMAP_POLYGON_CLIPPING;
+		if (compression)
+			infoByte |= BITMAP_WAYNODE_COMPRESSION;
 
 		return infoByte;
 	}
