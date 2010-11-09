@@ -31,7 +31,7 @@ import android.graphics.Bitmap;
  */
 class TileMemoryCardCache {
 	/**
-	 * The load factor of the internal HashMap.
+	 * Load factor of the internal HashMap.
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 

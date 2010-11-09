@@ -221,7 +221,6 @@ class WhiteList {
 		tagWhitelist.put("sport=tennis", Byte.valueOf((byte) 15));
 
 		tagWhitelist.put("tourism=attraction", Byte.valueOf((byte) 15));
-		tagWhitelist.put("tourism=hostel", Byte.valueOf((byte) 15));
 		tagWhitelist.put("tourism=zoo", Byte.valueOf((byte) 12));
 
 		tagWhitelist.put("tunnel=no", Byte.valueOf(Byte.MAX_VALUE));

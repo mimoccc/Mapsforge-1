@@ -53,12 +53,12 @@ public abstract class Overlay extends Thread {
 	private float matrixScaleFactor;
 
 	/**
-	 * The first internal bitmap for the Overlay to draw on.
+	 * First internal bitmap for the Overlay to draw on.
 	 */
 	private Bitmap overlayBitmap1;
 
 	/**
-	 * The second internal bitmap for the Overlay to draw on.
+	 * Second internal bitmap for the Overlay to draw on.
 	 */
 	private Bitmap overlayBitmap2;
 
@@ -103,7 +103,7 @@ public abstract class Overlay extends Thread {
 	private byte zoomLevelDiff;
 
 	/**
-	 * The Canvas that is used in the Overlay for drawing.
+	 * Canvas that is used in the Overlay for drawing.
 	 */
 	Canvas internalCanvas;
 

@@ -3,7 +3,7 @@
 	package="org.mapsforge.applications.android.samples"
 	android:versionCode="1" android:versionName="0.1"
 	android:installLocation="auto">
-	<application>
+	<application android:label="Samples">
 		<activity android:name=".BasicMapViewer" android:label="BasicMapViewer">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />

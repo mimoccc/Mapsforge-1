@@ -191,27 +191,27 @@ class CoastlineWay {
 	}
 
 	/**
-	 * The way node coordinates of the clipped coastline way.
+	 * Way node coordinates of the clipped coastline way.
 	 */
 	final float[] data;
 
 	/**
-	 * The angle at which the clipped coastline way enters the tile.
+	 * Angle at which the clipped coastline way enters the tile.
 	 */
 	final double entryAngle;
 
 	/**
-	 * The side on which the clipped coastline way enters the tile.
+	 * Side on which the clipped coastline way enters the tile.
 	 */
 	final byte entrySide;
 
 	/**
-	 * The angle at which the clipped coastline way leaves the tile.
+	 * Angle at which the clipped coastline way leaves the tile.
 	 */
 	final double exitAngle;
 
 	/**
-	 * The side on which the clipped coastline way leaves the tile.
+	 * Side on which the clipped coastline way leaves the tile.
 	 */
 	final byte exitSide;
 

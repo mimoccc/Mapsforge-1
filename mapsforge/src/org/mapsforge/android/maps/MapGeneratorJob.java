@@ -30,23 +30,22 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	final boolean drawTileFrames;
 
 	/**
-	 * The map file used to render the map image (may be null).
+	 * Map file used to render the map image (may be null).
 	 */
 	final String mapFile;
 
 	/**
-	 * The MapViewMode used to render the map image.
+	 * MapViewMode used to render the map image.
 	 */
 	final MapViewMode mapViewMode;
 
 	/**
-	 * The rendering priority of this job. Moving the map influences the priority of jobs, as
-	 * the distance from tiles to the visible map area changes.
+	 * Rendering priority of this job.
 	 */
 	int priority;
 
 	/**
-	 * The tile that is rendered to a map image.
+	 * Tile that is rendered to a map image.
 	 */
 	final Tile tile;
 

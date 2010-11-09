@@ -19,6 +19,7 @@ package org.mapsforge.android.maps;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.UnknownHostException;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -35,7 +36,7 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	private Bitmap tileBitmap;
 
 	/**
-	 * Abstract default constructor that must be called by subclasses.
+	 * Default constructor that must be called by subclasses.
 	 */
 	TileDownloadMapGenerator() {
 		this.stringBuilder = new StringBuilder(128);
@@ -75,6 +76,9 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 						Tile.TILE_SIZE, Tile.TILE_SIZE);
 			}
 			return true;
+		} catch (UnknownHostException e) {
+			Logger.d(e.getMessage());
+			return false;
 		} catch (IOException e) {
 			Logger.e(e);
 			return false;

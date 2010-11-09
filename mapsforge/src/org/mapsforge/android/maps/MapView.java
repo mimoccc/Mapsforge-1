@@ -445,7 +445,7 @@ public class MapView extends ViewGroup {
 	private static final float TRACKBALL_MOVE_SPEED = 40;
 
 	/**
-	 * The delay in milliseconds after which the zoom controls disappear.
+	 * Delay in milliseconds after which the zoom controls disappear.
 	 */
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
@@ -886,22 +886,23 @@ public class MapView extends ViewGroup {
 		}
 
 		this.mapMover.pause();
-		this.mapMover.stopMove();
-
 		this.mapGenerator.pause();
-		this.mapGenerator.clearJobs();
 
 		waitForReadyMapMover();
 		waitForReadyMapGenerator();
 
-		this.mapGenerator.unpause();
+		this.mapMover.stopMove();
+		this.mapGenerator.clearJobs();
+
 		this.mapMover.unpause();
+		this.mapGenerator.unpause();
 
 		this.database.closeFile();
 		if (this.database.openFile(newMapFile)) {
+			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 			clearMapView();
-			setCenter(this.database.getMapBoundary().getCenter());
+			setCenter(getDefaultStartPoint());
 			handleTiles(true);
 		} else {
 			this.mapFile = null;
@@ -1266,7 +1267,7 @@ public class MapView extends ViewGroup {
 	private void waitForReadyMapGenerator() {
 		while (!this.mapGenerator.isReady()) {
 			try {
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
@@ -1277,7 +1278,7 @@ public class MapView extends ViewGroup {
 	private void waitForReadyMapMover() {
 		while (!this.mapMover.isReady()) {
 			try {
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
@@ -1604,7 +1605,8 @@ public class MapView extends ViewGroup {
 			return false;
 		} else if (!this.mapViewMode.requiresInternetConnection()
 				&& (this.database == null || this.database.getMapBoundary() == null || !this.database
-						.getMapBoundary().contains(getMapCenter()))) {
+						.getMapBoundary().contains(getMapCenter().getLongitudeE6(),
+								getMapCenter().getLatitudeE6()))) {
 			return false;
 		}
 		return true;
@@ -1852,7 +1854,8 @@ public class MapView extends ViewGroup {
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
 		if (this.mapViewMode.requiresInternetConnection()
 				|| (this.database != null && this.database.getMapBoundary() != null && this.database
-						.getMapBoundary().contains(point))) {
+						.getMapBoundary().contains(point.getLongitudeE6(),
+								point.getLatitudeE6()))) {
 			if (hasValidCenter()) {
 				// calculate the distance between previous and current position
 				synchronized (this) {
@@ -1936,6 +1939,7 @@ public class MapView extends ViewGroup {
 			throw new UnsupportedOperationException();
 		}
 		if (newMapFile != null && this.database != null && this.database.openFile(newMapFile)) {
+			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;

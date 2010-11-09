@@ -26,6 +26,11 @@ import java.util.Map;
  */
 class MapDatabaseIndexCache {
 	/**
+	 * Bitmask to extract the block address from an index entry.
+	 */
+	private static final long BITMASK_INDEX_ADDRESS = 0x7FFFFFFFFFFFFFFFl;
+
+	/**
 	 * Number of bytes a single index entry consists of.
 	 */
 	private static final byte BYTES_PER_INDEX_ENTRY = 5;
@@ -36,12 +41,12 @@ class MapDatabaseIndexCache {
 	private static final int INDEX_ENTRIES_PER_CACHE_BLOCK = 128;
 
 	/**
-	 * The load factor of the internal HashMap.
+	 * Load factor of the internal HashMap.
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
 	/**
-	 * The real size in bytes of one index block.
+	 * Real size in bytes of one index block.
 	 */
 	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_CACHE_BLOCK
 			* BYTES_PER_INDEX_ENTRY;
@@ -139,8 +144,9 @@ class MapDatabaseIndexCache {
 			// calculate the address of the index entry inside the index block
 			this.addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
 
-			// return the real address
-			return Deserializer.fiveBytesToLong(this.indexBlock, this.addressInIndexBlock);
+			// return the real block address
+			return Deserializer.fiveBytesToLong(this.indexBlock, this.addressInIndexBlock)
+					& BITMASK_INDEX_ADDRESS;
 		} catch (IOException e) {
 			Logger.e(e);
 			return -1;

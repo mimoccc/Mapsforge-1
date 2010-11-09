@@ -16,12 +16,14 @@
  */
 package org.mapsforge.android.maps;
 
+import android.graphics.Rect;
+
 /**
  * Holds all parameters of a map file.
  */
 class MapFileParameters {
 	/**
-	 * The divisor for converting coordinates stored as integers to double values.
+	 * Divisor for converting coordinates stored as integers to double values.
 	 */
 	private static final double COORDINATES_DIVISOR = 1000000.0;
 
@@ -29,71 +31,71 @@ class MapFileParameters {
 	private MapFileParameters other;
 
 	/**
-	 * The base zoom level of the map file, which equals to one block.
+	 * Base zoom level of the map file, which equals to one block.
 	 */
 	final byte baseZoomLevel;
 
 	/**
-	 * The size of the entries table at the beginning of each block in bytes.
+	 * Size of the entries table at the beginning of each block in bytes.
 	 */
 	final int blockEntriesTableSize;
 
 	/**
-	 * The vertical amount of blocks in the grid.
+	 * Vertical amount of blocks in the grid.
 	 */
 	final long blocksHeight;
 
 	/**
-	 * The horizontal amount of blocks in the grid.
+	 * Horizontal amount of blocks in the grid.
 	 */
 	final long blocksWidth;
 
 	/**
-	 * The Y number of the tile at the bottom boundary in the grid.
+	 * Y number of the tile at the bottom boundary in the grid.
 	 */
 	final long boundaryBottomTile;
 
 	/**
-	 * The X number of the tile at the left boundary in the grid.
+	 * X number of the tile at the left boundary in the grid.
 	 */
 	final long boundaryLeftTile;
 
 	/**
-	 * The X number of the tile at the right boundary in the grid.
+	 * X number of the tile at the right boundary in the grid.
 	 */
 	final long boundaryRightTile;
 
 	/**
-	 * The Y number of the tile at the top boundary in the grid.
+	 * Y number of the tile at the top boundary in the grid.
 	 */
 	final long boundaryTopTile;
 
 	/**
-	 * The absolute start address of the index in the enclosing file.
+	 * Absolute start address of the index in the enclosing file.
 	 */
 	final long indexStartAddress;
 
 	/**
-	 * The size of the map file in bytes.
+	 * Size of the map file in bytes.
 	 */
 	final long mapFileSize;
 
 	/**
-	 * The total number of blocks in the grid.
+	 * Total number of blocks in the grid.
 	 */
 	final long numberOfBlocks;
 
 	/**
-	 * The absolute start address of the map file in the enclosing file.
+	 * Absolute start address of the map file in the enclosing file.
 	 */
 	final long startAddress;
 
 	/**
-	 * The maximum zoom level for which the block entries tables are made.
+	 * Maximum zoom level for which the block entries tables are made.
 	 */
 	final byte zoomLevelMax;
 	/**
-	 * The minimum zoom level for which the block entries tables are made.
+	 * Minimum zoom level for which the block entries tables are made.
 	 */
 	final byte zoomLevelMin;
 
@@ -126,11 +128,11 @@ class MapFileParameters {
 		this.hashCode = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.top
+		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.bottom
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(mapBoundary.left
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(mapBoundary.bottom
+		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(mapBoundary.top
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 		this.boundaryRightTile = MercatorProjection.longitudeToTileX(mapBoundary.right
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);

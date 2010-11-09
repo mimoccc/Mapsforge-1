@@ -265,6 +265,12 @@ class OpenGLMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 	}
 
 	/**
+	 * @param drawWays
+	 *            the ways to be rendered.
+	 * @param layers
+	 *            the number of layers.
+	 * @param levelsPerLayer
+	 *            the amount of levels per layer.
 	 * @see DatabaseMapGenerator#drawWays(ArrayList, byte, byte)
 	 */
 	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
@@ -283,6 +289,8 @@ class OpenGLMapRenderer implements android.opengl.GLSurfaceView.Renderer {
 	}
 
 	/**
+	 * @param bitmap
+	 *            the bitmap on which all future tiles need to be copied.
 	 * @see DatabaseMapGenerator#setupMapGenerator(Bitmap)
 	 */
 	void setBitmap(Bitmap bitmap) {

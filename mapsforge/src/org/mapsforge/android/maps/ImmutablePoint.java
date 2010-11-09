@@ -44,12 +44,12 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 	private ImmutablePoint other;
 
 	/**
-	 * The x coordinate of this point.
+	 * X coordinate of this point.
 	 */
 	final float x;
 
 	/**
-	 * The y coordinate of this point.
+	 * Y coordinate of this point.
 	 */
 	final float y;
 

@@ -160,6 +160,3 @@ waterway=drain
 waterway=river
 waterway=riverbank
 waterway=stream
-
-// the following line must be the last line in the file to get the highest ID
-NUMBER_OF_WAY_TAGS

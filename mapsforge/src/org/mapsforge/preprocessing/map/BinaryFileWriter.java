@@ -161,9 +161,10 @@ public class BinaryFileWriter {
 
 	// bitmap flags for file features
 	private static final short BITMAP_DEBUG = 128;
-	private static final short BITMAP_WAYNODE_FILTERING = 64;
-	private static final short BITMAP_POLYGON_CLIPPING = 32;
-	private static final short BITMAP_WAYNODE_COMPRESSION = 16;
+	private static final short BITMAP_HEADER_STARTPOSITION = 64;
+	private static final short BITMAP_WAYNODE_FILTERING = 32;
+	private static final short BITMAP_POLYGON_CLIPPING = 16;
+	private static final short BITMAP_WAYNODE_COMPRESSION = 8;
 
 	// maximal value of three bytes
 	private static final int MAX_VALUE_THREE_BYTES = 8388607;
@@ -185,6 +186,7 @@ public class BinaryFileWriter {
 	private static short fileAmount;
 
 	private static boolean debugStrings;
+	private static boolean headerStartposition;
 	private static boolean polygonClipping;
 	private static boolean wayNodePixelFilter;
 	private static boolean wayNodeCompression;
@@ -276,6 +278,7 @@ public class BinaryFileWriter {
 			props.load(new FileInputStream(featurePropertiesFile));
 
 			debugStrings = Boolean.parseBoolean(props.getProperty("debug.strings"));
+			headerStartposition = false;
 			polygonClipping = Boolean.parseBoolean(props.getProperty("polygon.clipping"));
 			wayNodePixelFilter = Boolean
 					.parseBoolean(props.getProperty("waynode.pixel.filter"));
@@ -408,12 +411,16 @@ public class BinaryFileWriter {
 			// magic byte
 			raf.write(MAGIC_BYTE.getBytes());
 
+			// save the position for the remaining header size
+			long remainingHeaderSizePosition = raf.getFilePointer();
+			raf.seek(remainingHeaderSizePosition + 4);
+
 			// version number of the binary file format
 			raf.writeInt(version);
 
 			// meta info byte
-			raf.writeByte(buildMetaInfoByte(debugStrings, wayNodePixelFilter, polygonClipping,
-					wayNodeCompression));
+			raf.writeByte(buildMetaInfoByte(debugStrings, headerStartposition,
+					wayNodePixelFilter, polygonClipping, wayNodeCompression));
 
 			// amount of sub files in this binary file
 			raf.writeByte(fileAmount);
@@ -449,8 +456,8 @@ public class BinaryFileWriter {
 			Entry<String, Short> e;
 			while (it.hasNext()) {
 				e = it.next();
-				raf.writeShort(e.getValue());
 				raf.writeUTF(e.getKey());
+				raf.writeShort(e.getValue());
 			}
 
 			// amount of map entries
@@ -458,8 +465,8 @@ public class BinaryFileWriter {
 			it = tagIdsWays.entrySet().iterator();
 			while (it.hasNext()) {
 				e = it.next();
-				raf.writeShort(e.getValue());
 				raf.writeUTF(e.getKey());
+				raf.writeShort(e.getValue());
 			}
 
 			// comment
@@ -492,6 +499,15 @@ public class BinaryFileWriter {
 			raf.seek(raf.getFilePointer() + 5);
 			subFileSizeHighZoom = raf.getFilePointer();
 			raf.seek(raf.getFilePointer() + 5);
+
+			// save the current position and go to the remaining header size position
+			long positionAfterFileHeader = raf.getFilePointer();
+			raf.seek(remainingHeaderSizePosition);
+			// calculate and write the size of the remaining file header, then go back
+			int remainingHeaderSize = (int) (positionAfterFileHeader
+					- remainingHeaderSizePosition - 4);
+			raf.writeInt(remainingHeaderSize);
+			raf.seek(positionAfterFileHeader);
 
 			// create temporary zoom tables
 			conn.createStatement().execute(
@@ -1121,8 +1137,8 @@ public class BinaryFileWriter {
 
 							// write a byte with name, label and way type information
 							raf.writeByte(buildInfoByteForWay(nameLength,
-									labelPositionLatitude, labelPositionLongitude, wayType,
-									ref.getBytes().length));
+									labelPositionLatitude, labelPositionLongitude, wayType, ref
+											.getBytes().length));
 
 							// if the way has a name, write it to the file
 							if (nameLength != 0) {
@@ -1130,7 +1146,7 @@ public class BinaryFileWriter {
 							}
 
 							// if the way has a ref, write it to the file
-							if (ref != "") {
+							if (ref.getBytes().length != 0) {
 								raf.writeUTF(ref);
 							}
 
@@ -1416,12 +1432,14 @@ public class BinaryFileWriter {
 		return infoByte;
 	}
 
-	private byte buildMetaInfoByte(boolean debug, boolean filtering, boolean clipping,
-			boolean compression) {
+	private byte buildMetaInfoByte(boolean debug, boolean startposition, boolean filtering,
+			boolean clipping, boolean compression) {
 		infoByte = 0;
 
 		if (debug)
 			infoByte |= BITMAP_DEBUG;
+		if (startposition)
+			infoByte |= BITMAP_HEADER_STARTPOSITION;
 		if (filtering)
 			infoByte |= BITMAP_WAYNODE_FILTERING;
 		if (clipping)

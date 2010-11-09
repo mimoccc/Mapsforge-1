@@ -159,11 +159,9 @@ final class TagIdsWays {
 	static final short WATERWAY$RIVER = 132;
 	static final short WATERWAY$RIVERBANK = 133;
 	static final short WATERWAY$STREAM = 134;
-	static final short NUMBER_OF_WAY_TAGS = 135;
 
 	static final Map<String, Short> getMap() {
 		Map<String, Short> map = new HashMap<String, Short>();
-		map.put("NUMBER_OF_WAY_TAGS", Short.valueOf((short) 135));
 		map.put("admin_level=10", Short.valueOf((short) 5));
 		map.put("admin_level=2", Short.valueOf((short) 0));
 		map.put("admin_level=4", Short.valueOf((short) 1));

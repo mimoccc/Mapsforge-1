@@ -94,11 +94,9 @@ final class TagIdsPOIs {
 	static final short TOURISM$INFORMATION = 67;
 	static final short TOURISM$MUSEUM = 68;
 	static final short TOURISM$VIEWPOINT = 69;
-	static final short NUMBER_OF_POI_TAGS = 70;
 
 	static final Map<String, Short> getMap() {
 		Map<String, Short> map = new HashMap<String, Short>();
-		map.put("NUMBER_OF_POI_TAGS", Short.valueOf((short) 70));
 		map.put("aeroway=gate", Short.valueOf((short) 0));
 		map.put("aeroway=helipad", Short.valueOf((short) 1));
 		map.put("amenity=atm", Short.valueOf((short) 2));

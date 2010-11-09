@@ -16,6 +16,8 @@
  */
 package org.mapsforge.android.maps;
 
+import android.graphics.Rect;
+
 /**
  * A tile represents a rectangular part of the world map. All tiles can be identified by their X
  * and Y number together with their zoom level. The actual area that a tile covers on a map
@@ -23,17 +25,17 @@ package org.mapsforge.android.maps;
  */
 class Tile {
 	/**
-	 * The amount of bytes per pixel of a map tile.
+	 * Amount of bytes per pixel of a map tile.
 	 */
 	static final byte TILE_BYTES_PER_PIXEL = 2;
 
 	/**
-	 * The width and height of a map tile in pixel.
+	 * Width and height of a map tile in pixel.
 	 */
 	static final short TILE_SIZE = 256;
 
 	/**
-	 * The size of a single map tile in bytes.
+	 * Size of a single map tile in bytes.
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
 
@@ -41,27 +43,27 @@ class Tile {
 	private Tile other;
 
 	/**
-	 * The pixel X coordinate of the upper left corner of this tile on the world map.
+	 * Pixel X coordinate of the upper left corner of this tile on the world map.
 	 */
 	final long pixelX;
 
 	/**
-	 * The pixel Y coordinate of the upper left corner of this tile on the world map.
+	 * Pixel Y coordinate of the upper left corner of this tile on the world map.
 	 */
 	final long pixelY;
 
 	/**
-	 * The X number of this tile.
+	 * X number of this tile.
 	 */
 	final long x;
 
 	/**
-	 * The Y number of this tile.
+	 * Y number of this tile.
 	 */
 	final long y;
 
 	/**
-	 * The zoom level of this tile.
+	 * Zoom level of this tile.
 	 */
 	final byte zoomLevel;
 
@@ -133,11 +135,11 @@ class Tile {
 	 * @return the bounding box of this tile.
 	 */
 	Rect getBoundingBox() {
-		return new Rect((long) (MercatorProjection.pixelXToLongitude(this.pixelX,
-				this.zoomLevel) * 1000000), (long) (MercatorProjection.pixelYToLatitude(
-				this.pixelY, this.zoomLevel) * 1000000), (long) (MercatorProjection
-				.pixelXToLongitude(this.pixelX + TILE_SIZE, this.zoomLevel) * 1000000),
-				(long) (MercatorProjection.pixelYToLatitude(this.pixelY + TILE_SIZE,
-						this.zoomLevel) * 1000000));
+		return new Rect(
+				(int) (MercatorProjection.pixelXToLongitude(this.pixelX, this.zoomLevel) * 1000000),
+				(int) (MercatorProjection.pixelYToLatitude(this.pixelY, this.zoomLevel) * 1000000),
+				(int) (MercatorProjection.pixelXToLongitude(this.pixelX + TILE_SIZE,
+						this.zoomLevel) * 1000000), (int) (MercatorProjection.pixelYToLatitude(
+						this.pixelY + TILE_SIZE, this.zoomLevel) * 1000000));
 	}
 }
