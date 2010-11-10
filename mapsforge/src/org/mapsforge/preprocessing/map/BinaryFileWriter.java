@@ -39,14 +39,10 @@ import org.mapsforge.core.MercatorProjection;
 import com.vividsolutions.jts.geom.Coordinate;
 
 /**
- * 
  * Writes the into the database imported data grouped by map tiles and ordered by zoom levels to
  * a mapsforge binary OSM file
- * 
  */
-
 public class BinaryFileWriter {
-
 	private static final String MAGIC_BYTE = "mapsforge binary OSM";
 	private static final String PROJECTION = "Mercator";
 
@@ -211,9 +207,6 @@ public class BinaryFileWriter {
 	private static long startTime;
 
 	private long nextIndexValue;
-	private long biggestTileSizePosition;
-
-	long previousTilePosition = 0;
 
 	private long startLowerZoom;
 	private long startHigherZoom;
@@ -226,8 +219,6 @@ public class BinaryFileWriter {
 
 	private long startPosition;
 	private byte[] startPositionInFiveBytes;
-
-	private int biggestTileSize = 0;
 
 	BinaryFileWriter(String propertiesFile) {
 		try {
@@ -344,11 +335,6 @@ public class BinaryFileWriter {
 			raf.write(differenceInFiveBytes);
 			raf.seek(endHigherZoom);
 
-			// write size of the biggest tile into the global file header
-			long currentPosition = raf.getFilePointer();
-			raf.seek(biggestTileSizePosition);
-			raf.writeInt(biggestTileSize);
-			raf.seek(currentPosition);
 			logger.info("end of file: " + raf.getFilePointer());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -441,10 +427,6 @@ public class BinaryFileWriter {
 
 			// date of the map data
 			raf.writeLong(date);
-
-			// place holder for the size of the biggest tile
-			biggestTileSizePosition = raf.getFilePointer();
-			raf.seek(biggestTileSizePosition + 4);
 
 			// store the mapping of tags to tag ids
 			Map<String, Short> tagIdsPois = TagIdsPOIs.getMap();
@@ -594,7 +576,6 @@ public class BinaryFileWriter {
 			long innerwayNodeCounterPos;
 			long innerWaysAmountPosition;
 			long startOfWay;
-			long tileDiff;
 			long tileStartAdress;
 			long waySizePosition;
 
@@ -648,16 +629,6 @@ public class BinaryFileWriter {
 					raf.write(currentPositionInFiveBytes);
 					nextIndexValue = raf.getFilePointer();
 					raf.seek(currentPosition);
-
-					// compare the size of the previous tile with the current value for the
-					// biggest tile
-					if (previousTilePosition != 0) {
-						tileDiff = raf.getFilePointer() - previousTilePosition;
-						if (tileDiff > biggestTileSize) {
-							biggestTileSize = (int) tileDiff;
-						}
-					}
-					previousTilePosition = currentPosition;
 
 					tileStartAdress = raf.getFilePointer();
 
@@ -1258,10 +1229,6 @@ public class BinaryFileWriter {
 
 			currentPosition = raf.getFilePointer();
 			logger.info("file ends at: " + currentPosition);
-			tileDiff = raf.getFilePointer() - previousTilePosition;
-			if (tileDiff > biggestTileSize) {
-				biggestTileSize = (int) tileDiff;
-			}
 
 			logger.info("total number of " + tileCounter + " tiles");
 			logger.info("binary map data file created");

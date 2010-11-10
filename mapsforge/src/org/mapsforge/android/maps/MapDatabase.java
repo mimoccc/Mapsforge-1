@@ -69,6 +69,11 @@ public class MapDatabase {
 	private static final float LOAD_FACTOR = 0.6f;
 
 	/**
+	 * Maximum size of a single block that is supported by this implementation.
+	 */
+	private static final int MAXIMUM_BLOCK_SIZE = 2000000;
+
+	/**
 	 * Maximum way nodes sequence length which is considered as valid.
 	 */
 	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
@@ -111,7 +116,7 @@ public class MapDatabase {
 	/**
 	 * Minimum size of the remaining file header in bytes.
 	 */
-	private static final int REMAINING_HEADER_SIZE_MIN = 58;
+	private static final int REMAINING_HEADER_SIZE_MIN = 50;
 
 	/**
 	 * Length of the debug signature at the beginning of each block.
@@ -244,7 +249,6 @@ public class MapDatabase {
 	private long mapFileSize;
 	private MapFileParameters[] mapFilesList;
 	private MapFileParameters[] mapFilesLookupTable;
-	private int maximumBlockSize;
 	private byte metaFlags;
 	private long nextBlockPointer;
 	private String nodeElevation;
@@ -541,7 +545,7 @@ public class MapDatabase {
 
 		// finished reading nodes, check if the current buffer position is valid
 		if (this.bufferPosition > this.firstWayOffset) {
-			Logger.d("invalid buffer position:" + this.bufferPosition + " - "
+			Logger.d("invalid buffer position: " + this.bufferPosition + " - "
 					+ this.firstWayOffset);
 			if (this.debugFile) {
 				Logger.d("block signature: " + this.blockSignature);
@@ -981,7 +985,7 @@ public class MapDatabase {
 		// read the the magic byte and the file header size into the buffer
 		this.readBuffer = new byte[BINARY_OSM_MAGIC_BYTE.length() + 4];
 		this.bufferPosition = 0;
-		if (this.inputFile.read(this.readBuffer, this.bufferPosition, this.readBuffer.length) != this.readBuffer.length) {
+		if (this.inputFile.read(this.readBuffer, 0, this.readBuffer.length) != this.readBuffer.length) {
 			Logger.d("reading magic byte has failed");
 			return false;
 		}
@@ -1007,7 +1011,7 @@ public class MapDatabase {
 		// read the header data into the buffer
 		this.readBuffer = new byte[this.remainingHeaderSize];
 		this.bufferPosition = 0;
-		if (this.inputFile.read(this.readBuffer, this.bufferPosition, this.readBuffer.length) != this.readBuffer.length) {
+		if (this.inputFile.read(this.readBuffer, 0, this.readBuffer.length) != this.readBuffer.length) {
 			Logger.d("reading header data has failed");
 			return false;
 		}
@@ -1121,14 +1125,6 @@ public class MapDatabase {
 		this.bufferPosition += 8;
 		if (this.mapDate < 0) {
 			Logger.d("invalid map date: " + this.mapDate);
-			return false;
-		}
-
-		// get and check the maximum block size (4 bytes)
-		this.maximumBlockSize = Deserializer.toInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
-		if (this.maximumBlockSize < 1) {
-			Logger.d("invalid maximum block size: " + this.maximumBlockSize);
 			return false;
 		}
 
@@ -1541,21 +1537,24 @@ public class MapDatabase {
 					} else if (this.currentBlockSize == 0) {
 						// the current block is empty, continue with the next block
 						continue;
+					} else if (this.currentBlockSize > MAXIMUM_BLOCK_SIZE) {
+						// the current block is too large, continue with the next block
+						continue;
 					} else if (this.currentBlockPointer + this.currentBlockSize > this.fileSize) {
 						Logger.d("invalid current block size: " + this.currentBlockSize);
 						return;
-					} else if (this.currentBlockSize > this.readBuffer.length) {
-						// the read buffer is not large enough
-						Logger.d("invalid buffer size:" + this.readBuffer.length);
-						return;
+					}
+
+					// make sure that the read buffer is large enough
+					if (this.currentBlockSize > this.readBuffer.length) {
+						this.readBuffer = new byte[this.currentBlockSize];
 					}
 
 					// go to the current block in the map file and read the data into the buffer
 					this.inputFile.seek(this.mapFileParameters.startAddress
 							+ this.currentBlockPointer);
 					this.bufferPosition = 0;
-					if (this.inputFile.read(this.readBuffer, this.bufferPosition = 0,
-							this.currentBlockSize) != this.currentBlockSize) {
+					if (this.inputFile.read(this.readBuffer, 0, this.currentBlockSize) != this.currentBlockSize) {
 						// if reading the current block has failed, skip it
 						Logger.d("reading current block has failed");
 						return;
@@ -1648,10 +1647,6 @@ public class MapDatabase {
 			// create the DatabaseIndexCache
 			this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile,
 					INDEX_CACHE_SIZE);
-
-			// create a read buffer that is big enough even for the largest block
-			this.readBuffer = new byte[this.maximumBlockSize];
-			this.bufferPosition = 0;
 
 			// create an array for the way nodes coordinates
 			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
