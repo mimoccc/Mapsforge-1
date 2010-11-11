@@ -28,7 +28,7 @@ import java.util.PriorityQueue;
  */
 class LabelPlacement {
 
-	private final boolean NORMAL = true;
+	private final boolean DEFAULT = false;
 	DependencyCache dependencyCache;
 	private int placementOption = 1;
 	// You can choose between 2 Position and 4 Position
@@ -92,10 +92,10 @@ class LabelPlacement {
 	 *            current tile with the x,y- coordinates and the zoom level.
 	 * @return the processed list of labels.
 	 */
-	public ArrayList<PointTextContainer> placeLabels(ArrayList<PointTextContainer> labels,
+	ArrayList<PointTextContainer> placeLabels(ArrayList<PointTextContainer> labels,
 			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels,
 			Tile cT) {
-		if (!NORMAL) {
+		if (!DEFAULT) {
 			dependencyCache.generateTileAndDependencyOnTile(cT);
 
 			preprocessAreaLabels(areaLabels);
@@ -673,7 +673,7 @@ class LabelPlacement {
 	 * @param areaLabels
 	 *            area labels from the actual tile
 	 */
-	public void removeOverlappingAreaLabels(ArrayList<PointTextContainer> areaLabels) {
+	private void removeOverlappingAreaLabels(ArrayList<PointTextContainer> areaLabels) {
 		int dis = this.labelDistanceToLabel;
 
 		for (int x = 0; x < areaLabels.size(); x++) {
