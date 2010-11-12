@@ -1336,7 +1336,7 @@ public class BinaryFileWriter {
 		if (tags != null) {
 			for (String tag : tags) {
 				Byte b = whiteList.get(tag);
-				if (b != null && b.equals(Byte.MAX_VALUE))
+				if (b != null && !b.equals(Byte.MAX_VALUE))
 					counter++;
 			}
 
