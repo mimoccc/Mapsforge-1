@@ -43,7 +43,8 @@ public class ExternalMemorySpeedTester {
 		out.close();
 	}
 
-	static void measureReadPerformance(File inputFile, PrintStream out, int[] blockSizes,
+	public static void measureReadPerformance(File inputFile, PrintStream out,
+			int[] blockSizes,
 			int numReads, int[] alignments)
 			throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(inputFile, "r");
