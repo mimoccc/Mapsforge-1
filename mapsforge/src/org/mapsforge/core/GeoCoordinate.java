@@ -63,7 +63,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 * The RegEx pattern to read WKT points
 	 */
 	private static Pattern wktPointPattern = Pattern
-		.compile(".*POINT\\s?\\(([\\d\\.]+)\\s([\\d\\.]+)\\).*");
+			.compile(".*POINT\\s?\\(([\\d\\.]+)\\s([\\d\\.]+)\\).*");
 
 	/**
 	 * Constructs a new GeoCoordinate with the given latitude and longitude values, measured in
@@ -113,6 +113,32 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 		m.matches();
 		this.longitude = validateLongitude(Double.parseDouble(m.group(1)));
 		this.latitude = validateLatitude(Double.parseDouble(m.group(2)));
+	}
+
+	/**
+	 * Constructs a new GeoCoordinate from a comma-separated String containing latitude and
+	 * longitude values (also ';', ':' and whitespace work as separator). First latitude and
+	 * longitude are interpreted as measured in degrees. If the coordinate is invalid, it is
+	 * tried to interpret values as measured in microdegrees.
+	 * 
+	 * @param latLonString
+	 *            the String containing the latitude and longitude values
+	 * @return the GeoCoordinate
+	 * @throws IllegalArgumentException
+	 *             if the latLonString could not be interpreted as a coordinate
+	 */
+	public static GeoCoordinate fromString(String latLonString) {
+		String[] splitted = latLonString.split("[,;:\\s]");
+		if (splitted.length != 2)
+			throw new IllegalArgumentException("cannot read coordinate, not a valid format");
+		double latitude = Double.parseDouble(splitted[0]);
+		double longitude = Double.parseDouble(splitted[1]);
+		try {
+			return new GeoCoordinate(latitude, longitude);
+		} catch (IllegalArgumentException e) {
+			return new GeoCoordinate(GeoCoordinate.doubleToInt(latitude),
+					GeoCoordinate.doubleToInt(longitude));
+		}
 	}
 
 	/**

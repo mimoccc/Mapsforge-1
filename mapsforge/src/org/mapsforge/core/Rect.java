@@ -83,8 +83,7 @@ public class Rect {
 	}
 
 	/**
-	 * Constructs a rectangle, it is not checked if given values are valid coordinates and also
-	 * if the minimum values are less equal compared to the respective maximum value.
+	 * Constructs a rectangle, it is not checked if given values are valid coordinates.
 	 * 
 	 * @param minLongitudeE6
 	 *            bound of the rectangle.
@@ -100,6 +99,27 @@ public class Rect {
 		this.maxLongitudeE6 = maxLongitudeE6;
 		this.minLatitudeE6 = minLatitudeE6;
 		this.maxLatitudeE6 = maxLatitudeE6;
+		validate();
+	}
+
+	/**
+	 * Constructs a rectangle, it is not checked if given values are valid coordinates.
+	 * 
+	 * @param minLongitude
+	 *            bound of the rectangle.
+	 * @param maxLongitude
+	 *            bound of the rectangle.
+	 * @param minLatitude
+	 *            bound of the rectangle.
+	 * @param maxLatitude
+	 *            bound of the rectangle.
+	 */
+	public Rect(double minLongitude, double maxLongitude, double minLatitude, double maxLatitude) {
+		this.minLongitudeE6 = GeoCoordinate.doubleToInt(minLongitude);
+		this.maxLongitudeE6 = GeoCoordinate.doubleToInt(maxLongitude);
+		this.minLatitudeE6 = GeoCoordinate.doubleToInt(minLatitude);
+		this.maxLatitudeE6 = GeoCoordinate.doubleToInt(maxLatitude);
+		validate();
 	}
 
 	/**
@@ -113,6 +133,65 @@ public class Rect {
 		this.maxLatitudeE6 = rect.maxLatitudeE6;
 		this.minLongitudeE6 = rect.minLongitudeE6;
 		this.maxLongitudeE6 = rect.maxLongitudeE6;
+	}
+
+	/**
+	 * Creates a new rectangle from a String containing comma-separated coordinates in the order
+	 * minLat, minLon, maxLat, maxLon.
+	 * 
+	 * @param rectString
+	 *            the String that describes the rectangle
+	 * @return a new rectangle
+	 * @throws IllegalArgumentException
+	 *             if input String cannot be parsed, or coordinates describe an invalid
+	 *             rectangle
+	 */
+	public static Rect fromString(String rectString) {
+		String[] splitted = rectString.split(",");
+		if (splitted.length != 4) {
+			throw new IllegalArgumentException(
+					"expects 4 comma-separated values that define a bounding box, only found "
+							+ splitted.length);
+		}
+		GeoCoordinate upperLeft = GeoCoordinate.fromString(splitted[2] + "," + splitted[1]);
+		GeoCoordinate bottomRight = GeoCoordinate.fromString(splitted[0] + "," + splitted[3]);
+		return new Rect(upperLeft.getLongitudeE6(), bottomRight.getLongitudeE6(),
+				bottomRight.getLatitudeE6(), upperLeft.getLatitudeE6());
+	}
+
+	private void validate() {
+		if (minLatitudeE6 > maxLatitudeE6)
+			throw new IllegalArgumentException("minLat is greater than maxLat");
+		if (minLongitudeE6 > maxLongitudeE6)
+			throw new IllegalArgumentException("minLon is greater than maxLon");
+	}
+
+	/**
+	 * @return the minLongitudeE6
+	 */
+	public int getMinLongitudeE6() {
+		return minLongitudeE6;
+	}
+
+	/**
+	 * @return the maxLongitudeE6
+	 */
+	public int getMaxLongitudeE6() {
+		return maxLongitudeE6;
+	}
+
+	/**
+	 * @return the minLatitudeE6
+	 */
+	public int getMinLatitudeE6() {
+		return minLatitudeE6;
+	}
+
+	/**
+	 * @return the maxLatitudeE6
+	 */
+	public int getMaxLatitudeE6() {
+		return maxLatitudeE6;
 	}
 
 	/**
