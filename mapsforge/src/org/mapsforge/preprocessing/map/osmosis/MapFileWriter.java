@@ -222,7 +222,7 @@ class MapFileWriter {
 		if (comment != null && !comment.equals("")) {
 			file.writeUTF(comment);
 		} else {
-			file.writeUTF("no comment");
+			file.writeUTF("");
 		}
 
 		// reserve place for zoom interval configuration, 13 bytes for each zoom interval

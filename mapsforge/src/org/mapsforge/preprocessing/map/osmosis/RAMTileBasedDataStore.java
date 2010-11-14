@@ -16,8 +16,8 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
-import gnu.trove.TLongObjectHashMap;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.List;

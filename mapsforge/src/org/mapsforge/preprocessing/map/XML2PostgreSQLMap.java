@@ -16,7 +16,7 @@
  */
 package org.mapsforge.preprocessing.map;
 
-import gnu.trove.TLongArrayList;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.io.File;
@@ -29,10 +29,10 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;

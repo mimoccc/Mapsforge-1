@@ -72,9 +72,11 @@ public class MapFileWriterTask implements Sink {
 	private boolean waynodeCompression;
 	private boolean pixelFilter;
 	private boolean polygonClipping;
+	private String comment;
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
+			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping) {
 		this.outFile = new File(outFile);
@@ -84,6 +86,7 @@ public class MapFileWriterTask implements Sink {
 		this.waynodeCompression = waynodeCompression;
 		this.pixelFilter = pixelFilter;
 		this.polygonClipping = polygonClipping;
+		this.comment = comment;
 
 		Rect bbox = bboxString == null ? null : Rect.fromString(bboxString);
 		this.zoomIntervalConfiguration = zoomIntervalConfigurationString == null ? ZoomIntervalConfiguration
@@ -125,7 +128,7 @@ public class MapFileWriterTask implements Sink {
 			RandomAccessFile file = new RandomAccessFile(outFile, "rw");
 			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
-			mfw.writeFile(System.currentTimeMillis(), 1, (short) 256, null, debugInfo,
+			mfw.writeFile(System.currentTimeMillis(), 1, (short) 256, comment, debugInfo,
 					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "error while writing file", e);

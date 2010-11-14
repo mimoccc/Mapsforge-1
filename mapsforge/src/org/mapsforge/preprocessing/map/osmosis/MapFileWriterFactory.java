@@ -11,6 +11,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
 	private static final String PARAM_ZOOMINTERVAL_CONFIG = "zoom-interval-conf";
+	private static final String PARAM_COMMENT = "comment";
 	private static final String PARAM_MAP_START_POSITION = "map-start-position";
 	private static final String PARAM_DEBUG_INFO = "debug";
 	private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
@@ -24,6 +25,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		String mapStartPosition = getStringArgument(taskConfig, PARAM_MAP_START_POSITION, null);
 		String bbox = getStringArgument(taskConfig, PARAM_BBOX, null);
 		String zoomConf = getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null);
+		String comment = getStringArgument(taskConfig, PARAM_COMMENT, null);
 		boolean debug = getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false);
 		boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
 				true);
@@ -32,6 +34,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		// String zoomIntervalConfiguration = getStringArgument(taskConfig,
 		// PARAM_ZOOMINTERVAL_CONFIG, null);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
+				comment,
 				zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
