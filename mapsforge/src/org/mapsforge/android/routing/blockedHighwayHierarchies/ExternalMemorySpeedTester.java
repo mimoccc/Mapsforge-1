@@ -49,12 +49,14 @@ public class ExternalMemorySpeedTester {
 			throws IOException {
 		RandomAccessFile raf = new RandomAccessFile(inputFile, "r");
 		Random rnd = new Random();
-		DecimalFormat df = new DecimalFormat("#.###");
+		DecimalFormat df1 = new DecimalFormat("#.###");
+		DecimalFormat df2 = new DecimalFormat("#");
 		int fileSize = (int) raf.length();
 
 		out.print("#blocksize");
 		for (int alignment : alignments) {
 			out.print("\tMB/s[" + alignment + "]");
+			out.print("\tBytes/s[" + alignment + "]");
 		}
 		out.println("");
 		for (int blockSize : blockSizes) {
@@ -78,7 +80,10 @@ public class ExternalMemorySpeedTester {
 				int avgNanos = (int) (sumNanos[j] / numReads);
 				double avgMBs = ((((double) blockSize) / ((double) avgNanos)) * Math.pow(10, 9))
 						/ (1024 * 1024);
-				out.print("\t" + df.format(avgMBs));
+				double avgBytes = ((((double) blockSize) / ((double) avgNanos)) * Math.pow(10,
+						9));
+				out.print("\t" + df1.format(avgMBs));
+				out.print("\t" + df2.format(avgBytes));
 			}
 			out.println();
 		}
@@ -95,7 +100,7 @@ public class ExternalMemorySpeedTester {
 		int[] blockSizes = new int[] { 1024, 1024 * 2, 1024 * 4, 1024 * 8, 1024 * 16,
 				1024 * 32, 1024 * 64, 1024 * 128, 1024 * 256, 1024 * 512, 1024 * 1024,
 				1024 * 2048, 1024 * 4096, 1024 * 8192 };
-		int[] alignments = new int[] { 1, 1024, 2048, 4096 };
+		int[] alignments = new int[] { 1, 512, 1024, 2048, 4096 };
 		measureReadPerformance(inputFile, System.out, blockSizes, numReads, alignments);
 	}
 }
