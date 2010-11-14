@@ -16,8 +16,10 @@ public class MapFileWriterPluginLoader implements PluginLoader {
 
 	@Override
 	public Map<String, TaskManagerFactory> loadTaskFactories() {
+		MapFileWriterFactory mapFileWriterFactory = new MapFileWriterFactory();
 		HashMap<String, TaskManagerFactory> map = new HashMap<String, TaskManagerFactory>();
-		map.put("mapfile-writer", new MapFileWriterFactory());
+		map.put("mapfile-writer", mapFileWriterFactory);
+		map.put("mw", mapFileWriterFactory);
 		return map;
 	}
 

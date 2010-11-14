@@ -32,37 +32,10 @@ class ZoomIntervalConfiguration {
 	private byte minMinZoom;
 	private byte maxMaxZoom;
 
-	private ZoomIntervalConfiguration() {
-		// private default constructor
-	}
-
-	static ZoomIntervalConfiguration getStandardConfiguration() {
-		ZoomIntervalConfiguration c = new ZoomIntervalConfiguration();
-		c.baseZoom = new byte[] { 8, 14 };
-		c.minZoom = new byte[] { 6, 12 };
-		c.maxZoom = new byte[] { 11, 17 };
-		c.minMinZoom = c.minZoom[0];
-		c.maxMaxZoom = c.maxZoom[c.maxZoom.length - 1];
-
-		return c;
-	}
-
-	static ZoomIntervalConfiguration getSpecialConfiguration() {
-		ZoomIntervalConfiguration c = new ZoomIntervalConfiguration();
-		c.baseZoom = new byte[] { 9, 15 };
-		c.minZoom = new byte[] { 7, 13 };
-		c.maxZoom = new byte[] { 12, 18 };
-		c.minMinZoom = c.minZoom[0];
-		c.maxMaxZoom = c.maxZoom[c.maxZoom.length - 1];
-
-		return c;
-	}
-
-	static ZoomIntervalConfiguration newInstance(byte[]... intervals) {
-		ZoomIntervalConfiguration conf = new ZoomIntervalConfiguration();
-		conf.baseZoom = new byte[intervals.length];
-		conf.minZoom = new byte[intervals.length];
-		conf.maxZoom = new byte[intervals.length];
+	private ZoomIntervalConfiguration(byte[][] intervals) {
+		baseZoom = new byte[intervals.length];
+		minZoom = new byte[intervals.length];
+		maxZoom = new byte[intervals.length];
 
 		int i = 0;
 		for (byte[] interval : intervals) {
@@ -75,16 +48,30 @@ class ZoomIntervalConfiguration {
 				throw new IllegalArgumentException("invalid configuration for interval " + i +
 						", make sure that minZoom < baseZoom < maxZoom");
 			if (i > 1) {
-				if (interval[0] < conf.baseZoom[i - 2])
+				if (interval[0] < baseZoom[i - 2])
 					throw new IllegalArgumentException(
 							"interval configurations must follow an increasing order");
-				if (interval[1] != (conf.maxZoom[i - 2]) + 1)
+				if (interval[1] != ((maxZoom[i - 2]) + 1))
 					throw new IllegalArgumentException("minZoom of interval " + i
 							+ " not adjacent to maxZoom of interval " + (i - 1));
 			}
+			baseZoom[i - 1] = interval[0];
+			minZoom[i - 1] = interval[1];
+			maxZoom[i - 1] = interval[2];
 		}
+		minMinZoom = minZoom[0];
+		maxMaxZoom = maxZoom[maxZoom.length - 1];
+	}
 
-		return conf;
+	static ZoomIntervalConfiguration getStandardConfiguration() {
+		return new ZoomIntervalConfiguration(new byte[][] {
+				new byte[] { 8, 6, 11 },
+				new byte[] { 14, 12, 17 }
+		});
+	}
+
+	static ZoomIntervalConfiguration newInstance(byte[]... intervals) {
+		return new ZoomIntervalConfiguration(intervals);
 	}
 
 	static ZoomIntervalConfiguration fromString(String confString) {

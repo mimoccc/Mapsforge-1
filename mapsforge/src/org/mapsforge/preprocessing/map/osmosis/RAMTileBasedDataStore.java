@@ -80,15 +80,6 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 				ZoomIntervalConfiguration.getStandardConfiguration());
 	}
 
-	static RAMTileBasedDataStore getSpecialInstance(
-			double minLat, double maxLat,
-			double minLon, double maxLon) {
-
-		return new RAMTileBasedDataStore(
-				minLat, maxLat, minLon, maxLon,
-				ZoomIntervalConfiguration.getSpecialConfiguration());
-	}
-
 	@Override
 	public Rect getBoundingBox() {
 		return boundingbox;

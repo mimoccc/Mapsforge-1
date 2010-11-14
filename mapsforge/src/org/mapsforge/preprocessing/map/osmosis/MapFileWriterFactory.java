@@ -8,9 +8,9 @@ import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 class MapFileWriterFactory extends TaskManagerFactory {
 
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
-	private static final String PARAM_OUTFILE = "outfile";
+	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
-	private static final String PARAM_ZOOMINTERVAL_CONFIG = "zoom-interval-config";
+	private static final String PARAM_ZOOMINTERVAL_CONFIG = "zoom-interval-conf";
 	private static final String PARAM_MAP_START_POSITION = "map-start-position";
 	private static final String PARAM_DEBUG_INFO = "debug";
 	private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";

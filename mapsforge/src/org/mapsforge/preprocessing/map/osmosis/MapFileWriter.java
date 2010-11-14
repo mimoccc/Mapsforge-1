@@ -329,6 +329,9 @@ class MapFileWriter {
 
 				// ************* POI ************
 				// write amount of POIs and ways for each zoom level
+				// TODO is this computation correct? Ways that have an associated zoom level of
+				// e.g. 9
+				// are lifted to zoom level 12 for an interval 12,14,17
 				Map<Byte, List<TDNode>> poisByZoomlevel = currentTile
 						.poisByZoomlevel(minZoomCurrentInterval, maxMaxZoomlevel);
 				Map<Byte, List<TDWay>> waysByZoomlevel = currentTile
