@@ -222,8 +222,8 @@ public abstract class Overlay extends Thread {
 				break;
 			}
 
+			this.redraw = false;
 			if (!isNew()) {
-				this.redraw = false;
 				redraw();
 			}
 		}
@@ -374,7 +374,6 @@ public abstract class Overlay extends Thread {
 	 *            the calling MapView.
 	 */
 	final void setupOverlay(MapView mapView) {
-		this.isNew = false;
 		this.internalMapView = mapView;
 
 		// save a reference to the MapView projection
@@ -394,6 +393,8 @@ public abstract class Overlay extends Thread {
 		this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
 				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.internalCanvas = new Canvas();
+
+		this.isNew = false;
 		requestRedraw();
 	}
 }
