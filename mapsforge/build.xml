@@ -32,10 +32,6 @@
 	</path>
 
 
-	<!-- Build JAR files for the distribution -->
-	<target name="dist" depends="mapsforge-map.jar create" />
-
-
 	<!-- Delete temporary folders -->
 	<target name="clean">
 		<delete dir="doc" />
@@ -43,8 +39,16 @@
 	</target>
 
 
+	<!-- Check if the keystore exists (used befor calling jarsigner) -->
+	<target name="check-for-keystore">
+		<available file="${mapsforge.keystore.location}"
+		           type="file"
+		           property="keystore.present" />
+	</target>
+
+
 	<!-- Create javadoc for the android.maps package -->
-	<target name="mapsforge-map javadoc">
+	<target name="mapsforge-map-javadoc-create">
 		<mkdir dir="doc/${mapsforge.version}" />
 		<javadoc destdir="doc/${mapsforge.version}"
 		         author="false"
@@ -60,19 +64,8 @@
 	</target>
 
 
-	<!-- Copy the newly created map JAR file to the dependent projects -->
-	<target name="mapsforge-map.jar copy" depends="mapsforge-map.jar create">
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
-		      todir="${mapsforge.advancemapviewer.lib.dir}" />
-		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
-		      todir="${mapsforge.samples.lib.dir}" />
-		<eclipse.refreshLocal resource="AdvancedMapViewer/lib" depth="infinite" />
-		<eclipse.refreshLocal resource="Samples/lib" depth="infinite" />
-	</target>
-
-
-	<!-- Build, sign and verify the JAR file for mapsforge-map -->
-	<target name="mapsforge-map.jar create">
+	<!-- Create the JAR file the android.maps package -->
+	<target name="mapsforge-map-jar-create">
 		<mkdir dir="dist" />
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="dist/mapsforge-map-${mapsforge.version}.jar" duplicate="preserve">
@@ -80,6 +73,13 @@
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/maps/" />
 			<fileset refid="info" />
 		</jar>
+	</target>
+
+
+	<!-- Sign and verify the JAR file for the android.maps package if the keystore exists -->
+	<target name="mapsforge-map-jar-sign"
+	        depends="check-for-keystore,mapsforge-map-jar-create"
+	        if="keystore.present">
 		<signjar jar="dist/mapsforge-map-${mapsforge.version}.jar"
 		         keystore="${mapsforge.keystore.location}"
 		         storepass="${mapsforge.keystore.pass}"
@@ -90,6 +90,18 @@
 			<arg value="-verify" />
 			<arg value="dist/mapsforge-map-${mapsforge.version}.jar" />
 		</exec>
+	</target>
+
+
+	<!-- Copy the created JAR file for the android.maps package file to the dependent projects -->
+	<target name="mapsforge-map-jar-copy" depends="mapsforge-map-jar-sign">
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
+		      todir="${mapsforge.advancemapviewer.lib.dir}" />
+		<copy file="dist/mapsforge-map-${mapsforge.version}.jar"
+		      todir="${mapsforge.samples.lib.dir}" />
+		<!-- Refresh the modified folders to trigger an automatic rebuild -->
+		<eclipse.refreshLocal resource="AdvancedMapViewer/lib" depth="infinite" />
+		<eclipse.refreshLocal resource="Samples/lib" depth="infinite" />
 	</target>
 
 
@@ -180,19 +192,27 @@
 			<fileset refid="info" />
 		</jar>
 	</target>
-	
+
 	<target name="mapsforge-mapfile-writer.jar create">
-		<mkdir dir="${mapsforge.dist}"/>
+		<mkdir dir="${mapsforge.dist}" />
 		<!-- Include source code and generated class files, avoid duplicates -->
-		<jar compress="true" destfile="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar" duplicate="preserve">			
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/map/osmosis/" excludes="*.xml"/>
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/map/osmosis/" excludes="*.xml"/>
+		<jar compress="true"
+		     destfile="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"
+		     duplicate="preserve">
+			<fileset dir="${mapsforge.src}"
+			         includes="org/mapsforge/preprocessing/map/osmosis/"
+			         excludes="*.xml" />
+			<fileset dir="${mapsforge.bin}"
+			         includes="org/mapsforge/preprocessing/map/osmosis/"
+			         excludes="*.xml" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
 			<fileset refid="info" />
-			<fileset dir="${mapsforge.src}/org/mapsforge/preprocessing/map/osmosis/" includes="*.xml"/>
+			<fileset dir="${mapsforge.src}/org/mapsforge/preprocessing/map/osmosis/"
+			         includes="*.xml" />
 		</jar>
-		<copy overwrite="true" todir="${user.home}/.openstreetmap/osmosis/plugins"
-			file="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"/>
+		<copy overwrite="true"
+		      todir="${user.home}/.openstreetmap/osmosis/plugins"
+		      file="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar" />
 	</target>
 </project>
