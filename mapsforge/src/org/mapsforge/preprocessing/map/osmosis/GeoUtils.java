@@ -274,7 +274,7 @@ public class GeoUtils {
 		if (!jtsPolygon.isValid())
 			return null;
 		Geometry tileBBox = geoFac.createPolygon(
-				getBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(), 0), null);
+				getBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(), 1), null);
 
 		Geometry intersection = jtsPolygon.intersection(tileBBox);
 		// if (intersection.isEmpty())

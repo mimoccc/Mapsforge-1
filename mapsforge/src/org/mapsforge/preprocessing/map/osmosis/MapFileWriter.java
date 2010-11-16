@@ -146,6 +146,8 @@ class MapFileWriter {
 			writeSubfileMetaDataToContainerHeader(i, startIndexOfZoomIntervalConf,
 					startIndexOfSubfile, subfileSize);
 		}
+
+		file.close();
 	}
 
 	private long writeContainerHeader(long date, int version, short tilePixel, String comment,

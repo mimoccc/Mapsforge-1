@@ -271,13 +271,4 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	public int numberOfVerticalTiles(int zoomIntervalIndex) {
 		return tileData[zoomIntervalIndex][0].length;
 	}
-
-	// @Override
-	// public long cumulatedNumberOfTiles() {
-	// long amount = 0;
-	// for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-	// amount += (numberOfHorizontalTiles(i) * numberOfVerticalTiles(i));
-	// }
-	// return amount;
-	// }
 }
