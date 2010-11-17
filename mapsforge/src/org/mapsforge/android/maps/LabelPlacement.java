@@ -111,7 +111,7 @@ class LabelPlacement {
 			dependencyCache.removeOverlappingObjectsWithDependencyOnTile(labels, areaLabels,
 					symbols);
 
-			if (labels.size() != 0)
+			if (labels.size() != 0) {
 				switch (this.placementOption) {
 					case 0:
 						labels = processTwoPointGreedy(labels, symbols, areaLabels);
@@ -122,10 +122,9 @@ class LabelPlacement {
 					default:
 						break;
 				}
-
-			if ((labels.size() > 0) || (symbols.size() > 0) || (areaLabels.size() > 0)) {
-				dependencyCache.fillDependencyOnTile(labels, symbols, areaLabels);
 			}
+
+			dependencyCache.fillDependencyOnTile(labels, symbols, areaLabels);
 
 		} else {
 			centerLabels(areaLabels);
