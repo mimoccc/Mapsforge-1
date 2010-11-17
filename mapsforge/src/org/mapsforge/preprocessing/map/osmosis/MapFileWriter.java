@@ -159,7 +159,7 @@ class MapFileWriter {
 		int numberOfZoomIntervals = dataStore.getZoomIntervalConfiguration()
 				.getNumberOfZoomIntervals();
 
-		logger.info("writing header");
+		logger.fine("writing header");
 
 		// write file header
 		// magic byte
@@ -187,7 +187,7 @@ class MapFileWriter {
 		// width and height of a tile in pixel
 		file.writeShort(tilePixel);
 
-		logger.info("Bounding box for file: " +
+		logger.finer("Bounding box for file: " +
 				dataStore.getBoundingBox().maxLatitudeE6 + ", " +
 				dataStore.getBoundingBox().minLongitudeE6 + ", " +
 				dataStore.getBoundingBox().minLatitudeE6 + ", " +
@@ -292,7 +292,7 @@ class MapFileWriter {
 		long tileAmountInBytes = dataStore.numberOfHorizontalTiles(zoomIntervalIndex)
 				* dataStore.numberOfVerticalTiles(zoomIntervalIndex)
 				* BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
-		logger.info("writing data for zoom interval " + zoomIntervalIndex
+		logger.fine("writing data for zoom interval " + zoomIntervalIndex
 				+ ", number of tiles: " +
 				dataStore.numberOfHorizontalTiles(zoomIntervalIndex)
 				* dataStore.numberOfVerticalTiles(zoomIntervalIndex));

@@ -112,7 +112,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		assert tileCoordinateLeft <= tileCoordinateRight;
 		assert tileCoordinateLeft - tileCoordinateRight + 1 < Integer.MAX_VALUE;
 
-		logger.info("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
+		logger.finest("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
 				+ "\t+n_horizontal: " + (tileCoordinateRight - tileCoordinateLeft + 1));
 
 		return (int) (tileCoordinateRight - tileCoordinateLeft + 1);
@@ -131,7 +131,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		assert tileCoordinateBottom >= tileCoordinateTop;
 		assert tileCoordinateBottom - tileCoordinateTop + 1 <= Integer.MAX_VALUE;
 
-		logger.info("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
+		logger.finest("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
 				+ "\t+n_vertical: " + (tileCoordinateBottom - tileCoordinateTop + 1));
 
 		return (int) (tileCoordinateBottom - tileCoordinateTop + 1);

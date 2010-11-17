@@ -303,7 +303,7 @@ public class GeoUtils {
 		assert way != null;
 		int amount = way.getWayNodes().length;
 		if (amount < 2) {
-			logger.warning("way has fewer than 2 way nodes, id: " + way.getId());
+			logger.finer("way has fewer than 2 way nodes, id: " + way.getId());
 			return null;
 		}
 
@@ -317,7 +317,7 @@ public class GeoUtils {
 		// cut out of a larger data file
 		// --> a polygon must have at least 4 points including the duplicated start/end
 		if (amount < 4) {
-			logger.warning("Found way of type polygon with fewer than 4 way nodes. Way-ID: "
+			logger.finer("Found way of type polygon with fewer than 4 way nodes. Way-ID: "
 						+ way.getId());
 			return null;
 		}

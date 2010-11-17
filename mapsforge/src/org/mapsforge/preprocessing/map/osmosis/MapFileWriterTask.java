@@ -36,6 +36,7 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
+import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
@@ -80,6 +81,10 @@ public class MapFileWriterTask implements Sink {
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping) {
 		this.outFile = new File(outFile);
+		if (this.outFile.isDirectory()) {
+			throw new IllegalArgumentException(
+					"file parameter points to a directory, must be a file");
+		}
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate
 				.fromString(mapStartPosition);
 		this.debugInfo = debugInfo;
@@ -116,15 +121,17 @@ public class MapFileWriterTask implements Sink {
 		logger.info("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
 		logger.info("total processed multipolygons: " + amountOfMultipolygons);
 		System.gc();
-		logger.info("used mem: " + nfMegabyte.format(
+		logger.info("estimated memory consumption: " + nfMegabyte.format(
 						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
 								.freeMemory()) / Math.pow(1024, 2))) + "MB");
 
 		logger.info("start writing file...");
 
 		try {
-			if (outFile.exists())
+			if (outFile.exists() && !outFile.isDirectory()) {
+				logger.info("overwriting file " + outFile.getAbsolutePath());
 				outFile.delete();
+			}
 			RandomAccessFile file = new RandomAccessFile(outFile, "rw");
 			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
@@ -156,6 +163,7 @@ public class MapFileWriterTask implements Sink {
 									bound.getLeft(), bound.getRight(),
 									zoomIntervalConfiguration);
 				}
+				logger.info("start reading data...");
 				break;
 
 			// *******************************************************
@@ -295,7 +303,7 @@ public class MapFileWriterTask implements Sink {
 						waynodes[i] = tileBasedGeoObjectStore.getNode(waynode.getNodeId());
 						if (waynodes[i] == null) {
 							validWay = false;
-							logger.warning("unknown way node: " + waynode.getNodeId()
+							logger.finer("unknown way node: " + waynode.getNodeId()
 									+ " in way " + currentWay.getId());
 						}
 						i++;
@@ -336,10 +344,11 @@ public class MapFileWriterTask implements Sink {
 			case Relation:
 				Relation currentRelation = (Relation) entity;
 
-				if (isMultiPolygon(currentRelation)) {
+				if (isWayMultiPolygon(currentRelation)) {
 
 					List<Long> outerMemberIDs = new ArrayList<Long>();
 					TLongArrayList innerMemberIDs = new TLongArrayList();
+					// currentRelation.get
 					for (RelationMember member : currentRelation.getMembers()) {
 						if ("outer".equals(member.getMemberRole()))
 							outerMemberIDs.add(member.getMemberId());
@@ -367,15 +376,22 @@ public class MapFileWriterTask implements Sink {
 
 	}
 
-	private boolean isMultiPolygon(Relation candidate) {
-		if (candidate == null || candidate.getTags() == null)
+	private boolean isWayMultiPolygon(Relation candidate) {
+		assert candidate != null;
+		if (candidate.getTags() == null)
 			return false;
+
+		for (RelationMember member : candidate.getMembers()) {
+			if (member.getMemberType() != EntityType.Way)
+				return false;
+		}
 		for (Tag tag : candidate.getTags()) {
 			if (tag.getKey().equalsIgnoreCase("type")
 					&& tag.getValue().equalsIgnoreCase("multipolygon"))
 				return true;
 		}
 		return false;
+
 	}
 	// private class MapNode extends org.mapsforge.core.Node implements IndexElement<Long> {
 	//

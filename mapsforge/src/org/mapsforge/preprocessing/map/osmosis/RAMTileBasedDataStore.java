@@ -191,12 +191,12 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		TDWay outerWay = getWay(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
-			logger.warning("outer way with id " + outerWayID + " not existent in relation");
+			logger.finer("outer way with id " + outerWayID + " not existent in relation");
 			return false;
 		}
 		// check if outer way is polygon
 		if (!GeoUtils.isClosedPolygon(outerWay)) {
-			logger.info("outer way is not a polygon, id: " + outerWayID);
+			logger.finer("outer way is not a polygon, id: " + outerWayID);
 			return false;
 		}
 
