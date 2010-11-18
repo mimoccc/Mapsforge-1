@@ -28,7 +28,7 @@ import java.util.PriorityQueue;
  */
 class LabelPlacement {
 
-	private final boolean DEFAULT = false;
+	private static final boolean DEFAULT = false;
 	DependencyCache dependencyCache;
 	private int placementOption = 1;
 	// You can choose between 2 Position and 4 Position
