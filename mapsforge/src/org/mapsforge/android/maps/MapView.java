@@ -1919,9 +1919,9 @@ public class MapView extends ViewGroup {
 			long tileCenterY = mapGeneratorJob.tile.pixelY + (Tile.TILE_SIZE >> 1);
 
 			// set tile priority to the distance from the MapView center
-			int diffX = (int) (mapViewCenterX - tileCenterX);
-			int diffY = (int) (mapViewCenterY - tileCenterY);
-			mapGeneratorJob.priority = SquareRoot.sqrt(diffX * diffX + diffY * diffY);
+			double diffX = mapViewCenterX - tileCenterX;
+			double diffY = mapViewCenterY - tileCenterY;
+			mapGeneratorJob.priority = (int) Math.sqrt(diffX * diffX + diffY * diffY);
 		}
 		return mapGeneratorJob;
 	}

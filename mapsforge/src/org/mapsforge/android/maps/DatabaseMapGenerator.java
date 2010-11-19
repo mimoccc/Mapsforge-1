@@ -264,7 +264,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private boolean needHelperPoint;
 	private ArrayList<PointTextContainer> nodes;
 	private boolean noWaterBackground;
-	private int pathLengthInPixel;
+	private double pathLengthInPixel;
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
@@ -568,9 +568,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 				// check the length of the current segment by calculating the Euclidian distance
 				this.distanceX = this.currentX - this.previousX;
 				this.distanceY = this.currentY - this.previousY;
-				this.pathLengthInPixel = SquareRoot
-						.sqrt((int) (this.distanceX * this.distanceX + this.distanceY
-								* this.distanceY));
+				this.pathLengthInPixel = Math.sqrt(this.distanceX * this.distanceX
+						+ this.distanceY * this.distanceY);
 				if (this.pathLengthInPixel > this.wayNameWidth) {
 					this.wayNamePath = new float[4];
 					// check to prevent inverted way names
@@ -649,12 +648,12 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	}
 
 	/**
-	 * Calculate the approximate length in pixel of the current way coordinates using the
-	 * Euclidean distance for each way segment.
+	 * Calculate the length in pixel of the current way coordinates using the Euclidean distance
+	 * for each way segment.
 	 * 
-	 * @return the approximate length of the way in pixels.
+	 * @return the length of the way in pixels.
 	 */
-	private int getWayLengthInPixel() {
+	private double getWayLengthInPixel() {
 		this.previousX = this.coordinates[0][0];
 		this.previousY = this.coordinates[0][1];
 		this.pathLengthInPixel = 0;
@@ -663,9 +662,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.currentY = this.coordinates[0][i + 1];
 			this.distanceX = this.currentX - this.previousX;
 			this.distanceY = this.currentY - this.previousY;
-			this.pathLengthInPixel += SquareRoot
-					.sqrt((int) (this.distanceX * this.distanceX + this.distanceY
-							* this.distanceY));
+			this.pathLengthInPixel += Math.sqrt(this.distanceX * this.distanceX
+					+ this.distanceY * this.distanceY);
 			this.previousX = this.currentX;
 			this.previousY = this.currentY;
 		}
