@@ -28,6 +28,9 @@ import android.graphics.Point;
  * via the two {@link android.graphics.Paint Paint} objects in the
  * {@link #CircleOverlay(Paint,Paint) constructor}. Anti-aliasing is always used to improve the
  * visual quality of the image.
+ * <p>
+ * <b>The implementation of this class is not complete. Its functionality and visible methods
+ * are likely to change in a future release.</b>
  */
 public class CircleOverlay extends Overlay {
 	private static final String THREAD_NAME = "CircleOverlay";
