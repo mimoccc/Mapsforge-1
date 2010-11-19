@@ -75,11 +75,13 @@ public class MapFileWriterTask implements Sink {
 	private boolean polygonClipping;
 	private String comment;
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
+	private int threadpoolSize;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
-			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping) {
+			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
+			int threadpoolSize) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException(
@@ -92,6 +94,10 @@ public class MapFileWriterTask implements Sink {
 		this.pixelFilter = pixelFilter;
 		this.polygonClipping = polygonClipping;
 		this.comment = comment;
+
+		if (threadpoolSize < 1 || threadpoolSize > 128)
+			throw new IllegalArgumentException("make sure that 1 <= threadpool size <= 128");
+		this.threadpoolSize = threadpoolSize;
 
 		Rect bbox = bboxString == null ? null : Rect.fromString(bboxString);
 		this.zoomIntervalConfiguration = zoomIntervalConfigurationString == null ? ZoomIntervalConfiguration
@@ -116,15 +122,6 @@ public class MapFileWriterTask implements Sink {
 		nfCounts.setGroupingUsed(true);
 		nfMegabyte.setMaximumFractionDigits(2);
 
-		logger.info("total processed nodes: " + nfCounts.format(amountOfNodesProcessed));
-		logger.info("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
-		logger.info("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
-		logger.info("total processed multipolygons: " + amountOfMultipolygons);
-		System.gc();
-		logger.info("estimated memory consumption: " + nfMegabyte.format(
-						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
-								.freeMemory()) / Math.pow(1024, 2))) + "MB");
-
 		logger.info("start writing file...");
 
 		try {
@@ -133,13 +130,25 @@ public class MapFileWriterTask implements Sink {
 				outFile.delete();
 			}
 			RandomAccessFile file = new RandomAccessFile(outFile, "rw");
-			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file);
+			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file, threadpoolSize);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
 			mfw.writeFile(System.currentTimeMillis(), 1, (short) 256, comment, debugInfo,
 					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "error while writing file", e);
 		}
+
+		logger.info("finished...");
+		logger.info("total processed nodes: " + nfCounts.format(amountOfNodesProcessed));
+		logger.info("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
+		logger.info("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
+		logger.info("total processed multipolygons: " + amountOfMultipolygons);
+		System.gc();
+		System.gc();
+		System.gc();
+		logger.info("estimated memory consumption: " + nfMegabyte.format(
+						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
+								.freeMemory()) / Math.pow(1024, 2))) + "MB");
 	}
 
 	@Override

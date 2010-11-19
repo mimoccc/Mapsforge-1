@@ -8,6 +8,8 @@ import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 class MapFileWriterFactory extends TaskManagerFactory {
 
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
+	private static final int DEFAULT_THREAD_POOL_SIZE = 2;
+
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
 	private static final String PARAM_ZOOMINTERVAL_CONFIG = "zoom-interval-conf";
@@ -17,6 +19,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
+	private static final String PARAM_THREAD_POOL_SIZE = "threadpool-size";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -31,11 +34,13 @@ class MapFileWriterFactory extends TaskManagerFactory {
 				true);
 		boolean pixelFilter = getBooleanArgument(taskConfig, PARAM_PIXEL_FILTER, true);
 		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
+		int threadpoolSize = getIntegerArgument(taskConfig, PARAM_THREAD_POOL_SIZE,
+				DEFAULT_THREAD_POOL_SIZE);
 		// String zoomIntervalConfiguration = getStringArgument(taskConfig,
 		// PARAM_ZOOMINTERVAL_CONFIG, null);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
-				comment,
-				zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping);
+				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
+				threadpoolSize);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 
