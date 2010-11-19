@@ -193,20 +193,27 @@
 		</jar>
 	</target>
 
-	<target name="mapsforge-mapfile-writer.jar create">
+	<target name="mapsforge-mapfile-writer-jar-create">
 		<mkdir dir="${mapsforge.dist}" />
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar compress="true"
 		     destfile="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"
 		     duplicate="preserve">
-			<fileset dir="${mapsforge.src}"
+			<fileset dir="${mapsforge.src}"					 
 			         includes="org/mapsforge/preprocessing/map/osmosis/"
-			         excludes="*.xml" />
+			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml"
+			          />
 			<fileset dir="${mapsforge.bin}"
 			         includes="org/mapsforge/preprocessing/map/osmosis/"
 			         excludes="*.xml" />
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/Rect.java,
+						org/mapsforge/core/GeoCoordinate.java,
+						org/mapsforge/core/MercatorProjection.java,
+						org/mapsforge/core/WGS84.java" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/Rect.class,
+						org/mapsforge/core/GeoCoordinate.class,
+						org/mapsforge/core/MercatorProjection.class,
+						org/mapsforge/core/WGS84.class" />
 			<fileset refid="info" />
 			<fileset dir="${mapsforge.src}/org/mapsforge/preprocessing/map/osmosis/"
 			         includes="*.xml" />
