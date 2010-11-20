@@ -60,7 +60,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 	}
 
 	/**
-	 * Sets the zoom level of the MapView without an animation.
+	 * Sets the zoom level of the MapView.
 	 * 
 	 * @param zoomLevel
 	 *            the new zoom level. This value will be limited by the maximum and minimum
@@ -68,7 +68,8 @@ public final class MapController implements android.view.View.OnKeyListener {
 	 * @return the new zoom level.
 	 */
 	public int setZoom(int zoomLevel) {
-		return this.mapView.setZoom((byte) zoomLevel);
+		this.mapView.zoom((byte) (zoomLevel - this.mapView.getZoomLevel()));
+		return this.mapView.getZoomLevel();
 	}
 
 	/**

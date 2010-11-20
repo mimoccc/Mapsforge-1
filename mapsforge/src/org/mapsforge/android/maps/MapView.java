@@ -1947,32 +1947,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the zoom level of the MapView without an animation.
-	 * 
-	 * @param zoomLevel
-	 *            the new zoom level. This value will be limited by the maximum and minimum
-	 *            possible zoom level.
-	 * @return the new zoom level.
-	 */
-	byte setZoom(byte zoomLevel) {
-		synchronized (this) {
-			this.zoomLevel = getValidZoomLevel(zoomLevel);
-		}
-		synchronized (this.overlays) {
-			for (Overlay overlay : this.overlays) {
-				overlay.requestRedraw();
-			}
-		}
-
-		// enable or disable the zoom buttons if necessary
-		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
-				.getMaxZoomLevel());
-		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
-		handleTiles(true);
-		return this.zoomLevel;
-	}
-
-	/**
 	 * Displays the zoom controls permanently.
 	 */
 	void showZoomControls() {
