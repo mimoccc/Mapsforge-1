@@ -113,7 +113,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		for (long id : innerWayIDs) {
 			TDWay current = getWay(id);
 			if (current == null)
-				return null;
+				continue;
 			res.add(current);
 		}
 
@@ -144,7 +144,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
 			// is poi seen in a zoom interval?
-			if (minZoomLevel >= zoomIntervalConfiguration.getMinMinZoom()) {
+			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
 				long tileCoordinateX = MercatorProjection.longitudeToTileX(
 						GeoCoordinate.intToDouble(node.getLongitude()),
 						zoomIntervalConfiguration.getBaseZoom(i));
@@ -172,7 +172,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			// is way seen in a zoom interval?
-			if (minZoomLevel >= zoomIntervalConfiguration.getMinMinZoom()) {
+			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
 				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(way,
 						zoomIntervalConfiguration.getBaseZoom(i));
 				for (TileCoordinate matchedTile : matchedTiles) {
@@ -202,8 +202,10 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 		// check if all inner ways exist
 		List<TDWay> innerWays = getInnerWaysOfMultipolygon(innerWayIDs);
-		if (innerWays == null)
+		if (innerWays == null || innerWays.size() < innerWayIDs.length) {
+			logger.finer("some inner ways are missing for outer way with id " + outerWayID);
 			return false;
+		}
 
 		for (TDWay innerWay : innerWays) {
 			// remove inner way from all tiles as it will be written

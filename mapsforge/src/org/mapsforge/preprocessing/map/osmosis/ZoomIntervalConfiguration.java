@@ -65,7 +65,7 @@ class ZoomIntervalConfiguration {
 
 	static ZoomIntervalConfiguration getStandardConfiguration() {
 		return new ZoomIntervalConfiguration(new byte[][] {
-				new byte[] { 8, 0, 11 },
+				new byte[] { 8, 6, 11 },
 				new byte[] { 14, 12, 17 }
 		});
 	}

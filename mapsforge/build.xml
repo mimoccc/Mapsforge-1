@@ -205,7 +205,7 @@
 			          />
 			<fileset dir="${mapsforge.bin}"
 			         includes="org/mapsforge/preprocessing/map/osmosis/"
-			         excludes="*.xml" />
+			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/Rect.java,
 						org/mapsforge/core/GeoCoordinate.java,
 						org/mapsforge/core/MercatorProjection.java,
