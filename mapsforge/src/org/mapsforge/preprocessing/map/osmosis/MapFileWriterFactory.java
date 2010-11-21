@@ -8,7 +8,8 @@ import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 class MapFileWriterFactory extends TaskManagerFactory {
 
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
-	private static final int DEFAULT_THREAD_POOL_SIZE = 2;
+	private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime()
+			.availableProcessors();
 
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
@@ -19,7 +20,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
-	private static final String PARAM_THREAD_POOL_SIZE = "threadpool-size";
+	private static final String PARAM_THREAD_POOL_SIZE = "thread-pool-size";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {

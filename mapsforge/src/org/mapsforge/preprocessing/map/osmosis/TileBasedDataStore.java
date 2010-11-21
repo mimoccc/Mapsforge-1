@@ -109,18 +109,76 @@ interface TileBasedDataStore {
 	 */
 	public TDWay getWay(long id);
 
+	/**
+	 * Retrieve the all the inner ways that are associated with an outer way that represents a
+	 * multipolygon.
+	 * 
+	 * @param outerWayID
+	 *            id of the outer way
+	 * @return all associated inner ways
+	 */
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID);
 
+	/**
+	 * Adds a POI to all associated tiles. Which tiles are associated is computed from the geo
+	 * position and the zoom level of first appearance of the POI.
+	 * 
+	 * @param poi
+	 *            POI to add
+	 * @return true if the POI has been successfully added
+	 */
 	public boolean addPOI(TDNode poi);
 
+	/**
+	 * Adds a multipolygon to the tile data store.
+	 * 
+	 * @param outerWayID
+	 *            id of the outer way
+	 * @param innerWayIDs
+	 *            ids of all inner ways
+	 * @return true if the multipolygon has been successfully added
+	 */
 	public boolean addMultipolygon(long outerWayID, long[] innerWayIDs);
 
+	/**
+	 * Retrieves all the data that is associated with a tile.
+	 * 
+	 * @param baseZoomIndex
+	 *            index of the base zoom, as defined in a ZoomIntervalConfiguration
+	 * @param tileCoordinateX
+	 *            x coordinate of the tile
+	 * @param tileCoordinateY
+	 *            y coordinate of the tile
+	 * @return tile, or null if the tile is outside the bounding box of this tile data store
+	 */
 	public TileData getTile(int baseZoomIndex, long tileCoordinateX, long tileCoordinateY);
 
+	/**
+	 * Retrieve the number of tiles on the x-axis of the tile coordinate system on a given base
+	 * zoom level.
+	 * 
+	 * @param zoomIntervalIndex
+	 *            index of the base zoom, as defined in a ZoomIntervalConfiguration
+	 * @return number of tiles
+	 */
 	public int numberOfHorizontalTiles(int zoomIntervalIndex);
 
+	/**
+	 * Retrieve the number of tiles on the y-axis of the tile coordinate system on a given base
+	 * zoom level.
+	 * 
+	 * @param zoomIntervalIndex
+	 *            index of the base zoom, as defined in a ZoomIntervalConfiguration
+	 * @return number of tiles
+	 */
 	public int numberOfVerticalTiles(int zoomIntervalIndex);
 
+	/**
+	 * Retrieve the total amount of tiles cumulated over all base zoom levels that is needed to
+	 * represent the underlying bounding box of this tile data store.
+	 * 
+	 * @return total amount of tiles
+	 */
 	long cumulatedNumberOfTiles();
 
 }
