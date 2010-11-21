@@ -17,9 +17,10 @@
 package org.mapsforge.android.maps;
 
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 class PointTextContainer {
-	android.graphics.Rect boundary;
+	Rect boundary;
 	final Paint paintBack;
 	final Paint paintFront;
 	SymbolContainer symbol;

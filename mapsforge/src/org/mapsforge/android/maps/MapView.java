@@ -392,7 +392,7 @@ public class MapView extends ViewGroup {
 	/**
 	 * Relative threshold value of a motion event to be interpreted as a move.
 	 */
-	private static final int DEFAULT_MAP_MOVE_DELTA = 10;
+	private static final int DEFAULT_MAP_MOVE_DELTA = 8;
 
 	/**
 	 * Default operation mode of a MapView if no other mode is specified.

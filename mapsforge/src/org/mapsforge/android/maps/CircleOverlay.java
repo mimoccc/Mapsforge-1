@@ -58,6 +58,23 @@ public class CircleOverlay extends Overlay {
 	}
 
 	/**
+	 * Sets the parameters of the circle.
+	 * 
+	 * @param center
+	 *            the geographical coordinates of the center point.
+	 * @param radius
+	 *            the radius of the circle.
+	 */
+	public synchronized void setCircleData(GeoPoint center, float radius) {
+		this.center = center;
+		if (this.center != null) {
+			// create the array for the cached center point position
+			this.cachedCenterPosition = new Point();
+		}
+		this.radius = radius;
+	}
+
+	/**
 	 * Sets the paint parameters which will be used to draw the circle.
 	 * 
 	 * @param fillPaint
@@ -74,23 +91,6 @@ public class CircleOverlay extends Overlay {
 		if (this.outlinePaint != null) {
 			this.outlinePaint.setAntiAlias(true);
 		}
-	}
-
-	/**
-	 * Sets the parameters of the circle.
-	 * 
-	 * @param center
-	 *            the geographical coordinates of the center point.
-	 * @param radius
-	 *            the radius of the circle.
-	 */
-	public synchronized void setCircleData(GeoPoint center, float radius) {
-		this.center = center;
-		if (this.center != null) {
-			// create the array for the cached center point position
-			this.cachedCenterPosition = new Point();
-		}
-		this.radius = radius;
 	}
 
 	/**
