@@ -27,6 +27,7 @@ import org.mapsforge.android.maps.RouteOverlay;
 import android.R;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 /**
@@ -76,9 +77,9 @@ public class OverlayMapViewer extends MapActivity {
 		RouteOverlay routeOverlay = new RouteOverlay(routePaint);
 		routeOverlay.setRouteData(new GeoPoint[] { geoPoint1, geoPoint2 });
 
-		// create the ItemizedOverlay and set the items
-		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(getResources()
-				.getDrawable(R.drawable.btn_star), this);
+		// create the ItemizedOverlay with a default marker and set the items
+		Drawable defaultMarker = getResources().getDrawable(R.drawable.btn_star);
+		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(defaultMarker, this);
 
 		OverlayItem item1 = new OverlayItem(geoPoint1, "Victory Column",
 				"a major tourist attraction");
