@@ -221,12 +221,9 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 						td.removeWay(innerWay);
 				}
 			}
-			// inner ways inherit the tags of their outer ways
-			if (outerWay.getTags() != null) {
-				if (innerWay.getTags() == null)
-					innerWay.setTags(outerWay.getTags());
-				else
-					innerWay.getTags().addAll(outerWay.getTags());
+			// remove tags from inner ways that are already set in outer way
+			if (outerWay.getTags() != null && innerWay.getTags() != null) {
+				innerWay.getTags().removeAll(outerWay.getTags());
 			}
 		}
 

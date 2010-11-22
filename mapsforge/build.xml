@@ -149,7 +149,7 @@ purpose.
 
 	<!-- Sign and verify the JAR file if the keystore exists -->
 	<target name="mapsforge-mapfile-writer-jar-sign"
-	        depends="check-for-keystore,mapsforge-map-jar-create"
+	        depends="check-for-keystore,mapsforge-mapfile-writer-jar-create"
 	        if="keystore.present">
 		<signjar jar="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"
 		         keystore="${mapsforge.keystore.location}"
