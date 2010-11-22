@@ -148,12 +148,12 @@ enum WayEnum {
 	TOURISM$ZOO(WayType.UNCLASSIFIED, (byte) 12),
 	TUNNEL$NO(WayType.UNCLASSIFIED, (byte) 127),
 	TUNNEL$YES(WayType.UNCLASSIFIED, (byte) 127),
-	WATERWAY$CANAL(WayType.WATERWAY, (byte) 12),
+	WATERWAY$CANAL(WayType.WATERWAY, (byte) 9),
 	WATERWAY$DAM(WayType.WATERWAY, (byte) 12),
 	WATERWAY$DRAIN(WayType.WATERWAY, (byte) 12),
-	WATERWAY$RIVER(WayType.WATERWAY, (byte) 12),
-	WATERWAY$RIVERBANK(WayType.WATERWAY, (byte) 12),
-	WATERWAY$STREAM(WayType.WATERWAY, (byte) 12);
+	WATERWAY$RIVER(WayType.WATERWAY, (byte) 8),
+	WATERWAY$RIVERBANK(WayType.WATERWAY, (byte) 8),
+	WATERWAY$STREAM(WayType.WATERWAY, (byte) 6);
 
 	private final byte zoomlevel;
 	private final WayType wayType;
