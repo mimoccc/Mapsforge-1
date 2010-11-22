@@ -20,6 +20,7 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -207,23 +208,32 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			return false;
 		}
 
-		for (TDWay innerWay : innerWays) {
-			// remove inner way from all tiles as it will be written
-			// together with the outer way
-			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-				Set<TileCoordinate> associatedTiles = GeoUtils.mapWayToTiles(innerWay,
-						zoomIntervalConfiguration.getBaseZoom(i));
-				if (associatedTiles == null)
-					continue;
-				for (TileCoordinate associatedTile : associatedTiles) {
-					TileData td = getTile(i, associatedTile.getX(), associatedTile.getY());
-					if (td != null)
-						td.removeWay(innerWay);
-				}
-			}
-			// remove tags from inner ways that are already set in outer way
+		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
+				.hasNext();) {
+			TDWay innerWay = innerWaysIterator.next();
+			// remove all tags from the inner way that are already present in the outer way
 			if (outerWay.getTags() != null && innerWay.getTags() != null) {
 				innerWay.getTags().removeAll(outerWay.getTags());
+			}
+			// only remove from normal ways, if the inner way has no tags other than the
+			// outer way
+			if (innerWay.getTags() == null || innerWay.getTags().size() == 0) {
+				for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
+					Set<TileCoordinate> associatedTiles = GeoUtils.mapWayToTiles(innerWay,
+							zoomIntervalConfiguration.getBaseZoom(i));
+					if (associatedTiles == null)
+						continue;
+					for (TileCoordinate associatedTile : associatedTiles) {
+						TileData td = getTile(i, associatedTile.getX(), associatedTile.getY());
+						if (td != null)
+							td.removeWay(innerWay);
+					}
+				}
+			}
+			// the inner way has tags other than the outer way --> must be rendered as normal
+			// way, remove it from list of inner ways
+			else {
+				innerWaysIterator.remove();
 			}
 		}
 

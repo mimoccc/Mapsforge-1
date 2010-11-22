@@ -79,7 +79,7 @@ class WayTagEnumCreator {
 			} else {
 				splitted = currentLine.split(";");
 				// write the line of java code with the corresponding id
-				tag2enum.append(splitted[0].replace('=', '_').toUpperCase(Locale.ENGLISH));
+				tag2enum.append(splitted[0].replace('=', '$').toUpperCase(Locale.ENGLISH));
 				tag2enum.append("(").append("WayType.");
 				tag2enum.append(wayType(splitted[0])).append(",");
 				tag2enum.append("(byte)").append(splitted[1]);
