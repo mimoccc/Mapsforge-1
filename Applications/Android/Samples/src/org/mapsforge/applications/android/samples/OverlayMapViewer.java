@@ -62,7 +62,7 @@ public class OverlayMapViewer extends MapActivity {
 
 		// create the CircleOverlay and set the parameters
 		CircleOverlay circleOverlay = new CircleOverlay(circleFillPaint, circleOutlinePaint);
-		circleOverlay.setCircleData(geoPoint3, 100);
+		circleOverlay.setCircleData(geoPoint3, 75);
 
 		// create the paint object for the RouteOverlay and set all parameters
 		Paint routePaint = new Paint();
