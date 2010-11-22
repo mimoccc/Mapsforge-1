@@ -97,7 +97,7 @@ class TagIDsNodes {
 		this.amenity$post_office = nodeTags.get("amenity=post_office");
 		this.amenity$pub = nodeTags.get("amenity=pub");
 		this.amenity$recycling = nodeTags.get("amenity=recycling");
-		this.amenity$restaurant = nodeTags.get("amenity$restaurant");
+		this.amenity$restaurant = nodeTags.get("amenity=restaurant");
 		this.amenity$school = nodeTags.get("amenity=school");
 		this.amenity$shelter = nodeTags.get("amenity=shelter");
 		this.amenity$telephone = nodeTags.get("amenity=telephone");
