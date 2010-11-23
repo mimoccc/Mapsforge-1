@@ -325,6 +325,7 @@ public class GeoUtils {
 				geoFac.createLinearRing(toJTSCoordinates(way.getWayNodes())), null);
 	}
 
+	// TODO now implemented in TileCoordinate.translateToZoomLevel()
 	private static List<TileCoordinate> computeSubtiles(final TileCoordinate tile,
 			final int zoomLevelDistance) {
 		if (zoomLevelDistance < 0)
@@ -333,11 +334,10 @@ public class GeoUtils {
 		int factor = (int) Math.pow(2, zoomLevelDistance);
 		List<TileCoordinate> subtiles = new ArrayList<TileCoordinate>((int) Math.pow(4,
 				zoomLevelDistance));
-		int rowLength = (int) Math.pow(4, zoomLevelDistance - 1);
 		int tileUpperLeftX = tile.getX() * factor;
 		int tileUpperLeftY = tile.getY() * factor;
-		for (int i = 0; i < rowLength; i++) {
-			for (int j = 0; j < rowLength; j++) {
+		for (int i = 0; i < factor; i++) {
+			for (int j = 0; j < factor; j++) {
 				subtiles.add(new TileCoordinate(tileUpperLeftX + j, tileUpperLeftY + i,
 						(byte) (tile.getZoomlevel() + zoomLevelDistance)));
 			}
