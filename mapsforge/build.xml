@@ -33,18 +33,30 @@ purpose.
 	</path>
 
 
-	<!-- Delete temporary folders -->
-	<target name="clean">
-		<delete dir="${mapsforge.doc}" />
-		<delete dir="${mapsforge.dist}" />
-	</target>
-
-
 	<!-- Check if the keystore exists -->
 	<target name="check-for-keystore">
 		<available file="${mapsforge.keystore.location}"
 		           type="file"
 		           property="keystore.present" />
+	</target>
+
+
+	<!-- Delete temporary folders -->
+	<target name="clean">
+		<delete dir="${mapsforge.doc}" />
+		<delete dir="${mapsforge.dist}" />
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.doc}" />
+		</antcall>
+	</target>
+
+
+	<!-- Refresh the given ressource if Ant runs in the same JRE as the workspace -->
+	<target name="eclipse-refresh" if="eclipse.running">
+		<eclipse.refreshLocal resource="${ressource}" depth="infinite" />
 	</target>
 
 
@@ -61,6 +73,9 @@ purpose.
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/maps/" />
 			<fileset refid="info" />
 		</jar>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 
 
@@ -78,6 +93,9 @@ purpose.
 			<arg value="-verify" />
 			<arg value="${mapsforge.dist}/mapsforge-map-${mapsforge.version}.jar" />
 		</exec>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 
 
@@ -89,9 +107,12 @@ purpose.
 		<copy overwrite="true"
 		      file="${mapsforge.dist}/mapsforge-map-${mapsforge.version}.jar"
 		      todir="${mapsforge.samples.lib.dir}" />
-		<!-- Refresh the modified folders to trigger an automatic rebuild -->
-		<eclipse.refreshLocal resource="AdvancedMapViewer/lib" depth="infinite" />
-		<eclipse.refreshLocal resource="Samples/lib" depth="infinite" />
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="AdvancedMapViewer/lib" />
+		</antcall>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="Samples/lib" />
+		</antcall>
 	</target>
 
 
@@ -112,6 +133,9 @@ purpose.
 			      offline="true"
 			      packagelistloc="${basedir}/../../Android/android-sdk-linux_x86/docs/reference" />
 		</javadoc>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.doc}" />
+		</antcall>
 	</target>
 
 
@@ -144,6 +168,9 @@ purpose.
 			         includes="*.xml" />
 			<fileset refid="info" />
 		</jar>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 
 
@@ -161,6 +188,9 @@ purpose.
 			<arg value="-verify" />
 			<arg value="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar" />
 		</exec>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 
 
@@ -216,6 +246,9 @@ purpose.
 				           value="org/mapsforge/preprocessing/graph/osm2rg/RgExtractor" />
 			</manifest>
 		</jar>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 
 
@@ -224,7 +257,9 @@ purpose.
 		<copy overwrite="true"
 		      file="${mapsforge.dist}/mapsforge-routing-${mapsforge.version}.jar"
 		      todir="${mapsforge.routingservlet.lib.dir}" />
-		<eclipse.refreshLocal resource="HHRoutingWebservice" depth="infinite" />
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="HHRoutingWebservice" />
+		</antcall>
 	</target>
 
 
@@ -267,5 +302,8 @@ purpose.
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
 			<fileset refid="info" />
 		</jar>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
 	</target>
 </project>
