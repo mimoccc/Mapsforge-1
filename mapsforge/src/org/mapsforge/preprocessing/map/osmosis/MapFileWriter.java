@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -95,6 +96,8 @@ class MapFileWriter {
 	private static final byte MAX_ZOOMLEVEL_PIXEL_FILTER = 11;
 
 	private static final byte MIN_ZOOMLEVEL_POLYGON_CLIPPING = 12;
+
+	private static final Charset UTF8_CHARSET = Charset.forName("utf8");
 
 	// data
 	private TileBasedDataStore dataStore;
@@ -172,7 +175,7 @@ class MapFileWriter {
 	}
 
 	private void writeUTF8(String string, MappedByteBuffer buffer) {
-		buffer.putShort((short) string.getBytes().length);
+		buffer.putShort((short) string.getBytes(UTF8_CHARSET).length);
 		buffer.put(string.getBytes());
 	}
 

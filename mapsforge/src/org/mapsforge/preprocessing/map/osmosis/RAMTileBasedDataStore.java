@@ -20,6 +20,8 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -109,7 +111,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	private List<TDWay> getInnerWaysOfMultipolygon(long[] innerWayIDs) {
 		if (innerWayIDs == null)
-			return null;
+			return Collections.emptyList();
 		List<TDWay> res = new ArrayList<TileData.TDWay>();
 		for (long id : innerWayIDs) {
 			TDWay current = getWay(id);
@@ -188,7 +190,8 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
-	public boolean addMultipolygon(long outerWayID, long[] innerWayIDs) {
+	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
+			EnumSet<WayEnum> relationTags) {
 		TDWay outerWay = getWay(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
@@ -203,10 +206,17 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 		// check if all inner ways exist
 		List<TDWay> innerWays = getInnerWaysOfMultipolygon(innerWayIDs);
-		if (innerWays == null || innerWays.size() < innerWayIDs.length) {
+		if (innerWays.size() < innerWayIDs.length) {
 			logger.finer("some inner ways are missing for outer way with id " + outerWayID);
 			return false;
 		}
+
+		// add relation tags to outer way
+		if (outerWay.getTags() == null) {
+			if (relationTags.size() > 0)
+				outerWay.setTags(relationTags);
+		} else
+			outerWay.getTags().addAll(relationTags);
 
 		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
 				.hasNext();) {
@@ -237,16 +247,19 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 		}
 
-		TLongArrayList innerWayIDList = multipolygons.get(outerWayID);
-		if (innerWayIDList == null) {
-			innerWayIDList = new TLongArrayList();
+		// only change way type to multipolygon if inner ways are existent
+		if (innerWays.size() > 0) {
+			TLongArrayList innerWayIDList = multipolygons.get(outerWayID);
+			if (innerWayIDList == null) {
+				innerWayIDList = new TLongArrayList();
+			}
+			innerWayIDList.add(innerWayIDs);
+			multipolygons.put(outerWayID, innerWayIDList);
+
+			// TODO document this side effect
+
+			outerWay.setWaytype((short) 3);
 		}
-		innerWayIDList.add(innerWayIDs);
-		multipolygons.put(outerWayID, innerWayIDList);
-
-		// TODO document this side effect
-
-		outerWay.setWaytype((short) 3);
 
 		return true;
 	}

@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.mapsforge.core.Rect;
@@ -130,15 +131,18 @@ interface TileBasedDataStore {
 	public boolean addPOI(TDNode poi);
 
 	/**
-	 * Adds a multipolygon to the tile data store.
+	 * Adds a multipolygon consisting of ways to the tile data store.
 	 * 
 	 * @param outerWayID
 	 *            id of the outer way
 	 * @param innerWayIDs
 	 *            ids of all inner ways
+	 * @param relationTags
+	 *            all supported tags that are attached to the relation
 	 * @return true if the multipolygon has been successfully added
 	 */
-	public boolean addMultipolygon(long outerWayID, long[] innerWayIDs);
+	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
+			EnumSet<WayEnum> relationTags);
 
 	/**
 	 * Retrieves all the data that is associated with a tile.

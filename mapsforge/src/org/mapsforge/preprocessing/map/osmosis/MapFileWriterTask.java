@@ -309,6 +309,7 @@ public class MapFileWriterTask implements Sink {
 					int i = 0;
 					boolean validWay = true;
 					for (WayNode waynode : currentWay.getWayNodes()) {
+						// TODO adjust interface to support a method getWayNodes()
 						waynodes[i] = tileBasedGeoObjectStore.getNode(waynode.getNodeId());
 						if (waynodes[i] == null) {
 							validWay = false;
@@ -354,6 +355,13 @@ public class MapFileWriterTask implements Sink {
 				Relation currentRelation = (Relation) entity;
 
 				if (isWayMultiPolygon(currentRelation)) {
+					EnumSet<WayEnum> relationTags = EnumSet.noneOf(WayEnum.class);
+					for (Tag tag : currentRelation.getTags()) {
+						WayEnum wayTag = WayEnum
+								.fromString(tag.getKey() + "=" + tag.getValue());
+						if (wayTag != null)
+							relationTags.add(wayTag);
+					}
 
 					List<Long> outerMemberIDs = new ArrayList<Long>();
 					TLongArrayList innerMemberIDs = new TLongArrayList();
@@ -368,8 +376,8 @@ public class MapFileWriterTask implements Sink {
 					if (innerMemberIDs.size() > 0) {
 						long[] innerMemberIDsArray = innerMemberIDs.toArray();
 						for (Long outerID : outerMemberIDs) {
-							if (tileBasedGeoObjectStore.addMultipolygon(outerID,
-									innerMemberIDsArray))
+							if (tileBasedGeoObjectStore.addWayMultipolygon(outerID,
+									innerMemberIDsArray, relationTags))
 								amountOfMultipolygons++;
 						}
 					}
