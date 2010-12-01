@@ -136,7 +136,7 @@ public class MapView extends ViewGroup {
 				this.previousPositionY = event.getY(this.pointerIndex);
 
 				// add the movement to the transformation matrices
-				MapView.this.matrixPostTranslate(this.moveX, this.moveY);
+				matrixPostTranslate(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
 						overlay.matrixPostTranslate(this.moveX, this.moveY);
@@ -144,7 +144,7 @@ public class MapView extends ViewGroup {
 				}
 
 				// move the map and the Overlays
-				MapView.this.moveMap(this.moveX, this.moveY);
+				moveMap(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
 						overlay.requestRedraw();
@@ -154,21 +154,49 @@ public class MapView extends ViewGroup {
 				handleTiles(true);
 				return true;
 			} else if (this.action == MotionEvent.ACTION_UP) {
+				this.pointerIndex = event.findPointerIndex(this.activePointerId);
+				this.activePointerId = INVALID_POINTER_ID;
 				hideZoomControlsDelayed();
 				if (this.mapMoved) {
+					this.previousEventTap = false;
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
 							overlay.requestRedraw();
 						}
 					}
 				} else {
+					if (this.previousEventTap) {
+						// calculate the distance to the previous tap position
+						this.tapDiffX = Math.abs(event.getX(this.pointerIndex)
+								- this.previousTapX);
+						this.tapDiffY = Math.abs(event.getY(this.pointerIndex)
+								- this.previousTapY);
+						this.tapDiffTime = event.getEventTime() - this.previousTapTime;
+
+						// check if a double-tap event occurred
+						if (this.tapDiffX < this.doubleTapDeltaPosition
+								&& this.tapDiffY < this.doubleTapDeltaPosition
+								&& this.tapDiffTime < this.doubleTapDeltaTime) {
+							// double-tap event
+							this.previousEventTap = false;
+							zoom((byte) 1);
+							return true;
+						}
+					} else {
+						this.previousEventTap = true;
+					}
+
+					// store the position and the time of this tap event
+					this.previousTapX = event.getX(this.pointerIndex);
+					this.previousTapY = event.getY(this.pointerIndex);
+					this.previousTapTime = event.getEventTime();
+
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
 							overlay.onTouchEvent(event, MapView.this);
 						}
 					}
 				}
-				this.activePointerId = INVALID_POINTER_ID;
 				return true;
 			} else if (this.action == MotionEvent.ACTION_CANCEL) {
 				hideZoomControlsDelayed();
@@ -213,8 +241,7 @@ public class MapView extends ViewGroup {
 		public boolean onScale(ScaleGestureDetector detector) {
 			this.scaleFactor = detector.getScaleFactor();
 			this.scaleFactorApplied *= this.scaleFactor;
-			MapView.this.matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX,
-					this.focusY);
+			matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX, this.focusY);
 			synchronized (MapView.this.overlays) {
 				for (Overlay overlay : MapView.this.overlays) {
 					overlay.matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX,
@@ -292,7 +319,7 @@ public class MapView extends ViewGroup {
 				this.previousPositionY = event.getY();
 
 				// add the movement to the transformation matrices
-				MapView.this.matrixPostTranslate(this.moveX, this.moveY);
+				matrixPostTranslate(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
 						overlay.matrixPostTranslate(this.moveX, this.moveY);
@@ -300,7 +327,7 @@ public class MapView extends ViewGroup {
 				}
 
 				// move the map and the Overlays
-				MapView.this.moveMap(this.moveX, this.moveY);
+				moveMap(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
 						overlay.requestRedraw();
@@ -312,12 +339,37 @@ public class MapView extends ViewGroup {
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				hideZoomControlsDelayed();
 				if (this.mapMoved) {
+					this.previousEventTap = false;
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
 							overlay.requestRedraw();
 						}
 					}
 				} else {
+					if (this.previousEventTap) {
+						// calculate the distance to the previous tap position
+						this.tapDiffX = Math.abs(event.getX() - this.previousTapX);
+						this.tapDiffY = Math.abs(event.getY() - this.previousTapY);
+						this.tapDiffTime = event.getEventTime() - this.previousTapTime;
+
+						// check if a double-tap event occurred
+						if (this.tapDiffX < this.doubleTapDeltaPosition
+								&& this.tapDiffY < this.doubleTapDeltaPosition
+								&& this.tapDiffTime < this.doubleTapDeltaTime) {
+							// double-tap event
+							this.previousEventTap = false;
+							zoom((byte) 1);
+							return true;
+						}
+					} else {
+						this.previousEventTap = true;
+					}
+
+					// store the position and the time of this tap event
+					this.previousTapX = event.getX();
+					this.previousTapY = event.getY();
+					this.previousTapTime = event.getEventTime();
+
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
 							overlay.onTouchEvent(event, MapView.this);
@@ -340,6 +392,16 @@ public class MapView extends ViewGroup {
 	 */
 	abstract class TouchEventHandler {
 		/**
+		 * Absolute threshold value for a double-tap event.
+		 */
+		final float doubleTapDeltaPosition;
+
+		/**
+		 * Maximum time difference in milliseconds for a double-tap event.
+		 */
+		final int doubleTapDeltaTime;
+
+		/**
 		 * Flag to indicate if the map has been moved.
 		 */
 		boolean mapMoved;
@@ -360,6 +422,11 @@ public class MapView extends ViewGroup {
 		float moveY;
 
 		/**
+		 * Flag to store if the previous event was a touch event.
+		 */
+		boolean previousEventTap;
+
+		/**
 		 * Stores the x coordinate of the previous touch event.
 		 */
 		float previousPositionX;
@@ -370,6 +437,36 @@ public class MapView extends ViewGroup {
 		float previousPositionY;
 
 		/**
+		 * Stores the X position of the previous tap event.
+		 */
+		float previousTapX;
+
+		/**
+		 * Stores the Y position of the previous tap event.
+		 */
+		float previousTapY;
+
+		/**
+		 * Stores the time of the previous tap event.
+		 */
+		long previousTapTime;
+
+		/**
+		 * Stores the time difference between the previous and the current tap event.
+		 */
+		long tapDiffTime;
+
+		/**
+		 * Stores the X difference between the previous and the current tap event.
+		 */
+		float tapDiffX;
+
+		/**
+		 * Stores the Y difference between the previous and the current tap event.
+		 */
+		float tapDiffY;
+
+		/**
 		 * Default constructor which must be called by all subclasses.
 		 * 
 		 * @param mapMoveDelta
@@ -377,6 +474,8 @@ public class MapView extends ViewGroup {
 		 */
 		TouchEventHandler(float mapMoveDelta) {
 			this.mapMoveDelta = mapMoveDelta;
+			this.doubleTapDeltaPosition = 3 * mapMoveDelta;
+			this.doubleTapDeltaTime = 300;
 		}
 
 		/**
