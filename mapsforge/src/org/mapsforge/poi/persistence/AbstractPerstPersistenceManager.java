@@ -21,20 +21,45 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.garret.perst.FieldIndex;
+import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
 import org.garret.perst.Storage;
 import org.garret.perst.StorageFactory;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.poi.exchange.IPoiReader;
 
 abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> implements
 		IPersistenceManager {
 
-	private static final int CATEGORY_CLUSTER_SPREAD_FACTOR = 1000000;
+	static class PoiNeighborIterator implements Iterator<PointOfInterest> {
+
+		private IterableIterator<PerstPoi> iterator;
+
+		public PoiNeighborIterator(IterableIterator<PerstPoi> iterator) {
+			super();
+			this.iterator = iterator;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return iterator.hasNext();
+		}
+
+		@Override
+		public PointOfInterest next() {
+			return iterator.next();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	protected static final int CATEGORY_CLUSTER_SPREAD_FACTOR = 1000000;
 	protected static final double SPACE_BETWEEN_LATS_IN_KM = 111.32;
-	protected static final long PAGE_POOL_SIZE = 2 * 1024 * 1024;
+	protected static final long PAGE_POOL_SIZE = 3 * 1024 * 1024;
 	protected static final int MAX_POIS = 20000;
 
 	protected T root;
@@ -49,6 +74,7 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 
 	protected void open() {
 		db = StorageFactory.getInstance().createStorage();
+		// db.setProperty("perst.string.encoding", "UTF-8");
 		db.open(this.fileName, PAGE_POOL_SIZE);
 
 		/* db.getRoot() returns object. Must be cast to root object T */
@@ -145,12 +171,6 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 	}
 
 	@Override
-	public void reopen() {
-		close();
-		open();
-	}
-
-	@Override
 	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int radius,
 			String category, int limit) {
 		Collection<PointOfInterest> result = find(computeBoundingBox(point, radius),
@@ -160,13 +180,13 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 		ArrayList<PointOfInterest> filtered = new ArrayList<PointOfInterest>();
 
 		// delete pois from result that are in the bounding box but not within the radius;
-		for (PointOfInterest poi : result) {
-			if (point.sphericalDistance(poi.getGeoCoordinate()) <= radius) {
-				filtered.add(poi);
-			}
-		}
+		// for (PointOfInterest poi : result) {
+		// if (point.sphericalDistance(poi.getGeoCoordinate()) <= radius) {
+		// filtered.add(poi);
+		// }
+		// }
 
-		return filtered;
+		return result;
 	}
 
 	@Override
@@ -197,14 +217,6 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 	}
 
 	@Override
-	public void insertPointsOfInterest(IPoiReader poiReader) {
-		Collection<PointOfInterest> pois = poiReader.read();
-		for (PointOfInterest poi : pois) {
-			insertPointOfInterest(poi);
-		}
-	}
-
-	@Override
 	public Collection<PoiCategory> descendants(String category) {
 		return categoryManager.descendants(category);
 	}
@@ -212,7 +224,8 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 	private ClusterEntry generateClusterEntry(PerstPoi poi) {
 		int z = categoryManager.getOrderNumber(poi.category.title)
 				* CATEGORY_CLUSTER_SPREAD_FACTOR;
-		return new ClusterEntry(poi, Hilbert.computeValue3D(poi.longitude, poi.latitude, z));
+		return new ClusterEntry(poi.id, Hilbert.computeValue3D(poi.longitude,
+				poi.latitude, z));
 	}
 
 	abstract protected Collection<PointOfInterest> find(Rect rect, String category, int limit);

@@ -27,7 +27,6 @@ import org.garret.perst.Assert;
 import org.garret.perst.Link;
 import org.garret.perst.Persistent;
 import org.garret.perst.Storage;
-import org.mapsforge.poi.PerstQueryTracer;
 
 abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Persistent
 		implements RtreeIndexPage<T, S> {
@@ -115,8 +114,8 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	private static <E, R extends SpatialShape<R>> boolean isOverflowing(
 			ArrayList<AbstractHilbertRtreePage<E, R>> pages, int capacity) {
-		for (int i = 0; i < pages.size(); i++) {
-			if (pages.get(i).n < capacity) {
+		for (AbstractHilbertRtreePage<E, R> page : pages) {
+			if (page.n < capacity) {
 				return false;
 			}
 		}
@@ -192,16 +191,16 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		}
 
 		n = objs.length;
-		largestHilbertValue = shapes[n - 1].linearOderValue();
 		isLeaf = leaf;
+		findNewLHV();
 	}
 
 	AbstractHilbertRtreePage(Storage storage, Object obj, S shape, boolean isLeaf) {
 		initialize(storage);
+		this.isLeaf = isLeaf;
 		setBranch(0, shape, obj);
 		n = 1;
-		largestHilbertValue = shape.linearOderValue();
-		this.isLeaf = isLeaf;
+		findNewLHV();
 	}
 
 	AbstractHilbertRtreePage(Storage storage, boolean leaf) {
@@ -241,8 +240,6 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	@Override
 	public void find(S shape, ArrayList<T> result, int level) {
-		PerstQueryTracer.getInstance().incrementNodes();
-
 		if (level - 1 != 0) { /* this is an internal node in the tree */
 			for (int i = 0; i < n; i++) {
 				if (shape.intersects(getShape(i))) {
@@ -268,9 +265,8 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	private AbstractHilbertRtreePage<T, S> chooseLeaf(int level, long hilbert) {
 		if (level - 1 != 0) { /* this is an internal node in the tree */
-			int pos = findPositionInBranch(hilbert);
-			return this.<AbstractHilbertRtreePage<T, S>> getBranch(pos).chooseLeaf(level - 1,
-					hilbert);
+			AbstractHilbertRtreePage<T, S> next = findNextNodeForLinearOrderValue(hilbert);
+			return next.chooseLeaf(level - 1, hilbert);
 		}
 		return this;
 	}
@@ -314,14 +310,10 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	private AbstractHilbertRtreePage<T, S> put(Storage storage, Object item, S shape) {
 		if (n < capacity()) {
 			addBranch(shape, item);
-			if (parent != null) {
-				updateParent();
-			}
+			updateParent();
 			return null;
 		}
-		long hilbert = isLeaf ? shape.linearOderValue()
-				: ((AbstractHilbertRtreePage<T, S>) item).largestHilbertValue;
-		return distributeOnPut(storage, new Entry<S>(item, shape, hilbert));
+		return distributeOnPut(storage, new Entry<S>(item, shape, shape.linearOderValue()));
 	}
 
 	private AbstractHilbertRtreePage<T, S> distributeOnPut(Storage storage, Entry<S> newEntry) {
@@ -358,17 +350,9 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	ArrayList<Entry<S>> getEntryList() {
 		ArrayList<Entry<S>> result = new ArrayList<Entry<S>>(n);
-		if (isLeaf) {
-			for (int i = 0; i < n; i++) {
-				result.add(new Entry<S>(branch.get(i), getShape(i), getShape(i)
-						.linearOderValue()));
-			}
-		} else {
-			AbstractHilbertRtreePage<T, S> page = null;
-			for (int i = 0; i < n; i++) {
-				page = this.<AbstractHilbertRtreePage<T, S>> getBranch(i);
-				result.add(new Entry<S>(page, getShape(i), page.largestHilbertValue));
-			}
+		for (int i = 0; i < n; i++) {
+			result.add(new Entry<S>(branch.get(i), getShape(i), getShape(i)
+					.linearOderValue()));
 		}
 
 		return result;
@@ -376,17 +360,9 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 	ArrayList<Entry<S>> getEntryListRaw() {
 		ArrayList<Entry<S>> result = new ArrayList<Entry<S>>(n);
-		if (isLeaf) {
-			for (int i = 0; i < n; i++) {
-				result.add(new Entry<S>(branch.getRaw(i), getShape(i), getShape(i)
-						.linearOderValue()));
-			}
-		} else {
-			AbstractHilbertRtreePage<T, S> page = null;
-			for (int i = 0; i < n; i++) {
-				page = this.<AbstractHilbertRtreePage<T, S>> getBranch(i);
-				result.add(new Entry<S>(page, getShape(i), page.largestHilbertValue));
-			}
+		for (int i = 0; i < n; i++) {
+			result.add(new Entry<S>(branch.getRaw(i), getShape(i), getShape(i)
+					.linearOderValue()));
 		}
 
 		return result;
@@ -409,12 +385,15 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 
 		for (AbstractHilbertRtreePage<T, S> page : pages) {
 			page.parent.removeBranch(page.parent.branch.indexOfObject(page));
+		}
+		for (AbstractHilbertRtreePage<T, S> page : pages) {
 			page.parent.addBranch(page.getMinimalBoundingShape(), page);
 		}
+
+		parent.updateParent();
 		if (newNode != null) {
 			return parent.put(storage, newNode, newNode.getMinimalBoundingShape());
 		}
-		parent.updateParent();
 		return null;
 	}
 
@@ -422,11 +401,13 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		if (parent != null) {
 			parent.removeBranch(parent.branch.indexOfObject(this));
 			parent.addBranch(getMinimalBoundingShape(), this);
+			parent.updateParent();
 		}
 	}
 
 	private void replaceChildren(List<Entry<S>> children) {
 		Assert.that(children.size() <= capacity());
+		Collections.sort(children);
 		Entry<S> entry = null;
 		branch.clear();
 		branch.setSize(capacity());
@@ -439,7 +420,7 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 			instantiateShape(i);
 		}
 		n = children.size();
-		largestHilbertValue = getShape(n - 1).linearOderValue();
+		findNewLHV();
 
 		modify();
 	}
@@ -473,6 +454,8 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 			return new ArrayList<AbstractHilbertRtreePage<T, S>>();
 		}
 
+		parent.modify();
+
 		int index = parent.branch.indexOfObject(this);
 		int offset = 0;
 		int max = 0;
@@ -503,24 +486,30 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 	}
 
 	private void addBranch(S shape, Object obj) {
+		S[] shapes = getShapes();
 		int pos = 0;
-		long hilbert = isLeaf ? shape.linearOderValue()
-				: ((AbstractHilbertRtreePage<T, S>) obj).largestHilbertValue;
+		long hilbert = shape.linearOderValue();
 		// find position in child list
 		pos = findPositionInBranch(hilbert);
+
 		// insert into child list
 		branch.add(pos, obj);
 		branch.setSize(capacity());
-		S[] shapes = getShapes();
+
 		System.arraycopy(shapes, pos, shapes, pos + 1, n - pos);
 		shapes[pos] = shape;
-		// set parent if page
-		if (obj instanceof AbstractHilbertRtreePage<?, ?>) {
-			this.<AbstractHilbertRtreePage<T, S>> getBranch(pos).parent = this;
+		if (isLeaf) {
+			if (hilbert > largestHilbertValue) {
+				largestHilbertValue = hilbert;
+			}
+		} else {
+			AbstractHilbertRtreePage<T, S> page = (AbstractHilbertRtreePage<T, S>) obj;
+			page.parent = this;
+			if (page.largestHilbertValue > largestHilbertValue) {
+				largestHilbertValue = page.largestHilbertValue;
+			}
 		}
-		if (pos == n - 1) {
-			largestHilbertValue = shapes[pos].linearOderValue();
-		}
+
 		n += 1;
 	}
 
@@ -537,35 +526,17 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		int upperBoundary = n - 1;
 		int lowerBoundary = 0;
 
-		if (isLeaf) {
-			S[] shapes = getShapes();
+		S[] shapes = getShapes();
 
-			while (true) {
-				if (shapes[i].linearOderValue() < hilbert) {
-					if (i == upperBoundary) {
-						return upperBoundary + 1;
-					}
-					lowerBoundary = i;
-					i += Math.max((upperBoundary - i) / 2, 1);
-				} else {
-					if (i == 0 || shapes[i - 1].linearOderValue() < hilbert) {
-						return i;
-					}
-					upperBoundary = i;
-					i -= Math.max((i - lowerBoundary) / 2, 1);
-				}
-			}
-		}
 		while (true) {
-			if (this.<AbstractHilbertRtreePage<T, S>> getBranch(i).largestHilbertValue < hilbert) {
+			if (shapes[i].linearOderValue() < hilbert) {
 				if (i == upperBoundary) {
-					return upperBoundary;
+					return upperBoundary + 1;
 				}
 				lowerBoundary = i;
 				i += Math.max((upperBoundary - i) / 2, 1);
 			} else {
-				if (i == 0
-						|| this.<AbstractHilbertRtreePage<T, S>> getBranch(i - 1).largestHilbertValue < hilbert) {
+				if (i == 0 || shapes[i - 1].linearOderValue() < hilbert) {
 					return i;
 				}
 				upperBoundary = i;
@@ -574,25 +545,78 @@ abstract class AbstractHilbertRtreePage<T, S extends SpatialShape<S>> extends Pe
 		}
 	}
 
-	private void removeBranch(int i) {
-		if (i < 0)
+	private AbstractHilbertRtreePage<T, S> findNextNodeForLinearOrderValue(long hilbert) {
+		long minLHV = Long.MAX_VALUE;
+		long maxLHV = Long.MIN_VALUE;
+		AbstractHilbertRtreePage<T, S> page = null;
+		AbstractHilbertRtreePage<T, S> result = null;
+		AbstractHilbertRtreePage<T, S> max = null;
+		for (int i = 0; i < n; i++) {
+			page = getBranch(i);
+			if (page.largestHilbertValue > maxLHV) {
+				max = page;
+			}
+			if (page.largestHilbertValue > hilbert && page.largestHilbertValue < minLHV) {
+				result = page;
+				minLHV = page.largestHilbertValue;
+			}
+		}
+		return (result == null ? max : result);
+	}
+
+	private void removeBranch(int index) {
+		if (index < 0)
 			return;
-		n -= 1;
+
 		S[] shapes = getShapes();
-		System.arraycopy(shapes, i + 1, shapes, i, n - i);
-		branch.remove(i);
+		S oldShape = shapes[index];
+
+		n -= 1;
+		System.arraycopy(shapes, index + 1, shapes, index, n - index);
+		Object item = branch.remove(index);
 		branch.setSize(capacity());
-		if (i == n && n != 0) {
-			largestHilbertValue = shapes[n - 1].linearOderValue();
+
+		if (isLeaf) {
+			if (oldShape.linearOderValue() == largestHilbertValue) {
+				findNewLHV();
+			}
+		} else {
+			AbstractHilbertRtreePage<T, S> page = (AbstractHilbertRtreePage<T, S>) item;
+			if (page.largestHilbertValue == largestHilbertValue) {
+				findNewLHV();
+			}
 		}
 		modify();
+	}
+
+	private void findNewLHV() {
+		largestHilbertValue = Long.MIN_VALUE;
+		if (isLeaf) {
+			S[] shapes = getShapes();
+			for (int i = 0; i < n; i++) {
+				if (shapes[i].linearOderValue() > largestHilbertValue) {
+					largestHilbertValue = shapes[i].linearOderValue();
+				}
+			}
+		} else {
+			AbstractHilbertRtreePage<T, S> page = null;
+			for (int i = 0; i < n; i++) {
+				page = this.<AbstractHilbertRtreePage<T, S>> getBranch(i);
+				if (page.largestHilbertValue > largestHilbertValue) {
+					largestHilbertValue = page.largestHilbertValue;
+				}
+			}
+		}
 	}
 
 	private void setBranch(int i, S shape, Object obj) {
 		setShape(i, shape);
 		branch.setObject(i, obj);
-		if (obj instanceof AbstractHilbertRtreePage<?, ?>) {
-			this.<AbstractHilbertRtreePage<T, S>> getBranch(i).parent = this;
+		if (!isLeaf) {
+			AbstractHilbertRtreePage<T, S> page = this
+					.<AbstractHilbertRtreePage<T, S>> getBranch(i);
+			page.parent = this;
+			// page.modify();
 		}
 	}
 

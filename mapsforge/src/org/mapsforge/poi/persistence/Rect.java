@@ -16,6 +16,8 @@
  */
 package org.mapsforge.poi.persistence;
 
+import org.mapsforge.core.GeoCoordinate;
+
 class Rect implements SpatialShape<Rect> {
 	static final int memory_size = 4 * 4; // 4 int values
 
@@ -33,8 +35,8 @@ class Rect implements SpatialShape<Rect> {
 	int right;
 
 	// not persisted
-	transient long linearOrderValue;
-	transient Point center;
+	transient long linearOrderValue = 0;
+	transient Point center = null;
 
 	public Rect() {
 		// required by perst
@@ -74,7 +76,7 @@ class Rect implements SpatialShape<Rect> {
 
 	@Override
 	public Rect join(Rect shape) {
-		linearOrderValue = -1;
+		linearOrderValue = 0;
 		center = null;
 
 		if (left > shape.left) {
@@ -101,7 +103,7 @@ class Rect implements SpatialShape<Rect> {
 
 	@Override
 	public long joinArea(Rect shape) {
-		linearOrderValue = -1;
+		linearOrderValue = 0;
 		center = null;
 
 		int l = (this.left < shape.left) ? this.left : shape.left;
@@ -126,7 +128,7 @@ class Rect implements SpatialShape<Rect> {
 
 	@Override
 	public long linearOderValue() {
-		if (linearOrderValue < 0) {
+		if (linearOrderValue == 0) {
 			linearOrderValue = Hilbert.computeValue(center().y, center().x);
 		}
 		return linearOrderValue;
@@ -150,6 +152,35 @@ class Rect implements SpatialShape<Rect> {
 		int dx = x < left ? left - x : x - right;
 		int dy = y < top ? top - y : y - bottom;
 		return Math.sqrt((double) dx * dx + (double) dy * dy);
+	}
+
+	public double geoDist(GeoCoordinate geoCoordinate) {
+		int x = geoCoordinate.getLongitudeE6();
+		int y = geoCoordinate.getLatitudeE6();
+
+		if (x < left && y < top) {
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(top, left));
+		} else if (x > right && y < top) {
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(top, right));
+		} else if (x < left && y > bottom) {
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(bottom, left));
+		} else if (x > right && y > bottom) {
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(bottom, right));
+		} else if (x >= left && x <= right) {
+			if (y >= top) {
+				if (y <= bottom) {
+					return 0;
+				}
+				return geoCoordinate.vincentyDistance(new GeoCoordinate(bottom, x));
+			}
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(top, x));
+		} else if (y >= top && y <= bottom) {
+			if (x < left) {
+				return geoCoordinate.vincentyDistance(new GeoCoordinate(y, left));
+			}
+			return geoCoordinate.vincentyDistance(new GeoCoordinate(y, right));
+		}
+		throw new RuntimeException();
 	}
 
 }

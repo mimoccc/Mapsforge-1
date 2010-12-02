@@ -8,9 +8,11 @@ import java.util.List;
 import org.mapsforge.poi.persistence.IPersistenceManager;
 import org.mapsforge.poi.persistence.PersistenceManagerFactory;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskConfiguration;
+import org.openstreetmap.osmosis.core.pipeline.common.TaskManager;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManagerFactory;
+import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 
-abstract class PoiWriterFactory extends TaskManagerFactory {
+class PoiWriterFactory extends TaskManagerFactory {
 
 	private static final String DRIVER = "org.postgresql.Driver";
 	private static final String DEFAULT_DB_SERVER = "localhost";
@@ -53,27 +55,34 @@ abstract class PoiWriterFactory extends TaskManagerFactory {
 					.getPostGisPersistenceManager(establishDBConnection());
 		} else if (modus.equals("perst")) {
 			persistenceManager = PersistenceManagerFactory
-					.getPerstMultiRtreePersistenceManager(perstFile);
+					.getPerstPersistenceManager(perstFile);
 		} else {
 			persistenceManager = PersistenceManagerFactory.getDualPersistenceManager(
 					establishDBConnection(), perstFile);
 		}
 	}
 
-	private Connection establishDBConnection() {
+	@Override
+	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
+		PoiWriter task;
 
-		try {
-			Class.forName(DRIVER);
-		} catch (ClassNotFoundException e1) {
-			e1.printStackTrace();
-			throw new RuntimeException("Unble to connect to Database");
-		}
+		handleArguments(taskConfig);
+		task = new PoiWriter(persistenceManager, categories);
+
+		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
+	}
+
+	private Connection establishDBConnection() {
 
 		Connection connection = null;
 
 		try {
+			Class.forName(DRIVER);
 			connection = DriverManager.getConnection(protocol + database, username, password);
 			System.out.println("DB connection established");
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+			throw new RuntimeException("Unble to connect to Database");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException();

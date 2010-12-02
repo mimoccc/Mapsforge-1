@@ -16,7 +16,6 @@
  */
 package org.mapsforge.poi.persistence;
 
-
 class RtreeBox implements SpatialShape<RtreeBox> {
 
 	int top;
@@ -25,6 +24,9 @@ class RtreeBox implements SpatialShape<RtreeBox> {
 	int right;
 	int front;
 	int back;
+
+	// not persisted
+	transient long linearOrderValue = 0;
 
 	RtreeBox() {
 		super();
@@ -103,11 +105,14 @@ class RtreeBox implements SpatialShape<RtreeBox> {
 
 	@Override
 	public long linearOderValue() {
-		int x = (left + right) / 2;
-		int y = (top + bottom) / 2;
-		int z = (back + front) / 2;
+		if (linearOrderValue == 0) {
+			int x = (left + right) / 2;
+			int y = (top + bottom) / 2;
+			int z = (back + front) / 2;
+			linearOrderValue = Hilbert.computeValue3D(x, y, z);
+		}
 
-		return Hilbert.computeValue3D(x, y, z);
+		return linearOrderValue;
 	}
 
 }

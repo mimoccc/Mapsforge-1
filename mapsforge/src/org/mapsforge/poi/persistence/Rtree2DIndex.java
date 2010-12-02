@@ -19,15 +19,110 @@ package org.mapsforge.poi.persistence;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.garret.perst.Assert;
+import org.garret.perst.IPersistent;
+import org.garret.perst.IterableIterator;
 import org.garret.perst.PersistentCollection;
+import org.garret.perst.PersistentIterator;
 import org.garret.perst.Storage;
+import org.mapsforge.core.GeoCoordinate;
 
-class Rtree2DIndex<T> extends PersistentCollection<T> implements RtreeIndex<T, Rect> {
+class Rtree2DIndex<T extends IPersistent> extends PersistentCollection<T> implements
+		RtreeIndex<T, Rect> {
+
+	static class Neighbor {
+		int oid;
+		Neighbor next;
+		int level;
+		double distance;
+
+		Neighbor(int oid, double distance, int level) {
+			this.oid = oid;
+			this.distance = distance;
+			this.level = level;
+		}
+	}
+
+	class NeighborIterator<E> extends IterableIterator<E> implements
+			PersistentIterator {
+		Storage db;
+		Neighbor list;
+		int counter;
+		int x;
+		int y;
+
+		NeighborIterator(int x, int y, Storage db) {
+			this.db = db;
+			this.x = x;
+			this.y = y;
+			if (height == 0) {
+				return;
+			}
+			list = new Neighbor(root.getOid(), 0, height);
+		}
+
+		void insert(Neighbor node) {
+			Neighbor prev = null, next = list;
+			double distance = node.distance;
+			while (next != null && next.distance < distance) {
+				prev = next;
+				next = prev.next;
+			}
+			node.next = next;
+			if (prev == null) {
+				list = node;
+			} else {
+				prev.next = node;
+			}
+		}
+
+		public boolean hasNext() {
+			while (true) {
+				Neighbor neighbor = list;
+				if (neighbor == null) {
+					return false;
+				}
+				if (neighbor.level == 0) {
+					return true;
+				}
+				list = neighbor.next; // DEQUEUE
+				Rtree2DIndexPage<T> pg = (Rtree2DIndexPage<T>) db.getObjectByOID(neighbor.oid);
+				for (int i = 0, max = pg.n; i < max; i++) {
+					insert(new Neighbor(db.getOid(pg.branch.getRaw(i)), pg.rects[i]
+							.geoDist(new GeoCoordinate(y, x)),
+							neighbor.level - 1));
+				}
+			}
+		}
+
+		public E next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			Neighbor neighbor = list;
+			list = neighbor.next;
+
+			Assert.that(neighbor.level == 0);
+			return loadElem(neighbor.oid);
+		}
+
+		private final E loadElem(int oid) {
+			return (E) db.getObjectByOID(oid);
+		}
+
+		public int nextOid() {
+			return getStorage().getOid(next());
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
 
 	public RtreeIndexPage<T, Rect> root;
-	private int height;
+	int height;
 	private int n;
 
 	@Override
@@ -165,6 +260,10 @@ class Rtree2DIndex<T> extends PersistentCollection<T> implements RtreeIndex<T, R
 	@Override
 	public <E> E[] toArray(E[] a) {
 		throw new UnsupportedOperationException();
+	}
+
+	public IterableIterator<T> neighborIterator(int x, int y) {
+		return new NeighborIterator<T>(x, y, getStorage());
 	}
 
 }

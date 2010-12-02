@@ -25,6 +25,7 @@ import org.garret.perst.GenericIndex;
 import org.garret.perst.IterableIterator;
 import org.garret.perst.Key;
 import org.garret.perst.Storage;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
 
@@ -39,9 +40,9 @@ public class MultiRtreePersistenceManager extends
 
 	private class PackEntryIterator implements Iterator<PackEntry<Rect, PerstPoi>> {
 
-		private final Iterator<PerstPoi> iterator;
+		private final Iterator<ClusterEntry> iterator;
 
-		public PackEntryIterator(Iterator<PerstPoi> iterator) {
+		public PackEntryIterator(Iterator<ClusterEntry> iterator) {
 			super();
 			this.iterator = iterator;
 		}
@@ -55,7 +56,7 @@ public class MultiRtreePersistenceManager extends
 				return null;
 			}
 
-			PerstPoi poi = iterator.next();
+			PerstPoi poi = root.poiIntegerIdPKIndex.get(new Key(iterator.next().poiId));
 
 			return new PackEntry<Rect, PerstPoi>(new Rect(poi.latitude, poi.longitude,
 					poi.latitude,
@@ -142,24 +143,22 @@ public class MultiRtreePersistenceManager extends
 
 		IterableIterator<PerstPoi> pois = null;
 		Key categoryFK = null;
-		Key poiPK = null;
-		DeleteQueue deleteQueueEntry = null;
+		ArrayList<Integer> deleteQueue = new ArrayList<Integer>();
+
 		for (PoiCategory descendant : descendants) {
 			categoryFK = new Key(categoryManager.get(descendant.getTitle()));
 			pois = root.poiCategoryFkIndex.iterator(categoryFK, categoryFK,
 					GenericIndex.ASCENT_ORDER);
 
 			while (pois.hasNext()) {
-				deleteQueueEntry = new DeleteQueue(pois.next().id);
-				root.deleteQueueIndex.add(deleteQueueEntry);
+				deleteQueue.add(pois.next().getOid());
 			}
 
-			Iterator<DeleteQueue> queueIterator = root.deleteQueueIndex.iterator();
+			Iterator<Integer> queueIterator = deleteQueue.iterator();
 			while (queueIterator.hasNext()) {
-				poiPK = new Key(queueIterator.next().poiId);
-				removePointOfInterest(root.poiIntegerIdPKIndex.get(poiPK));
+				removePointOfInterest((PerstPoi) db.getObjectByOID(queueIterator.next()));
 			}
-			root.deleteQueueIndex.clear();
+			deleteQueue.clear();
 
 			root.removeSpatialIndex(descendant.getTitle());
 			root.categoryTitlePkIndex.remove(descendant);
@@ -204,12 +203,18 @@ public class MultiRtreePersistenceManager extends
 					"This only works for PersistenceManager that have a root Category 'Root'");
 		}
 
-		MultiRtreePersistenceManager destinationManager = new MultiRtreePersistenceManager(
+		ClusterStorage clusterStorage = new ClusterStorage(this.fileName + ".clusterStorage",
+				true);
+
+		IPersistenceManager destinationManager = new MultiRtreePersistenceManager(
 				fileName + ".clustered");
 
 		// create temporary index for cluster value
-		FieldIndex<ClusterEntry> clusterIndex = createClusterIndex(root.poiIntegerIdPKIndex
-				.iterator());
+		FieldIndex<ClusterEntry> clusterIndex = clusterStorage.createClusterIndex(
+				root.poiIntegerIdPKIndex.iterator(),
+				"Root",
+				categoryManager,
+				CATEGORY_CLUSTER_SPREAD_FACTOR);
 
 		Collection<PoiCategory> categories = categoryManager.allCategories();
 
@@ -217,31 +222,48 @@ public class MultiRtreePersistenceManager extends
 			destinationManager.insertCategory(category);
 		}
 
+		// reopen
+		destinationManager.close();
+		destinationManager = new MultiRtreePersistenceManager(fileName + ".clustered");
+
 		Iterator<ClusterEntry> clusterIterator = clusterIndex.iterator();
+		PerstPoi perstPoi = null;
 		while (clusterIterator.hasNext()) {
-			destinationManager.insertPointOfInterest(clusterIterator.next().poi);
+			perstPoi = root.poiIntegerIdPKIndex.get(new Key(clusterIterator.next().poiId));
+			destinationManager.insertPointOfInterest(perstPoi);
 		}
 
-		System.out.println(destinationManager.root.getSpatialIndex("Root").size() + " =? "
-				+ root.getSpatialIndex("Root").size());
-
 		destinationManager.close();
-
-		clusterIndex.clear();
-		clusterIndex.deallocate();
+		clusterStorage.destroy();
 	}
 
 	@Override
 	public void packIndex() {
-		Iterator<PerstPoi> iterator = null;
-		Rtree2DIndex<PerstPoi> index = null;
-		for (NamedSpatialIndex namedIndex : root.spatialIndexIndex) {
-			iterator = namedIndex.index.iterator();
-			index = new Rtree2DIndex<PerstPoi>();
-			index.packInsert(new PackEntryIterator(iterator), root.getStorage());
-			root.removeSpatialIndex(namedIndex.name); // remove old
-			root.addSpatialIndex(new NamedSpatialIndex(namedIndex.name, index)); // add new
+		ClusterStorage clusterStorage = new ClusterStorage(this.fileName + ".clusterStorage",
+				false);
+
+		Rtree2DIndex<PerstPoi> oldIndex = null;
+		Rtree2DIndex<PerstPoi> newIndex = null;
+		FieldIndex<ClusterEntry> clusterIndex = null;
+
+		Collection<PoiCategory> categories = categoryManager.allCategories();
+		for (PoiCategory category : categories) {
+			oldIndex = root.getSpatialIndex(category.getTitle());
+			if (oldIndex.size() > 0) {
+				clusterIndex = clusterStorage.createClusterIndex(oldIndex.iterator(),
+													category.getTitle(),
+													categoryManager,
+													CATEGORY_CLUSTER_SPREAD_FACTOR);
+
+				root.removeSpatialIndex(category.getTitle()); // remove old
+				newIndex = new Rtree2DIndex<PerstPoi>();
+				newIndex.packInsert(new PackEntryIterator(clusterIndex.iterator()), root
+						.getStorage());
+				root.addSpatialIndex(new NamedSpatialIndex(category.getTitle(), newIndex)); // add
+				// new
+			}
 		}
+		clusterStorage.destroy();
 	}
 
 	@Override
@@ -249,4 +271,15 @@ public class MultiRtreePersistenceManager extends
 		return new PoiRootElement(database);
 	}
 
+	@Override
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category) {
+		if (!categoryManager.contains(category)) {
+			return new ArrayList<PointOfInterest>(0).iterator();
+		}
+
+		return new PoiNeighborIterator(root.getSpatialIndex(category).
+				neighborIterator(geoCoordinate.getLongitudeE6(),
+						geoCoordinate.getLatitudeE6()));
+	}
 }

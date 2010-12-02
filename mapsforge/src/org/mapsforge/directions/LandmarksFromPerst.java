@@ -66,7 +66,7 @@ public class LandmarksFromPerst {
 	 */
 	public LandmarksFromPerst(String databaseFileURI) {
 		this.persistenceManager = PersistenceManagerFactory
-				.getPerstMultiRtreePersistenceManager(databaseFileURI);
+				.getPerstPersistenceManager(databaseFileURI);
 	}
 
 	@Override

@@ -19,16 +19,16 @@ package org.mapsforge.poi.persistence;
 import org.garret.perst.Persistent;
 
 class ClusterEntry extends Persistent {
-	PerstPoi poi;
+	long poiId;
 	long value;
 
 	public ClusterEntry() {
 		super();
 	}
 
-	public ClusterEntry(PerstPoi poi, long value) {
+	public ClusterEntry(long poiId, long value) {
 		super();
-		this.poi = poi;
+		this.poiId = poiId;
 		this.value = value;
 	}
 

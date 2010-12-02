@@ -42,6 +42,7 @@ class PerstRootElement extends BasicRootElement {
 
 	public void addSpatialIndex(Storage db, String categoryName) {
 		SpatialIndex<PerstPoi> index = db.<PerstPoi> createSpatialIndex();
+		db.store(index);
 		names.add(categoryName);
 		indexes.add(index);
 		modify();
@@ -51,7 +52,6 @@ class PerstRootElement extends BasicRootElement {
 		int i = names.indexOf(categoryName);
 		names.remove(i);
 		SpatialIndex<PerstPoi> index = indexes.remove(i);
-		index.clear();
 		index.deallocate();
 		modify();
 	}

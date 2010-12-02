@@ -35,4 +35,6 @@ interface RtreeIndexPage<T, S extends SpatialShape<S>> {
 
 	public Iterator<T> iterator(int level);
 
+	public int getOid();
+
 }

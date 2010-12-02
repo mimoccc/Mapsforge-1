@@ -49,7 +49,7 @@ class PoiCategoryParser {
 		if (attr.length > 2) {
 			tagList = attr[2].trim().split(",");
 			for (String tagString : tagList) {
-				String[] kvPair = tagString.split("\\.");
+				String[] kvPair = tagString.trim().split("\\.");
 				builder.addTag(kvPair[0], kvPair[1]);
 			}
 		}

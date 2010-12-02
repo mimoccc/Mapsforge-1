@@ -1,11 +1,11 @@
 package org.mapsforge.poi.persistence;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.poi.exchange.IPoiReader;
 
 class DualPersistenceManager implements IPersistenceManager {
 
@@ -54,12 +54,6 @@ class DualPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void insertPointsOfInterest(IPoiReader poiReader) {
-		perstManager.insertPointsOfInterest(poiReader);
-		pgManager.insertPointsOfInterest(poiReader);
-	}
-
-	@Override
 	public void removeCategory(PoiCategory category) {
 		perstManager.removeCategory(category);
 		pgManager.removeCategory(category);
@@ -89,11 +83,6 @@ class DualPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void reopen() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void clusterStorage() {
 		perstManager.clusterStorage();
 	}
@@ -101,6 +90,12 @@ class DualPersistenceManager implements IPersistenceManager {
 	@Override
 	public void packIndex() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category) {
+		return perstManager.neighborIterator(geoCoordinate, category);
 	}
 
 }

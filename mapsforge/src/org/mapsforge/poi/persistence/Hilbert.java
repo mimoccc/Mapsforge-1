@@ -16,8 +16,6 @@
  */
 package org.mapsforge.poi.persistence;
 
-import org.garret.perst.Assert;
-
 /**
  * Provides for methods for computing the hilbert value in two and three dimensional space.
  * 
@@ -177,7 +175,7 @@ class Hilbert {
 	}
 
 	static String normalize(String binaryString, int order) {
-		Assert.that(binaryString.length() <= order);
+		// Assert.that(binaryString.length() <= order);
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < (order - binaryString.length()); i++) {
 			sb.append('0');

@@ -17,10 +17,11 @@
 package org.mapsforge.poi.persistence;
 
 import java.util.Collection;
+import java.util.Iterator;
 
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.poi.exchange.IPoiReader;
 
 /**
  * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/searching
@@ -29,10 +30,6 @@ import org.mapsforge.poi.exchange.IPoiReader;
  * Remember to call the {@link #close()} method as soon as your done manipulating the Storage/DB
  * via this {@link IPersistenceManager}.
  * 
- * @author weise
- * 
- */
-/**
  * @author weise
  * 
  */
@@ -62,14 +59,6 @@ public interface IPersistenceManager extends IPoiQuery {
 	 *            collection of {@link PointOfInterest} to insert into storage.
 	 */
 	public void insertPointsOfInterest(Collection<PointOfInterest> pois);
-
-	/**
-	 * Inserts {@link PointOfInterest} from a {@link IPoiReader} instance.
-	 * 
-	 * @param poiReader
-	 *            the {@link IPoiReader} fetching the {@link PointOfInterest}s.
-	 */
-	public void insertPointsOfInterest(IPoiReader poiReader);
 
 	/**
 	 * Removes a {@link PoiCategory} from this {@link IPersistenceManager}.
@@ -111,12 +100,6 @@ public interface IPersistenceManager extends IPoiQuery {
 	public void close();
 
 	/**
-	 * Reopens this {@link IPersistenceManager} after it has been closed so that it can be
-	 * queried again.
-	 */
-	public void reopen();
-
-	/**
 	 * @param poiId
 	 *            the id of the point of interest that shall be returned.
 	 * @return a single {@link PointOfInterest} p where p.id == poiId.
@@ -141,4 +124,19 @@ public interface IPersistenceManager extends IPoiQuery {
 	 * May not be supported by all implementing classes.
 	 */
 	public void packIndex();
+
+	/**
+	 * Returns an iterator that enables the user to iterate over POIs of the specified category
+	 * in the order of their distance to the specified {@link GeoCoordinate}.
+	 * 
+	 * May not be supported by all implementing classes.
+	 * 
+	 * @param geoCoordinate
+	 *            starting point for the iterator.
+	 * @param category
+	 *            of POIs that shall be returned.
+	 * @return iterator of {@link PointOfInterest}
+	 */
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category);
 }

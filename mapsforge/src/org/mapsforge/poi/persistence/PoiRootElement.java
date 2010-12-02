@@ -25,7 +25,6 @@ import org.garret.perst.Storage;
  */
 class PoiRootElement extends BasicRootElement {
 
-	FieldIndex<DeleteQueue> deleteQueueIndex;
 	FieldIndex<NamedSpatialIndex> spatialIndexIndex;
 
 	/**
@@ -37,7 +36,6 @@ class PoiRootElement extends BasicRootElement {
 
 	public PoiRootElement(Storage db) {
 		super(db);
-		deleteQueueIndex = db.<DeleteQueue> createFieldIndex(DeleteQueue.class, "poiId", true);
 		spatialIndexIndex = db.<NamedSpatialIndex> createFieldIndex(NamedSpatialIndex.class,
 				"name", true);
 	}
@@ -58,7 +56,6 @@ class PoiRootElement extends BasicRootElement {
 	public void removeSpatialIndex(String categoryName) {
 		NamedSpatialIndex namedIndex = spatialIndexIndex.get(categoryName);
 		spatialIndexIndex.remove(namedIndex);
-		namedIndex.index.clear();
 		namedIndex.index.deallocate();
 		namedIndex.deallocate();
 	}

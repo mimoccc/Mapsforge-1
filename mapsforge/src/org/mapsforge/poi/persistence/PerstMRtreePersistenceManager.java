@@ -21,8 +21,10 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.garret.perst.FieldIndex;
+import org.garret.perst.Key;
 import org.garret.perst.Rectangle;
 import org.garret.perst.Storage;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
 
@@ -139,12 +141,18 @@ class PerstMRtreePersistenceManager extends
 					"This only works for PersistenceManager that have a root Category 'Root'");
 		}
 
+		ClusterStorage clusterStorage = new ClusterStorage(this.fileName +
+				".clusterStorage", true);
+
 		PerstMRtreePersistenceManager destinationManager = new PerstMRtreePersistenceManager(
 				fileName + ".clustered");
 
 		// create temporary index for cluster value
-		FieldIndex<ClusterEntry> clusterIndex = createClusterIndex(root.poiIntegerIdPKIndex
-				.iterator());
+		FieldIndex<ClusterEntry> clusterIndex = clusterStorage.createClusterIndex(
+				root.poiIntegerIdPKIndex.iterator(),
+				"Root",
+				categoryManager,
+				CATEGORY_CLUSTER_SPREAD_FACTOR);
 
 		Collection<PoiCategory> categories = categoryManager.allCategories();
 
@@ -153,17 +161,17 @@ class PerstMRtreePersistenceManager extends
 		}
 
 		Iterator<ClusterEntry> clusterIterator = clusterIndex.iterator();
+		PerstPoi perstPoi = null;
 		while (clusterIterator.hasNext()) {
-			destinationManager.insertPointOfInterest(clusterIterator.next().poi);
+			perstPoi = root.poiIntegerIdPKIndex.get(new Key(clusterIterator.next().poiId));
+			destinationManager.insertPointOfInterest(perstPoi);
 		}
 
 		System.out.println(destinationManager.root.getSpatialIndex("Root").size() + " =? "
 				+ root.getSpatialIndex("Root").size());
 
 		destinationManager.close();
-
-		clusterIndex.clear();
-		clusterIndex.deallocate();
+		clusterStorage.destroy();
 	}
 
 	@Override
@@ -174,6 +182,19 @@ class PerstMRtreePersistenceManager extends
 	@Override
 	protected PerstRootElement initRootElement(Storage database) {
 		return new PerstRootElement(database);
+	}
+
+	@Override
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category) {
+		if (!categoryManager.contains(category)) {
+			return new ArrayList<PointOfInterest>(0).iterator();
+		}
+
+		return new PoiNeighborIterator(
+				root.getSpatialIndex(category).
+						neighborIterator(geoCoordinate.getLatitudeE6(),
+								geoCoordinate.getLongitudeE6()));
 	}
 
 }

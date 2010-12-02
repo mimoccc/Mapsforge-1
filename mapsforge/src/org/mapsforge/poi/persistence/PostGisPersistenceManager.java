@@ -21,11 +21,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.poi.exchange.IPoiReader;
 
 class PostGisPersistenceManager implements IPersistenceManager {
 
@@ -104,15 +104,6 @@ class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void insertPointsOfInterest(IPoiReader poiReader) {
-		Collection<PointOfInterest> pois = poiReader.read();
-
-		for (PointOfInterest poi : pois) {
-			insertPointOfInterest(poi);
-		}
-	}
-
-	@Override
 	public void removeCategory(PoiCategory category) {
 		throw new UnsupportedOperationException();
 	}
@@ -164,17 +155,18 @@ class PostGisPersistenceManager implements IPersistenceManager {
 	}
 
 	@Override
-	public void reopen() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void clusterStorage() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void packIndex() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category) {
 		throw new UnsupportedOperationException();
 	}
 

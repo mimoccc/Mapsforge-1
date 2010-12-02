@@ -16,18 +16,22 @@
  */
 package org.mapsforge.poi.persistence;
 
+import org.garret.perst.FieldIndex;
 import org.garret.perst.Persistent;
 
-class DeleteQueue extends Persistent {
+class NamedClusterIndex extends Persistent {
 
-	long poiId;
+	public String name;
+	public FieldIndex<ClusterEntry> index;
 
-	public DeleteQueue() {
-		// required by perst
+	public NamedClusterIndex() {
+		/* required by perst */
 	}
 
-	public DeleteQueue(long poiId) {
-		this.poiId = poiId;
+	public NamedClusterIndex(String name, FieldIndex<ClusterEntry> index) {
+		super();
+		this.name = name;
+		this.index = index;
 	}
 
 }

@@ -287,23 +287,54 @@ purpose.
 	<!-- ################## mapsforge-poi-osmosis.jar ################## -->
 
 
-	<target name="mapsforge-poi-osmosis.jar-create">
+	<target name="mapsforge-poi-osmosis-jar-create">
 		<mkdir dir="${mapsforge.dist}" />
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="${mapsforge.dist}/mapsforge-poi-osmosis-${mapsforge.version}.jar"
 		     duplicate="preserve">
 			<fileset dir="${mapsforge.src}"
-			         includes="org/mapsforge/preprocessing/osmosis/poi/" />
+			         includes="org/mapsforge/preprocessing/osmosis/poi/"
+					 excludes="*.xml" />
 			<fileset dir="${mapsforge.bin}"
-			         includes="org/mapsforge/preprocessing/osmosis/poi/" />
+			         includes="org/mapsforge/preprocessing/osmosis/poi/" 
+					 excludes="*.xml" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/poi/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/poi/" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
 			<fileset refid="info" />
+			<fileset dir="${mapsforge.src}/org/mapsforge/preprocessing/osmosis/poi/"
+						         includes="*.xml" />
 		</jar>
 		<antcall target="eclipse-refresh">
 			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
 		</antcall>
 	</target>
+	
+	<!-- Sign and verify the JAR file if the keystore exists -->
+	<target name="mapsforge-poi-osmosis-jar-sign"
+	        depends="check-for-keystore,mapsforge-poi-osmosis-jar-create"
+	        if="keystore.present">
+		<signjar jar="${mapsforge.dist}/mapsforge-poi-osmosis-${mapsforge.version}.jar"
+		         keystore="${mapsforge.keystore.location}"
+		         storepass="${mapsforge.keystore.pass}"
+		         alias="${mapsforge.keystore.alias}"
+		         keypass="${mapsforge.key.pass}" />
+		<!-- Verify the signed JAR file and stop if verification was not successful -->
+		<exec executable="jarsigner" failonerror="true">
+			<arg value="-verify" />
+			<arg value="${mapsforge.dist}/mapsforge-poi-osmosis-${mapsforge.version}.jar" />
+		</exec>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
+	</target>
+	
+	<target name="mapsforge-poi-osmosis-jar-copy"
+	        depends="mapsforge-poi-osmosis-jar-sign">
+		<copy overwrite="true"
+		      file="${mapsforge.dist}/mapsforge-poi-osmosis-${mapsforge.version}.jar"
+		      todir="${user.home}/.openstreetmap/osmosis/plugins" />
+	</target>
+
 </project>

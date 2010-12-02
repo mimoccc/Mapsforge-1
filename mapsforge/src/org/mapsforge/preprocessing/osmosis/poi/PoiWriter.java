@@ -3,15 +3,12 @@ package org.mapsforge.preprocessing.osmosis.poi;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.poi.persistence.IPersistenceManager;
 import org.mapsforge.poi.persistence.PoiBuilder;
-import org.openstreetmap.osmosis.core.container.v0_6.Dataset;
-import org.openstreetmap.osmosis.core.container.v0_6.DatasetContext;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
@@ -27,7 +24,7 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
  * @author weise
  * 
  */
-public class PoiWriter implements Sink, DatasetSink {
+public class PoiWriter implements Sink {
 
 	static final String REPLACE_REGEX = "\\Q{{?}}\\E";
 	static final String INSERT_POI = "INSERT INTO pois (\"location\", category_id, name, url) VALUES "
@@ -68,17 +65,6 @@ public class PoiWriter implements Sink, DatasetSink {
 		}
 
 		System.out.println("Inserted categories into DB!");
-	}
-
-	@Override
-	// this is the entry point for osmosis when using postgis as source.
-	public void process(Dataset dataset) {
-		DatasetContext dc = dataset.createReader();
-		Iterator<Node> iterator = dc.getNodeManager().iterate();
-		while (iterator.hasNext()) {
-			handleNode(iterator.next());
-		}
-		complete();
 	}
 
 	@Override

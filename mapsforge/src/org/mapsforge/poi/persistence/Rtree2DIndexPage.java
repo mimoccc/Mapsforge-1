@@ -25,7 +25,7 @@ class Rtree2DIndexPage<T> extends AbstractHilbertRtreePage<T, Rect> {
 
 	static final int capacity = (Page.pageSize - 8 - 4 * 4 - 8) / (4 * 4 + 4);
 
-	Rect[] rects;
+	public Rect[] rects;
 
 	Rtree2DIndexPage(Storage storage, Object[] objs, Rect[] rects, boolean leaf) {
 		super(storage, objs, rects, leaf);

@@ -17,8 +17,7 @@ public class PoiWriterPluginLoader implements PluginLoader {
 	@Override
 	public Map<String, TaskManagerFactory> loadTaskFactories() {
 		HashMap<String, TaskManagerFactory> map = new HashMap<String, TaskManagerFactory>();
-		map.put("xml-poiWriter", new XMLPoiWriterFactory());
-		map.put("pg-poiWriter", new PostGISPoiWriterFactory());
+		map.put("poiWriter", new PoiWriterFactory());
 		return map;
 	}
 

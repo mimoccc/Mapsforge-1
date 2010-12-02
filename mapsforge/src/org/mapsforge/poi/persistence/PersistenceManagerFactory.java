@@ -40,18 +40,8 @@ public class PersistenceManagerFactory {
 	 *            path to perst storage file.
 	 * @return {@link IPersistenceManager} using an underlying Perst database.
 	 */
-	public static IPersistenceManager getPerstMultiRtreePersistenceManager(String filename) {
+	public static IPersistenceManager getPerstPersistenceManager(String filename) {
 		return new MultiRtreePersistenceManager(filename);
-	}
-
-	/**
-	 * @param filename
-	 *            path to perst storage file.
-	 * @return {@link IPersistenceManager} using an underlying Perst database with multiple
-	 *         Hilbert R-Trees as spatial index.
-	 */
-	public static IPersistenceManager getPerst3DRtreePersistenceManager(String filename) {
-		return new Perst3DRtreePersistenceManager(filename);
 	}
 
 	/**
@@ -65,15 +55,5 @@ public class PersistenceManagerFactory {
 			String filename) {
 		return new DualPersistenceManager(new PostGisPersistenceManager(connection),
 				new MultiRtreePersistenceManager(filename));
-	}
-
-	/**
-	 * @param filename
-	 *            path to perst storage file.
-	 * @return {@link IPersistenceManager} using an underlying Perst database with multiple
-	 *         Guttman R-Tree as spatial index.
-	 */
-	public static IPersistenceManager getPerstMRtreePersistenceManager(String filename) {
-		return new PerstMRtreePersistenceManager(filename);
 	}
 }

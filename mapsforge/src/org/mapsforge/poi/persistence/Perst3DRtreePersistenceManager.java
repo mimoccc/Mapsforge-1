@@ -20,7 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.garret.perst.FieldIndex;
+import org.garret.perst.Key;
 import org.garret.perst.Storage;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PoiCategory;
 import org.mapsforge.poi.PointOfInterest;
 
@@ -30,9 +33,9 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 
 	private class PackEntryIterator implements Iterator<PackEntry<RtreeBox, PerstPoi>> {
 
-		private final Iterator<PerstPoi> iterator;
+		private final Iterator<ClusterEntry> iterator;
 
-		public PackEntryIterator(Iterator<PerstPoi> iterator) {
+		public PackEntryIterator(Iterator<ClusterEntry> iterator) {
 			super();
 			this.iterator = iterator;
 		}
@@ -45,7 +48,7 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 			if (!iterator.hasNext()) {
 				return null;
 			}
-			PerstPoi poi = iterator.next();
+			PerstPoi poi = root.poiIntegerIdPKIndex.get(new Key(iterator.next().poiId));
 
 			int x = poi.latitude;
 			int y = poi.longitude;
@@ -137,8 +140,7 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 
 	@Override
 	public void removeCategory(PoiCategory category) {
-		// TODO implement me
-
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -169,12 +171,30 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 
 	@Override
 	public void packIndex() {
+		ClusterStorage clusterStorage = new ClusterStorage(this.fileName + ".clusterStorage",
+				true);
+		FieldIndex<ClusterEntry> clusterIndex = null;
+
+		clusterIndex = clusterStorage.createClusterIndex(root.spatialIndex.iterator(),
+				"3d",
+				categoryManager,
+				CATEGORY_CLUSTER_SPREAD_FACTOR);
+
+		root.spatialIndex.deallocate(); // remove old index
 		Rtree3DIndex<PerstPoi> newIndex = new Rtree3DIndex<PerstPoi>();
-		newIndex.packInsert(new PackEntryIterator(root.spatialIndex.iterator()), root
+		newIndex.packInsert(new PackEntryIterator(clusterIndex.iterator()), root
 				.getStorage());
-		root.spatialIndex.clear();
-		root.spatialIndex.deallocate();
+		db.store(newIndex);
 		root.spatialIndex = newIndex;
+		root.modify();
+
+		clusterStorage.destroy();
+	}
+
+	@Override
+	public Iterator<PointOfInterest> neighborIterator(GeoCoordinate geoCoordinate,
+			String category) {
+		throw new UnsupportedOperationException();
 	}
 
 }
