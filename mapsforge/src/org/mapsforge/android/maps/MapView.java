@@ -176,7 +176,7 @@ public class MapView extends ViewGroup {
 						// check if a double-tap event occurred
 						if (this.tapDiffX < this.doubleTapDelta
 								&& this.tapDiffY < this.doubleTapDelta
-								&& this.tapDiffTime < this.doubleTapTimout) {
+								&& this.tapDiffTime < this.doubleTapTimeout) {
 							// double-tap event
 							this.previousEventTap = false;
 							setCenter(getProjection().fromPixels(
@@ -358,7 +358,7 @@ public class MapView extends ViewGroup {
 						// check if a double-tap event occurred
 						if (this.tapDiffX < this.doubleTapDelta
 								&& this.tapDiffY < this.doubleTapDelta
-								&& this.tapDiffTime < this.doubleTapTimout) {
+								&& this.tapDiffTime < this.doubleTapTimeout) {
 							// double-tap event
 							this.previousEventTap = false;
 							setCenter(getProjection().fromPixels((int) event.getX(),
@@ -404,7 +404,7 @@ public class MapView extends ViewGroup {
 		/**
 		 * Maximum time difference in milliseconds for a double-tap event.
 		 */
-		final int doubleTapTimout;
+		final int doubleTapTimeout;
 
 		/**
 		 * Flag to indicate if the map has been moved.
@@ -475,7 +475,7 @@ public class MapView extends ViewGroup {
 			ViewConfiguration viewConfiguration = ViewConfiguration.get(getMapActivity());
 			this.mapMoveDelta = viewConfiguration.getScaledTouchSlop();
 			this.doubleTapDelta = viewConfiguration.getScaledDoubleTapSlop();
-			this.doubleTapTimout = ViewConfiguration.getDoubleTapTimeout();
+			this.doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout();
 		}
 
 		/**
