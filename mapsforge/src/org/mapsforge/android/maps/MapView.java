@@ -85,8 +85,8 @@ public class MapView extends ViewGroup {
 		private int pointerIndex;
 		private final ScaleGestureDetector scaleGestureDetector;
 
-		MultiTouchHandler(float mapMoveDelta) {
-			super(mapMoveDelta);
+		MultiTouchHandler() {
+			super();
 			this.activePointerId = INVALID_POINTER_ID;
 			this.scaleGestureDetector = new ScaleGestureDetector(getMapActivity(),
 					new ScaleListener());
@@ -174,11 +174,14 @@ public class MapView extends ViewGroup {
 						this.tapDiffTime = event.getEventTime() - this.previousTapTime;
 
 						// check if a double-tap event occurred
-						if (this.tapDiffX < this.doubleTapDeltaPosition
-								&& this.tapDiffY < this.doubleTapDeltaPosition
-								&& this.tapDiffTime < this.doubleTapDeltaTime) {
+						if (this.tapDiffX < this.doubleTapDelta
+								&& this.tapDiffY < this.doubleTapDelta
+								&& this.tapDiffTime < this.doubleTapTimout) {
 							// double-tap event
 							this.previousEventTap = false;
+							setCenter(getProjection().fromPixels(
+									(int) event.getX(this.pointerIndex),
+									(int) event.getY(this.pointerIndex)));
 							zoom((byte) 1);
 							return true;
 						}
@@ -285,8 +288,8 @@ public class MapView extends ViewGroup {
 	 * Implementation for single-touch capable devices.
 	 */
 	private class SingleTouchHandler extends TouchEventHandler {
-		SingleTouchHandler(float mapMoveDelta) {
-			super(mapMoveDelta);
+		SingleTouchHandler() {
+			super();
 		}
 
 		@Override
@@ -353,11 +356,13 @@ public class MapView extends ViewGroup {
 						this.tapDiffTime = event.getEventTime() - this.previousTapTime;
 
 						// check if a double-tap event occurred
-						if (this.tapDiffX < this.doubleTapDeltaPosition
-								&& this.tapDiffY < this.doubleTapDeltaPosition
-								&& this.tapDiffTime < this.doubleTapDeltaTime) {
+						if (this.tapDiffX < this.doubleTapDelta
+								&& this.tapDiffY < this.doubleTapDelta
+								&& this.tapDiffTime < this.doubleTapTimout) {
 							// double-tap event
 							this.previousEventTap = false;
+							setCenter(getProjection().fromPixels((int) event.getX(),
+									(int) event.getY()));
 							zoom((byte) 1);
 							return true;
 						}
@@ -387,19 +392,19 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Abstract base class for all handlers of touch events. Default visibility is required to
-	 * avoid a synthetic method.
+	 * Abstract base class for the single-touch and multi-touch handler. Default visibility is
+	 * required to avoid a synthetic method.
 	 */
 	abstract class TouchEventHandler {
 		/**
 		 * Absolute threshold value for a double-tap event.
 		 */
-		final float doubleTapDeltaPosition;
+		final float doubleTapDelta;
 
 		/**
 		 * Maximum time difference in milliseconds for a double-tap event.
 		 */
-		final int doubleTapDeltaTime;
+		final int doubleTapTimout;
 
 		/**
 		 * Flag to indicate if the map has been moved.
@@ -437,6 +442,11 @@ public class MapView extends ViewGroup {
 		float previousPositionY;
 
 		/**
+		 * Stores the time of the previous tap event.
+		 */
+		long previousTapTime;
+
+		/**
 		 * Stores the X position of the previous tap event.
 		 */
 		float previousTapX;
@@ -445,11 +455,6 @@ public class MapView extends ViewGroup {
 		 * Stores the Y position of the previous tap event.
 		 */
 		float previousTapY;
-
-		/**
-		 * Stores the time of the previous tap event.
-		 */
-		long previousTapTime;
 
 		/**
 		 * Stores the time difference between the previous and the current tap event.
@@ -466,16 +471,11 @@ public class MapView extends ViewGroup {
 		 */
 		float tapDiffY;
 
-		/**
-		 * Default constructor which must be called by all subclasses.
-		 * 
-		 * @param mapMoveDelta
-		 *            the absolute threshold value of a motion event.
-		 */
-		TouchEventHandler(float mapMoveDelta) {
-			this.mapMoveDelta = mapMoveDelta;
-			this.doubleTapDeltaPosition = 3 * mapMoveDelta;
-			this.doubleTapDeltaTime = 300;
+		TouchEventHandler() {
+			ViewConfiguration viewConfiguration = ViewConfiguration.get(getMapActivity());
+			this.mapMoveDelta = viewConfiguration.getScaledTouchSlop();
+			this.doubleTapDelta = viewConfiguration.getScaledDoubleTapSlop();
+			this.doubleTapTimout = ViewConfiguration.getDoubleTapTimeout();
 		}
 
 		/**
@@ -487,11 +487,6 @@ public class MapView extends ViewGroup {
 		 */
 		abstract boolean handleTouchEvent(MotionEvent event);
 	}
-
-	/**
-	 * Relative threshold value of a motion event to be interpreted as a move.
-	 */
-	private static final int DEFAULT_MAP_MOVE_DELTA = 8;
 
 	/**
 	 * Default operation mode of a MapView if no other mode is specified.
@@ -508,8 +503,19 @@ public class MapView extends ViewGroup {
 	 */
 	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
 
+	/**
+	 * Default value for the kilometer text field.
+	 */
 	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
+
+	/**
+	 * Default value for the meter text field.
+	 */
 	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
+
+	/**
+	 * Path to the caching folder on the external storage.
+	 */
 	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
 
 	/**
@@ -531,6 +537,7 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
+
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -549,6 +556,9 @@ public class MapView extends ViewGroup {
 	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
 			.getZoomControlsTimeout();
 
+	/**
+	 * Minimum possible zoom level.
+	 */
 	private static final byte ZOOM_MIN = 0;
 
 	/**
@@ -1221,11 +1231,9 @@ public class MapView extends ViewGroup {
 	private synchronized void setupMapView() {
 		// set up the TouchEventHandler depending on the Android version
 		if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.FROYO) {
-			this.touchEventHandler = new SingleTouchHandler(DEFAULT_MAP_MOVE_DELTA
-					* this.mapActivity.getResources().getDisplayMetrics().density);
+			this.touchEventHandler = new SingleTouchHandler();
 		} else {
-			this.touchEventHandler = new MultiTouchHandler(DEFAULT_MAP_MOVE_DELTA
-					* this.mapActivity.getResources().getDisplayMetrics().density);
+			this.touchEventHandler = new MultiTouchHandler();
 		}
 
 		this.tileMemoryCardCacheSize = DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE;
