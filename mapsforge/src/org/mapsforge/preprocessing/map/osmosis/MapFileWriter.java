@@ -297,12 +297,13 @@ class MapFileWriter {
 
 		logger.fine("writing data for zoom interval " + zoomIntervalIndex
 				+ ", number of tiles: " +
-				dataStore.numberOfHorizontalTiles(zoomIntervalIndex)
-				* dataStore.numberOfVerticalTiles(zoomIntervalIndex));
+				dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal()
+				* dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesVertical());
 
-		TileCoordinate upperLeft = dataStore.getUpperLeft(zoomIntervalIndex);
-		int lengthX = dataStore.numberOfHorizontalTiles(zoomIntervalIndex);
-		int lengthY = dataStore.numberOfVerticalTiles(zoomIntervalIndex);
+		TileCoordinate upperLeft = dataStore.getTileGridLayout(zoomIntervalIndex)
+				.getUpperLeft();
+		int lengthX = dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal();
+		int lengthY = dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesVertical();
 
 		byte minZoomCurrentInterval = dataStore.getZoomIntervalConfiguration().getMinZoom(
 				zoomIntervalIndex);
@@ -312,9 +313,7 @@ class MapFileWriter {
 				zoomIntervalIndex);
 		byte maxMaxZoomlevel = dataStore.getZoomIntervalConfiguration().getMaxMaxZoom();
 
-		int tileAmountInBytes = dataStore.numberOfHorizontalTiles(zoomIntervalIndex)
-				* dataStore.numberOfVerticalTiles(zoomIntervalIndex)
-				* BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
+		int tileAmountInBytes = lengthX * lengthY * BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
 		int indexBufferSize = tileAmountInBytes
 				+ (debugStrings ? DEBUG_INDEX_START_STRING.getBytes().length : 0);
 		MappedByteBuffer indexBuffer = randomAccessFile.getChannel().map(MapMode.READ_WRITE,
@@ -541,33 +540,32 @@ class MapFileWriter {
 							// // }
 							//
 							// *********MULTIPOLYGON PROCESSING***********
-							if (way.getWaytype() == 3 && dataStore
-									.getInnerWaysOfMultipolygon(way.getId()) != null) {
+							if (way.getWaytype() == 3) {
 								List<TDWay> innerways = dataStore
 										.getInnerWaysOfMultipolygon(way.getId());
+								if (innerways != null && innerways.size() > 0) {
 
-								if (innerways == null) {
-									tileBuffer.put((byte) 0);
-								} else {
 									tileBuffer.put((byte) innerways.size());
 									for (TDWay innerway : innerways) {
 										WayNodePreprocessingResult innerWayNodePreprocessingResult =
-												preprocessWayNodes(innerway,
-														waynodeCompression, pixelCompression,
-														false,
-														maxZoomCurrentInterval,
-														minZoomCurrentInterval,
-														currentTileCoordinate);
+													preprocessWayNodes(innerway,
+															waynodeCompression,
+															pixelCompression,
+															false,
+															maxZoomCurrentInterval,
+															minZoomCurrentInterval,
+															currentTileCoordinate);
 										// write the amount of way nodes to the file
 										tileBuffer
-												.putShort((short) (innerWayNodePreprocessingResult
-														.getWaynodesAsList()
-														.size() / 2));
+													.putShort((short) (innerWayNodePreprocessingResult
+															.getWaynodesAsList()
+															.size() / 2));
 										writeWayNodes(
-												innerWayNodePreprocessingResult
-														.getWaynodesAsList(),
-												wayNodePreprocessingResult.getCompressionType(),
-												tileBuffer);
+													innerWayNodePreprocessingResult
+															.getWaynodesAsList(),
+													wayNodePreprocessingResult
+															.getCompressionType(),
+													tileBuffer);
 									}
 								}
 							}

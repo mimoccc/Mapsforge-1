@@ -23,10 +23,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
+import org.openstreetmap.osmosis.core.domain.v0_6.Way;
+import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
 class TileData {
+
+	static final Logger logger =
+			Logger.getLogger(TileData.class.getName());
 
 	private Set<TDNode> pois;
 	private Set<TDWay> ways;
@@ -97,6 +105,52 @@ class TileData {
 		private final String name;
 		private EnumSet<PoiEnum> tags;
 
+		static TDNode fromNode(Node node) {
+			// special tags
+			short elevation = 0;
+			byte layer = 5;
+			String name = null;
+			String housenumber = null;
+
+			EnumSet<PoiEnum> tags = EnumSet.noneOf(PoiEnum.class);
+			PoiEnum currentTag = null;
+
+			// Process Tags
+			for (Tag tag : node.getTags()) {
+				String fullTag = tag.getKey() + "=" + tag.getValue();
+				// test for special tags
+				if (tag.getKey().equalsIgnoreCase("ele")) {
+					try {
+						elevation = (short) Double.parseDouble(tag.getValue());
+						if (elevation > 32000) {
+							elevation = 32000;
+						}
+
+					} catch (NumberFormatException e) {
+						// nothing to do here as elevation is initialized with 0
+					}
+				} else if (tag.getKey().equalsIgnoreCase("addr:housenumber")) {
+					housenumber = tag.getValue();
+				} else if (tag.getKey().equalsIgnoreCase("name")) {
+					name = tag.getValue();
+				} else if (tag.getKey().equalsIgnoreCase("layer")) {
+					try {
+						layer = Byte.parseByte(tag.getValue());
+						if (layer >= -5 && layer <= 5)
+							layer += 5;
+					} catch (NumberFormatException e) {
+						// nothing to do here as layer is initialized with 5
+					}
+				} else if ((currentTag = PoiEnum.fromString(fullTag)) != null) {
+					tags.add(currentTag);
+				}
+			}
+			return new TDNode(node.getId(),
+					GeoCoordinate.doubleToInt(node.getLatitude()),
+					GeoCoordinate.doubleToInt(node.getLongitude()), elevation,
+					layer, housenumber, name, tags);
+		}
+
 		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
 				String houseNumber, String name) {
 			this.id = id;
@@ -106,6 +160,22 @@ class TileData {
 			this.houseNumber = houseNumber;
 			this.layer = layer;
 			this.name = name;
+		}
+
+		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
+				String houseNumber, String name, EnumSet<PoiEnum> tags) {
+			this.id = id;
+			this.latitude = latitude;
+			this.longitude = longitude;
+			this.elevation = elevation;
+			this.houseNumber = houseNumber;
+			this.layer = layer;
+			this.name = name;
+			this.tags = tags;
+		}
+
+		boolean isPOI() {
+			return houseNumber != null || elevation > 0 || name != null || tags.size() > 0;
 		}
 
 		byte getMinimumZoomLevel() {
@@ -189,15 +259,75 @@ class TileData {
 		private short waytype;
 		private final TDNode[] wayNodes;
 
-		// private boolean innerWay = false;
+		static TDWay fromWay(Way way, EntityResolver<TDNode> er) {
+			if (way == null)
+				return null;
 
-		// boolean isInnerWay() {
-		// return innerWay;
-		// }
-		//
-		// void setInnerWay(boolean innerWay) {
-		// this.innerWay = innerWay;
-		// }
+			// special tags
+			byte layer = 5;
+			String name = null;
+			String ref = null;
+
+			EnumSet<WayEnum> tags = EnumSet.noneOf(WayEnum.class);
+			WayEnum currentTag = null;
+
+			// Process Tags
+			for (Tag tag : way.getTags()) {
+				String fullTag = tag.getKey() + "=" + tag.getValue();
+				// test for special tags
+				if (tag.getKey().equalsIgnoreCase("name")) {
+					name = tag.getValue();
+				} else if (tag.getKey().equalsIgnoreCase("layer")) {
+					try {
+						layer = Byte.parseByte(tag.getValue());
+						if (layer >= -5 && layer <= 5)
+							layer += 5;
+					} catch (NumberFormatException e) {
+						// nothing to do here as layer is initialized with 5
+					}
+				} else if (tag.getKey().equalsIgnoreCase("ref")) {
+					ref = tag.getValue();
+				} else if ((currentTag = WayEnum.fromString(fullTag)) != null) {
+					tags.add(currentTag);
+				}
+			}
+
+			// only ways with at least 2 way nodes are valid ways
+			if (way.getWayNodes().size() >= 2) {
+
+				boolean validWay = true;
+				// retrieve way nodes from data store
+				TDNode[] waynodes = new TDNode[way.getWayNodes().size()];
+				int i = 0;
+				for (WayNode waynode : way.getWayNodes()) {
+					// TODO adjust interface to support a method getWayNodes()
+					waynodes[i] = er.getEntity(waynode.getNodeId());
+					if (waynodes[i] == null) {
+						validWay = false;
+						logger.finer("unknown way node: " + waynode.getNodeId()
+								+ " in way " + way.getId());
+					}
+					i++;
+				}
+
+				// for a valid way all way nodes must be existent in the input data
+				if (validWay) {
+
+					// mark the way as area if the first and the last way node are the same
+					// and if the way has more than two way nodes
+					short waytype = 1;
+					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()
+							&& waynodes.length > 2) {
+						waytype = 2;
+					}
+
+					return new TDWay(way.getId(), layer, name,
+							ref, tags, waytype, waynodes);
+				}
+			}
+
+			return null;
+		}
 
 		TDWay(long id, byte layer, String name, String ref, TDNode[] wayNodes) {
 			this.id = id;

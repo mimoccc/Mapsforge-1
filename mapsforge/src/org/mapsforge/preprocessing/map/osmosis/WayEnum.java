@@ -194,6 +194,19 @@ enum WayEnum {
 		return stringToEnum.get(symbol);
 	}
 
+	private static final Map<Integer, WayEnum> ordinalToEnum =
+			new HashMap<Integer, WayEnum>();
+
+	static {
+		for (WayEnum way : values()) {
+			ordinalToEnum.put(way.ordinal(), way);
+		}
+	}
+
+	public static WayEnum fromOrdinal(int ordinal) {
+		return ordinalToEnum.get(ordinal);
+	}
+
 	public enum WayType {
 		HIGHWAY, RAILWAY, BUILDING, LANDUSE, LEISURE, AMENITY, NATURAL, WATERWAY, UNCLASSIFIED;
 	}

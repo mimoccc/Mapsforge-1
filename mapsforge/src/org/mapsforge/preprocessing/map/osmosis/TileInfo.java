@@ -20,6 +20,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class TileInfo {
@@ -40,29 +41,39 @@ class TileInfo {
 
 	private final BitSet seaTileInfo = new BitSet(N_BITS);
 
-	TileInfo(String strInputFile) throws IOException {
-		DataInputStream dis = new DataInputStream(
-				ClassLoader.getSystemResourceAsStream(strInputFile));
-		byte currentByte;
+	private TileInfo(String strInputFile) {
+		try {
 
-		long start = System.currentTimeMillis();
-		for (int i = 0; i < N_BYTES; i++) {
-			currentByte = dis.readByte();
-			if (((currentByte >> 6) & BITMASK) == SEA) {
-				seaTileInfo.set(i * 4);
+			DataInputStream dis = new DataInputStream(
+					TileInfo.class.getClassLoader().getResourceAsStream(strInputFile));
+			byte currentByte;
+
+			long start = System.currentTimeMillis();
+			for (int i = 0; i < N_BYTES; i++) {
+				currentByte = dis.readByte();
+				if (((currentByte >> 6) & BITMASK) == SEA) {
+					seaTileInfo.set(i * 4);
+				}
+				if (((currentByte >> 4) & BITMASK) == SEA) {
+					seaTileInfo.set(i * 4 + 1);
+				}
+				if (((currentByte >> 2) & BITMASK) == SEA) {
+					seaTileInfo.set(i * 4 + 2);
+				}
+				if ((currentByte & BITMASK) == SEA) {
+					seaTileInfo.set(i * 4 + 3);
+				}
 			}
-			if (((currentByte >> 4) & BITMASK) == SEA) {
-				seaTileInfo.set(i * 4 + 1);
-			}
-			if (((currentByte >> 2) & BITMASK) == SEA) {
-				seaTileInfo.set(i * 4 + 2);
-			}
-			if ((currentByte & BITMASK) == SEA) {
-				seaTileInfo.set(i * 4 + 3);
-			}
+			logger.info("loading of tile info data took "
+					+ (System.currentTimeMillis() - start)
+					+ " ms");
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "error loading tile info from file " + strInputFile);
 		}
-		logger.info("loading of tile info data took " + (System.currentTimeMillis() - start)
-				+ " ms");
+	}
+
+	static TileInfo getInstance() {
+		return new TileInfo("org/mapsforge/preprocessing/map/osmosis/oceantiles_12.dat");
 	}
 
 	/**

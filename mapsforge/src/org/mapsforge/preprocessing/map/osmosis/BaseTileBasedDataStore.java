@@ -28,9 +28,8 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 			Logger.getLogger(BaseTileBasedDataStore.class.getName());
 
 	protected final Rect boundingbox;
+	protected TileGridLayout[] tileGridLayouts;
 	protected final ZoomIntervalConfiguration zoomIntervalConfiguration;
-
-	protected final TileCoordinate[] upperLeftTiles;
 
 	// protected final int[] tileOffsetsHorizontal;
 	// protected final int[] tileOffsetsVertical;
@@ -47,19 +46,13 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		super();
 		this.boundingbox = bbox;
 		this.zoomIntervalConfiguration = zoomIntervalConfiguration;
-		this.upperLeftTiles = new TileCoordinate[zoomIntervalConfiguration
-												.getNumberOfZoomIntervals()];
-		long cumulatedNumberOfTiles = cumulatedNumberOfTiles();
-		if (cumulatedNumberOfTiles > MAX_TILES_SUPPORTED) {
-			throw new IllegalArgumentException("Bounding box of this area is too large. Need "
-					+ cumulatedNumberOfTiles + " number of tiles, but only "
-					+ MAX_TILES_SUPPORTED + " are supported.");
-		}
+		this.tileGridLayouts = new TileGridLayout[zoomIntervalConfiguration
+				.getNumberOfZoomIntervals()];
 
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			this.upperLeftTiles[i] = new TileCoordinate(
+			TileCoordinate upperLeft = new TileCoordinate(
 													(int) MercatorProjection.longitudeToTileX(
 															GeoCoordinate
 																	.intToDouble(boundingbox.minLongitudeE6),
@@ -73,6 +66,14 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 																	zoomIntervalConfiguration
 																			.getBaseZoom(i)
 													);
+			this.tileGridLayouts[i] = new TileGridLayout(upperLeft,
+					computeNumberOfHorizontalTiles(i), computeNumberOfVerticalTiles(i));
+		}
+
+		if (cumulatedNumberOfTiles() > MAX_TILES_SUPPORTED) {
+			throw new IllegalArgumentException("Bounding box of this area is too large. Need "
+					+ cumulatedNumberOfTiles() + " number of tiles, but only "
+					+ MAX_TILES_SUPPORTED + " are supported.");
 		}
 	}
 
@@ -82,25 +83,26 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	}
 
 	@Override
-	public ZoomIntervalConfiguration getZoomIntervalConfiguration() {
-		return zoomIntervalConfiguration;
+	public TileGridLayout getTileGridLayout(int zoomIntervalIndex) {
+		return tileGridLayouts[zoomIntervalIndex];
 	}
 
 	@Override
-	public TileCoordinate getUpperLeft(int zoomIntervalIndex) {
-		return upperLeftTiles[zoomIntervalIndex];
+	public ZoomIntervalConfiguration getZoomIntervalConfiguration() {
+		return zoomIntervalConfiguration;
 	}
 
 	@Override
 	public long cumulatedNumberOfTiles() {
 		long cumulated = 0;
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			cumulated += (computeNumberOfHorizontalTiles(i) * computeNumberOfVerticalTiles(i));
+			cumulated += (tileGridLayouts[i].getAmountTilesHorizontal() * tileGridLayouts[i]
+					.getAmountTilesVertical());
 		}
 		return cumulated;
 	}
 
-	protected int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {
+	private int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {
 		long tileCoordinateLeft = MercatorProjection.longitudeToTileX(
 				GeoCoordinate.intToDouble(boundingbox.getMinLongitudeE6()),
 				zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
@@ -119,7 +121,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 
 	}
 
-	protected int computeNumberOfVerticalTiles(int zoomIntervalIndex) {
+	private int computeNumberOfVerticalTiles(int zoomIntervalIndex) {
 		long tileCoordinateBottom = MercatorProjection.latitudeToTileY(
 				GeoCoordinate.intToDouble(boundingbox.getMinLatitudeE6()),
 				zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));

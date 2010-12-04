@@ -32,6 +32,8 @@ import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
+import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	private static final Logger logger =
@@ -59,7 +61,8 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		this.tileData = new TileData[zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
 		// compute number of tiles needed on each base zoom level
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			this.tileData[i] = new TileData[computeNumberOfHorizontalTiles(i)][computeNumberOfVerticalTiles(i)];
+			this.tileData[i] = new TileData[tileGridLayouts[i].getAmountTilesHorizontal()][tileGridLayouts[i]
+					.getAmountTilesVertical()];
 		}
 	}
 
@@ -84,6 +87,11 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
+	public TDNode getEntity(long id) {
+		return nodes.get(id);
+	}
+
+	@Override
 	public Rect getBoundingBox() {
 		return boundingbox;
 	}
@@ -91,16 +99,6 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	@Override
 	public ZoomIntervalConfiguration getZoomIntervalConfiguration() {
 		return zoomIntervalConfiguration;
-	}
-
-	@Override
-	public TDNode getNode(long id) {
-		return nodes.get(id);
-	}
-
-	@Override
-	public TDWay getWay(long id) {
-		return ways.get(id);
 	}
 
 	@Override
@@ -114,7 +112,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			return Collections.emptyList();
 		List<TDWay> res = new ArrayList<TileData.TDWay>();
 		for (long id : innerWayIDs) {
-			TDWay current = getWay(id);
+			TDWay current = ways.get(id);
 			if (current == null)
 				continue;
 			res.add(current);
@@ -124,23 +122,15 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
-	public int numberOfNodes() {
-		return nodes.size();
-	}
-
-	@Override
-	public boolean addNode(TDNode node) {
-		nodes.put(node.getId(), node);
+	public boolean addNode(Node node) {
+		TDNode tdNode = TDNode.fromNode(node);
+		nodes.put(tdNode.getId(), tdNode);
+		if (tdNode.isPOI())
+			addPOI(tdNode);
 		return true;
 	}
 
-	@Override
-	public boolean containsNode(long id) {
-		return nodes.contains(id);
-	}
-
-	@Override
-	public boolean addPOI(TDNode node) {
+	private void addPOI(TDNode node) {
 		byte minZoomLevel = node.getMinimumZoomLevel();
 		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
 			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
@@ -158,30 +148,32 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 				// System.out.println("adding poi: " + tileCoordinateX + "\t" + tileCoordinateY
 				// + "\t" + zoomIntervalConfiguration.getBaseZoom(i));
 				// System.out.println(node);
-				TileData td = getTile(i, tileCoordinateX, tileCoordinateY);
+				TileData td = getTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
 				if (td != null) {
 					td.addPOI(node);
 				}
 			}
 		}
-		return true;
 	}
 
 	@Override
-	public boolean addWay(TDWay way) {
-		this.ways.put(way.getId(), way);
-		byte minZoomLevel = way.getMinimumZoomLevel();
+	public boolean addWay(Way way) {
+		TDWay tdWay = TDWay.fromWay(way, this);
+		if (tdWay == null)
+			return false;
+		this.ways.put(tdWay.getId(), tdWay);
+		byte minZoomLevel = tdWay.getMinimumZoomLevel();
 		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
 			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			// is way seen in a zoom interval?
 			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
-				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(way,
+				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(tdWay,
 						zoomIntervalConfiguration.getBaseZoom(i));
 				for (TileCoordinate matchedTile : matchedTiles) {
 					TileData td = getTile(i, matchedTile.getX(), matchedTile.getY());
 					if (td != null)
-						td.addWay(way);
+						td.addWay(tdWay);
 				}
 			}
 		}
@@ -192,7 +184,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	@Override
 	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
 			EnumSet<WayEnum> relationTags) {
-		TDWay outerWay = getWay(outerWayID);
+		TDWay outerWay = ways.get(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
 			logger.finer("outer way with id " + outerWayID + " not existent in relation");
@@ -265,10 +257,12 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
-	public TileData getTile(int baseZoomIndex, long tileCoordinateX, long tileCoordinateY) {
-		int tileCoordinateXIndex = (int) (tileCoordinateX - upperLeftTiles[baseZoomIndex]
+	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {
+		int tileCoordinateXIndex = (tileCoordinateX - tileGridLayouts[baseZoomIndex]
+				.getUpperLeft()
 				.getX());
-		int tileCoordinateYIndex = (int) (tileCoordinateY - upperLeftTiles[baseZoomIndex]
+		int tileCoordinateYIndex = (tileCoordinateY - tileGridLayouts[baseZoomIndex]
+				.getUpperLeft()
 				.getY());
 		// check for valid range
 		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0 ||
@@ -285,12 +279,8 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
-	public int numberOfHorizontalTiles(int zoomIntervalIndex) {
-		return tileData[zoomIntervalIndex].length;
+	public void complete() {
+		// nothing to do here
 	}
 
-	@Override
-	public int numberOfVerticalTiles(int zoomIntervalIndex) {
-		return tileData[zoomIntervalIndex][0].length;
-	}
 }

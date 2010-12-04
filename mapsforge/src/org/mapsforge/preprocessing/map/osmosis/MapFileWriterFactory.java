@@ -10,6 +10,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
 	private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime()
 			.availableProcessors();
+	private static final String DEFAULT_PARAM_TYPE = "ram";
 
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
@@ -21,6 +22,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
 	private static final String PARAM_THREAD_POOL_SIZE = "thread-pool-size";
+	private static final String PARAM_TYPE = "type";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -37,11 +39,10 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
 		int threadpoolSize = getIntegerArgument(taskConfig, PARAM_THREAD_POOL_SIZE,
 				DEFAULT_THREAD_POOL_SIZE);
-		// String zoomIntervalConfiguration = getStringArgument(taskConfig,
-		// PARAM_ZOOMINTERVAL_CONFIG, null);
+		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
 				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
-				threadpoolSize);
+				threadpoolSize, type);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

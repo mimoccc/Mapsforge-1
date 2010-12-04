@@ -22,6 +22,8 @@ import java.util.List;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
+import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 /**
  * A TileBasedDataStore allows tile based access to OpenStreetMap geo data. POIs and ways are
@@ -30,7 +32,7 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
  * @author bross
  * 
  */
-interface TileBasedDataStore {
+interface TileBasedDataStore extends EntityResolver<TDNode> {
 
 	static final int MAX_TILES_SUPPORTED = 1000000;
 
@@ -41,15 +43,7 @@ interface TileBasedDataStore {
 	 */
 	public Rect getBoundingBox();
 
-	/**
-	 * Get the TileCoordinate of the upper left tile in the bounding box of the data store on a
-	 * given base zoom level.
-	 * 
-	 * @param zoomIntervalIndex
-	 *            the index of the zoom interval that defines the base zoom level
-	 * @return The upper left tile
-	 */
-	public TileCoordinate getUpperLeft(int zoomIntervalIndex);
+	public TileGridLayout getTileGridLayout(int zoomIntervalIndex);
 
 	/**
 	 * Get the zoom interval configuration of the data store.
@@ -65,32 +59,7 @@ interface TileBasedDataStore {
 	 *            the node that is to be added to the data store
 	 * @return true, if the node was successfully added, false otherwise
 	 */
-	public boolean addNode(TDNode node);
-
-	/**
-	 * Retrieve the node with the given id from the data store.
-	 * 
-	 * @param id
-	 *            the id of the node
-	 * @return the node if existent in the data store, null otherwise
-	 */
-	public TDNode getNode(long id);
-
-	/**
-	 * Checks if the node with the given id exists in the data store.
-	 * 
-	 * @param id
-	 *            the id of the node
-	 * @return true, if the node exists, false otherwise
-	 */
-	public boolean containsNode(long id);
-
-	/**
-	 * Get the total amount of distinct nodes that exist in the data store.
-	 * 
-	 * @return total amount of distinct nodes in this data store
-	 */
-	public int numberOfNodes();
+	public boolean addNode(Node node);
 
 	/**
 	 * Add a way to the data store. No association with a tile is performed.
@@ -99,16 +68,7 @@ interface TileBasedDataStore {
 	 *            the way which is to be added to the data store
 	 * @return true if the way was successfully added, false otherwise
 	 */
-	public boolean addWay(TDWay way);
-
-	/**
-	 * Retrieve the way from the data store with the given id.
-	 * 
-	 * @param id
-	 *            the id of the way
-	 * @return the way if existent in the data store, null otherwise
-	 */
-	public TDWay getWay(long id);
+	public boolean addWay(Way way);
 
 	/**
 	 * Retrieve the all the inner ways that are associated with an outer way that represents a
@@ -119,16 +79,6 @@ interface TileBasedDataStore {
 	 * @return all associated inner ways
 	 */
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID);
-
-	/**
-	 * Adds a POI to all associated tiles. Which tiles are associated is computed from the geo
-	 * position and the zoom level of first appearance of the POI.
-	 * 
-	 * @param poi
-	 *            POI to add
-	 * @return true if the POI has been successfully added
-	 */
-	public boolean addPOI(TDNode poi);
 
 	/**
 	 * Adds a multipolygon consisting of ways to the tile data store.
@@ -155,27 +105,7 @@ interface TileBasedDataStore {
 	 *            y coordinate of the tile
 	 * @return tile, or null if the tile is outside the bounding box of this tile data store
 	 */
-	public TileData getTile(int baseZoomIndex, long tileCoordinateX, long tileCoordinateY);
-
-	/**
-	 * Retrieve the number of tiles on the x-axis of the tile coordinate system on a given base
-	 * zoom level.
-	 * 
-	 * @param zoomIntervalIndex
-	 *            index of the base zoom, as defined in a ZoomIntervalConfiguration
-	 * @return number of tiles
-	 */
-	public int numberOfHorizontalTiles(int zoomIntervalIndex);
-
-	/**
-	 * Retrieve the number of tiles on the y-axis of the tile coordinate system on a given base
-	 * zoom level.
-	 * 
-	 * @param zoomIntervalIndex
-	 *            index of the base zoom, as defined in a ZoomIntervalConfiguration
-	 * @return number of tiles
-	 */
-	public int numberOfVerticalTiles(int zoomIntervalIndex);
+	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY);
 
 	/**
 	 * Retrieve the total amount of tiles cumulated over all base zoom levels that is needed to
@@ -184,5 +114,7 @@ interface TileBasedDataStore {
 	 * @return total amount of tiles
 	 */
 	long cumulatedNumberOfTiles();
+
+	void complete();
 
 }

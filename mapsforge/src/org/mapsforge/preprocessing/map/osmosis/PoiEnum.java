@@ -125,4 +125,17 @@ enum PoiEnum {
 		return stringToEnum.get(symbol);
 	}
 
+	private static final Map<Integer, PoiEnum> ordinalToEnum =
+			new HashMap<Integer, PoiEnum>();
+
+	static {
+		for (PoiEnum way : values()) {
+			ordinalToEnum.put(way.ordinal(), way);
+		}
+	}
+
+	public static PoiEnum fromOrdinal(int ordinal) {
+		return ordinalToEnum.get(ordinal);
+	}
+
 }

@@ -24,15 +24,12 @@ import java.io.RandomAccessFile;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
-import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
@@ -42,7 +39,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 /**
@@ -76,12 +72,13 @@ public class MapFileWriterTask implements Sink {
 	private String comment;
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 	private int threadpoolSize;
+	private String type;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
-			int threadpoolSize) {
+			int threadpoolSize, String type) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException(
@@ -104,8 +101,17 @@ public class MapFileWriterTask implements Sink {
 				.getStandardConfiguration()
 				: ZoomIntervalConfiguration.fromString(zoomIntervalConfigurationString);
 
+		this.type = type;
+		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd"))
+			throw new IllegalArgumentException("type argument must equal ram or hd, found: "
+					+ type);
+
 		if (bbox != null) {
-			this.tileBasedGeoObjectStore = RAMTileBasedDataStore.newInstance(bbox,
+			if (type.equalsIgnoreCase("ram"))
+				this.tileBasedGeoObjectStore = RAMTileBasedDataStore.newInstance(bbox,
+						zoomIntervalConfiguration);
+			else
+				this.tileBasedGeoObjectStore = HDTileBasedDataStore.newInstance(bbox,
 						zoomIntervalConfiguration);
 		}
 	}
@@ -121,6 +127,9 @@ public class MapFileWriterTask implements Sink {
 		NumberFormat nfCounts = NumberFormat.getInstance();
 		nfCounts.setGroupingUsed(true);
 		nfMegabyte.setMaximumFractionDigits(2);
+
+		logger.info("completing read...");
+		tileBasedGeoObjectStore.complete();
 
 		logger.info("start writing file...");
 
@@ -166,11 +175,18 @@ public class MapFileWriterTask implements Sink {
 			case Bound:
 				Bound bound = (Bound) entity;
 				if (tileBasedGeoObjectStore == null) {
-					tileBasedGeoObjectStore =
-							RAMTileBasedDataStore.newInstance(
-									bound.getBottom(), bound.getTop(),
-									bound.getLeft(), bound.getRight(),
-									zoomIntervalConfiguration);
+					if (type.equalsIgnoreCase("ram"))
+						tileBasedGeoObjectStore =
+								RAMTileBasedDataStore.newInstance(
+										bound.getBottom(), bound.getTop(),
+										bound.getLeft(), bound.getRight(),
+										zoomIntervalConfiguration);
+					else
+						tileBasedGeoObjectStore =
+								HDTileBasedDataStore.newInstance(
+										bound.getBottom(), bound.getTop(),
+										bound.getLeft(), bound.getRight(),
+										zoomIntervalConfiguration);
 				}
 				logger.info("start reading data...");
 				break;
@@ -189,76 +205,9 @@ public class MapFileWriterTask implements Sink {
 							"tile based data store not initialized, missing bounding " +
 									"box information in input data");
 				}
-
-				Node currentNode = (Node) entity;
-
-				boolean isPOI = false;
-
-				// special tags
-				short elevation = 0;
-				byte layer = 5;
-				String name = null;
-				String housenumber = null;
-
-				List<PoiEnum> tags = new LinkedList<PoiEnum>();
-				PoiEnum currentTag = null;
-
-				// Process Tags
-				for (Tag tag : currentNode.getTags()) {
-					String fullTag = tag.getKey() + "=" + tag.getValue();
-					// test for special tags
-					if (tag.getKey().equalsIgnoreCase("ele")) {
-						try {
-							elevation = (short) Double.parseDouble(tag.getValue());
-							if (elevation > 32000) {
-								elevation = 32000;
-							}
-
-						} catch (NumberFormatException e) {
-							// nothing to do here as elevation is initialized with 0
-						}
-						isPOI = true;
-					} else if (tag.getKey().equalsIgnoreCase("addr:housenumber")) {
-						housenumber = tag.getValue();
-						isPOI = true;
-					} else if (tag.getKey().equalsIgnoreCase("name")) {
-						name = tag.getValue();
-						isPOI = true;
-					} else if (tag.getKey().equalsIgnoreCase("layer")) {
-						try {
-							layer = Byte.parseByte(tag.getValue());
-							if (layer >= -5 && layer <= 5)
-								layer += 5;
-						} catch (NumberFormatException e) {
-							// nothing to do here as layer is initialized with 5
-						}
-						// TODO: is node a POI if above condition is true? guess not...
-						// isPOI = true;
-					} else if ((currentTag = PoiEnum.fromString(fullTag)) != null) {
-						// if current tag is in the white list, add it to the temporary tag
-						// list
-						tags.add(currentTag);
-						isPOI = true;
-					}
-				}
-
-				// add all nodes to list of known nodes regardless of POI or not;
-				// we need the data if the node is part of a way or a relation
-				TDNode node = new TDNode(currentNode.getId(),
-						GeoCoordinate.doubleToInt(currentNode.getLatitude()),
-						GeoCoordinate.doubleToInt(currentNode.getLongitude()), elevation,
-						layer,
-						housenumber, name);
-				if (!tags.isEmpty())
-					node.setTags(EnumSet.copyOf(tags));
-
-				tileBasedGeoObjectStore.addNode(node);
-				if (isPOI)
-					tileBasedGeoObjectStore.addPOI(node);
-
+				tileBasedGeoObjectStore.addNode((Node) entity);
 				// hint to GC
 				entity = null;
-
 				amountOfNodesProcessed++;
 				break;
 			}
@@ -267,83 +216,8 @@ public class MapFileWriterTask implements Sink {
 				// ******************* WAY PROCESSING*********************
 				// *******************************************************
 			case Way: {
-				Way currentWay = (Way) entity;
-
-				// special tags
-				byte layer = 5;
-				String name = null;
-				String ref = null;
-
-				List<WayEnum> tags = new LinkedList<WayEnum>();
-				WayEnum currentTag = null;
-
-				// Process Tags
-				for (Tag tag : currentWay.getTags()) {
-					String fullTag = tag.getKey() + "=" + tag.getValue();
-					// test for special tags
-					if (tag.getKey().equalsIgnoreCase("name")) {
-						name = tag.getValue();
-					} else if (tag.getKey().equalsIgnoreCase("layer")) {
-						try {
-							layer = Byte.parseByte(tag.getValue());
-							if (layer >= -5 && layer <= 5)
-								layer += 5;
-						} catch (NumberFormatException e) {
-							// nothing to do here as layer is initialized with 5
-						}
-					} else if (tag.getKey().equalsIgnoreCase("ref")) {
-						ref = tag.getValue();
-					} else if ((currentTag = WayEnum.fromString(fullTag)) != null) {
-						// if current tag is in the white list, add it to the temporary tag
-						// list
-						tags.add(currentTag);
-					}
-				}
-
-				// only ways with at least 2 way nodes are valid ways
-				if (currentWay.getWayNodes().size() >= 2) {
-
-					// retrieve way nodes from data store
-					TDNode[] waynodes = new TDNode[currentWay
-							.getWayNodes().size()];
-					int i = 0;
-					boolean validWay = true;
-					for (WayNode waynode : currentWay.getWayNodes()) {
-						// TODO adjust interface to support a method getWayNodes()
-						waynodes[i] = tileBasedGeoObjectStore.getNode(waynode.getNodeId());
-						if (waynodes[i] == null) {
-							validWay = false;
-							logger.finer("unknown way node: " + waynode.getNodeId()
-									+ " in way " + currentWay.getId());
-						}
-						i++;
-					}
-
-					// for a valid way all way nodes must be existent in the input data
-					if (validWay) {
-
-						// mark the way as area if the first and the last way node are the same
-						// and if the way has more than two way nodes
-						short waytype = 1;
-						// TODO multipolygon handling
-						if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()
-								&& waynodes.length > 2) {
-							waytype = 2;
-						}
-
-						EnumSet<WayEnum> tagSet = null;
-						if (!tags.isEmpty()) {
-							tagSet = EnumSet.copyOf(tags);
-						}
-						TileData.TDWay way = new TDWay(currentWay.getId(), layer, name,
-								ref, tagSet, waytype, waynodes);
-						tileBasedGeoObjectStore.addWay(way);
-					}
-
-				}
-
+				tileBasedGeoObjectStore.addWay((Way) entity);
 				entity = null;
-
 				amountOfWaysProcessed++;
 				break;
 			}
