@@ -18,8 +18,7 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel.MapMode;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,7 +88,8 @@ class MapFileWriter {
 	private static final short BITMAP_POLYGON_CLIPPING = 16;
 	private static final short BITMAP_WAYNODE_COMPRESSION = 8;
 
-	private static final Logger logger = Logger.getLogger(MapFileWriter.class.getName());
+	private static final Logger logger = Logger.getLogger(MapFileWriterUnbuffered.class
+			.getName());
 
 	private static final String PROJECTION = "Mercator";
 
@@ -107,7 +107,7 @@ class MapFileWriter {
 	private static final int MIN_TILE_BUFFER_SIZE = 0xA00000; // 10MB
 	private static final int TILE_BUFFER_SIZE = 0x3200000;
 	private final RandomAccessFile randomAccessFile;
-	private MappedByteBuffer bufferZoomIntervalConfig;
+	private ByteBuffer bufferZoomIntervalConfig;
 
 	// concurrent computation of subtile bitmask
 	private final ExecutorService executorService;
@@ -116,7 +116,10 @@ class MapFileWriter {
 	private long tilesProcessed = 0;
 	private long fivePercentOfTilesToProcess;
 
-	MapFileWriter(TileBasedDataStore dataStore, RandomAccessFile file, int threadpoolSize) {
+	private int posZoomIntervalConfig;
+
+	MapFileWriter(TileBasedDataStore dataStore, RandomAccessFile file,
+			int threadpoolSize) {
 		super();
 		this.dataStore = dataStore;
 		this.randomAccessFile = file;
@@ -170,13 +173,15 @@ class MapFileWriter {
 			currentFileSize += subfileSize;
 		}
 
-		randomAccessFile.setLength(currentFileSize);
+		randomAccessFile.seek(posZoomIntervalConfig);
+		byte[] containerB = bufferZoomIntervalConfig.array();
+		randomAccessFile.write(containerB);
 		randomAccessFile.close();
 	}
 
-	private void writeUTF8(String string, MappedByteBuffer buffer) {
+	private void writeUTF8(String string, ByteBuffer buffer) {
 		buffer.putShort((short) string.getBytes(UTF8_CHARSET).length);
-		buffer.put(string.getBytes());
+		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
 	private long writeContainerHeader(long date, int version, short tilePixel, String comment,
@@ -190,9 +195,7 @@ class MapFileWriter {
 
 		logger.fine("writing header");
 
-		MappedByteBuffer containerHeaderBuffer = randomAccessFile.getChannel().map(
-				MapMode.READ_WRITE, 0,
-				HEADER_BUFFER_SIZE);
+		ByteBuffer containerHeaderBuffer = ByteBuffer.allocate(HEADER_BUFFER_SIZE);
 
 		// write file header
 		// magic byte
@@ -259,9 +262,9 @@ class MapFileWriter {
 		}
 
 		// initialize buffer for writing zoom interval configurations
-		bufferZoomIntervalConfig = randomAccessFile.getChannel().map(MapMode.READ_WRITE,
-				containerHeaderBuffer.position(), SIZE_ZOOMINTERVAL_CONFIGURATION
-						* numberOfZoomIntervals);
+		this.posZoomIntervalConfig = containerHeaderBuffer.position();
+		bufferZoomIntervalConfig = ByteBuffer.allocate(SIZE_ZOOMINTERVAL_CONFIGURATION
+				* numberOfZoomIntervals);
 
 		containerHeaderBuffer.position(containerHeaderBuffer.position()
 				+ SIZE_ZOOMINTERVAL_CONFIGURATION
@@ -270,6 +273,14 @@ class MapFileWriter {
 		// -4 bytes of header size variable itself
 		int headerSize = containerHeaderBuffer.position() - headerSizePosition - 4;
 		containerHeaderBuffer.putInt(headerSizePosition, headerSize);
+
+		if (!containerHeaderBuffer.hasArray()) {
+			randomAccessFile.close();
+			throw new RuntimeException(
+					"unsupported operating system, byte buffer not backed by array");
+		}
+		randomAccessFile.write(containerHeaderBuffer.array(), 0,
+				containerHeaderBuffer.position());
 
 		return containerHeaderBuffer.position();
 	}
@@ -316,12 +327,15 @@ class MapFileWriter {
 		int tileAmountInBytes = lengthX * lengthY * BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
 		int indexBufferSize = tileAmountInBytes
 				+ (debugStrings ? DEBUG_INDEX_START_STRING.getBytes().length : 0);
-		MappedByteBuffer indexBuffer = randomAccessFile.getChannel().map(MapMode.READ_WRITE,
-				startPositionSubfile, indexBufferSize);
-		MappedByteBuffer tileBuffer = randomAccessFile.getChannel().map(MapMode.READ_WRITE,
-				startPositionSubfile + indexBufferSize, TILE_BUFFER_SIZE);
+		ByteBuffer indexBuffer = ByteBuffer.allocate(indexBufferSize);
+		ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
+
+		// write debug strings for tile index segment if necessary
+		if (debugStrings)
+			indexBuffer.put(DEBUG_INDEX_START_STRING.getBytes());
 
 		long currentSubfileOffset = indexBufferSize;
+		randomAccessFile.seek(startPositionSubfile + indexBufferSize);
 
 		for (int tileY = upperLeft.getY(); tileY < upperLeft.getY() + lengthY; tileY++) {
 			for (int tileX = upperLeft.getX(); tileX < upperLeft.getX() + lengthX; tileX++) {
@@ -579,10 +593,10 @@ class MapFileWriter {
 				currentSubfileOffset += tileSize;
 
 				// if necessary, allocate new buffer
-				if (tileBuffer.remaining() < MIN_TILE_BUFFER_SIZE)
-					tileBuffer = randomAccessFile.getChannel().map(MapMode.READ_WRITE,
-							startPositionSubfile + currentSubfileOffset,
-							TILE_BUFFER_SIZE);
+				if (tileBuffer.remaining() < MIN_TILE_BUFFER_SIZE) {
+					randomAccessFile.write(tileBuffer.array(), 0, tileBuffer.position());
+					tileBuffer.clear();
+				}
 
 				tilesProcessed++;
 				if (tilesProcessed % fivePercentOfTilesToProcess == 0) {
@@ -592,6 +606,17 @@ class MapFileWriter {
 				}
 			}// end for loop over tile columns
 		}// /end for loop over tile rows
+
+		// write remaining tiles
+		if (tileBuffer.position() > 0) {
+			// byte buffer was not previously cleared
+			randomAccessFile.write(tileBuffer.array(), 0, tileBuffer.position());
+		}
+
+		// write index
+		randomAccessFile.seek(startPositionSubfile);
+		randomAccessFile.write(indexBuffer.array());
+		randomAccessFile.seek(currentSubfileOffset);
 
 		// return size of sub file in bytes
 		return currentSubfileOffset;
@@ -631,7 +656,7 @@ class MapFileWriter {
 		return result;
 	}
 
-	private void appendWhitespace(int amount, MappedByteBuffer buffer) {
+	private void appendWhitespace(int amount, ByteBuffer buffer) {
 		for (int i = 0; i < amount; i++) {
 			buffer.put((byte) ' ');
 		}
@@ -829,7 +854,7 @@ class MapFileWriter {
 	}
 
 	private void writeWayNodes(List<Integer> waynodes, int compressionType,
-			MappedByteBuffer buffer) {
+			ByteBuffer buffer) {
 		if (!waynodes.isEmpty()
 				&& waynodes.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = waynodes.iterator();
