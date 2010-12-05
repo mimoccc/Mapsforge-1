@@ -1575,7 +1575,7 @@ public class MapView extends ViewGroup {
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
 
-			// setup the Overlays
+			// set up the Overlays
 			synchronized (this.overlays) {
 				for (Overlay overlay : this.overlays) {
 					overlay.setupOverlay(this);

@@ -389,9 +389,9 @@ public abstract class Overlay extends Thread {
 
 		// create the two Overlay bitmaps with the correct dimensions
 		this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.internalCanvas = new Canvas();
 
 		this.isSetUp = false;
