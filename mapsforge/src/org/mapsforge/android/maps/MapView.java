@@ -19,6 +19,7 @@ package org.mapsforge.android.maps;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -1254,7 +1255,85 @@ public class MapView extends ViewGroup {
 		this.matrix = new Matrix();
 
 		// create the thread-safe Overlay list
-		this.overlays = Collections.synchronizedList(new ArrayList<Overlay>(4));
+		this.overlays = Collections.synchronizedList(new ArrayList<Overlay>(4) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void add(int index, Overlay overlay) {
+				overlay.setupOverlay(MapView.this);
+				super.add(index, overlay);
+			}
+
+			@Override
+			public boolean add(Overlay overlay) {
+				overlay.setupOverlay(MapView.this);
+				return super.add(overlay);
+			}
+
+			@Override
+			public boolean addAll(Collection<? extends Overlay> collection) {
+				for (Overlay overlay : collection) {
+					overlay.setupOverlay(MapView.this);
+				}
+				return super.addAll(collection);
+			}
+
+			@Override
+			public boolean addAll(int index, Collection<? extends Overlay> collection) {
+				for (Overlay overlay : collection) {
+					overlay.setupOverlay(MapView.this);
+				}
+				return super.addAll(index, collection);
+			}
+
+			@Override
+			public void clear() {
+				for (int i = size() - 1; i >= 0; --i) {
+					get(i).interrupt();
+				}
+				super.clear();
+				postInvalidate();
+			}
+
+			@Override
+			public Overlay remove(int index) {
+				get(index).interrupt();
+				Overlay retval = super.remove(index);
+				postInvalidate();
+				return retval;
+			}
+
+			@Override
+			public boolean remove(Object object) {
+				if (object instanceof Overlay) {
+					((Overlay) object).interrupt();
+				}
+				boolean retval = super.remove(object);
+				postInvalidate();
+				return retval;
+			}
+
+			@Override
+			public boolean removeAll(Collection<?> collection) {
+				for (Object object : collection) {
+					if (object instanceof Overlay) {
+						((Overlay) object).interrupt();
+					}
+				}
+				boolean retval = super.removeAll(collection);
+				postInvalidate();
+				return retval;
+			}
+
+			@Override
+			public Overlay set(int index, Overlay overlay) {
+				get(index).interrupt();
+				overlay.setupOverlay(MapView.this);
+				Overlay retval = super.set(index, overlay);
+				postInvalidate();
+				return retval;
+			}
+		});
 
 		// create the tile bitmap and buffer
 		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
@@ -1423,9 +1502,6 @@ public class MapView extends ViewGroup {
 		// draw the Overlays
 		synchronized (this.overlays) {
 			for (Overlay overlay : this.overlays) {
-				if (overlay.isNew()) {
-					overlay.setupOverlay(this);
-				}
 				overlay.draw(canvas, this, false);
 			}
 		}
@@ -1498,6 +1574,13 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
+
+			// setup the Overlays
+			synchronized (this.overlays) {
+				for (Overlay overlay : this.overlays) {
+					overlay.setupOverlay(this);
+				}
+			}
 		}
 	}
 

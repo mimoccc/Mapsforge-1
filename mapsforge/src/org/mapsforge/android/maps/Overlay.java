@@ -40,7 +40,7 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Flag to indicate if this Overlay is new to the MapView.
 	 */
-	private boolean isNew;
+	private boolean isSetUp;
 
 	/**
 	 * Transformation matrix for the Overlay.
@@ -116,7 +116,7 @@ public abstract class Overlay extends Thread {
 	 * Default constructor which must be called by all subclasses.
 	 */
 	public Overlay() {
-		this.isNew = true;
+		this.isSetUp = true;
 		this.matrix = new Matrix();
 		this.point = new Point();
 		start();
@@ -223,7 +223,7 @@ public abstract class Overlay extends Thread {
 			}
 
 			this.redraw = false;
-			if (!isNew()) {
+			if (!this.isSetUp) {
 				redraw();
 			}
 		}
@@ -320,15 +320,6 @@ public abstract class Overlay extends Thread {
 	abstract String getThreadName();
 
 	/**
-	 * Checks if this Overlay is new and {@link #setupOverlay(MapView)} should be called.
-	 * 
-	 * @return true if this Overlay is new and needs to be set up, false otherwise.
-	 */
-	final boolean isNew() {
-		return this.isNew;
-	}
-
-	/**
 	 * @param sx
 	 *            the horizontal scale.
 	 * @param sy
@@ -374,10 +365,9 @@ public abstract class Overlay extends Thread {
 	 *            the calling MapView.
 	 */
 	final void setupOverlay(MapView mapView) {
-		this.internalMapView = mapView;
-
-		// save a reference to the MapView projection
-		this.projection = this.internalMapView.getProjection();
+		if (isInterrupted() || !isAlive()) {
+			throw new IllegalThreadStateException("Overlay thread already destroyed");
+		}
 
 		// check if the previous Overlay bitmaps must be recycled
 		if (this.overlayBitmap1 != null) {
@@ -387,14 +377,24 @@ public abstract class Overlay extends Thread {
 			this.overlayBitmap2.recycle();
 		}
 
+		// check if the MapView has valid dimensions
+		if (mapView.getWidth() <= 0 || mapView.getHeight() <= 0) {
+			return;
+		}
+
+		this.internalMapView = mapView;
+
+		// save a reference to the MapView projection
+		this.projection = this.internalMapView.getProjection();
+
 		// create the two Overlay bitmaps with the correct dimensions
 		this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.internalCanvas = new Canvas();
 
-		this.isNew = false;
+		this.isSetUp = false;
 		requestRedraw();
 	}
 }
