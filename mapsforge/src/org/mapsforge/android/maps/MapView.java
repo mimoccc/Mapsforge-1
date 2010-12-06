@@ -95,6 +95,9 @@ public class MapView extends ViewGroup {
 
 		@Override
 		boolean handleTouchEvent(MotionEvent event) {
+			// round the event coordinates to integers
+			event.setLocation((int) event.getX(), (int) event.getY());
+
 			// let the ScaleGestureDetector inspect all events
 			this.scaleGestureDetector.onTouchEvent(event);
 
@@ -195,9 +198,12 @@ public class MapView extends ViewGroup {
 					this.previousTapY = event.getY(this.pointerIndex);
 					this.previousTapTime = event.getEventTime();
 
+					this.tapPoint = getProjection().fromPixels(
+							(int) event.getX(this.pointerIndex),
+							(int) event.getY(this.pointerIndex));
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
-							overlay.onTouchEvent(event, MapView.this);
+							overlay.onTap(this.tapPoint, MapView.this);
 						}
 					}
 				}
@@ -228,7 +234,7 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+	private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
 		private float focusX;
 		private float focusY;
 		private float scaleFactor;
@@ -295,6 +301,9 @@ public class MapView extends ViewGroup {
 
 		@Override
 		boolean handleTouchEvent(MotionEvent event) {
+			// round the event coordinates to integers
+			event.setLocation((int) event.getX(), (int) event.getY());
+
 			if (event.getAction() == MotionEvent.ACTION_DOWN) {
 				// save the position of the event
 				this.previousPositionX = event.getX();
@@ -376,9 +385,11 @@ public class MapView extends ViewGroup {
 					this.previousTapY = event.getY();
 					this.previousTapTime = event.getEventTime();
 
+					this.tapPoint = getProjection().fromPixels((int) event.getX(),
+							(int) event.getY());
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
-							overlay.onTouchEvent(event, MapView.this);
+							overlay.onTap(this.tapPoint, MapView.this);
 						}
 					}
 				}
@@ -471,6 +482,11 @@ public class MapView extends ViewGroup {
 		 * Stores the Y difference between the previous and the current tap event.
 		 */
 		float tapDiffY;
+
+		/**
+		 * Stores the coordinates of a tap event.
+		 */
+		GeoPoint tapPoint;
 
 		TouchEventHandler() {
 			ViewConfiguration viewConfiguration = ViewConfiguration.get(getMapActivity());
@@ -1275,12 +1291,18 @@ public class MapView extends ViewGroup {
 
 			@Override
 			public void add(int index, Overlay overlay) {
+				if (!overlay.isAlive()) {
+					overlay.start();
+				}
 				overlay.setupOverlay(MapView.this);
 				super.add(index, overlay);
 			}
 
 			@Override
 			public boolean add(Overlay overlay) {
+				if (!overlay.isAlive()) {
+					overlay.start();
+				}
 				overlay.setupOverlay(MapView.this);
 				return super.add(overlay);
 			}
@@ -1288,6 +1310,9 @@ public class MapView extends ViewGroup {
 			@Override
 			public boolean addAll(Collection<? extends Overlay> collection) {
 				for (Overlay overlay : collection) {
+					if (!overlay.isAlive()) {
+						overlay.start();
+					}
 					overlay.setupOverlay(MapView.this);
 				}
 				return super.addAll(collection);
@@ -1296,6 +1321,9 @@ public class MapView extends ViewGroup {
 			@Override
 			public boolean addAll(int index, Collection<? extends Overlay> collection) {
 				for (Overlay overlay : collection) {
+					if (!overlay.isAlive()) {
+						overlay.start();
+					}
 					overlay.setupOverlay(MapView.this);
 				}
 				return super.addAll(index, collection);
@@ -1363,6 +1391,9 @@ public class MapView extends ViewGroup {
 			@Override
 			public Overlay set(int index, Overlay overlay) {
 				get(index).interrupt();
+				if (!overlay.isAlive()) {
+					overlay.start();
+				}
 				overlay.setupOverlay(MapView.this);
 				Overlay retval = super.set(index, overlay);
 				getMapActivity().runOnUiThread(new Runnable() {

@@ -84,14 +84,6 @@ class EarClippingTriangulation {
 	private void clipEarAtPosition(int p) {
 		// Logger.d("clipping ear at position: " + p + " number of polygon vertices: " + num);
 
-		if (p == -1) {
-			for (int x = 0; x < this.num; x++) {
-				// Logger.d(xCoords[x] + " " + yCoords[x]);
-				// if (((x + 1) % 2) == 0)
-				// Logger.d("");
-			}
-		}
-
 		/*
 		 * add the new triangle to the list
 		 */
