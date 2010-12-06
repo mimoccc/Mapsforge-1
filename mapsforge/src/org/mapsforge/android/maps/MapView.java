@@ -969,7 +969,12 @@ public class MapView extends ViewGroup {
 	public void setFpsCounter(boolean showFpsCounter) {
 		this.showFpsCounter = showFpsCounter;
 		// invalidate the MapView
-		invalidate();
+		getMapActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				invalidate();
+			}
+		});
 	}
 
 	/**
@@ -1017,7 +1022,12 @@ public class MapView extends ViewGroup {
 		} else {
 			this.mapFile = null;
 			clearMapView();
-			invalidate();
+			getMapActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					invalidate();
+				}
+			});
 		}
 	}
 
@@ -1082,7 +1092,12 @@ public class MapView extends ViewGroup {
 			renderScaleBar();
 		}
 		// invalidate the MapView
-		invalidate();
+		getMapActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				invalidate();
+			}
+		});
 	}
 
 	/**
@@ -1292,14 +1307,24 @@ public class MapView extends ViewGroup {
 					get(i).interrupt();
 				}
 				super.clear();
-				postInvalidate();
+				getMapActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						invalidate();
+					}
+				});
 			}
 
 			@Override
 			public Overlay remove(int index) {
 				get(index).interrupt();
 				Overlay retval = super.remove(index);
-				postInvalidate();
+				getMapActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						invalidate();
+					}
+				});
 				return retval;
 			}
 
@@ -1309,7 +1334,12 @@ public class MapView extends ViewGroup {
 					((Overlay) object).interrupt();
 				}
 				boolean retval = super.remove(object);
-				postInvalidate();
+				getMapActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						invalidate();
+					}
+				});
 				return retval;
 			}
 
@@ -1321,7 +1351,12 @@ public class MapView extends ViewGroup {
 					}
 				}
 				boolean retval = super.removeAll(collection);
-				postInvalidate();
+				getMapActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						invalidate();
+					}
+				});
 				return retval;
 			}
 
@@ -1330,7 +1365,12 @@ public class MapView extends ViewGroup {
 				get(index).interrupt();
 				overlay.setupOverlay(MapView.this);
 				Overlay retval = super.set(index, overlay);
-				postInvalidate();
+				getMapActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						invalidate();
+					}
+				});
 				return retval;
 			}
 		});
