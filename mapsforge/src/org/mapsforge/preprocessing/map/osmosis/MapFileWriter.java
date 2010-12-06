@@ -88,7 +88,7 @@ class MapFileWriter {
 	private static final short BITMAP_POLYGON_CLIPPING = 16;
 	private static final short BITMAP_WAYNODE_COMPRESSION = 8;
 
-	private static final Logger logger = Logger.getLogger(MapFileWriterUnbuffered.class
+	private static final Logger logger = Logger.getLogger(MapFileWriter.class
 			.getName());
 
 	private static final String PROJECTION = "Mercator";
