@@ -433,10 +433,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		// check if there are no errors and the tile needs a water background
 		if (this.islandSituation && !this.noWaterBackground && this.coastlineWays.isEmpty()) {
 			// add a water polygon for the whole tile
-			this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-					new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
-							Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0,
-							Tile.TILE_SIZE, 0, 0 } }), PAINT_NATURAL_WATER_FILL));
+			renderWaterBackground();
 			return;
 		}
 
@@ -2113,6 +2110,16 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		else {
 			return;
 		}
+	}
+
+	/**
+	 * Renders water background for the current tile.
+	 */
+	final void renderWaterBackground() {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+				new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
+						Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+						0, 0 } }), PAINT_NATURAL_WATER_FILL));
 	}
 
 	/**

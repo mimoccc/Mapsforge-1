@@ -26,11 +26,6 @@ import java.util.Map;
  */
 class MapDatabaseIndexCache {
 	/**
-	 * Bitmask to extract the block address from an index entry.
-	 */
-	private static final long BITMASK_INDEX_ADDRESS = 0x7FFFFFFFFFFFFFFFL;
-
-	/**
 	 * Number of bytes a single index entry consists of.
 	 */
 	private static final byte BYTES_PER_INDEX_ENTRY = 5;
@@ -100,16 +95,16 @@ class MapDatabaseIndexCache {
 	}
 
 	/**
-	 * Returns the real address of a block in the given map file. If the required block address
-	 * is not cached, it will be read from the correct map file index and put in the cache.
+	 * Returns the index entry of a block in the given map file. If the required index entry is
+	 * not cached, it will be read from the correct map file index and put in the cache.
 	 * 
 	 * @param mapFileParameters
-	 *            the parameters of the map file for which the address is needed.
+	 *            the parameters of the map file for which the index entry is needed.
 	 * @param blockNumber
 	 *            the number of the block in the map file.
-	 * @return the block address or -1 if the block number is invalid.
+	 * @return the index entry or -1 if the block number is invalid.
 	 */
-	long getAddress(MapFileParameters mapFileParameters, long blockNumber) {
+	long getIndexEntry(MapFileParameters mapFileParameters, long blockNumber) {
 		try {
 			// check if the block number is out of bounds
 			if (blockNumber >= mapFileParameters.numberOfBlocks) {
@@ -144,9 +139,8 @@ class MapDatabaseIndexCache {
 			// calculate the address of the index entry inside the index block
 			this.addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
 
-			// return the real block address
-			return Deserializer.fiveBytesToLong(this.indexBlock, this.addressInIndexBlock)
-					& BITMASK_INDEX_ADDRESS;
+			// return the real index entry
+			return Deserializer.fiveBytesToLong(this.indexBlock, this.addressInIndexBlock);
 		} catch (IOException e) {
 			Logger.e(e);
 			return -1;

@@ -44,6 +44,16 @@ public class MapDatabase {
 	private static final int BINARY_OSM_VERSION_MIN = 1;
 
 	/**
+	 * Bitmask to extract the block offset from an index entry.
+	 */
+	private static final long BITMASK_INDEX_OFFSET = 0x7FFFFFFFFFFFFFFFL;
+
+	/**
+	 * Bitmask to extract the water information from an index entry.
+	 */
+	private static final long BITMASK_INDEX_WATER = 0x80000000L;
+
+	/**
 	 * Bitmask for the debug flag in the file header.
 	 */
 	private static final int HEADER_BITMASK_DEBUG = 0x80;
@@ -218,6 +228,8 @@ public class MapDatabase {
 	private int boundaryTop;
 	private int bufferPosition;
 	private String commentText;
+	private long currentBlockIndexEntry;
+	private boolean currentBlockIsWater;
 	private long currentBlockPointer;
 	private int currentBlockSize;
 	private long currentColumn;
@@ -275,6 +287,7 @@ public class MapDatabase {
 	private long parentTileX;
 	private long parentTileY;
 	private String projectionName;
+	private boolean queryIsWater;
 	private boolean queryReadWayNames;
 	private int queryTileBitmask;
 	private int queryZoomLevel;
@@ -1489,6 +1502,8 @@ public class MapDatabase {
 			this.toBlockY = Math.min(this.toBaseTileY - this.mapFileParameters.boundaryTopTile,
 					this.mapFileParameters.blocksHeight - 1);
 
+			this.queryIsWater = true;
+
 			// read and process all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
 				for (this.currentColumn = this.fromBlockX; this.currentColumn <= this.toBlockX; ++this.currentColumn) {
@@ -1501,9 +1516,20 @@ public class MapDatabase {
 					this.blockNumber = this.currentRow * this.mapFileParameters.blocksWidth
 							+ this.currentColumn;
 
-					// get and check the current block pointer
-					this.currentBlockPointer = this.databaseIndexCache.getAddress(
+					// get the current index entry
+					this.currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(
 							this.mapFileParameters, this.blockNumber);
+
+					// check if the current query would still return a water tile
+					if (this.queryIsWater) {
+						// check the water flag of the current block
+						this.currentBlockIsWater = (this.currentBlockIndexEntry & BITMASK_INDEX_WATER) != 0;
+						this.queryIsWater = this.queryIsWater && this.currentBlockIsWater;
+					}
+
+					// get and check the current block pointer
+					this.currentBlockPointer = this.currentBlockIndexEntry
+							& BITMASK_INDEX_OFFSET;
 					if (this.currentBlockPointer < 1
 							|| this.currentBlockPointer > this.mapFileParameters.mapFileSize) {
 						Logger.d("invalid current block pointer: " + this.currentBlockPointer);
@@ -1517,8 +1543,9 @@ public class MapDatabase {
 						this.nextBlockPointer = this.mapFileParameters.mapFileSize;
 					} else {
 						// get and check the next block pointer
-						this.nextBlockPointer = this.databaseIndexCache.getAddress(
-								this.mapFileParameters, this.blockNumber + 1);
+						this.nextBlockPointer = this.databaseIndexCache.getIndexEntry(
+								this.mapFileParameters, this.blockNumber + 1)
+								& BITMASK_INDEX_OFFSET;
 						if (this.nextBlockPointer < 1
 								|| this.nextBlockPointer > this.mapFileParameters.mapFileSize) {
 							Logger.d("invalid next block pointer: " + this.nextBlockPointer);
@@ -1561,6 +1588,12 @@ public class MapDatabase {
 					// handle the current block data
 					processBlock(mapGenerator);
 				}
+			}
+
+			// the query is finished, was the water flag set for all blocks?
+			if (this.queryIsWater) {
+				// render the water background
+				mapGenerator.renderWaterBackground();
 			}
 		} catch (IOException e) {
 			Logger.e(e);
