@@ -88,6 +88,8 @@ class MapFileWriter {
 	private static final short BITMAP_POLYGON_CLIPPING = 16;
 	private static final short BITMAP_WAYNODE_COMPRESSION = 8;
 
+	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
+
 	private static final Logger logger = Logger.getLogger(MapFileWriter.class
 			.getName());
 
@@ -101,6 +103,8 @@ class MapFileWriter {
 
 	// data
 	private TileBasedDataStore dataStore;
+
+	private static final TileInfo tileInfo = TileInfo.getInstance();
 
 	// IO
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
@@ -345,9 +349,14 @@ class MapFileWriter {
 				TileCoordinate currentTileCoordinate = new TileCoordinate(tileX, tileY,
 						baseZoomCurrentInterval);
 
+				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
+				if (tileInfo.isWaterTile(currentTileCoordinate)) {
+					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
+				}
+
 				// seek to index frame of this tile and write relative offset of this
 				// tile as five bytes to the index
-				indexBuffer.put(Serializer.getFiveBytes(currentSubfileOffset));
+				indexBuffer.put(indexBytes);
 
 				// get statistics for tile
 				TileData currentTile = dataStore.getTile(zoomIntervalIndex, tileX, tileY);

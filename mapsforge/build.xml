@@ -150,10 +150,12 @@ purpose.
 		     duplicate="preserve">
 			<fileset dir="${mapsforge.src}"
 			         includes="org/mapsforge/preprocessing/map/osmosis/"
-			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml" />
+			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml"/>
+			         <!-- excludes="org/mapsforge/preprocessing/map/osmosis/*.xml,org/mapsforge/preprocessing/map/osmosis/*.dat" /> -->
 			<fileset dir="${mapsforge.bin}"
 			         includes="org/mapsforge/preprocessing/map/osmosis/"
 			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml" />
+			         <!-- excludes="org/mapsforge/preprocessing/map/osmosis/*.xml,org/mapsforge/preprocessing/map/osmosis/*.dat" /> -->
 			<fileset dir="${mapsforge.src}"
 			         includes="org/mapsforge/core/Rect.java,
 						org/mapsforge/core/GeoCoordinate.java,
