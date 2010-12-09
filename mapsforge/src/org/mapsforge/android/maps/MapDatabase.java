@@ -46,12 +46,12 @@ public class MapDatabase {
 	/**
 	 * Bitmask to extract the block offset from an index entry.
 	 */
-	private static final long BITMASK_INDEX_OFFSET = 0x7FFFFFFFFFFFFFFFL;
+	private static final long BITMASK_INDEX_OFFSET = 0x7FFFFFFFFFL;
 
 	/**
 	 * Bitmask to extract the water information from an index entry.
 	 */
-	private static final long BITMASK_INDEX_WATER = 0x80000000L;
+	private static final long BITMASK_INDEX_WATER = 0x8000000000L;
 
 	/**
 	 * Bitmask for the debug flag in the file header.
