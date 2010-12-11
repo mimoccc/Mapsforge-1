@@ -58,6 +58,11 @@ class OpenGLRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
+	void drawTileCoordinates(Tile tile) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	void drawTileFrame() {
 		// TODO Auto-generated method stub
 	}

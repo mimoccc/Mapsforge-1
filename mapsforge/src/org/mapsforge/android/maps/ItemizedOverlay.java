@@ -31,8 +31,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 	private int bottom;
 	private final Drawable defaultMarker;
-	private Point itemPoint;
 	private Drawable itemMarker;
+	private Point itemPoint;
 	private final Point itemPosition;
 	private int left;
 	private int numberOfItems;

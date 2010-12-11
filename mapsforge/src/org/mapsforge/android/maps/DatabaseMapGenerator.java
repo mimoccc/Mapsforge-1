@@ -17,10 +17,6 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.TreeMap;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -32,7 +28,8 @@ import android.graphics.Paint.Align;
 /**
  * A MapGenerator that reads map data from a database and renders them.
  */
-abstract class DatabaseMapGenerator extends MapGenerator {
+abstract class DatabaseMapGenerator extends MapGenerator implements
+		CoastlineAlgorithm.ClosedPolygonHandler {
 	private static final byte AREA_NAME_BLACK = 0;
 	private static final byte AREA_NAME_BLUE = 1;
 	private static final byte AREA_NAME_RED = 2;
@@ -224,46 +221,29 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
-	private ArrayList<ImmutablePoint> additionalCoastlinePoints;
 	private ArrayList<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
 	private float bboxLatitude2;
 	private float bboxLongitude1;
 	private float bboxLongitude2;
-	private CoastlineWay coastlineEnd;
-	private int coastlineEndLength;
-	private ImmutablePoint coastlineEndPoint;
-	private TreeMap<ImmutablePoint, float[]> coastlineEnds;
-	private CoastlineWay coastlineStart;
-	private int coastlineStartLength;
-	private ImmutablePoint coastlineStartPoint;
-	private TreeMap<ImmutablePoint, float[]> coastlineStarts;
-	private Comparator<CoastlineWay> coastlineWayComparator;
-	private ArrayList<CoastlineWay> coastlineWays;
+	private CoastlineAlgorithm coastlineAlgorithm;
 	private float[][] coordinates;
 	private float currentNodeX;
 	private float currentNodeY;
-	private int currentSide;
 	private Tile currentTile;
 	private float currentX;
 	private float currentY;
 	private MapDatabase database;
 	private float distanceX;
 	private float distanceY;
-	private EndPoints endPoints;
-	private HashSet<EndPoints> handledCoastlineSegments;
-	private ImmutablePoint[] helperPoints;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
-	private boolean islandSituation;
 	private LabelPlacement labelPlacement;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
 	private MapSymbols mapSymbols;
-	private boolean needHelperPoint;
 	private ArrayList<PointTextContainer> nodes;
-	private boolean noWaterBackground;
 	private double pathLengthInPixel;
 	private float previousX;
 	private float previousY;
@@ -285,8 +265,8 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	 * Default constructor that must be called by subclasses.
 	 */
 	DatabaseMapGenerator() {
+		this.coastlineAlgorithm = new CoastlineAlgorithm();
 		this.labelPlacement = new LabelPlacement();
-
 		this.mapSymbols = new MapSymbols();
 		this.tagIDsNodes = new TagIDsNodes();
 		this.tagIDsWays = new TagIDsWays();
@@ -307,29 +287,38 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.areaLabels = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
+	}
 
-		// create the data structures for the coastline segments
-		this.coastlineEnds = new TreeMap<ImmutablePoint, float[]>();
-		this.coastlineStarts = new TreeMap<ImmutablePoint, float[]>();
-		this.handledCoastlineSegments = new HashSet<EndPoints>(64);
-		this.coastlineWayComparator = new Comparator<CoastlineWay>() {
-			@Override
-			public int compare(CoastlineWay o1, CoastlineWay o2) {
-				if (o1.entryAngle > o2.entryAngle) {
-					return 1;
-				}
-				return -1;
-			}
-		};
+	@Override
+	public void onInvalidCoastlineSegment(float[] coastline) {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
+				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+						PAINT_NATURAL_COASTLINE_INVALID));
+	}
 
-		// create the four helper points at the tile corners
-		this.helperPoints = new ImmutablePoint[4];
-		this.helperPoints[0] = new ImmutablePoint(Tile.TILE_SIZE, Tile.TILE_SIZE);
-		this.helperPoints[1] = new ImmutablePoint(0, Tile.TILE_SIZE);
-		this.helperPoints[2] = new ImmutablePoint(0, 0);
-		this.helperPoints[3] = new ImmutablePoint(Tile.TILE_SIZE, 0);
-		this.additionalCoastlinePoints = new ArrayList<ImmutablePoint>(4);
-		this.coastlineWays = new ArrayList<CoastlineWay>(4);
+	@Override
+	public void onIslandPolygon(float[] coastline) {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$LAND).add(
+				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+						PAINT_NATURAL_LAND_FILL));
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
+				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+						PAINT_NATURAL_COASTLINE));
+	}
+
+	@Override
+	public void onWaterPolygon(float[] coastline) {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+						PAINT_NATURAL_WATER_FILL));
+	}
+
+	@Override
+	public void onWaterTile() {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+				new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
+						Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+						0, 0 } }), PAINT_NATURAL_WATER_FILL));
 	}
 
 	/**
@@ -382,159 +371,6 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
 					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
 					- (symbolBitmap.getHeight() >> 1))));
-		}
-	}
-
-	/**
-	 * Generates closed polygons for water areas from unconnected coastline segments. Closed
-	 * segments are handled either as water or islands, depending on their orientation.
-	 */
-	private void addCoastlines() {
-		// check if there are any coastline segments
-		if (this.coastlineStarts.isEmpty()) {
-			return;
-		}
-
-		this.islandSituation = false;
-		this.noWaterBackground = false;
-		for (float[] coastline : this.coastlineStarts.values()) {
-			// is the current segment already closed?
-			if (CoastlineWay.isClosed(coastline)) {
-				// depending on the orientation we have either water or an island
-				if (CoastlineWay.isClockWise(coastline)) {
-					// water
-					this.noWaterBackground = true;
-					this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-									PAINT_NATURAL_WATER_FILL));
-				} else {
-					// island
-					this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$LAND).add(
-							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-									PAINT_NATURAL_LAND_FILL));
-					this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
-							new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-									PAINT_NATURAL_COASTLINE));
-					this.islandSituation = true;
-				}
-			} else if (CoastlineWay.isValid(coastline)) {
-				coastline = CoastlineWay.shortenCoastlineSegment(coastline);
-				if (coastline != null) {
-					this.coastlineWays.add(new CoastlineWay(coastline));
-				}
-			} else {
-				this.noWaterBackground = true;
-				this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
-						new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-								PAINT_NATURAL_COASTLINE_INVALID));
-			}
-		}
-
-		// check if there are no errors and the tile needs a water background
-		if (this.islandSituation && !this.noWaterBackground && this.coastlineWays.isEmpty()) {
-			// add a water polygon for the whole tile
-			renderWaterBackground();
-			return;
-		}
-
-		// order all coastline segments ascending by their entering angle
-		Collections.sort(this.coastlineWays, this.coastlineWayComparator);
-
-		// join coastline segments to create closed water segments
-		while (!this.coastlineWays.isEmpty()) {
-			this.coastlineStart = this.coastlineWays.get(0);
-			this.coastlineEnd = null;
-			// try to find a matching coastline segment
-			for (CoastlineWay coastline : this.coastlineWays) {
-				if (coastline.entryAngle > this.coastlineStart.exitAngle) {
-					this.coastlineEnd = coastline;
-					break;
-				}
-			}
-			if (this.coastlineEnd == null) {
-				// no coastline segment was found, take the first one
-				this.coastlineEnd = this.coastlineWays.get(0);
-			}
-			this.coastlineWays.remove(0);
-
-			// if the segment orientation is clockwise, we need at least one helper point
-			if (this.coastlineEnd.entrySide == 0 && this.coastlineStart.exitSide == 0) {
-				this.needHelperPoint = (this.coastlineStart.exitAngle > this.coastlineEnd.entryAngle && (this.coastlineStart.exitAngle - this.coastlineEnd.entryAngle) < Math.PI)
-						|| (this.coastlineStart.exitAngle < Math.PI && this.coastlineEnd.entryAngle > Math.PI);
-			} else {
-				this.needHelperPoint = this.coastlineStart.exitAngle > this.coastlineEnd.entryAngle;
-			}
-
-			this.additionalCoastlinePoints.clear();
-			this.currentSide = this.coastlineStart.exitSide;
-
-			// walk around the tile and add additional points to the list
-			while (this.currentSide != this.coastlineEnd.entrySide || this.needHelperPoint) {
-				this.needHelperPoint = false;
-				this.additionalCoastlinePoints.add(this.helperPoints[this.currentSide]);
-				this.currentSide = (this.currentSide + 1) % 4;
-			}
-
-			// check if the start segment is also the end segment
-			if (this.coastlineStart == this.coastlineEnd) {
-				// calculate the length of the new way
-				this.coastlineStartLength = this.coastlineStart.data.length;
-				this.coordinates = new float[1][this.coastlineStartLength
-						+ this.additionalCoastlinePoints.size() * 2 + 2];
-
-				// copy the start segment
-				System.arraycopy(this.coastlineStart.data, 0, this.coordinates[0], 0,
-						this.coastlineStartLength);
-
-				// copy the additional points
-				for (int i = 0; i < this.additionalCoastlinePoints.size(); ++i) {
-					this.coordinates[0][this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints
-							.get(i).x;
-					this.coordinates[0][this.coastlineStartLength + 2 * i + 1] = this.additionalCoastlinePoints
-							.get(i).y;
-				}
-
-				// close the way
-				this.coordinates[0][this.coordinates[0].length - 2] = this.coordinates[0][0];
-				this.coordinates[0][this.coordinates[0].length - 1] = this.coordinates[0][1];
-
-				// add the now closed way as a water polygon to the way list
-				this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-						new ShapePaintContainer(new WayContainer(this.coordinates),
-								PAINT_NATURAL_WATER_FILL));
-
-			} else {
-				// calculate the length of the new coastline segment
-				this.coastlineStartLength = this.coastlineStart.data.length;
-				this.coastlineEndLength = this.coastlineEnd.data.length;
-				float[] newSegment = new float[this.coastlineStartLength
-						+ this.additionalCoastlinePoints.size() * 2 + this.coastlineEndLength];
-
-				// copy the start segment
-				System.arraycopy(this.coastlineStart.data, 0, newSegment, 0,
-						this.coastlineStartLength);
-
-				// copy the additional points
-				for (int i = 0; i < this.additionalCoastlinePoints.size(); ++i) {
-					newSegment[this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints
-							.get(i).x;
-					newSegment[this.coastlineStartLength + 2 * i + 1] = this.additionalCoastlinePoints
-							.get(i).y;
-				}
-
-				// copy the end segment
-				System.arraycopy(this.coastlineEnd.data, 0, newSegment,
-						this.coastlineStartLength + this.additionalCoastlinePoints.size() * 2,
-						this.coastlineEndLength);
-
-				// replace the end segment in the list with the new segment
-				this.coastlineWays.remove(this.coastlineEnd);
-				newSegment = CoastlineWay.shortenCoastlineSegment(newSegment);
-				if (newSegment != null) {
-					this.coastlineWays.add(new CoastlineWay(newSegment));
-					Collections.sort(this.coastlineWays, this.coastlineWayComparator);
-				}
-			}
 		}
 	}
 
@@ -1556,6 +1392,14 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 	abstract void drawNodes(ArrayList<PointTextContainer> drawNodes);
 
 	/**
+	 * This method is called when the tile coordinates should be rendered.
+	 * 
+	 * @param tile
+	 *            the tile whose coordinates should be rendered.
+	 */
+	abstract void drawTileCoordinates(Tile tile);
+
+	/**
 	 * This method is called when the tile frame should be rendered.
 	 */
 	abstract void drawTileFrame();
@@ -1592,10 +1436,13 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		this.database.executeQuery(this.currentTile,
 				this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
+
 		if (isInterrupted()) {
 			return false;
 		}
-		addCoastlines();
+
+		// start the coastline algorithm for generating closed polygons
+		this.coastlineAlgorithm.generateClosedPolygons(this);
 
 		// erase the tileBitmap with the default color
 		this.tileBitmap.eraseColor(TILE_BACKGROUND);
@@ -1623,6 +1470,10 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 
 		if (mapGeneratorJob.drawTileFrames) {
 			drawTileFrame();
+		}
+
+		if (mapGeneratorJob.drawTileCoordinates) {
+			drawTileCoordinates(this.currentTile);
 		}
 
 		finishMapGeneration();
@@ -1677,9 +1528,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 		this.nodes.clear();
 		this.areaLabels.clear();
 		this.symbols.clear();
-		this.coastlineStarts.clear();
-		this.coastlineEnds.clear();
-		this.handledCoastlineSegments.clear();
+		this.coastlineAlgorithm.clearCoastlineSegments();
 	}
 
 	/**
@@ -3021,59 +2870,7 @@ abstract class DatabaseMapGenerator extends MapGenerator {
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
 			} else if (this.tagIDsWays.natural$coastline != null
 					&& wayTagIds[this.tagIDsWays.natural$coastline]) {
-				// all coastline segments are accumulated and merged together if possible
-				float[] nodesSequence = this.coordinates[0];
-				this.coastlineStartPoint = new ImmutablePoint(nodesSequence[0],
-						nodesSequence[1]);
-				this.coastlineEndPoint = new ImmutablePoint(
-						nodesSequence[nodesSequence.length - 2],
-						nodesSequence[nodesSequence.length - 1]);
-				this.endPoints = new EndPoints(this.coastlineStartPoint, this.coastlineEndPoint);
-
-				// check to avoid duplicate coastline segments
-				if (!this.handledCoastlineSegments.contains(this.endPoints)) {
-					// update the set of handled coastline segments
-					this.handledCoastlineSegments.add(new EndPoints(this.coastlineStartPoint,
-							this.coastlineEndPoint));
-
-					float[] matchPath;
-					float[] newPath;
-
-					// check if a data way starts with the last point of the current way
-					if (this.coastlineStarts.containsKey(this.coastlineEndPoint)) {
-						// merge both way segments
-						matchPath = this.coastlineStarts.remove(this.coastlineEndPoint);
-						newPath = new float[nodesSequence.length + matchPath.length - 2];
-						System
-								.arraycopy(nodesSequence, 0, newPath, 0,
-										nodesSequence.length - 2);
-						System.arraycopy(matchPath, 0, newPath, nodesSequence.length - 2,
-								matchPath.length);
-						nodesSequence = newPath;
-						this.coastlineEndPoint = new ImmutablePoint(
-								nodesSequence[nodesSequence.length - 2],
-								nodesSequence[nodesSequence.length - 1]);
-					}
-
-					// check if a data way ends with the first point of the current way
-					if (this.coastlineEnds.containsKey(this.coastlineStartPoint)) {
-						matchPath = this.coastlineEnds.remove(this.coastlineStartPoint);
-						// check if the merged way is already a circle
-						if (!this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
-							// merge both way segments
-							newPath = new float[nodesSequence.length + matchPath.length - 2];
-							System.arraycopy(matchPath, 0, newPath, 0, matchPath.length - 2);
-							System.arraycopy(nodesSequence, 0, newPath, matchPath.length - 2,
-									nodesSequence.length);
-							nodesSequence = newPath;
-							this.coastlineStartPoint = new ImmutablePoint(nodesSequence[0],
-									nodesSequence[1]);
-						}
-					}
-
-					this.coastlineStarts.put(this.coastlineStartPoint, nodesSequence);
-					this.coastlineEnds.put(this.coastlineEndPoint, nodesSequence);
-				}
+				this.coastlineAlgorithm.addCoastlineSegment(this.coordinates[0]);
 			}
 			if (--this.remainingTags <= 0) {
 				return;

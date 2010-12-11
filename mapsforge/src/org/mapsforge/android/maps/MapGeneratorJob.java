@@ -25,7 +25,12 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	private MapGeneratorJob other;
 
 	/**
-	 * Indicates if a frame should be drawn around the image for debug purposes.
+	 * Flag if the tile coordinates should be drawn on the image for debugging.
+	 */
+	final boolean drawTileCoordinates;
+
+	/**
+	 * Flag if a frame should be drawn around the image for debugging.
 	 */
 	final boolean drawTileFrames;
 
@@ -60,12 +65,16 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	 *            the map file or null, if no map file is needed.
 	 * @param drawTileFrames
 	 *            flag to enable tile frames.
+	 * @param drawTileCoordinates
+	 *            flag to enable tile coordinates.
 	 */
-	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, boolean drawTileFrames) {
+	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, boolean drawTileFrames,
+			boolean drawTileCoordinates) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
 		this.drawTileFrames = drawTileFrames;
+		this.drawTileCoordinates = drawTileCoordinates;
 		this.hashCode = calculateHashCode();
 	}
 
@@ -92,6 +101,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 				return false;
 			} else if (this.drawTileFrames != this.other.drawTileFrames) {
 				return false;
+			} else if (this.drawTileCoordinates != this.other.drawTileCoordinates) {
+				return false;
 			}
 			return true;
 		}
@@ -115,6 +126,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
 		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
+		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
 		return result;
 	}
 }

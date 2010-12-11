@@ -115,7 +115,7 @@ class CoastlineWay {
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
-	 * @return true if first and last point are outside tile, false otherwise.
+	 * @return true if first and last point are outside of the tile, false otherwise.
 	 */
 	static boolean isValid(float[] coastline) {
 		return (coastline[0] <= 0 || coastline[0] >= Tile.TILE_SIZE || coastline[1] <= 0 || coastline[1] >= Tile.TILE_SIZE)
@@ -125,8 +125,8 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Shortens a coastline segment by removing all way points from the begin and end that are
-	 * outside of the tile and therefore invisible.
+	 * Shortens a coastline segment by removing all way points from the begin and the end that
+	 * are outside of the tile and therefore invisible.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.

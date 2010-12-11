@@ -20,13 +20,17 @@ import java.util.ArrayList;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Typeface;
 
 /**
  * A map renderer which uses a Canvas for drawing.
  */
 class CanvasRenderer extends DatabaseMapGenerator {
+	private static final Paint PAINT_TILE_COORDINATES = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_TILE_COORDINATES_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final String THREAD_NAME = "CanvasRenderer";
 	private int arrayListIndex;
@@ -44,6 +48,9 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private SymbolContainer symbolContainer;
 	private float[] textCoordinates;
 	private float[] tileFrame;
+	private String tileX;
+	private String tileY;
+	private String tileZ;
 	private ArrayList<ShapePaintContainer> wayList;
 
 	@Override
@@ -66,6 +73,19 @@ class CanvasRenderer extends DatabaseMapGenerator {
 			this.canvas.drawText(this.pointTextContainer.text, this.pointTextContainer.x,
 					this.pointTextContainer.y, this.pointTextContainer.paintFront);
 		}
+	}
+
+	@Override
+	void drawTileCoordinates(Tile tile) {
+		this.tileX = "X: " + tile.x;
+		this.tileY = "Y: " + tile.y;
+		this.tileZ = "Z: " + tile.zoomLevel;
+		this.canvas.drawText(this.tileX, 20, 30, PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.tileX, 20, 30, PAINT_TILE_COORDINATES);
+		this.canvas.drawText(this.tileY, 20, 60, PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.tileY, 20, 60, PAINT_TILE_COORDINATES);
+		this.canvas.drawText(this.tileZ, 20, 90, PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.tileZ, 20, 90, PAINT_TILE_COORDINATES);
 	}
 
 	@Override
@@ -154,5 +174,12 @@ class CanvasRenderer extends DatabaseMapGenerator {
 				0 };
 		this.path = new Path();
 		this.path.setFillType(Path.FillType.EVEN_ODD);
+		PAINT_TILE_COORDINATES.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_TILE_COORDINATES.setTextSize(20);
+		PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_TILE_COORDINATES_STROKE.setStyle(Paint.Style.STROKE);
+		PAINT_TILE_COORDINATES_STROKE.setStrokeWidth(7);
+		PAINT_TILE_COORDINATES_STROKE.setTextSize(20);
+		PAINT_TILE_COORDINATES_STROKE.setColor(Color.WHITE);
 	}
 }

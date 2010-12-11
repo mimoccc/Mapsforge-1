@@ -58,6 +58,43 @@ public class CircleOverlay extends Overlay {
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
+	@Override
+	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+			Projection projection, byte drawZoomLevel) {
+		if (this.center == null || this.radius < 0) {
+			// no valid parameters to draw the circle
+			return;
+		} else if (this.fillPaint == null && this.outlinePaint == null) {
+			// no paint to draw
+			return;
+		}
+
+		// make sure that the cached center position is valid
+		if (drawZoomLevel != this.cachedZoomLevel) {
+			this.cachedCenterPosition = projection.toPoint(this.center,
+					this.cachedCenterPosition, drawZoomLevel);
+			this.cachedZoomLevel = drawZoomLevel;
+		}
+
+		// assemble the path
+		this.path.reset();
+		this.path.addCircle(this.cachedCenterPosition.x - drawPosition.x,
+				this.cachedCenterPosition.y - drawPosition.y, this.radius, Path.Direction.CCW);
+
+		// draw the path on the canvas
+		if (this.fillPaint != null) {
+			canvas.drawPath(this.path, this.fillPaint);
+		}
+		if (this.outlinePaint != null) {
+			canvas.drawPath(this.path, this.outlinePaint);
+		}
+	}
+
+	@Override
+	public String getThreadName() {
+		return THREAD_NAME;
+	}
+
 	/**
 	 * Sets the parameters of the circle.
 	 * 
@@ -99,42 +136,5 @@ public class CircleOverlay extends Overlay {
 	 */
 	protected final void populate() {
 		super.requestRedraw();
-	}
-
-	@Override
-	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel) {
-		if (this.center == null || this.radius < 0) {
-			// no valid parameters to draw the circle
-			return;
-		} else if (this.fillPaint == null && this.outlinePaint == null) {
-			// no paint to draw
-			return;
-		}
-
-		// make sure that the cached center position is valid
-		if (drawZoomLevel != this.cachedZoomLevel) {
-			this.cachedCenterPosition = projection.toPoint(this.center,
-					this.cachedCenterPosition, drawZoomLevel);
-			this.cachedZoomLevel = drawZoomLevel;
-		}
-
-		// assemble the path
-		this.path.reset();
-		this.path.addCircle(this.cachedCenterPosition.x - drawPosition.x,
-				this.cachedCenterPosition.y - drawPosition.y, this.radius, Path.Direction.CCW);
-
-		// draw the path on the canvas
-		if (this.fillPaint != null) {
-			canvas.drawPath(this.path, this.fillPaint);
-		}
-		if (this.outlinePaint != null) {
-			canvas.drawPath(this.path, this.outlinePaint);
-		}
-	}
-
-	@Override
-	public String getThreadName() {
-		return THREAD_NAME;
 	}
 }

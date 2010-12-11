@@ -127,8 +127,8 @@ class DependencyCache {
 	 * The class holds the data for a label with dependencies on other tiles.
 	 */
 	private class DependencyText {
-		int depCounter;
 		final Rect boundary;
+		int depCounter;
 		final Paint paintBack;
 		final Paint paintFront;
 		final String text;

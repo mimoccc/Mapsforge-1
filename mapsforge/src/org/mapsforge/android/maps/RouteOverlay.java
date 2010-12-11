@@ -50,40 +50,6 @@ public class RouteOverlay extends Overlay {
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
-	/**
-	 * Sets the paint object which will be used to draw the route.
-	 * 
-	 * @param paint
-	 *            the paint object which will be used to draw the route.
-	 */
-	public synchronized void setPaint(Paint paint) {
-		this.paint = paint;
-		if (this.paint != null) {
-			this.paint.setAntiAlias(true);
-		}
-	}
-
-	/**
-	 * Sets the way nodes of the route.
-	 * 
-	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes.
-	 */
-	public synchronized void setRouteData(GeoPoint[] wayNodes) {
-		this.wayNodes = wayNodes;
-		if (this.wayNodes != null) {
-			// create the array for the cached way node positions
-			this.cachedWayPositions = new Point[this.wayNodes.length];
-		}
-	}
-
-	/**
-	 * This method should be called after way nodes have been added to the Overlay.
-	 */
-	protected final void populate() {
-		super.requestRedraw();
-	}
-
 	@Override
 	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
@@ -120,5 +86,39 @@ public class RouteOverlay extends Overlay {
 	@Override
 	public String getThreadName() {
 		return THREAD_NAME;
+	}
+
+	/**
+	 * Sets the paint object which will be used to draw the route.
+	 * 
+	 * @param paint
+	 *            the paint object which will be used to draw the route.
+	 */
+	public synchronized void setPaint(Paint paint) {
+		this.paint = paint;
+		if (this.paint != null) {
+			this.paint.setAntiAlias(true);
+		}
+	}
+
+	/**
+	 * Sets the way nodes of the route.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes.
+	 */
+	public synchronized void setRouteData(GeoPoint[] wayNodes) {
+		this.wayNodes = wayNodes;
+		if (this.wayNodes != null) {
+			// create the array for the cached way node positions
+			this.cachedWayPositions = new Point[this.wayNodes.length];
+		}
+	}
+
+	/**
+	 * This method should be called after way nodes have been added to the Overlay.
+	 */
+	protected final void populate() {
+		super.requestRedraw();
 	}
 }
