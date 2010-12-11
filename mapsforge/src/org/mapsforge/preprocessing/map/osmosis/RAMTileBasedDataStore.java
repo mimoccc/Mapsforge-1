@@ -22,6 +22,8 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +45,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	protected TLongObjectHashMap<TDWay> ways;
 	protected TLongObjectHashMap<TLongArrayList> multipolygons;
 	protected TileData[][][] tileData;
+	private final HashMap<TileCoordinate, Set<TDWay>> tilesToCoastlines;
 
 	// private TileData[][][] wayTileData;
 
@@ -64,6 +67,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			this.tileData[i] = new TileData[tileGridLayouts[i].getAmountTilesHorizontal()][tileGridLayouts[i]
 					.getAmountTilesVertical()];
 		}
+		this.tilesToCoastlines = new HashMap<TileCoordinate, Set<TDWay>>();
 	}
 
 	static RAMTileBasedDataStore newInstance(Rect bbox,
@@ -165,6 +169,20 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		byte minZoomLevel = tdWay.getMinimumZoomLevel();
 		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
 			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
+
+		if (tdWay.getTags() != null && tdWay.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(tdWay,
+					TileInfo.TILE_INFO_ZOOMLEVEL);// find matching tiles on zoom level 12
+			for (TileCoordinate tileCoordinate : coastLineTiles) {
+				Set<TDWay> coastlines = tilesToCoastlines.get(tileCoordinate);
+				if (coastlines == null) {
+					coastlines = new HashSet<TDWay>();
+					tilesToCoastlines.put(tileCoordinate, coastlines);
+				}
+				coastlines.add(tdWay);
+			}
+		}
+
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			// is way seen in a zoom interval?
 			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
@@ -279,8 +297,22 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
+	public Set<TDWay> getCoastLines(TileCoordinate tc) {
+		Set<TDWay> coastlines = tilesToCoastlines.get(tc);
+		if (coastlines == null)
+			coastlines = Collections.emptySet();
+		return coastlines;
+	}
+
+	@Override
 	public void complete() {
-		// nothing to do here
+		int count = 0;
+		for (Set<TDWay> coastlines : tilesToCoastlines.values()) {
+			count += coastlines.size();
+		}
+
+		logger.info("number of coastlines: " + count);
+
 	}
 
 }

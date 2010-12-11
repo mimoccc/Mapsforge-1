@@ -916,6 +916,7 @@ class MapFileWriter {
 
 	private class TileBitmaskComputationTask implements Callable<Short> {
 
+		private static final short COASTLINE_BITMASK = (short) 0xFFFF;
 		private final TileCoordinate baseTile;
 		private final TDWay way;
 
@@ -927,6 +928,9 @@ class MapFileWriter {
 
 		@Override
 		public Short call() {
+			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+				return COASTLINE_BITMASK;
+			}
 			return GeoUtils.computeBitmask(way, baseTile);
 		}
 

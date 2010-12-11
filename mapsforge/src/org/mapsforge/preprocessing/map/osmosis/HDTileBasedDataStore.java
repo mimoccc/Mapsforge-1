@@ -22,7 +22,10 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,6 +51,7 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	private final IndexedObjectStore<Way> indexedWayStore;
 	private final SimpleObjectStore<Way> wayStore;
 	private final HDTileData[][][] tileData;
+	private final HashMap<TileCoordinate, TLongHashSet> tilesToCoastlines;
 	private final TLongObjectHashMap<TLongHashSet> multipolygons;
 	private final TLongObjectHashMap<EnumSet<WayEnum>> multipolygonTags;
 	private final IdTracker innerWayTracker;
@@ -80,6 +84,7 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 					.getAmountTilesVertical()];
 		}
 
+		tilesToCoastlines = new HashMap<TileCoordinate, TLongHashSet>();
 		multipolygons = new TLongObjectHashMap<TLongHashSet>();
 		multipolygonTags = new TLongObjectHashMap<EnumSet<WayEnum>>();
 		innerWayTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
@@ -194,6 +199,25 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
+	public Set<TDWay> getCoastLines(TileCoordinate tc) {
+		if (wayIndexReader == null)
+			throw new IllegalStateException("way store not accessible, call complete() first");
+
+		TLongHashSet coastlines = tilesToCoastlines.get(tc);
+		if (coastlines == null)
+			return Collections.emptySet();
+
+		TLongIterator it = coastlines.iterator();
+		HashSet<TDWay> coastlinesAsTDWay = new HashSet<TileData.TDWay>(coastlines.size());
+		while (it.hasNext()) {
+			TDWay tdWay = TDWay.fromWay(wayIndexReader.get(it.next()), this);
+			if (tdWay != null)
+				coastlinesAsTDWay.add(tdWay);
+		}
+		return coastlinesAsTDWay;
+	}
+
+	@Override
 	public TDNode getEntity(long id) {
 		if (nodeIndexReader == null)
 			throw new IllegalStateException("node store not accessible, call complete() first");
@@ -214,6 +238,19 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			TDWay way = TDWay.fromWay(wayReader.next(), this);
 			if (way == null)
 				continue;
+
+			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+				Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(way,
+						TileInfo.TILE_INFO_ZOOMLEVEL);// find matching tiles on zoom level 12
+				for (TileCoordinate tileCoordinate : coastLineTiles) {
+					TLongHashSet coastlines = tilesToCoastlines.get(tileCoordinate);
+					if (coastlines == null) {
+						coastlines = new TLongHashSet();
+						tilesToCoastlines.put(tileCoordinate, coastlines);
+					}
+					coastlines.add(way.getId());
+				}
+			}
 
 			byte minZoomLevel = way.getMinimumZoomLevel();
 			if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())

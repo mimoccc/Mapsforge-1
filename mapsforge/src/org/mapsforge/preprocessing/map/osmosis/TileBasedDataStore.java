@@ -18,6 +18,7 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
@@ -114,6 +115,8 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 * @return total amount of tiles
 	 */
 	long cumulatedNumberOfTiles();
+
+	Set<TDWay> getCoastLines(TileCoordinate tc);
 
 	void complete();
 

@@ -30,7 +30,7 @@ class TileInfo {
 
 	private static final byte SEA = 0x2;
 
-	private static final byte ZOOMLEVEL12 = 0xC;
+	static final byte TILE_INFO_ZOOMLEVEL = 0xC;
 
 	private static final byte BITMASK = 0x3;
 
@@ -86,7 +86,7 @@ class TileInfo {
 	 *         on zoom level 12 is(are) not completely covered by water.
 	 */
 	boolean isWaterTile(TileCoordinate tc) {
-		List<TileCoordinate> tiles = tc.translateToZoomLevel(ZOOMLEVEL12);
+		List<TileCoordinate> tiles = tc.translateToZoomLevel(TILE_INFO_ZOOMLEVEL);
 		for (TileCoordinate tile : tiles) {
 			if (!seaTileInfo.get(tile.getY() * 4096 + tile.getX()))
 				return false;
@@ -95,32 +95,22 @@ class TileInfo {
 	}
 
 	// public static void main(String[] args) throws Exception {
-	// try {
 	//
-	// TileInfo ti = new TileInfo(
-	// "org/mapsforge/preprocessing/map/osmosis/oceantiles_12.dat");
+	// TileInfo ti = TileInfo.getInstance();
 	//
 	// // TileCoordinate tc1 = new TileCoordinate(1660, 167, (byte) 12);
 	// TileCoordinate tc2 = new TileCoordinate(2141, 1325, (byte) 12);
 	// // TileCoordinate tc3 = new TileCoordinate(1065, 659, (byte) 11);
 	// // TileCoordinate tc4 = new TileCoordinate(1065, 660, (byte) 11);
 	// // TileCoordinate tc5 = new TileCoordinate(65, 40, (byte) 7);
-	// TileCoordinate tc6 = new TileCoordinate(4283, 2651, (byte) 13);
+	// // TileCoordinate tc6 = new TileCoordinate(4283, 2651, (byte) 13);
 	// // System.out.println(ti.isWaterTile(tc1));
 	// System.out.println(ti.isWaterTile(tc2));
 	// // System.out.println(ti.isWaterTile(tc3));
 	// // System.out.println(ti.isWaterTile(tc4));
 	// // System.out.println(ti.isWaterTile(tc5));
-	// System.out.println(ti.isWaterTile(tc6));
-	// System.gc();
-	// System.gc();
-	// System.gc();
-	// System.gc();
+	// // System.out.println(ti.isWaterTile(tc6));
 	//
-	// } catch (IOException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
 	// }
 
 }
