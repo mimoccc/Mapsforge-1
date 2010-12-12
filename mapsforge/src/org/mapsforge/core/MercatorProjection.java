@@ -16,8 +16,6 @@
  */
 package org.mapsforge.core;
 
-import org.mapsforge.preprocessing.map.Tile;
-
 /**
  * A static class that implements spherical mercator projection.
  */
