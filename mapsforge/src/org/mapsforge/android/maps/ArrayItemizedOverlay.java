@@ -17,6 +17,7 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -28,6 +29,7 @@ import android.graphics.drawable.Drawable;
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+	private static final String THREAD_NAME = "ArrayItemizedOverlay";
 
 	private final Context context;
 	private AlertDialog.Builder dialog;
@@ -57,6 +59,30 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	public synchronized void addOverlay(OverlayItem overlayItem) {
 		this.overlayItems.add(overlayItem);
 		populate();
+	}
+
+	/**
+	 * Adds all items of the given collection to the Overlay.
+	 * 
+	 * @param c
+	 *            collection whose items should be added to the Overlay.
+	 */
+	public synchronized void addOverlays(Collection<? extends OverlayItem> c) {
+		this.overlayItems.addAll(c);
+		populate();
+	}
+
+	/**
+	 * Removes all items from the Overlay.
+	 */
+	public synchronized void clear() {
+		this.overlayItems.clear();
+		populate();
+	}
+
+	@Override
+	public String getThreadName() {
+		return THREAD_NAME;
 	}
 
 	/**

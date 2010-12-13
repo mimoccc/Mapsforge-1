@@ -47,7 +47,6 @@ public class RouteOverlay extends Overlay {
 	public RouteOverlay(Paint paint) {
 		setPaint(paint);
 		this.path = new Path();
-		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	@Override
@@ -109,10 +108,14 @@ public class RouteOverlay extends Overlay {
 	 */
 	public synchronized void setRouteData(GeoPoint[] wayNodes) {
 		this.wayNodes = wayNodes;
-		if (this.wayNodes != null) {
+		if (this.wayNodes == null) {
+			this.cachedWayPositions = null;
+		} else {
 			// create the array for the cached way node positions
 			this.cachedWayPositions = new Point[this.wayNodes.length];
+			this.cachedZoomLevel = Byte.MIN_VALUE;
 		}
+		populate();
 	}
 
 	/**

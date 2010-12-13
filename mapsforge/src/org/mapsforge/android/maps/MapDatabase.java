@@ -1637,6 +1637,15 @@ public class MapDatabase {
 	}
 
 	/**
+	 * Returns the current state of the database.
+	 * 
+	 * @return true if the database has an open map file, false otherwise.
+	 */
+	boolean hasOpenFile() {
+		return this.inputFile != null;
+	}
+
+	/**
 	 * Opens a map file and checks for valid header data.
 	 * 
 	 * @param fileName

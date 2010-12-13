@@ -112,7 +112,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	@Override
-	public final String getThreadName() {
+	public String getThreadName() {
 		return THREAD_NAME;
 	}
 

@@ -15,7 +15,7 @@
 	<classpathentry kind="lib" path="lib/junit-4.8.2.jar"/>
 	<classpathentry kind="lib" path="lib/swingx-ws.jar"/>
 	<classpathentry kind="lib" path="lib/swingx.jar"/>
-	<classpathentry kind="lib" path="lib/android-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/android-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/perst-421.jar"/>
 	<classpathentry kind="lib" path="lib/osmosis-0.35.1.jar"/>
 	<classpathentry kind="output" path="bin"/>

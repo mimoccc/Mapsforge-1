@@ -61,7 +61,7 @@ public class CircleOverlay extends Overlay {
 	@Override
 	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
-		if (this.center == null || this.radius < 0) {
+		if (this.cachedCenterPosition == null || this.radius < 0) {
 			// no valid parameters to draw the circle
 			return;
 		} else if (this.fillPaint == null && this.outlinePaint == null) {
@@ -105,11 +105,15 @@ public class CircleOverlay extends Overlay {
 	 */
 	public synchronized void setCircleData(GeoPoint center, float radius) {
 		this.center = center;
-		if (this.center != null) {
+		if (this.center == null) {
+			this.cachedCenterPosition = null;
+		} else {
 			// create the array for the cached center point position
 			this.cachedCenterPosition = new Point();
+			this.cachedZoomLevel = Byte.MIN_VALUE;
 		}
 		this.radius = radius;
+		populate();
 	}
 
 	/**

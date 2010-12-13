@@ -3110,6 +3110,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	final void setDatabase(MapDatabase database) {
 		this.database = database;
+		if (this.database.hasOpenFile()) {
+			onMapFileChange();
+		}
 	}
 
 	@Override

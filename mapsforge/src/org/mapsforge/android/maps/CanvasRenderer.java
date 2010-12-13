@@ -45,12 +45,10 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private PointTextContainer pointTextContainer;
 	private ShapePaintContainer shapePaintContainer;
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
+	private StringBuilder stringBuilder;
 	private SymbolContainer symbolContainer;
 	private float[] textCoordinates;
 	private float[] tileFrame;
-	private String tileX;
-	private String tileY;
-	private String tileZ;
 	private ArrayList<ShapePaintContainer> wayList;
 
 	@Override
@@ -77,15 +75,26 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawTileCoordinates(Tile tile) {
-		this.tileX = "X: " + tile.x;
-		this.tileY = "Y: " + tile.y;
-		this.tileZ = "Z: " + tile.zoomLevel;
-		this.canvas.drawText(this.tileX, 20, 30, PAINT_TILE_COORDINATES_STROKE);
-		this.canvas.drawText(this.tileX, 20, 30, PAINT_TILE_COORDINATES);
-		this.canvas.drawText(this.tileY, 20, 60, PAINT_TILE_COORDINATES_STROKE);
-		this.canvas.drawText(this.tileY, 20, 60, PAINT_TILE_COORDINATES);
-		this.canvas.drawText(this.tileZ, 20, 90, PAINT_TILE_COORDINATES_STROKE);
-		this.canvas.drawText(this.tileZ, 20, 90, PAINT_TILE_COORDINATES);
+		this.stringBuilder.setLength(0);
+		this.stringBuilder.append("X: ");
+		this.stringBuilder.append(tile.x);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 30,
+				PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 30, PAINT_TILE_COORDINATES);
+
+		this.stringBuilder.setLength(0);
+		this.stringBuilder.append("Y: ");
+		this.stringBuilder.append(tile.y);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 60,
+				PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 60, PAINT_TILE_COORDINATES);
+
+		this.stringBuilder.setLength(0);
+		this.stringBuilder.append("Z: ");
+		this.stringBuilder.append(tile.zoomLevel);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 90,
+				PAINT_TILE_COORDINATES_STROKE);
+		this.canvas.drawText(this.stringBuilder.toString(), 20, 90, PAINT_TILE_COORDINATES);
 	}
 
 	@Override
@@ -174,6 +183,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 				0 };
 		this.path = new Path();
 		this.path.setFillType(Path.FillType.EVEN_ODD);
+		this.stringBuilder = new StringBuilder(16);
 		PAINT_TILE_COORDINATES.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_TILE_COORDINATES.setTextSize(20);
 		PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));

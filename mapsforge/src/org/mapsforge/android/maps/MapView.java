@@ -634,7 +634,7 @@ public class MapView extends ViewGroup {
 	private MapGeneratorJob currentJob;
 	private Tile currentTile;
 	private long currentTime;
-	private MapDatabase database;
+	private MapDatabase mapDatabase;
 	private boolean drawTileCoordinates;
 	private boolean drawTileFrames;
 	private int fps;
@@ -795,7 +795,7 @@ public class MapView extends ViewGroup {
 		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
-		return this.database;
+		return this.mapDatabase;
 	}
 
 	/**
@@ -1012,7 +1012,7 @@ public class MapView extends ViewGroup {
 		} else if (this.mapFile != null && this.mapFile.equals(newMapFile)) {
 			// same map file as before
 			return;
-		} else if (this.database == null) {
+		} else if (this.mapDatabase == null) {
 			// no database exists
 			return;
 		}
@@ -1029,8 +1029,8 @@ public class MapView extends ViewGroup {
 		this.mapMover.unpause();
 		this.mapGenerator.unpause();
 
-		this.database.closeFile();
-		if (this.database.openFile(newMapFile)) {
+		this.mapDatabase.closeFile();
+		if (this.mapDatabase.openFile(newMapFile)) {
 			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 			clearMapView();
@@ -1438,7 +1438,7 @@ public class MapView extends ViewGroup {
 		this.mapController = new MapController(this);
 
 		// create the database
-		this.database = new MapDatabase();
+		this.mapDatabase = new MapDatabase();
 
 		startMapGeneratorThread();
 
@@ -1495,7 +1495,7 @@ public class MapView extends ViewGroup {
 		switch (this.mapViewMode) {
 			case CANVAS_RENDERER:
 				this.mapGenerator = new CanvasRenderer();
-				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
+				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.mapDatabase);
 				break;
 			case MAPNIK_TILE_DOWNLOAD:
 				this.mapGenerator = new MapnikTileDownload();
@@ -1505,7 +1505,7 @@ public class MapView extends ViewGroup {
 				break;
 			case OPENGL_RENDERER:
 				this.mapGenerator = new OpenGLRenderer(this.mapActivity, this);
-				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.database);
+				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.mapDatabase);
 				break;
 			case OSMARENDER_TILE_DOWNLOAD:
 				this.mapGenerator = new OsmarenderTileDownload();
@@ -1746,9 +1746,9 @@ public class MapView extends ViewGroup {
 		}
 
 		// close the map file
-		if (this.database != null) {
-			this.database.closeFile();
-			this.database = null;
+		if (this.mapDatabase != null) {
+			this.mapDatabase.closeFile();
+			this.mapDatabase = null;
 		}
 	}
 
@@ -1879,7 +1879,7 @@ public class MapView extends ViewGroup {
 				|| this.longitude < LONGITUDE_MIN) {
 			return false;
 		} else if (!this.mapViewMode.requiresInternetConnection()
-				&& (this.database == null || this.database.getMapBoundary() == null || !this.database
+				&& (this.mapDatabase == null || this.mapDatabase.getMapBoundary() == null || !this.mapDatabase
 						.getMapBoundary().contains(getMapCenter().getLongitudeE6(),
 								getMapCenter().getLatitudeE6()))) {
 			return false;
@@ -2128,7 +2128,7 @@ public class MapView extends ViewGroup {
 	 */
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
 		if (this.mapViewMode.requiresInternetConnection()
-				|| (this.database != null && this.database.getMapBoundary() != null && this.database
+				|| (this.mapDatabase != null && this.mapDatabase.getMapBoundary() != null && this.mapDatabase
 						.getMapBoundary().contains(point.getLongitudeE6(),
 								point.getLatitudeE6()))) {
 			if (hasValidCenter()) {
@@ -2213,7 +2213,8 @@ public class MapView extends ViewGroup {
 		if (this.mapViewMode.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
-		if (newMapFile != null && this.database != null && this.database.openFile(newMapFile)) {
+		if (newMapFile != null && this.mapDatabase != null
+				&& this.mapDatabase.openFile(newMapFile)) {
 			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 		} else {
