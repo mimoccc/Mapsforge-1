@@ -2025,7 +2025,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 		this.shapeContainer = new WayContainer(this.coordinates);
 
-		this.layer = this.ways.get(wayLayer);
+		// check for a valid layer value
+		if (wayLayer < 0) {
+			this.layer = this.ways.get(0);
+		} else if (wayLayer >= LAYERS) {
+			this.layer = this.ways.get(LAYERS - 1);
+		} else {
+			this.layer = this.ways.get(wayLayer);
+		}
 
 		/* highway */
 		if ((wayTagBitmap & BITMAP_HIGHWAY) != 0) {
