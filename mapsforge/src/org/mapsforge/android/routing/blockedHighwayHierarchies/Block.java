@@ -405,7 +405,7 @@ final class Block implements CacheItem {
 			bitOffset += 1;
 
 			// set target id
-			int _blockId;
+			int _blockId = 0;
 			if (!isInternal) {
 				int blockIdx = (int) Deserializer.readUInt(data, bitsPerIndirectBlockRef,
 						bitOffset / 8, bitOffset % 8);
@@ -523,6 +523,11 @@ final class Block implements CacheItem {
 				int numHopIndices = (int) Deserializer.readUInt(data, 5, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 5;
+				if (numHopIndices == 31) {
+					numHopIndices = (int) Deserializer.readUInt(data, 8, bitOffset / 8,
+							bitOffset % 8);
+					bitOffset += 8;
+				}
 
 				edge.hopIndices = new int[numHopIndices];
 				for (int j = 0; j < numHopIndices; j++) {

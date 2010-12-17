@@ -277,7 +277,7 @@ public class HHRouter implements IRouter {
 		public GeoCoordinate[] getWaypoints() {
 			GeoCoordinate[] waypoints = new GeoCoordinate[edge.waypoints.length / 2];
 			for (int i = 0; i < waypoints.length; i++) {
-				waypoints[i] = new GeoCoordinate(edge.waypoints[i << 1],
+				waypoints[i] = new GeoCoordinate(edge.waypoints[i / 1],
 						edge.waypoints[i << 1 + 1]);
 			}
 			return waypoints;
@@ -317,22 +317,20 @@ public class HHRouter implements IRouter {
 	 *             if there is something wrong reading the file.
 	 */
 	public static void main(String[] args) throws IOException {
+		// this code is required for android routing:
+		int cacheSize = 1024 * 1024 * 2;
 		HHRouter router = new HHRouter(new File(
-				"router/berlin.blockedHH"), 1000 * 1024);
-		// IVertex source = router.getNearestVertex(new GeoCoordinate(50.509769, 10.4567655));
-		// IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
-		IVertex source = router.getNearestVertex(new GeoCoordinate(52.509769, 13.456766));
-		IVertex target = router.getNearestVertex(new GeoCoordinate(52.454685, 13.29188));
-		long startTime = System.currentTimeMillis();
+				"router/ger.blockedHH"), cacheSize);
+		IVertex source = router.getNearestVertex(new GeoCoordinate(52.50818, 13.28487));
+		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
-		long time = System.currentTimeMillis() - startTime;
 		for (IEdge e : shortestPath) {
 			System.out.println(e.getName() + " " + e.getRef() + " " + e.getType());
 		}
-		RendererV2 renderer = new RendererV2(1024, 768, router, Color.BLACK,
-				Color.WHITE);
 
-		renderer.addRoute(shortestPath, Color.GREEN);
-		System.out.println(time + "ms");
+		// this is just for viewing the route - testing code only
+		RendererV2 r = new RendererV2(1024, 768, router, Color.BLACK, Color.WHITE);
+		r.setRenderParam(new GeoCoordinate(52.50818, 13.28487), 4);
+		r.addRoute(shortestPath, Color.RED);
 	}
 }

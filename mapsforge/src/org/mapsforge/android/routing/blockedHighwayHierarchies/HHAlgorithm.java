@@ -59,9 +59,6 @@ final class HHAlgorithm {
 	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff,
 			boolean clearCacheAfterPhaseA)
 			throws IOException {
-		// REMOVE THIS LATER
-		Evaluation.setPhase(Evaluation.PHASE_A);
-		graph.clearCache();
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
@@ -80,18 +77,12 @@ final class HHAlgorithm {
 		graph.releaseVertex(t);
 
 		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
-			// REMOVE THIS LATER
-			Evaluation.notifyHeapSizeChanged(queue[FWD].size()
-					+ queue[BWD].size());
 
 			if (queue[direction].isEmpty()) {
 				direction = (direction + 1) % 2;
 			}
 			HHHeapItem uItem = queue[direction].extractMin();
 			uItem.heapIdx = HEAP_IDX_SETTLED;
-
-			// REMOVE THIS LATER
-			Evaluation.notifyVertexSettled();
 
 			if (uItem.distance > distance) {
 				queue[direction].clear();
@@ -128,8 +119,6 @@ final class HHAlgorithm {
 			graph.releaseVertex(u);
 		}
 		if (searchScopeHitId != -1) {
-			// REMOVE THIS LATER
-			Evaluation.setPhase(Evaluation.PHASE_B);
 
 			if (clearCacheAfterPhaseA) {
 				graph.clearCache();
@@ -163,9 +152,6 @@ final class HHAlgorithm {
 	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff,
 			boolean clearCacheAfterPhaseA, LinkedList<Shortcut>[] shortcutBuff)
 			throws IOException {
-		// REMOVE THIS LATER
-		Evaluation.setPhase(Evaluation.PHASE_A);
-		graph.clearCache();
 
 		int direction = FWD;
 		int distance = Integer.MAX_VALUE;
@@ -184,18 +170,12 @@ final class HHAlgorithm {
 		graph.releaseVertex(t);
 
 		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
-			// REMOVE THIS LATER
-			Evaluation.notifyHeapSizeChanged(queue[FWD].size()
-					+ queue[BWD].size());
 
 			if (queue[direction].isEmpty()) {
 				direction = (direction + 1) % 2;
 			}
 			HHHeapItem uItem = queue[direction].extractMin();
 			uItem.heapIdx = HEAP_IDX_SETTLED;
-
-			// REMOVE THIS LATER
-			Evaluation.notifyVertexSettled();
 
 			if (uItem.distance > distance) {
 				queue[direction].clear();
@@ -232,8 +212,6 @@ final class HHAlgorithm {
 			graph.releaseVertex(u);
 		}
 		if (searchScopeHitId != -1) {
-			// REMOVE THIS LATER
-			Evaluation.setPhase(Evaluation.PHASE_B);
 
 			if (clearCacheAfterPhaseA) {
 				graph.clearCache();
@@ -340,6 +318,8 @@ final class HHAlgorithm {
 			HHHeapItem vItem = discovered[direction].get(v.vertexIds[0]);
 			if (forward) {
 				shortcutBuff[u.getLevel()].add(new Shortcut(u.vertexIds[0], v.vertexIds[0]));
+			} else {
+				shortcutBuff[u.getLevel()].add(new Shortcut(v.vertexIds[0], u.vertexIds[0]));
 			}
 			if (vItem == null) {
 				vItem = new HHHeapItem(uItem.distance + e.weight, lvl, gap_, e.targetId,
@@ -477,9 +457,6 @@ final class HHAlgorithm {
 			queueDijkstra.insert(sItem);
 
 			while (!queueDijkstra.isEmpty()) {
-				// REMOVE THIS LATER
-				Evaluation.notifyHeapSizeChanged(queueDijkstra.size()
-						+ queue[BWD].size());
 
 				DijkstraHeapItem uItem = queueDijkstra.extractMin();
 				if (uItem.id == t.vertexIds[e.minLevel - 1]) {
@@ -487,9 +464,6 @@ final class HHAlgorithm {
 					break;
 				}
 				HHVertex u = graph.getVertex(uItem.id);
-
-				// REMOVE THIS LATER
-				Evaluation.notifyVertexSettled();
 
 				// relax edges
 				HHEdge[] adjEdges = graph.getOutboundEdges(u);
@@ -725,6 +699,6 @@ final class HHAlgorithm {
 				edges.add(e);
 			}
 		}
-		rv.drawEdges(edges);
+		// rv.drawEdges(edges);
 	}
 }

@@ -637,8 +637,14 @@ class BlockWriter {
 							dijkstraAlgorithm.getShortestPath(e.getSource().getId(), e
 									.getTarget().getId(), e.getMinLevel() - 1,
 									new LinkedList<LevelVertex>(), hopIndices, e.isForward(), e
-									.isBackward());
-							out.writeUInt(hopIndices.size(), 5);
+									.isBackward(), true);
+							if (hopIndices.size() < 31) {
+								out.writeUInt(hopIndices.size(), 5);
+							} else {
+								out.writeUInt(31, 5);
+								out.writeUInt(hopIndices.size(), 8);
+							}
+
 							for (int hopIdx : hopIndices) {
 								if (hopIdx < 15) {
 									out.writeUInt(hopIdx, 4);
@@ -646,6 +652,23 @@ class BlockWriter {
 									out.writeUInt(15, 4);
 									out.writeUInt(hopIdx, 24);
 								}
+							}
+							LevelVertex _v = _levelGraph.getLevel(e.getMinLevel() - 1)
+									.getVertex(e.getSource().getId());
+							int _w = 0;
+							for (int k = 0; k < hopIndices.size(); k++) {
+								int _h = hopIndices.get(k);
+								LevelEdge _e = _v.getOutboundEdges()[_h];
+								_w += _e.getWeight();
+								_v = _e.getTarget();
+							}
+							if (hopIndices.size() > 31) {
+								System.out.println("--------------------");
+								System.out.println("targetID : " + e.getTarget().getId()
+										+ " == "
+										+ _v.getId());
+								System.out.println("weight : " + e.getWeight() + " == " + _w);
+								System.out.println("numHops : " + hopIndices.size());
 							}
 						}
 					}

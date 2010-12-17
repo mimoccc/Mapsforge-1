@@ -90,7 +90,7 @@ final class ObjectPool<T extends ObjectPool.Poolable> {
 	/**
 	 * @return Returns a poolable object from the pool.
 	 */
-	public T borrow() {
+	public synchronized T borrow() {
 		T obj;
 		if (objects.size() == 0) {
 			obj = factory.makeObject();
@@ -109,7 +109,7 @@ final class ObjectPool<T extends ObjectPool.Poolable> {
 	 * @param obj
 	 *            the poolable object to be released back to the pool.
 	 */
-	public void release(T obj) {
+	public synchronized void release(T obj) {
 		if (obj != null) {
 			if (!obj.isReleased()) {
 				objects.add(obj);

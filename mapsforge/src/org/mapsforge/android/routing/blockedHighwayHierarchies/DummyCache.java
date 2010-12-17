@@ -59,8 +59,13 @@ final class DummyCache<I extends CacheItem> implements Cache<I> {
 	}
 
 	@Override
-	public int sizeBytes() {
+	public int currentSizeBytes() {
 		return sizeBytes;
+	}
+
+	@Override
+	public int maxSizeBytes() {
+		return Integer.MAX_VALUE;
 	}
 
 }

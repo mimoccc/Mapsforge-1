@@ -22,6 +22,7 @@ import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
+import org.mapsforge.preprocessing.routing.highwayHierarchies.HHComputation;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
 
@@ -74,7 +75,7 @@ class DijkstraAlgorithm {
 	 */
 	public int getShortestPath(int sourceId, int targetId, int level,
 			LinkedList<LevelVertex> shortestPathBuff, LinkedList<Integer> hopIndicesBuff,
-			boolean forward, boolean backward) {
+			boolean forward, boolean backward, boolean coreOnly) {
 		this.queue.clear();
 		this.discovered.clear();
 
@@ -90,7 +91,9 @@ class DijkstraAlgorithm {
 			LevelEdge[] adjEdges = u.getOutboundEdges();
 			for (int i = 0; i < adjEdges.length; i++) {
 				LevelEdge e = adjEdges[i];
-				if ((forward && !e.isForward()) || (backward && !e.isBackward())) {
+				if ((forward && !e.isForward())
+						|| (backward && !e.isBackward())
+						|| (coreOnly && (e.getTarget().getNeighborhood() == HHComputation.INFINITY_1))) {
 					continue;
 				}
 				HeapItem _v = discovered.get(e.getTarget().getId());

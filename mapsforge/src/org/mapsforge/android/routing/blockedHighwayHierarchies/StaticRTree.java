@@ -56,6 +56,9 @@ final class StaticRTree {
 	 */
 	private final Rect boundingBox;
 
+	/** Size in bytes on secondary storage of this r-tree */
+	private final int sizeBytes;
+
 	/**
 	 * Instantiate an RTree stored in a file.
 	 * 
@@ -63,11 +66,13 @@ final class StaticRTree {
 	 *            File where the RTree is stored.
 	 * @param startAddr
 	 *            byte index of the 1st byte of the r-tree within the given file.
+	 * @param endAddr
+	 *            points to the first byte behind the r-tree.
 	 * @throws IOException
 	 *             if there was an error reading file, or the given location does not contain a
 	 *             valid r-tree.
 	 */
-	public StaticRTree(File file, long startAddr) throws IOException {
+	public StaticRTree(File file, long startAddr, long endAddr) throws IOException {
 		this.startAddr = startAddr;
 		this.raf = new RandomAccessFile(file, "r");
 
@@ -96,6 +101,7 @@ final class StaticRTree {
 			maxLon = Math.max(maxLon, root.maxLongitudeE6[i]);
 		}
 		this.boundingBox = new Rect(minLon, maxLon, minLat, maxLat);
+		this.sizeBytes = (int) (endAddr - startAddr);
 	}
 
 	/**
@@ -138,7 +144,8 @@ final class StaticRTree {
 			int minLatitudeE6, int maxLatitudeE6)
 			throws IOException {
 		LinkedList<Integer> buff = new LinkedList<Integer>();
-		overlapsRecursive(minLongitudeE6, maxLongitudeE6, minLatitudeE6, maxLatitudeE6, root,
+		overlapsRecursive(minLongitudeE6, maxLongitudeE6, minLatitudeE6,
+				maxLatitudeE6, root,
 				buff);
 		return buff;
 	}
@@ -158,12 +165,14 @@ final class StaticRTree {
 	 *            the current node to be processed.
 	 * @param buff
 	 *            the result is added to this list.
+	 * @return number of disc reads.
 	 * @throws IOException
 	 *             on error accessing file.
 	 */
-	private void overlapsRecursive(int minLon, int maxLon, int minLat, int maxLat,
+	private int overlapsRecursive(int minLon, int maxLon, int minLat, int maxLat,
 			RtreeNode node,
 			LinkedList<Integer> buff) throws IOException {
+		int discReads = 0;
 		for (int i = 0; i < node.minLongitudeE6.length; i++) {
 			boolean overlaps = Rect.overlaps(node.minLongitudeE6[i], node.maxLongitudeE6[i],
 					node.minLatitudeE6[i],
@@ -173,10 +182,12 @@ final class StaticRTree {
 					buff.add(node.pointer[i]);
 				} else {
 					RtreeNode child = readNode(node.pointer[i]);
-					overlapsRecursive(minLon, maxLon, minLat, maxLat, child, buff);
+					discReads++;
+					discReads += overlapsRecursive(minLon, maxLon, minLat, maxLat, child, buff);
 				}
 			}
 		}
+		return discReads;
 	}
 
 	/**
@@ -192,6 +203,22 @@ final class StaticRTree {
 		raf.seek(startAddr + (blockSizeBytes * id));
 		raf.readFully(readBuff);
 		return new RtreeNode(readBuff);
+	}
+
+	public int getSizeBytes() {
+		return sizeBytes;
+	}
+
+	public int getNumNodes() {
+		return (sizeBytes / blockSizeBytes) - 1;
+	}
+
+	public int getBlockSizeBytes() {
+		return blockSizeBytes;
+	}
+
+	public int getBranchingFactor() {
+		return (blockSizeBytes - 3) / 20;
 	}
 
 	/**

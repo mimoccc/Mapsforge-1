@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Random;
 
@@ -45,15 +46,17 @@ class Evaluation {
 	private static final String GRAPHS_NAME_PREFIX = "ger_";
 
 	// binary file parameters
-	private static final int[] quadClusteringVertexThreshold = new int[] { 100, 200, 300, 400 };
-	private static final int[] kCenterAverageVerticesPerCluster = new int[] { 100, 200, 300,
-			400 };
+	private static final int[] quadClusteringVertexThreshold = new int[] { 75 };
+	private static final int[] kCenterAverageVerticesPerCluster = new int[] {};
 
 	// test routes
 	private static final int ROUTES_COUNT = 1000;
-	private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 11),
-			(int) Math.pow(2, 13), (int) Math.pow(2, 15), (int) Math.pow(2, 17),
-			(int) Math.pow(2, 19) };
+	// private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 11),
+	// (int) Math.pow(2, 13), (int) Math.pow(2, 15), (int) Math.pow(2, 17),
+	// (int) Math.pow(2, 19) };
+
+	private static final int[] ROUTES_RANKS = new int[] { (int) Math.pow(2, 20),
+			(int) Math.pow(2, 21) };
 
 	static void generateRoutes(LevelGraph levelGraph) throws IOException {
 		for (int rank : ROUTES_RANKS) {
@@ -90,6 +93,51 @@ class Evaluation {
 			if ((i + 1) % 10 == 0)
 				System.out.println((i + 1) + "/" + n);
 		}
+		writer.flush();
+		writer.close();
+		System.out.println("ready!");
+	}
+
+	static void generateNaviRoutes(LevelGraph levelGraph, int steps, int rank, File targetFile,
+			int dRank)
+			throws IOException {
+		System.out.println("generateRoutes");
+		System.out.println("  rank = " + rank);
+		System.out.println("  targetFile = " + targetFile.getAbsolutePath());
+		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(levelGraph);
+		FileWriter writer = new FileWriter(targetFile);
+		Level graph = levelGraph.getLevel(0);
+
+		int sourceId = rnd.nextInt(levelGraph.numVertices);
+		int taretId = dijkstra.getVertexByDijkstraRank(sourceId, rank);
+		LevelVertex s = graph.getVertex(sourceId);
+		LevelVertex t = graph.getVertex(taretId);
+		writer.write(s.getCoordinate().getLatitude() + ","
+				+ s.getCoordinate().getLongitude());
+		writer.write(";");
+		writer.write(t.getCoordinate().getLatitude() + ","
+				+ t.getCoordinate().getLongitude());
+		writer.write("\n");
+
+		LinkedList<LevelVertex> path = new LinkedList<LevelVertex>();
+		dijkstra.getShortestPath(sourceId, taretId, 0, path, new LinkedList<Integer>(), true,
+				false, false);
+
+		for (int i = 0; i < path.size(); i++) {
+			if (i % steps == 0) {
+				LevelVertex v = path.get(i);
+				LevelVertex s_ = levelGraph.getLevel(0).getVertex(
+						dijkstra.getVertexByDijkstraRank(v.getId(), dRank));
+
+				writer.write(s_.getCoordinate().getLatitude() + ","
+						+ s_.getCoordinate().getLongitude());
+				writer.write(";");
+				writer.write(t.getCoordinate().getLatitude() + ","
+						+ t.getCoordinate().getLongitude());
+				writer.write("\n");
+			}
+		}
+
 		writer.flush();
 		writer.close();
 		System.out.println("ready!");
@@ -139,16 +187,22 @@ class Evaluation {
 		conf.setProperty("blockedHH.clustering.oversamplingFac", "8");
 
 		// quad tree binaries
-		for (int i = 27; i <= GRAPHS_COUNT; i++) {
+		/* for (int i = 1; i <= GRAPHS_COUNT; i++) */{
+			int i = 12;
 			boolean incluedHopIndices = true;
 			for (int k = 0; k < 2; k++) {
 				String graphName = getGraphFileName(i);
 				String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
 				conf.setProperty("blockedHH.input.file", inputFile);
+				if (incluedHopIndices) {
+					conf.setProperty("blockedHH.hopIndices", "1");
+				} else {
+					conf.setProperty("blockedHH.hopIndices", "0");
+				}
 
 				for (int vertexThreshold : quadClusteringVertexThreshold) {
 					String algorithmName = "quad_tree";
-					String outputFile = "evaluation/binaries/" + graphName + "_"
+					String outputFile = "evaluation/opthh/" + graphName + "_"
 							+ algorithmName + "_" + vertexThreshold + "_" + incluedHopIndices
 							+ ".blockedHH";
 
@@ -163,16 +217,22 @@ class Evaluation {
 		}
 
 		// k-center binaries
-		for (int i = 3; i <= GRAPHS_COUNT; i++) {
+		/* for (int i = 1; i <= GRAPHS_COUNT; i++) */{
+			int i = 12;
 			boolean incluedHopIndices = true;
 			for (int k = 0; k < 2; k++) {
 				String graphName = getGraphFileName(i);
 				String inputFile = "evaluation/graphs/" + graphName + ".levelGraph";
 				conf.setProperty("blockedHH.input.file", inputFile);
+				if (incluedHopIndices) {
+					conf.setProperty("blockedHH.hopIndices", "1");
+				} else {
+					conf.setProperty("blockedHH.hopIndices", "0");
+				}
 
 				for (int averageVerticesPerCluster : kCenterAverageVerticesPerCluster) {
 					String algorithmName = "k_center";
-					String outputFile = "evaluation/binaries/" + graphName + "_"
+					String outputFile = "evaluation/opthh/" + graphName + "_"
 							+ algorithmName + "_" + averageVerticesPerCluster + "_"
 							+ incluedHopIndices + ".blockedHH";
 					conf.setProperty("blockedHH.clustering.algorithm", algorithmName);
@@ -192,15 +252,15 @@ class Evaluation {
 				DB_PASS);
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException,
+			SQLException {
+		// createBinaryFiles();
 		/* generate routes */
 		LevelGraph levelGraph = Serializer.deserialize(new File(
 				"evaluation/graphs/ger_01.levelGraph"));
-		generateRoutes(levelGraph);
-		levelGraph = null;
-
-		/* serialize graphs */
-		// serializeLevelGraphs();
-		// createBinaryFiles();
+		// generateRoutes(levelGraph);
+		generateNaviRoutes(levelGraph, 5, (int) Math.pow(2, 21), new File(
+				"evaluation/naviRoute/"
+				+ ((int) Math.pow(2, 21)) + ".txt"), 130);
 	}
 }

@@ -29,6 +29,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +50,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.mapsforge.android.routing.blockedHighwayHierarchies.HHRouter;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.Cluster;
@@ -76,7 +82,7 @@ public class RendererV2 {
 		double[] tmp = new double[n];
 		tmp[0] = 0.5;
 		for (int i = 1; i < tmp.length; i++) {
-			tmp[i] = tmp[i - 1] + (tmp[i - 1] / 2.2);
+			tmp[i] = tmp[i - 1] + (tmp[i - 1] / 1);
 		}
 		return tmp;
 	}
@@ -742,4 +748,34 @@ public class RendererV2 {
 		}
 	}
 
+	public static void main(String[] agrs) throws FileNotFoundException, IOException,
+			ClassNotFoundException {
+		IRouter router = new HHRouter(new File(
+				"evaluation/opthh/ger_12_quad_tree_100_true.blockedHH"), 1024 * 1024);
+		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);
+		LineNumberReader lnr = new LineNumberReader(new FileReader(new File(
+				"evaluation/naviRoute/2097152.txt")));
+		String line = lnr.readLine();
+		String[] tmp = line.split(";");
+		String[] c1 = tmp[0].split(",");
+		String[] c2 = tmp[1].split(",");
+		IVertex s = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c1[0]), Double
+				.parseDouble(c1[1])));
+		IVertex t = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c2[0]), Double
+				.parseDouble(c2[1])));
+		IEdge[] route = router.getShortestPath(s.getId(), t.getId());
+		r.addRoute(route, Color.BLUE);
+
+		while ((line = lnr.readLine()) != null) {
+			tmp = line.split(";");
+			c1 = tmp[0].split(",");
+			GeoCoordinate gc = new GeoCoordinate(Double.parseDouble(c1[0]), Double
+					.parseDouble(c1[1]));
+			System.out.println(gc);
+			r.addCircle(
+					gc,
+					Color.RED
+					);
+		}
+	}
 }

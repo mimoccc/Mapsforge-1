@@ -37,7 +37,6 @@ public class ExternalMemorySpeedTester {
 		while (size > 0) {
 			out.write(content, 0, (int) Math.min(content.length, size));
 			size -= content.length;
-			System.out.println(size);
 		}
 		out.flush();
 		out.close();
@@ -94,8 +93,10 @@ public class ExternalMemorySpeedTester {
 	public static void main(String[] args) throws IOException {
 		// File inputFile = new File(
 		// "F:/video/concerts/jimi hendrix - live at woodstock (disc 1-2).iso");
-		File inputFile = new File("flash2.dat");
-		// createFile(inputFile, 1024L * 1024L * 1024L * 3L);
+		// File inputFile = new File("flash2.dat");
+		File inputFile = new File("1gb.dat");
+
+		createTestFile(inputFile, 1024L * 1024L * 1024L * 1L);
 		int numReads = 100;
 		int[] blockSizes = new int[] { 1024, 1024 * 2, 1024 * 4, 1024 * 8, 1024 * 16,
 				1024 * 32, 1024 * 64, 1024 * 128, 1024 * 256, 1024 * 512, 1024 * 1024,

@@ -55,6 +55,8 @@ interface Cache<I extends CacheItem> {
 	/**
 	 * @return byte siye of all items in cache.
 	 */
-	public int sizeBytes();
+	public int currentSizeBytes();
+
+	public int maxSizeBytes();
 
 }

@@ -79,8 +79,20 @@ class HHBinaryFileWriter {
 			int rtreeBlockSize = Integer.parseInt(props
 					.getProperty("blockedHH.rtree.blockSize"));
 
-			System.out.println("create blocked highway hierarchies binary :'"
+			/* print parameters */
+			System.out.println("create blocked highway hierarchies binary :"
 					+ outputFile.getAbsolutePath() + "'");
+			System.out.println("outputFile = '" + outputFile.getAbsolutePath() + "'");
+			System.out.println("clusteringAlgorithm = " + clusteringAlgorithm);
+			System.out.println("quadtreeVertexThreshold = " + quadtreeVertexThreshold);
+			System.out
+					.println("kcenterAvgVerticesPerCluster = " + kcenterAvgVerticesPerCluster);
+			System.out.println("kcenterOversamplingFac = " + kcenterOversamplingFac);
+			System.out.println("addressLookupTableMaxGroupSize = "
+					+ addressLookupTableMaxGroupSize);
+			System.out.println("hopIndices = " + hopIndices);
+			System.out.println("rtreeBlockSize = " + rtreeBlockSize);
+
 			LevelGraph levelGraph = null;
 			if (inputFile != null && inputFile.exists() && inputFile.isFile()) {
 				// load graph from file
@@ -113,7 +125,7 @@ class HHBinaryFileWriter {
 				clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph
 						.getLevels(),
 						levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
-						QuadTreeClusteringAlgorithm.HEURISTIC_CENTER,
+						QuadTreeClusteringAlgorithm.HEURISTIC_MEDIAN,
 						quadtreeVertexThreshold);
 
 			} else if (clusteringAlgorithm.equals(KCenterClusteringAlgorithm.ALGORITHM_NAME)) {

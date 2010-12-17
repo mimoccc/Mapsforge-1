@@ -68,18 +68,19 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 	}
 
 	@Override
-	public I getItem(int id) {
+	public synchronized I getItem(int id) {
 		ListNode<I> ci = map.get(id);
 		if (ci != null) {
 			list.remove(ci);
 			list.addFirst(ci);
 			return ci.item;
 		}
+
 		return null;
 	}
 
 	@Override
-	public void putItem(I item) {
+	public synchronized void putItem(I item) {
 		ListNode<I> ci = new ListNode<I>(item);
 		list.addFirst(ci);
 		map.put(item.getId(), ci);
@@ -97,8 +98,13 @@ final class LRUCache<I extends CacheItem> implements Cache<I> {
 	}
 
 	@Override
-	public int sizeBytes() {
+	public int currentSizeBytes() {
 		return currentSizeBytes;
+	}
+
+	@Override
+	public int maxSizeBytes() {
+		return cacheSizeBytes;
 	}
 
 	/**

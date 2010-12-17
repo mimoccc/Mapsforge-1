@@ -16,21 +16,18 @@
  */
 package org.mapsforge.android.routing.blockedHighwayHierarchies;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.core.WGS84;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.HHGlobals;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**
  * This class implements the routing graph, the highway hierarchies algorithm directly works on.
@@ -83,11 +80,11 @@ final class HHRoutingGraph {
 	/**
 	 * This r-tree indexes minimum bounding rectangles of each block.
 	 */
-	private final StaticRTree blockIndex;
+	final StaticRTree blockIndex;
 	/**
 	 * This address lookup table holds pointers which can be looked up by the block id.
 	 */
-	private final AddressLookupTable blockAddressTable;
+	final AddressLookupTable blockAddressTable;
 	/**
 	 * The Cache which hopefully holds the near future most valuable blocks.
 	 */
@@ -144,8 +141,6 @@ final class HHRoutingGraph {
 	 */
 	final String[] streetTypes;
 
-	private Cache<Block> evalSpeedupCache = new DummyCache<Block>();
-
 	/**
 	 * @param hhBinaryFile
 	 *            the highway hierarchies binary file.
@@ -174,11 +169,15 @@ final class HHRoutingGraph {
 		}
 
 		long startAddrGraph = iStream.readLong();
-		/* long endAddrGraph = */iStream.readLong();
+		long endAddrGraph = iStream.readLong();
 		long startAddrBlockIndex = iStream.readLong();
 		long endAddrBlockIndex = iStream.readLong();
 		long startAddrRTree = iStream.readLong();
-		/* long endAddrRTree = */iStream.readLong();
+		long endAddrRTree = iStream.readLong();
+		System.out.println("file size " + hhBinaryFile.length());
+		System.out.println("graph " + (endAddrGraph - startAddrGraph));
+		System.out.println("rtree " + (endAddrRTree - startAddrRTree));
+		System.out.println("addrTable " + (endAddrBlockIndex - startAddrBlockIndex));
 
 		// READ THE HEADER OF THE CLUSTER BLOCKS SECTION
 		raf.seek(startAddrGraph);
@@ -215,7 +214,7 @@ final class HHRoutingGraph {
 		this.startAddrClusterBlocks = startAddrGraph + CLUSTER_BLOCKS_HEADER_LENGTH;
 
 		// INITIALIZE COMPONENTS
-		this.blockIndex = new StaticRTree(hhBinaryFile, startAddrRTree);
+		this.blockIndex = new StaticRTree(hhBinaryFile, startAddrRTree, endAddrRTree);
 		this.blockAddressTable = new AddressLookupTable(startAddrBlockIndex, endAddrBlockIndex,
 				hhBinaryFile);
 		this.blockCache = new LRUCache<Block>(cacheSizeBytes);
@@ -236,9 +235,9 @@ final class HHRoutingGraph {
 
 		}, INITIAL_POOL_SIZE_EDGES);
 
-		for (int i = 0; i < blockAddressTable.size(); i++) {
-			readBlock(i);
-		}
+		// for (int i = 0; i < blockAddressTable.size(); i++) {
+		// readBlock(i);
+		// }
 		clearCache();
 	}
 
@@ -254,6 +253,10 @@ final class HHRoutingGraph {
 	 */
 	public void clearCache() {
 		blockCache.clear();
+	}
+
+	public int getCacheSizeBytes() {
+		return blockCache.maxSizeBytes();
 	}
 
 	/**
@@ -341,14 +344,15 @@ final class HHRoutingGraph {
 	 */
 	public HHVertex getNearestVertex(GeoCoordinate c, double maxDistanceMeters)
 			throws IOException {
-		double alphaLon = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180;
-		double alphaLat = (maxDistanceMeters / WGS84.EQUATORIALRADIUS) * 180; // TODO:
+		double alphaLon = (maxDistanceMeters * 180)
+				/ (Math.cos(Math.toRadians(c.getLatitude())) * WGS84.EQUATORIALRADIUS * Math.PI);
+		double alphaLat = (maxDistanceMeters * 180) / (WGS84.EQUATORIALRADIUS * Math.PI);
 		int minLon = GeoCoordinate.doubleToInt(c.getLongitude() - alphaLon);
 		int maxLon = GeoCoordinate.doubleToInt(c.getLongitude() + alphaLon);
 		int minLat = GeoCoordinate.doubleToInt(c.getLatitude() - alphaLat);
 		int maxLat = GeoCoordinate.doubleToInt(c.getLatitude() + alphaLat);
 		LinkedList<Integer> blockIds = blockIndex.overlaps(minLon, maxLon, minLat, maxLat);
-
+		System.out.println(maxDistanceMeters + "\t" + blockIds.size());
 		double dBest = Double.MAX_VALUE;
 		HHVertex vBest = null;
 		for (int blockId : blockIds) {
@@ -386,6 +390,7 @@ final class HHRoutingGraph {
 		LinkedList<Integer> blockIds = blockIndex.overlaps(bbox);
 		LinkedList<HHVertex> result = new LinkedList<HHVertex>();
 		for (int blockId : blockIds) {
+
 			Block block = getBlock(blockId);
 			int n = block.getNumVertices();
 			for (int i = 0; i < n; i++) {
@@ -443,14 +448,11 @@ final class HHRoutingGraph {
 	 * @throws IOException
 	 *             on error reading file
 	 */
-	private Block getBlock(int blockId) throws IOException {
+	Block getBlock(int blockId) throws IOException {
 		Block block = blockCache.getItem(blockId);
 		if (block == null) {
 			block = readBlock(blockId);
 			blockCache.putItem(block);
-		} else {
-			// REMOVE THIS LATER
-			Evaluation.notifyCacheHit();
 		}
 		return block;
 	}
@@ -471,67 +473,102 @@ final class HHRoutingGraph {
 			// need to read 4 bytes to much since the Deserializer requires that.
 			int nBytes = pointer.lengthBytes + 4;
 
-			// REMOVE THIS LATER
-			Evaluation.notifyBlockRead(startAddr, startAddr + nBytes);
-
-			Block block = evalSpeedupCache.getItem(blockId);
-			if (block == null) {
-				raf.seek(startAddr);
-				byte[] buff = new byte[nBytes];
-				raf.readFully(buff);
-				block = new Block(blockId, buff, this);
-				evalSpeedupCache.putItem(block);
-			}
+			// Block block = evalSpeedupCache.getItem(blockId);
+			// if (block == null) {
+			long startNanos = System.nanoTime();
+			raf.seek(startAddr);
+			byte[] buff = new byte[nBytes];
+			raf.readFully(buff);
+			long endNanos = System.nanoTime();
+			Block block = new Block(blockId, buff, this);
+			// evalSpeedupCache.putItem(block);
+			// }
 			return block;
 		}
 		return null;
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		RendererV2 renderer = new RendererV2(1024, 768, HHRouterServerside
-				.deserialize(new FileInputStream("router/berlin.hh")), Color.BLACK,
-				Color.WHITE);
-
-		File hhBinaryFile = new File("router/berlin.blockedHH");
-		HHRoutingGraph graph = new HHRoutingGraph(hhBinaryFile, 1000 * 1024);
-		HHVertex s = graph.getNearestVertex(new GeoCoordinate(52.509769, 13.4567655), 300);
-		HHVertex t = graph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805), 300);
-
-		// DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
-		// LinkedList<HHVertex> spDijkstra = new LinkedList<HHVertex>();
-		// int distanceDijkstra = dijkstra.getShortestPath(s.getId(0), t.getId(0), spDijkstra);
-
-		HHAlgorithm hh = new HHAlgorithm(graph);
-		LinkedList<HHEdge> spHH = new LinkedList<HHEdge>();
-		int distanceHH = hh.getShortestPath(s.vertexIds[0], t.vertexIds[0], spHH, false);
-
-		// System.out.println(distanceDijkstra + " " + distanceHH);
-		// 11327 is correct!!!
-
-		for (HHEdge e : spHH) {
-			HHVertex source = graph.getVertex(e.sourceId);
-			HHVertex target = graph.getVertex(e.targetId);
-			GeoCoordinate[] waypoints = new GeoCoordinate[2 + (e.waypoints.length / 2)];
-			waypoints[0] = new GeoCoordinate(source.latitudeE6, source.longitudeE6);
-			renderer.addCircle(waypoints[0], Color.BLUE);
-			for (int i = 1; i < waypoints.length - 1; i++) {
-				waypoints[i] = new GeoCoordinate(e.waypoints[(i - 1) * 2],
-						e.waypoints[((i - 1) * 2) + 1]);
-				renderer.addCircle(waypoints[i], Color.RED);
+	public LinkedList<HHEdge> getCachedEdges(int level) {
+		LinkedList<HHEdge> l = new LinkedList<HHEdge>();
+		for (int i = 0; i < blockAddressTable.size(); i++) {
+			Block b = blockCache.getItem(i);
+			if (b != null && b.getLevel() == level) {
+				for (int j = 0; j < b.getNumVertices(); j++) {
+					HHVertex v = b.getVertex(j);
+					HHEdge[] e = b.getOutboundEdges(v);
+					for (int k = 0; k < e.length; k++) {
+						l.add(e[k]);
+					}
+				}
 			}
-			waypoints[waypoints.length - 1] = new GeoCoordinate(target.latitudeE6,
-					target.longitudeE6);
-			renderer.addCircle(waypoints[waypoints.length - 1], Color.BLUE);
-
-			renderer.addMultiLine(waypoints, Color.GREEN);
-			graph.releaseVertex(source);
-			graph.releaseVertex(target);
-			if (e.name != null)
-				System.out.println(new String(e.name));
 		}
-		System.out.println("vertices : " + graph.vertexPool.toString());
-		System.out.println("edges : " + graph.edgePool.toString());
-		System.out.println("edges in shortest path : " + spHH.size());
-		System.out.println("distance : " + distanceHH);
+		return l;
+	}
+
+	@Override
+	public String toString() {
+		DecimalFormat df1 = new DecimalFormat("#.#");
+		StringBuilder sb = new StringBuilder();
+		sb.append("--- HHRoutingGraph ---\n\n");
+
+		sb.append("AddressLookupTable\n");
+		sb.append("  size = " + blockAddressTable.byteSize() + " bytes\n");
+		sb.append("  #entries = " + blockAddressTable.size() + "\n");
+		sb.append("  bits / entry = "
+				+ df1.format(((double) blockAddressTable.byteSize() * 8) / blockAddressTable
+				.size()) + "\n");
+		sb.append("\n");
+
+		sb.append("StaticRTree\n");
+		sb.append("  size = " + blockIndex.getSizeBytes() + " bytes\n");
+		sb.append("  #nodes = " + blockIndex.getNumNodes() + "\n");
+		sb.append("  block size = " + blockIndex.getBlockSizeBytes() + " bytes\n");
+		sb.append("  branching factor = " + blockIndex.getBranchingFactor() + "\n");
+		sb.append("\n");
+
+		sb.append("Blocks\n");
+
+		int[] levelBytes = new int[numLevels];
+		int[] levelNodes = new int[numLevels];
+		int[] levelEdges = new int[numLevels];
+		int[] levelNumBlocks = new int[numLevels];
+
+		for (int blockId = 0; blockId < blockAddressTable.size(); blockId++) {
+			try {
+				Block b = readBlock(blockId);
+				levelBytes[b.getLevel()] += blockAddressTable.getPointer(blockId).lengthBytes;
+				levelNodes[b.getLevel()] += b.getNumVertices();
+				levelNumBlocks[b.getLevel()]++;
+				for (int j = 0; j < b.getNumVertices(); j++) {
+					HHVertex v = b.getVertex(j);
+					levelEdges[b.getLevel()] += b.getOutboundEdges(v).length;
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		for (int i = 0; i < levelBytes.length; i++) {
+			sb.append("  level-"
+					+ i
+					+ " = "
+					+ levelBytes[i]
+					+ " bytes, "
+					+ levelNodes[i]
+					+ " nodes, "
+					+ levelEdges[i]
+					+ " edges, "
+					+ df1
+					.format(((double) levelBytes[i] * 8)
+					/ (levelNodes[i] + levelEdges[i]))
+					+ " bits/entry, "
+					+ " avg Block Size = "
+					+ (levelBytes[i] / Math.max(1, (levelNodes[i] / 75))) + "\n"
+					);
+
+		}
+
+		return sb.toString();
 	}
 }
