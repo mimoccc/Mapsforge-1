@@ -36,6 +36,16 @@ public interface Projection {
 	GeoPoint fromPixels(int x, int y);
 
 	/**
+	 * Converts the given distance in meters to the corresponding number of horizontal pixels.
+	 * The calculation is carried out at the current latitude coordinate and zoom level.
+	 * 
+	 * @param meters
+	 *            the distance in meters.
+	 * @return the number of horizontal pixels at the current map position and zoom level.
+	 */
+	float metersToPixels(float meters);
+
+	/**
 	 * Translates the given GeoPoint to relative pixel coordinates on the screen.
 	 * 
 	 * @param in

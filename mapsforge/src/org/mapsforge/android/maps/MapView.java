@@ -634,7 +634,6 @@ public class MapView extends ViewGroup {
 	private MapGeneratorJob currentJob;
 	private Tile currentTile;
 	private long currentTime;
-	private MapDatabase mapDatabase;
 	private boolean drawTileCoordinates;
 	private boolean drawTileFrames;
 	private int fps;
@@ -644,6 +643,7 @@ public class MapView extends ViewGroup {
 	private double longitude;
 	private MapActivity mapActivity;
 	private MapController mapController;
+	private MapDatabase mapDatabase;
 	private String mapFile;
 	private MapGenerator mapGenerator;
 	private MapMover mapMover;

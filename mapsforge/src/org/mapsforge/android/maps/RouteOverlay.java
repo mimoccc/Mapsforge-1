@@ -47,12 +47,13 @@ public class RouteOverlay extends Overlay {
 	public RouteOverlay(Paint paint) {
 		setPaint(paint);
 		this.path = new Path();
+		this.cachedWayPositions = new Point[0];
 	}
 
 	@Override
 	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
-		if (this.cachedWayPositions == null || this.cachedWayPositions.length < 1) {
+		if (this.wayNodes == null || this.wayNodes.length < 1) {
 			// no way nodes to draw
 			return;
 		} else if (this.paint == null) {
@@ -108,13 +109,10 @@ public class RouteOverlay extends Overlay {
 	 */
 	public synchronized void setRouteData(GeoPoint[] wayNodes) {
 		this.wayNodes = wayNodes;
-		if (this.wayNodes == null) {
-			this.cachedWayPositions = null;
-		} else {
-			// create the array for the cached way node positions
+		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
 			this.cachedWayPositions = new Point[this.wayNodes.length];
-			this.cachedZoomLevel = Byte.MIN_VALUE;
 		}
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		populate();
 	}
 
