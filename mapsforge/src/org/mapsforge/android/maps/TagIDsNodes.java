@@ -19,6 +19,7 @@ package org.mapsforge.android.maps;
 import java.util.HashMap;
 
 class TagIDsNodes {
+	Short aeroway$aerodrome;
 	Short aeroway$helipad;
 	Short amenity$atm;
 	Short amenity$bank;
@@ -53,8 +54,11 @@ class TagIDsNodes {
 	Short historic$monument;
 	Short leisure$playground;
 	Short man_made$windmill;
+	Short natural$cave_entrance;
 	Short natural$peak;
+	Short natural$volcano;
 	Short place$city;
+	Short place$country;
 	Short place$island;
 	Short place$suburb;
 	Short place$town;
@@ -76,6 +80,7 @@ class TagIDsNodes {
 	Short tourism$viewpoint;
 
 	void update(HashMap<String, Short> nodeTags) {
+		this.aeroway$aerodrome = nodeTags.get("aeroway=aerodrome");
 		this.aeroway$helipad = nodeTags.get("aeroway=helipad");
 
 		this.amenity$atm = nodeTags.get("amenity=atm");
@@ -117,9 +122,12 @@ class TagIDsNodes {
 
 		this.man_made$windmill = nodeTags.get("man_made=windmill");
 
+		this.natural$cave_entrance = nodeTags.get("natural=cave_entrance");
 		this.natural$peak = nodeTags.get("natural=peak");
+		this.natural$volcano = nodeTags.get("natural=volcano");
 
 		this.place$city = nodeTags.get("place=city");
+		this.place$country = nodeTags.get("place=country");
 		this.place$island = nodeTags.get("place=island");
 		this.place$suburb = nodeTags.get("place=suburb");
 		this.place$town = nodeTags.get("place=town");

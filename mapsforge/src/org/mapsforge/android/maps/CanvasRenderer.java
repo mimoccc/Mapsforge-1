@@ -176,7 +176,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void setupMapGenerator(Bitmap bitmap) {
+	void setupRenderer(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
 		this.tileFrame = new float[] { 0, 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
 				Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE,
@@ -188,7 +188,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 		PAINT_TILE_COORDINATES.setTextSize(20);
 		PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_TILE_COORDINATES_STROKE.setStyle(Paint.Style.STROKE);
-		PAINT_TILE_COORDINATES_STROKE.setStrokeWidth(7);
+		PAINT_TILE_COORDINATES_STROKE.setStrokeWidth(5);
 		PAINT_TILE_COORDINATES_STROKE.setTextSize(20);
 		PAINT_TILE_COORDINATES_STROKE.setColor(Color.WHITE);
 	}

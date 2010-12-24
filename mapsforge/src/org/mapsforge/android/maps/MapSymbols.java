@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory;
  * the MapSymbols constructor is called and are recycled when the recycle() method is called.
  */
 class MapSymbols {
+	final Bitmap airport;
 	final Bitmap atm;
 	final Bitmap bakery;
 	final Bitmap bank;
@@ -31,6 +32,7 @@ class MapSymbols {
 	final Bitmap bus;
 	final Bitmap bus_sta;
 	final Bitmap cafe;
+	final Bitmap cave_entrance;
 	final Bitmap church;
 	final Bitmap cinema;
 	final Bitmap fastfood;
@@ -62,9 +64,12 @@ class MapSymbols {
 	final Bitmap traffic_signal;
 	final Bitmap university;
 	final Bitmap viewpoint;
+	final Bitmap vulcan;
 	final Bitmap windmill;
 
 	MapSymbols() {
+		this.airport = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"symbols/airport.png"));
 		this.atm = BitmapFactory
 				.decodeStream(getClass().getResourceAsStream("symbols/atm.png"));
 		this.bakery = BitmapFactory.decodeStream(getClass().getResourceAsStream(
@@ -79,6 +84,8 @@ class MapSymbols {
 				"symbols/bus_sta.png"));
 		this.cafe = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/cafe.png"));
+		this.cave_entrance = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"symbols/cave_entrance.png"));
 		this.church = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/church.png"));
 		this.cinema = BitmapFactory.decodeStream(getClass().getResourceAsStream(
@@ -141,11 +148,16 @@ class MapSymbols {
 				"symbols/university.png"));
 		this.viewpoint = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/viewpoint.png"));
+		this.vulcan = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"symbols/vulcan.png"));
 		this.windmill = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/windmill.png"));
 	}
 
 	void recycle() {
+		if (this.airport != null) {
+			this.airport.recycle();
+		}
 		if (this.atm != null) {
 			this.atm.recycle();
 		}
@@ -166,6 +178,9 @@ class MapSymbols {
 		}
 		if (this.cafe != null) {
 			this.cafe.recycle();
+		}
+		if (this.cave_entrance != null) {
+			this.cave_entrance.recycle();
 		}
 		if (this.church != null) {
 			this.church.recycle();
@@ -259,6 +274,9 @@ class MapSymbols {
 		}
 		if (this.viewpoint != null) {
 			this.viewpoint.recycle();
+		}
+		if (this.vulcan != null) {
+			this.vulcan.recycle();
 		}
 		if (this.windmill != null) {
 			this.windmill.recycle();

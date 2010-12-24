@@ -217,6 +217,12 @@ class MercatorProjection implements Projection {
 	}
 
 	@Override
+	public float metersToPixels(float meters, byte zoom) {
+		return (float) (meters * (1 / calculateGroundResolution(this.mapView.getMapCenter()
+				.getLatitude(), zoom)));
+	}
+
+	@Override
 	public Point toPixels(GeoPoint in, Point out) {
 		// save the current position and zoom level of the map
 		this.mapCenter2 = this.mapView.getMapCenter();

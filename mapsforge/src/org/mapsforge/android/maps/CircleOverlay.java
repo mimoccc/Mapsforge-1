@@ -22,16 +22,12 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * CircleOverlay is a special Overlay to display a circle on top of the map. Center point and
- * radius of the circle are adjustable.
+ * CircleOverlay is a special Overlay to display a circle on top of the map. The radius of the
+ * circle is specified in meters and will be automatically converted to pixels at each redraw.
  * <p>
  * All rendering parameters like color, stroke width, pattern and transparency can be configured
  * via the two {@link android.graphics.Paint Paint} objects in the
- * {@link #CircleOverlay(Paint,Paint) constructor}. Anti-aliasing is always used to improve the
- * visual quality of the image.
- * <p>
- * <b>The implementation of this class is not complete. Its functionality and visible methods
- * are likely to change in a future release.</b>
+ * {@link #CircleOverlay(Paint,Paint)} constructor.
  */
 public class CircleOverlay extends Overlay {
 	private static final String THREAD_NAME = "CircleOverlay";
@@ -48,14 +44,14 @@ public class CircleOverlay extends Overlay {
 	 * Constructs a new CircleOverlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the circle.
+	 *            the paint object which will be used to fill the overlay.
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the circle.
+	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
 	public CircleOverlay(Paint fillPaint, Paint outlinePaint) {
-		setPaint(fillPaint, outlinePaint);
 		this.path = new Path();
 		this.cachedCenterPosition = new Point();
+		setPaint(fillPaint, outlinePaint);
 	}
 
 	@Override
@@ -79,7 +75,8 @@ public class CircleOverlay extends Overlay {
 		// assemble the path
 		this.path.reset();
 		this.path.addCircle(this.cachedCenterPosition.x - drawPosition.x,
-				this.cachedCenterPosition.y - drawPosition.y, this.radius, Path.Direction.CCW);
+				this.cachedCenterPosition.y - drawPosition.y, projection.metersToPixels(
+						this.radius, drawZoomLevel), Path.Direction.CCW);
 
 		// draw the path on the canvas
 		if (this.fillPaint != null) {
@@ -101,38 +98,25 @@ public class CircleOverlay extends Overlay {
 	 * @param center
 	 *            the geographical coordinates of the center point.
 	 * @param radius
-	 *            the radius of the circle.
+	 *            the radius of the circle in meters.
 	 */
 	public synchronized void setCircleData(GeoPoint center, float radius) {
 		this.center = center;
 		this.radius = radius;
 		this.cachedZoomLevel = Byte.MIN_VALUE;
-		populate();
+		super.requestRedraw();
 	}
 
 	/**
-	 * Sets the paint parameters which will be used to draw the circle.
+	 * Sets the paint objects which will be used to draw the overlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the circle.
+	 *            the paint object which will be used to fill the overlay.
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the circle.
+	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
 	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
 		this.fillPaint = fillPaint;
-		if (this.fillPaint != null) {
-			this.fillPaint.setAntiAlias(true);
-		}
 		this.outlinePaint = outlinePaint;
-		if (this.outlinePaint != null) {
-			this.outlinePaint.setAntiAlias(true);
-		}
-	}
-
-	/**
-	 * This method should be called after a center point has been added to the Overlay.
-	 */
-	protected final void populate() {
-		super.requestRedraw();
 	}
 }

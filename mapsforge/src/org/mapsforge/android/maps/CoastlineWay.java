@@ -29,16 +29,23 @@ class CoastlineWay {
 	private static final byte TOP = 3;
 
 	/**
-	 * Calculates the angle for a given coastline point.
+	 * Calculates the angle for a given coastline point. The angle is defined as zero at the
+	 * middle of the right tile side. The angle increases clockwise, therefore the middle of the
+	 * bottom tile side has a value of π/2 and the middle of the left tile side a value of π.
 	 * 
 	 * @param x
 	 *            the x coordinate of the coastline point.
 	 * @param y
 	 *            the y coordinate of the coastline point.
+	 * @param tileBoundaries
+	 *            the boundaries of the tile.
+	 * @param tileSize
+	 *            the size of the tile.
 	 * @return the angle, always between 0 (inclusively) and 2π (exclusively).
 	 */
-	private static double calculateAngle(float x, float y) {
-		double angle = Math.atan2(y - (Tile.TILE_SIZE >> 1), x - (Tile.TILE_SIZE >> 1));
+	private static double calculateAngle(float x, float y, int[] tileBoundaries, int tileSize) {
+		double angle = Math.atan2(y - tileBoundaries[1] - (tileSize >> 1), x
+				- tileBoundaries[0] - (tileSize >> 1));
 		if (angle < 0) {
 			return angle + 2 * Math.PI;
 		}
@@ -115,24 +122,30 @@ class CoastlineWay {
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
+	 * @param tileBoundaries
+	 *            the boundaries of the tile.
 	 * @return true if first and last point are outside of the tile, false otherwise.
 	 */
-	static boolean isValid(float[] coastline) {
-		return (coastline[0] <= 0 || coastline[0] >= Tile.TILE_SIZE || coastline[1] <= 0 || coastline[1] >= Tile.TILE_SIZE)
-				&& (coastline[coastline.length - 2] <= 0
-						|| coastline[coastline.length - 2] >= Tile.TILE_SIZE
-						|| coastline[coastline.length - 1] <= 0 || coastline[coastline.length - 1] >= Tile.TILE_SIZE);
+	static boolean isValid(float[] coastline, int[] tileBoundaries) {
+		return (coastline[0] <= tileBoundaries[0] || coastline[0] >= tileBoundaries[2]
+				|| coastline[1] <= tileBoundaries[1] || coastline[1] >= tileBoundaries[3])
+				&& (coastline[coastline.length - 2] <= tileBoundaries[0]
+						|| coastline[coastline.length - 2] >= tileBoundaries[2]
+						|| coastline[coastline.length - 1] <= tileBoundaries[1] || coastline[coastline.length - 1] >= tileBoundaries[3]);
 	}
 
 	/**
 	 * Shortens a coastline segment by removing all way points from the begin and the end that
-	 * are outside of the tile and therefore invisible.
+	 * are outside of the tile and therefore invisible. Returns null if the coastline segment is
+	 * completely outside of the tile and does not intersect with it.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
+	 * @param tileBoundaries
+	 *            the boundaries of the tile.
 	 * @return the coordinates of the shortened coastline segment.
 	 */
-	static float[] shortenCoastlineSegment(float[] coastline) {
+	static float[] shortenCoastlineSegment(float[] coastline, int[] tileBoundaries) {
 		int skipStart = 0;
 		float x1 = coastline[0];
 		float y1 = coastline[1];
@@ -144,8 +157,8 @@ class CoastlineWay {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
 			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
-					Tile.TILE_SIZE, Tile.TILE_SIZE);
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
+					tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
 			if (clippedSegment != null) {
 				coastline[i - 2] = (float) clippedSegment[0];
 				coastline[i - 1] = (float) clippedSegment[1];
@@ -166,8 +179,8 @@ class CoastlineWay {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
 			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2, 0, 0,
-					Tile.TILE_SIZE, Tile.TILE_SIZE);
+			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
+					tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
 			if (clippedSegment != null) {
 				coastline[i + 2] = (float) clippedSegment[0];
 				coastline[i + 3] = (float) clippedSegment[1];
@@ -220,12 +233,16 @@ class CoastlineWay {
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
+	 * @param tileBoundaries
+	 *            the boundaries of the tile.
+	 * @param tileSize
+	 *            the size of the tile.
 	 */
-	CoastlineWay(float[] coastline) {
+	CoastlineWay(float[] coastline, int[] tileBoundaries, int tileSize) {
 		this.data = coastline;
-		this.entryAngle = calculateAngle(this.data[0], this.data[1]);
+		this.entryAngle = calculateAngle(this.data[0], this.data[1], tileBoundaries, tileSize);
 		this.exitAngle = calculateAngle(this.data[this.data.length - 2],
-				this.data[this.data.length - 1]);
+				this.data[this.data.length - 1], tileBoundaries, tileSize);
 		this.entrySide = calculateSide(this.entryAngle);
 		this.exitSide = calculateSide(this.exitAngle);
 	}

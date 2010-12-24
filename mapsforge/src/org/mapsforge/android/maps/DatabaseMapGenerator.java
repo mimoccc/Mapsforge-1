@@ -188,6 +188,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE_INVALID = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NATURAL_GLACIER_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NATURAL_GLACIER_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_HEATH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_LAND_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_WATER_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -255,6 +257,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private TagIDsNodes tagIDsNodes;
 	private TagIDsWays tagIDsWays;
 	private Bitmap tileBitmap;
+	private Tile tileForCoastlineAlgorithm;
 	private float[] wayNamePath;
 	private boolean wayNameRendered;
 	private ArrayList<WayTextContainer> wayNames;
@@ -265,28 +268,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * Default constructor that must be called by subclasses.
 	 */
 	DatabaseMapGenerator() {
-		this.coastlineAlgorithm = new CoastlineAlgorithm();
-		this.labelPlacement = new LabelPlacement();
-		this.mapSymbols = new MapSymbols();
 		this.tagIDsNodes = new TagIDsNodes();
 		this.tagIDsWays = new TagIDsWays();
-
-		initializePaints();
-
-		// set up all data structures for the map objects
-		this.ways = new ArrayList<ArrayList<ArrayList<ShapePaintContainer>>>(LAYERS);
-		for (byte i = LAYERS - 1; i >= 0; --i) {
-			this.innerWayList = new ArrayList<ArrayList<ShapePaintContainer>>(
-					LayerIds.LEVELS_PER_LAYER);
-			for (byte j = LayerIds.LEVELS_PER_LAYER - 1; j >= 0; --j) {
-				this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
-			}
-			this.ways.add(this.innerWayList);
-		}
-		this.wayNames = new ArrayList<WayTextContainer>(64);
-		this.nodes = new ArrayList<PointTextContainer>(64);
-		this.areaLabels = new ArrayList<PointTextContainer>(64);
-		this.symbols = new ArrayList<SymbolContainer>(64);
 	}
 
 	@Override
@@ -1030,6 +1013,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_COASTLINE_INVALID.setColor(Color.rgb(112, 133, 153));
+		PAINT_NATURAL_GLACIER_FILL.setStyle(Paint.Style.FILL);
+		PAINT_NATURAL_GLACIER_FILL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_NATURAL_GLACIER_FILL.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_NATURAL_GLACIER_FILL.setColor(Color.rgb(250, 250, 255));
+		PAINT_NATURAL_GLACIER_OUTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_NATURAL_GLACIER_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_NATURAL_GLACIER_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_NATURAL_GLACIER_OUTLINE.setColor(Color.rgb(182, 220, 233));
 		PAINT_NATURAL_HEATH_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_HEATH_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_HEATH_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1222,89 +1213,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				break;
 		}
 
-		PAINT_HIGHWAY_MOTORWAY1.setStrokeWidth(2.9f * paintScaleFactor);
-		PAINT_HIGHWAY_MOTORWAY2.setStrokeWidth(2.6f * paintScaleFactor);
-		PAINT_HIGHWAY_MOTORWAY_LINK1.setStrokeWidth(2.6f * paintScaleFactor);
-		PAINT_HIGHWAY_MOTORWAY_LINK2.setStrokeWidth(2.3f * paintScaleFactor);
-		PAINT_HIGHWAY_TRUNK1.setStrokeWidth(2.6f * paintScaleFactor);
-		PAINT_HIGHWAY_TRUNK2.setStrokeWidth(2.3f * paintScaleFactor);
-		PAINT_HIGHWAY_TRUNK_LINK1.setStrokeWidth(2.4f * paintScaleFactor);
-		PAINT_HIGHWAY_TRUNK_LINK2.setStrokeWidth(2.1f * paintScaleFactor);
-		PAINT_HIGHWAY_PRIMARY1.setStrokeWidth(2.1f * paintScaleFactor);
-		PAINT_HIGHWAY_PRIMARY2.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_PRIMARY_LINK1.setStrokeWidth(2.1f * paintScaleFactor);
-		PAINT_HIGHWAY_PRIMARY_LINK2.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_SECONDARY1.setStrokeWidth(2 * paintScaleFactor);
-		PAINT_HIGHWAY_SECONDARY2.setStrokeWidth(1.7f * paintScaleFactor);
-		PAINT_HIGHWAY_TERTIARY1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_TERTIARY2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
-				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
-		PAINT_HIGHWAY_TUNNEL.setStrokeWidth(0.8f * paintScaleFactor);
-		PAINT_HIGHWAY_UNCLASSIFIED1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_UNCLASSIFIED2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_ROAD1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_ROAD2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_RESIDENTIAL1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_RESIDENTIAL2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_LIVING_STREET1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_LIVING_STREET2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_SERVICE_AREA_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
-		PAINT_HIGHWAY_SERVICE1.setStrokeWidth(1.3f * paintScaleFactor);
-		PAINT_HIGHWAY_SERVICE2.setStrokeWidth(1 * paintScaleFactor);
-		PAINT_HIGHWAY_TRACK1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_TRACK2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_PEDESTRIAN_AREA_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
-		PAINT_HIGHWAY_PEDESTRIAN1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_PEDESTRIAN2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_PATH1.setStrokeWidth(0.8f * paintScaleFactor);
-		PAINT_HIGHWAY_PATH1.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_HIGHWAY_PATH2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_HIGHWAY_CYCLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_CYCLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_FOOTWAY1.setStrokeWidth(0.8f * paintScaleFactor);
-		PAINT_HIGHWAY_FOOTWAY1.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_HIGHWAY_FOOTWAY2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_HIGHWAY_BRIDLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_HIGHWAY_STEPS1.setStrokeWidth(0.8f * paintScaleFactor);
-		PAINT_HIGHWAY_STEPS1.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_HIGHWAY_STEPS2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_HIGHWAY_STEPS2.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 3));
-		PAINT_HIGHWAY_CONSTRUCTION.setStrokeWidth(1.3f * paintScaleFactor);
-
-		PAINT_WATERWAY_CANAL.setStrokeWidth(1.5f * paintScaleFactor);
-		PAINT_WATERWAY_RIVER.setStrokeWidth(1 * paintScaleFactor);
-		PAINT_WATERWAY_STREAM.setStrokeWidth(0.7f * paintScaleFactor);
-
-		PAINT_RAILWAY_RAIL_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
-				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
-		PAINT_RAILWAY_RAIL_TUNNEL.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_RAIL1.setPathEffect(new DashPathEffect(new float[] {
-				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_RAIL1.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_RAIL2.setStrokeWidth(0.6f * paintScaleFactor);
-		PAINT_RAILWAY_TRAM1.setStrokeWidth(0.4f * paintScaleFactor);
-		PAINT_RAILWAY_TRAM1.setPathEffect(new DashPathEffect(new float[] {
-				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_TRAM2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_LIGHT_RAIL1.setStrokeWidth(0.4f * paintScaleFactor);
-		PAINT_RAILWAY_LIGHT_RAIL1.setPathEffect(new DashPathEffect(new float[] {
-				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_LIGHT_RAIL2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_SUBWAY1.setPathEffect(new DashPathEffect(new float[] {
-				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_SUBWAY1.setStrokeWidth(0.4f * paintScaleFactor);
-		PAINT_RAILWAY_SUBWAY2.setStrokeWidth(0.5f * paintScaleFactor);
-		PAINT_RAILWAY_SUBWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
-				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
-		PAINT_RAILWAY_SUBWAY_TUNNEL.setStrokeWidth(0.4f * paintScaleFactor);
-		PAINT_RAILWAY_STATION_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-
 		PAINT_AEROWAY_AERODROME_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_AEROWAY_RUNWAY1.setStrokeWidth(7.5f * paintScaleFactor);
 		PAINT_AEROWAY_RUNWAY2.setStrokeWidth(5 * paintScaleFactor);
@@ -1312,25 +1220,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_AEROWAY_TAXIWAY2.setStrokeWidth(3 * paintScaleFactor);
 		PAINT_AEROWAY_TERMINAL_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
-		PAINT_MAN_MADE_PIER.setStrokeWidth(0.8f * paintScaleFactor);
-
-		PAINT_BUILDING_ROOF_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
-		PAINT_BUILDING_YES_OUTLINE.setStrokeWidth(0.2f * paintScaleFactor);
-
-		PAINT_LEISURE_COMMON_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-		PAINT_LEISURE_STADIUM_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-
 		PAINT_AMENITY_SCHOOL_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_AMENITY_PARKING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-
-		PAINT_TOURISM_ZOO_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-
-		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-		PAINT_LANDUSE_GRASS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-
-		PAINT_ROUTE_FERRY.setPathEffect(new DashPathEffect(new float[] { 3 * paintScaleFactor,
-				3 * paintScaleFactor }, 0));
-		PAINT_ROUTE_FERRY.setStrokeWidth(1 * paintScaleFactor);
 
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_2.setStrokeWidth(1.5f * paintScaleFactor);
 		PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_2.setPathEffect(new DashPathEffect(
@@ -1356,11 +1247,112 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_BOUNDARY_NATIONAL_PARK.setPathEffect(new DashPathEffect(new float[] {
 				1 * paintScaleFactor, 4 * paintScaleFactor }, 0));
 
-		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
-		PAINT_SPORT_TENNIS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_BUILDING_ROOF_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
+		PAINT_BUILDING_YES_OUTLINE.setStrokeWidth(0.2f * paintScaleFactor);
+
+		PAINT_HIGHWAY_BRIDLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_CONSTRUCTION.setStrokeWidth(1.3f * paintScaleFactor);
+		PAINT_HIGHWAY_CYCLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_CYCLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_FOOTWAY1.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
+		PAINT_HIGHWAY_FOOTWAY1.setStrokeWidth(0.8f * paintScaleFactor);
+		PAINT_HIGHWAY_FOOTWAY2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_HIGHWAY_LIVING_STREET1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_LIVING_STREET2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_MOTORWAY_LINK1.setStrokeWidth(2.6f * paintScaleFactor);
+		PAINT_HIGHWAY_MOTORWAY_LINK2.setStrokeWidth(2.3f * paintScaleFactor);
+		PAINT_HIGHWAY_MOTORWAY1.setStrokeWidth(2.9f * paintScaleFactor);
+		PAINT_HIGHWAY_MOTORWAY2.setStrokeWidth(2.6f * paintScaleFactor);
+		PAINT_HIGHWAY_PATH1.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
+		PAINT_HIGHWAY_PATH1.setStrokeWidth(0.8f * paintScaleFactor);
+		PAINT_HIGHWAY_PATH2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_HIGHWAY_PEDESTRIAN_AREA_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
+		PAINT_HIGHWAY_PEDESTRIAN1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_PEDESTRIAN2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_PRIMARY_LINK1.setStrokeWidth(2.1f * paintScaleFactor);
+		PAINT_HIGHWAY_PRIMARY_LINK2.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_PRIMARY1.setStrokeWidth(2.1f * paintScaleFactor);
+		PAINT_HIGHWAY_PRIMARY2.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_RESIDENTIAL1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_RESIDENTIAL2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_ROAD1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_ROAD2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_SECONDARY1.setStrokeWidth(2 * paintScaleFactor);
+		PAINT_HIGHWAY_SECONDARY2.setStrokeWidth(1.7f * paintScaleFactor);
+		PAINT_HIGHWAY_SERVICE_AREA_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
+		PAINT_HIGHWAY_SERVICE1.setStrokeWidth(1.3f * paintScaleFactor);
+		PAINT_HIGHWAY_SERVICE2.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_HIGHWAY_STEPS1.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
+		PAINT_HIGHWAY_STEPS1.setStrokeWidth(0.8f * paintScaleFactor);
+		PAINT_HIGHWAY_STEPS2.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 1 * paintScaleFactor }, 3));
+		PAINT_HIGHWAY_STEPS2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_HIGHWAY_TERTIARY1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_TERTIARY2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_TRACK1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_TRACK2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_TRUNK_LINK1.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_HIGHWAY_TRUNK_LINK2.setStrokeWidth(2.1f * paintScaleFactor);
+		PAINT_HIGHWAY_TRUNK1.setStrokeWidth(2.6f * paintScaleFactor);
+		PAINT_HIGHWAY_TRUNK2.setStrokeWidth(2.3f * paintScaleFactor);
+		PAINT_HIGHWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
+				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
+		PAINT_HIGHWAY_TUNNEL.setStrokeWidth(0.8f * paintScaleFactor);
+		PAINT_HIGHWAY_UNCLASSIFIED1.setStrokeWidth(1.8f * paintScaleFactor);
+		PAINT_HIGHWAY_UNCLASSIFIED2.setStrokeWidth(1.5f * paintScaleFactor);
+
+		PAINT_LANDUSE_ALLOTMENTS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_LANDUSE_GRASS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_LEISURE_COMMON_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_LEISURE_STADIUM_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_MAN_MADE_PIER.setStrokeWidth(0.8f * paintScaleFactor);
 
 		PAINT_NATURAL_COASTLINE.setStrokeWidth(1 * paintScaleFactor);
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_NATURAL_GLACIER_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_RAILWAY_RAIL_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
+				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
+		PAINT_RAILWAY_RAIL_TUNNEL.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_RAIL1.setPathEffect(new DashPathEffect(new float[] {
+				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
+		PAINT_RAILWAY_RAIL1.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_RAIL2.setStrokeWidth(0.6f * paintScaleFactor);
+		PAINT_RAILWAY_TRAM1.setStrokeWidth(0.4f * paintScaleFactor);
+		PAINT_RAILWAY_TRAM1.setPathEffect(new DashPathEffect(new float[] {
+				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
+		PAINT_RAILWAY_TRAM2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_LIGHT_RAIL1.setStrokeWidth(0.4f * paintScaleFactor);
+		PAINT_RAILWAY_LIGHT_RAIL1.setPathEffect(new DashPathEffect(new float[] {
+				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
+		PAINT_RAILWAY_LIGHT_RAIL2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_SUBWAY1.setPathEffect(new DashPathEffect(new float[] {
+				2 * paintScaleFactor, 2 * paintScaleFactor }, 0));
+		PAINT_RAILWAY_SUBWAY1.setStrokeWidth(0.4f * paintScaleFactor);
+		PAINT_RAILWAY_SUBWAY2.setStrokeWidth(0.5f * paintScaleFactor);
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
+				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
+		PAINT_RAILWAY_SUBWAY_TUNNEL.setStrokeWidth(0.4f * paintScaleFactor);
+		PAINT_RAILWAY_STATION_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_ROUTE_FERRY.setPathEffect(new DashPathEffect(new float[] { 3 * paintScaleFactor,
+				3 * paintScaleFactor }, 0));
+		PAINT_ROUTE_FERRY.setStrokeWidth(1 * paintScaleFactor);
+
+		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_SPORT_TENNIS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_TOURISM_ZOO_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_WATERWAY_CANAL.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_WATERWAY_RIVER.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_WATERWAY_STREAM.setStrokeWidth(0.7f * paintScaleFactor);
 	}
 
 	@Override
@@ -1442,6 +1434,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		// start the coastline algorithm for generating closed polygons
+		this.coastlineAlgorithm.setTiles(this.tileForCoastlineAlgorithm, this.currentTile);
 		this.coastlineAlgorithm.generateClosedPolygons(this);
 
 		// erase the tileBitmap with the default color
@@ -1531,6 +1524,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.coastlineAlgorithm.clearCoastlineSegments();
 	}
 
+	final void renderCoastlineTile(Tile tile) {
+		this.tileForCoastlineAlgorithm = tile;
+	}
+
 	/**
 	 * Renders a single POI.
 	 * 
@@ -1561,7 +1558,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* aeroway */
-		if (this.tagIDsNodes.aeroway$helipad != null
+		if (this.tagIDsNodes.aeroway$aerodrome != null
+				&& nodeTagIds[this.tagIDsNodes.aeroway$aerodrome]
+				&& this.currentTile.zoomLevel <= 14) {
+			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.airport);
+		} else if (this.tagIDsNodes.aeroway$helipad != null
 				&& nodeTagIds[this.tagIDsNodes.aeroway$helipad]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.helipad);
 		}
@@ -1799,7 +1800,16 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* natural */
-		else if (this.tagIDsNodes.natural$peak != null
+		else if (this.tagIDsNodes.natural$cave_entrance != null
+				&& nodeTagIds[this.tagIDsNodes.natural$cave_entrance]) {
+			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+					this.mapSymbols.cave_entrance);
+			if (nodeName != null) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLACK_12, PAINT_NAME_WHITE_STROKE_12));
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
+			}
+		} else if (this.tagIDsNodes.natural$peak != null
 				&& nodeTagIds[this.tagIDsNodes.natural$peak]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.peak);
@@ -1814,11 +1824,32 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 								this.currentNodeY + 18, PAINT_NAME_BLACK_10,
 								PAINT_NAME_WHITE_STROKE_10));
 			}
+		} else if (this.tagIDsNodes.natural$volcano != null
+				&& nodeTagIds[this.tagIDsNodes.natural$volcano]) {
+			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+					this.mapSymbols.vulcan);
+			if (nodeName != null && this.currentTile.zoomLevel >= 14) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLACK_10, PAINT_NAME_WHITE_STROKE_11));
+				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
+			}
+			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
+				this.nodes
+						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+								this.currentNodeY + 18, PAINT_NAME_BLACK_10,
+								PAINT_NAME_WHITE_STROKE_10));
+			}
 		}
 
 		/* place */
 		else if (this.tagIDsNodes.place$city != null && nodeTagIds[this.tagIDsNodes.place$city]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 14) {
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
+			}
+		} else if (this.tagIDsNodes.place$country != null
+				&& nodeTagIds[this.tagIDsNodes.place$country]) {
+			if (nodeName != null && this.currentTile.zoomLevel <= 6) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
 			}
@@ -2878,6 +2909,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			} else if (this.tagIDsWays.natural$coastline != null
 					&& wayTagIds[this.tagIDsWays.natural$coastline]) {
 				this.coastlineAlgorithm.addCoastlineSegment(this.coordinates[0]);
+			} else if (this.tagIDsWays.natural$glacier != null
+					&& wayTagIds[this.tagIDsWays.natural$glacier]) {
+				this.layer.get(LayerIds.NATURAL$GLACIER)
+						.add(
+								new ShapePaintContainer(this.shapeContainer,
+										PAINT_NATURAL_GLACIER_FILL));
+				this.layer.get(LayerIds.NATURAL$GLACIER).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_NATURAL_GLACIER_OUTLINE));
 			}
 			if (--this.remainingTags <= 0) {
 				return;
@@ -3123,9 +3163,31 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	}
 
 	@Override
-	final void setup(Bitmap bitmap) {
+	final void setupMapGenerator(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
-		setupMapGenerator(this.tileBitmap);
+
+		this.coastlineAlgorithm = new CoastlineAlgorithm();
+		this.labelPlacement = new LabelPlacement();
+		this.mapSymbols = new MapSymbols();
+
+		initializePaints();
+
+		// set up all data structures for the map objects
+		this.ways = new ArrayList<ArrayList<ArrayList<ShapePaintContainer>>>(LAYERS);
+		for (byte i = LAYERS - 1; i >= 0; --i) {
+			this.innerWayList = new ArrayList<ArrayList<ShapePaintContainer>>(
+					LayerIds.LEVELS_PER_LAYER);
+			for (byte j = LayerIds.LEVELS_PER_LAYER - 1; j >= 0; --j) {
+				this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
+			}
+			this.ways.add(this.innerWayList);
+		}
+		this.wayNames = new ArrayList<WayTextContainer>(64);
+		this.nodes = new ArrayList<PointTextContainer>(64);
+		this.areaLabels = new ArrayList<PointTextContainer>(64);
+		this.symbols = new ArrayList<SymbolContainer>(64);
+
+		setupRenderer(this.tileBitmap);
 	}
 
 	/**
@@ -3135,5 +3197,5 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param bitmap
 	 *            the bitmap on which all future tiles need to be copied.
 	 */
-	abstract void setupMapGenerator(Bitmap bitmap);
+	abstract void setupRenderer(Bitmap bitmap);
 }

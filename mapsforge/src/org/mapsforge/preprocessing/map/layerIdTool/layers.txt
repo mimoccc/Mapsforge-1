@@ -24,6 +24,7 @@ SEA_AREAS
 
 // Natural features
 natural=coastline
+natural=glacier
 natural=land
 natural=beach
 landuse=forest landuse=wood natural=wood natural=scrub

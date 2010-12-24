@@ -22,10 +22,12 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeMap;
 
+import android.graphics.Point;
+
 /**
- * Class to generate closed polygons from disjoint coastline segments. The algorithm is based on
- * the close-areas.pl script, written by Frederik Ramm for the Osmarender program. This
- * implementation is optimized for high performance and memory reusing.
+ * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The
+ * algorithm is based on the close-areas.pl script, written by Frederik Ramm for the Osmarender
+ * program. This implementation is optimized for high performance and memory reusing.
  */
 class CoastlineAlgorithm {
 	/**
@@ -62,7 +64,7 @@ class CoastlineAlgorithm {
 		void onWaterTile();
 	}
 
-	private final ArrayList<ImmutablePoint> additionalCoastlinePoints;
+	private final ArrayList<Point> additionalCoastlinePoints;
 	private CoastlineWay coastlineEnd;
 	private int coastlineEndLength;
 	private ImmutablePoint coastlineEndPoint;
@@ -77,13 +79,20 @@ class CoastlineAlgorithm {
 	private int currentSide;
 	private EndPoints endPoints;
 	private final HashSet<EndPoints> handledCoastlineSegments;
-	private final ImmutablePoint[] helperPoints;
+	private final Point[] helperPoints;
 	private boolean islandSituation;
 	private float[] matchPath;
 	private boolean needHelperPoint;
 	private float[] newPath;
 	private float[] nodesSequence;
-	private boolean noWaterBackground;
+	private int relativeX1;
+	private int relativeX2;
+	private int relativeY1;
+	private int relativeY2;
+	private final int[] virtualTileBoundaries;
+	private int virtualTileSize;
+	private boolean waterBackground;
+	private int zoomLevelDifference;
 
 	/**
 	 * Constructs a new CoastlineAlgorithm instance to generate closed polygons.
@@ -101,19 +110,21 @@ class CoastlineAlgorithm {
 		};
 
 		// create the four helper points at the tile corners
-		this.helperPoints = new ImmutablePoint[4];
-		this.helperPoints[0] = new ImmutablePoint(Tile.TILE_SIZE, Tile.TILE_SIZE);
-		this.helperPoints[1] = new ImmutablePoint(0, Tile.TILE_SIZE);
-		this.helperPoints[2] = new ImmutablePoint(0, 0);
-		this.helperPoints[3] = new ImmutablePoint(Tile.TILE_SIZE, 0);
+		this.helperPoints = new Point[4];
+		this.helperPoints[0] = new Point();
+		this.helperPoints[1] = new Point();
+		this.helperPoints[2] = new Point();
+		this.helperPoints[3] = new Point();
 
-		this.additionalCoastlinePoints = new ArrayList<ImmutablePoint>(4);
+		this.additionalCoastlinePoints = new ArrayList<Point>(4);
 		this.coastlineWays = new ArrayList<CoastlineWay>(4);
 
 		// create the data structures for the coastline segments
 		this.coastlineEnds = new TreeMap<ImmutablePoint, float[]>();
 		this.coastlineStarts = new TreeMap<ImmutablePoint, float[]>();
 		this.handledCoastlineSegments = new HashSet<EndPoints>(64);
+
+		this.virtualTileBoundaries = new int[4];
 	}
 
 	/**
@@ -185,6 +196,7 @@ class CoastlineAlgorithm {
 		this.coastlineStarts.clear();
 		this.coastlineEnds.clear();
 		this.handledCoastlineSegments.clear();
+		this.coastlineWays.clear();
 	}
 
 	/**
@@ -201,33 +213,35 @@ class CoastlineAlgorithm {
 		}
 
 		this.islandSituation = false;
-		this.noWaterBackground = false;
+		this.waterBackground = true;
 		for (float[] coastline : this.coastlineStarts.values()) {
 			// is the current segment already closed?
 			if (CoastlineWay.isClosed(coastline)) {
 				// depending on the orientation we have either water or an island
 				if (CoastlineWay.isClockWise(coastline)) {
 					// water
-					this.noWaterBackground = true;
+					this.waterBackground = false;
 					closedPolygonHandler.onWaterPolygon(coastline);
 				} else {
 					// island
 					this.islandSituation = true;
 					closedPolygonHandler.onIslandPolygon(coastline);
 				}
-			} else if (CoastlineWay.isValid(coastline)) {
-				coastline = CoastlineWay.shortenCoastlineSegment(coastline);
+			} else if (CoastlineWay.isValid(coastline, this.virtualTileBoundaries)) {
+				coastline = CoastlineWay.shortenCoastlineSegment(coastline,
+						this.virtualTileBoundaries);
 				if (coastline != null) {
-					this.coastlineWays.add(new CoastlineWay(coastline));
+					this.coastlineWays.add(new CoastlineWay(coastline,
+							this.virtualTileBoundaries, this.virtualTileSize));
 				}
 			} else {
-				this.noWaterBackground = true;
+				this.waterBackground = false;
 				closedPolygonHandler.onInvalidCoastlineSegment(coastline);
 			}
 		}
 
 		// check if there are no errors and the tile needs a water background
-		if (this.islandSituation && !this.noWaterBackground && this.coastlineWays.isEmpty()) {
+		if (this.islandSituation && this.waterBackground && this.coastlineWays.isEmpty()) {
 			// add a water polygon for the whole tile
 			closedPolygonHandler.onWaterTile();
 			return;
@@ -296,7 +310,6 @@ class CoastlineAlgorithm {
 
 				// add the now closed way as a water polygon to the way list
 				closedPolygonHandler.onWaterPolygon(this.coordinates);
-
 			} else {
 				// calculate the length of the new coastline segment
 				this.coastlineStartLength = this.coastlineStart.data.length;
@@ -323,12 +336,63 @@ class CoastlineAlgorithm {
 
 				// replace the end segment in the list with the new segment
 				this.coastlineWays.remove(this.coastlineEnd);
-				newSegment = CoastlineWay.shortenCoastlineSegment(newSegment);
+				newSegment = CoastlineWay.shortenCoastlineSegment(newSegment,
+						this.virtualTileBoundaries);
 				if (newSegment != null) {
-					this.coastlineWays.add(new CoastlineWay(newSegment));
+					this.coastlineWays.add(new CoastlineWay(newSegment,
+							this.virtualTileBoundaries, this.virtualTileSize));
 					Collections.sort(this.coastlineWays, this.coastlineWayComparator);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Sets the tiles on which the coastline algorithm should work.
+	 * 
+	 * @param readCoastlineTile
+	 *            the tile whose coastline segments have been read.
+	 * @param currentTile
+	 *            the tile for which the coastline coordinates are relative to.
+	 */
+	void setTiles(Tile readCoastlineTile, Tile currentTile) {
+		if (readCoastlineTile.zoomLevel < currentTile.zoomLevel) {
+			// calculate the virtual tile dimensions
+			this.zoomLevelDifference = currentTile.zoomLevel - readCoastlineTile.zoomLevel;
+			this.virtualTileSize = Tile.TILE_SIZE << this.zoomLevelDifference;
+			this.relativeX1 = (int) ((readCoastlineTile.pixelX << this.zoomLevelDifference) - currentTile.pixelX);
+			this.relativeY1 = (int) ((readCoastlineTile.pixelY << this.zoomLevelDifference) - currentTile.pixelY);
+			this.relativeX2 = relativeX1 + this.virtualTileSize;
+			this.relativeY2 = relativeY1 + this.virtualTileSize;
+
+			this.virtualTileBoundaries[0] = this.relativeX1;
+			this.virtualTileBoundaries[1] = this.relativeY1;
+			this.virtualTileBoundaries[2] = this.relativeX2;
+			this.virtualTileBoundaries[3] = this.relativeY2;
+		} else {
+			// use the standard tile dimensions
+			this.virtualTileSize = Tile.TILE_SIZE;
+
+			this.virtualTileBoundaries[0] = 0;
+			this.virtualTileBoundaries[1] = 0;
+			this.virtualTileBoundaries[2] = Tile.TILE_SIZE;
+			this.virtualTileBoundaries[3] = Tile.TILE_SIZE;
+		}
+
+		// bottom-right
+		this.helperPoints[0].x = this.virtualTileBoundaries[2];
+		this.helperPoints[0].y = this.virtualTileBoundaries[3];
+
+		// bottom-left
+		this.helperPoints[1].x = this.virtualTileBoundaries[0];
+		this.helperPoints[1].y = this.virtualTileBoundaries[3];
+
+		// top-left
+		this.helperPoints[2].x = this.virtualTileBoundaries[0];
+		this.helperPoints[2].y = this.virtualTileBoundaries[1];
+
+		// top-right
+		this.helperPoints[3].x = this.virtualTileBoundaries[2];
+		this.helperPoints[3].y = this.virtualTileBoundaries[1];
 	}
 }

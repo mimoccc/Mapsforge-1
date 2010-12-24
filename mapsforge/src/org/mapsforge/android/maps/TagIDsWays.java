@@ -109,6 +109,7 @@ class TagIDsWays {
 	Short military$naval_base;
 	Short natural$beach;
 	Short natural$coastline;
+	Short natural$glacier;
 	Short natural$heath;
 	Short natural$land;
 	Short natural$scrub;
@@ -238,6 +239,7 @@ class TagIDsWays {
 
 		this.natural$beach = nodeTags.get("natural=beach");
 		this.natural$coastline = nodeTags.get("natural=coastline");
+		this.natural$glacier = nodeTags.get("natural=glacier");
 		this.natural$heath = nodeTags.get("natural=heath");
 		this.natural$land = nodeTags.get("natural=land");
 		this.natural$scrub = nodeTags.get("natural=scrub");

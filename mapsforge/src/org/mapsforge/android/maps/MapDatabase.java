@@ -288,6 +288,7 @@ public class MapDatabase {
 	private long parentTileY;
 	private String projectionName;
 	private boolean queryIsWater;
+	private boolean queryReadWaterInfo;
 	private boolean queryReadWayNames;
 	private int queryTileBitmask;
 	private int queryZoomLevel;
@@ -395,12 +396,12 @@ public class MapDatabase {
 	/**
 	 * Reads a single block and calls the render functions on all map elements.
 	 * 
-	 * @param mapGenerator
-	 *            the MapGenerator callback which handles the extracted map elements.
+	 * @param databaseMapGenerator
+	 *            the DatabaseMapGenerator callback which handles the extracted map elements.
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private void processBlock(DatabaseMapGenerator mapGenerator)
+	private void processBlock(DatabaseMapGenerator databaseMapGenerator)
 			throws UnsupportedEncodingException {
 		if (this.debugFile) {
 			// get and check the block signature
@@ -549,7 +550,7 @@ public class MapDatabase {
 			}
 
 			// render the node
-			mapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
+			databaseMapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
 					this.nodeLongitude, this.nodeName, this.nodeHouseNumber,
 					this.nodeElevation, this.nodeTagIds);
 		}
@@ -979,9 +980,10 @@ public class MapDatabase {
 			}
 
 			// render the way
-			mapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags, this.wayName,
-					this.wayRef, this.wayLabelPosition, this.wayTagIds, this.wayTagBitmap,
-					this.wayNodesSequenceLength, this.wayNodesSequence, this.wayInnerWays);
+			databaseMapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags,
+					this.wayName, this.wayRef, this.wayLabelPosition, this.wayTagIds,
+					this.wayTagBitmap, this.wayNodesSequenceLength, this.wayNodesSequence,
+					this.wayInnerWays);
 		}
 	}
 
@@ -1349,10 +1351,10 @@ public class MapDatabase {
 	 *            the tile to read.
 	 * @param readWayNames
 	 *            if way names should be read.
-	 * @param mapGenerator
-	 *            the MapGenerator callback which handles the extracted map elements.
+	 * @param databaseMapGenerator
+	 *            the DatabaseMapGenerator callback which handles the extracted map elements.
 	 */
-	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator mapGenerator) {
+	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator databaseMapGenerator) {
 		try {
 			// reset the stop execution flag
 			this.stopCurrentQuery = false;
@@ -1385,6 +1387,7 @@ public class MapDatabase {
 				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
 				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
 				this.useTileBitmask = false;
+				databaseMapGenerator.renderCoastlineTile(tile);
 			} else if (tile.zoomLevel > this.mapFileParameters.baseZoomLevel) {
 				// calculate the XY numbers of the parent base tile
 				this.zoomLevelDifference = tile.zoomLevel
@@ -1393,6 +1396,8 @@ public class MapDatabase {
 				this.fromBaseTileY = tile.y >>> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
+				databaseMapGenerator.renderCoastlineTile(new Tile(this.fromBaseTileX,
+						this.fromBaseTileY, this.mapFileParameters.baseZoomLevel));
 
 				if (this.zoomLevelDifference == 1) {
 					// determine the correct bitmask for all quadrants
@@ -1489,6 +1494,7 @@ public class MapDatabase {
 				this.toBaseTileX = this.fromBaseTileX;
 				this.toBaseTileY = this.fromBaseTileY;
 				this.useTileBitmask = false;
+				databaseMapGenerator.renderCoastlineTile(tile);
 			}
 
 			// calculate the blocks in the file which need to be read
@@ -1503,6 +1509,7 @@ public class MapDatabase {
 					this.mapFileParameters.blocksHeight - 1);
 
 			this.queryIsWater = true;
+			this.queryReadWaterInfo = false;
 
 			// read and process all necessary blocks from top to bottom and from left to right
 			for (this.currentRow = this.fromBlockY; this.currentRow <= this.toBlockY; ++this.currentRow) {
@@ -1525,6 +1532,7 @@ public class MapDatabase {
 						// check the water flag of the current block
 						this.currentBlockIsWater = (this.currentBlockIndexEntry & BITMASK_INDEX_WATER) != 0;
 						this.queryIsWater = this.queryIsWater && this.currentBlockIsWater;
+						this.queryReadWaterInfo = true;
 					}
 
 					// get and check the current block pointer
@@ -1586,14 +1594,14 @@ public class MapDatabase {
 					}
 
 					// handle the current block data
-					processBlock(mapGenerator);
+					processBlock(databaseMapGenerator);
 				}
 			}
 
 			// the query is finished, was the water flag set for all blocks?
-			if (this.queryIsWater) {
+			if (this.queryIsWater && this.queryReadWaterInfo) {
 				// render the water background
-				mapGenerator.renderWaterBackground();
+				databaseMapGenerator.renderWaterBackground();
 			}
 		} catch (IOException e) {
 			Logger.e(e);

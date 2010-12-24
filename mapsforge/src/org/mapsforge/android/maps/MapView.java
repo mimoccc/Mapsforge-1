@@ -780,7 +780,7 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @return the current center of the map.
 	 */
-	public GeoPoint getMapCenter() {
+	public synchronized GeoPoint getMapCenter() {
 		return new GeoPoint(this.latitude, this.longitude);
 	}
 
@@ -1189,20 +1189,23 @@ public class MapView extends ViewGroup {
 	}
 
 	private void renderScaleBar() {
-		// check if recalculating and drawing of the map scale is necessary
-		if (this.zoomLevel == this.mapScalePreviousZoomLevel
-				&& Math.abs(this.latitude - this.mapScalePreviousLatitude) < 0.2) {
-			// no need to refresh the map scale
-			return;
+		synchronized (this) {
+			// check if recalculating and drawing of the map scale is necessary
+			if (this.zoomLevel == this.mapScalePreviousZoomLevel
+					&& Math.abs(this.latitude - this.mapScalePreviousLatitude) < 0.2) {
+				// no need to refresh the map scale
+				return;
+			}
+
+			// save the current zoom level and latitude
+			this.mapScalePreviousZoomLevel = this.zoomLevel;
+			this.mapScalePreviousLatitude = this.latitude;
+
+			// calculate an even value for the map scale
+			this.meterPerPixel = MercatorProjection.calculateGroundResolution(this.latitude,
+					this.zoomLevel);
 		}
 
-		// save the current zoom level and latitude
-		this.mapScalePreviousZoomLevel = this.zoomLevel;
-		this.mapScalePreviousLatitude = this.latitude;
-
-		// calculate an even value for the map scale
-		this.meterPerPixel = MercatorProjection.calculateGroundResolution(this.latitude,
-				this.zoomLevel);
 		for (int i = 0; i < SCALE_BAR_VALUES.length; ++i) {
 			this.mapScale = SCALE_BAR_VALUES[i];
 			this.mapScaleLength = this.mapScale / (float) this.meterPerPixel;
@@ -1502,10 +1505,6 @@ public class MapView extends ViewGroup {
 				break;
 			case OPENCYCLEMAP_TILE_DOWNLOAD:
 				this.mapGenerator = new OpenCycleMapTileDownload();
-				break;
-			case OPENGL_RENDERER:
-				this.mapGenerator = new OpenGLRenderer(this.mapActivity, this);
-				((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.mapDatabase);
 				break;
 			case OSMARENDER_TILE_DOWNLOAD:
 				this.mapGenerator = new OsmarenderTileDownload();

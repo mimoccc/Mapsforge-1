@@ -26,6 +26,7 @@ import java.util.Map;
  * 
  */
 enum PoiEnum {
+	AEROWAY$AERODROME((byte) 13),
 	AEROWAY$GATE((byte) 17),
 	AEROWAY$HELIPAD((byte) 17),
 	AMENITY$ATM((byte) 17),
@@ -70,10 +71,13 @@ enum PoiEnum {
 	MAN_MADE$SURVEILLANCE((byte) 17),
 	MAN_MADE$TOWER((byte) 17),
 	MAN_MADE$WINDMILL((byte) 17),
+	NATURAL$CAVE_ENTRANCE((byte) 14),
 	NATURAL$PEAK((byte) 15),
 	NATURAL$SPRING((byte) 17),
 	NATURAL$TREE((byte) 17),
-	PLACE$CITY((byte) 8),
+	NATURAL$VOLCANO((byte) 12),
+	PLACE$CITY((byte) 6),
+	PLACE$COUNTRY((byte)3),
 	PLACE$ISLAND((byte) 12),
 	PLACE$SUBURB((byte) 12),
 	PLACE$TOWN((byte) 9),

@@ -38,11 +38,6 @@ public enum MapViewMode {
 	OPENCYCLEMAP_TILE_DOWNLOAD,
 
 	/**
-	 * Map tiles are rendered with OpenGL ES. <b>This mode is unstable and for testing only.</b>
-	 */
-	OPENGL_RENDERER,
-
-	/**
 	 * Map tiles are downloaded from the Osmarender server. Requires an Internet connection.
 	 */
 	OSMARENDER_TILE_DOWNLOAD;
@@ -62,8 +57,6 @@ public enum MapViewMode {
 				return true;
 			case OPENCYCLEMAP_TILE_DOWNLOAD:
 				return true;
-			case OPENGL_RENDERER:
-				return false;
 			case OSMARENDER_TILE_DOWNLOAD:
 				return true;
 		}

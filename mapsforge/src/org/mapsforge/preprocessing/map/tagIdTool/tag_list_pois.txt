@@ -1,6 +1,7 @@
 // this is a sorted list of all POI tags that could be rendered
 // to generate java code with unique IDs run the tagIdTool on this file
 
+aeroway=aerodrome;13
 aeroway=gate;17
 aeroway=helipad;17
 
@@ -53,11 +54,14 @@ man_made=surveillance;17
 man_made=tower;17
 man_made=windmill;17
 
+natural=cave_entrance;14
 natural=peak;15
 natural=spring;17
 natural=tree;17
+natural=volcano;12
 
-place=city;8
+place=city;6
+place=country;3
 place=island;12
 place=suburb;14
 place=town;9

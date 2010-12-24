@@ -47,16 +47,15 @@ abstract class MapGenerator extends Thread {
 		// set up the two job queues
 		this.jobQueue1 = new PriorityQueue<MapGeneratorJob>(64);
 		this.jobQueue2 = new PriorityQueue<MapGeneratorJob>(64);
-
-		// create the currentTileBitmap for the tile content
-		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
-				Bitmap.Config.RGB_565);
 	}
 
 	@Override
 	public final void run() {
 		setName(getThreadName());
-		setup(this.currentTileBitmap);
+		// create the currentTileBitmap for the tile content
+		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
+				Bitmap.Config.RGB_565);
+		setupMapGenerator(this.currentTileBitmap);
 
 		while (!isInterrupted()) {
 			prepareMapGeneration();
@@ -318,7 +317,7 @@ abstract class MapGenerator extends Thread {
 	 * @param bitmap
 	 *            the bitmap on which all future tiles need to be copied.
 	 */
-	abstract void setup(Bitmap bitmap);
+	abstract void setupMapGenerator(Bitmap bitmap);
 
 	/**
 	 * Request the MapGenerator to continue working.

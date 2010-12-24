@@ -119,6 +119,8 @@ public abstract class Overlay extends Thread {
 		this.isSetUp = false;
 		this.matrix = new Matrix();
 		this.point = new Point();
+		this.positionBeforeDraw = new Point();
+		this.positionAfterDraw = new Point();
 	}
 
 	/**
@@ -247,8 +249,11 @@ public abstract class Overlay extends Thread {
 					.getMapCenter(), this.positionBeforeDraw, this.zoomLevelBeforeDraw);
 		}
 
+		// calculate the top-left point of the visible rectangle
 		this.point.x = this.positionBeforeDraw.x - (this.overlayCanvas.getWidth() >> 1);
 		this.point.y = this.positionBeforeDraw.y - (this.overlayCanvas.getHeight() >> 1);
+
+		// call the draw implementation of the subclass
 		this.drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection,
 				this.zoomLevelBeforeDraw);
 
@@ -269,21 +274,24 @@ public abstract class Overlay extends Thread {
 			if (this.zoomLevelDiff > 0) {
 				// zoom level has increased
 				this.matrixScaleFactor = 1 << this.zoomLevelDiff;
+				this.matrix
+						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
+								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
+										.getHeight() >> 1);
 			} else if (this.zoomLevelDiff < 0) {
 				// zoom level has decreased
 				this.matrixScaleFactor = 1.0f / (1 << -this.zoomLevelDiff);
-			} else {
-				// zoom level is unchanged
-				this.matrixScaleFactor = 1;
+				this.matrix
+						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
+								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
+										.getHeight() >> 1);
 			}
-			this.matrix.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
-					this.overlayCanvas.getWidth() >> 1, this.overlayCanvas.getHeight() >> 1);
-		}
 
-		// swap the two Overlay bitmaps
-		this.overlayBitmapSwap = this.overlayBitmap1;
-		this.overlayBitmap1 = this.overlayBitmap2;
-		this.overlayBitmap2 = this.overlayBitmapSwap;
+			// swap the two Overlay bitmaps
+			this.overlayBitmapSwap = this.overlayBitmap1;
+			this.overlayBitmap1 = this.overlayBitmap2;
+			this.overlayBitmap2 = this.overlayBitmapSwap;
+		}
 
 		// request the MapView to redraw
 		this.internalMapView.postInvalidate();

@@ -108,7 +108,7 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	}
 
 	@Override
-	final void setup(Bitmap bitmap) {
+	final void setupMapGenerator(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
 		this.pixelColors = new int[Tile.TILE_SIZE * Tile.TILE_SIZE];
 	}

@@ -26,28 +26,31 @@ import android.graphics.Point;
  * polygon, add a way node sequence where the first and the last way node are equal.
  * <p>
  * All rendering parameters like color, stroke width, pattern and transparency can be configured
- * via the {@link android.graphics.Paint Paint} object in the {@link #RouteOverlay(Paint)
- * constructor}. Anti-aliasing is always used to improve the visual quality of the image.
+ * via the two {@link android.graphics.Paint Paint} objects in the
+ * {@link #RouteOverlay(Paint,Paint)} constructor.
  */
 public class RouteOverlay extends Overlay {
 	private static final String THREAD_NAME = "RouteOverlay";
 
 	private Point[] cachedWayPositions;
 	private byte cachedZoomLevel;
-	private Paint paint;
+	private Paint fillPaint;
+	private Paint outlinePaint;
 	private final Path path;
 	private GeoPoint[] wayNodes;
 
 	/**
 	 * Constructs a new RouteOverlay.
 	 * 
-	 * @param paint
-	 *            the paint object which will be used to draw the route.
+	 * @param fillPaint
+	 *            the paint object which will be used to fill the overlay.
+	 * @param outlinePaint
+	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
-	public RouteOverlay(Paint paint) {
-		setPaint(paint);
+	public RouteOverlay(Paint fillPaint, Paint outlinePaint) {
 		this.path = new Path();
 		this.cachedWayPositions = new Point[0];
+		setPaint(fillPaint, outlinePaint);
 	}
 
 	@Override
@@ -56,7 +59,7 @@ public class RouteOverlay extends Overlay {
 		if (this.wayNodes == null || this.wayNodes.length < 1) {
 			// no way nodes to draw
 			return;
-		} else if (this.paint == null) {
+		} else if (this.fillPaint == null && this.outlinePaint == null) {
 			// no paint to draw
 			return;
 		}
@@ -80,7 +83,12 @@ public class RouteOverlay extends Overlay {
 		}
 
 		// draw the path on the canvas
-		canvas.drawPath(this.path, this.paint);
+		if (this.fillPaint != null) {
+			canvas.drawPath(this.path, this.fillPaint);
+		}
+		if (this.outlinePaint != null) {
+			canvas.drawPath(this.path, this.outlinePaint);
+		}
 	}
 
 	@Override
@@ -89,16 +97,16 @@ public class RouteOverlay extends Overlay {
 	}
 
 	/**
-	 * Sets the paint object which will be used to draw the route.
+	 * Sets the paint objects which will be used to draw the overlay.
 	 * 
-	 * @param paint
-	 *            the paint object which will be used to draw the route.
+	 * @param fillPaint
+	 *            the paint object which will be used to fill the overlay.
+	 * @param outlinePaint
+	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
-	public synchronized void setPaint(Paint paint) {
-		this.paint = paint;
-		if (this.paint != null) {
-			this.paint.setAntiAlias(true);
-		}
+	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
+		this.fillPaint = fillPaint;
+		this.outlinePaint = outlinePaint;
 	}
 
 	/**
@@ -113,13 +121,6 @@ public class RouteOverlay extends Overlay {
 			this.cachedWayPositions = new Point[this.wayNodes.length];
 		}
 		this.cachedZoomLevel = Byte.MIN_VALUE;
-		populate();
-	}
-
-	/**
-	 * This method should be called after way nodes have been added to the Overlay.
-	 */
-	protected final void populate() {
 		super.requestRedraw();
 	}
 }
