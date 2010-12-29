@@ -22,14 +22,83 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeMap;
 
-import android.graphics.Point;
-
 /**
  * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The
  * algorithm is based on the close-areas.pl script, written by Frederik Ramm for the Osmarender
  * program. This implementation is optimized for high performance and memory reusing.
  */
 class CoastlineAlgorithm {
+	/**
+	 * An immutable container for the two endpoints of a coastline segment.
+	 */
+	private class EndPoints {
+		private final ImmutablePoint end;
+		private final int hashCode;
+		private EndPoints other;
+		private final ImmutablePoint start;
+
+		/**
+		 * Creates a new EndPoints instance with the given points.
+		 * 
+		 * @param start
+		 *            the start point.
+		 * @param end
+		 *            the end point.
+		 */
+		EndPoints(ImmutablePoint start, ImmutablePoint end) {
+			this.start = start;
+			this.end = end;
+			this.hashCode = calculateHashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			} else if (!(obj instanceof EndPoints)) {
+				return false;
+			} else {
+				this.other = (EndPoints) obj;
+				if (!this.start.equals(this.other.start)) {
+					return false;
+				} else if (!this.end.equals(this.other.end)) {
+					return false;
+				}
+				return true;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		/**
+		 * Calculates the hash value of this object.
+		 * 
+		 * @return the hash value of this object.
+		 */
+		private int calculateHashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((this.start == null) ? 0 : this.start.hashCode());
+			result = prime * result + ((this.end == null) ? 0 : this.end.hashCode());
+			return result;
+		}
+	}
+
+	/**
+	 * A HelperPoint represents one of the four corners of the virtual tile.
+	 */
+	private class HelperPoint {
+		int x;
+		int y;
+
+		HelperPoint() {
+			// do nothing
+		}
+	}
+
 	/**
 	 * Interface which must be implemented to handle all events during polygon creation.
 	 */
@@ -64,7 +133,7 @@ class CoastlineAlgorithm {
 		void onWaterTile();
 	}
 
-	private final ArrayList<Point> additionalCoastlinePoints;
+	private final ArrayList<HelperPoint> additionalCoastlinePoints;
 	private CoastlineWay coastlineEnd;
 	private int coastlineEndLength;
 	private ImmutablePoint coastlineEndPoint;
@@ -80,7 +149,7 @@ class CoastlineAlgorithm {
 	private int currentSide;
 	private EndPoints endPoints;
 	private final HashSet<EndPoints> handledCoastlineSegments;
-	private final Point[] helperPoints;
+	private final HelperPoint[] helperPoints;
 	private boolean islandSituation;
 	private float[] matchPath;
 	private boolean needHelperPoint;
@@ -111,13 +180,13 @@ class CoastlineAlgorithm {
 		};
 
 		// create the four helper points at the tile corners
-		this.helperPoints = new Point[4];
-		this.helperPoints[0] = new Point();
-		this.helperPoints[1] = new Point();
-		this.helperPoints[2] = new Point();
-		this.helperPoints[3] = new Point();
+		this.helperPoints = new HelperPoint[4];
+		this.helperPoints[0] = new HelperPoint();
+		this.helperPoints[1] = new HelperPoint();
+		this.helperPoints[2] = new HelperPoint();
+		this.helperPoints[3] = new HelperPoint();
 
-		this.additionalCoastlinePoints = new ArrayList<Point>(4);
+		this.additionalCoastlinePoints = new ArrayList<HelperPoint>(4);
 		this.coastlineWays = new ArrayList<CoastlineWay>(4);
 
 		// create the data structures for the coastline segments

@@ -223,6 +223,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
+	/**
+	 * Returns a WayContainer for the given coastline segment.
+	 * 
+	 * @param coastline
+	 *            the coordinates of the coastline segment.
+	 * @return a WayContainer.
+	 */
+	private static WayContainer getWayContainer(float[] coastline) {
+		float[][] wayCoordinates = new float[1][coastline.length];
+		System.arraycopy(coastline, 0, wayCoordinates[0], 0, coastline.length);
+		return new WayContainer(wayCoordinates);
+	}
+
 	private ArrayList<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
@@ -262,6 +275,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private boolean wayNameRendered;
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
+
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
 
 	/**
@@ -275,25 +289,22 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	@Override
 	public void onInvalidCoastlineSegment(float[] coastline) {
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
-				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
+				new ShapePaintContainer(getWayContainer(coastline),
 						PAINT_NATURAL_COASTLINE_INVALID));
 	}
 
 	@Override
 	public void onIslandPolygon(float[] coastline) {
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$LAND).add(
-				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-						PAINT_NATURAL_LAND_FILL));
+				new ShapePaintContainer(getWayContainer(coastline), PAINT_NATURAL_LAND_FILL));
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
-				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-						PAINT_NATURAL_COASTLINE));
+				new ShapePaintContainer(getWayContainer(coastline), PAINT_NATURAL_COASTLINE));
 	}
 
 	@Override
 	public void onWaterPolygon(float[] coastline) {
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-				new ShapePaintContainer(CoastlineWay.getWayContainer(coastline),
-						PAINT_NATURAL_WATER_FILL));
+				new ShapePaintContainer(getWayContainer(coastline), PAINT_NATURAL_WATER_FILL));
 	}
 
 	@Override

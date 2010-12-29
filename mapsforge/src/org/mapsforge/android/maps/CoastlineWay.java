@@ -74,19 +74,6 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Returns a WayContainer for the given coastline segment.
-	 * 
-	 * @param coastline
-	 *            the coordinates of the coastline segment.
-	 * @return a WayContainer.
-	 */
-	static WayContainer getWayContainer(float[] coastline) {
-		float[][] wayCoordinates = new float[1][coastline.length];
-		System.arraycopy(coastline, 0, wayCoordinates[0], 0, coastline.length);
-		return new WayContainer(wayCoordinates);
-	}
-
-	/**
 	 * Calculates the orientation of the given coastline segment by calculating the signed area.
 	 * As the origin is in the top left corner, a positive area means clockwise.
 	 * 
