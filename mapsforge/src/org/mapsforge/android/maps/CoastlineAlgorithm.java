@@ -69,6 +69,7 @@ class CoastlineAlgorithm {
 	private int coastlineEndLength;
 	private ImmutablePoint coastlineEndPoint;
 	private final TreeMap<ImmutablePoint, float[]> coastlineEnds;
+	private final ArrayList<float[]> coastlineSegments;
 	private CoastlineWay coastlineStart;
 	private int coastlineStartLength;
 	private ImmutablePoint coastlineStartPoint;
@@ -120,6 +121,7 @@ class CoastlineAlgorithm {
 		this.coastlineWays = new ArrayList<CoastlineWay>(4);
 
 		// create the data structures for the coastline segments
+		this.coastlineSegments = new ArrayList<float[]>(8);
 		this.coastlineEnds = new TreeMap<ImmutablePoint, float[]>();
 		this.coastlineStarts = new TreeMap<ImmutablePoint, float[]>();
 		this.handledCoastlineSegments = new HashSet<EndPoints>(64);
@@ -144,6 +146,12 @@ class CoastlineAlgorithm {
 				this.nodesSequence[this.nodesSequence.length - 2],
 				this.nodesSequence[this.nodesSequence.length - 1]);
 		this.endPoints = new EndPoints(this.coastlineStartPoint, this.coastlineEndPoint);
+
+		// check for an already closed coastline segment
+		if (this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
+			this.coastlineSegments.add(this.nodesSequence);
+			return;
+		}
 
 		// check to avoid duplicate coastline segments
 		if (!this.handledCoastlineSegments.contains(this.endPoints)) {
@@ -193,6 +201,7 @@ class CoastlineAlgorithm {
 	 * Clears the internal data structures. Must be called between tiles.
 	 */
 	void clearCoastlineSegments() {
+		this.coastlineSegments.clear();
 		this.coastlineStarts.clear();
 		this.coastlineEnds.clear();
 		this.handledCoastlineSegments.clear();
@@ -207,14 +216,16 @@ class CoastlineAlgorithm {
 	 *            the implementation which will be called to handle the generated polygons.
 	 */
 	void generateClosedPolygons(ClosedPolygonHandler closedPolygonHandler) {
+		this.coastlineSegments.addAll(this.coastlineStarts.values());
+
 		// check if there are any coastline segments
-		if (this.coastlineStarts.isEmpty()) {
+		if (this.coastlineSegments.isEmpty()) {
 			return;
 		}
 
 		this.islandSituation = false;
 		this.waterBackground = true;
-		for (float[] coastline : this.coastlineStarts.values()) {
+		for (float[] coastline : this.coastlineSegments) {
 			// is the current segment already closed?
 			if (CoastlineWay.isClosed(coastline)) {
 				// depending on the orientation we have either water or an island
