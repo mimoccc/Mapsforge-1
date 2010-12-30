@@ -17,7 +17,7 @@
 package org.mapsforge.preprocessing.map.osmosis;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
@@ -42,6 +43,7 @@ import com.vividsolutions.jts.geom.LinearRing;
 public class GeoUtils {
 
 	private static final int SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
+	private static final double[] EPSILON_ZERO = new double[] { 0, 0 };
 	private static final Logger logger =
 			Logger.getLogger(GeoUtils.class.getName());
 	private static final GeometryFactory geoFac = new GeometryFactory();
@@ -50,14 +52,42 @@ public class GeoUtils {
 			8192, 4096, 2048, 1024,
 			512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
 
-	// TODO do we need these epsilons, can we do it better with JTS?
-	// list of values for extending a tile on the base zoom level
-	private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0.0006, 0.00025, 0.00013, 0.00006 };
+	// // TODO do we need these epsilons, can we do it better with JTS?
+	// // list of values for extending a tile on the base zoom level
+	// private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	// 0,
+	// 0, 0.0006, 0.00025, 0.00013, 0.00006 };
+	//
+	// // list of values for extending a sub tile
+	// private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	// 0,
+	// 0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
 
-	// list of values for extending a sub tile
-	private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
+	private static double[] computeTileEnlargement(long tileY, byte zoom,
+			int enlargementInMeter) {
+		if (enlargementInMeter == 0)
+			return EPSILON_ZERO;
+
+		double[] epsilons = new double[2];
+		double lat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInMeter);
+		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInMeter, lat);
+
+		return epsilons;
+	}
+
+	private static double[] computeTileEnlargement(double lat, int enlargementInPixel) {
+
+		if (enlargementInPixel == 0)
+			return EPSILON_ZERO;
+
+		double[] epsilons = new double[2];
+
+		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInPixel);
+		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInPixel, lat);
+
+		return epsilons;
+	}
 
 	/**
 	 * Computes which tiles on the given base zoom level need to include the given way (which
@@ -67,10 +97,14 @@ public class GeoUtils {
 	 *            the way that is mapped to tiles
 	 * @param baseZoomLevel
 	 *            the base zoom level which is used in the mapping
+	 * @param enlargementInMeter
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the
+	 *            tiles in the mapping process
 	 * @return all tiles on the given base zoom level that need to include the given way, an
 	 *         empty set if no tiles are matched
 	 */
-	final static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel) {
+	final static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel,
+			final int enlargementInMeter) {
 		if (way == null)
 			throw new IllegalArgumentException("parameter way is null");
 
@@ -80,13 +114,13 @@ public class GeoUtils {
 			return matchedTiles;
 		}
 
-		TileCoordinate[] bbox = getBoundingBox(way, baseZoomLevel);
+		TileCoordinate[] bbox = getWayBoundingBox(way, baseZoomLevel, enlargementInMeter);
 
 		// calculate the tile coordinates and the corresponding bounding boxes
 		for (int k = bbox[0].getX(); k <= bbox[1].getX(); k++) {
 			for (int l = bbox[0].getY(); l <= bbox[1].getY(); l++) {
 				Geometry currentTile = geoFac.createPolygon(getBoundingBox(
-						k, l, baseZoomLevel, 0), null);
+						k, l, baseZoomLevel, enlargementInMeter), null);
 				if (way.getWaytype() == 1) {
 					if (geoWay.intersects(currentTile) || geoWay.crosses(currentTile)
 							|| geoWay.coveredBy(currentTile)) {
@@ -114,10 +148,14 @@ public class GeoUtils {
 	 *            the way which is analyzed
 	 * @param tile
 	 *            the tile which is split into 16 sub tiles
+	 * @param enlargementInMeters
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the
+	 *            tiles in the mapping process
 	 * @return a 16 bit short value that represents the information which of the sub tiles needs
 	 *         to include the way
 	 */
-	final static short computeBitmask(final TDWay way, final TileCoordinate tile) {
+	final static short computeBitmask(final TDWay way, final TileCoordinate tile,
+			final int enlargementInMeters) {
 
 		List<TileCoordinate> subtiles = computeSubtiles(tile, SUBTILE_ZOOMLEVEL_DIFFERENCE);
 		Geometry geoWay = toJTSGeometry(way);
@@ -126,7 +164,8 @@ public class GeoUtils {
 		int tileCounter = 0;
 		for (TileCoordinate subtile : subtiles) {
 			Geometry subtilePolygon = geoFac.createPolygon(
-					getBoundingBox(subtile.getX(), subtile.getY(), subtile.getZoomlevel(), 0),
+					getBoundingBox(subtile.getX(), subtile.getY(), subtile.getZoomlevel(),
+							enlargementInMeters),
 					null);
 			if (way.getWaytype() == 1) {
 				if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
@@ -254,34 +293,169 @@ public class GeoUtils {
 	 *            the polygon which is to be clipped
 	 * @param tile
 	 *            the tile which represents the clipping area
+	 * @param enlargementInMeters
+	 *            the enlargement of bounding boxes in meters
 	 * @return the clipped polygon, null if the polygon is not valid or if the intersection
 	 *         between polygon and the tile's bounding box is empty
 	 */
 	final static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
-			final TileCoordinate tile) {
+			final TileCoordinate tile, int enlargementInMeters) {
 		if (polygon == null) {
 			throw new IllegalArgumentException("polygon is null");
 		}
 
-		Coordinate[] jtsCoordinates = toJTSCoordinates(polygon);
-		if (jtsCoordinates.length < 3
-				|| !jtsCoordinates[0].equals2D(jtsCoordinates[jtsCoordinates.length - 1])) {
-			throw new IllegalArgumentException("not a valid JTS polygon: "
-					+ jtsCoordinates.toString());
-		}
-		Geometry jtsPolygon = geoFac.createPolygon(geoFac.createLinearRing(jtsCoordinates),
-				null);
-		if (!jtsPolygon.isValid())
-			return null;
-		Geometry tileBBox = geoFac.createPolygon(
-				getBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(), 1), null);
+		if (polygon.size() < 4)
+			throw new IllegalArgumentException(
+					"a valid closed polygon must have at least 4 points");
 
-		Geometry intersection = jtsPolygon.intersection(tileBBox);
-		// if (intersection.isEmpty())
-		// intersection = tileBBox.intersection(jtsPolygon);
-		return toGeoCoordinates(intersection);
+		Rect bbox = getRectBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(),
+				enlargementInMeters);
+
+		// left edge
+		List<GeoCoordinate> clippedPolygon = clipPolygonToEdge(polygon, new GeoCoordinate(
+				bbox.maxLatitudeE6, bbox.minLongitudeE6), new GeoCoordinate(bbox.minLatitudeE6,
+				bbox.minLongitudeE6));
+		// bottom edge
+		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
+				bbox.minLatitudeE6,
+						bbox.minLongitudeE6), new GeoCoordinate(bbox.minLatitudeE6,
+				bbox.maxLongitudeE6));
+		// right edge
+		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
+				bbox.minLatitudeE6, bbox.maxLongitudeE6), new GeoCoordinate(bbox.maxLatitudeE6,
+				bbox.maxLongitudeE6));
+		// top edge
+		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
+				bbox.maxLatitudeE6,
+				bbox.maxLongitudeE6),
+				new GeoCoordinate(bbox.maxLatitudeE6, bbox.minLongitudeE6));
+
+		if (clippedPolygon.size() == 0) {
+			logger.finer("clipped polygon is empty: " + polygon);
+			return Collections.emptyList();
+		}
+
+		// for us a valid closed polygon must have the same start and end point
+		if (!clippedPolygon.get(0).equals(clippedPolygon.get(clippedPolygon.size() - 1)))
+			clippedPolygon.add(clippedPolygon.get(0));
+
+		return clippedPolygon;
+	}
+
+	private static List<GeoCoordinate> clipPolygonToEdge(final List<GeoCoordinate> polygon,
+			GeoCoordinate edgeStart, GeoCoordinate edgeEnd) {
+		List<GeoCoordinate> clippedPolygon = new ArrayList<GeoCoordinate>();
+
+		if (polygon.size() < 3)
+			return polygon;
+
+		GeoCoordinate previousVertex = polygon.get(polygon.size() - 1);
+		boolean previousInside = false, currentInside = false;
+		for (GeoCoordinate currentVertex : polygon) {
+			if (edgeStart.getLatitudeE6() > edgeEnd.getLatitudeE6()) {
+				previousInside = previousVertex.getLongitude() >= edgeStart.getLongitude();
+				currentInside = currentVertex.getLongitude() >= edgeStart.getLongitude();
+			} else if (edgeStart.getLongitudeE6() < edgeEnd.getLongitudeE6()) {
+				previousInside = previousVertex.getLatitude() >= edgeStart.getLatitude();
+				currentInside = currentVertex.getLatitude() >= edgeStart.getLatitude();
+			} else if (edgeStart.getLatitudeE6() < edgeEnd.getLatitudeE6()) {
+				previousInside = previousVertex.getLongitude() <= edgeStart.getLongitude();
+				currentInside = currentVertex.getLongitude() <= edgeStart.getLongitude();
+			} else if (edgeStart.getLongitudeE6() > edgeEnd.getLongitudeE6()) {
+				previousInside = previousVertex.getLatitude() <= edgeStart.getLatitude();
+				currentInside = currentVertex.getLatitude() <= edgeStart.getLatitude();
+			} else
+				throw new IllegalArgumentException("illegal edge: " + edgeStart + " : "
+						+ edgeEnd);
+
+			if (previousInside) {
+				if (currentInside) {
+					clippedPolygon.add(currentVertex);
+				} else {
+					GeoCoordinate intersection = computeIntersection(edgeStart, edgeEnd,
+							previousVertex, currentVertex);
+					clippedPolygon.add(intersection);
+				}
+			} else if (currentInside) {
+				GeoCoordinate intersection = computeIntersection(edgeStart, edgeEnd,
+						previousVertex, currentVertex);
+				clippedPolygon.add(intersection);
+				clippedPolygon.add(currentVertex);
+			}
+
+			previousVertex = currentVertex;
+		}
+
+		return clippedPolygon;
+	}
+
+	private static GeoCoordinate computeIntersection(GeoCoordinate edgeStart,
+			GeoCoordinate edgeEnd, GeoCoordinate p1, GeoCoordinate p2) {
+		// horizontal edge
+		if (edgeStart.getLatitude() == edgeEnd.getLatitude()) {
+			double latitude = edgeStart.getLatitude();
+			double longitude = p1.getLongitude() + (edgeStart.getLatitude() - p1.getLatitude())
+					* ((p2.getLongitude() - p1.getLongitude())
+					/ (p2.getLatitude() - p1.getLatitude()));
+			return new GeoCoordinate(latitude, longitude);
+		}
+
+		// vertical edge
+		double latitude = p1.getLatitude()
+					+ (edgeStart.getLongitude() - p1.getLongitude())
+					* ((p2.getLatitude() - p1.getLatitude()) / (p2.getLongitude() - p1
+							.getLongitude()));
+		double longitude = edgeStart.getLongitude();
+		return new GeoCoordinate(latitude, longitude);
 
 	}
+
+	// /**
+	// * Clips a polygon to the bounding box of a tile.
+	// *
+	// * @param polygon
+	// * the polygon which is to be clipped
+	// * @param tile
+	// * the tile which represents the clipping area
+	// * @return the clipped polygon, null if the polygon is not valid or if the intersection
+	// * between polygon and the tile's bounding box is empty
+	// */
+	// final static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
+	// final TileCoordinate tile) {
+	// if (polygon == null) {
+	// throw new IllegalArgumentException("polygon is null");
+	// }
+	//
+	// Coordinate[] jtsCoordinates = toJTSCoordinates(polygon);
+	// if (jtsCoordinates.length < 3
+	// || !jtsCoordinates[0].equals(jtsCoordinates[jtsCoordinates.length - 1])) {
+	// throw new IllegalArgumentException("not a valid JTS polygon: "
+	// + jtsCoordinates.toString());
+	// }
+	// Geometry jtsPolygon = geoFac.createPolygon(geoFac.createLinearRing(jtsCoordinates),
+	// null);
+	// if (!jtsPolygon.isValid())
+	// return null;
+	// Geometry tileBBox = geoFac.createPolygon(
+	// getBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(), 1), null);
+	//
+	// Polygon intersection = (Polygon) jtsPolygon.intersection(tileBBox);
+	//
+	// String jtsPolygonStr = toGPX(jtsPolygon);
+	// String tileBBoxStr = toGPX(tileBBox);
+	// String intersectionStr = toGPX(intersection);
+	//
+	// Geometry ch = intersection.convexHull();
+	// String chStr = toGPX(ch);
+	//
+	// if (tile.getX() == 7174 && tile.getY() == 4312)
+	// System.out.println("here we are");
+	//
+	// // if (intersection.isEmpty())
+	// // intersection = tileBBox.intersection(jtsPolygon);
+	// return toGeoCoordinates(ch);
+	//
+	// }
 
 	/**
 	 * Checks whether the given way is a closed polygon.
@@ -345,33 +519,38 @@ public class GeoUtils {
 		return subtiles;
 	}
 
-	private static LinearRing getBoundingBox(long tileX, long tileY, byte zoom, int enlargement) {
+	private static LinearRing getBoundingBox(long tileX, long tileY, byte zoom,
+			int enlargementInPixel) {
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
-		// TODO necessary? does not recognize zoom interval configuration
-		double epsilon = 0;
-		switch (enlargement) {
-			case 1:
-				epsilon = tileEpsilon[zoom - 1];
-				break;
-			case 2:
-				epsilon = subTileEpsilon[zoom - 1];
-				break;
-		}
+		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInPixel);
 
 		return geoFac.createLinearRing(new Coordinate[] {
-				new Coordinate(maxLat + epsilon, minLon - epsilon),
-				new Coordinate(minLat - epsilon, minLon - epsilon),
-				new Coordinate(minLat - epsilon, maxLon + epsilon),
-				new Coordinate(maxLat + epsilon, maxLon + epsilon),
-				new Coordinate(maxLat + epsilon, minLon - epsilon) });
+				new Coordinate(maxLat + epsilons[0], minLon - epsilons[1]),
+				new Coordinate(minLat - epsilons[0], minLon - epsilons[1]),
+				new Coordinate(minLat - epsilons[0], maxLon + epsilons[1]),
+				new Coordinate(maxLat + epsilons[0], maxLon + epsilons[1]),
+				new Coordinate(maxLat + epsilons[0], minLon - epsilons[1]) });
 	}
 
-	private static TileCoordinate[] getBoundingBox(final TDWay way, byte zoomlevel) {
-		double maxx = Double.MIN_VALUE, maxy = Double.MIN_VALUE, minx = Double.MAX_VALUE, miny = Double.MAX_VALUE;
+	private static Rect getRectBoundingBox(long tileX, long tileY, byte zoom,
+			int enlargementInPixel) {
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
+		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+
+		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInPixel);
+		return new Rect(minLon - epsilons[1], maxLon + epsilons[1],
+				minLat - epsilons[0], maxLat + epsilons[0]);
+	}
+
+	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel,
+			int enlargementInPixel) {
+		double maxx = Double.NEGATIVE_INFINITY, maxy = Double.NEGATIVE_INFINITY, minx = Double.POSITIVE_INFINITY, miny = Double.POSITIVE_INFINITY;
 		for (TDNode coordinate : way.getWayNodes()) {
 			maxy = Math.max(maxy, GeoCoordinate.intToDouble(coordinate.getLatitude()));
 			miny = Math.min(miny, GeoCoordinate.intToDouble(coordinate.getLatitude()));
@@ -379,13 +558,19 @@ public class GeoUtils {
 			minx = Math.min(minx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
 		}
 
+		double epsilonsTopLeft[] = computeTileEnlargement(maxy, enlargementInPixel);
+		double epsilonsBottomRight[] = computeTileEnlargement(miny, enlargementInPixel);
+
 		TileCoordinate[] bbox = new TileCoordinate[2];
 		bbox[0] = new TileCoordinate(
-				(int) MercatorProjection.longitudeToTileX(minx, zoomlevel),
-				(int) MercatorProjection.latitudeToTileY(maxy, zoomlevel), zoomlevel);
+				(int) MercatorProjection.longitudeToTileX(minx - epsilonsTopLeft[1], zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(maxy + epsilonsTopLeft[0], zoomlevel),
+				zoomlevel);
 		bbox[1] = new TileCoordinate(
-				(int) MercatorProjection.longitudeToTileX(maxx, zoomlevel),
-				(int) MercatorProjection.latitudeToTileY(miny, zoomlevel), zoomlevel);
+				(int) MercatorProjection.longitudeToTileX(maxx + epsilonsBottomRight[1],
+						zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0],
+						zoomlevel), zoomlevel);
 
 		return bbox;
 	}
@@ -393,10 +578,6 @@ public class GeoUtils {
 	private static Coordinate toJTSCoordinate(final TDNode coordinate) {
 		return new Coordinate(GeoCoordinate.intToDouble(coordinate.getLatitude()),
 				GeoCoordinate.intToDouble(coordinate.getLongitude()));
-	}
-
-	private static Coordinate toJTSCoordinate(final GeoCoordinate coordinate) {
-		return new Coordinate(coordinate.getLatitude(), coordinate.getLongitude());
 	}
 
 	private static Coordinate[] toJTSCoordinates(final TDNode[] coordinates) {
@@ -410,27 +591,37 @@ public class GeoUtils {
 		return jtsCoordinates;
 	}
 
-	private static Coordinate[] toJTSCoordinates(final Collection<GeoCoordinate> coordinates) {
-		if (coordinates == null)
-			return null;
-		Coordinate[] jtsCoordinates = new Coordinate[coordinates.size()];
-		int i = 0;
-		for (GeoCoordinate coordinate : coordinates) {
-			jtsCoordinates[i++] = toJTSCoordinate(coordinate);
-		}
-
-		return jtsCoordinates;
-	}
-
-	private static List<GeoCoordinate> toGeoCoordinates(final Geometry geometry) {
-		assert geometry != null;
-		if (geometry.isEmpty())
-			return null;
-
-		List<GeoCoordinate> ret = new ArrayList<GeoCoordinate>();
-		for (Coordinate coordinate : geometry.getCoordinates()) {
-			ret.add(new GeoCoordinate(coordinate.x, coordinate.y));
-		}
-		return ret;
-	}
+	// private static String toGPX(List<GeoCoordinate> g) {
+	// StringBuilder sb = new StringBuilder();
+	// sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
+	// sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
+	// "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+	// "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
+	// "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
+	// for (GeoCoordinate c : g) {
+	// sb.append("\t<wpt ").append("lat=\"").append(c.getLatitude()).append("\" ");
+	// sb.append("lon=\"").append(c.getLongitude()).append("\"/>");
+	// sb.append("\n");
+	// }
+	// sb.append("</gpx>");
+	//
+	// return sb.toString();
+	// }
+	//
+	// private static String toGPX(Geometry g) {
+	// StringBuilder sb = new StringBuilder();
+	// sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
+	// sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
+	// "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+	// "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
+	// "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
+	// for (Coordinate c : g.getCoordinates()) {
+	// sb.append("\t<wpt ").append("lat=\"").append(c.x).append("\" ");
+	// sb.append("lon=\"").append(c.y).append("\"/>");
+	// sb.append("\n");
+	// }
+	// sb.append("</gpx>");
+	//
+	// return sb.toString();
+	// }
 }

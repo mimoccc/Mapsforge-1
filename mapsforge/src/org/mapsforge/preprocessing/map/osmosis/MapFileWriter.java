@@ -43,7 +43,7 @@ class MapFileWriter {
 
 	private static final int SIZE_ZOOMINTERVAL_CONFIGURATION = 13;
 
-	private static final int PIXEL_COMPRESSION_MAX_DELTA = 3;
+	private static final int PIXEL_COMPRESSION_MAX_DELTA = 5;
 
 	private static final int BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE = 5;
 
@@ -97,7 +97,7 @@ class MapFileWriter {
 
 	private static final byte MAX_ZOOMLEVEL_PIXEL_FILTER = 11;
 
-	private static final byte MIN_ZOOMLEVEL_POLYGON_CLIPPING = 12;
+	private static final byte MIN_ZOOMLEVEL_POLYGON_CLIPPING = 8;
 
 	private static final Charset UTF8_CHARSET = Charset.forName("utf8");
 
@@ -105,6 +105,7 @@ class MapFileWriter {
 	private TileBasedDataStore dataStore;
 
 	private static final TileInfo tileInfo = TileInfo.getInstance();
+	private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
 
 	// IO
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
@@ -119,11 +120,17 @@ class MapFileWriter {
 	// accounting
 	private long tilesProcessed = 0;
 	private long fivePercentOfTilesToProcess;
+	private long emptyTiles = 0;
+	private long maxTileSize = 0;
+	private long cumulatedTileSizeOfNonEmptyTiles = 0;
+	private int maxWaysPerTile = 0;
+	private int cumulatedNumberOfWaysInTiles = 0;
 
 	private int posZoomIntervalConfig;
+	final int bboxEnlargement;
 
 	MapFileWriter(TileBasedDataStore dataStore, RandomAccessFile file,
-			int threadpoolSize) {
+			int threadpoolSize, int bboxEnlargement) {
 		super();
 		this.dataStore = dataStore;
 		this.randomAccessFile = file;
@@ -131,6 +138,7 @@ class MapFileWriter {
 		if (fivePercentOfTilesToProcess == 0)
 			fivePercentOfTilesToProcess = 1;
 		executorService = Executors.newFixedThreadPool(threadpoolSize);
+		this.bboxEnlargement = bboxEnlargement;
 	}
 
 	final void writeFileWithDebugInfos(long date, int version, short tilePixel)
@@ -181,6 +189,22 @@ class MapFileWriter {
 		byte[] containerB = bufferZoomIntervalConfig.array();
 		randomAccessFile.write(containerB);
 		randomAccessFile.close();
+
+		logger.fine("number of empty tiles: " + emptyTiles);
+		logger.fine("percentage of empty tiles: " + (float) emptyTiles
+				/ dataStore.cumulatedNumberOfTiles());
+		logger.fine("cumulated size of non-empty tiles: " + cumulatedTileSizeOfNonEmptyTiles);
+		logger.fine("average tile size of non-empty tile: "
+				+ (float) cumulatedTileSizeOfNonEmptyTiles
+				/ (dataStore.cumulatedNumberOfTiles() - emptyTiles));
+		logger.fine("maximum size of a tile: " + maxTileSize);
+		logger.fine("cumulated number of ways in all non-empty tiles: "
+				+ cumulatedNumberOfWaysInTiles);
+		logger.fine("maximum number of ways in a tile: " + maxWaysPerTile);
+		logger.fine("average number of ways in non-empty tiles: "
+				+ (float) cumulatedNumberOfWaysInTiles
+				/ (dataStore.cumulatedNumberOfTiles() - emptyTiles));
+
 	}
 
 	private void writeUTF8(String string, ByteBuffer buffer) {
@@ -353,6 +377,19 @@ class MapFileWriter {
 				if (tileInfo.isWaterTile(currentTileCoordinate)) {
 					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
 				}
+				// TODO activate coastline processing
+				else {
+					// the TileInfo class may produce false negatives for tiles on zoom level
+					// greater than TileInfo.TILE_INFO_ZOOMLEVEL
+					// we need to run the coastline algorithm to detect whether the tile is
+					// completely covered by water or not
+					if (currentTileCoordinate.getZoomlevel() > TileInfo.TILE_INFO_ZOOMLEVEL) {
+						if (COASTLINE_HANDLER.isWaterTile(currentTileCoordinate,
+								dataStore.getCoastLines(currentTileCoordinate))) {
+							indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
+						}
+					}
+				}
 
 				// seek to index frame of this tile and write relative offset of this
 				// tile as five bytes to the index
@@ -394,6 +431,10 @@ class MapFileWriter {
 						tileBuffer.putShort(cumulatedPOIs);
 						tileBuffer.putShort(cumulatedWays);
 					}
+
+					if (maxWaysPerTile < cumulatedWays)
+						maxWaysPerTile = cumulatedWays;
+					cumulatedNumberOfWaysInTiles += cumulatedWays;
 
 					// skip 4 bytes, later these 4 bytes will contain the start
 					// position of the ways in this tile
@@ -598,8 +639,17 @@ class MapFileWriter {
 						}
 					}// end for loop over ways
 				}// end if clause checking if tile is empty or not
+				else {
+					emptyTiles++;
+				}
 				long tileSize = tileBuffer.position() - currentTileOffsetInBuffer;
 				currentSubfileOffset += tileSize;
+
+				// accounting
+				if (maxTileSize < tileSize)
+					maxTileSize = tileSize;
+				if (tileSize > 0)
+					cumulatedTileSizeOfNonEmptyTiles += tileSize;
 
 				// if necessary, allocate new buffer
 				if (tileBuffer.remaining() < MIN_TILE_BUFFER_SIZE) {
@@ -692,9 +742,11 @@ class MapFileWriter {
 				(way.getName() == null || way.getName().length() == 0)
 					&& minZoomCurrentInterval >= MIN_ZOOMLEVEL_POLYGON_CLIPPING) {
 			List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
-					waynodeCoordinates, tile);
-			if (clipped != null)
+					waynodeCoordinates, tile, bboxEnlargement);
+			if (clipped != null && !clipped.isEmpty())
 				waynodeCoordinates = clipped;
+			else
+				return null;
 		}
 
 		// if the wayNodeCompression flag is set, compress the way nodes
@@ -725,7 +777,8 @@ class MapFileWriter {
 	 * @return a byte that holds the specified information
 	 */
 	private byte buildLayerTagAmountByte(byte layer, short tagAmount) {
-		return (byte) (layer << 4 | tagAmount);
+		// make sure layer is in [0,10]
+		return (byte) ((layer < 0 ? 0 : layer > 10 ? 10 : layer) << 4 | tagAmount);
 	}
 
 	private byte buildMetaInfoByte(boolean debug, boolean mapStartPosition, boolean filtering,
@@ -931,7 +984,7 @@ class MapFileWriter {
 			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
 				return COASTLINE_BITMASK;
 			}
-			return GeoUtils.computeBitmask(way, baseTile);
+			return GeoUtils.computeBitmask(way, baseTile, bboxEnlargement);
 		}
 
 	}

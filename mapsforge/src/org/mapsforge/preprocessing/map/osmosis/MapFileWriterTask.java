@@ -73,12 +73,13 @@ public class MapFileWriterTask implements Sink {
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 	private int threadpoolSize;
 	private String type;
+	private int bboxEnlargement;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
-			int threadpoolSize, String type) {
+			int threadpoolSize, String type, int bboxEnlargement) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException(
@@ -109,11 +110,12 @@ public class MapFileWriterTask implements Sink {
 		if (bbox != null) {
 			if (type.equalsIgnoreCase("ram"))
 				this.tileBasedGeoObjectStore = RAMTileBasedDataStore.newInstance(bbox,
-						zoomIntervalConfiguration);
+						zoomIntervalConfiguration, bboxEnlargement);
 			else
 				this.tileBasedGeoObjectStore = HDTileBasedDataStore.newInstance(bbox,
-						zoomIntervalConfiguration);
+						zoomIntervalConfiguration, bboxEnlargement);
 		}
+		this.bboxEnlargement = bboxEnlargement;
 	}
 
 	/*
@@ -139,7 +141,8 @@ public class MapFileWriterTask implements Sink {
 				outFile.delete();
 			}
 			RandomAccessFile file = new RandomAccessFile(outFile, "rw");
-			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file, threadpoolSize);
+			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file,
+					threadpoolSize, bboxEnlargement);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
 			mfw.writeFile(System.currentTimeMillis(), 1, (short) 256, comment, debugInfo,
 					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
@@ -180,13 +183,13 @@ public class MapFileWriterTask implements Sink {
 								RAMTileBasedDataStore.newInstance(
 										bound.getBottom(), bound.getTop(),
 										bound.getLeft(), bound.getRight(),
-										zoomIntervalConfiguration);
+										zoomIntervalConfiguration, bboxEnlargement);
 					else
 						tileBasedGeoObjectStore =
 								HDTileBasedDataStore.newInstance(
 										bound.getBottom(), bound.getTop(),
 										bound.getLeft(), bound.getRight(),
-										zoomIntervalConfiguration);
+										zoomIntervalConfiguration, bboxEnlargement);
 				}
 				logger.info("start reading data...");
 				break;

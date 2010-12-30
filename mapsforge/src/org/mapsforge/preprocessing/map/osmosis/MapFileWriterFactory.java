@@ -11,6 +11,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime()
 			.availableProcessors();
 	private static final String DEFAULT_PARAM_TYPE = "ram";
+	private static final int DEFAULT_PARAM_BBOX_ENLARGEMENT = 20;
 
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
@@ -23,6 +24,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
 	private static final String PARAM_THREAD_POOL_SIZE = "thread-pool-size";
 	private static final String PARAM_TYPE = "type";
+	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -40,9 +42,11 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		int threadpoolSize = getIntegerArgument(taskConfig, PARAM_THREAD_POOL_SIZE,
 				DEFAULT_THREAD_POOL_SIZE);
 		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
+		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
+				DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
 				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
-				threadpoolSize, type);
+				threadpoolSize, type, bboxEnlargement);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

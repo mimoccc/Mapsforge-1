@@ -52,12 +52,14 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	private RAMTileBasedDataStore(
 			double minLat, double maxLat,
 			double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration);
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration,
+				bboxEnlargement);
 	}
 
-	private RAMTileBasedDataStore(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		super(bbox, zoomIntervalConfiguration);
+	private RAMTileBasedDataStore(Rect bbox,
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		super(bbox, zoomIntervalConfiguration, bboxEnlargement);
 		this.nodes = new TLongObjectHashMap<TDNode>();
 		this.ways = new TLongObjectHashMap<TDWay>();
 		this.multipolygons = new TLongObjectHashMap<TLongArrayList>();
@@ -71,23 +73,24 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	static RAMTileBasedDataStore newInstance(Rect bbox,
-			ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		return new RAMTileBasedDataStore(bbox, zoomIntervalConfiguration);
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		return new RAMTileBasedDataStore(bbox, zoomIntervalConfiguration, bboxEnlargement);
 	}
 
 	static RAMTileBasedDataStore newInstance(double minLat, double maxLat,
-			double minLon, double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration) {
+			double minLon, double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int bboxEnlargement) {
 		return new RAMTileBasedDataStore(minLat, maxLat, minLon, maxLon,
-				zoomIntervalConfiguration);
+				zoomIntervalConfiguration, bboxEnlargement);
 	}
 
 	static RAMTileBasedDataStore getStandardInstance(
 			double minLat, double maxLat,
-			double minLon, double maxLon) {
+			double minLon, double maxLon, int bboxEnlargement) {
 
 		return new RAMTileBasedDataStore(
 				minLat, maxLat, minLon, maxLon,
-				ZoomIntervalConfiguration.getStandardConfiguration());
+				ZoomIntervalConfiguration.getStandardConfiguration(), bboxEnlargement);
 	}
 
 	@Override
@@ -169,10 +172,13 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		byte minZoomLevel = tdWay.getMinimumZoomLevel();
 		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
 			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
+		int bboxEnlargementLocal = bboxEnlargement;
 
 		if (tdWay.getTags() != null && tdWay.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+			bboxEnlargementLocal = 0;
+			// find matching tiles on zoom level 12
 			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(tdWay,
-					TileInfo.TILE_INFO_ZOOMLEVEL);// find matching tiles on zoom level 12
+					TileInfo.TILE_INFO_ZOOMLEVEL, bboxEnlargementLocal);
 			for (TileCoordinate tileCoordinate : coastLineTiles) {
 				Set<TDWay> coastlines = tilesToCoastlines.get(tileCoordinate);
 				if (coastlines == null) {
@@ -187,7 +193,8 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			// is way seen in a zoom interval?
 			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
 				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(tdWay,
-						zoomIntervalConfiguration.getBaseZoom(i));
+						zoomIntervalConfiguration.getBaseZoom(i),
+						bboxEnlargementLocal);
 				for (TileCoordinate matchedTile : matchedTiles) {
 					TileData td = getTile(i, matchedTile.getX(), matchedTile.getY());
 					if (td != null)
@@ -240,7 +247,7 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			if (innerWay.getTags() == null || innerWay.getTags().size() == 0) {
 				for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 					Set<TileCoordinate> associatedTiles = GeoUtils.mapWayToTiles(innerWay,
-							zoomIntervalConfiguration.getBaseZoom(i));
+							zoomIntervalConfiguration.getBaseZoom(i), bboxEnlargement);
 					if (associatedTiles == null)
 						continue;
 					for (TileCoordinate associatedTile : associatedTiles) {
@@ -298,7 +305,10 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
-		Set<TDWay> coastlines = tilesToCoastlines.get(tc);
+		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
+			return Collections.emptySet();
+		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel((byte) 12).get(0);
+		Set<TDWay> coastlines = tilesToCoastlines.get(correspondingOceanTile);
 		if (coastlines == null)
 			coastlines = Collections.emptySet();
 		return coastlines;

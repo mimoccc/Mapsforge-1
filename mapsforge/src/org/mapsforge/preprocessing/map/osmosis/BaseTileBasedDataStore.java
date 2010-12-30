@@ -30,6 +30,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	protected final Rect boundingbox;
 	protected TileGridLayout[] tileGridLayouts;
 	protected final ZoomIntervalConfiguration zoomIntervalConfiguration;
+	protected final int bboxEnlargement;
 
 	// protected final int[] tileOffsetsHorizontal;
 	// protected final int[] tileOffsetsVertical;
@@ -37,17 +38,20 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	public BaseTileBasedDataStore(
 			double minLat, double maxLat,
 			double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration);
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration,
+				bboxEnlargement);
 
 	}
 
-	public BaseTileBasedDataStore(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration) {
+	public BaseTileBasedDataStore(Rect bbox,
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
 		super();
 		this.boundingbox = bbox;
 		this.zoomIntervalConfiguration = zoomIntervalConfiguration;
 		this.tileGridLayouts = new TileGridLayout[zoomIntervalConfiguration
 				.getNumberOfZoomIntervals()];
+		this.bboxEnlargement = bboxEnlargement;
 
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels

@@ -63,12 +63,14 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	private HDTileBasedDataStore(
 			double minLat, double maxLat,
 			double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration);
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration,
+				bboxEnlargement);
 	}
 
-	private HDTileBasedDataStore(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		super(bbox, zoomIntervalConfiguration);
+	private HDTileBasedDataStore(Rect bbox,
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		super(bbox, zoomIntervalConfiguration, bboxEnlargement);
 		indexedNodeStore = new IndexedObjectStore<Node>(
 				new SingleClassObjectSerializationFactory(
 						Node.class), "idxNodes");
@@ -92,23 +94,24 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	static HDTileBasedDataStore newInstance(Rect bbox,
-			ZoomIntervalConfiguration zoomIntervalConfiguration) {
-		return new HDTileBasedDataStore(bbox, zoomIntervalConfiguration);
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		return new HDTileBasedDataStore(bbox, zoomIntervalConfiguration, bboxEnlargement);
 	}
 
 	static HDTileBasedDataStore newInstance(double minLat, double maxLat,
-			double minLon, double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration) {
+			double minLon, double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int bboxEnlargement) {
 		return new HDTileBasedDataStore(minLat, maxLat, minLon, maxLon,
-				zoomIntervalConfiguration);
+				zoomIntervalConfiguration, bboxEnlargement);
 	}
 
 	static HDTileBasedDataStore getStandardInstance(
 			double minLat, double maxLat,
-			double minLon, double maxLon) {
+			double minLon, double maxLon, int bboxEnlargement) {
 
 		return new HDTileBasedDataStore(
 				minLat, maxLat, minLon, maxLon,
-				ZoomIntervalConfiguration.getStandardConfiguration());
+				ZoomIntervalConfiguration.getStandardConfiguration(), bboxEnlargement);
 	}
 
 	@Override
@@ -200,10 +203,14 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
+		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
+			return Collections.emptySet();
+		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel((byte) 12).get(0);
+
 		if (wayIndexReader == null)
 			throw new IllegalStateException("way store not accessible, call complete() first");
 
-		TLongHashSet coastlines = tilesToCoastlines.get(tc);
+		TLongHashSet coastlines = tilesToCoastlines.get(correspondingOceanTile);
 		if (coastlines == null)
 			return Collections.emptySet();
 
@@ -239,9 +246,12 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			if (way == null)
 				continue;
 
+			int bboxEnlargementLocal = bboxEnlargement;
 			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+				// find matching tiles on zoom level 12
+				bboxEnlargementLocal = 0;
 				Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(way,
-						TileInfo.TILE_INFO_ZOOMLEVEL);// find matching tiles on zoom level 12
+						TileInfo.TILE_INFO_ZOOMLEVEL, bboxEnlargementLocal);
 				for (TileCoordinate tileCoordinate : coastLineTiles) {
 					TLongHashSet coastlines = tilesToCoastlines.get(tileCoordinate);
 					if (coastlines == null) {
@@ -259,7 +269,8 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				// is way seen in a zoom interval?
 				if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
 					Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(way,
-							zoomIntervalConfiguration.getBaseZoom(i));
+							zoomIntervalConfiguration.getBaseZoom(i),
+							bboxEnlargementLocal);
 					for (TileCoordinate matchedTile : matchedTiles) {
 						HDTileData hdt = getHDTile(i, matchedTile.getX(), matchedTile.getY());
 						if (hdt != null)
