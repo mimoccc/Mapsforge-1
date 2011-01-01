@@ -373,12 +373,13 @@ class MapFileWriter {
 				TileCoordinate currentTileCoordinate = new TileCoordinate(tileX, tileY,
 						baseZoomCurrentInterval);
 
+				if (currentTileCoordinate.getX() == 134 && currentTileCoordinate.getY() == 82)
+					System.out.println("roskilde");
+
 				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
 				if (tileInfo.isWaterTile(currentTileCoordinate)) {
 					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
-				}
-				// TODO activate coastline processing
-				else {
+				} else {
 					// the TileInfo class may produce false negatives for tiles on zoom level
 					// greater than TileInfo.TILE_INFO_ZOOMLEVEL
 					// we need to run the coastline algorithm to detect whether the tile is
@@ -512,10 +513,11 @@ class MapFileWriter {
 						// needed to access bitmask computation results in the foreach loop
 						int i = 0;
 						for (TDWay way : ways) {
-							// // INNER WAY
-							// // inner ways will be written as part of the outer way
-							// if (way.isInnerWay())
-							// continue;
+
+							if (way.getTags() != null
+									&& way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+								boolean coastline = true;
+							}
 							int startIndexWay = tileBuffer.position();
 
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(

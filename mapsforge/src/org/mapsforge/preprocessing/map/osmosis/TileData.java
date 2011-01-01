@@ -248,6 +248,12 @@ class TileData {
 			return true;
 		}
 
+		@Override
+		public String toString() {
+			return "TDNode [id=" + id + ", latitude=" + latitude + ", longitude=" + longitude
+					+ ", name=" + name + ", tags=" + tags + "]";
+		}
+
 	}
 
 	static class TDWay {
@@ -434,6 +440,12 @@ class TileData {
 			if (id != other.id)
 				return false;
 			return true;
+		}
+
+		@Override
+		public String toString() {
+			return "TDWay [id=" + id + ", name=" + name + ", tags=" + tags + ", waytype="
+					+ waytype + "]";
 		}
 
 	}

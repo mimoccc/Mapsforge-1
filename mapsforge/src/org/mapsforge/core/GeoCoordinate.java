@@ -392,6 +392,46 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
+	 * Calculate the amount of degrees of latitude for a given distance in meters.
+	 * 
+	 * @param meters
+	 *            distance in meters
+	 * @return latitude degrees
+	 */
+	public static double latitudeDistance(int meters) {
+		return (meters * 360) / (2 * Math.PI * WGS84.EQUATORIALRADIUS);
+	}
+
+	/**
+	 * Calculate the amount of degrees of longitude for a given distance in meters.
+	 * 
+	 * @param meters
+	 *            distance in meters
+	 * @param latitude
+	 *            the latitude at which the calculation should be performed
+	 * @return longitude degrees
+	 */
+	public static double longitudeDistance(int meters, double latitude) {
+		return (meters * 360)
+				/ (2 * Math.PI * WGS84.EQUATORIALRADIUS * Math.cos(Math.toRadians(latitude)));
+	}
+
+	/**
+	 * Calculate the amount of degrees of longitude for a given distance in meters.
+	 * 
+	 * @param meters
+	 *            distance in meters
+	 * @param latitude
+	 *            the latitude at which the calculation should be performed
+	 * @return longitude degrees
+	 */
+	public static double longitudeDistance(int meters, int latitude) {
+		return (meters * 360)
+				/ (2 * Math.PI * WGS84.EQUATORIALRADIUS * Math.cos(Math
+						.toRadians(intToDouble(latitude))));
+	}
+
+	/**
 	 * Converts a coordinate from degrees to microdegrees.
 	 * 
 	 * @param coordinate

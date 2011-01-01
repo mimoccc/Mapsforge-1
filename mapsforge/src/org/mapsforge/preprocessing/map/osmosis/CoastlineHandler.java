@@ -72,21 +72,21 @@ class CoastlineHandler implements ClosedPolygonHandler {
 
 	@Override
 	public void onInvalidCoastlineSegment(float[] coastline) {
-		System.out.println("onInvalid");
+		// System.out.println("onInvalid");
 		// nothing to do here
 
 	}
 
 	@Override
 	public void onIslandPolygon(float[] coastline) {
-		System.out.println("onIslandPolygon");
+		// System.out.println("onIslandPolygon");
 		// nothing to do here
 
 	}
 
 	@Override
 	public void onWaterPolygon(float[] coastline) {
-		System.out.println("onWaterPolygon");
+		// System.out.println("onWaterPolygon");
 		// nothing to do here
 
 	}

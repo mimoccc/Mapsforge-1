@@ -165,6 +165,14 @@ public class MercatorProjection {
 		return (long) Math.min(Math.max((pixelX / Tile.TILE_SIZE), 0), Math.pow(2, zoom) - 1);
 	}
 
+	public static double tileXToPixelX(long tileX) {
+		return tileX * Tile.TILE_SIZE;
+	}
+
+	public static double tileYToPixelY(long tileY) {
+		return tileY * Tile.TILE_SIZE;
+	}
+
 	/**
 	 * Convert a pixel Y coordinate at a certain zoom level to a latitude coordinate.
 	 * 
