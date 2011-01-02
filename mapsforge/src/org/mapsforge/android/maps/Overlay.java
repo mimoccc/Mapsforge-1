@@ -115,53 +115,12 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Default constructor which must be called by all subclasses.
 	 */
-	public Overlay() {
+	Overlay() {
 		this.isSetUp = false;
 		this.matrix = new Matrix();
 		this.point = new Point();
 		this.positionBeforeDraw = new Point();
 		this.positionAfterDraw = new Point();
-	}
-
-	/**
-	 * Draws the Overlay on top of the map. This will be called by the MapView.
-	 * 
-	 * @param canvas
-	 *            the canvas the Overlay will be drawn onto.
-	 * @param mapView
-	 *            the calling MapView.
-	 * @param shadow
-	 *            true if the shadow layer should be drawn, false otherwise.
-	 */
-	public final void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		synchronized (this.matrix) {
-			canvas.drawBitmap(this.overlayBitmap1, this.matrix, null);
-		}
-	}
-
-	/**
-	 * Draws the Overlay on the canvas.
-	 * 
-	 * @param canvas
-	 *            the canvas to draw the Overlay on.
-	 * @param drawPosition
-	 *            the top-left position of the map relative to the world map.
-	 * @param projection
-	 *            the projection to be used for the drawing process.
-	 * @param drawZoomLevel
-	 *            the zoom level of the map.
-	 */
-	public abstract void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel);
-
-	/**
-	 * Returns the name of the Overlay implementation. It will be used as the name for the
-	 * Overlay thread.
-	 * 
-	 * @return the name of the Overlay implementation.
-	 */
-	public String getThreadName() {
-		return THREAD_NAME;
 	}
 
 	/**
@@ -177,16 +136,6 @@ public abstract class Overlay extends Thread {
 	 */
 	public boolean onTap(GeoPoint p, MapView mapView) {
 		return false;
-	}
-
-	/**
-	 * Requests a redraw of the Overlay.
-	 */
-	public final void requestRedraw() {
-		this.redraw = true;
-		synchronized (this) {
-			notify();
-		}
 	}
 
 	@Override
@@ -295,6 +244,57 @@ public abstract class Overlay extends Thread {
 
 		// request the MapView to redraw
 		this.internalMapView.postInvalidate();
+	}
+
+	/**
+	 * Draws the Overlay on the canvas.
+	 * 
+	 * @param canvas
+	 *            the canvas to draw the Overlay on.
+	 * @param drawPosition
+	 *            the top-left position of the map relative to the world map.
+	 * @param projection
+	 *            the projection to be used for the drawing process.
+	 * @param drawZoomLevel
+	 *            the zoom level of the map.
+	 */
+	protected abstract void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+			Projection projection, byte drawZoomLevel);
+
+	/**
+	 * Returns the name of the Overlay implementation. It will be used as the name for the
+	 * Overlay thread.
+	 * 
+	 * @return the name of the Overlay implementation.
+	 */
+	protected String getThreadName() {
+		return THREAD_NAME;
+	}
+
+	/**
+	 * Requests a redraw of the Overlay.
+	 */
+	protected final void requestRedraw() {
+		this.redraw = true;
+		synchronized (this) {
+			notify();
+		}
+	}
+
+	/**
+	 * Draws the Overlay on top of the map. This will be called by the MapView.
+	 * 
+	 * @param canvas
+	 *            the canvas the Overlay will be drawn onto.
+	 * @param mapView
+	 *            the calling MapView.
+	 * @param shadow
+	 *            true if the shadow layer should be drawn, false otherwise.
+	 */
+	final void draw(Canvas canvas, MapView mapView, boolean shadow) {
+		synchronized (this.matrix) {
+			canvas.drawBitmap(this.overlayBitmap1, this.matrix, null);
+		}
 	}
 
 	/**

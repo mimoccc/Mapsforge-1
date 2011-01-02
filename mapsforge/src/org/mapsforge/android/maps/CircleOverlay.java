@@ -54,8 +54,36 @@ public class CircleOverlay extends Overlay {
 		setPaint(fillPaint, outlinePaint);
 	}
 
+	/**
+	 * Sets the parameters of the circle.
+	 * 
+	 * @param center
+	 *            the geographical coordinates of the center point.
+	 * @param radius
+	 *            the radius of the circle in meters.
+	 */
+	public synchronized void setCircleData(GeoPoint center, float radius) {
+		this.center = center;
+		this.radius = radius;
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+		super.requestRedraw();
+	}
+
+	/**
+	 * Sets the paint objects which will be used to draw the overlay.
+	 * 
+	 * @param fillPaint
+	 *            the paint object which will be used to fill the overlay.
+	 * @param outlinePaint
+	 *            the paint object which will be used to draw the outline of the overlay.
+	 */
+	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
+		this.fillPaint = fillPaint;
+		this.outlinePaint = outlinePaint;
+	}
+
 	@Override
-	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+	protected synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
 		if (this.center == null || this.radius < 0) {
 			// no valid parameters to draw the circle
@@ -88,35 +116,7 @@ public class CircleOverlay extends Overlay {
 	}
 
 	@Override
-	public String getThreadName() {
+	protected String getThreadName() {
 		return THREAD_NAME;
-	}
-
-	/**
-	 * Sets the parameters of the circle.
-	 * 
-	 * @param center
-	 *            the geographical coordinates of the center point.
-	 * @param radius
-	 *            the radius of the circle in meters.
-	 */
-	public synchronized void setCircleData(GeoPoint center, float radius) {
-		this.center = center;
-		this.radius = radius;
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		super.requestRedraw();
-	}
-
-	/**
-	 * Sets the paint objects which will be used to draw the overlay.
-	 * 
-	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
-	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
-	 */
-	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
-		this.fillPaint = fillPaint;
-		this.outlinePaint = outlinePaint;
 	}
 }

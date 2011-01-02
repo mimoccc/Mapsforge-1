@@ -53,7 +53,60 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	@Override
-	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+	public synchronized boolean onTap(GeoPoint geoPoint, MapView mapView) {
+		Projection projection = mapView.getProjection();
+		this.tapPosition = projection.toPixels(geoPoint, this.tapPosition);
+
+		// iterate over all items
+		for (int i = size() - 1; i >= 0; --i) {
+			// get the current item
+			this.overlayItem = createItem(i);
+
+			// check if the item has a position
+			if (this.overlayItem.getPoint() == null) {
+				continue;
+			}
+
+			this.itemPoint = projection.toPixels(this.overlayItem.getPoint(), this.itemPoint);
+
+			// select the correct marker for the item
+			if (this.overlayItem.getMarker() == null) {
+				this.itemMarker = this.defaultMarker;
+			} else {
+				this.itemMarker = this.overlayItem.getMarker();
+			}
+
+			// check if the hit position is within the bounds of the marker
+			if (Math.abs(this.itemPoint.x - this.tapPosition.x) <= this.itemMarker
+					.getIntrinsicWidth() / 2
+					&& Math.abs(this.itemPoint.y - this.tapPosition.y) <= this.itemMarker
+							.getIntrinsicHeight() / 2) {
+				return onTap(i);
+			}
+		}
+
+		// no hit
+		return false;
+	}
+
+	/**
+	 * Returns the numbers of items in this Overlay.
+	 * 
+	 * @return the numbers of items in this Overlay.
+	 */
+	public abstract int size();
+
+	/**
+	 * Creates an item in the Overlay.
+	 * 
+	 * @param i
+	 *            the index of the item.
+	 * @return the item.
+	 */
+	protected abstract Item createItem(int i);
+
+	@Override
+	protected synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
 		this.numberOfItems = size();
 		if (this.numberOfItems < 1) {
@@ -112,62 +165,9 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	@Override
-	public String getThreadName() {
+	protected String getThreadName() {
 		return THREAD_NAME;
 	}
-
-	@Override
-	public synchronized boolean onTap(GeoPoint geoPoint, MapView mapView) {
-		Projection projection = mapView.getProjection();
-		this.tapPosition = projection.toPixels(geoPoint, this.tapPosition);
-
-		// iterate over all items
-		for (int i = size() - 1; i >= 0; --i) {
-			// get the current item
-			this.overlayItem = createItem(i);
-
-			// check if the item has a position
-			if (this.overlayItem.getPoint() == null) {
-				continue;
-			}
-
-			this.itemPoint = projection.toPixels(this.overlayItem.getPoint(), this.itemPoint);
-
-			// select the correct marker for the item
-			if (this.overlayItem.getMarker() == null) {
-				this.itemMarker = this.defaultMarker;
-			} else {
-				this.itemMarker = this.overlayItem.getMarker();
-			}
-
-			// check if the hit position is within the bounds of the marker
-			if (Math.abs(this.itemPoint.x - this.tapPosition.x) <= this.itemMarker
-					.getIntrinsicWidth() / 2
-					&& Math.abs(this.itemPoint.y - this.tapPosition.y) <= this.itemMarker
-							.getIntrinsicHeight() / 2) {
-				return onTap(i);
-			}
-		}
-
-		// no hit
-		return false;
-	}
-
-	/**
-	 * Returns the numbers of items in this Overlay.
-	 * 
-	 * @return the numbers of items in this Overlay.
-	 */
-	public abstract int size();
-
-	/**
-	 * Creates an item in the Overlay.
-	 * 
-	 * @param i
-	 *            the index of the item.
-	 * @return the item.
-	 */
-	protected abstract Item createItem(int i);
 
 	/**
 	 * Handles a tap event.

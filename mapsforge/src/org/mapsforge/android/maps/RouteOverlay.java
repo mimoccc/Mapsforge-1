@@ -53,8 +53,36 @@ public class RouteOverlay extends Overlay {
 		setPaint(fillPaint, outlinePaint);
 	}
 
+	/**
+	 * Sets the paint objects which will be used to draw the overlay.
+	 * 
+	 * @param fillPaint
+	 *            the paint object which will be used to fill the overlay.
+	 * @param outlinePaint
+	 *            the paint object which will be used to draw the outline of the overlay.
+	 */
+	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
+		this.fillPaint = fillPaint;
+		this.outlinePaint = outlinePaint;
+	}
+
+	/**
+	 * Sets the way nodes of the route.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes.
+	 */
+	public synchronized void setRouteData(GeoPoint[] wayNodes) {
+		this.wayNodes = wayNodes;
+		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
+			this.cachedWayPositions = new Point[this.wayNodes.length];
+		}
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+		super.requestRedraw();
+	}
+
 	@Override
-	public final synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+	protected synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
 			Projection projection, byte drawZoomLevel) {
 		if (this.wayNodes == null || this.wayNodes.length < 1) {
 			// no way nodes to draw
@@ -92,35 +120,7 @@ public class RouteOverlay extends Overlay {
 	}
 
 	@Override
-	public String getThreadName() {
+	protected String getThreadName() {
 		return THREAD_NAME;
-	}
-
-	/**
-	 * Sets the paint objects which will be used to draw the overlay.
-	 * 
-	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
-	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
-	 */
-	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
-		this.fillPaint = fillPaint;
-		this.outlinePaint = outlinePaint;
-	}
-
-	/**
-	 * Sets the way nodes of the route.
-	 * 
-	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes.
-	 */
-	public synchronized void setRouteData(GeoPoint[] wayNodes) {
-		this.wayNodes = wayNodes;
-		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
-			this.cachedWayPositions = new Point[this.wayNodes.length];
-		}
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		super.requestRedraw();
 	}
 }
