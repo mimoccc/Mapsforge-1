@@ -105,7 +105,7 @@ class MapFileWriter {
 	private TileBasedDataStore dataStore;
 
 	private static final TileInfo tileInfo = TileInfo.getInstance();
-	private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
+	// private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
 
 	// IO
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
@@ -373,24 +373,22 @@ class MapFileWriter {
 				TileCoordinate currentTileCoordinate = new TileCoordinate(tileX, tileY,
 						baseZoomCurrentInterval);
 
-				if (currentTileCoordinate.getX() == 134 && currentTileCoordinate.getY() == 82)
-					System.out.println("roskilde");
-
 				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
 				if (tileInfo.isWaterTile(currentTileCoordinate)) {
 					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
-				} else {
-					// the TileInfo class may produce false negatives for tiles on zoom level
-					// greater than TileInfo.TILE_INFO_ZOOMLEVEL
-					// we need to run the coastline algorithm to detect whether the tile is
-					// completely covered by water or not
-					if (currentTileCoordinate.getZoomlevel() > TileInfo.TILE_INFO_ZOOMLEVEL) {
-						if (COASTLINE_HANDLER.isWaterTile(currentTileCoordinate,
-								dataStore.getCoastLines(currentTileCoordinate))) {
-							indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
-						}
-					}
 				}
+				// else {
+				// // the TileInfo class may produce false negatives for tiles on zoom level
+				// // greater than TileInfo.TILE_INFO_ZOOMLEVEL
+				// // we need to run the coastline algorithm to detect whether the tile is
+				// // completely covered by water or not
+				// if (currentTileCoordinate.getZoomlevel() > TileInfo.TILE_INFO_ZOOMLEVEL) {
+				// if (COASTLINE_HANDLER.isWaterTile(currentTileCoordinate,
+				// dataStore.getCoastLines(currentTileCoordinate))) {
+				// indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
+				// }
+				// }
+				// }
 
 				// seek to index frame of this tile and write relative offset of this
 				// tile as five bytes to the index
@@ -513,11 +511,6 @@ class MapFileWriter {
 						// needed to access bitmask computation results in the foreach loop
 						int i = 0;
 						for (TDWay way : ways) {
-
-							if (way.getTags() != null
-									&& way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
-								boolean coastline = true;
-							}
 							int startIndexWay = tileBuffer.position();
 
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(

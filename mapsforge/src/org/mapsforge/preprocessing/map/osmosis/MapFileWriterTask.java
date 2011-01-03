@@ -155,9 +155,6 @@ public class MapFileWriterTask implements Sink {
 		logger.info("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
 		logger.info("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
 		logger.info("total processed multipolygons: " + amountOfMultipolygons);
-		System.gc();
-		System.gc();
-		System.gc();
 		logger.info("estimated memory consumption: " + nfMegabyte.format(
 						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
 								.freeMemory()) / Math.pow(1024, 2))) + "MB");
