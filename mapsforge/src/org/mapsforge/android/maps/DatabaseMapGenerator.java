@@ -216,6 +216,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_TOURISM_ATTRACTION_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TOURISM_ZOO_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TOURISM_ZOO_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_WATER_TILE_HIGHTLIGHT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_CANAL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVERBANK_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -244,6 +245,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private float bboxLongitude2;
 	private CoastlineAlgorithm coastlineAlgorithm;
 	private float[][] coordinates;
+	private MapGeneratorJob currentJob;
 	private float currentNodeX;
 	private float currentNodeY;
 	private Tile currentTile;
@@ -271,11 +273,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private TagIDsWays tagIDsWays;
 	private Bitmap tileBitmap;
 	private Tile tileForCoastlineAlgorithm;
+	private float[][] waterTileCoordinates;
 	private float[] wayNamePath;
 	private boolean wayNameRendered;
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
-
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
 
 	/**
@@ -310,9 +312,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	@Override
 	public void onWaterTile() {
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-				new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
-						Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
-						0, 0 } }), PAINT_NATURAL_WATER_FILL));
+				new ShapePaintContainer(new WayContainer(this.waterTileCoordinates),
+						PAINT_NATURAL_WATER_FILL));
 	}
 
 	/**
@@ -1138,6 +1139,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_TOURISM_ZOO_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_TOURISM_ZOO_OUTLINE.setColor(Color.rgb(123, 200, 145));
 
+		PAINT_WATER_TILE_HIGHTLIGHT.setStyle(Paint.Style.FILL);
+		PAINT_WATER_TILE_HIGHTLIGHT.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_WATER_TILE_HIGHTLIGHT.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_WATER_TILE_HIGHTLIGHT.setColor(Color.CYAN);
+
 		PAINT_WATERWAY_CANAL.setStyle(Paint.Style.STROKE);
 		PAINT_WATERWAY_CANAL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_WATERWAY_CANAL.setStrokeCap(Paint.Cap.ROUND);
@@ -1430,6 +1436,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	@Override
 	final boolean executeJob(MapGeneratorJob mapGeneratorJob) {
+		this.currentJob = mapGeneratorJob;
 		this.currentTile = mapGeneratorJob.tile;
 		// check if the paint parameters need to be set again
 		if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
@@ -2007,10 +2014,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * Renders water background for the current tile.
 	 */
 	final void renderWaterBackground() {
-		this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
-				new ShapePaintContainer(new WayContainer(new float[][] { { 0, 0,
-						Tile.TILE_SIZE, 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
-						0, 0 } }), PAINT_NATURAL_WATER_FILL));
+		if (this.currentJob.highlightWater) {
+			this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+					new ShapePaintContainer(new WayContainer(this.waterTileCoordinates),
+							PAINT_WATER_TILE_HIGHTLIGHT));
+		} else {
+			this.ways.get(DEFAULT_LAYER).get(LayerIds.SEA_AREAS).add(
+					new ShapePaintContainer(new WayContainer(this.waterTileCoordinates),
+							PAINT_NATURAL_WATER_FILL));
+		}
 	}
 
 	/**
@@ -3197,6 +3209,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.areaLabels = new ArrayList<PointTextContainer>(64);
 		this.symbols = new ArrayList<SymbolContainer>(64);
+
+		// create the coordinates array for water tiles
+		this.waterTileCoordinates = new float[][] { { 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+				Tile.TILE_SIZE, 0, Tile.TILE_SIZE, 0, 0 } };
 
 		setupRenderer(this.tileBitmap);
 	}

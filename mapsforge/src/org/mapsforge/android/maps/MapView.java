@@ -639,6 +639,7 @@ public class MapView extends ViewGroup {
 	private int fps;
 	private Paint fpsPaint;
 	private short frame_counter;
+	private boolean highlightWaterTiles;
 	private double latitude;
 	private double longitude;
 	private MapActivity mapActivity;
@@ -979,6 +980,8 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Sets the visibility of the frame rate.
+	 * <p>
+	 * This method is for debugging purposes only.
 	 * 
 	 * @param showFpsCounter
 	 *            true if the map frame rate should be visible, false otherwise.
@@ -1145,6 +1148,8 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Sets the drawing of tile coordinates for debugging. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
 	 * 
 	 * @param drawTileCoordinates
 	 *            true if tile coordinates should be drawn, false otherwise.
@@ -1158,12 +1163,29 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Sets the drawing of tile frames for debugging. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
 	 * 
 	 * @param drawTileFrames
 	 *            true if tile frames should be drawn, false otherwise.
 	 */
 	public void setTileFrames(boolean drawTileFrames) {
 		this.drawTileFrames = drawTileFrames;
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles(true);
+	}
+
+	/**
+	 * Sets the highlighting of water tiles. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
+	 * 
+	 * @param highlightWaterTiles
+	 *            true if water tiles should be highlighted, false otherwise.
+	 */
+	public void setWaterTiles(boolean highlightWaterTiles) {
+		this.highlightWaterTiles = highlightWaterTiles;
 		this.mapGenerator.clearJobs();
 		clearMapView();
 		handleTiles(true);
@@ -1832,7 +1854,8 @@ public class MapView extends ViewGroup {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
 					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
 					this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-							this.mapFile, this.drawTileFrames, this.drawTileCoordinates);
+							this.mapFile, this.drawTileFrames, this.drawTileCoordinates,
+							this.highlightWaterTiles);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
 						putTileOnBitmap(this.currentJob,
@@ -2066,7 +2089,8 @@ public class MapView extends ViewGroup {
 			for (this.tileX = this.mapViewTileX2 + 1; this.tileX >= this.mapViewTileX1 - 1; --this.tileX) {
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.drawTileFrames, this.drawTileCoordinates);
+						this.mapFile, this.drawTileFrames, this.drawTileCoordinates,
+						this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
@@ -2074,7 +2098,8 @@ public class MapView extends ViewGroup {
 
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.drawTileFrames, this.drawTileCoordinates);
+						this.mapFile, this.drawTileFrames, this.drawTileCoordinates,
+						this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
@@ -2085,7 +2110,8 @@ public class MapView extends ViewGroup {
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.drawTileFrames, this.drawTileCoordinates);
+						this.mapFile, this.drawTileFrames, this.drawTileCoordinates,
+						this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);
@@ -2093,7 +2119,8 @@ public class MapView extends ViewGroup {
 
 				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.drawTileFrames, this.drawTileCoordinates);
+						this.mapFile, this.drawTileFrames, this.drawTileCoordinates,
+						this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
 					this.mapGenerator.addJob(this.currentJob);

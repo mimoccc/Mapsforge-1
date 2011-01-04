@@ -35,6 +35,11 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	final boolean drawTileFrames;
 
 	/**
+	 * Flag to highlight the tile in case it is a water tile.
+	 */
+	final boolean highlightWater;
+
+	/**
 	 * Map file used to render the map image (may be null).
 	 */
 	final String mapFile;
@@ -67,14 +72,17 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	 *            flag to enable tile frames.
 	 * @param drawTileCoordinates
 	 *            flag to enable tile coordinates.
+	 * @param highlightWater
+	 *            flag to enable water tile highlighting.
 	 */
 	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, boolean drawTileFrames,
-			boolean drawTileCoordinates) {
+			boolean drawTileCoordinates, boolean highlightWater) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
 		this.drawTileFrames = drawTileFrames;
 		this.drawTileCoordinates = drawTileCoordinates;
+		this.highlightWater = highlightWater;
 		this.hashCode = calculateHashCode();
 	}
 
@@ -103,6 +111,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 				return false;
 			} else if (this.drawTileCoordinates != this.other.drawTileCoordinates) {
 				return false;
+			} else if (this.highlightWater != this.other.highlightWater) {
+				return false;
 			}
 			return true;
 		}
@@ -127,6 +137,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
 		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
 		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
+		result = prime * result + (this.highlightWater ? 1231 : 1237);
 		return result;
 	}
 }
