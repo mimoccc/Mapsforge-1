@@ -72,7 +72,7 @@ class PoiTagEnumCreator {
 				// write the line of java code with the corresponding id
 				tag2enum.append(splitted[0].replace('=', '$').toUpperCase(Locale.ENGLISH));
 				tag2enum.append("(");
-				tag2enum.append("(byte)").append(splitted[1]);
+				tag2enum.append("(byte) ").append(splitted[1]);
 				tag2enum.append(")").append(",").append("\n");
 			}
 		}

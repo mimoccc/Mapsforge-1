@@ -63,9 +63,9 @@ natural=volcano;12
 place=city;6
 place=country;3
 place=island;12
-place=suburb;14
+place=suburb;12
 place=town;9
-place=village;14
+place=village;12
 
 power=generator;17
 power=tower;17

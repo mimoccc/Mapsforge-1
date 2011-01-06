@@ -145,9 +145,9 @@ tourism=zoo;12
 tunnel=no;127
 tunnel=yes;127
 
-waterway=canal;12
+waterway=canal;9
 waterway=dam;12
 waterway=drain;12
-waterway=river;12
-waterway=riverbank;12
-waterway=stream;12
+waterway=river;8
+waterway=riverbank;8
+waterway=stream;6

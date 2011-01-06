@@ -77,7 +77,7 @@ enum PoiEnum {
 	NATURAL$TREE((byte) 17),
 	NATURAL$VOLCANO((byte) 12),
 	PLACE$CITY((byte) 6),
-	PLACE$COUNTRY((byte)3),
+	PLACE$COUNTRY((byte) 3),
 	PLACE$ISLAND((byte) 12),
 	PLACE$SUBURB((byte) 12),
 	PLACE$TOWN((byte) 9),
