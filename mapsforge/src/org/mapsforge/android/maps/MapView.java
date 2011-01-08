@@ -83,6 +83,8 @@ public class MapView extends ViewGroup {
 		private static final int INVALID_POINTER_ID = -1;
 		private int action;
 		private int activePointerId;
+		private long multiTouchDownTime;
+		private long multiTouchTime;
 		private int pointerIndex;
 		private final ScaleGestureDetector scaleGestureDetector;
 
@@ -181,7 +183,7 @@ public class MapView extends ViewGroup {
 						if (this.tapDiffX < this.doubleTapDelta
 								&& this.tapDiffY < this.doubleTapDelta
 								&& this.tapDiffTime < this.doubleTapTimeout) {
-							// double-tap event
+							// double-tap event, zoom in
 							this.previousEventTap = false;
 							setCenter(getProjection().fromPixels(
 									(int) event.getX(this.pointerIndex),
@@ -212,6 +214,9 @@ public class MapView extends ViewGroup {
 				hideZoomControlsDelayed();
 				this.activePointerId = INVALID_POINTER_ID;
 				return true;
+			} else if (this.action == MotionEvent.ACTION_POINTER_DOWN) {
+				// save the time when the pointer has gone down
+				this.multiTouchDownTime = event.getEventTime();
 			} else if (this.action == MotionEvent.ACTION_POINTER_UP) {
 				// extract the index of the pointer that left the touch sensor
 				this.pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
@@ -227,6 +232,15 @@ public class MapView extends ViewGroup {
 					this.previousPositionY = event.getY(this.pointerIndex);
 					this.activePointerId = event.getPointerId(this.pointerIndex);
 				}
+
+				// calculate the time difference since the pointer has gone down
+				this.multiTouchTime = event.getEventTime() - this.multiTouchDownTime;
+				if (this.multiTouchTime < this.doubleTapTimeout) {
+					// multi-touch tap event, zoom out
+					this.previousEventTap = false;
+					zoom((byte) -1);
+				}
+
 				return true;
 			}
 			// the event was not handled
