@@ -109,7 +109,7 @@ class MapFileWriter {
 
 	// IO
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
-	private static final int MIN_TILE_BUFFER_SIZE = 0xA00000; // 10MB
+	private static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
 	private static final int TILE_BUFFER_SIZE = 0x3200000;
 	private final RandomAccessFile randomAccessFile;
 	private ByteBuffer bufferZoomIntervalConfig;
@@ -350,7 +350,7 @@ class MapFileWriter {
 				zoomIntervalIndex);
 		byte baseZoomCurrentInterval = dataStore.getZoomIntervalConfiguration().getBaseZoom(
 				zoomIntervalIndex);
-		byte maxMaxZoomlevel = dataStore.getZoomIntervalConfiguration().getMaxMaxZoom();
+		// byte maxMaxZoomlevel = dataStore.getZoomIntervalConfiguration().getMaxMaxZoom();
 
 		int tileAmountInBytes = lengthX * lengthY * BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
 		int indexBufferSize = tileAmountInBytes
@@ -397,15 +397,13 @@ class MapFileWriter {
 				// get statistics for tile
 				TileData currentTile = dataStore.getTile(zoomIntervalIndex, tileX, tileY);
 
+				// TODO we need to rethink the semantic of zoom levels
 				// ************* POI ************
 				// write amount of POIs and ways for each zoom level
-				// TODO is this computation correct? Ways that have an associated zoom level of
-				// e.g. 9
-				// are lifted to zoom level 12 for an interval 12,14,17
 				Map<Byte, List<TDNode>> poisByZoomlevel = currentTile
-						.poisByZoomlevel(minZoomCurrentInterval, maxMaxZoomlevel);
+						.poisByZoomlevel(minZoomCurrentInterval, maxZoomCurrentInterval);
 				Map<Byte, List<TDWay>> waysByZoomlevel = currentTile
-						.waysByZoomlevel(minZoomCurrentInterval, maxMaxZoomlevel);
+						.waysByZoomlevel(minZoomCurrentInterval, maxZoomCurrentInterval);
 
 				if (poisByZoomlevel.size() > 0 || waysByZoomlevel.size() > 0) {
 					int tileContainerStart = tileBuffer.position();
@@ -604,8 +602,21 @@ class MapFileWriter {
 										.getInnerWaysOfMultipolygon(way.getId());
 								if (innerways != null && innerways.size() > 0) {
 
-									tileBuffer.put((byte) innerways.size());
+									// TODO we better adjust the binary format
+									if (innerways.size() > Byte.MAX_VALUE) {
+										logger.fine("Multipolygon has more than "
+												+ Byte.MAX_VALUE
+												+ " inner ways. Truncating rest of inner ways. Outer way id: "
+												+ way.getId());
+										tileBuffer.put(Byte.MAX_VALUE);
+									} else {
+										tileBuffer.put((byte) innerways.size());
+									}
+
+									int innerWaysCounter = 0;
 									for (TDWay innerway : innerways) {
+										if (++innerWaysCounter > Byte.MAX_VALUE)
+											break;
 										WayNodePreprocessingResult innerWayNodePreprocessingResult =
 													preprocessWayNodes(innerway,
 															waynodeCompression,

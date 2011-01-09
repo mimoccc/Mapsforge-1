@@ -62,7 +62,7 @@ class TileData {
 		for (TDNode poi : pois) {
 			byte zoomlevel = poi.getMinimumZoomLevel();
 			if (zoomlevel > maxValidZoomlevel)
-				zoomlevel = maxValidZoomlevel;
+				continue;
 			if (zoomlevel < minValidZoomlevel)
 				zoomlevel = minValidZoomlevel;
 			List<TDNode> group = poisByZoomlevel.get(zoomlevel);
@@ -80,7 +80,7 @@ class TileData {
 		for (TDWay way : ways) {
 			byte zoomlevel = way.getMinimumZoomLevel();
 			if (zoomlevel > maxValidZoomlevel)
-				zoomlevel = maxValidZoomlevel;
+				continue;
 			if (zoomlevel < minValidZoomlevel)
 				zoomlevel = minValidZoomlevel;
 			List<TDWay> group = waysByZoomlevel.get(zoomlevel);
@@ -352,6 +352,19 @@ class TileData {
 			this.tags = tags;
 			this.waytype = waytype;
 			this.wayNodes = wayNodes;
+		}
+
+		double[] wayNodesAsArray() {
+			if (wayNodes == null)
+				return null;
+			double[] ret = new double[wayNodes.length * 2];
+			int i = 0;
+			for (TDNode waynode : wayNodes) {
+				ret[i++] = GeoCoordinate.intToDouble(waynode.getLongitude());
+				ret[i++] = GeoCoordinate.intToDouble(waynode.getLatitude());
+			}
+
+			return ret;
 		}
 
 		List<GeoCoordinate> wayNodesAsCoordinateList() {

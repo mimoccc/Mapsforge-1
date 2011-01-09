@@ -139,8 +139,6 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	private void addPOI(TDNode node) {
 		byte minZoomLevel = node.getMinimumZoomLevel();
-		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
-			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
 			// is poi seen in a zoom interval?
@@ -170,8 +168,6 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			return false;
 		this.ways.put(tdWay.getId(), tdWay);
 		byte minZoomLevel = tdWay.getMinimumZoomLevel();
-		if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
-			minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 		int bboxEnlargementLocal = bboxEnlargement;
 
 		if (tdWay.getTags() != null && tdWay.getTags().contains(WayEnum.NATURAL$COASTLINE)) {

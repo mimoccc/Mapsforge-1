@@ -121,8 +121,6 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		TDNode tdNode = TDNode.fromNode(node);
 		if (tdNode.isPOI()) {
 			byte minZoomLevel = tdNode.getMinimumZoomLevel();
-			if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
-				minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
 				// is poi seen in a zoom interval?
@@ -263,8 +261,6 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 
 			byte minZoomLevel = way.getMinimumZoomLevel();
-			if (minZoomLevel > zoomIntervalConfiguration.getMaxMaxZoom())
-				minZoomLevel = zoomIntervalConfiguration.getMaxMaxZoom();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 				// is way seen in a zoom interval?
 				if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {

@@ -16,6 +16,8 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.mapsforge.core.GeoCoordinate;
@@ -25,13 +27,28 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
 class CoastlineHandler implements ClosedPolygonHandler {
-
 	private final CoastlineAlgorithm coastlineAlgorithm =
 			new CoastlineAlgorithm();
 	private boolean isWaterTile = false;
+	private final List<float[]> waterPolygons = new ArrayList<float[]>();
 
 	boolean isWaterTile(TileCoordinate tc, Set<TDWay> coastlines) {
+
+		// if (tc.getX() == 8845
+		// && tc.getY() == 6436) {
+		// boolean found = true;
+		// }
+
+		TileCoordinate coordinateOnTileInfoZoomlevel = tc.translateToZoomLevel(
+				TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
 		coastlineAlgorithm.clearCoastlineSegments();
+		coastlineAlgorithm.setTiles(
+				new Tile(coordinateOnTileInfoZoomlevel.getX(), coordinateOnTileInfoZoomlevel
+						.getY(), coordinateOnTileInfoZoomlevel.getZoomlevel()),
+				new Tile(tc.getX(), tc.getY(),
+						tc.getZoomlevel()));
+
+		waterPolygons.clear();
 		isWaterTile = false;
 
 		double pixelX = MercatorProjection.tileXToPixelX(tc.getX());
@@ -47,7 +64,7 @@ class CoastlineHandler implements ClosedPolygonHandler {
 
 		coastlineAlgorithm.generateClosedPolygons(this);
 
-		return isWaterTile;
+		return isWaterTile || isTileCoveredByAnyWaterPolygon(tc);
 	}
 
 	private float[] convertToCoastlineSegmentRelativeToTile(double tilePixelX,
@@ -70,6 +87,16 @@ class CoastlineHandler implements ClosedPolygonHandler {
 		return segment;
 	}
 
+	private boolean isTileCoveredByAnyWaterPolygon(TileCoordinate tc) {
+		// TODO implement
+		// for (float[] waterPolygon : waterPolygons) {
+		// if (GeoUtils.covers(waterPolygon, tc, 0))
+		// return true;
+		// }
+
+		return false;
+	}
+
 	@Override
 	public void onInvalidCoastlineSegment(float[] coastline) {
 		// System.out.println("onInvalid");
@@ -86,8 +113,7 @@ class CoastlineHandler implements ClosedPolygonHandler {
 
 	@Override
 	public void onWaterPolygon(float[] coastline) {
-		// System.out.println("onWaterPolygon");
-		// nothing to do here
+		waterPolygons.add(coastline);
 
 	}
 

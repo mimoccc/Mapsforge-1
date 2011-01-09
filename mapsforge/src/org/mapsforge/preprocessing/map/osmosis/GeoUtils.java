@@ -16,6 +16,8 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import gnu.trove.list.array.TDoubleArrayList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,14 +27,8 @@ import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
 
 /**
  * Provides utility functions for the maps preprocessing.
@@ -40,28 +36,16 @@ import com.vividsolutions.jts.geom.LinearRing;
  * @author bross
  * 
  */
-public class GeoUtils {
+final class GeoUtils {
 
-	private static final int SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
+	private static final byte SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
 	private static final double[] EPSILON_ZERO = new double[] { 0, 0 };
 	private static final Logger logger =
 			Logger.getLogger(GeoUtils.class.getName());
-	private static final GeometryFactory geoFac = new GeometryFactory();
 
 	private static final int[] tileBitMaskValues = new int[] { 32768, 16384,
 			8192, 4096, 2048, 1024,
 			512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
-
-	// // TODO do we need these epsilons, can we do it better with JTS?
-	// // list of values for extending a tile on the base zoom level
-	// private static final double[] tileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	// 0,
-	// 0, 0.0006, 0.00025, 0.00013, 0.00006 };
-	//
-	// // list of values for extending a sub tile
-	// private static final double[] subTileEpsilon = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	// 0,
-	// 0, 0, 0, 0.0015, 0.0001, 0.00085, 0.00065 };
 
 	private static double[] computeTileEnlargement(long tileY, byte zoom,
 			int enlargementInMeter) {
@@ -103,32 +87,36 @@ public class GeoUtils {
 	 * @return all tiles on the given base zoom level that need to include the given way, an
 	 *         empty set if no tiles are matched
 	 */
-	final static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel,
+	static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel,
 			final int enlargementInMeter) {
 		if (way == null)
 			throw new IllegalArgumentException("parameter way is null");
 
 		HashSet<TileCoordinate> matchedTiles = new HashSet<TileCoordinate>();
-		Geometry geoWay = GeoUtils.toJTSGeometry(way);
-		if (geoWay == null) {
+		double[] waynodes = way.wayNodesAsArray();
+		if (waynodes == null) {
+			return matchedTiles;
+		}
+		// check for valid closed polygon
+		if (way.getWaytype() > 1 && waynodes.length < 8) {
+			logger.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+					+ way.getId());
 			return matchedTiles;
 		}
 
 		TileCoordinate[] bbox = getWayBoundingBox(way, baseZoomLevel, enlargementInMeter);
-
 		// calculate the tile coordinates and the corresponding bounding boxes
 		for (int k = bbox[0].getX(); k <= bbox[1].getX(); k++) {
 			for (int l = bbox[0].getY(); l <= bbox[1].getY(); l++) {
-				Geometry currentTile = geoFac.createPolygon(getBoundingBox(
-						k, l, baseZoomLevel, enlargementInMeter), null);
+				double[] currentBBox = getBoundingBoxAsArray(k, l, baseZoomLevel,
+						enlargementInMeter);
 				if (way.getWaytype() == 1) {
-					if (geoWay.intersects(currentTile) || geoWay.crosses(currentTile)
-							|| geoWay.coveredBy(currentTile)) {
+					if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)) {
 						matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
 					}
 				} else {
-					if (geoWay.intersects(currentTile) || geoWay.crosses(currentTile)
-							|| geoWay.covers(currentTile) || geoWay.coveredBy(currentTile)) {
+					if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)
+							|| SutherlandHodgmanClipping.accept(waynodes, currentBBox)) {
 						matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
 					}
 				}
@@ -154,27 +142,34 @@ public class GeoUtils {
 	 * @return a 16 bit short value that represents the information which of the sub tiles needs
 	 *         to include the way
 	 */
-	final static short computeBitmask(final TDWay way, final TileCoordinate tile,
+	static short computeBitmask(final TDWay way, final TileCoordinate tile,
 			final int enlargementInMeters) {
 
-		List<TileCoordinate> subtiles = computeSubtiles(tile, SUBTILE_ZOOMLEVEL_DIFFERENCE);
-		Geometry geoWay = toJTSGeometry(way);
+		List<TileCoordinate> subtiles = tile.translateToZoomLevel((byte) (tile.getZoomlevel()
+				+ SUBTILE_ZOOMLEVEL_DIFFERENCE));
+		// computeSubtiles(tile, SUBTILE_ZOOMLEVEL_DIFFERENCE);
+		double[] waynodes = way.wayNodesAsArray();
+		// check for valid closed polygon
+		if (way.getWaytype() > 1 && waynodes.length < 8) {
+			logger.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+					+ way.getId());
+			return 0;
+		}
 
 		short bitmask = 0;
 		int tileCounter = 0;
 		for (TileCoordinate subtile : subtiles) {
-			Geometry subtilePolygon = geoFac.createPolygon(
-					getBoundingBox(subtile.getX(), subtile.getY(), subtile.getZoomlevel(),
-							enlargementInMeters),
-					null);
+			double[] currentBBox = getBoundingBoxAsArray(subtile.getX(), subtile.getY(),
+					subtile.getZoomlevel(), enlargementInMeters);
 			if (way.getWaytype() == 1) {
-				if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
-						|| geoWay.coveredBy(subtilePolygon)) {
+				// if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
+				// || geoWay.coveredBy(subtilePolygon))
+				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)) {
 					bitmask |= tileBitMaskValues[tileCounter];
 				}
 			} else {
-				if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
-						|| geoWay.covers(subtilePolygon) || geoWay.coveredBy(subtilePolygon)) {
+				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)
+						|| SutherlandHodgmanClipping.accept(waynodes, currentBBox)) {
 					bitmask |= tileBitMaskValues[tileCounter];
 				}
 			}
@@ -198,7 +193,7 @@ public class GeoUtils {
 	 * @return a new list of way nodes that includes only those way nodes that do not fall onto
 	 *         the same or adjacent pixels
 	 */
-	final static List<GeoCoordinate> filterWaynodesOnSamePixel(
+	static List<GeoCoordinate> filterWaynodesOnSamePixel(
 			final List<GeoCoordinate> waynodes,
 			byte zoom, float delta) {
 		if (waynodes == null)
@@ -245,7 +240,7 @@ public class GeoUtils {
 	 *         offsets to their predecessor. For each way node first latitude (offset) and
 	 *         second longitude (offset) is added.
 	 */
-	final static List<Integer> waynodeAbsoluteCoordinatesToOffsets(
+	static List<Integer> waynodeAbsoluteCoordinatesToOffsets(
 			final List<GeoCoordinate> waynodes) {
 		ArrayList<Integer> result = new ArrayList<Integer>();
 
@@ -276,7 +271,7 @@ public class GeoUtils {
 	 *            absolute coordinates and not offsets
 	 * @return the maximum absolute offset
 	 */
-	final static int maxDiffBetweenCompressedWayNodes(final List<Integer> wayNodeOffsets) {
+	static int maxDiffBetweenCompressedWayNodes(final List<Integer> wayNodeOffsets) {
 		int maxDiff = 0;
 		for (int diff : wayNodeOffsets.subList(2, wayNodeOffsets.size())) {
 			diff = Math.abs(diff);
@@ -284,6 +279,22 @@ public class GeoUtils {
 				maxDiff = diff;
 		}
 		return maxDiff;
+	}
+
+	/**
+	 * Checks whether the given way is a closed polygon.
+	 * 
+	 * @param way
+	 *            the way which is to be analyzed
+	 * @return true if the way is a closed polygon, false otherwise
+	 */
+	static boolean isClosedPolygon(final TDWay way) {
+		if (way == null)
+			throw new IllegalArgumentException("parameter way is null");
+		if (way.getWayNodes() == null || way.getWayNodes().length < 3)
+			return false;
+		return way.getWayNodes()[0].getId() == way.getWayNodes()[way.getWayNodes().length - 1]
+				.getId();
 	}
 
 	/**
@@ -298,7 +309,7 @@ public class GeoUtils {
 	 * @return the clipped polygon, null if the polygon is not valid or if the intersection
 	 *         between polygon and the tile's bounding box is empty
 	 */
-	final static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
+	static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
 			final TileCoordinate tile, int enlargementInMeters) {
 		if (polygon == null) {
 			throw new IllegalArgumentException("polygon is null");
@@ -308,244 +319,69 @@ public class GeoUtils {
 			throw new IllegalArgumentException(
 					"a valid closed polygon must have at least 4 points");
 
-		Rect bbox = getRectBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(),
+		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
 				enlargementInMeters);
+		double[] polygonArray = geocoordinatesAsArray(polygon);
 
-		// left edge
-		List<GeoCoordinate> clippedPolygon = clipPolygonToEdge(polygon, new GeoCoordinate(
-				bbox.maxLatitudeE6, bbox.minLongitudeE6), new GeoCoordinate(bbox.minLatitudeE6,
-				bbox.minLongitudeE6));
-		// bottom edge
-		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
-				bbox.minLatitudeE6,
-						bbox.minLongitudeE6), new GeoCoordinate(bbox.minLatitudeE6,
-				bbox.maxLongitudeE6));
-		// right edge
-		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
-				bbox.minLatitudeE6, bbox.maxLongitudeE6), new GeoCoordinate(bbox.maxLatitudeE6,
-				bbox.maxLongitudeE6));
-		// top edge
-		clippedPolygon = clipPolygonToEdge(clippedPolygon, new GeoCoordinate(
-				bbox.maxLatitudeE6,
-				bbox.maxLongitudeE6),
-				new GeoCoordinate(bbox.maxLatitudeE6, bbox.minLongitudeE6));
+		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox);
 
-		if (clippedPolygon.size() == 0) {
+		if (clippedPolygon == null || clippedPolygon.length == 0) {
 			logger.finer("clipped polygon is empty: " + polygon);
 			return Collections.emptyList();
 		}
 
+		List<GeoCoordinate> ret = arrayAsGeoCoordinates(clippedPolygon);
+
 		// for us a valid closed polygon must have the same start and end point
-		if (!clippedPolygon.get(0).equals(clippedPolygon.get(clippedPolygon.size() - 1)))
-			clippedPolygon.add(clippedPolygon.get(0));
+		if (!ret.get(0).equals(ret.get(ret.size() - 1)))
+			ret.add(ret.get(0));
 
-		return clippedPolygon;
+		return ret;
 	}
 
-	private static List<GeoCoordinate> clipPolygonToEdge(final List<GeoCoordinate> polygon,
-			GeoCoordinate edgeStart, GeoCoordinate edgeEnd) {
-		List<GeoCoordinate> clippedPolygon = new ArrayList<GeoCoordinate>();
-
-		if (polygon.size() < 3)
-			return polygon;
-
-		GeoCoordinate previousVertex = polygon.get(polygon.size() - 1);
-		boolean previousInside = false, currentInside = false;
-		for (GeoCoordinate currentVertex : polygon) {
-			if (edgeStart.getLatitudeE6() > edgeEnd.getLatitudeE6()) {
-				previousInside = previousVertex.getLongitude() >= edgeStart.getLongitude();
-				currentInside = currentVertex.getLongitude() >= edgeStart.getLongitude();
-			} else if (edgeStart.getLongitudeE6() < edgeEnd.getLongitudeE6()) {
-				previousInside = previousVertex.getLatitude() >= edgeStart.getLatitude();
-				currentInside = currentVertex.getLatitude() >= edgeStart.getLatitude();
-			} else if (edgeStart.getLatitudeE6() < edgeEnd.getLatitudeE6()) {
-				previousInside = previousVertex.getLongitude() <= edgeStart.getLongitude();
-				currentInside = currentVertex.getLongitude() <= edgeStart.getLongitude();
-			} else if (edgeStart.getLongitudeE6() > edgeEnd.getLongitudeE6()) {
-				previousInside = previousVertex.getLatitude() <= edgeStart.getLatitude();
-				currentInside = currentVertex.getLatitude() <= edgeStart.getLatitude();
-			} else
-				throw new IllegalArgumentException("illegal edge: " + edgeStart + " : "
-						+ edgeEnd);
-
-			if (previousInside) {
-				if (currentInside) {
-					clippedPolygon.add(currentVertex);
-				} else {
-					GeoCoordinate intersection = computeIntersection(edgeStart, edgeEnd,
-							previousVertex, currentVertex);
-					clippedPolygon.add(intersection);
-				}
-			} else if (currentInside) {
-				GeoCoordinate intersection = computeIntersection(edgeStart, edgeEnd,
-						previousVertex, currentVertex);
-				clippedPolygon.add(intersection);
-				clippedPolygon.add(currentVertex);
-			}
-
-			previousVertex = currentVertex;
+	static boolean covers(float[] polygon,
+			final TileCoordinate tile, int enlargementInMeters) {
+		if (polygon == null) {
+			throw new IllegalArgumentException("polygon is null");
 		}
 
-		return clippedPolygon;
-	}
+		if (polygon.length < 8)
+			throw new IllegalArgumentException(
+					"a valid closed polygon must have at least 4 points");
 
-	private static GeoCoordinate computeIntersection(GeoCoordinate edgeStart,
-			GeoCoordinate edgeEnd, GeoCoordinate p1, GeoCoordinate p2) {
-		// horizontal edge
-		if (edgeStart.getLatitude() == edgeEnd.getLatitude()) {
-			double latitude = edgeStart.getLatitude();
-			double longitude = p1.getLongitude() + (edgeStart.getLatitude() - p1.getLatitude())
-					* ((p2.getLongitude() - p1.getLongitude())
-					/ (p2.getLatitude() - p1.getLatitude()));
-			return new GeoCoordinate(latitude, longitude);
+		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
+				enlargementInMeters);
+		double[] polygonAsDoubleArray = new double[polygon.length];
+		for (int i = 0; i < polygon.length; i++) {
+			polygonAsDoubleArray[i] = polygon[i];
 		}
 
-		// vertical edge
-		double latitude = p1.getLatitude()
-					+ (edgeStart.getLongitude() - p1.getLongitude())
-					* ((p2.getLatitude() - p1.getLatitude()) / (p2.getLongitude() - p1
-							.getLongitude()));
-		double longitude = edgeStart.getLongitude();
-		return new GeoCoordinate(latitude, longitude);
+		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonAsDoubleArray,
+				bbox);
 
-	}
-
-	// /**
-	// * Clips a polygon to the bounding box of a tile.
-	// *
-	// * @param polygon
-	// * the polygon which is to be clipped
-	// * @param tile
-	// * the tile which represents the clipping area
-	// * @return the clipped polygon, null if the polygon is not valid or if the intersection
-	// * between polygon and the tile's bounding box is empty
-	// */
-	// final static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
-	// final TileCoordinate tile) {
-	// if (polygon == null) {
-	// throw new IllegalArgumentException("polygon is null");
-	// }
-	//
-	// Coordinate[] jtsCoordinates = toJTSCoordinates(polygon);
-	// if (jtsCoordinates.length < 3
-	// || !jtsCoordinates[0].equals(jtsCoordinates[jtsCoordinates.length - 1])) {
-	// throw new IllegalArgumentException("not a valid JTS polygon: "
-	// + jtsCoordinates.toString());
-	// }
-	// Geometry jtsPolygon = geoFac.createPolygon(geoFac.createLinearRing(jtsCoordinates),
-	// null);
-	// if (!jtsPolygon.isValid())
-	// return null;
-	// Geometry tileBBox = geoFac.createPolygon(
-	// getBoundingBox(tile.getX(), tile.getY(), tile.getZoomlevel(), 1), null);
-	//
-	// Polygon intersection = (Polygon) jtsPolygon.intersection(tileBBox);
-	//
-	// String jtsPolygonStr = toGPX(jtsPolygon);
-	// String tileBBoxStr = toGPX(tileBBox);
-	// String intersectionStr = toGPX(intersection);
-	//
-	// Geometry ch = intersection.convexHull();
-	// String chStr = toGPX(ch);
-	//
-	// if (tile.getX() == 7174 && tile.getY() == 4312)
-	// System.out.println("here we are");
-	//
-	// // if (intersection.isEmpty())
-	// // intersection = tileBBox.intersection(jtsPolygon);
-	// return toGeoCoordinates(ch);
-	//
-	// }
-
-	/**
-	 * Checks whether the given way is a closed polygon.
-	 * 
-	 * @param way
-	 *            the way which is to be analyzed
-	 * @return true if the way is a closed polygon, false otherwise
-	 */
-	final static boolean isClosedPolygon(final TDWay way) {
-		if (way == null)
-			throw new IllegalArgumentException("parameter way is null");
-		if (way.getWayNodes() == null || way.getWayNodes().length < 3)
+		if (clippedPolygon == null || clippedPolygon.length == 0 || clippedPolygon.length != 10) {
 			return false;
-		return way.getWayNodes()[0].getId() == way.getWayNodes()[way.getWayNodes().length - 1]
-				.getId();
+		}
+
+		// TODO implement
+		return true;
+
 	}
 
-	private static Geometry toJTSGeometry(final TDWay way) {
-		assert way != null;
-		int amount = way.getWayNodes().length;
-		if (amount < 2) {
-			logger.finer("way has fewer than 2 way nodes, id: " + way.getId());
-			return null;
-		}
-
-		// LINE
-		if (way.getWaytype() == 1) {
-			return geoFac.createLineString(toJTSCoordinates(way.getWayNodes()));
-		}
-
-		// CLOSED POLYGON
-		// data cleansing: sometimes way nodes are missing if an area has been
-		// cut out of a larger data file
-		// --> a polygon must have at least 4 points including the duplicated start/end
-		if (amount < 4) {
-			logger.finer("Found way of type polygon with fewer than 4 way nodes. Way-ID: "
-						+ way.getId());
-			return null;
-		}
-		return geoFac.createPolygon(
-				geoFac.createLinearRing(toJTSCoordinates(way.getWayNodes())), null);
-	}
-
-	// TODO now implemented in TileCoordinate.translateToZoomLevel()
-	private static List<TileCoordinate> computeSubtiles(final TileCoordinate tile,
-			final int zoomLevelDistance) {
-		if (zoomLevelDistance < 0)
-			throw new IllegalArgumentException("zoomLevelDistance must be greater than 0, was "
-					+ zoomLevelDistance);
-		int factor = (int) Math.pow(2, zoomLevelDistance);
-		List<TileCoordinate> subtiles = new ArrayList<TileCoordinate>((int) Math.pow(4,
-				zoomLevelDistance));
-		int tileUpperLeftX = tile.getX() * factor;
-		int tileUpperLeftY = tile.getY() * factor;
-		for (int i = 0; i < factor; i++) {
-			for (int j = 0; j < factor; j++) {
-				subtiles.add(new TileCoordinate(tileUpperLeftX + j, tileUpperLeftY + i,
-						(byte) (tile.getZoomlevel() + zoomLevelDistance)));
-			}
-		}
-		return subtiles;
-	}
-
-	private static LinearRing getBoundingBox(long tileX, long tileY, byte zoom,
-			int enlargementInPixel) {
+	private static double[] getBoundingBoxAsArray(long tileX, long tileY, byte zoom,
+			int enlargementInMeter) {
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
 		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
 		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
 
-		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInPixel);
+		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInMeter);
 
-		return geoFac.createLinearRing(new Coordinate[] {
-				new Coordinate(maxLat + epsilons[0], minLon - epsilons[1]),
-				new Coordinate(minLat - epsilons[0], minLon - epsilons[1]),
-				new Coordinate(minLat - epsilons[0], maxLon + epsilons[1]),
-				new Coordinate(maxLat + epsilons[0], maxLon + epsilons[1]),
-				new Coordinate(maxLat + epsilons[0], minLon - epsilons[1]) });
-	}
-
-	private static Rect getRectBoundingBox(long tileX, long tileY, byte zoom,
-			int enlargementInPixel) {
-		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
-		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
-		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
-		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
-
-		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInPixel);
-		return new Rect(minLon - epsilons[1], maxLon + epsilons[1],
-				minLat - epsilons[0], maxLat + epsilons[0]);
+		return new double[] {
+				minLon - epsilons[1],
+				minLat - epsilons[0],
+				maxLon + epsilons[1],
+				maxLat + epsilons[0] };
 	}
 
 	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel,
@@ -575,53 +411,354 @@ public class GeoUtils {
 		return bbox;
 	}
 
-	private static Coordinate toJTSCoordinate(final TDNode coordinate) {
-		return new Coordinate(GeoCoordinate.intToDouble(coordinate.getLatitude()),
-				GeoCoordinate.intToDouble(coordinate.getLongitude()));
-	}
-
-	private static Coordinate[] toJTSCoordinates(final TDNode[] coordinates) {
-		if (coordinates == null)
-			return null;
-		Coordinate[] jtsCoordinates = new Coordinate[coordinates.length];
-		for (int i = 0, length = coordinates.length; i < length; i++) {
-			jtsCoordinates[i] = toJTSCoordinate(coordinates[i]);
+	private static double[] geocoordinatesAsArray(List<GeoCoordinate> coordinates) {
+		double[] ret = new double[coordinates.size() * 2];
+		int i = 0;
+		for (GeoCoordinate c : coordinates) {
+			ret[i++] = c.getLongitude();
+			ret[i++] = c.getLatitude();
 		}
 
-		return jtsCoordinates;
+		return ret;
 	}
 
-	// private static String toGPX(List<GeoCoordinate> g) {
-	// StringBuilder sb = new StringBuilder();
-	// sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
-	// sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
-	// "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-	// "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
-	// "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
-	// for (GeoCoordinate c : g) {
-	// sb.append("\t<wpt ").append("lat=\"").append(c.getLatitude()).append("\" ");
-	// sb.append("lon=\"").append(c.getLongitude()).append("\"/>");
-	// sb.append("\n");
-	// }
-	// sb.append("</gpx>");
-	//
-	// return sb.toString();
-	// }
-	//
-	// private static String toGPX(Geometry g) {
-	// StringBuilder sb = new StringBuilder();
-	// sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
-	// sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
-	// "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-	// "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
-	// "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
-	// for (Coordinate c : g.getCoordinates()) {
-	// sb.append("\t<wpt ").append("lat=\"").append(c.x).append("\" ");
-	// sb.append("lon=\"").append(c.y).append("\"/>");
-	// sb.append("\n");
-	// }
-	// sb.append("</gpx>");
-	//
-	// return sb.toString();
-	// }
+	private static List<GeoCoordinate> arrayAsGeoCoordinates(double[] coordinates) {
+		List<GeoCoordinate> ret = new ArrayList<GeoCoordinate>();
+		for (int i = 0; i < coordinates.length - 1; i += 2) {
+			ret.add(new GeoCoordinate(coordinates[i + 1], coordinates[i]));
+		}
+
+		return ret;
+	}
+
+	static String toGPX(final List<GeoCoordinate> g) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
+		sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
+				"version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+				"xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
+				"http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
+		for (GeoCoordinate c : g) {
+			sb.append("\t<wpt ").append("lat=\"").append(c.getLatitude()).append("\" ");
+			sb.append("lon=\"").append(c.getLongitude()).append("\"/>");
+			sb.append("\n");
+		}
+		sb.append("</gpx>");
+
+		return sb.toString();
+	}
+
+	static String arraysSVG(List<float[]> closedPolygons) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>").append("\n");
+		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" " +
+				"xmlns:xlink=\"http://www.w3.org/1999/xlink\" " +
+				"xmlns:ev=\"http://www.w3.org/2001/xml-events\" " +
+				"version=\"1.1\" baseProfile=\"full\" width=\"800mm\" height=\"600mm\">");
+
+		for (float[] fs : closedPolygons) {
+			sb.append("<polygon points=\"");
+			for (float f : fs) {
+				sb.append(f).append(" ");
+			}
+			sb.append("\" />");
+		}
+
+		sb.append("</svg>");
+
+		return sb.toString();
+	}
+
+	/**
+	 * Implements the Sutherland-Hodgman algorithm for clipping a polygon.
+	 * 
+	 * @author bross
+	 * 
+	 */
+	static class SutherlandHodgmanClipping {
+
+		/**
+		 * Check whether the polygon "touches" the clipping region (that includes "covers"), or
+		 * whether the polygon is completely outside of the clipping region.
+		 * 
+		 * @param polygon
+		 *            A closed polygon as a double array in the form
+		 *            [x1,y1,x2,y2,x3,y3,...,x1,y1]
+		 * @param rectangle
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
+		 *            ymin, xmax, ymax]
+		 * @return true if the polygon "touches" (includes "covers") the clipping region, false
+		 *         otherwise
+		 */
+		static boolean accept(final double[] polygon, final double[] rectangle) {
+			double[] clipped = clipPolygon(polygon, rectangle);
+			return clipped != null && clipped.length > 0;
+		}
+
+		/**
+		 * Clips a closed polygon to a rectangular clipping region.
+		 * 
+		 * @param polygon
+		 *            A closed polygon as a double array in the form
+		 *            [x1,y1,x2,y2,x3,y3,...,x1,y1]
+		 * @param rectangle
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
+		 *            ymin, xmax, ymax]
+		 * @return the clipped polygon if the polygon "touches" the clipping region, an empty
+		 *         array otherwise
+		 */
+		static double[] clipPolygon(final double[] polygon, final double[] rectangle) {
+			if (polygon == null) {
+				throw new IllegalArgumentException("polygon is null");
+			}
+
+			if (polygon.length < 8)
+				throw new IllegalArgumentException(
+						"a valid closed polygon must have at least 4 points");
+
+			// bottom edge
+			double[] clippedPolygon = clipPolygonToEdge(polygon, new double[] { rectangle[0],
+					rectangle[1], rectangle[2], rectangle[1] });
+			// right edge
+			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[2],
+					rectangle[1], rectangle[2], rectangle[3] });
+			// top edge
+			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[2],
+					rectangle[3], rectangle[0], rectangle[3] });
+			// left edge
+			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[0],
+					rectangle[3], rectangle[0], rectangle[1] });
+
+			return clippedPolygon;
+		}
+
+		private static boolean inside(double x, double y, double[] edge) {
+
+			if (edge[0] < edge[2]) {
+				// bottom edge
+				return y >= edge[1];
+			} else if (edge[0] > edge[2]) {
+				// top edge
+				return y <= edge[1];
+			} else if (edge[1] < edge[3]) {
+				// right edge
+				return x <= edge[0];
+			} else if (edge[1] > edge[3]) {
+				// left edge
+				return x >= edge[0];
+			} else
+				throw new IllegalArgumentException();
+		}
+
+		private static double[] clipPolygonToEdge(final double[] polygon, double[] edge) {
+			TDoubleArrayList clippedPolygon = new TDoubleArrayList();
+
+			if (polygon.length < 8)
+				return polygon;
+
+			// polygon not closed
+			if (polygon[0] != polygon[polygon.length - 2]
+					|| polygon[1] != polygon[polygon.length - 1]) {
+				throw new IllegalArgumentException("polygon must be closed");
+			}
+
+			double x1, y1, x2, y2;
+			boolean startPointInside = false, endPointInside = false;
+			for (int i = 0; i < polygon.length - 2; i += 2) {
+				// line starts with previous point
+				x1 = polygon[i];
+				y1 = polygon[i + 1];
+				x2 = polygon[i + 2];
+				y2 = polygon[i + 3];
+				startPointInside = inside(x1, y1, edge);
+				endPointInside = inside(x2, y2, edge);
+				if (startPointInside) {
+					if (endPointInside) {
+						clippedPolygon.add(x2);
+						clippedPolygon.add(y2);
+					} else {
+						double[] intersection = computeIntersection(edge, x1, y1, x2, y2);
+						clippedPolygon.add(intersection);
+					}
+				} else if (endPointInside) {
+					double[] intersection = computeIntersection(edge, x1, y1, x2, y2);
+					clippedPolygon.add(intersection);
+					clippedPolygon.add(x2);
+					clippedPolygon.add(y2);
+				}
+			}
+
+			// if clipped polygon is not closed, add the start point to the end
+			if (clippedPolygon.size() > 0
+					&& (clippedPolygon.get(0) != clippedPolygon.get(clippedPolygon.size() - 2)
+					|| clippedPolygon.get(1) != clippedPolygon.get(clippedPolygon.size() - 1))) {
+				clippedPolygon.add(clippedPolygon.get(0));
+				clippedPolygon.add(clippedPolygon.get(1));
+			}
+
+			return clippedPolygon.toArray();
+		}
+
+		private static double[] computeIntersection(double[] edge, double x1, double y1,
+				double x2, double y2) {
+			double[] ret = new double[2];
+
+			if (edge[1] == edge[3]) {
+				// horizontal edge
+				ret[1] = edge[1];
+				ret[0] = x1 + (edge[1] - y1) * ((x2 - x1) / (y2 - y1));
+
+			} else {
+				// vertical edge
+				ret[1] = y1 + (edge[0] - x1) * ((y2 - y1) / (x2 - x1));
+				ret[0] = edge[0];
+			}
+			return ret;
+
+		}
+	}
+
+	/**
+	 * Clips a line to a clipping region using the Cohen-Sutherland algorithm.
+	 * 
+	 * @author bross
+	 * 
+	 */
+	static class CohenSutherlandClipping {
+
+		private static final byte INSIDE = 0;
+		private static final byte LEFT = 1;
+		private static final byte RIGHT = 2;
+		private static final byte BOTTOM = 4;
+		private static final byte TOP = 8;
+
+		/**
+		 * 
+		 * @param line
+		 *            A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
+		 * @param rectangle
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
+		 *            ymin, xmax, ymax]
+		 * @return All line segments that can be clipped to the clipping region. For each
+		 *         segment exactly two points are added to the result array.
+		 */
+		static double[] clipLine(final double[] line, final double[] rectangle) {
+			if (line.length < 4)
+				throw new IllegalArgumentException("line must have at least 2 points");
+			if (rectangle.length != 4)
+				throw new IllegalArgumentException(
+						"clipping rectangle must be defined by exactly 2 points");
+
+			TDoubleArrayList clippedSegments = new TDoubleArrayList();
+			double[] clippedSegment;
+			for (int i = 0; i < line.length - 2; i += 2) {
+				clippedSegment = clipLine(line[i], line[i + 1], line[i + 2], line[i + 3],
+						rectangle);
+				if (clippedSegment != null)
+					clippedSegments.add(clippedSegment);
+			}
+
+			return clippedSegments.toArray();
+		}
+
+		/**
+		 * Checks whether a given line intersects the given clipping region.
+		 * 
+		 * @param line
+		 *            A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
+		 * @param rectangle
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
+		 *            ymin, xmax, ymax]
+		 * @return true if any line segments intersects the clipping region, false otherwise
+		 */
+		static boolean intersectsClippingRegion(final double[] line, final double[] rectangle) {
+			if (line.length < 4)
+				throw new IllegalArgumentException("line must have at least 2 points");
+			if (rectangle.length != 4)
+				throw new IllegalArgumentException(
+						"clipping rectangle must be defined by exactly 2 points");
+
+			double[] clippedSegment;
+			for (int i = 0; i < line.length - 2; i += 2) {
+				clippedSegment = clipLine(line[i], line[i + 1], line[i + 2], line[i + 3],
+						rectangle);
+				if (clippedSegment != null)
+					return true;
+			}
+
+			return false;
+		}
+
+		private static byte outCode(double x, double y, double xMin, double xMax, double yMin,
+				double yMax) {
+			byte outcode = INSIDE;
+			if (x < xMin)
+				outcode |= LEFT;
+			else if (x > xMax)
+				outcode |= RIGHT;
+			if (y < yMin)
+				outcode |= BOTTOM;
+			else if (y > yMax)
+				outcode |= TOP;
+
+			return outcode;
+		}
+
+		private static double[] clipLine(double x1, double y1, double x2, double y2,
+				double[] rectangle) {
+			byte outcode1 = outCode(x1, y1, rectangle[0], rectangle[2], rectangle[1],
+					rectangle[3]);
+			byte outcode2 = outCode(x2, y2, rectangle[0], rectangle[2], rectangle[1],
+					rectangle[3]);
+
+			while (true) {
+
+				if ((outcode1 | outcode2) == 0) {
+					// both are inside
+					return new double[] { x1, y1, x2, y2 };
+				} else if ((outcode1 & outcode2) != 0) {
+					// both are outside and in the same region
+					return null;
+				} else {
+					// at least one is outside
+					byte outcodeOut = outcode1 > 0 ? outcode1 : outcode2;
+					double x = 0, y = 0;
+					// Now find the intersection point;
+					// use formulas y = y0 + slope * (x - x0), x = x0 + (1 / slope) * (y - y0)
+					if ((outcodeOut & TOP) != 0) { // point is above the clip rectangle
+						x = x1 + (x2 - x1) * (rectangle[3] - y1) / (y2 - y1);
+						y = rectangle[3];
+					} else if ((outcodeOut & BOTTOM) != 0) { // point is below the clip
+																// rectangle
+						x = x1 + (x2 - x1) * (rectangle[1] - y1) / (y2 - y1);
+						y = rectangle[1];
+					} else if ((outcodeOut & RIGHT) != 0) { // point is to the right of clip
+															// rectangle
+						y = y1 + (y2 - y1) * (rectangle[2] - x1) / (x2 - x1);
+						x = rectangle[2];
+					} else if ((outcodeOut & LEFT) != 0) { // point is to the left of clip
+															// rectangle
+						y = y1 + (y2 - y1) * (rectangle[0] - x1) / (x2 - x1);
+						x = rectangle[0];
+					}
+
+					// Now we move outside point to intersection point to clip
+					// and get ready for next pass.
+					// TODO i do not recognize the sense of these warnings for a "call by value"
+					// parameter
+					if (outcodeOut == outcode1) {
+						x1 = x;
+						y1 = y;
+						outcode1 = outCode(x1, y1, rectangle[0], rectangle[2], rectangle[1],
+								rectangle[3]);
+					} else {
+						x2 = x;
+						y2 = y;
+						outcode2 = outCode(x2, y2, rectangle[0], rectangle[2], rectangle[1],
+								rectangle[3]);
+					}
+				}
+			}
+		}
+	}
 }
