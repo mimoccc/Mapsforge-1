@@ -310,6 +310,8 @@ public class MapDatabase {
 	private long toBlockX;
 	private long toBlockY;
 	private boolean useTileBitmask;
+	private int variableByteDecode;
+	private byte variableByteShift;
 	private byte wayFeatureByte;
 	private boolean wayFeatureLabelPosition;
 	private boolean wayFeatureMultipolygon;
@@ -1323,6 +1325,25 @@ public class MapDatabase {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Decodes a variable amount of bytes to an int number.
+	 * 
+	 * @return the decoded int number.
+	 */
+	private int readVariableByteNumber() {
+		this.variableByteDecode = 0;
+		this.variableByteShift = 0;
+
+		// the first bit is used for continuation info, the other seven bits for data
+		while (this.readBuffer[this.bufferPosition] > 127) { // 2^7
+			this.variableByteDecode |= (this.readBuffer[this.bufferPosition] & 0x7f) << this.variableByteShift;
+			++this.bufferPosition;
+			this.variableByteShift += 7;
+		}
+		return this.variableByteDecode
+				| (this.readBuffer[this.bufferPosition] << this.variableByteShift);
 	}
 
 	/**

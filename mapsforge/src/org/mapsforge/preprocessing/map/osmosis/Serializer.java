@@ -16,11 +16,12 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import java.security.InvalidParameterException;
+
 /**
  * This static class converts numbers to byte arrays. Byte order is big-endian.
  */
 public class Serializer {
-
 	/**
 	 * The maximum integer value that is representable with three bytes which is 2^23.
 	 */
@@ -92,5 +93,40 @@ public class Serializer {
 		}
 		// negative number, set the first bit in the first byte to 1
 		return new byte[] { (byte) (value >> 16 | 0x80), (byte) (value >> 8), (byte) value };
+	}
+
+	/**
+	 * Converts a positive number to a variable length byte array.
+	 * 
+	 * @param value
+	 *            the int value, must not be negative.
+	 * @return an array with 1-5 bytes.
+	 */
+	static final byte[] variableLengthEncode(int value) {
+		// the first bit is used for continuation info, the other seven bits for data
+		if (value < 0) {
+			throw new InvalidParameterException("negative value not allowed: " + value);
+		} else if (value < 128) { // 2^7
+			// encode the number in a single byte
+			return new byte[] { (byte) value };
+		} else if (value < 16384) { // 2^14
+			// encode the number in two bytes
+			return new byte[] { (byte) ((value & 0x7f) | 0x80), (byte) (value >> 7) };
+		} else if (value < 2097152) { // 2^21
+			// encode the number in three bytes
+			return new byte[] { (byte) ((value & 0x7f) | 0x80),
+					(byte) (((value >> 7) & 0x7f) | 0x80), (byte) (value >> 14) };
+		} else if (value < 268435456) { // 2^28
+			// encode the number in four bytes
+			return new byte[] { (byte) ((value & 0x7f) | 0x80),
+					(byte) (((value >> 7) & 0x7f) | 0x80),
+					(byte) (((value >> 14) & 0x7f) | 0x80), (byte) (value >> 21) };
+		} else {
+			// encode the number in five bytes
+			return new byte[] { (byte) ((value & 0x7f) | 0x80),
+					(byte) (((value >> 7) & 0x7f) | 0x80),
+					(byte) (((value >> 14) & 0x7f) | 0x80),
+					(byte) (((value >> 21) & 0x7f) | 0x80), (byte) (value >> 28) };
+		}
 	}
 }
