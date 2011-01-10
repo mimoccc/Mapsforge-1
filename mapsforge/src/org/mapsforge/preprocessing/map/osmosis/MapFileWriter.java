@@ -207,8 +207,15 @@ class MapFileWriter {
 
 	}
 
+	private void writeByteArray(int pos, byte[] array, ByteBuffer buffer) {
+		int currentPos = buffer.position();
+		buffer.position(pos);
+		buffer.put(array);
+		buffer.position(currentPos);
+	}
+
 	private void writeUTF8(String string, ByteBuffer buffer) {
-		buffer.putShort((short) string.getBytes(UTF8_CHARSET).length);
+		buffer.put(Serializer.variableLengthEncode(string.getBytes(UTF8_CHARSET).length));
 		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
@@ -235,7 +242,7 @@ class MapFileWriter {
 		containerHeaderBuffer.position(headerSizePosition + 4);
 
 		// version number of the binary file format
-		containerHeaderBuffer.putInt(version);
+		containerHeaderBuffer.put(Serializer.variableLengthEncode(version));
 
 		// meta info byte
 		containerHeaderBuffer.put(buildMetaInfoByte(debugStrings, mapStartPosition != null,
@@ -271,15 +278,15 @@ class MapFileWriter {
 		containerHeaderBuffer.putLong(date);
 
 		// store the mapping of tags to tag ids
-		containerHeaderBuffer.putShort((short) PoiEnum.values().length);
+		containerHeaderBuffer.put(Serializer.variableLengthEncode(PoiEnum.values().length));
 		for (PoiEnum poiEnum : PoiEnum.values()) {
 			writeUTF8(poiEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort((short) poiEnum.ordinal());
+			containerHeaderBuffer.put(Serializer.variableLengthEncode(poiEnum.ordinal()));
 		}
-		containerHeaderBuffer.putShort((short) WayEnum.values().length);
+		containerHeaderBuffer.put(Serializer.variableLengthEncode(WayEnum.values().length));
 		for (WayEnum wayEnum : WayEnum.values()) {
 			writeUTF8(wayEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort((short) wayEnum.ordinal());
+			containerHeaderBuffer.put(Serializer.variableLengthEncode(wayEnum.ordinal()));
 		}
 
 		// comment
@@ -299,8 +306,11 @@ class MapFileWriter {
 				* numberOfZoomIntervals);
 
 		// -4 bytes of header size variable itself
-		int headerSize = containerHeaderBuffer.position() - headerSizePosition - 4;
-		containerHeaderBuffer.putInt(headerSizePosition, headerSize);
+		int currentPosition = containerHeaderBuffer.position();
+		int headerSize = currentPosition - headerSizePosition - 4;
+		containerHeaderBuffer.position(headerSizePosition);
+		containerHeaderBuffer.put(Serializer.variableLengthEncode(headerSize));
+		containerHeaderBuffer.position(currentPosition);
 
 		if (!containerHeaderBuffer.hasArray()) {
 			randomAccessFile.close();
@@ -308,9 +318,9 @@ class MapFileWriter {
 					"unsupported operating system, byte buffer not backed by array");
 		}
 		randomAccessFile.write(containerHeaderBuffer.array(), 0,
-				containerHeaderBuffer.position());
+				currentPosition);
 
-		return containerHeaderBuffer.position();
+		return currentPosition;
 	}
 
 	private void writeSubfileMetaDataToContainerHeader(int i, long startIndexOfSubfile,
@@ -435,8 +445,8 @@ class MapFileWriter {
 
 					// skip 4 bytes, later these 4 bytes will contain the start
 					// position of the ways in this tile
-					int fileIndexStartWayContainer = tileBuffer.position();
-					tileBuffer.position(fileIndexStartWayContainer + 4);
+					int positionFirstWay = tileBuffer.position();
+					tileBuffer.position(positionFirstWay + 4);
 
 					// write POIs for each zoom level beginning with lowest zoom level
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
@@ -465,7 +475,8 @@ class MapFileWriter {
 							// write tag ids to the file
 							if (poi.getTags() != null) {
 								for (PoiEnum poiEnum : poi.getTags()) {
-									tileBuffer.putShort((short) poiEnum.ordinal());
+									tileBuffer.put(Serializer.variableLengthEncode(poiEnum
+											.ordinal()));
 								}
 							}
 
@@ -479,8 +490,10 @@ class MapFileWriter {
 								writeUTF8(poi.getName(), tileBuffer);
 
 							}
-							if (poi.getElevation() != 0) {
-								tileBuffer.putShort(poi.getElevation());
+							// TODO we need to support negative values
+							if (poi.getElevation() > 0) {
+								tileBuffer.put(Serializer.variableLengthEncode(poi
+										.getElevation()));
 							}
 							if (poi.getHouseNumber() != null
 									&& poi.getHouseNumber().length() > 0) {
@@ -490,8 +503,10 @@ class MapFileWriter {
 					}// end for loop over POIs
 
 					// write offset to first way in the tile header
-					tileBuffer.putInt(fileIndexStartWayContainer, tileBuffer.position()
-							- tileContainerStart);
+					writeByteArray(
+							positionFirstWay,
+							Serializer.variableLengthEncode(tileBuffer.position()
+									- tileContainerStart), tileBuffer);
 
 					// ************* WAYS ************
 					// write ways
@@ -509,7 +524,7 @@ class MapFileWriter {
 						// needed to access bitmask computation results in the foreach loop
 						int i = 0;
 						for (TDWay way : ways) {
-							int startIndexWay = tileBuffer.position();
+							int positionStartWay = tileBuffer.position();
 
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
@@ -530,8 +545,8 @@ class MapFileWriter {
 							}
 
 							// skip 4 bytes to reserve space for way size
-							int startIndexWaySize = tileBuffer.position();
-							tileBuffer.position(startIndexWaySize + 4);
+							int positionWaySize = tileBuffer.position();
+							tileBuffer.position(positionWaySize + 4);
 
 							// write way features
 							// short bitmask = GeoUtils.computeBitmask(way,
@@ -559,13 +574,14 @@ class MapFileWriter {
 							// write tag ids
 							if (way.getTags() != null) {
 								for (WayEnum wayEnum : way.getTags()) {
-									tileBuffer.putShort((short) wayEnum.ordinal());
+									tileBuffer.put(Serializer.variableLengthEncode(wayEnum
+											.ordinal()));
 								}
 							}
 							// write the amount of way nodes to the file
-							tileBuffer.putShort((short) (wayNodePreprocessingResult
-									.getWaynodesAsList()
-									.size() / 2));
+							tileBuffer.put(Serializer
+									.variableLengthEncode(wayNodePreprocessingResult
+											.getWaynodesAsList().size() / 2));
 
 							// write the way nodes:
 							// the first node is always stored with four bytes
@@ -602,21 +618,9 @@ class MapFileWriter {
 										.getInnerWaysOfMultipolygon(way.getId());
 								if (innerways != null && innerways.size() > 0) {
 
-									// TODO we better adjust the binary format
-									if (innerways.size() > Byte.MAX_VALUE) {
-										logger.fine("Multipolygon has more than "
-												+ Byte.MAX_VALUE
-												+ " inner ways. Truncating rest of inner ways. Outer way id: "
-												+ way.getId());
-										tileBuffer.put(Byte.MAX_VALUE);
-									} else {
-										tileBuffer.put((byte) innerways.size());
-									}
-
-									int innerWaysCounter = 0;
+									tileBuffer.put(Serializer.variableLengthEncode(innerways
+											.size()));
 									for (TDWay innerway : innerways) {
-										if (++innerWaysCounter > Byte.MAX_VALUE)
-											break;
 										WayNodePreprocessingResult innerWayNodePreprocessingResult =
 													preprocessWayNodes(innerway,
 															waynodeCompression,
@@ -627,21 +631,22 @@ class MapFileWriter {
 															currentTileCoordinate);
 										// write the amount of way nodes to the file
 										tileBuffer
-													.putShort((short) (innerWayNodePreprocessingResult
-															.getWaynodesAsList()
-															.size() / 2));
+												.put(Serializer
+														.variableLengthEncode(innerWayNodePreprocessingResult
+																.getWaynodesAsList().size() / 2));
 										writeWayNodes(
-													innerWayNodePreprocessingResult
-															.getWaynodesAsList(),
-													wayNodePreprocessingResult
-															.getCompressionType(),
-													tileBuffer);
+												innerWayNodePreprocessingResult
+														.getWaynodesAsList(),
+												wayNodePreprocessingResult.getCompressionType(),
+												tileBuffer);
 									}
 								}
 							}
 							// write the size of the way to the file
-							tileBuffer.putInt(startIndexWaySize, tileBuffer.position()
-									- startIndexWay);
+							writeByteArray(
+									positionWaySize,
+									Serializer.variableLengthEncode(tileBuffer.position()
+											- positionStartWay), tileBuffer);
 						}
 					}// end for loop over ways
 				}// end if clause checking if tile is empty or not
@@ -812,7 +817,8 @@ class MapFileWriter {
 		if (name != null && name.length() > 0) {
 			infoByte |= BITMAP_NAME;
 		}
-		if (elevation != 0) {
+		// TODO support negative elevation
+		if (elevation > 0) {
 			infoByte |= BITMAP_ELEVATION;
 		}
 		if (housenumber != null && housenumber.length() > 0) {
