@@ -19,91 +19,133 @@ package org.mapsforge.preprocessing.map.osmosis;
 import java.security.InvalidParameterException;
 
 /**
- * This static class converts numbers to byte arrays. Byte order is big-endian.
+ * This class converts numbers to byte arrays.
  */
 public class Serializer {
 	/**
-	 * The maximum integer value that is representable with three bytes which is 2^23.
-	 */
-	public static final int MAX_VALUE_THREE_BYTES = 8388607;
-
-	/**
-	 * Converts an int number to a byte array.
+	 * Converts a signed int to a byte array.
+	 * <p>
+	 * The byte order is big-endian.
 	 * 
 	 * @param value
 	 *            the int value.
 	 * @return an array with four bytes.
 	 */
-	static final byte[] getBytes(int value) {
+	public static byte[] getBytes(int value) {
 		return new byte[] { (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8),
 				(byte) value };
 	}
 
 	/**
-	 * Converts a long number to a byte array.
+	 * Converts a signed long to a byte array.
+	 * <p>
+	 * The byte order is big-endian.
 	 * 
 	 * @param value
 	 *            the long value.
 	 * @return an array with eight bytes.
 	 */
-	static byte[] getBytes(long value) {
+	public static byte[] getBytes(long value) {
 		return new byte[] { (byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40),
 				(byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
 				(byte) (value >> 8), (byte) value };
 	}
 
 	/**
-	 * Converts a short number to a byte array.
+	 * Converts a signed short to a byte array.
+	 * <p>
+	 * The byte order is big-endian.
 	 * 
 	 * @param value
 	 *            the short value.
 	 * @return an array with two bytes.
 	 */
-	static byte[] getBytes(short value) {
+	public static byte[] getBytes(short value) {
 		return new byte[] { (byte) (value >> 8), (byte) value };
 	}
 
 	/**
-	 * Converts the lowest five bytes of a long number to a byte array.
+	 * Converts the lowest five bytes of an unsigned long to a byte array.
+	 * <p>
+	 * The byte order is big-endian.
 	 * 
 	 * @param value
-	 *            the long value.
+	 *            the long value, must not be negative.
 	 * @return an array with five bytes.
 	 */
-	static byte[] getFiveBytes(long value) {
+	public static byte[] getFiveBytes(long value) {
+		if (value < 0) {
+			throw new IllegalArgumentException("negative value not allowed: " + value);
+		} else if (value > 1099511627775L) {
+			throw new IllegalArgumentException("value out of range: " + value);
+		}
 		return new byte[] { (byte) (value >> 32), (byte) (value >> 24), (byte) (value >> 16),
 				(byte) (value >> 8), (byte) value };
 	}
 
 	/**
-	 * Converts the lowest three bytes of an int number to a byte array. The sign of the int
-	 * number is preserved in the most significant bit of the first byte.
-	 * 
-	 * The original int number can be exactly restored if its absolute value was < 2^23.
+	 * Converts a signed int to a variable length byte array.
+	 * <p>
+	 * The first bit is for continuation info, the other six (last byte) or seven (all other
+	 * bytes) bits for data. The second bit in the last byte indicates the sign of the number.
 	 * 
 	 * @param value
 	 *            the int value.
-	 * @return an array with three bytes.
+	 * @return an array with 1-5 bytes.
 	 */
-	static final byte[] getSignedThreeBytes(int value) {
-		// check the sign
-		if (value >= 0) {
-			// positive number, set the first bit in the first byte to 0
-			return new byte[] { (byte) (value >> 16 & 0x7F), (byte) (value >> 8), (byte) value };
+	public static byte[] getVariableByteSigned(int value) {
+		long absValue = Math.abs((long) value);
+		if (absValue < 64) { // 2^6
+			// encode the number in a single byte
+			if (value < 0) {
+				return new byte[] { (byte) (absValue | 0x40) };
+			}
+			return new byte[] { (byte) absValue };
+		} else if (absValue < 8192) { // 2^13
+			// encode the number in two bytes
+			if (value < 0) {
+				return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x40) };
+			}
+			return new byte[] { (byte) (absValue | 0x80), (byte) (absValue >> 7) };
+		} else if (absValue < 1048576) { // 2^20
+			// encode the number in three bytes
+			if (value < 0) {
+				return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+						(byte) ((absValue >> 14) | 0x40) };
+			}
+			return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+					(byte) (absValue >> 14) };
+		} else if (absValue < 134217728) { // 2^27
+			// encode the number in four bytes
+			if (value < 0) {
+				return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+						(byte) ((absValue >> 14) | 0x80), (byte) ((absValue >> 21) | 0x40) };
+			}
+			return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+					(byte) ((absValue >> 14) | 0x80), (byte) (absValue >> 21) };
+		} else {
+			// encode the number in five bytes
+			if (value < 0) {
+				return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+						(byte) ((absValue >> 14) | 0x80), (byte) ((absValue >> 21) | 0x80),
+						(byte) ((absValue >> 28) | 0x40) };
+			}
+			return new byte[] { (byte) (absValue | 0x80), (byte) ((absValue >> 7) | 0x80),
+					(byte) ((absValue >> 14) | 0x80), (byte) ((absValue >> 21) | 0x80),
+					(byte) (absValue >> 28) };
 		}
-		// negative number, set the first bit in the first byte to 1
-		return new byte[] { (byte) (value >> 16 | 0x80), (byte) (value >> 8), (byte) value };
 	}
 
 	/**
-	 * Converts a positive number to a variable length byte array.
+	 * Converts an unsigned int to a variable length byte array.
+	 * <p>
+	 * The first bit is for continuation info, the other seven bits for data.
 	 * 
 	 * @param value
 	 *            the int value, must not be negative.
 	 * @return an array with 1-5 bytes.
 	 */
-	static final byte[] variableLengthEncode(int value) {
-		// the first bit is used for continuation info, the other seven bits for data
+	public static byte[] getVariableByteUnsigned(int value) {
 		if (value < 0) {
 			throw new InvalidParameterException("negative value not allowed: " + value);
 		} else if (value < 128) { // 2^7
@@ -111,22 +153,27 @@ public class Serializer {
 			return new byte[] { (byte) value };
 		} else if (value < 16384) { // 2^14
 			// encode the number in two bytes
-			return new byte[] { (byte) ((value & 0x7f) | 0x80), (byte) (value >> 7) };
+			return new byte[] { (byte) (value | 0x80), (byte) (value >> 7) };
 		} else if (value < 2097152) { // 2^21
 			// encode the number in three bytes
-			return new byte[] { (byte) ((value & 0x7f) | 0x80),
-					(byte) (((value >> 7) & 0x7f) | 0x80), (byte) (value >> 14) };
+			return new byte[] { (byte) (value | 0x80), (byte) ((value >> 7) | 0x80),
+					(byte) (value >> 14) };
 		} else if (value < 268435456) { // 2^28
 			// encode the number in four bytes
-			return new byte[] { (byte) ((value & 0x7f) | 0x80),
-					(byte) (((value >> 7) & 0x7f) | 0x80),
-					(byte) (((value >> 14) & 0x7f) | 0x80), (byte) (value >> 21) };
+			return new byte[] { (byte) (value | 0x80), (byte) ((value >> 7) | 0x80),
+					(byte) ((value >> 14) | 0x80), (byte) (value >> 21) };
 		} else {
 			// encode the number in five bytes
-			return new byte[] { (byte) ((value & 0x7f) | 0x80),
-					(byte) (((value >> 7) & 0x7f) | 0x80),
-					(byte) (((value >> 14) & 0x7f) | 0x80),
-					(byte) (((value >> 21) & 0x7f) | 0x80), (byte) (value >> 28) };
+			return new byte[] { (byte) (value | 0x80), (byte) ((value >> 7) | 0x80),
+					(byte) ((value >> 14) | 0x80), (byte) ((value >> 21) | 0x80),
+					(byte) (value >> 28) };
 		}
+	}
+
+	/**
+	 * Empty private constructor to prevent object creation.
+	 */
+	private Serializer() {
+		// do nothing
 	}
 }

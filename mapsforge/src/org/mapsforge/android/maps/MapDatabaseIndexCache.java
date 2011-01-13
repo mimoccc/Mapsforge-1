@@ -140,7 +140,7 @@ class MapDatabaseIndexCache {
 			this.addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
 
 			// return the real index entry
-			return Deserializer.fiveBytesToLong(this.indexBlock, this.addressInIndexBlock);
+			return Deserializer.getFiveBytesLong(this.indexBlock, this.addressInIndexBlock);
 		} catch (IOException e) {
 			Logger.e(e);
 			return -1;
