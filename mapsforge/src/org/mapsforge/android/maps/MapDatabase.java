@@ -390,11 +390,11 @@ public class MapDatabase {
 		// read the six data bits from the last byte
 		if ((this.readBuffer[this.bufferPosition] & 0x40) != 0) {
 			// negative
-			return -(this.variableByteDecode | ((this.readBuffer[this.bufferPosition] & 0x3f) << this.variableByteShift));
+			return -(this.variableByteDecode | ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift));
 		}
 		// positive
 		return this.variableByteDecode
-				| ((this.readBuffer[this.bufferPosition] & 0x3f) << this.variableByteShift);
+				| ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift);
 	}
 
 	/**
@@ -416,7 +416,7 @@ public class MapDatabase {
 
 		// read the seven data bits from the last byte
 		return this.variableByteDecode
-				| (this.readBuffer[this.bufferPosition] << this.variableByteShift);
+				| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
 	}
 
 	/**
