@@ -144,7 +144,7 @@ public class MapFileWriterTask implements Sink {
 			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file,
 					threadpoolSize, bboxEnlargement);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
-			mfw.writeFile(System.currentTimeMillis(), 1, (short) 256, comment, debugInfo,
+			mfw.writeFile(System.currentTimeMillis(), 2, (short) 256, comment, debugInfo,
 					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "error while writing file", e);

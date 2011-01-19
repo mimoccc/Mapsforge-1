@@ -68,10 +68,6 @@ class MapFileWriter {
 	private static final short BITMAP_REF = 64;
 	// private static final short BITMAP_LABEL = 32;
 	private static final short BITMAP_MULTIPOLYGON = 16;
-	private static final short BITMAP_WAYNODECOMPRESSION_4_BYTE = 0;
-	private static final short BITMAP_WAYNODECOMPRESSION_3_BYTE = 1;
-	private static final short BITMAP_WAYNODECOMPRESSION_2_BYTE = 2;
-	private static final short BITMAP_WAYNODECOMPRESSION_1_BYTE = 3;
 	private static final short BITMAP_HIGHWAY = 128;
 	private static final short BITMAP_RAILWAY = 64;
 	private static final short BITMAP_BUILDING = 32;
@@ -111,6 +107,7 @@ class MapFileWriter {
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
 	private static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
 	private static final int TILE_BUFFER_SIZE = 0x3200000;
+	private static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
 	private final RandomAccessFile randomAccessFile;
 	private ByteBuffer bufferZoomIntervalConfig;
 
@@ -207,15 +204,15 @@ class MapFileWriter {
 
 	}
 
-	private void writeByteArray(int pos, byte[] array, ByteBuffer buffer) {
-		int currentPos = buffer.position();
-		buffer.position(pos);
-		buffer.put(array);
-		buffer.position(currentPos);
-	}
+	// private void writeByteArray(int pos, byte[] array, ByteBuffer buffer) {
+	// int currentPos = buffer.position();
+	// buffer.position(pos);
+	// buffer.put(array);
+	// buffer.position(currentPos);
+	// }
 
 	private void writeUTF8(String string, ByteBuffer buffer) {
-		buffer.put(Serializer.variableLengthEncode(string.getBytes(UTF8_CHARSET).length));
+		buffer.put(Serializer.getVariableByteUnsigned(string.getBytes(UTF8_CHARSET).length));
 		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
@@ -242,10 +239,11 @@ class MapFileWriter {
 		containerHeaderBuffer.position(headerSizePosition + 4);
 
 		// version number of the binary file format
-		containerHeaderBuffer.put(Serializer.variableLengthEncode(version));
+		containerHeaderBuffer.putInt(version);
 
 		// meta info byte
-		containerHeaderBuffer.put(buildMetaInfoByte(debugStrings, mapStartPosition != null,
+		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings,
+				mapStartPosition != null,
 				pixelCompression,
 				polygonClipping, waynodeCompression));
 
@@ -278,15 +276,15 @@ class MapFileWriter {
 		containerHeaderBuffer.putLong(date);
 
 		// store the mapping of tags to tag ids
-		containerHeaderBuffer.put(Serializer.variableLengthEncode(PoiEnum.values().length));
+		containerHeaderBuffer.putShort((short) PoiEnum.values().length);
 		for (PoiEnum poiEnum : PoiEnum.values()) {
 			writeUTF8(poiEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.put(Serializer.variableLengthEncode(poiEnum.ordinal()));
+			containerHeaderBuffer.putShort((short) poiEnum.ordinal());
 		}
-		containerHeaderBuffer.put(Serializer.variableLengthEncode(WayEnum.values().length));
+		containerHeaderBuffer.putShort((short) WayEnum.values().length);
 		for (WayEnum wayEnum : WayEnum.values()) {
 			writeUTF8(wayEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.put(Serializer.variableLengthEncode(wayEnum.ordinal()));
+			containerHeaderBuffer.putShort((short) wayEnum.ordinal());
 		}
 
 		// comment
@@ -306,11 +304,8 @@ class MapFileWriter {
 				* numberOfZoomIntervals);
 
 		// -4 bytes of header size variable itself
-		int currentPosition = containerHeaderBuffer.position();
-		int headerSize = currentPosition - headerSizePosition - 4;
-		containerHeaderBuffer.position(headerSizePosition);
-		containerHeaderBuffer.put(Serializer.variableLengthEncode(headerSize));
-		containerHeaderBuffer.position(currentPosition);
+		int headerSize = containerHeaderBuffer.position() - headerSizePosition - 4;
+		containerHeaderBuffer.putInt(headerSizePosition, headerSize);
 
 		if (!containerHeaderBuffer.hasArray()) {
 			randomAccessFile.close();
@@ -318,9 +313,9 @@ class MapFileWriter {
 					"unsupported operating system, byte buffer not backed by array");
 		}
 		randomAccessFile.write(containerHeaderBuffer.array(), 0,
-				currentPosition);
+				containerHeaderBuffer.position());
 
-		return currentPosition;
+		return containerHeaderBuffer.position();
 	}
 
 	private void writeSubfileMetaDataToContainerHeader(int i, long startIndexOfSubfile,
@@ -367,6 +362,7 @@ class MapFileWriter {
 				+ (debugStrings ? DEBUG_INDEX_START_STRING.getBytes().length : 0);
 		ByteBuffer indexBuffer = ByteBuffer.allocate(indexBufferSize);
 		ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
+		ByteBuffer wayBuffer = ByteBuffer.allocate(WAY_BUFFER_SIZE);
 
 		// write debug strings for tile index segment if necessary
 		if (debugStrings)
@@ -375,10 +371,12 @@ class MapFileWriter {
 		long currentSubfileOffset = indexBufferSize;
 		randomAccessFile.seek(startPositionSubfile + indexBufferSize);
 
+		// loop over tiles (row-wise)
 		for (int tileY = upperLeft.getY(); tileY < upperLeft.getY() + lengthY; tileY++) {
 			for (int tileX = upperLeft.getX(); tileX < upperLeft.getX() + lengthX; tileX++) {
 				// logger.info("writing data for tile (" + tileX + ", " + tileY + ")");
 
+				// ***************** TILE INDEX SEGMENT ********************
 				long currentTileOffsetInBuffer = tileBuffer.position();
 				TileCoordinate currentTileCoordinate = new TileCoordinate(tileX, tileY,
 						baseZoomCurrentInterval);
@@ -404,11 +402,12 @@ class MapFileWriter {
 				// tile as five bytes to the index
 				indexBuffer.put(indexBytes);
 
+				// ***************** TILE DATA SEGMENT ********************
 				// get statistics for tile
 				TileData currentTile = dataStore.getTile(zoomIntervalIndex, tileX, tileY);
 
 				// TODO we need to rethink the semantic of zoom levels
-				// ************* POI ************
+				// ***************** POIs ********************
 				// write amount of POIs and ways for each zoom level
 				Map<Byte, List<TDNode>> poisByZoomlevel = currentTile
 						.poisByZoomlevel(minZoomCurrentInterval, maxZoomCurrentInterval);
@@ -416,7 +415,7 @@ class MapFileWriter {
 						.waysByZoomlevel(minZoomCurrentInterval, maxZoomCurrentInterval);
 
 				if (poisByZoomlevel.size() > 0 || waysByZoomlevel.size() > 0) {
-					int tileContainerStart = tileBuffer.position();
+					int tileDataSegmentStart = tileBuffer.position();
 					if (debugStrings) {
 						// write tile header
 						StringBuilder sb = new StringBuilder();
@@ -469,20 +468,20 @@ class MapFileWriter {
 							tileBuffer.putInt(poi.getLongitude());
 
 							// write byte with layer and tag amount info
-							tileBuffer.put(buildLayerTagAmountByte(poi.getLayer(),
+							tileBuffer.put(infoByteLayerAndTagAmount(poi.getLayer(),
 									poi.getTags() == null ? 0 : (short) poi.getTags().size()));
 
 							// write tag ids to the file
 							if (poi.getTags() != null) {
 								for (PoiEnum poiEnum : poi.getTags()) {
-									tileBuffer.put(Serializer.variableLengthEncode(poiEnum
+									tileBuffer.put(Serializer.getVariableByteUnsigned(poiEnum
 											.ordinal()));
 								}
 							}
 
 							// write byte with bits set to 1 if the poi has a name, an elevation
 							// or a housenumber
-							tileBuffer.put(buildInfoByteForPOI(poi.getName(),
+							tileBuffer.put(infoBytePOI(poi.getName(),
 									poi.getElevation(),
 									poi.getHouseNumber()));
 
@@ -490,9 +489,8 @@ class MapFileWriter {
 								writeUTF8(poi.getName(), tileBuffer);
 
 							}
-							// TODO we need to support negative values
-							if (poi.getElevation() > 0) {
-								tileBuffer.put(Serializer.variableLengthEncode(poi
+							if (poi.getElevation() != 0) {
+								tileBuffer.put(Serializer.getVariableByteSigned(poi
 										.getElevation()));
 							}
 							if (poi.getHouseNumber() != null
@@ -503,13 +501,11 @@ class MapFileWriter {
 					}// end for loop over POIs
 
 					// write offset to first way in the tile header
-					writeByteArray(
-							positionFirstWay,
-							Serializer.variableLengthEncode(tileBuffer.position()
-									- tileContainerStart), tileBuffer);
+					tileBuffer.putInt(positionFirstWay, tileBuffer.position()
+							- tileDataSegmentStart);
 
-					// ************* WAYS ************
-					// write ways
+					// ***************** WAYS ********************
+					// loop over all relevant zoom levels
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
 						List<TDWay> ways = waysByZoomlevel.get(zoomlevel);
 						if (ways == null)
@@ -524,9 +520,9 @@ class MapFileWriter {
 						// needed to access bitmask computation results in the foreach loop
 						int i = 0;
 						for (TDWay way : ways) {
-							int positionStartWay = tileBuffer.position();
+							wayBuffer.clear();
 
-							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
+							List<Integer> wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
 									maxZoomCurrentInterval, minZoomCurrentInterval,
 									currentTileCoordinate);
@@ -544,65 +540,52 @@ class MapFileWriter {
 										tileBuffer);
 							}
 
-							// skip 4 bytes to reserve space for way size
-							int positionWaySize = tileBuffer.position();
-							tileBuffer.position(positionWaySize + 4);
-
 							// write way features
-							// short bitmask = GeoUtils.computeBitmask(way,
-							// currentTileCoordinate);
-							// short bitmask = (short) 0xffff;
-							tileBuffer.putShort(bitmaskComputationResults[i++]);
+							wayBuffer.putShort(bitmaskComputationResults[i++]);
 
 							// write byte with layer and tag amount
-							tileBuffer.put(buildLayerTagAmountByte(way.getLayer(),
+							wayBuffer.put(infoByteLayerAndTagAmount(way.getLayer(),
 									way.getTags() == null ? 0 : (short) way.getTags().size()));
 
-							// set type of the way node compression
-							int compressionType = wayNodePreprocessingResult
-									.getCompressionType();
-
 							// write byte with amount of tags which are rendered
-							tileBuffer.put(buildRenderTagWayNodeCompressionByte(
-									way.getTags(),
-									compressionType));
+							wayBuffer.put(infoByteWayAmountRenderedTags(
+									way.getTags()));
 
 							// write tag bitmap
-							tileBuffer.put(buildTagBitmapByte(way.getTags()));
-							// file.writeByte((byte) 0xff);
+							wayBuffer.put(infoByteTagBitmask(way.getTags()));
 
 							// write tag ids
 							if (way.getTags() != null) {
 								for (WayEnum wayEnum : way.getTags()) {
-									tileBuffer.put(Serializer.variableLengthEncode(wayEnum
+									wayBuffer.put(Serializer.getVariableByteUnsigned(wayEnum
 											.ordinal()));
 								}
 							}
 							// write the amount of way nodes to the file
-							tileBuffer.put(Serializer
-									.variableLengthEncode(wayNodePreprocessingResult
-											.getWaynodesAsList().size() / 2));
+							wayBuffer
+									.put(Serializer
+											.getVariableByteUnsigned(wayNodePreprocessingResult
+													.size() / 2));
 
 							// write the way nodes:
 							// the first node is always stored with four bytes
 							// the remaining way node differences are stored according to the
 							// compression type
-							writeWayNodes(wayNodePreprocessingResult.getWaynodesAsList(),
-									wayNodePreprocessingResult.getCompressionType(), tileBuffer);
+							writeWayNodes(wayNodePreprocessingResult, wayBuffer);
 
 							// write a byte with name, label and way type information
-							tileBuffer.put(buildInfoByteForWay(way.getName(),
+							wayBuffer.put(infoByteWay(way.getName(),
 									way.getWaytype(),
 									way.getRef()));
 
 							// // if the way has a name, write it to the file
 							if (way.getName() != null && way.getName().length() > 0) {
-								writeUTF8(way.getName(), tileBuffer);
+								writeUTF8(way.getName(), wayBuffer);
 							}
 
 							// if the way has a ref, write it to the file
 							if (way.getRef() != null && way.getRef().length() > 0) {
-								writeUTF8(way.getRef(), tileBuffer);
+								writeUTF8(way.getRef(), wayBuffer);
 							}
 							//
 							// // // if the way has a label position write it to the file
@@ -612,16 +595,16 @@ class MapFileWriter {
 							// // raf.writeInt(labelPositionLongitude);
 							// // }
 							//
-							// *********MULTIPOLYGON PROCESSING***********
+							// ***************** MULTIPOLYGONS WITH INNER WAYS ***************
 							if (way.getWaytype() == 3) {
 								List<TDWay> innerways = dataStore
 										.getInnerWaysOfMultipolygon(way.getId());
 								if (innerways != null && innerways.size() > 0) {
 
-									tileBuffer.put(Serializer.variableLengthEncode(innerways
+									wayBuffer.put(Serializer.getVariableByteUnsigned(innerways
 											.size()));
 									for (TDWay innerway : innerways) {
-										WayNodePreprocessingResult innerWayNodePreprocessingResult =
+										List<Integer> innerWayAsList =
 													preprocessWayNodes(innerway,
 															waynodeCompression,
 															pixelCompression,
@@ -630,23 +613,19 @@ class MapFileWriter {
 															minZoomCurrentInterval,
 															currentTileCoordinate);
 										// write the amount of way nodes to the file
-										tileBuffer
+										wayBuffer
 												.put(Serializer
-														.variableLengthEncode(innerWayNodePreprocessingResult
-																.getWaynodesAsList().size() / 2));
-										writeWayNodes(
-												innerWayNodePreprocessingResult
-														.getWaynodesAsList(),
-												wayNodePreprocessingResult.getCompressionType(),
-												tileBuffer);
+														.getVariableByteUnsigned(innerWayAsList
+																.size() / 2));
+										writeInnerWayNodes(wayNodePreprocessingResult.get(0),
+												wayNodePreprocessingResult.get(1),
+												innerWayAsList, wayBuffer);
 									}
 								}
 							}
-							// write the size of the way to the file
-							writeByteArray(
-									positionWaySize,
-									Serializer.variableLengthEncode(tileBuffer.position()
-											- positionStartWay), tileBuffer);
+							tileBuffer.put(Serializer.getVariableByteUnsigned(wayBuffer
+									.position()));
+							tileBuffer.put(wayBuffer.array(), 0, wayBuffer.position());
 						}
 					}// end for loop over ways
 				}// end if clause checking if tile is empty or not
@@ -690,30 +669,12 @@ class MapFileWriter {
 
 		// return size of sub file in bytes
 		return currentSubfileOffset;
-	}
+	} // end writeSubfile()
 
-	private short[] computeSubtileBitmasks(List<TDWay> ways,
-			TileCoordinate currentTileCoordinate) {
-		short[] bitmaskComputationResults = new short[ways.size()];
-		Collection<TileBitmaskComputationTask> tasks = new ArrayList<MapFileWriter.TileBitmaskComputationTask>();
-		for (TDWay tdWay : ways) {
-			tasks.add(new TileBitmaskComputationTask(currentTileCoordinate,
-					tdWay));
+	private void appendWhitespace(int amount, ByteBuffer buffer) {
+		for (int i = 0; i < amount; i++) {
+			buffer.put((byte) ' ');
 		}
-
-		try {
-			List<Future<Short>> results = executorService.invokeAll(tasks);
-			int i = 0;
-			for (Future<Short> future : results) {
-				bitmaskComputationResults[i++] = future.get().shortValue();
-			}
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		} catch (ExecutionException e) {
-			throw new RuntimeException(e);
-		}
-
-		return bitmaskComputationResults;
 	}
 
 	private List<Integer> waynodesAsList(List<GeoCoordinate> waynodeCoordinates) {
@@ -726,13 +687,7 @@ class MapFileWriter {
 		return result;
 	}
 
-	private void appendWhitespace(int amount, ByteBuffer buffer) {
-		for (int i = 0; i < amount; i++) {
-			buffer.put((byte) ' ');
-		}
-	}
-
-	private WayNodePreprocessingResult preprocessWayNodes(TDWay way,
+	private List<Integer> preprocessWayNodes(TDWay way,
 			boolean waynodeCompression,
 			boolean pixelCompression, boolean polygonClipping, byte maxZoomCurrentInterval,
 			byte minZoomCurrentInterval,
@@ -749,50 +704,46 @@ class MapFileWriter {
 
 		// if the way is a multipolygon without a name, clip the way to the
 		// tile
-		if (polygonClipping && way.getWaytype() >= 2 && waynodeCoordinates.size() >= 4 &&
-				(way.getName() == null || way.getName().length() == 0)
-					&& minZoomCurrentInterval >= MIN_ZOOMLEVEL_POLYGON_CLIPPING) {
-			List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
-					waynodeCoordinates, tile, bboxEnlargement);
-			if (clipped != null && !clipped.isEmpty())
-				waynodeCoordinates = clipped;
-			else
-				return null;
+		if (polygonClipping && minZoomCurrentInterval >= MIN_ZOOMLEVEL_POLYGON_CLIPPING) {
+			// if (false && way.getWaytype() == 1 && waynodeCoordinates.size() >= 2) {
+			// List<GeoCoordinate> clipped = GeoUtils.clipLineToTile(waynodeCoordinates, tile,
+			// bboxEnlargement);
+			// if (clipped != null && !clipped.isEmpty())
+			// waynodeCoordinates = clipped;
+			// else
+			// return null;
+			// }
+			if (way.getWaytype() >= 2 && waynodeCoordinates.size() >= 4
+					// TODO reactivate restriction
+					&& (way.getName() == null || way.getName().length() == 0)) {
+				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
+						waynodeCoordinates, tile, bboxEnlargement);
+				if (clipped != null && !clipped.isEmpty())
+					waynodeCoordinates = clipped;
+				else
+					return null;
+			}
 		}
 
 		// if the wayNodeCompression flag is set, compress the way nodes
 		// with a minimal amount of bytes
 		List<Integer> waynodesAsList = null;
-		int maxDiff = Integer.MAX_VALUE;
 		if (waynodeCompression) {
 			waynodesAsList = GeoUtils.waynodeAbsoluteCoordinatesToOffsets(waynodeCoordinates);
-			maxDiff = GeoUtils.maxDiffBetweenCompressedWayNodes(waynodesAsList);
 		} else {
 			waynodesAsList = waynodesAsList(waynodeCoordinates);
 		}
 
-		WayNodePreprocessingResult result = new WayNodePreprocessingResult(waynodesAsList,
-				computeCompressionType(maxDiff));
-
-		return result;
+		return waynodesAsList;
 	}
 
-	/**
-	 * Returns a byte that specifies the layer on which the map element should be rendered and
-	 * the amount of tags that a map element has.
-	 * 
-	 * @param layer
-	 *            the layer on which a map element should be rendered
-	 * @param tagAmount
-	 *            the amount of all tags a map element has
-	 * @return a byte that holds the specified information
-	 */
-	private byte buildLayerTagAmountByte(byte layer, short tagAmount) {
+	private byte infoByteLayerAndTagAmount(byte layer, short tagAmount) {
 		// make sure layer is in [0,10]
 		return (byte) ((layer < 0 ? 0 : layer > 10 ? 10 : layer) << 4 | tagAmount);
 	}
 
-	private byte buildMetaInfoByte(boolean debug, boolean mapStartPosition, boolean filtering,
+	private byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition,
+			boolean filtering,
 			boolean clipping,
 			boolean compression) {
 		byte infoByte = 0;
@@ -811,14 +762,13 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte buildInfoByteForPOI(String name, int elevation, String housenumber) {
+	private byte infoBytePOI(String name, int elevation, String housenumber) {
 		byte infoByte = 0;
 
 		if (name != null && name.length() > 0) {
 			infoByte |= BITMAP_NAME;
 		}
-		// TODO support negative elevation
-		if (elevation > 0) {
+		if (elevation != 0) {
 			infoByte |= BITMAP_ELEVATION;
 		}
 		if (housenumber != null && housenumber.length() > 0) {
@@ -827,21 +777,27 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private int computeCompressionType(int maxDiff) {
-		int compressionType = 0;
+	private byte infoByteWay(String name, int wayType, String ref) {
+		byte infoByte = 0;
 
-		if (maxDiff <= Byte.MAX_VALUE)
-			compressionType = 3;
-		else if (maxDiff <= Short.MAX_VALUE)
-			compressionType = 2;
-		else if (maxDiff <= Serializer.MAX_VALUE_THREE_BYTES)
-			compressionType = 1;
+		if (name != null && name.length() > 0) {
+			infoByte |= BITMAP_NAME;
+		}
+		if (ref != null && ref.length() > 0) {
+			infoByte |= BITMAP_REF;
+		}
+		// TODO we do not yet support label positions for ways
+		// if (labelPosLat != 0 && labelPosLon != 0) {
+		// infoByte |= BITMAP_LABEL;
+		// }
+		if (wayType == 3) {
+			infoByte |= BITMAP_MULTIPOLYGON;
+		}
 
-		return compressionType;
+		return infoByte;
 	}
 
-	private byte buildRenderTagWayNodeCompressionByte(EnumSet<WayEnum> tags,
-			int wayNodeCompressionType) {
+	private byte infoByteWayAmountRenderedTags(EnumSet<WayEnum> tags) {
 
 		byte infoByte = 0;
 		short counter = 0;
@@ -853,23 +809,10 @@ class MapFileWriter {
 			infoByte = (byte) (counter << 5);
 		}
 
-		if (wayNodeCompressionType == 0) {
-			infoByte |= BITMAP_WAYNODECOMPRESSION_4_BYTE;
-		}
-		if (wayNodeCompressionType == 1) {
-			infoByte |= BITMAP_WAYNODECOMPRESSION_3_BYTE;
-		}
-		if (wayNodeCompressionType == 2) {
-			infoByte |= BITMAP_WAYNODECOMPRESSION_2_BYTE;
-		}
-		if (wayNodeCompressionType == 3) {
-			infoByte |= BITMAP_WAYNODECOMPRESSION_1_BYTE;
-		}
-
 		return infoByte;
 	}
 
-	private byte buildTagBitmapByte(EnumSet<WayEnum> tags) {
+	private byte infoByteTagBitmask(EnumSet<WayEnum> tags) {
 		if (tags == null)
 			return 0;
 		byte infoByte = 0;
@@ -907,28 +850,7 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte buildInfoByteForWay(String name, int wayType, String ref) {
-		byte infoByte = 0;
-
-		if (name != null && name.length() > 0) {
-			infoByte |= BITMAP_NAME;
-		}
-		if (ref != null && ref.length() > 0) {
-			infoByte |= BITMAP_REF;
-		}
-		// TODO we do not yet support label positions for ways
-		// if (labelPosLat != 0 && labelPosLon != 0) {
-		// infoByte |= BITMAP_LABEL;
-		// }
-		if (wayType == 3) {
-			infoByte |= BITMAP_MULTIPOLYGON;
-		}
-
-		return infoByte;
-	}
-
-	private void writeWayNodes(List<Integer> waynodes, int compressionType,
-			ByteBuffer buffer) {
+	private void writeWayNodes(List<Integer> waynodes, ByteBuffer buffer) {
 		if (!waynodes.isEmpty()
 				&& waynodes.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = waynodes.iterator();
@@ -936,47 +858,48 @@ class MapFileWriter {
 			buffer.putInt(waynodeIterator.next());
 
 			while (waynodeIterator.hasNext()) {
-				switch (compressionType) {
-					case 0:
-						buffer.putInt(waynodeIterator.next().intValue());
-						buffer.putInt(waynodeIterator.next().intValue());
-						break;
-					case 1:
-						buffer.put(Serializer
-								.getSignedThreeBytes(waynodeIterator.next().intValue()));
-						buffer.put(Serializer
-								.getSignedThreeBytes(waynodeIterator.next().intValue()));
-						break;
-					case 2:
-						buffer.putShort(waynodeIterator.next().shortValue());
-						buffer.putShort(waynodeIterator.next().shortValue());
-						break;
-					case 3:
-						buffer.put(waynodeIterator.next().byteValue());
-						buffer.put(waynodeIterator.next().byteValue());
-						break;
-				}
+				buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next()));
 			}
 		}
 	}
 
-	private class WayNodePreprocessingResult {
-		private final List<Integer> waynodesAsList;
-		private final int compressionType;
+	private void writeInnerWayNodes(int latRef, int lonRef, List<Integer> innerWay,
+			ByteBuffer buffer) {
 
-		WayNodePreprocessingResult(List<Integer> waynodesAsList, int compressionType) {
-			super();
-			this.waynodesAsList = waynodesAsList;
-			this.compressionType = compressionType;
+		if (!innerWay.isEmpty()
+				&& innerWay.size() % 2 == 0) {
+			Iterator<Integer> waynodeIterator = innerWay.iterator();
+			buffer.put(Serializer.getVariableByteSigned(latRef - waynodeIterator.next()));
+			buffer.put(Serializer.getVariableByteSigned(lonRef - waynodeIterator.next()));
+
+			while (waynodeIterator.hasNext()) {
+				buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next()));
+			}
+		}
+	}
+
+	private short[] computeSubtileBitmasks(List<TDWay> ways,
+			TileCoordinate currentTileCoordinate) {
+		short[] bitmaskComputationResults = new short[ways.size()];
+		Collection<TileBitmaskComputationTask> tasks = new ArrayList<MapFileWriter.TileBitmaskComputationTask>();
+		for (TDWay tdWay : ways) {
+			tasks.add(new TileBitmaskComputationTask(currentTileCoordinate,
+					tdWay));
 		}
 
-		List<Integer> getWaynodesAsList() {
-			return waynodesAsList;
+		try {
+			List<Future<Short>> results = executorService.invokeAll(tasks);
+			int i = 0;
+			for (Future<Short> future : results) {
+				bitmaskComputationResults[i++] = future.get().shortValue();
+			}
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
 		}
 
-		int getCompressionType() {
-			return compressionType;
-		}
+		return bitmaskComputationResults;
 	}
 
 	private class TileBitmaskComputationTask implements Callable<Short> {

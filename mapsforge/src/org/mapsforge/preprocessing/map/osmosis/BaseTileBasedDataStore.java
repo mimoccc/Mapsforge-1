@@ -35,6 +35,10 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	// protected final int[] tileOffsetsHorizontal;
 	// protected final int[] tileOffsetsVertical;
 
+	// accounting
+	protected float[] countWays;
+	protected float[] countWayTileFactor;
+
 	public BaseTileBasedDataStore(
 			double minLat, double maxLat,
 			double minLon, double maxLon,
@@ -52,6 +56,9 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		this.tileGridLayouts = new TileGridLayout[zoomIntervalConfiguration
 				.getNumberOfZoomIntervals()];
 		this.bboxEnlargement = bboxEnlargement;
+		this.countWays = new float[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
+		this.countWayTileFactor = new float[zoomIntervalConfiguration
+				.getNumberOfZoomIntervals()];
 
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels

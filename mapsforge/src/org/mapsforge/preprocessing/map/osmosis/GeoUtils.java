@@ -297,6 +297,29 @@ final class GeoUtils {
 				.getId();
 	}
 
+	// TODO clarify the semantic of a line segment
+	static List<GeoCoordinate> clipLineToTile(final List<GeoCoordinate> line,
+			final TileCoordinate tile, int enlargementInMeters) {
+		if (line == null) {
+			throw new IllegalArgumentException("line is null");
+		}
+
+		if (line.size() < 2)
+			throw new IllegalArgumentException(
+					"a valid line must have at least 2 points");
+
+		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
+				enlargementInMeters);
+		double[] lineArray = geocoordinatesAsArray(line);
+		double[] clippedLine = CohenSutherlandClipping.clipLine(lineArray, bbox);
+		if (clippedLine == null || clippedLine.length == 0) {
+			logger.finer("clipped polygon is empty: " + line);
+			return Collections.emptyList();
+		}
+
+		return arrayAsGeoCoordinates(clippedLine);
+	}
+
 	/**
 	 * Clips a polygon to the bounding box of a tile.
 	 * 
@@ -632,6 +655,7 @@ final class GeoUtils {
 		private static final byte BOTTOM = 4;
 		private static final byte TOP = 8;
 
+		// TODO clarify the semantic of a line segment
 		/**
 		 * 
 		 * @param line
@@ -639,8 +663,7 @@ final class GeoUtils {
 		 * @param rectangle
 		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
 		 *            ymin, xmax, ymax]
-		 * @return All line segments that can be clipped to the clipping region. For each
-		 *         segment exactly two points are added to the result array.
+		 * @return All line segments that can be clipped to the clipping region.
 		 */
 		static double[] clipLine(final double[] line, final double[] rectangle) {
 			if (line.length < 4)

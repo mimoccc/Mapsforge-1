@@ -230,6 +230,7 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		return TDNode.fromNode(nodeIndexReader.get(id));
 	}
 
+	// TODO add accounting of average number of tiles per way
 	@Override
 	public void complete() {
 		indexedNodeStore.complete();
@@ -276,6 +277,13 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 
 		}
+
+		// logger.info("number of coastlines: " + count);
+		// for (int i = 0; i < countWays.length; i++) {
+		// logger.info("zoom-interval " + i + ", added ways: " + countWays[i]);
+		// logger.info("zoom-interval " + i + ", average tiles per way: "
+		// + (countWayTileFactor[i] / countWays[i]));
+		// }
 
 	}
 

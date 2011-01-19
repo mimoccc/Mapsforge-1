@@ -191,11 +191,17 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(tdWay,
 						zoomIntervalConfiguration.getBaseZoom(i),
 						bboxEnlargementLocal);
+				boolean added = false;
 				for (TileCoordinate matchedTile : matchedTiles) {
 					TileData td = getTile(i, matchedTile.getX(), matchedTile.getY());
-					if (td != null)
+					if (td != null) {
+						countWayTileFactor[i]++;
+						added = true;
 						td.addWay(tdWay);
+					}
 				}
+				if (added)
+					countWays[i]++;
 			}
 		}
 
@@ -318,6 +324,11 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		}
 
 		logger.info("number of coastlines: " + count);
+		for (int i = 0; i < countWays.length; i++) {
+			logger.info("zoom-interval " + i + ", added ways: " + countWays[i]);
+			logger.info("zoom-interval " + i + ", average tiles per way: "
+					+ (countWayTileFactor[i] / countWays[i]));
+		}
 
 	}
 
