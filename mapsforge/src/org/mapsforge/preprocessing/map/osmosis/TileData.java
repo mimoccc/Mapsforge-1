@@ -175,7 +175,7 @@ class TileData {
 		}
 
 		boolean isPOI() {
-			return houseNumber != null || elevation > 0 || name != null || tags.size() > 0;
+			return houseNumber != null || elevation != 0 || name != null || tags.size() > 0;
 		}
 
 		byte getMinimumZoomLevel() {

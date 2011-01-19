@@ -714,7 +714,6 @@ class MapFileWriter {
 			// return null;
 			// }
 			if (way.getWaytype() >= 2 && waynodeCoordinates.size() >= 4
-					// TODO reactivate restriction
 					&& (way.getName() == null || way.getName().length() == 0)) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
 						waynodeCoordinates, tile, bboxEnlargement);
