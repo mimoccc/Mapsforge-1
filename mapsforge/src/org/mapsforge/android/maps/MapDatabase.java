@@ -226,7 +226,8 @@ public class MapDatabase {
 	private boolean headerStartPosition;
 	private long indexStartAddress;
 	private int[] innerWay;
-	private short innerWayNodesSequenceLength;
+	private int innerWayNodesSequenceLength;
+	private int innerWayNumber;
 	private int innerWayNumberOfWayNodes;
 	private RandomAccessFile inputFile;
 	private String magicByte;
@@ -278,7 +279,6 @@ public class MapDatabase {
 	private long subtileY;
 	private byte tempByte;
 	private int tempInt;
-	private short tempShort;
 	private short tilePixelSize;
 	private long toBaseTileX;
 	private long toBaseTileY;
@@ -299,7 +299,7 @@ public class MapDatabase {
 	private int wayNodeLatitude;
 	private int wayNodeLongitude;
 	private int[] wayNodesSequence;
-	private short wayNodesSequenceLength;
+	private int wayNodesSequenceLength;
 	private int wayNumberOfInnerWays;
 	private byte wayNumberOfRelevantTags;
 	private byte wayNumberOfTags;
@@ -318,6 +318,7 @@ public class MapDatabase {
 	private short wayTileBitmask;
 	private int zoomLevelDifference;
 	private byte zoomLevelMax;
+
 	private byte zoomLevelMin;
 
 	/**
@@ -370,56 +371,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Converts a variable amount of bytes to a signed int.
-	 * <p>
-	 * The first bit is for continuation info, the other six (last byte) or seven (all other
-	 * bytes) bits for data. The second bit in the last byte indicates the sign of the number.
-	 * 
-	 * @return the int value.
-	 */
-	private int getVariableByteEncodedSignedInt() {
-		this.variableByteDecode = 0;
-		this.variableByteShift = 0;
-
-		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-			this.variableByteDecode |= (this.readBuffer[this.bufferPosition] & 0x7f) << this.variableByteShift;
-			++this.bufferPosition;
-			this.variableByteShift += 7;
-		}
-
-		// read the six data bits from the last byte
-		if ((this.readBuffer[this.bufferPosition] & 0x40) != 0) {
-			// negative
-			return -(this.variableByteDecode | ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift));
-		}
-		// positive
-		return this.variableByteDecode
-				| ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift);
-	}
-
-	/**
-	 * Converts a variable amount of bytes to an unsigned int.
-	 * <p>
-	 * The first bit is for continuation info, the other seven bits for data.
-	 * 
-	 * @return the int value.
-	 */
-	private int getVariableByteEncodedUnsignedInt() {
-		this.variableByteDecode = 0;
-		this.variableByteShift = 0;
-
-		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-			this.variableByteDecode |= (this.readBuffer[this.bufferPosition] & 0x7f) << this.variableByteShift;
-			++this.bufferPosition;
-			this.variableByteShift += 7;
-		}
-
-		// read the seven data bits from the last byte
-		return this.variableByteDecode
-				| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
-	}
-
-	/**
 	 * Reads a single block and calls the render functions on all map elements.
 	 * 
 	 * @param databaseMapGenerator
@@ -445,19 +396,17 @@ public class MapDatabase {
 		this.bufferPosition += this.blockEntriesTableOffset;
 
 		// get the amount of way and nodes on the current zoomLevel level
-		this.nodesOnZoomLevel = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 2;
-		this.waysOnZoomLevel = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 2;
+		this.nodesOnZoomLevel = readShort();
+		this.waysOnZoomLevel = readShort();
 
 		// move the pointer to the end of the block entries table
 		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
 				- this.blockEntriesTableOffset - 4;
 
 		// get the offset to the first stored way in the block (4 bytes)
-		this.firstWayOffset = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
-		if (this.firstWayOffset > this.readBuffer.length) {
+		this.firstWayOffset = readInt();
+		if (this.firstWayOffset < this.bufferPosition
+				|| this.firstWayOffset > this.readBuffer.length) {
 			Logger.d("invalid first way offset: " + this.firstWayOffset);
 			if (this.debugFile) {
 				Logger.d("block signature: " + this.blockSignature);
@@ -479,12 +428,10 @@ public class MapDatabase {
 			}
 
 			// get the node latitude (4 bytes)
-			this.nodeLatitude = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 4;
+			this.nodeLatitude = readInt();
 
 			// get the node longitude (4 bytes)
-			this.nodeLongitude = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 4;
+			this.nodeLongitude = readInt();
 
 			// get the special byte that encodes multiple fields (1 byte)
 			this.nodeSpecialByte = this.readBuffer[this.bufferPosition];
@@ -499,7 +446,7 @@ public class MapDatabase {
 			System.arraycopy(this.defaultTagIds, 0, this.nodeTagIds, 0, this.nodeTagIds.length);
 			// get the node tag IDs (VBE-U)
 			for (this.tempByte = this.nodeNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.nodeTagId = getVariableByteEncodedUnsignedInt();
+				this.nodeTagId = readVariableByteEncodedUnsignedInt();
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
 					Logger.d("invalid node tag ID: " + this.nodeTagId);
 					if (this.debugFile) {
@@ -522,7 +469,7 @@ public class MapDatabase {
 			// check if the node has a name
 			if (this.nodeFeatureName) {
 				// get and check the length of the node name (VBE-U)
-				this.stringLength = getVariableByteEncodedUnsignedInt();
+				this.stringLength = readVariableByteEncodedUnsignedInt();
 				if (this.stringLength > 0) {
 					// get the node name
 					this.nodeName = new String(this.readBuffer, this.bufferPosition,
@@ -543,7 +490,7 @@ public class MapDatabase {
 			// check if the node has an elevation
 			if (this.nodeFeatureElevation) {
 				// get the node elevation (VBE-S)
-				this.nodeElevation = Integer.toString(getVariableByteEncodedSignedInt());
+				this.nodeElevation = Integer.toString(readVariableByteEncodedSignedInt());
 			} else {
 				// no elevation
 				this.nodeElevation = null;
@@ -552,7 +499,7 @@ public class MapDatabase {
 			// check if the node has a house number
 			if (this.nodeFeatureHouseNumber) {
 				// get and check the length of the node house number (VBE-U)
-				this.stringLength = getVariableByteEncodedUnsignedInt();
+				this.stringLength = readVariableByteEncodedUnsignedInt();
 				if (this.stringLength > 0) {
 					// get the node house number
 					this.nodeHouseNumber = new String(this.readBuffer, this.bufferPosition,
@@ -603,21 +550,15 @@ public class MapDatabase {
 			}
 
 			// get the size of the way (VBE-U)
-			this.waySize = getVariableByteEncodedUnsignedInt();
+			this.waySize = readVariableByteEncodedUnsignedInt();
 
 			if (this.useTileBitmask) {
 				// get the way tile bitmask (2 bytes)
-				this.wayTileBitmask = Deserializer.getShort(this.readBuffer,
-						this.bufferPosition);
-				this.bufferPosition += 2;
+				this.wayTileBitmask = readShort();
 				// check if the way is inside the requested tile
 				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
 					// skip the rest of the way and continue with the next way
-					if (this.debugFile) {
-						this.bufferPosition += this.waySize - 6 - SIGNATURE_LENGTH_WAY;
-					} else {
-						this.bufferPosition += this.waySize - 6;
-					}
+					this.bufferPosition += this.waySize - 2;
 					continue;
 				}
 			} else {
@@ -649,7 +590,7 @@ public class MapDatabase {
 			System.arraycopy(this.defaultTagIds, 0, this.wayTagIds, 0, this.wayTagIds.length);
 			// get the way tag IDs (VBE-U)
 			for (this.tempByte = this.wayNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.wayTagId = getVariableByteEncodedUnsignedInt();
+				this.wayTagId = readVariableByteEncodedUnsignedInt();
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
 					Logger.d("invalid way tag ID: " + this.wayTagId);
 					if (this.debugFile) {
@@ -661,7 +602,7 @@ public class MapDatabase {
 			}
 
 			// get and check the number of way nodes (VBE-U)
-			this.wayNumberOfWayNodes = getVariableByteEncodedUnsignedInt();
+			this.wayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
@@ -672,7 +613,7 @@ public class MapDatabase {
 			}
 
 			// each way node consists of latitude and longitude fields
-			this.wayNodesSequenceLength = (short) (this.wayNumberOfWayNodes * 2);
+			this.wayNodesSequenceLength = this.wayNumberOfWayNodes * 2;
 
 			// make sure that the array for the way nodes is large enough
 			if (this.wayNodesSequenceLength > this.wayNodesSequence.length) {
@@ -680,27 +621,25 @@ public class MapDatabase {
 			}
 
 			// get the first way node latitude (4 bytes)
-			this.wayNodeLatitude = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 4;
+			this.wayNodeLatitude = readInt();
 			// get the first way node longitude (4 bytes)
-			this.wayNodeLongitude = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 4;
+			this.wayNodeLongitude = readInt();
 
 			// store the first way node
 			this.wayNodesSequence[1] = this.wayNodeLatitude;
 			this.wayNodesSequence[0] = this.wayNodeLongitude;
 
 			// get the remaining way nodes offsets
-			for (this.tempShort = 2; this.tempShort < this.wayNodesSequenceLength; this.tempShort += 2) {
+			for (this.tempInt = 2; this.tempInt < this.wayNodesSequenceLength; this.tempInt += 2) {
 				// get the way node latitude offset (VBE-S)
-				this.wayNodeLatitude = getVariableByteEncodedSignedInt();
+				this.wayNodeLatitude = readVariableByteEncodedSignedInt();
 				// get the way node longitude offset (VBE-S)
-				this.wayNodeLongitude = getVariableByteEncodedSignedInt();
+				this.wayNodeLongitude = readVariableByteEncodedSignedInt();
 
 				// calculate the way node coordinates
-				this.wayNodesSequence[this.tempShort] = this.wayNodesSequence[this.tempShort - 2]
+				this.wayNodesSequence[this.tempInt] = this.wayNodesSequence[this.tempInt - 2]
 						+ this.wayNodeLongitude;
-				this.wayNodesSequence[this.tempShort + 1] = this.wayNodesSequence[this.tempShort - 1]
+				this.wayNodesSequence[this.tempInt + 1] = this.wayNodesSequence[this.tempInt - 1]
 						+ this.wayNodeLatitude;
 			}
 
@@ -717,7 +656,7 @@ public class MapDatabase {
 			// check if the way has a name
 			if (this.wayFeatureName) {
 				// get and check the length of the way name (VBE-U)
-				this.stringLength = getVariableByteEncodedUnsignedInt();
+				this.stringLength = readVariableByteEncodedUnsignedInt();
 				if (this.stringLength > 0) {
 					if (this.queryReadWayNames) {
 						// get the way name
@@ -742,7 +681,7 @@ public class MapDatabase {
 			// check if the way has a reference
 			if (this.wayFeatureRef) {
 				// get and check the length of the way reference (VBE-U)
-				this.stringLength = getVariableByteEncodedUnsignedInt();
+				this.stringLength = readVariableByteEncodedUnsignedInt();
 				if (this.stringLength > 0) {
 					if (this.queryReadWayNames) {
 						// get the way reference
@@ -769,10 +708,10 @@ public class MapDatabase {
 				this.wayLabelPosition = new int[2];
 				// get the label position latitude offset (VBE-S)
 				this.wayLabelPosition[0] = this.wayNodesSequence[1]
-						+ getVariableByteEncodedSignedInt();
+						+ readVariableByteEncodedSignedInt();
 				// get the label position longitude offset (VBE-S)
 				this.wayLabelPosition[1] = this.wayNodesSequence[0]
-						+ getVariableByteEncodedSignedInt();
+						+ readVariableByteEncodedSignedInt();
 			} else {
 				// no label position
 				this.wayLabelPosition = null;
@@ -781,16 +720,16 @@ public class MapDatabase {
 			// check if the way represents a multipolygon
 			if (this.wayFeatureMultipolygon) {
 				// get the amount of inner ways (VBE-U)
-				this.wayNumberOfInnerWays = getVariableByteEncodedUnsignedInt();
+				this.wayNumberOfInnerWays = readVariableByteEncodedUnsignedInt();
 
 				if (this.wayNumberOfInnerWays > 0) {
 					// create a two-dimensional array for the coordinates of the inner ways
 					this.wayInnerWays = new int[this.wayNumberOfInnerWays][];
 
 					// for each inner way
-					for (this.tempByte = (byte) (this.wayNumberOfInnerWays - 1); this.tempByte >= 0; --this.tempByte) {
+					for (this.innerWayNumber = this.wayNumberOfInnerWays - 1; this.innerWayNumber >= 0; --this.innerWayNumber) {
 						// get and check the number of inner way nodes (VBE-U)
-						this.innerWayNumberOfWayNodes = getVariableByteEncodedUnsignedInt();
+						this.innerWayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
 						if (this.innerWayNumberOfWayNodes < 1
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 							Logger.d("invalid inner way number of way nodes: "
@@ -802,38 +741,38 @@ public class MapDatabase {
 						}
 
 						// each inner way node consists of a latitude and a longitude field
-						this.innerWayNodesSequenceLength = (short) (this.innerWayNumberOfWayNodes * 2);
+						this.innerWayNodesSequenceLength = this.innerWayNumberOfWayNodes * 2;
 
 						// create an array for the inner way coordinates
 						this.innerWay = new int[this.innerWayNodesSequenceLength];
 
 						// get the first inner way node latitude offset (VBE-S)
 						this.wayNodeLatitude = this.wayNodesSequence[1]
-								+ getVariableByteEncodedSignedInt();
+								+ readVariableByteEncodedSignedInt();
 						// get the first inner way node longitude offset (VBE-S)
 						this.wayNodeLongitude = this.wayNodesSequence[0]
-								+ getVariableByteEncodedSignedInt();
+								+ readVariableByteEncodedSignedInt();
 
 						// store the first inner way node
 						this.innerWay[1] = this.wayNodeLatitude;
 						this.innerWay[0] = this.wayNodeLongitude;
 
 						// get and store the remaining inner way nodes offsets
-						for (this.tempShort = 2; this.tempShort < this.innerWayNodesSequenceLength; this.tempShort += 2) {
+						for (this.tempInt = 2; this.tempInt < this.innerWayNodesSequenceLength; this.tempInt += 2) {
 							// get the inner way node latitude offset (VBE-S)
-							this.wayNodeLatitude = getVariableByteEncodedSignedInt();
+							this.wayNodeLatitude = readVariableByteEncodedSignedInt();
 							// get the inner way node longitude offset (VBE-S)
-							this.wayNodeLongitude = getVariableByteEncodedSignedInt();
+							this.wayNodeLongitude = readVariableByteEncodedSignedInt();
 
 							// calculate the inner way node coordinates
-							this.innerWay[this.tempShort] = this.innerWay[this.tempShort - 2]
+							this.innerWay[this.tempInt] = this.innerWay[this.tempInt - 2]
 									+ this.wayNodeLongitude;
-							this.innerWay[this.tempShort + 1] = this.innerWay[this.tempShort - 1]
+							this.innerWay[this.tempInt + 1] = this.innerWay[this.tempInt - 1]
 									+ this.wayNodeLatitude;
 						}
 
 						// store the inner way
-						this.wayInnerWays[this.tempByte] = this.innerWay;
+						this.wayInnerWays[this.innerWayNumber] = this.innerWay;
 					}
 				} else {
 					Logger.d("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
@@ -862,7 +801,7 @@ public class MapDatabase {
 	 * @throws IOException
 	 *             if an error occurs while reading the file.
 	 */
-	private boolean readFileHeader() throws IOException {
+	private boolean processFileHeader() throws IOException {
 		// read the the magic byte and the file header size into the buffer
 		this.readBuffer = new byte[BINARY_OSM_MAGIC_BYTE.length() + 4];
 		this.bufferPosition = 0;
@@ -881,8 +820,7 @@ public class MapDatabase {
 		}
 
 		// get and check the size of the remaining file header (4 bytes)
-		this.remainingHeaderSize = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.remainingHeaderSize = readInt();
 		if (this.remainingHeaderSize < REMAINING_HEADER_SIZE_MIN
 				|| this.remainingHeaderSize > REMAINING_HEADER_SIZE_MAX) {
 			Logger.d("invalid remaining header size: " + this.remainingHeaderSize);
@@ -898,8 +836,7 @@ public class MapDatabase {
 		}
 
 		// get and check the file version number (4 bytes)
-		this.fileVersionNumber = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.fileVersionNumber = readInt();
 		if (this.fileVersionNumber < BINARY_OSM_VERSION_MIN
 				|| this.fileVersionNumber > BINARY_OSM_VERSION_MAX) {
 			Logger.d("unsupported file format version: " + this.fileVersionNumber);
@@ -923,7 +860,7 @@ public class MapDatabase {
 		}
 
 		// get and check the length of the projection name (VBE-U)
-		this.stringLength = getVariableByteEncodedUnsignedInt();
+		this.stringLength = readVariableByteEncodedUnsignedInt();
 		if (this.stringLength > 0) {
 			// get the projection name
 			this.projectionName = new String(this.readBuffer, this.bufferPosition,
@@ -935,40 +872,35 @@ public class MapDatabase {
 		}
 
 		// get and check the tile pixel size (2 bytes)
-		this.tilePixelSize = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 2;
+		this.tilePixelSize = readShort();
 		if (this.tilePixelSize < 1) {
 			Logger.d("invalid tile pixel size: " + this.tilePixelSize);
 			return false;
 		}
 
 		// get and check the the top boundary (4 bytes)
-		this.boundaryTop = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.boundaryTop = readInt();
 		if (this.boundaryTop > 90000000) {
 			Logger.d("invalid top boundary: " + this.boundaryTop);
 			return false;
 		}
 
 		// get and check the left boundary (4 bytes)
-		this.boundaryLeft = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.boundaryLeft = readInt();
 		if (this.boundaryLeft < -180000000) {
 			Logger.d("invalid left boundary: " + this.boundaryLeft);
 			return false;
 		}
 
 		// get and check the bottom boundary (4 bytes)
-		this.boundaryBottom = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.boundaryBottom = readInt();
 		if (this.boundaryBottom < -90000000) {
 			Logger.d("invalid bottom boundary: " + this.boundaryBottom);
 			return false;
 		}
 
 		// get and check the right boundary (4 bytes)
-		this.boundaryRight = Deserializer.getInt(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 4;
+		this.boundaryRight = readInt();
 		if (this.boundaryRight > 180000000) {
 			Logger.d("invalid right boundary: " + this.boundaryRight);
 			return false;
@@ -981,18 +913,14 @@ public class MapDatabase {
 		// check if the header contains a start position
 		if (this.headerStartPosition) {
 			// get and check the start position latitude (4 byte)
-			this.startPositionLatitude = Deserializer.getInt(this.readBuffer,
-					this.bufferPosition);
-			this.bufferPosition += 4;
+			this.startPositionLatitude = readInt();
 			if (this.startPositionLatitude < -90000000 || this.startPositionLatitude > 90000000) {
 				Logger.d("invalid start position latitude: " + this.startPositionLatitude);
 				return false;
 			}
 
 			// get and check the start position longitude (4 byte)
-			this.startPositionLongitude = Deserializer.getInt(this.readBuffer,
-					this.bufferPosition);
-			this.bufferPosition += 4;
+			this.startPositionLongitude = readInt();
 			if (this.startPositionLongitude < -180000000
 					|| this.startPositionLongitude > 180000000) {
 				Logger.d("invalid start position longitude: " + this.startPositionLongitude);
@@ -1001,16 +929,14 @@ public class MapDatabase {
 		}
 
 		// get and check the the map date (8 bytes)
-		this.mapDate = Deserializer.getLong(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 8;
+		this.mapDate = readLong();
 		if (this.mapDate < 0) {
 			Logger.d("invalid map date: " + this.mapDate);
 			return false;
 		}
 
 		// get and check the number of node tags (2 bytes)
-		this.numberOfNodeTags = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 2;
+		this.numberOfNodeTags = readShort();
 		if (this.numberOfNodeTags < 0) {
 			Logger.d("invalid number of node tags: " + this.numberOfNodeTags);
 			return false;
@@ -1024,9 +950,9 @@ public class MapDatabase {
 				(int) (this.numberOfNodeTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
 
 		// get the node tags
-		for (this.tempShort = 0; this.tempShort < this.numberOfNodeTags; ++this.tempShort) {
+		for (this.tempInt = 0; this.tempInt < this.numberOfNodeTags; ++this.tempInt) {
 			// get and check the length of the node tag (VBE-U)
-			this.stringLength = getVariableByteEncodedUnsignedInt();
+			this.stringLength = readVariableByteEncodedUnsignedInt();
 			if (this.stringLength > 0) {
 				// get the node tag
 				this.nodeTag = new String(this.readBuffer, this.bufferPosition,
@@ -1038,8 +964,7 @@ public class MapDatabase {
 			}
 
 			// get and check the node tag ID (2 bytes)
-			this.nodeTagId = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 2;
+			this.nodeTagId = readShort();
 			if (this.nodeTagId < 0) {
 				Logger.d("invalid node tag ID: " + this.nodeTagId);
 				return false;
@@ -1050,8 +975,7 @@ public class MapDatabase {
 		}
 
 		// get and check the number of way tags (2 bytes)
-		this.numberOfWayTags = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-		this.bufferPosition += 2;
+		this.numberOfWayTags = readShort();
 		if (this.numberOfWayTags < 0) {
 			Logger.d("invalid number of way tags: " + this.numberOfWayTags);
 			return false;
@@ -1062,9 +986,9 @@ public class MapDatabase {
 				(int) (this.numberOfWayTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
 
 		// get the way tags
-		for (this.tempShort = 0; this.tempShort < this.numberOfWayTags; ++this.tempShort) {
+		for (this.tempInt = 0; this.tempInt < this.numberOfWayTags; ++this.tempInt) {
 			// get and check the length of the way tag (VBE-U)
-			this.stringLength = getVariableByteEncodedUnsignedInt();
+			this.stringLength = readVariableByteEncodedUnsignedInt();
 			if (this.stringLength > 0) {
 				// get the way tag
 				this.wayTag = new String(this.readBuffer, this.bufferPosition,
@@ -1076,8 +1000,7 @@ public class MapDatabase {
 			}
 
 			// get and check the way tag ID (2 bytes)
-			this.wayTagId = Deserializer.getShort(this.readBuffer, this.bufferPosition);
-			this.bufferPosition += 2;
+			this.wayTagId = readShort();
 			if (this.wayTagId < 0) {
 				Logger.d("invalid way tag ID: " + this.wayTagId);
 				return false;
@@ -1088,7 +1011,7 @@ public class MapDatabase {
 		}
 
 		// get and check the length of the comment text (VBE-U)
-		this.stringLength = getVariableByteEncodedUnsignedInt();
+		this.stringLength = readVariableByteEncodedUnsignedInt();
 		if (this.stringLength > 0) {
 			// get the comment text
 			this.commentText = new String(this.readBuffer, this.bufferPosition,
@@ -1141,9 +1064,7 @@ public class MapDatabase {
 			}
 
 			// get and check the start address of the map file (5 bytes)
-			this.startAddress = Deserializer.getFiveBytesLong(this.readBuffer,
-					this.bufferPosition);
-			this.bufferPosition += 5;
+			this.startAddress = readFiveBytesLong();
 			if (this.startAddress < 1 || this.startAddress >= this.fileSize) {
 				Logger.d("invalid start address: " + this.startAddress);
 				return false;
@@ -1158,9 +1079,7 @@ public class MapDatabase {
 			}
 
 			// get and check the size of the map file (5 bytes)
-			this.mapFileSize = Deserializer.getFiveBytesLong(this.readBuffer,
-					this.bufferPosition);
-			this.bufferPosition += 5;
+			this.mapFileSize = readFiveBytesLong();
 			if (this.mapFileSize < 1) {
 				Logger.d("invalid map file size: " + this.mapFileSize);
 				return false;
@@ -1190,6 +1109,104 @@ public class MapDatabase {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Converts five bytes from the read buffer to an unsigned long.
+	 * <p>
+	 * The byte order is big-endian.
+	 * 
+	 * @return the long value.
+	 */
+	private long readFiveBytesLong() {
+		this.bufferPosition += 5;
+		return Deserializer.getFiveBytesLong(this.readBuffer, this.bufferPosition - 5);
+	}
+
+	/**
+	 * Converts four bytes from the read buffer to a signed int.
+	 * <p>
+	 * The byte order is big-endian.
+	 * 
+	 * @return the int value.
+	 */
+	private int readInt() {
+		this.bufferPosition += 4;
+		return Deserializer.getInt(this.readBuffer, this.bufferPosition - 4);
+	}
+
+	/**
+	 * Converts eight bytes from the read buffer to a signed long.
+	 * <p>
+	 * The byte order is big-endian.
+	 * 
+	 * @return the long value.
+	 */
+	private long readLong() {
+		this.bufferPosition += 8;
+		return Deserializer.getLong(this.readBuffer, this.bufferPosition - 8);
+	}
+
+	/**
+	 * Converts two bytes from the read buffer to a signed short.
+	 * <p>
+	 * The byte order is big-endian.
+	 * 
+	 * @return the short value.
+	 */
+	private short readShort() {
+		this.bufferPosition += 2;
+		return Deserializer.getShort(this.readBuffer, this.bufferPosition - 2);
+	}
+
+	/**
+	 * Converts a variable amount of bytes from the read buffer to a signed int.
+	 * <p>
+	 * The first bit is for continuation info, the other six (last byte) or seven (all other
+	 * bytes) bits for data. The second bit in the last byte indicates the sign of the number.
+	 * 
+	 * @return the int value.
+	 */
+	private int readVariableByteEncodedSignedInt() {
+		this.variableByteDecode = 0;
+		this.variableByteShift = 0;
+
+		// check if the continuation bit is set
+		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
+			this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
+			this.variableByteShift += 7;
+		}
+
+		// read the six data bits from the last byte
+		if ((this.readBuffer[this.bufferPosition] & 0x40) != 0) {
+			// negative
+			return -(this.variableByteDecode | ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift));
+		}
+		// positive
+		return this.variableByteDecode
+				| ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift);
+	}
+
+	/**
+	 * Converts a variable amount of bytes from the read buffer to an unsigned int.
+	 * <p>
+	 * The first bit is for continuation info, the other seven bits for data.
+	 * 
+	 * @return the int value.
+	 */
+	private int readVariableByteEncodedUnsignedInt() {
+		this.variableByteDecode = 0;
+		this.variableByteShift = 0;
+
+		// check if the continuation bit is set
+		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
+			this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
+			this.variableByteShift += 7;
+		}
+
+		// read the seven data bits from the last byte
+		return this.variableByteDecode
+				| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
 	}
 
 	/**
@@ -1555,7 +1572,7 @@ public class MapDatabase {
 			this.fileSize = this.inputFile.length();
 
 			// read the header data from the file
-			if (!readFileHeader()) {
+			if (!processFileHeader()) {
 				return false;
 			}
 

@@ -2052,7 +2052,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName,
 			String wayRef, int[] wayLabelPosition, boolean[] wayTagIds, byte wayTagBitmap,
-			short wayNodesSequenceLength, int[] wayNodesSequence, int[][] innerWays) {
+			int wayNodesSequenceLength, int[] wayNodesSequence, int[][] innerWays) {
 		this.remainingTags = wayNumberOfRealTags;
 		if (innerWays == null) {
 			this.coordinates = new float[1][];
