@@ -868,8 +868,8 @@ class MapFileWriter {
 		if (!innerWay.isEmpty()
 				&& innerWay.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = innerWay.iterator();
-			buffer.put(Serializer.getVariableByteSigned(latRef - waynodeIterator.next()));
-			buffer.put(Serializer.getVariableByteSigned(lonRef - waynodeIterator.next()));
+			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - latRef));
+			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - lonRef));
 
 			while (waynodeIterator.hasNext()) {
 				buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next()));
