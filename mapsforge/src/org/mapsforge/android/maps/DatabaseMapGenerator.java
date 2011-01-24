@@ -1569,6 +1569,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.currentNodeX = scaleLongitude(longitude);
 		this.currentNodeY = scaleLatitude(latitude);
 
+		// check for a valid layer value
+		if (nodeLayer < 0) {
+			this.layer = this.ways.get(0);
+		} else if (nodeLayer >= LAYERS) {
+			this.layer = this.ways.get(LAYERS - 1);
+		} else {
+			this.layer = this.ways.get(nodeLayer);
+		}
+
 		/* houseNumber */
 		if (houseNumber != null && this.currentTile.zoomLevel >= 17) {
 			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
@@ -1777,7 +1786,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* barrier */
 		else if (this.tagIDsNodes.barrier$bollard != null
 				&& nodeTagIds[this.tagIDsNodes.barrier$bollard]) {
-			this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL).add(
+			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(new CircleContainer(this.currentNodeX,
 							this.currentNodeY, 1.5f), PAINT_BARRIER_BOLLARD));
 		}
@@ -1795,9 +1804,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		else if ((this.tagIDsNodes.historic$memorial != null && nodeTagIds[this.tagIDsNodes.historic$memorial])
 				|| (this.tagIDsNodes.historic$monument != null && nodeTagIds[this.tagIDsNodes.historic$monument])) {
 			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 3);
-			this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL).add(
+			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_INNER));
-			this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL).add(
+			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
@@ -1896,11 +1905,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					|| (this.tagIDsNodes.station$subway != null && nodeTagIds[this.tagIDsNodes.station$subway])) {
 				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY,
 						4);
-				this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL)
+				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_RAILWAY_CIRCLE_INNER));
-				this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL)
+				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_RAILWAY_CIRCLE_OUTER));
@@ -1912,11 +1921,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			} else {
 				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY,
 						6);
-				this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL)
+				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_RAILWAY_CIRCLE_INNER));
-				this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL)
+				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_RAILWAY_CIRCLE_OUTER));
@@ -1928,9 +1937,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		} else if ((this.tagIDsNodes.railway$halt != null && nodeTagIds[this.tagIDsNodes.railway$halt])
 				|| (this.tagIDsNodes.railway$tram_stop != null && nodeTagIds[this.tagIDsNodes.railway$tram_stop])) {
 			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 4);
-			this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL).add(
+			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
-			this.ways.get(nodeLayer).get(LayerIds.POI_CIRCLE_SYMBOL).add(
+			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
