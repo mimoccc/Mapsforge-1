@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
@@ -380,6 +381,12 @@ class MapFileWriter {
 				long currentTileOffsetInBuffer = tileBuffer.position();
 				TileCoordinate currentTileCoordinate = new TileCoordinate(tileX, tileY,
 						baseZoomCurrentInterval);
+				int currentTileLat = GeoCoordinate.doubleToInt(MercatorProjection
+						.tileYToLatitude(currentTileCoordinate.getY(),
+								currentTileCoordinate.getZoomlevel()));
+				int currentTileLon = GeoCoordinate.doubleToInt(MercatorProjection
+						.tileXToLongitude(currentTileCoordinate.getX(),
+								currentTileCoordinate.getZoomlevel()));
 
 				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
 				if (tileInfo.isWaterTile(currentTileCoordinate)) {
@@ -464,8 +471,10 @@ class MapFileWriter {
 							}
 
 							// write poi features to the file
-							tileBuffer.putInt(poi.getLatitude());
-							tileBuffer.putInt(poi.getLongitude());
+							tileBuffer.put(Serializer.getVariableByteSigned(poi.getLatitude()
+									- currentTileLat));
+							tileBuffer.put(Serializer.getVariableByteSigned(poi.getLongitude()
+									- currentTileLon));
 
 							// write byte with layer and tag amount info
 							tileBuffer.put(infoByteLayerAndTagAmount(poi.getLayer(),
@@ -571,7 +580,8 @@ class MapFileWriter {
 							// the first node is always stored with four bytes
 							// the remaining way node differences are stored according to the
 							// compression type
-							writeWayNodes(wayNodePreprocessingResult, wayBuffer);
+							writeWayNodes(wayNodePreprocessingResult, currentTileLat,
+									currentTileLon, wayBuffer);
 
 							// write a byte with name, label and way type information
 							wayBuffer.put(infoByteWay(way.getName(),
@@ -849,12 +859,13 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private void writeWayNodes(List<Integer> waynodes, ByteBuffer buffer) {
+	private void writeWayNodes(List<Integer> waynodes, int currentTileLat, int currentTileLon,
+			ByteBuffer buffer) {
 		if (!waynodes.isEmpty()
 				&& waynodes.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = waynodes.iterator();
-			buffer.putInt(waynodeIterator.next());
-			buffer.putInt(waynodeIterator.next());
+			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - currentTileLat));
+			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - currentTileLon));
 
 			while (waynodeIterator.hasNext()) {
 				buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next()));

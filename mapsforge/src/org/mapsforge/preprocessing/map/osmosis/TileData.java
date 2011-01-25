@@ -95,6 +95,9 @@ class TileData {
 
 	static class TDNode {
 
+		private static final byte ZOOM_HOUSENUMBER = (byte) 17;
+		private static final byte ZOOM_NAME = (byte) 16;
+
 		private final long id;
 		private final int latitude;
 		private final int longitude;
@@ -180,11 +183,14 @@ class TileData {
 
 		byte getMinimumZoomLevel() {
 			byte min = Byte.MAX_VALUE;
+			if (houseNumber != null)
+				min = (byte) Math.min(min, ZOOM_HOUSENUMBER);
+			if (name != null)
+				min = (byte) Math.min(min, ZOOM_NAME);
 			if (tags == null)
 				return min;
 			for (PoiEnum poiEnum : tags) {
-				if (poiEnum.zoomlevel() < min)
-					min = poiEnum.zoomlevel();
+				min = (byte) Math.min(min, poiEnum.zoomlevel());
 			}
 
 			return min;
