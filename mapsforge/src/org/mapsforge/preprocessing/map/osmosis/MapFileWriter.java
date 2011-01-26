@@ -81,9 +81,6 @@ class MapFileWriter {
 	// bitmap flags for file features
 	private static final short BITMAP_DEBUG = 128;
 	private static final short BITMAP_MAP_START_POSITION = 64;
-	private static final short BITMAP_WAYNODE_FILTERING = 32;
-	private static final short BITMAP_POLYGON_CLIPPING = 16;
-	private static final short BITMAP_WAYNODE_COMPRESSION = 8;
 
 	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
 
@@ -109,6 +106,7 @@ class MapFileWriter {
 	private static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
 	private static final int TILE_BUFFER_SIZE = 0x3200000;
 	private static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
+	private static final int POI_BUFFER_SIZE = 0x100000; // 1MB
 	private final RandomAccessFile randomAccessFile;
 	private ByteBuffer bufferZoomIntervalConfig;
 
@@ -165,8 +163,7 @@ class MapFileWriter {
 
 		// CONTAINER HEADER
 		long totalHeaderSize = writeContainerHeader(date, version, tilePixel,
-				comment, debugStrings, waynodeCompression, polygonClipping, pixelCompression,
-				mapStartPosition);
+				comment, debugStrings, mapStartPosition);
 
 		int n_zoom_intervals = dataStore.getZoomIntervalConfiguration()
 				.getNumberOfZoomIntervals();
@@ -218,8 +215,7 @@ class MapFileWriter {
 	}
 
 	private long writeContainerHeader(long date, int version, short tilePixel, String comment,
-			boolean debugStrings, boolean waynodeCompression, boolean polygonClipping,
-			boolean pixelCompression, GeoCoordinate mapStartPosition)
+			boolean debugStrings, GeoCoordinate mapStartPosition)
 			throws IOException {
 
 		// get metadata for the map file
@@ -244,9 +240,7 @@ class MapFileWriter {
 
 		// meta info byte
 		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings,
-				mapStartPosition != null,
-				pixelCompression,
-				polygonClipping, waynodeCompression));
+				mapStartPosition != null));
 
 		// amount of map files inside this file
 		containerHeaderBuffer.put((byte) numberOfZoomIntervals);
@@ -364,6 +358,7 @@ class MapFileWriter {
 		ByteBuffer indexBuffer = ByteBuffer.allocate(indexBufferSize);
 		ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
 		ByteBuffer wayBuffer = ByteBuffer.allocate(WAY_BUFFER_SIZE);
+		ByteBuffer poiBuffer = ByteBuffer.allocate(POI_BUFFER_SIZE);
 
 		// write debug strings for tile index segment if necessary
 		if (debugStrings)
@@ -422,7 +417,6 @@ class MapFileWriter {
 						.waysByZoomlevel(minZoomCurrentInterval, maxZoomCurrentInterval);
 
 				if (poisByZoomlevel.size() > 0 || waysByZoomlevel.size() > 0) {
-					int tileDataSegmentStart = tileBuffer.position();
 					if (debugStrings) {
 						// write tile header
 						StringBuilder sb = new StringBuilder();
@@ -449,10 +443,8 @@ class MapFileWriter {
 						maxWaysPerTile = cumulatedWays;
 					cumulatedNumberOfWaysInTiles += cumulatedWays;
 
-					// skip 4 bytes, later these 4 bytes will contain the start
-					// position of the ways in this tile
-					int positionFirstWay = tileBuffer.position();
-					tileBuffer.position(positionFirstWay + 4);
+					// clear poi buffer
+					poiBuffer.clear();
 
 					// write POIs for each zoom level beginning with lowest zoom level
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
@@ -464,54 +456,54 @@ class MapFileWriter {
 								StringBuilder sb = new StringBuilder();
 								sb.append(DEBUG_STRING_POI_HEAD).append(poi.getId())
 										.append(DEBUG_STRING_POI_TAIL);
-								tileBuffer.put(sb.toString().getBytes());
+								poiBuffer.put(sb.toString().getBytes());
 								// append withespaces so that block has 32 bytes
 								appendWhitespace(32 - sb.toString().getBytes().length,
-										tileBuffer);
+										poiBuffer);
 							}
 
 							// write poi features to the file
-							tileBuffer.put(Serializer.getVariableByteSigned(poi.getLatitude()
+							poiBuffer.put(Serializer.getVariableByteSigned(poi.getLatitude()
 									- currentTileLat));
-							tileBuffer.put(Serializer.getVariableByteSigned(poi.getLongitude()
+							poiBuffer.put(Serializer.getVariableByteSigned(poi.getLongitude()
 									- currentTileLon));
 
 							// write byte with layer and tag amount info
-							tileBuffer.put(infoByteLayerAndTagAmount(poi.getLayer(),
+							poiBuffer.put(infoByteLayerAndTagAmount(poi.getLayer(),
 									poi.getTags() == null ? 0 : (short) poi.getTags().size()));
 
 							// write tag ids to the file
 							if (poi.getTags() != null) {
 								for (PoiEnum poiEnum : poi.getTags()) {
-									tileBuffer.put(Serializer.getVariableByteUnsigned(poiEnum
+									poiBuffer.put(Serializer.getVariableByteUnsigned(poiEnum
 											.ordinal()));
 								}
 							}
 
 							// write byte with bits set to 1 if the poi has a name, an elevation
 							// or a housenumber
-							tileBuffer.put(infoBytePOI(poi.getName(),
+							poiBuffer.put(infoBytePOI(poi.getName(),
 									poi.getElevation(),
 									poi.getHouseNumber()));
 
 							if (poi.getName() != null && poi.getName().length() > 0) {
-								writeUTF8(poi.getName(), tileBuffer);
+								writeUTF8(poi.getName(), poiBuffer);
 
 							}
 							if (poi.getElevation() != 0) {
-								tileBuffer.put(Serializer.getVariableByteSigned(poi
+								poiBuffer.put(Serializer.getVariableByteSigned(poi
 										.getElevation()));
 							}
 							if (poi.getHouseNumber() != null
 									&& poi.getHouseNumber().length() > 0) {
-								writeUTF8(poi.getHouseNumber(), tileBuffer);
+								writeUTF8(poi.getHouseNumber(), poiBuffer);
 							}
 						}
 					}// end for loop over POIs
 
 					// write offset to first way in the tile header
-					tileBuffer.putInt(positionFirstWay, tileBuffer.position()
-							- tileDataSegmentStart);
+					tileBuffer.put(Serializer.getVariableByteUnsigned(poiBuffer.position()));
+					tileBuffer.put(poiBuffer.array(), 0, poiBuffer.position());
 
 					// ***************** WAYS ********************
 					// loop over all relevant zoom levels
@@ -751,22 +743,13 @@ class MapFileWriter {
 		return (byte) ((layer < 0 ? 0 : layer > 10 ? 10 : layer) << 4 | tagAmount);
 	}
 
-	private byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition,
-			boolean filtering,
-			boolean clipping,
-			boolean compression) {
+	private byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition) {
 		byte infoByte = 0;
 
 		if (debug)
 			infoByte |= BITMAP_DEBUG;
 		if (mapStartPosition)
 			infoByte |= BITMAP_MAP_START_POSITION;
-		if (filtering)
-			infoByte |= BITMAP_WAYNODE_FILTERING;
-		if (clipping)
-			infoByte |= BITMAP_POLYGON_CLIPPING;
-		if (compression)
-			infoByte |= BITMAP_WAYNODE_COMPRESSION;
 
 		return infoByte;
 	}
