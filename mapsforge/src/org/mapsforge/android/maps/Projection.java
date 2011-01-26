@@ -25,13 +25,15 @@ import android.graphics.Point;
  */
 public interface Projection {
 	/**
-	 * Translates the given screen coordinates to a GeoPoint.
+	 * Translates the given screen coordinates to a GeoPoint. If the corresponding MapView has
+	 * no valid dimensions (width and height > 0), null is returned.
 	 * 
 	 * @param x
 	 *            the pixel x coordinate on the screen.
 	 * @param y
 	 *            the pixel y coordinate on the screen.
-	 * @return a new GeoPoint which is relative to the top-left of the MapView.
+	 * @return a new GeoPoint which is relative to the top-left of the MapView or null, if the
+	 *         corresponding MapView has no valid dimensions (width and height > 0).
 	 */
 	GeoPoint fromPixels(int x, int y);
 
@@ -58,14 +60,16 @@ public interface Projection {
 	float metersToPixels(float meters, byte zoom);
 
 	/**
-	 * Translates the given GeoPoint to relative pixel coordinates on the screen.
+	 * Translates the given GeoPoint to relative pixel coordinates on the screen. If the
+	 * corresponding MapView has no valid dimensions (width and height > 0), null is returned.
 	 * 
 	 * @param in
 	 *            the geographical point to convert.
 	 * @param out
 	 *            an already existing object to use for the output. If this parameter is null, a
 	 *            new Point object will be created and returned.
-	 * @return a Point which is relative to the top-left of the MapView.
+	 * @return a Point which is relative to the top-left of the MapView or null, if the
+	 *         corresponding MapView has no valid dimensions (width and height > 0).
 	 */
 	Point toPixels(GeoPoint in, Point out);
 

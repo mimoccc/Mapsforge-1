@@ -195,6 +195,11 @@ class MercatorProjection implements Projection {
 
 	@Override
 	public GeoPoint fromPixels(int x, int y) {
+		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
+			// the MapView has no valid dimensions
+			return null;
+		}
+
 		// save the current position and zoom level of the map
 		this.mapCenter1 = this.mapView.getMapCenter();
 		this.mapZoomLevel1 = this.mapView.getZoomLevel();
@@ -224,6 +229,11 @@ class MercatorProjection implements Projection {
 
 	@Override
 	public Point toPixels(GeoPoint in, Point out) {
+		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
+			// the MapView has no valid dimensions
+			return null;
+		}
+
 		// save the current position and zoom level of the map
 		this.mapCenter2 = this.mapView.getMapCenter();
 		this.mapZoomLevel2 = this.mapView.getZoomLevel();

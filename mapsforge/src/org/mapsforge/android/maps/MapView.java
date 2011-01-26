@@ -2161,12 +2161,16 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @param point
 	 *            the new center point of the map.
-	 * 
 	 * @param zoom
 	 *            the new zoom level. This value will be limited by the maximum and minimum
 	 *            possible zoom level.
 	 */
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
+		if (point == null) {
+			// do nothing
+			return;
+		}
+
 		if (this.mapViewMode.requiresInternetConnection()
 				|| (this.mapDatabase != null && this.mapDatabase.getMapBoundary() != null && this.mapDatabase
 						.getMapBoundary().contains(point.getLongitudeE6(),

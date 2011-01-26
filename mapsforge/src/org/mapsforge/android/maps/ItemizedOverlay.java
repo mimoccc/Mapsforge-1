@@ -57,6 +57,11 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 		Projection projection = mapView.getProjection();
 		this.tapPosition = projection.toPixels(geoPoint, this.tapPosition);
 
+		// check if the translation to pixel coordinates has failed
+		if (this.tapPosition == null) {
+			return false;
+		}
+
 		// iterate over all items
 		for (int i = size() - 1; i >= 0; --i) {
 			// get the current item

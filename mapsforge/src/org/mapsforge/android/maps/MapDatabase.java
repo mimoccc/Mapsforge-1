@@ -409,10 +409,9 @@ public class MapDatabase {
 		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
 				- this.blockEntriesTableOffset - 4;
 
-		// get the offset to the first stored way in the block (4 bytes)
-		this.firstWayOffset = readInt();
-		if (this.firstWayOffset < this.bufferPosition
-				|| this.firstWayOffset > this.readBuffer.length) {
+		// get the offset to the first stored way in the block
+		this.firstWayOffset = readVariableByteEncodedUnsignedInt() + this.bufferPosition;
+		if (this.firstWayOffset > this.readBuffer.length) {
 			Logger.d("invalid first way offset: " + this.firstWayOffset);
 			if (this.debugFile) {
 				Logger.d("block signature: " + this.blockSignature);
