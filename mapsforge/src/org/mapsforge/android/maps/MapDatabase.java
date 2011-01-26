@@ -1103,7 +1103,7 @@ public class MapDatabase {
 		// get and check the length of string (VBE-U)
 		this.stringLength = readVariableByteEncodedUnsignedInt();
 		if (this.stringLength >= 0
-				&& this.bufferPosition + this.stringLength < this.readBuffer.length) {
+				&& this.bufferPosition + this.stringLength <= this.readBuffer.length) {
 			this.bufferPosition += this.stringLength;
 			if (readString) {
 				// get the string
