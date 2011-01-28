@@ -115,7 +115,7 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Default constructor which must be called by all subclasses.
 	 */
-	Overlay() {
+	protected Overlay() {
 		this.isSetUp = false;
 		this.matrix = new Matrix();
 		this.point = new Point();
