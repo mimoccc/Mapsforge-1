@@ -45,7 +45,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 *            the reference to the application context.
 	 */
 	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
-		super(defaultMarker);
+		super(boundCenterBottom(defaultMarker));
 		this.context = context;
 		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);
 	}

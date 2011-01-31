@@ -18,6 +18,7 @@ package org.mapsforge.android.maps;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -29,12 +30,39 @@ import android.graphics.drawable.Drawable;
 public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay {
 	private static final String THREAD_NAME = "ItemizedOverlay";
 
+	/**
+	 * Sets the bounds of the given drawable so that (0,0) is the center of the bottom row.
+	 * 
+	 * @param balloon
+	 *            the drawable whose bounds should be set.
+	 * @return the given drawable.
+	 */
+	protected static Drawable boundCenter(Drawable balloon) {
+		balloon.setBounds(balloon.getIntrinsicWidth() / -2, balloon.getIntrinsicHeight() / -2,
+				balloon.getIntrinsicWidth() / 2, balloon.getIntrinsicHeight() / 2);
+		return balloon;
+	}
+
+	/**
+	 * Sets the bounds of the given drawable so that (0,0) is the center of the bounding box.
+	 * 
+	 * @param balloon
+	 *            the drawable whose bounds should be set.
+	 * @return the given drawable.
+	 */
+	protected static Drawable boundCenterBottom(Drawable balloon) {
+		balloon.setBounds(balloon.getIntrinsicWidth() / -2, -balloon.getIntrinsicHeight(),
+				balloon.getIntrinsicWidth() / 2, 0);
+		return balloon;
+	}
+
 	private int bottom;
 	private final Drawable defaultMarker;
 	private Drawable itemMarker;
 	private Point itemPoint;
 	private final Point itemPosition;
 	private int left;
+	private Rect markerBounds;
 	private int numberOfItems;
 	private Item overlayItem;
 	private int right;
@@ -74,18 +102,22 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 			this.itemPoint = projection.toPixels(this.overlayItem.getPoint(), this.itemPoint);
 
-			// select the correct marker for the item
+			// select the correct marker for the item and get the position
 			if (this.overlayItem.getMarker() == null) {
-				this.itemMarker = this.defaultMarker;
+				this.markerBounds = this.defaultMarker.getBounds();
 			} else {
-				this.itemMarker = this.overlayItem.getMarker();
+				this.markerBounds = this.overlayItem.getMarker().getBounds();
 			}
 
+			// calculate the bounding box of the marker
+			this.left = this.itemPoint.x + this.markerBounds.left;
+			this.right = this.itemPoint.x + this.markerBounds.right;
+			this.top = this.itemPoint.y + this.markerBounds.top;
+			this.bottom = this.itemPoint.y + this.markerBounds.bottom;
+
 			// check if the hit position is within the bounds of the marker
-			if (Math.abs(this.itemPoint.x - this.tapPosition.x) <= this.itemMarker
-					.getIntrinsicWidth() / 2
-					&& Math.abs(this.itemPoint.y - this.tapPosition.y) <= this.itemMarker
-							.getIntrinsicHeight() / 2) {
+			if (this.right >= this.tapPosition.x && this.left <= this.tapPosition.x
+					&& this.bottom >= this.tapPosition.y && this.top <= this.tapPosition.y) {
 				return onTap(i);
 			}
 		}
@@ -147,24 +179,26 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 				this.itemMarker = this.overlayItem.getMarker();
 			}
 
-			// calculate the bounding box of the centered marker
-			this.left = this.itemPosition.x - (this.itemMarker.getIntrinsicWidth() / 2);
-			this.right = this.itemPosition.x + (this.itemMarker.getIntrinsicWidth() / 2);
-			this.top = this.itemPosition.y - (this.itemMarker.getIntrinsicHeight() / 2);
-			this.bottom = this.itemPosition.y + (this.itemMarker.getIntrinsicHeight() / 2);
+			// get the position of the marker
+			this.markerBounds = this.itemMarker.copyBounds();
+
+			// calculate the bounding box of the marker
+			this.left = this.itemPosition.x + this.markerBounds.left;
+			this.right = this.itemPosition.x + this.markerBounds.right;
+			this.top = this.itemPosition.y + this.markerBounds.top;
+			this.bottom = this.itemPosition.y + this.markerBounds.bottom;
 
 			// check if the bounding box of the marker intersects with the canvas
 			if (this.right >= 0 && this.left <= canvas.getWidth() && this.bottom >= 0
 					&& this.top <= canvas.getHeight()) {
-				// set the relative center position of the marker
-				this.itemMarker.setBounds(this.itemPosition.x
-						- this.itemMarker.getIntrinsicWidth() / 2, this.itemPosition.y
-						- this.itemMarker.getIntrinsicHeight() / 2, this.itemPosition.x
-						+ this.itemMarker.getIntrinsicWidth() / 2, this.itemPosition.y
-						+ this.itemMarker.getIntrinsicHeight() / 2);
+				// set the position of the marker
+				this.itemMarker.setBounds(this.left, this.top, this.right, this.bottom);
 
 				// draw the item marker on the canvas
 				this.itemMarker.draw(canvas);
+
+				// restore the position of the marker
+				this.itemMarker.setBounds(this.markerBounds);
 			}
 		}
 	}
