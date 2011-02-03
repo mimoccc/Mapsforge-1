@@ -31,7 +31,7 @@ class LabelPlacement {
 	/**
 	 * This class holds the reference positions for the two and four point greedy algorithms.
 	 */
-	class ReferencePosition {
+	static class ReferencePosition {
 		final float height;
 		final int nodeNumber;
 		SymbolContainer symbol;

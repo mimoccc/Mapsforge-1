@@ -39,7 +39,7 @@ class DependencyCache {
 	 * @param <Type>
 	 *            only two types are reasonable. The DependencySymbol or DependencyText class.
 	 */
-	private class Dependency<Type> {
+	private static class Dependency<Type> {
 		ImmutablePoint point;
 		final Type value;
 
@@ -52,7 +52,7 @@ class DependencyCache {
 	/**
 	 * This class holds all the information off the possible dependencies on a tile.
 	 */
-	private class DependencyOnTile {
+	private static class DependencyOnTile {
 		boolean drawn;
 		ArrayList<Dependency<DependencyText>> labels;
 		ArrayList<Dependency<DependencySymbol>> symbols;
@@ -92,7 +92,7 @@ class DependencyCache {
 	/**
 	 * The class holds the data for a symbol with dependencies on other tiles.
 	 */
-	private class DependencySymbol {
+	private static class DependencySymbol {
 		private LinkedList<Tile> tiles;
 		int depCounter;
 		Bitmap symbol;
@@ -126,7 +126,7 @@ class DependencyCache {
 	/**
 	 * The class holds the data for a label with dependencies on other tiles.
 	 */
-	private class DependencyText {
+	private static class DependencyText {
 		final Rect boundary;
 		int depCounter;
 		final Paint paintBack;

@@ -31,7 +31,7 @@ class CoastlineAlgorithm {
 	/**
 	 * An immutable container for the two endpoints of a coastline segment.
 	 */
-	private class EndPoints {
+	private static class EndPoints {
 		private final ImmutablePoint end;
 		private final int hashCode;
 		private EndPoints other;
@@ -90,7 +90,7 @@ class CoastlineAlgorithm {
 	/**
 	 * A HelperPoint represents one of the four corners of the virtual tile.
 	 */
-	private class HelperPoint {
+	private static class HelperPoint {
 		int x;
 		int y;
 
