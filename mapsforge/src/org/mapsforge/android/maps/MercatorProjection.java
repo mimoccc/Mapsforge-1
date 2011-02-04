@@ -48,7 +48,8 @@ class MercatorProjection implements Projection {
 	 */
 	static double latitudeToPixelY(double latitude, byte zoom) {
 		double sinLatitude = Math.sin(latitude * Math.PI / 180);
-		return ((0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * ((long) Tile.TILE_SIZE << zoom));
+		return (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI))
+				* ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
@@ -75,7 +76,7 @@ class MercatorProjection implements Projection {
 	 * @return the pixel X coordinate of the longitude value.
 	 */
 	static double longitudeToPixelX(double longitude, byte zoom) {
-		return ((longitude + 180) / 360 * ((long) Tile.TILE_SIZE << zoom));
+		return (longitude + 180) / 360 * ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
@@ -115,7 +116,7 @@ class MercatorProjection implements Projection {
 	 * @return the tile X number.
 	 */
 	static long pixelXToTileX(double pixelX, byte zoom) {
-		return (long) Math.min(Math.max((pixelX / Tile.TILE_SIZE), 0), Math.pow(2, zoom) - 1);
+		return (long) Math.min(Math.max(pixelX / Tile.TILE_SIZE, 0), Math.pow(2, zoom) - 1);
 	}
 
 	/**
@@ -142,7 +143,7 @@ class MercatorProjection implements Projection {
 	 * @return the tile Y number.
 	 */
 	static long pixelYToTileY(double pixelY, byte zoom) {
-		return (long) Math.min(Math.max((pixelY / Tile.TILE_SIZE), 0), Math.pow(2, zoom) - 1);
+		return (long) Math.min(Math.max(pixelY / Tile.TILE_SIZE, 0), Math.pow(2, zoom) - 1);
 	}
 
 	/**

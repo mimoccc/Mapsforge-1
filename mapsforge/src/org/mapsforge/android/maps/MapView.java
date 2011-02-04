@@ -443,12 +443,12 @@ public class MapView extends ViewGroup {
 		final float mapMoveDelta;
 
 		/**
-		 * Stores the horizontal length of a map move,
+		 * Stores the horizontal length of a map move.
 		 */
 		float moveX;
 
 		/**
-		 * Stores the vertical length of a map move,
+		 * Stores the vertical length of a map move.
 		 */
 		float moveY;
 
@@ -1545,6 +1545,9 @@ public class MapView extends ViewGroup {
 			case OSMARENDER_TILE_DOWNLOAD:
 				this.mapGenerator = new OsmarenderTileDownload();
 				break;
+			default:
+				// all cases are covered, the default case should never occur
+				throw new RuntimeException("invalid mapViewMode: " + this.mapViewMode);
 		}
 
 		if (this.attachedToWindow) {

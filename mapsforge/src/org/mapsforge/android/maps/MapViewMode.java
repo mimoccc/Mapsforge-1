@@ -59,8 +59,10 @@ public enum MapViewMode {
 				return true;
 			case OSMARENDER_TILE_DOWNLOAD:
 				return true;
+			default:
+				// all cases are covered, the default case should never occur
+				return false;
 		}
-		return false;
 	}
 
 	/**

@@ -73,7 +73,7 @@ class LabelPlacement {
 	}
 
 	/**
-	 * centers the labels
+	 * Centers the labels.
 	 * 
 	 * @param labels
 	 *            labels to center
@@ -250,10 +250,10 @@ class LabelPlacement {
 			priorUp.remove(refPos[reference.nodeNumber * 4 + 2]);
 			priorUp.remove(refPos[reference.nodeNumber * 4 + 3]);
 
-			priorDown.remove((refPos[reference.nodeNumber * 4 + 0]));
-			priorDown.remove((refPos[reference.nodeNumber * 4 + 1]));
-			priorDown.remove((refPos[reference.nodeNumber * 4 + 2]));
-			priorDown.remove((refPos[reference.nodeNumber * 4 + 3]));
+			priorDown.remove(refPos[reference.nodeNumber * 4 + 0]);
+			priorDown.remove(refPos[reference.nodeNumber * 4 + 1]);
+			priorDown.remove(refPos[reference.nodeNumber * 4 + 2]);
+			priorDown.remove(refPos[reference.nodeNumber * 4 + 3]);
 
 			LinkedList<ReferencePosition> linkedRef = new LinkedList<ReferencePosition>();
 
@@ -303,7 +303,7 @@ class LabelPlacement {
 			ArrayList<PointTextContainer> areaLabels) {
 		ArrayList<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
 		// Array for the generated reference positions around the points of interests
-		ReferencePosition[] refPos = new ReferencePosition[(labels.size() * 2)];
+		ReferencePosition[] refPos = new ReferencePosition[labels.size() * 2];
 
 		// lists that sorts the reference points after the minimum right edge x position
 		PriorityQueue<ReferencePosition> priorRight = new PriorityQueue<ReferencePosition>(
@@ -390,7 +390,7 @@ class LabelPlacement {
 			}
 
 			priorLeft.remove(reference);
-			priorLeft.remove((refPos[reference.nodeNumber * 2 + 1]));
+			priorLeft.remove(refPos[reference.nodeNumber * 2 + 1]);
 
 			// find overlapping labels and deletes the reference points and delete them
 			LinkedList<ReferencePosition> linkedRef = new LinkedList<ReferencePosition>();
@@ -636,9 +636,9 @@ class LabelPlacement {
 			for (int y = 0; y < symbols.size(); y++) {
 				smb = symbols.get(y);
 
-				rect2 = (new android.graphics.Rect((int) smb.x, (int) smb.y,
+				rect2 = new android.graphics.Rect((int) smb.x, (int) smb.y,
 						(int) (smb.x + smb.symbol.getWidth()), (int) (smb.y + smb.symbol
-								.getHeight())));
+								.getHeight()));
 
 				if (android.graphics.Rect.intersects(rect1, rect2)) {
 					symbols.remove(y);
@@ -742,8 +742,8 @@ class LabelPlacement {
 			for (int y = x + 1; y < symbols.size(); y++) {
 				if (y != x) {
 					smb = symbols.get(y);
-					rect2 = (new android.graphics.Rect((int) smb.x, (int) smb.y, (int) smb.x
-							+ smb.symbol.getWidth(), (int) smb.y + smb.symbol.getHeight()));
+					rect2 = new android.graphics.Rect((int) smb.x, (int) smb.y, (int) smb.x
+							+ smb.symbol.getWidth(), (int) smb.y + smb.symbol.getHeight());
 
 					if (android.graphics.Rect.intersects(rect2, rect1)) {
 						symbols.remove(y);

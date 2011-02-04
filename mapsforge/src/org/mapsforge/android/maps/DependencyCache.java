@@ -58,7 +58,7 @@ class DependencyCache {
 		ArrayList<Dependency<DependencySymbol>> symbols;
 
 		/**
-		 * Init label, symbol and drawn
+		 * Initialize label, symbol and drawn.
 		 */
 		DependencyOnTile() {
 			this.labels = null;
@@ -98,7 +98,7 @@ class DependencyCache {
 		Bitmap symbol;
 
 		/**
-		 * Creates a symbol dependency element for the dependency cache
+		 * Creates a symbol dependency element for the dependency cache.
 		 * 
 		 * @param symbol
 		 *            reference on the dependency symbol.
@@ -113,7 +113,7 @@ class DependencyCache {
 		}
 
 		/**
-		 * Adds an additional tile, which has an dependency with this symbol
+		 * Adds an additional tile, which has an dependency with this symbol.
 		 * 
 		 * @param tile
 		 *            additional tile.
@@ -569,20 +569,20 @@ class DependencyCache {
 				linkedDep = this.dependencyTable.get(up);
 
 				addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
-				this.currentDependencyOnTile.addSymbol((new Dependency<DependencySymbol>(
-						addSmb, new ImmutablePoint(symbol.x, symbol.y))));
+				this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(addSmb,
+						new ImmutablePoint(symbol.x, symbol.y)));
 				addSmb.depCounter++;
 
-				linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
-						new ImmutablePoint(symbol.x, symbol.y + Tile.TILE_SIZE))));
+				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
+						new ImmutablePoint(symbol.x, symbol.y + Tile.TILE_SIZE)));
 				addSmb.addTile(up);
 
 				if ((symbol.x < 0.0f) && (!this.dependencyTable.get(leftup).drawn)) {
 					linkedDep = this.dependencyTable.get(leftup);
 
-					linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
+					linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
 							new ImmutablePoint(symbol.x + Tile.TILE_SIZE, symbol.y
-									+ Tile.TILE_SIZE))));
+									+ Tile.TILE_SIZE)));
 					addSmb.addTile(leftup);
 				}
 
@@ -590,9 +590,9 @@ class DependencyCache {
 						&& (!this.dependencyTable.get(rightup).drawn)) {
 					linkedDep = this.dependencyTable.get(rightup);
 
-					linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
+					linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
 							new ImmutablePoint(symbol.x - Tile.TILE_SIZE, symbol.y
-									+ Tile.TILE_SIZE))));
+									+ Tile.TILE_SIZE)));
 					addSmb.addTile(rightup);
 				}
 			}
@@ -605,21 +605,21 @@ class DependencyCache {
 
 				if (addSmb == null) {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
-					this.currentDependencyOnTile.addSymbol((new Dependency<DependencySymbol>(
-							addSmb, new ImmutablePoint(symbol.x, symbol.y))));
+					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
+							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
 					addSmb.depCounter++;
 				}
 
-				linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
-						new ImmutablePoint(symbol.x, symbol.y - Tile.TILE_SIZE))));
+				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
+						new ImmutablePoint(symbol.x, symbol.y - Tile.TILE_SIZE)));
 				addSmb.addTile(down);
 
 				if ((symbol.x < 0.0f) && (!this.dependencyTable.get(leftdown).drawn)) {
 					linkedDep = this.dependencyTable.get(leftdown);
 
-					linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
+					linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
 							new ImmutablePoint(symbol.x + Tile.TILE_SIZE, symbol.y
-									- Tile.TILE_SIZE))));
+									- Tile.TILE_SIZE)));
 					addSmb.addTile(leftdown);
 				}
 
@@ -628,9 +628,9 @@ class DependencyCache {
 
 					linkedDep = this.dependencyTable.get(rightdown);
 
-					linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
+					linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
 							new ImmutablePoint(symbol.x - Tile.TILE_SIZE, symbol.y
-									- Tile.TILE_SIZE))));
+									- Tile.TILE_SIZE)));
 					addSmb.addTile(rightdown);
 				}
 			}
@@ -641,13 +641,13 @@ class DependencyCache {
 
 				if (addSmb == null) {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
-					this.currentDependencyOnTile.addSymbol((new Dependency<DependencySymbol>(
-							addSmb, new ImmutablePoint(symbol.x, symbol.y))));
+					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
+							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
 					addSmb.depCounter++;
 				}
 
-				linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
-						new ImmutablePoint(symbol.x + Tile.TILE_SIZE, symbol.y))));
+				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
+						new ImmutablePoint(symbol.x + Tile.TILE_SIZE, symbol.y)));
 				addSmb.addTile(left);
 			}
 			// right
@@ -656,13 +656,13 @@ class DependencyCache {
 				linkedDep = this.dependencyTable.get(right);
 				if (addSmb == null) {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
-					this.currentDependencyOnTile.addSymbol((new Dependency<DependencySymbol>(
-							addSmb, new ImmutablePoint(symbol.x, symbol.y))));
+					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
+							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
 					addSmb.depCounter++;
 				}
 
-				linkedDep.addSymbol((new Dependency<DependencySymbol>(addSmb,
-						new ImmutablePoint(symbol.x - Tile.TILE_SIZE, symbol.y))));
+				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
+						new ImmutablePoint(symbol.x - Tile.TILE_SIZE, symbol.y)));
 				addSmb.addTile(right);
 			}
 		}
@@ -692,10 +692,10 @@ class DependencyCache {
 
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			depLabel = this.currentDependencyOnTile.labels.get(i);
-			rect1 = (new android.graphics.Rect((int) (depLabel.point.x),
+			rect1 = new android.graphics.Rect((int) (depLabel.point.x),
 					(int) (depLabel.point.y - depLabel.value.boundary.height()),
 					(int) (depLabel.point.x + depLabel.value.boundary.width()),
-					(int) (depLabel.point.y)));
+					(int) (depLabel.point.y));
 
 			for (int x = 0; x < areaLabels.size(); x++) {
 				pTC = areaLabels.get(x);
@@ -725,9 +725,9 @@ class DependencyCache {
 			for (int x = 0; x < areaLabels.size(); x++) {
 				label = areaLabels.get(x);
 
-				rect2 = (new android.graphics.Rect((int) (label.x),
+				rect2 = new android.graphics.Rect((int) (label.x),
 						(int) (label.y - label.boundary.height()),
-						(int) (label.x + label.boundary.width()), (int) (label.y)));
+						(int) (label.x + label.boundary.width()), (int) (label.y));
 
 				if (android.graphics.Rect.intersects(rect2, rect1)) {
 					areaLabels.remove(x);
@@ -769,8 +769,8 @@ class DependencyCache {
 			for (int y = 0; y < symbols.size(); y++) {
 
 				sym = symbols.get(y);
-				rect2 = (new android.graphics.Rect((int) sym.x, (int) sym.y, (int) sym.x
-						+ sym.symbol.getWidth(), (int) sym.y + sym.symbol.getHeight()));
+				rect2 = new android.graphics.Rect((int) sym.x, (int) sym.y, (int) sym.x
+						+ sym.symbol.getWidth(), (int) sym.y + sym.symbol.getHeight());
 
 				if (android.graphics.Rect.intersects(rect2, rect1)) {
 					symbols.remove(y);
@@ -783,10 +783,10 @@ class DependencyCache {
 	private void removeOverlappingSymbolsWithDependencyLabels(ArrayList<SymbolContainer> symbols) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			depLabel = this.currentDependencyOnTile.labels.get(i);
-			rect1 = (new android.graphics.Rect((int) (depLabel.point.x),
+			rect1 = new android.graphics.Rect((int) (depLabel.point.x),
 					(int) (depLabel.point.y - depLabel.value.boundary.height()),
 					(int) (depLabel.point.x + depLabel.value.boundary.width()),
-					(int) (depLabel.point.y)));
+					(int) (depLabel.point.y));
 
 			for (int x = 0; x < symbols.size(); x++) {
 				smb = symbols.get(x);
@@ -851,18 +851,18 @@ class DependencyCache {
 	 * Tile to the dependencies can be deleted, because the dependencies could have some
 	 * connection with neighbor tiles. AT THE TIME NOT TESTED AND NOT USED!!!
 	 * 
-	 * @param tile
+	 * @param tileToDelete
 	 *            tile which image will be remove from the cache
 	 */
-	void onDeleteTile(Tile tile) {
-		Tile Tile = new Tile(tile.x, tile.y, tile.zoomLevel);
-		DependencyOnTile cache = this.dependencyTable.get(Tile);
+	void onDeleteTile(Tile tileToDelete) {
+		Tile tile = new Tile(tileToDelete.x, tileToDelete.y, tileToDelete.zoomLevel);
+		DependencyOnTile cache = this.dependencyTable.get(tile);
 
 		if (cache == null) {
 			return;
 		}
 		if (isDependenyEmpty(cache)) {
-			this.dependencyTable.remove(Tile);
+			this.dependencyTable.remove(tile);
 			return;
 		}
 
@@ -877,82 +877,82 @@ class DependencyCache {
 		}
 
 		if (isDependenyEmpty(cache)) {
-			this.dependencyTable.remove(Tile);
+			this.dependencyTable.remove(tile);
 			return;
 		}
 
 		// test if all six connected tiles can be deleted
 
 		// up
-		Tile = new Tile(tile.x, tile.y - 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x, tileToDelete.y - 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 
 		// down
-		Tile = new Tile(tile.x, tile.y + 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x, tileToDelete.y + 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// left
-		Tile = new Tile(tile.x - 1, tile.y, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x - 1, tileToDelete.y, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// right
-		Tile = new Tile(tile.x + 1, tile.y, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x + 1, tileToDelete.y, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// leftup
-		Tile = new Tile(tile.x - 1, tile.y - 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x - 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// leftdown
-		Tile = new Tile(tile.x - 1, tile.y + 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x - 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// righttup
-		Tile = new Tile(tile.x + 1, tile.y - 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x + 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
 		// rightdown
-		Tile = new Tile(tile.x + 1, tile.y + 1, tile.zoomLevel);
-		cache = this.dependencyTable.get(Tile);
+		tile = new Tile(tileToDelete.x + 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
+		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
 			if (isDependenyEmpty(cache)) {
-				this.dependencyTable.remove(Tile);
+				this.dependencyTable.remove(tile);
 				return;
 			}
 		}

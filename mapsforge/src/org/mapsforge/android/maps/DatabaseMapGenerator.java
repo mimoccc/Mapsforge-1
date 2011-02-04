@@ -42,7 +42,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final short BITMAP_RAILWAY = 0x40;
 	private static final short BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
-	private static final byte DEFAULT_ZOOM_LEVEL = 15;
+	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
@@ -106,9 +106,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_HIGHWAY_PEDESTRIAN1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_PEDESTRIAN2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_PRIMARY_LINK1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static Paint PAINT_HIGHWAY_PRIMARY_LINK2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_PRIMARY_LINK2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_PRIMARY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static Paint PAINT_HIGHWAY_PRIMARY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_PRIMARY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_RESIDENTIAL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_RESIDENTIAL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_ROAD1 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -363,9 +363,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private void addAreaSymbol(Bitmap symbolBitmap, byte zoomLevel) {
 		if (symbolBitmap != null && this.currentTile.zoomLevel >= zoomLevel) {
 			this.areaNamePositions = calculateCenterOfBoundingBox();
-			this.symbols.add((new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
+			this.symbols.add(new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
 					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
-					- (symbolBitmap.getHeight() >> 1))));
+					- (symbolBitmap.getHeight() >> 1)));
 		}
 	}
 

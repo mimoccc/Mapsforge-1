@@ -19,7 +19,7 @@ package org.mapsforge.android.maps;
 /**
  * This class converts byte arrays to numbers.
  */
-class Deserializer {
+final class Deserializer {
 	/**
 	 * Converts five bytes of a byte array to an unsigned long.
 	 * <p>
