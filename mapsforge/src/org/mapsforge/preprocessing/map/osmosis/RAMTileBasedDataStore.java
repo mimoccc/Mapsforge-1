@@ -332,4 +332,10 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	}
 
+	@Override
+	public void release() {
+		// nothing to do here
+
+	}
+
 }

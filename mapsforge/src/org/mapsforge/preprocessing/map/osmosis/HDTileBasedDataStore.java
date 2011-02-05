@@ -42,6 +42,7 @@ import org.openstreetmap.osmosis.core.filter.common.IdTrackerType;
 import org.openstreetmap.osmosis.core.lifecycle.ReleasableIterator;
 import org.openstreetmap.osmosis.core.store.IndexedObjectStore;
 import org.openstreetmap.osmosis.core.store.IndexedObjectStoreReader;
+import org.openstreetmap.osmosis.core.store.NoSuchIndexElementException;
 import org.openstreetmap.osmosis.core.store.SimpleObjectStore;
 import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactory;
 
@@ -227,7 +228,12 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		if (nodeIndexReader == null)
 			throw new IllegalStateException("node store not accessible, call complete() first");
 
-		return TDNode.fromNode(nodeIndexReader.get(id));
+		try {
+			return TDNode.fromNode(nodeIndexReader.get(id));
+		} catch (NoSuchIndexElementException e) {
+			// TODO logging
+			return null;
+		}
 	}
 
 	// TODO add accounting of average number of tiles per way
@@ -285,6 +291,13 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		// + (countWayTileFactor[i] / countWays[i]));
 		// }
 
+	}
+
+	@Override
+	public void release() {
+		this.indexedNodeStore.release();
+		this.indexedWayStore.release();
+		this.wayStore.release();
 	}
 
 	private HDTileData getHDTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {

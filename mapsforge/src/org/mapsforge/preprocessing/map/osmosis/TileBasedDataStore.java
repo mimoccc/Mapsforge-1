@@ -120,4 +120,6 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 
 	void complete();
 
+	void release();
+
 }

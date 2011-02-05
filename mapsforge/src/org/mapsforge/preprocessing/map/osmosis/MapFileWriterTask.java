@@ -164,13 +164,16 @@ public class MapFileWriterTask implements Sink {
 
 	@Override
 	public void release() {
-		// nothing to do here
+		tileBasedGeoObjectStore.release();
 	}
 
 	@Override
 	public void process(EntityContainer entityContainer) {
 
 		Entity entity = entityContainer.getEntity();
+		// entity.setChangesetId(0);
+		// entity.setVersion(0);
+		// entity.setTimestamp(null);
 
 		switch (entity.getType()) {
 
