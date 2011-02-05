@@ -19,8 +19,10 @@ package org.mapsforge.preprocessing.map.osmosis;
 import gnu.trove.list.array.TDoubleArrayList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -262,26 +264,6 @@ final class GeoUtils {
 	}
 
 	/**
-	 * Computes the maximum absolute difference in the list of way node offsets. It is assumed
-	 * that the first two entries in the list are absolute coordinates and not offsets, so only
-	 * the remaining entries are considered.
-	 * 
-	 * @param wayNodeOffsets
-	 *            the list containing the way node offsets, where the first two entries are
-	 *            absolute coordinates and not offsets
-	 * @return the maximum absolute offset
-	 */
-	static int maxDiffBetweenCompressedWayNodes(final List<Integer> wayNodeOffsets) {
-		int maxDiff = 0;
-		for (int diff : wayNodeOffsets.subList(2, wayNodeOffsets.size())) {
-			diff = Math.abs(diff);
-			if (diff > maxDiff)
-				maxDiff = diff;
-		}
-		return maxDiff;
-	}
-
-	/**
 	 * Checks whether the given way is a closed polygon.
 	 * 
 	 * @param way
@@ -295,6 +277,80 @@ final class GeoUtils {
 			return false;
 		return way.getWayNodes()[0].getId() == way.getWayNodes()[way.getWayNodes().length - 1]
 				.getId();
+	}
+
+	/**
+	 * Computes the area enclosed by a non self-intersecting closed polygon.
+	 * 
+	 * see <a href="http://mathworld.wolfram.com/PolygonArea.html"/>
+	 * 
+	 * @param coordinates
+	 *            the coordinates as a collection of lat/lon pairs
+	 * @return the area enclosed by the polygon
+	 */
+	static double computePolygonArea(final Collection<GeoCoordinate> coordinates) {
+		if (coordinates.size() < 4) {
+			logger.fine("closed polygon must consist of at least 4 coordinates");
+			return -1;
+		}
+		Iterator<GeoCoordinate> it = coordinates.iterator();
+
+		GeoCoordinate c1 = null;
+		GeoCoordinate c2 = it.next();
+		double area = 0;
+		while (it.hasNext()) {
+			c1 = c2;
+			c2 = it.next();
+
+			area += c1.getLongitude() * c2.getLatitude();
+			area -= c2.getLongitude() * c1.getLatitude();
+		}
+
+		return area / 2;
+	}
+
+	static GeoCoordinate computePolygonCentroid(final Collection<GeoCoordinate> coordinates) {
+		if (coordinates.size() < 4) {
+			logger.fine("closed polygon must consist of at least 4 coordinates");
+			return null;
+		}
+
+		double area = computePolygonArea(coordinates);
+		area *= 6;
+
+		double cLon = 0, cLat = 0, factor;
+		Iterator<GeoCoordinate> it = coordinates.iterator();
+		GeoCoordinate c1;
+		GeoCoordinate c2 = it.next();
+
+		while (it.hasNext()) {
+			c1 = c2;
+			c2 = it.next();
+
+			factor = c1.getLongitude() * c2.getLatitude() - c2.getLongitude()
+					* c1.getLatitude();
+			cLon += (c1.getLongitude() + c2.getLongitude()) * factor;
+			cLat += (c1.getLatitude() + c2.getLatitude()) * factor;
+		}
+
+		return new GeoCoordinate(cLat / area, cLon / area);
+
+	}
+
+	static boolean pointInTile(GeoCoordinate point, TileCoordinate tile) {
+		if (point == null || tile == null)
+			return false;
+
+		int lon1 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(),
+				tile.getZoomlevel()));
+		int lon2 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(
+				tile.getX() + 1, tile.getZoomlevel()));
+		int lat1 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(),
+				tile.getZoomlevel()));
+		int lat2 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(
+				tile.getY() + 1, tile.getZoomlevel()));
+		return point.getLatitudeE6() <= lat1 && point.getLatitudeE6() >= lat2
+				&& point.getLongitudeE6() >= lon1 && point.getLongitudeE6() <= lon2;
 	}
 
 	// TODO clarify the semantic of a line segment
@@ -729,16 +785,18 @@ final class GeoUtils {
 
 		private static double[] clipLine(double x1, double y1, double x2, double y2,
 				double[] rectangle) {
-			byte outcode1 = outCode(x1, y1, rectangle[0], rectangle[2], rectangle[1],
+			double x1Copy = x1, y1Copy = y1, x2Copy = x2, y2Copy = y2;
+
+			byte outcode1 = outCode(x1Copy, y1Copy, rectangle[0], rectangle[2], rectangle[1],
 					rectangle[3]);
-			byte outcode2 = outCode(x2, y2, rectangle[0], rectangle[2], rectangle[1],
+			byte outcode2 = outCode(x2Copy, y2Copy, rectangle[0], rectangle[2], rectangle[1],
 					rectangle[3]);
 
 			while (true) {
 
 				if ((outcode1 | outcode2) == 0) {
 					// both are inside
-					return new double[] { x1, y1, x2, y2 };
+					return new double[] { x1Copy, y1Copy, x2Copy, y2Copy };
 				} else if ((outcode1 & outcode2) != 0) {
 					// both are outside and in the same region
 					return null;
@@ -749,19 +807,23 @@ final class GeoUtils {
 					// Now find the intersection point;
 					// use formulas y = y0 + slope * (x - x0), x = x0 + (1 / slope) * (y - y0)
 					if ((outcodeOut & TOP) != 0) { // point is above the clip rectangle
-						x = x1 + (x2 - x1) * (rectangle[3] - y1) / (y2 - y1);
+						x = x1Copy + (x2Copy - x1Copy) * (rectangle[3] - y1Copy)
+								/ (y2Copy - y1Copy);
 						y = rectangle[3];
 					} else if ((outcodeOut & BOTTOM) != 0) { // point is below the clip
 																// rectangle
-						x = x1 + (x2 - x1) * (rectangle[1] - y1) / (y2 - y1);
+						x = x1Copy + (x2Copy - x1Copy) * (rectangle[1] - y1Copy)
+								/ (y2Copy - y1Copy);
 						y = rectangle[1];
 					} else if ((outcodeOut & RIGHT) != 0) { // point is to the right of clip
 															// rectangle
-						y = y1 + (y2 - y1) * (rectangle[2] - x1) / (x2 - x1);
+						y = y1Copy + (y2Copy - y1Copy) * (rectangle[2] - x1Copy)
+								/ (x2Copy - x1Copy);
 						x = rectangle[2];
 					} else if ((outcodeOut & LEFT) != 0) { // point is to the left of clip
 															// rectangle
-						y = y1 + (y2 - y1) * (rectangle[0] - x1) / (x2 - x1);
+						y = y1Copy + (y2Copy - y1Copy) * (rectangle[0] - x1Copy)
+								/ (x2Copy - x1Copy);
 						x = rectangle[0];
 					}
 
@@ -770,14 +832,16 @@ final class GeoUtils {
 					// TODO i do not recognize the sense of these warnings for a "call by value"
 					// parameter
 					if (outcodeOut == outcode1) {
-						x1 = x;
-						y1 = y;
-						outcode1 = outCode(x1, y1, rectangle[0], rectangle[2], rectangle[1],
+						x1Copy = x;
+						y1Copy = y;
+						outcode1 = outCode(x1Copy, y1Copy, rectangle[0], rectangle[2],
+								rectangle[1],
 								rectangle[3]);
 					} else {
-						x2 = x;
-						y2 = y;
-						outcode2 = outCode(x2, y2, rectangle[0], rectangle[2], rectangle[1],
+						x2Copy = x;
+						y2Copy = y;
+						outcode2 = outCode(x2Copy, y2Copy, rectangle[0], rectangle[2],
+								rectangle[1],
 								rectangle[3]);
 					}
 				}

@@ -67,7 +67,7 @@ class MapFileWriter {
 
 	// bitmap flags for ways
 	private static final short BITMAP_REF = 64;
-	// private static final short BITMAP_LABEL = 32;
+	private static final short BITMAP_LABEL = 32;
 	private static final short BITMAP_MULTIPOLYGON = 16;
 	private static final short BITMAP_HIGHWAY = 128;
 	private static final short BITMAP_RAILWAY = 64;
@@ -104,7 +104,7 @@ class MapFileWriter {
 	// IO
 	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
 	private static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
-	private static final int TILE_BUFFER_SIZE = 0x3200000;
+	private static final int TILE_BUFFER_SIZE = 0x3200000; // 50MB
 	private static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
 	private static final int POI_BUFFER_SIZE = 0x100000; // 1MB
 	private final RandomAccessFile randomAccessFile;
@@ -523,7 +523,7 @@ class MapFileWriter {
 						for (TDWay way : ways) {
 							wayBuffer.clear();
 
-							List<Integer> wayNodePreprocessingResult = preprocessWayNodes(
+							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
 									maxZoomCurrentInterval, minZoomCurrentInterval,
 									currentTileCoordinate);
@@ -566,19 +566,23 @@ class MapFileWriter {
 							wayBuffer
 									.put(Serializer
 											.getVariableByteUnsigned(wayNodePreprocessingResult
+													.getCoordinates()
 													.size() / 2));
 
 							// write the way nodes:
 							// the first node is always stored with four bytes
 							// the remaining way node differences are stored according to the
 							// compression type
-							writeWayNodes(wayNodePreprocessingResult, currentTileLat,
+							writeWayNodes(wayNodePreprocessingResult.getCoordinates(),
+									currentTileLat,
 									currentTileLon, wayBuffer);
 
 							// write a byte with name, label and way type information
-							wayBuffer.put(infoByteWay(way.getName(),
-									way.getWaytype(),
-									way.getRef()));
+							wayBuffer.put(infoByteWay(way.getName(), way.getRef(),
+										wayNodePreprocessingResult.getLabelPosition() != null,
+									// false,
+									way.getWaytype()
+									));
 
 							// // if the way has a name, write it to the file
 							if (way.getName() != null && way.getName().length() > 0) {
@@ -589,14 +593,24 @@ class MapFileWriter {
 							if (way.getRef() != null && way.getRef().length() > 0) {
 								writeUTF8(way.getRef(), wayBuffer);
 							}
-							//
-							// // // if the way has a label position write it to the file
-							// // if (labelPositionLatitude != 0 && labelPositionLongitude != 0)
-							// {
-							// // raf.writeInt(labelPositionLatitude);
-							// // raf.writeInt(labelPositionLongitude);
-							// // }
-							//
+
+							if (wayNodePreprocessingResult.getLabelPosition() != null) {
+								// if (way.getId() == 36056459)
+								// System.out.println("rewe");
+								// logger.info("writing label position: "
+								// + wayNodePreprocessingResult.getLabelPosition());
+								wayBuffer.put(Serializer
+										.getVariableByteSigned(wayNodePreprocessingResult
+												.getLabelPosition().getLatitudeE6()
+												- wayNodePreprocessingResult.getCoordinates()
+														.get(0)));
+								wayBuffer.put(Serializer
+										.getVariableByteSigned(wayNodePreprocessingResult
+												.getLabelPosition().getLongitudeE6()
+												- wayNodePreprocessingResult.getCoordinates()
+														.get(1)));
+							}
+
 							// ***************** MULTIPOLYGONS WITH INNER WAYS ***************
 							if (way.getWaytype() == 3) {
 								List<TDWay> innerways = dataStore
@@ -606,7 +620,7 @@ class MapFileWriter {
 									wayBuffer.put(Serializer.getVariableByteUnsigned(innerways
 											.size()));
 									for (TDWay innerway : innerways) {
-										List<Integer> innerWayAsList =
+										WayNodePreprocessingResult innerWayAsList =
 													preprocessWayNodes(innerway,
 															waynodeCompression,
 															pixelCompression,
@@ -618,10 +632,13 @@ class MapFileWriter {
 										wayBuffer
 												.put(Serializer
 														.getVariableByteUnsigned(innerWayAsList
+																.getCoordinates()
 																.size() / 2));
-										writeInnerWayNodes(wayNodePreprocessingResult.get(0),
-												wayNodePreprocessingResult.get(1),
-												innerWayAsList, wayBuffer);
+										writeInnerWayNodes(wayNodePreprocessingResult
+												.getCoordinates().get(0),
+												wayNodePreprocessingResult.getCoordinates()
+														.get(1),
+												innerWayAsList.getCoordinates(), wayBuffer);
 									}
 								}
 							}
@@ -671,7 +688,7 @@ class MapFileWriter {
 
 		// return size of sub file in bytes
 		return currentSubfileOffset;
-	} // end writeSubfile()
+	}// end writeSubfile()
 
 	private void appendWhitespace(int amount, ByteBuffer buffer) {
 		for (int i = 0; i < amount; i++) {
@@ -689,12 +706,13 @@ class MapFileWriter {
 		return result;
 	}
 
-	private List<Integer> preprocessWayNodes(TDWay way,
+	private WayNodePreprocessingResult preprocessWayNodes(TDWay way,
 			boolean waynodeCompression,
 			boolean pixelCompression, boolean polygonClipping, byte maxZoomCurrentInterval,
 			byte minZoomCurrentInterval,
 			TileCoordinate tile) {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
+		GeoCoordinate polygonCentroid = null;
 
 		// if the sub file for lower zoom levels is written, remove all way
 		// nodes from the list which are projected on the same pixel
@@ -716,12 +734,25 @@ class MapFileWriter {
 			// return null;
 			// }
 			if (way.getWaytype() >= 2 && waynodeCoordinates.size() >= 4
-					&& (way.getName() == null || way.getName().length() == 0)) {
+					// TODO activate polygon clipping of named polygons
+					&& (way.getName() == null || way.getName().equals(""))) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
 						waynodeCoordinates, tile, bboxEnlargement);
-				if (clipped != null && !clipped.isEmpty())
+				if (clipped != null && !clipped.isEmpty()) {
 					waynodeCoordinates = clipped;
-				else
+					// TODO activate polygon clipping of named polygons
+					// if (way.getName() != null && way.getName().length() > 0) {
+					// polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates);
+					// if (polygonCentroid != null) {
+					// logger.info("centroid for way '" + way.getName() + "' ("
+					// + way.getId() + ") is: " + polygonCentroid);
+					// }
+					// }
+					// if (polygonCentroid != null
+					// && !GeoUtils.pointInTile(polygonCentroid,
+					// tile))
+					// polygonCentroid = null;
+				} else
 					return null;
 			}
 		}
@@ -735,7 +766,7 @@ class MapFileWriter {
 			waynodesAsList = waynodesAsList(waynodeCoordinates);
 		}
 
-		return waynodesAsList;
+		return new WayNodePreprocessingResult(waynodesAsList, polygonCentroid);
 	}
 
 	private byte infoByteLayerAndTagAmount(byte layer, short tagAmount) {
@@ -769,7 +800,7 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte infoByteWay(String name, int wayType, String ref) {
+	private byte infoByteWay(String name, String ref, boolean labelPosition, int wayType) {
 		byte infoByte = 0;
 
 		if (name != null && name.length() > 0) {
@@ -778,10 +809,9 @@ class MapFileWriter {
 		if (ref != null && ref.length() > 0) {
 			infoByte |= BITMAP_REF;
 		}
-		// TODO we do not yet support label positions for ways
-		// if (labelPosLat != 0 && labelPosLon != 0) {
-		// infoByte |= BITMAP_LABEL;
-		// }
+		if (labelPosition) {
+			infoByte |= BITMAP_LABEL;
+		}
 		if (wayType == 3) {
 			infoByte |= BITMAP_MULTIPOLYGON;
 		}
@@ -893,6 +923,27 @@ class MapFileWriter {
 		}
 
 		return bitmaskComputationResults;
+	}
+
+	private class WayNodePreprocessingResult {
+
+		final List<Integer> coordinates;
+		final GeoCoordinate labelPosition;
+
+		public WayNodePreprocessingResult(List<Integer> coordinates, GeoCoordinate labelPosition) {
+			super();
+			this.coordinates = coordinates;
+			this.labelPosition = labelPosition;
+		}
+
+		public List<Integer> getCoordinates() {
+			return coordinates;
+		}
+
+		public GeoCoordinate getLabelPosition() {
+			return labelPosition;
+		}
+
 	}
 
 	private class TileBitmaskComputationTask implements Callable<Short> {

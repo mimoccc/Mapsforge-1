@@ -143,9 +143,14 @@ class CoastlineWay {
 		for (int i = 2; i < coastline.length; i += 2) {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
+			// TODO delete
 			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
-					tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
+			// clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
+			// tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
+			clippedSegment = GeoUtils.CohenSutherlandClipping.clipLine(
+					new double[] { x1, y1, x2, y2 },
+					new double[] { tileBoundaries[0], tileBoundaries[1],
+							tileBoundaries[2], tileBoundaries[3] });
 			if (clippedSegment != null) {
 				coastline[i - 2] = (float) clippedSegment[0];
 				coastline[i - 1] = (float) clippedSegment[1];
@@ -165,9 +170,14 @@ class CoastlineWay {
 		for (int i = coastline.length - 4; i >= 0; i -= 2) {
 			x2 = coastline[i];
 			y2 = coastline[i + 1];
+			// TODO delete
 			// clip the current way segment to the tile rectangle
-			clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
-					tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
+			// clippedSegment = LineClipping.clipLineToRectangle(x1, y1, x2, y2,
+			// tileBoundaries[0], tileBoundaries[1], tileBoundaries[2], tileBoundaries[3]);
+			clippedSegment = GeoUtils.CohenSutherlandClipping.clipLine(
+					new double[] { x1, y1, x2, y2 },
+					new double[] { tileBoundaries[0], tileBoundaries[1],
+							tileBoundaries[2], tileBoundaries[3] });
 			if (clippedSegment != null) {
 				coastline[i + 2] = (float) clippedSegment[0];
 				coastline[i + 3] = (float) clippedSegment[1];

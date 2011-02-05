@@ -326,11 +326,16 @@ class TileData {
 				if (validWay) {
 
 					// mark the way as area if the first and the last way node are the same
-					// and if the way has more than two way nodes
+					// and if the way has at least 4 way nodes
 					short waytype = 1;
-					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()
-							&& waynodes.length > 2) {
-						waytype = 2;
+					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()) {
+						if (waynodes.length >= 4)
+							waytype = 2;
+						else {
+							logger.fine("Found closed polygon with fewer than 4 way nodes. Way-id: "
+									+ way.getId());
+							return null;
+						}
 					}
 
 					return new TDWay(way.getId(), layer, name,
