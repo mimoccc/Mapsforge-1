@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 mapsforge.org
+ * Copyright 2010, 2011 mapsforge.org
  *
  * This progrimport java.util.Map;
 import java.util.Map.Entry;

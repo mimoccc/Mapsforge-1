@@ -1,7 +1,7 @@
 //package org.mapsforge.android.routing.blockedHighwayHierarchies;
 //
 ///*
-// * Copyright 2010 mapsforge.org
+// * Copyright 2010, 2011 mapsforge.org
 // *
 // * This program is free software: you can redistribute it and/or modify
 // * it under the terms of the GNU General Public License as published by
