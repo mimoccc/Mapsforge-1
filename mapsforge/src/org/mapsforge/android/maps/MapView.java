@@ -574,7 +574,7 @@ public class MapView extends ViewGroup {
 	/**
 	 * Capacity of the RAM cache.
 	 */
-	private static final int TILE_RAM_CACHE_SIZE = 20;
+	private static final int TILE_RAM_CACHE_SIZE = 16;
 
 	/**
 	 * Constant move speed factor for trackball events.

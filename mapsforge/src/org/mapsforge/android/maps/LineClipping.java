@@ -17,13 +17,13 @@
 package org.mapsforge.android.maps;
 
 /**
- * Fast implementation of the Cohen–Sutherland clipping algorithm.
+ * Fast implementation of the Cohen–Sutherland line clipping algorithm.
  */
 final class LineClipping {
-	private static final int BOTTOM = 1;
-	private static final int LEFT = 2;
-	private static final int RIGHT = 4;
-	private static final int TOP = 8;
+	private static final byte BOTTOM = 1;
+	private static final byte LEFT = 2;
+	private static final byte RIGHT = 4;
+	private static final byte TOP = 8;
 
 	/**
 	 * Computes the region code for a given point and rectangle.
@@ -42,7 +42,7 @@ final class LineClipping {
 	 *            top coordinate of the rectangle.
 	 * @return the region code bitmask.
 	 */
-	private static int calculateOutCode(double x, double y, double left, double bottom,
+	private static byte calculateOutCode(double x, double y, double left, double bottom,
 			double right, double top) {
 		if (y > top) {
 			if (x > right) {
@@ -100,8 +100,8 @@ final class LineClipping {
 		double y2new = y2;
 
 		// compute the region codes for both points
-		int outcode1 = calculateOutCode(x1, y1, left, bottom, right, top);
-		int outcode2 = calculateOutCode(x2, y2, left, bottom, right, top);
+		byte outcode1 = calculateOutCode(x1, y1, left, bottom, right, top);
+		byte outcode2 = calculateOutCode(x2, y2, left, bottom, right, top);
 
 		while (true) {
 			if ((outcode1 | outcode2) == 0) {
