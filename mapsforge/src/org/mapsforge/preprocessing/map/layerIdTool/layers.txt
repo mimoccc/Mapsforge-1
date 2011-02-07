@@ -42,8 +42,7 @@ aeroway=aerodrome
 aeroway=apron
 
 // Man-made areas
-sport=tennis
-sport=shooting
+sport=tennis sport=shooting sport=swimming
 amenity=parking
 tourism=attraction
 tourism=zoo

@@ -136,6 +136,7 @@ route=ferry;12
 sport=golf;15
 sport=shooting;15
 sport=soccer;15
+sport=swimming;15
 sport=tennis;15
 
 tourism=attraction;15

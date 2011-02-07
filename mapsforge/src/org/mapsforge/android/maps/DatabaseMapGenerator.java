@@ -211,6 +211,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_ROUTE_FERRY = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_SHOOTING_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_SHOOTING_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_SPORT_SWIMMING_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_SPORT_SWIMMING_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_TENNIS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_TENNIS_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TOURISM_ATTRACTION_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -1117,6 +1119,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_SPORT_SHOOTING_OUTLINE.setColor(Color.rgb(112, 193, 143));
+		PAINT_SPORT_SWIMMING_FILL.setStyle(Paint.Style.FILL);
+		PAINT_SPORT_SWIMMING_FILL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_SPORT_SWIMMING_FILL.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_SPORT_SWIMMING_FILL.setColor(Color.rgb(181, 214, 241));
+		PAINT_SPORT_SWIMMING_OUTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_SPORT_SWIMMING_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_SPORT_SWIMMING_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_SPORT_SWIMMING_OUTLINE.setColor(Color.rgb(97, 97, 255));
 		PAINT_SPORT_TENNIS_FILL.setStyle(Paint.Style.FILL);
 		PAINT_SPORT_TENNIS_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_SPORT_TENNIS_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1363,6 +1373,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_ROUTE_FERRY.setStrokeWidth(1 * paintScaleFactor);
 
 		PAINT_SPORT_SHOOTING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_SPORT_SWIMMING_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_SPORT_TENNIS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_TOURISM_ZOO_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
@@ -3051,6 +3062,16 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SHOOTING_FILL));
 			this.layer.get(LayerIds.SPORT$SHOOTING).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SHOOTING_OUTLINE));
+			if (--this.remainingTags <= 0) {
+				return;
+			}
+		} else if (this.tagIDsWays.sport$swimming != null
+				&& wayTagIds[this.tagIDsWays.sport$swimming]) {
+			this.layer.get(LayerIds.SPORT$SWIMMING).add(
+					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SWIMMING_FILL));
+			this.layer.get(LayerIds.SPORT$SWIMMING).add(
+					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SWIMMING_OUTLINE));
+			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
 			}

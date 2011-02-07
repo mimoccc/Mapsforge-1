@@ -123,6 +123,7 @@ class TagIDsWays {
 	Integer railway$tram;
 	Integer route$ferry;
 	Integer sport$shooting;
+	Integer sport$swimming;
 	Integer sport$tennis;
 	Integer tourism$attraction;
 	Integer tourism$zoo;
@@ -257,6 +258,7 @@ class TagIDsWays {
 		this.route$ferry = nodeTags.get("route=ferry");
 
 		this.sport$shooting = nodeTags.get("sport=shooting");
+		this.sport$swimming = nodeTags.get("sport=swimming");
 		this.sport$tennis = nodeTags.get("sport=tennis");
 
 		this.tourism$attraction = nodeTags.get("tourism=attraction");
