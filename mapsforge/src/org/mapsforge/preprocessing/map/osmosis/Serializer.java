@@ -21,7 +21,7 @@ import java.security.InvalidParameterException;
 /**
  * This class converts numbers to byte arrays.
  */
-public class Serializer {
+public final class Serializer {
 	/**
 	 * Converts a signed int to a byte array.
 	 * <p>

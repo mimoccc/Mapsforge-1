@@ -95,10 +95,12 @@ class MapFileWriter {
 
 	private static final Charset UTF8_CHARSET = Charset.forName("utf8");
 
+	private static final int PROGRESS_PERCENT_STEP = 10;
+
 	// data
 	private TileBasedDataStore dataStore;
 
-	private static final TileInfo tileInfo = TileInfo.getInstance();
+	private static final TileInfo TILE_INFO = TileInfo.getInstance();
 	// private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
 
 	// IO
@@ -115,7 +117,7 @@ class MapFileWriter {
 
 	// accounting
 	private long tilesProcessed = 0;
-	private long fivePercentOfTilesToProcess;
+	private long amountOfTilesInPercentStep;
 	private long emptyTiles = 0;
 	private long maxTileSize = 0;
 	private long cumulatedTileSizeOfNonEmptyTiles = 0;
@@ -130,9 +132,9 @@ class MapFileWriter {
 		super();
 		this.dataStore = dataStore;
 		this.randomAccessFile = file;
-		fivePercentOfTilesToProcess = dataStore.cumulatedNumberOfTiles() / 20;
-		if (fivePercentOfTilesToProcess == 0)
-			fivePercentOfTilesToProcess = 1;
+		amountOfTilesInPercentStep = dataStore.cumulatedNumberOfTiles() / PROGRESS_PERCENT_STEP;
+		if (amountOfTilesInPercentStep == 0)
+			amountOfTilesInPercentStep = 1;
 		executorService = Executors.newFixedThreadPool(threadpoolSize);
 		this.bboxEnlargement = bboxEnlargement;
 	}
@@ -165,13 +167,13 @@ class MapFileWriter {
 		long totalHeaderSize = writeContainerHeader(date, version, tilePixel,
 				comment, debugStrings, mapStartPosition);
 
-		int n_zoom_intervals = dataStore.getZoomIntervalConfiguration()
+		int amountOfZoomIntervals = dataStore.getZoomIntervalConfiguration()
 				.getNumberOfZoomIntervals();
 
 		// SUB FILES
 		// for each zoom interval write a sub file
 		long currentFileSize = totalHeaderSize;
-		for (int i = 0; i < n_zoom_intervals; i++) {
+		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
 			long subfileSize = writeSubfile(currentFileSize, i, debugStrings,
 					waynodeCompression, polygonClipping, pixelCompression);
@@ -252,10 +254,10 @@ class MapFileWriter {
 		containerHeaderBuffer.putShort(tilePixel);
 
 		logger.fine("Bounding box for file: " +
-				dataStore.getBoundingBox().maxLatitudeE6 + ", " +
-				dataStore.getBoundingBox().minLongitudeE6 + ", " +
-				dataStore.getBoundingBox().minLatitudeE6 + ", " +
-				dataStore.getBoundingBox().maxLongitudeE6);
+				dataStore.getBoundingBox().maxLatitudeE6 + ", "
+				+ dataStore.getBoundingBox().minLongitudeE6 + ", "
+				+ dataStore.getBoundingBox().minLatitudeE6 + ", "
+				+ dataStore.getBoundingBox().maxLongitudeE6);
 		// upper left corner of the bounding box
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLatitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLongitudeE6);
@@ -384,7 +386,7 @@ class MapFileWriter {
 								currentTileCoordinate.getZoomlevel()));
 
 				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
-				if (tileInfo.isWaterTile(currentTileCoordinate)) {
+				if (TILE_INFO.isWaterTile(currentTileCoordinate)) {
 					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
 				}
 				// else {
@@ -499,7 +501,7 @@ class MapFileWriter {
 								writeUTF8(poi.getHouseNumber(), poiBuffer);
 							}
 						}
-					}// end for loop over POIs
+					} // end for loop over POIs
 
 					// write offset to first way in the tile header
 					tileBuffer.put(Serializer.getVariableByteUnsigned(poiBuffer.position()));
@@ -646,8 +648,8 @@ class MapFileWriter {
 									.position()));
 							tileBuffer.put(wayBuffer.array(), 0, wayBuffer.position());
 						}
-					}// end for loop over ways
-				}// end if clause checking if tile is empty or not
+					} // end for loop over ways
+				} // end if clause checking if tile is empty or not
 				else {
 					emptyTiles++;
 				}
@@ -667,13 +669,13 @@ class MapFileWriter {
 				}
 
 				tilesProcessed++;
-				if (tilesProcessed % fivePercentOfTilesToProcess == 0) {
-					logger.info("written " + (tilesProcessed / fivePercentOfTilesToProcess)
-							* 5
+				if (tilesProcessed % amountOfTilesInPercentStep == 0) {
+					logger.info("written " + (tilesProcessed / amountOfTilesInPercentStep)
+							* PROGRESS_PERCENT_STEP
 							+ "% of file");
 				}
-			}// end for loop over tile columns
-		}// /end for loop over tile rows
+			} // end for loop over tile columns
+		} // /end for loop over tile rows
 
 		// write remaining tiles
 		if (tileBuffer.position() > 0) {
@@ -688,7 +690,7 @@ class MapFileWriter {
 
 		// return size of sub file in bytes
 		return currentSubfileOffset;
-	}// end writeSubfile()
+	} // end writeSubfile()
 
 	private void appendWhitespace(int amount, ByteBuffer buffer) {
 		for (int i = 0; i < amount; i++) {
@@ -866,6 +868,8 @@ class MapFileWriter {
 					infoByte |= BITMAP_WATERWAY;
 					break;
 				case UNCLASSIFIED:
+					break;
+				default:
 					break;
 			}
 		}

@@ -45,9 +45,13 @@ final class GeoUtils {
 	private static final Logger logger =
 			Logger.getLogger(GeoUtils.class.getName());
 
-	private static final int[] tileBitMaskValues = new int[] { 32768, 16384,
+	private static final int[] TILE_BITMASK_VALUES = new int[] { 32768, 16384,
 			8192, 4096, 2048, 1024,
 			512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
+
+	private GeoUtils() {
+		// prevent creation of a GeoUtils object
+	}
 
 	private static double[] computeTileEnlargement(long tileY, byte zoom,
 			int enlargementInMeter) {
@@ -129,7 +133,7 @@ final class GeoUtils {
 	}
 
 	/**
-	 * A tile on zoom level <i>z<i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each
+	 * A tile on zoom level <i>z</i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each
 	 * of these 16 sub tiles it is analyzed if the given way needs to be included. The result is
 	 * represented as a 16 bit short value. Each bit represents one of the 16 sub tiles. A bit
 	 * is set to 1 if the sub tile needs to include the way. Representation is row-wise.
@@ -167,12 +171,12 @@ final class GeoUtils {
 				// if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
 				// || geoWay.coveredBy(subtilePolygon))
 				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)) {
-					bitmask |= tileBitMaskValues[tileCounter];
+					bitmask |= TILE_BITMASK_VALUES[tileCounter];
 				}
 			} else {
 				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)
 						|| SutherlandHodgmanClipping.accept(waynodes, currentBBox)) {
-					bitmask |= tileBitMaskValues[tileCounter];
+					bitmask |= TILE_BITMASK_VALUES[tileCounter];
 				}
 			}
 			tileCounter++;
@@ -513,10 +517,10 @@ final class GeoUtils {
 	static String toGPX(final List<GeoCoordinate> g) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
-		sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" " +
-				"version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-				"xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 " +
-				"http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
+		sb.append("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" "
+				+ "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+				+ "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 "
+				+ "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
 		for (GeoCoordinate c : g) {
 			sb.append("\t<wpt ").append("lat=\"").append(c.getLatitude()).append("\" ");
 			sb.append("lon=\"").append(c.getLongitude()).append("\"/>");

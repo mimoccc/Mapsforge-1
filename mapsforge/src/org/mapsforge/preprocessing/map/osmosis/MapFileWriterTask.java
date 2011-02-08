@@ -199,7 +199,7 @@ public class MapFileWriterTask implements Sink {
 			// *******************************************************
 			// ****************** NODE PROCESSING*********************
 			// *******************************************************
-			case Node: {
+			case Node:
 
 				if (tileBasedGeoObjectStore == null) {
 					logger.severe("No valid bounding box found in input data.\n" +
@@ -215,21 +215,19 @@ public class MapFileWriterTask implements Sink {
 				entity = null;
 				amountOfNodesProcessed++;
 				break;
-			}
 
-				// *******************************************************
-				// ******************* WAY PROCESSING*********************
-				// *******************************************************
-			case Way: {
+			// *******************************************************
+			// ******************* WAY PROCESSING*********************
+			// *******************************************************
+			case Way:
 				tileBasedGeoObjectStore.addWay((Way) entity);
 				entity = null;
 				amountOfWaysProcessed++;
 				break;
-			}
 
-				// *******************************************************
-				// ****************** RELATION PROCESSING*********************
-				// *******************************************************
+			// *******************************************************
+			// ****************** RELATION PROCESSING*********************
+			// *******************************************************
 			case Relation:
 				Relation currentRelation = (Relation) entity;
 

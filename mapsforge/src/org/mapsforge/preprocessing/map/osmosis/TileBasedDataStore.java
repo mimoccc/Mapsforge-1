@@ -42,16 +42,16 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 * 
 	 * @return The bounding box that defines the area that is covered by the data store.
 	 */
-	public Rect getBoundingBox();
+	Rect getBoundingBox();
 
-	public TileGridLayout getTileGridLayout(int zoomIntervalIndex);
+	TileGridLayout getTileGridLayout(int zoomIntervalIndex);
 
 	/**
 	 * Get the zoom interval configuration of the data store.
 	 * 
 	 * @return the underlying zoom interval configuration
 	 */
-	public ZoomIntervalConfiguration getZoomIntervalConfiguration();
+	ZoomIntervalConfiguration getZoomIntervalConfiguration();
 
 	/**
 	 * Add a node to the data store. No association with a tile is performed.
@@ -60,7 +60,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 *            the node that is to be added to the data store
 	 * @return true, if the node was successfully added, false otherwise
 	 */
-	public boolean addNode(Node node);
+	boolean addNode(Node node);
 
 	/**
 	 * Add a way to the data store. No association with a tile is performed.
@@ -69,7 +69,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 *            the way which is to be added to the data store
 	 * @return true if the way was successfully added, false otherwise
 	 */
-	public boolean addWay(Way way);
+	boolean addWay(Way way);
 
 	/**
 	 * Retrieve the all the inner ways that are associated with an outer way that represents a
@@ -79,7 +79,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 *            id of the outer way
 	 * @return all associated inner ways
 	 */
-	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID);
+	List<TDWay> getInnerWaysOfMultipolygon(long outerWayID);
 
 	/**
 	 * Adds a multipolygon consisting of ways to the tile data store.
@@ -92,7 +92,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 *            all supported tags that are attached to the relation
 	 * @return true if the multipolygon has been successfully added
 	 */
-	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
+	boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
 			EnumSet<WayEnum> relationTags);
 
 	/**
@@ -106,7 +106,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 *            y coordinate of the tile
 	 * @return tile, or null if the tile is outside the bounding box of this tile data store
 	 */
-	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY);
+	TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY);
 
 	/**
 	 * Retrieve the total amount of tiles cumulated over all base zoom levels that is needed to
@@ -116,10 +116,23 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 */
 	long cumulatedNumberOfTiles();
 
+	/**
+	 * Retrieve all coastlines that cross the given tile.
+	 * 
+	 * @param tc
+	 *            the coordinate of the tile
+	 * @return all coastlines that cross the tile, an empty set if no coastlines cross
+	 */
 	Set<TDWay> getCoastLines(TileCoordinate tc);
 
+	/**
+	 * Complete the data store, e.g. build indexes or similar.
+	 */
 	void complete();
 
+	/**
+	 * Release all acquired resources, e.g. delete any temporary files.
+	 */
 	void release();
 
 }

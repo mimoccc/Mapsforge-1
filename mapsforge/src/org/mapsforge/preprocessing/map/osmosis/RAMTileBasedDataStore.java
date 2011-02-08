@@ -37,7 +37,7 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
-class RAMTileBasedDataStore extends BaseTileBasedDataStore {
+final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	private static final Logger logger =
 			Logger.getLogger(TileBasedDataStore.class.getName());
 
@@ -285,16 +285,16 @@ class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {
-		int tileCoordinateXIndex = (tileCoordinateX - tileGridLayouts[baseZoomIndex]
+		int tileCoordinateXIndex = tileCoordinateX - tileGridLayouts[baseZoomIndex]
 				.getUpperLeft()
-				.getX());
-		int tileCoordinateYIndex = (tileCoordinateY - tileGridLayouts[baseZoomIndex]
+				.getX();
+		int tileCoordinateYIndex = tileCoordinateY - tileGridLayouts[baseZoomIndex]
 				.getUpperLeft()
-				.getY());
+				.getY();
 		// check for valid range
-		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0 ||
-				tileData[baseZoomIndex].length <= tileCoordinateXIndex ||
-				tileData[baseZoomIndex][0].length <= tileCoordinateYIndex)
+		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
+				|| tileData[baseZoomIndex].length <= tileCoordinateXIndex
+				|| tileData[baseZoomIndex][0].length <= tileCoordinateYIndex)
 			return null;
 
 		TileData td = tileData[baseZoomIndex][tileCoordinateXIndex][tileCoordinateYIndex];

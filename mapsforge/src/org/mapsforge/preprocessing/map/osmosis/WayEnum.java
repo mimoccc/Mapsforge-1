@@ -182,30 +182,30 @@ enum WayEnum {
 		return name().replaceFirst("\\$", "=").toLowerCase(Locale.US);
 	}
 
-	private static final Map<String, WayEnum> stringToEnum =
+	private static final Map<String, WayEnum> STRING_TO_ENUM =
 			new HashMap<String, WayEnum>();
 
 	static {
 		for (WayEnum way : values()) {
-			stringToEnum.put(way.toString(), way);
+			STRING_TO_ENUM.put(way.toString(), way);
 		}
 	}
 
 	public static WayEnum fromString(String symbol) {
-		return stringToEnum.get(symbol);
+		return STRING_TO_ENUM.get(symbol);
 	}
 
-	private static final Map<Integer, WayEnum> ordinalToEnum =
+	private static final Map<Integer, WayEnum> ORDINAL_TO_ENUM =
 			new HashMap<Integer, WayEnum>();
 
 	static {
 		for (WayEnum way : values()) {
-			ordinalToEnum.put(way.ordinal(), way);
+			ORDINAL_TO_ENUM.put(way.ordinal(), way);
 		}
 	}
 
 	public static WayEnum fromOrdinal(int ordinal) {
-		return ordinalToEnum.get(ordinal);
+		return ORDINAL_TO_ENUM.get(ordinal);
 	}
 
 	public enum WayType {

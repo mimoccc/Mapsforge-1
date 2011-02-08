@@ -116,30 +116,30 @@ enum PoiEnum {
 		return name().replaceFirst("\\$", "=").toLowerCase(Locale.US);
 	}
 
-	private static final Map<String, PoiEnum> stringToEnum =
+	private static final Map<String, PoiEnum> STRING_TO_ENUM =
 			new HashMap<String, PoiEnum>();
 
 	static {
 		for (PoiEnum poi : values()) {
-			stringToEnum.put(poi.toString(), poi);
+			STRING_TO_ENUM.put(poi.toString(), poi);
 		}
 	}
 
 	public static PoiEnum fromString(String symbol) {
-		return stringToEnum.get(symbol);
+		return STRING_TO_ENUM.get(symbol);
 	}
 
-	private static final Map<Integer, PoiEnum> ordinalToEnum =
+	private static final Map<Integer, PoiEnum> ORDINAL_TO_ENUM =
 			new HashMap<Integer, PoiEnum>();
 
 	static {
 		for (PoiEnum way : values()) {
-			ordinalToEnum.put(way.ordinal(), way);
+			ORDINAL_TO_ENUM.put(way.ordinal(), way);
 		}
 	}
 
 	public static PoiEnum fromOrdinal(int ordinal) {
-		return ordinalToEnum.get(ordinal);
+		return ORDINAL_TO_ENUM.get(ordinal);
 	}
 
 }

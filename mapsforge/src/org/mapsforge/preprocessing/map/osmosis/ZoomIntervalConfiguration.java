@@ -23,7 +23,7 @@ package org.mapsforge.preprocessing.map.osmosis;
  * @author bross
  * 
  */
-class ZoomIntervalConfiguration {
+final class ZoomIntervalConfiguration {
 
 	private byte[] baseZoom;
 	private byte[] minZoom;
@@ -45,8 +45,8 @@ class ZoomIntervalConfiguration {
 						"invalid interval configuration, found only " + interval.length
 								+ "parameters for interval " + i);
 			if (interval[0] <= interval[1] || interval[0] >= interval[2])
-				throw new IllegalArgumentException("invalid configuration for interval " + i +
-						", make sure that minZoom < baseZoom < maxZoom");
+				throw new IllegalArgumentException("invalid configuration for interval " + i
+						+ ", make sure that minZoom < baseZoom < maxZoom");
 			if (i > 1) {
 				if (interval[0] < baseZoom[i - 2])
 					throw new IllegalArgumentException(

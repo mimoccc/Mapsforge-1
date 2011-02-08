@@ -46,7 +46,7 @@ import org.openstreetmap.osmosis.core.store.NoSuchIndexElementException;
 import org.openstreetmap.osmosis.core.store.SimpleObjectStore;
 import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactory;
 
-class HDTileBasedDataStore extends BaseTileBasedDataStore {
+final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 	private final IndexedObjectStore<Node> indexedNodeStore;
 	private final IndexedObjectStore<Way> indexedWayStore;
@@ -301,12 +301,10 @@ class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	private HDTileData getHDTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {
-		int tileCoordinateXIndex = (tileCoordinateX - tileGridLayouts[baseZoomIndex]
-				.getUpperLeft()
-				.getX());
-		int tileCoordinateYIndex = (tileCoordinateY - tileGridLayouts[baseZoomIndex]
-				.getUpperLeft()
-				.getY());
+		int tileCoordinateXIndex = tileCoordinateX - tileGridLayouts[baseZoomIndex]
+				.getUpperLeft().getX();
+		int tileCoordinateYIndex = tileCoordinateY - tileGridLayouts[baseZoomIndex]
+				.getUpperLeft().getY();
 		// check for valid range
 		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0 ||
 				tileData[baseZoomIndex].length <= tileCoordinateXIndex ||
