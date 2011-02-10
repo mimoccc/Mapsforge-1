@@ -40,6 +40,8 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
 class MapFileWriter {
 
+	private static final int DEBUG_BLOCK_SIZE = 32;
+
 	private static final String DEBUG_INDEX_START_STRING = "+++IndexStart+++";
 
 	private static final int SIZE_ZOOMINTERVAL_CONFIGURATION = 13;
@@ -84,7 +86,7 @@ class MapFileWriter {
 
 	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
 
-	private static final Logger logger = Logger.getLogger(MapFileWriter.class
+	private static final Logger LOGGER = Logger.getLogger(MapFileWriter.class
 			.getName());
 
 	private static final String PROJECTION = "Mercator";
@@ -139,25 +141,6 @@ class MapFileWriter {
 		this.bboxEnlargement = bboxEnlargement;
 	}
 
-	final void writeFileWithDebugInfos(long date, int version, short tilePixel)
-			throws IOException {
-		writeFile(date, version, tilePixel, null, true, true, true, true, null);
-	}
-
-	final void writeFile(long date, int version, short tilePixel) throws IOException {
-		writeFile(date, version, tilePixel, null, false, true, true, true, null);
-	}
-
-	final void writeFile() throws IOException {
-		writeFile(System.currentTimeMillis(), 1, (short) 256, null, false, true, true, true,
-				null);
-	}
-
-	final void writeFile(GeoCoordinate mapStartPosition) throws IOException {
-		writeFile(System.currentTimeMillis(), 1, (short) 256, null, false, true, true, true,
-				mapStartPosition);
-	}
-
 	final void writeFile(long date, int version, short tilePixel, String comment,
 			boolean debugStrings, boolean waynodeCompression, boolean polygonClipping,
 			boolean pixelCompression, GeoCoordinate mapStartPosition)
@@ -187,18 +170,18 @@ class MapFileWriter {
 		randomAccessFile.write(containerB);
 		randomAccessFile.close();
 
-		logger.fine("number of empty tiles: " + emptyTiles);
-		logger.fine("percentage of empty tiles: " + (float) emptyTiles
+		LOGGER.fine("number of empty tiles: " + emptyTiles);
+		LOGGER.fine("percentage of empty tiles: " + (float) emptyTiles
 				/ dataStore.cumulatedNumberOfTiles());
-		logger.fine("cumulated size of non-empty tiles: " + cumulatedTileSizeOfNonEmptyTiles);
-		logger.fine("average tile size of non-empty tile: "
+		LOGGER.fine("cumulated size of non-empty tiles: " + cumulatedTileSizeOfNonEmptyTiles);
+		LOGGER.fine("average tile size of non-empty tile: "
 				+ (float) cumulatedTileSizeOfNonEmptyTiles
 				/ (dataStore.cumulatedNumberOfTiles() - emptyTiles));
-		logger.fine("maximum size of a tile: " + maxTileSize);
-		logger.fine("cumulated number of ways in all non-empty tiles: "
+		LOGGER.fine("maximum size of a tile: " + maxTileSize);
+		LOGGER.fine("cumulated number of ways in all non-empty tiles: "
 				+ cumulatedNumberOfWaysInTiles);
-		logger.fine("maximum number of ways in a tile: " + maxWaysPerTile);
-		logger.fine("average number of ways in non-empty tiles: "
+		LOGGER.fine("maximum number of ways in a tile: " + maxWaysPerTile);
+		LOGGER.fine("average number of ways in non-empty tiles: "
 				+ (float) cumulatedNumberOfWaysInTiles
 				/ (dataStore.cumulatedNumberOfTiles() - emptyTiles));
 
@@ -224,7 +207,7 @@ class MapFileWriter {
 		int numberOfZoomIntervals = dataStore.getZoomIntervalConfiguration()
 				.getNumberOfZoomIntervals();
 
-		logger.fine("writing header");
+		LOGGER.fine("writing header");
 
 		ByteBuffer containerHeaderBuffer = ByteBuffer.allocate(HEADER_BUFFER_SIZE);
 
@@ -253,8 +236,8 @@ class MapFileWriter {
 		// width and height of a tile in pixel
 		containerHeaderBuffer.putShort(tilePixel);
 
-		logger.fine("Bounding box for file: " +
-				dataStore.getBoundingBox().maxLatitudeE6 + ", "
+		LOGGER.fine("Bounding box for file: "
+				+ dataStore.getBoundingBox().maxLatitudeE6 + ", "
 				+ dataStore.getBoundingBox().minLongitudeE6 + ", "
 				+ dataStore.getBoundingBox().minLatitudeE6 + ", "
 				+ dataStore.getBoundingBox().maxLongitudeE6);
@@ -336,9 +319,9 @@ class MapFileWriter {
 			boolean pixelCompression)
 			throws IOException {
 
-		logger.fine("writing data for zoom interval " + zoomIntervalIndex
-				+ ", number of tiles: " +
-				dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal()
+		LOGGER.fine("writing data for zoom interval " + zoomIntervalIndex
+				+ ", number of tiles: "
+				+ dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal()
 				* dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesVertical());
 
 		TileCoordinate upperLeft = dataStore.getTileGridLayout(zoomIntervalIndex)
@@ -427,7 +410,8 @@ class MapFileWriter {
 								.append(DEBUG_STRING_TILE_TAIL);
 						tileBuffer.put(sb.toString().getBytes());
 						// append withespaces so that block has 32 bytes
-						appendWhitespace(32 - sb.toString().getBytes().length, tileBuffer);
+						appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length,
+								tileBuffer);
 					}
 
 					short cumulatedPOIs = 0;
@@ -460,7 +444,8 @@ class MapFileWriter {
 										.append(DEBUG_STRING_POI_TAIL);
 								poiBuffer.put(sb.toString().getBytes());
 								// append withespaces so that block has 32 bytes
-								appendWhitespace(32 - sb.toString().getBytes().length,
+								appendWhitespace(DEBUG_BLOCK_SIZE
+										- sb.toString().getBytes().length,
 										poiBuffer);
 							}
 
@@ -539,7 +524,8 @@ class MapFileWriter {
 										.append(DEBUG_STRING_WAY_TAIL);
 								tileBuffer.put(sb.toString().getBytes());
 								// append withespaces so that block has 32 bytes
-								appendWhitespace(32 - sb.toString().getBytes().length,
+								appendWhitespace(DEBUG_BLOCK_SIZE
+										- sb.toString().getBytes().length,
 										tileBuffer);
 							}
 
@@ -670,7 +656,7 @@ class MapFileWriter {
 
 				tilesProcessed++;
 				if (tilesProcessed % amountOfTilesInPercentStep == 0) {
-					logger.info("written " + (tilesProcessed / amountOfTilesInPercentStep)
+					LOGGER.info("written " + (tilesProcessed / amountOfTilesInPercentStep)
 							* PROGRESS_PERCENT_STEP
 							+ "% of file");
 				}
@@ -735,7 +721,8 @@ class MapFileWriter {
 			// else
 			// return null;
 			// }
-			if (way.getWaytype() >= 2 && waynodeCoordinates.size() >= 4
+			if (way.getWaytype() >= 2
+					&& waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON
 					// TODO activate polygon clipping of named polygons
 					&& (way.getName() == null || way.getName().equals(""))) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(

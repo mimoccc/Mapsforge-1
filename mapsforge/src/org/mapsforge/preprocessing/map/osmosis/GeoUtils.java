@@ -36,13 +36,15 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
  * Provides utility functions for the maps preprocessing.
  * 
  * @author bross
- * 
  */
 final class GeoUtils {
 
+	private static final int CLIPPED_COVERING_POLYGON_SIZE = 10;
+	static final int MIN_NODES_POLYGON = 4;
+	static final int MIN_COORDINATES_POLYGON = 8;
 	private static final byte SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
 	private static final double[] EPSILON_ZERO = new double[] { 0, 0 };
-	private static final Logger logger =
+	private static final Logger LOGGER =
 			Logger.getLogger(GeoUtils.class.getName());
 
 	private static final int[] TILE_BITMASK_VALUES = new int[] { 32768, 16384,
@@ -104,8 +106,8 @@ final class GeoUtils {
 			return matchedTiles;
 		}
 		// check for valid closed polygon
-		if (way.getWaytype() > 1 && waynodes.length < 8) {
-			logger.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+		if (way.getWaytype() > 1 && waynodes.length < MIN_COORDINATES_POLYGON) {
+			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
 					+ way.getId());
 			return matchedTiles;
 		}
@@ -156,8 +158,8 @@ final class GeoUtils {
 		// computeSubtiles(tile, SUBTILE_ZOOMLEVEL_DIFFERENCE);
 		double[] waynodes = way.wayNodesAsArray();
 		// check for valid closed polygon
-		if (way.getWaytype() > 1 && waynodes.length < 8) {
-			logger.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+		if (way.getWaytype() > 1 && waynodes.length < MIN_COORDINATES_POLYGON) {
+			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
 					+ way.getId());
 			return 0;
 		}
@@ -277,7 +279,7 @@ final class GeoUtils {
 	static boolean isClosedPolygon(final TDWay way) {
 		if (way == null)
 			throw new IllegalArgumentException("parameter way is null");
-		if (way.getWayNodes() == null || way.getWayNodes().length < 3)
+		if (way.getWayNodes() == null || way.getWayNodes().length < MIN_NODES_POLYGON)
 			return false;
 		return way.getWayNodes()[0].getId() == way.getWayNodes()[way.getWayNodes().length - 1]
 				.getId();
@@ -293,8 +295,8 @@ final class GeoUtils {
 	 * @return the area enclosed by the polygon
 	 */
 	static double computePolygonArea(final Collection<GeoCoordinate> coordinates) {
-		if (coordinates.size() < 4) {
-			logger.fine("closed polygon must consist of at least 4 coordinates");
+		if (coordinates.size() < MIN_NODES_POLYGON) {
+			LOGGER.finer("closed polygon must consist of at least 4 coordinates");
 			return -1;
 		}
 		Iterator<GeoCoordinate> it = coordinates.iterator();
@@ -314,8 +316,8 @@ final class GeoUtils {
 	}
 
 	static GeoCoordinate computePolygonCentroid(final Collection<GeoCoordinate> coordinates) {
-		if (coordinates.size() < 4) {
-			logger.fine("closed polygon must consist of at least 4 coordinates");
+		if (coordinates.size() < MIN_NODES_POLYGON) {
+			LOGGER.finer("closed polygon must consist of at least 4 coordinates");
 			return null;
 		}
 
@@ -373,7 +375,7 @@ final class GeoUtils {
 		double[] lineArray = geocoordinatesAsArray(line);
 		double[] clippedLine = CohenSutherlandClipping.clipLine(lineArray, bbox);
 		if (clippedLine == null || clippedLine.length == 0) {
-			logger.finer("clipped polygon is empty: " + line);
+			LOGGER.finer("clipped polygon is empty: " + line);
 			return Collections.emptyList();
 		}
 
@@ -398,7 +400,7 @@ final class GeoUtils {
 			throw new IllegalArgumentException("polygon is null");
 		}
 
-		if (polygon.size() < 4)
+		if (polygon.size() < MIN_NODES_POLYGON)
 			throw new IllegalArgumentException(
 					"a valid closed polygon must have at least 4 points");
 
@@ -409,7 +411,7 @@ final class GeoUtils {
 		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox);
 
 		if (clippedPolygon == null || clippedPolygon.length == 0) {
-			logger.finer("clipped polygon is empty: " + polygon);
+			LOGGER.finer("clipped polygon is empty: " + polygon);
 			return Collections.emptyList();
 		}
 
@@ -428,7 +430,7 @@ final class GeoUtils {
 			throw new IllegalArgumentException("polygon is null");
 		}
 
-		if (polygon.length < 8)
+		if (polygon.length < MIN_COORDINATES_POLYGON)
 			throw new IllegalArgumentException(
 					"a valid closed polygon must have at least 4 points");
 
@@ -442,7 +444,8 @@ final class GeoUtils {
 		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonAsDoubleArray,
 				bbox);
 
-		if (clippedPolygon == null || clippedPolygon.length == 0 || clippedPolygon.length != 10) {
+		if (clippedPolygon == null || clippedPolygon.length == 0
+				|| clippedPolygon.length != CLIPPED_COVERING_POLYGON_SIZE) {
 			return false;
 		}
 
@@ -477,8 +480,8 @@ final class GeoUtils {
 			minx = Math.min(minx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
 		}
 
-		double epsilonsTopLeft[] = computeTileEnlargement(maxy, enlargementInPixel);
-		double epsilonsBottomRight[] = computeTileEnlargement(miny, enlargementInPixel);
+		double[] epsilonsTopLeft = computeTileEnlargement(maxy, enlargementInPixel);
+		double[] epsilonsBottomRight = computeTileEnlargement(miny, enlargementInPixel);
 
 		TileCoordinate[] bbox = new TileCoordinate[2];
 		bbox[0] = new TileCoordinate(
@@ -534,10 +537,10 @@ final class GeoUtils {
 	static String arraysSVG(List<float[]> closedPolygons) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>").append("\n");
-		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" " +
-				"xmlns:xlink=\"http://www.w3.org/1999/xlink\" " +
-				"xmlns:ev=\"http://www.w3.org/2001/xml-events\" " +
-				"version=\"1.1\" baseProfile=\"full\" width=\"800mm\" height=\"600mm\">");
+		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" "
+				+ "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
+				+ "xmlns:ev=\"http://www.w3.org/2001/xml-events\" "
+				+ "version=\"1.1\" baseProfile=\"full\" width=\"800mm\" height=\"600mm\">");
 
 		for (float[] fs : closedPolygons) {
 			sb.append("<polygon points=\"");
@@ -595,7 +598,7 @@ final class GeoUtils {
 				throw new IllegalArgumentException("polygon is null");
 			}
 
-			if (polygon.length < 8)
+			if (polygon.length < MIN_COORDINATES_POLYGON)
 				throw new IllegalArgumentException(
 						"a valid closed polygon must have at least 4 points");
 
@@ -636,7 +639,7 @@ final class GeoUtils {
 		private static double[] clipPolygonToEdge(final double[] polygon, double[] edge) {
 			TDoubleArrayList clippedPolygon = new TDoubleArrayList();
 
-			if (polygon.length < 8)
+			if (polygon.length < MIN_COORDINATES_POLYGON)
 				return polygon;
 
 			// polygon not closed
@@ -709,6 +712,7 @@ final class GeoUtils {
 	 */
 	static class CohenSutherlandClipping {
 
+		private static final int MIN_COORDINATES_LINE = 4;
 		private static final byte INSIDE = 0;
 		private static final byte LEFT = 1;
 		private static final byte RIGHT = 2;
@@ -726,7 +730,7 @@ final class GeoUtils {
 		 * @return All line segments that can be clipped to the clipping region.
 		 */
 		static double[] clipLine(final double[] line, final double[] rectangle) {
-			if (line.length < 4)
+			if (line.length < MIN_COORDINATES_LINE)
 				throw new IllegalArgumentException("line must have at least 2 points");
 			if (rectangle.length != 4)
 				throw new IllegalArgumentException(
@@ -755,7 +759,7 @@ final class GeoUtils {
 		 * @return true if any line segments intersects the clipping region, false otherwise
 		 */
 		static boolean intersectsClippingRegion(final double[] line, final double[] rectangle) {
-			if (line.length < 4)
+			if (line.length < MIN_COORDINATES_LINE)
 				throw new IllegalArgumentException("line must have at least 2 points");
 			if (rectangle.length != 4)
 				throw new IllegalArgumentException(

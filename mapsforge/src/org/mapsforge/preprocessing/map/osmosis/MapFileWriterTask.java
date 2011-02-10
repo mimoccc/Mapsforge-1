@@ -48,7 +48,9 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
  * 
  */
 public class MapFileWriterTask implements Sink {
-	private static final Logger logger = Logger.getLogger(MapFileWriterTask.class
+	private static final int MAX_THREADPOOL_SIZE = 128;
+
+	private static final Logger LOGGER = Logger.getLogger(MapFileWriterTask.class
 			.getName());
 
 	private TileBasedDataStore tileBasedGeoObjectStore;
@@ -93,7 +95,7 @@ public class MapFileWriterTask implements Sink {
 		this.polygonClipping = polygonClipping;
 		this.comment = comment;
 
-		if (threadpoolSize < 1 || threadpoolSize > 128)
+		if (threadpoolSize < 1 || threadpoolSize > MAX_THREADPOOL_SIZE)
 			throw new IllegalArgumentException("make sure that 1 <= threadpool size <= 128");
 		this.threadpoolSize = threadpoolSize;
 
@@ -124,20 +126,20 @@ public class MapFileWriterTask implements Sink {
 	 * @see org.openstreetmap.osmosis.core.lifecycle.Completable#complete()
 	 */
 	@Override
-	public void complete() {
+	public final void complete() {
 		NumberFormat nfMegabyte = NumberFormat.getInstance();
 		NumberFormat nfCounts = NumberFormat.getInstance();
 		nfCounts.setGroupingUsed(true);
 		nfMegabyte.setMaximumFractionDigits(2);
 
-		logger.info("completing read...");
+		LOGGER.info("completing read...");
 		tileBasedGeoObjectStore.complete();
 
-		logger.info("start writing file...");
+		LOGGER.info("start writing file...");
 
 		try {
 			if (outFile.exists() && !outFile.isDirectory()) {
-				logger.info("overwriting file " + outFile.getAbsolutePath());
+				LOGGER.info("overwriting file " + outFile.getAbsolutePath());
 				outFile.delete();
 			}
 			RandomAccessFile file = new RandomAccessFile(outFile, "rw");
@@ -147,28 +149,28 @@ public class MapFileWriterTask implements Sink {
 			mfw.writeFile(System.currentTimeMillis(), 2, (short) 256, comment, debugInfo,
 					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "error while writing file", e);
+			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}
 
-		logger.info("finished...");
-		logger.info("total processed nodes: " + nfCounts.format(amountOfNodesProcessed));
-		logger.info("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
-		logger.info("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
-		logger.info("total processed multipolygons: " + amountOfMultipolygons);
+		LOGGER.info("finished...");
+		LOGGER.fine("total processed nodes: " + nfCounts.format(amountOfNodesProcessed));
+		LOGGER.fine("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
+		LOGGER.fine("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
+		LOGGER.fine("total processed multipolygons: " + amountOfMultipolygons);
 
 		System.gc();
-		logger.info("estimated memory consumption: " + nfMegabyte.format(
+		LOGGER.fine("estimated memory consumption: " + nfMegabyte.format(
 						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
 								.freeMemory()) / Math.pow(1024, 2))) + "MB");
 	}
 
 	@Override
-	public void release() {
+	public final void release() {
 		tileBasedGeoObjectStore.release();
 	}
 
 	@Override
-	public void process(EntityContainer entityContainer) {
+	public final void process(EntityContainer entityContainer) {
 
 		Entity entity = entityContainer.getEntity();
 		// entity.setChangesetId(0);
@@ -193,7 +195,7 @@ public class MapFileWriterTask implements Sink {
 										bound.getLeft(), bound.getRight(),
 										zoomIntervalConfiguration, bboxEnlargement);
 				}
-				logger.info("start reading data...");
+				LOGGER.info("start reading data...");
 				break;
 
 			// *******************************************************
@@ -202,13 +204,13 @@ public class MapFileWriterTask implements Sink {
 			case Node:
 
 				if (tileBasedGeoObjectStore == null) {
-					logger.severe("No valid bounding box found in input data.\n" +
-							"Please provide valid bounding box via command " +
-							"line parameter 'bbox=minLat,minLon,maxLat,maxLon'.\n" +
-							"Tile based data store not initialized. Aborting...");
+					LOGGER.severe("No valid bounding box found in input data.\n"
+							+ "Please provide valid bounding box via command "
+							+ "line parameter 'bbox=minLat,minLon,maxLat,maxLon'.\n"
+							+ "Tile based data store not initialized. Aborting...");
 					throw new IllegalStateException(
-							"tile based data store not initialized, missing bounding " +
-									"box information in input data");
+							"tile based data store not initialized, missing bounding "
+									+ "box information in input data");
 				}
 				tileBasedGeoObjectStore.addNode((Node) entity);
 				// hint to GC

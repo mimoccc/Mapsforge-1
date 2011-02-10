@@ -204,7 +204,8 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
 		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
 			return Collections.emptySet();
-		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel((byte) 12).get(0);
+		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(
+				TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
 
 		if (wayIndexReader == null)
 			throw new IllegalStateException("way store not accessible, call complete() first");
@@ -306,9 +307,9 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		int tileCoordinateYIndex = tileCoordinateY - tileGridLayouts[baseZoomIndex]
 				.getUpperLeft().getY();
 		// check for valid range
-		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0 ||
-				tileData[baseZoomIndex].length <= tileCoordinateXIndex ||
-				tileData[baseZoomIndex][0].length <= tileCoordinateYIndex)
+		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
+				|| tileData[baseZoomIndex].length <= tileCoordinateXIndex
+				|| tileData[baseZoomIndex][0].length <= tileCoordinateYIndex)
 			return null;
 
 		HDTileData td = tileData[baseZoomIndex][tileCoordinateXIndex][tileCoordinateYIndex];
@@ -334,7 +335,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			if (!innerWayTracker.get(way.getId())) {
 				if (multipolygonTracker.get(way.getId())) {
 					if (way.getWayNodes() != null
-							&& way.getWayNodes().length >= 4
+							&& way.getWayNodes().length >= GeoUtils.MIN_NODES_POLYGON
 							&& way.getWayNodes()[0].getId() == way.getWayNodes()[way
 									.getWayNodes().length - 1].getId())
 						way.setWaytype((short) 3);
@@ -346,7 +347,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				}
 				td.addWay(way);
 			} else {
-				// TODO do not mark remove inner ways they contain
+				// TODO do not remove inner ways if they contain
 				// other tags than the outer way
 			}
 		}

@@ -24,7 +24,7 @@ import org.mapsforge.core.Rect;
 
 abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 
-	private static final Logger logger =
+	private static final Logger LOGGER =
 			Logger.getLogger(BaseTileBasedDataStore.class.getName());
 
 	protected final Rect boundingbox;
@@ -107,8 +107,8 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	public long cumulatedNumberOfTiles() {
 		long cumulated = 0;
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			cumulated += (tileGridLayouts[i].getAmountTilesHorizontal() * tileGridLayouts[i]
-					.getAmountTilesVertical());
+			cumulated += tileGridLayouts[i].getAmountTilesHorizontal() * tileGridLayouts[i]
+					.getAmountTilesVertical();
 		}
 		return cumulated;
 	}
@@ -125,7 +125,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		assert tileCoordinateLeft <= tileCoordinateRight;
 		assert tileCoordinateLeft - tileCoordinateRight + 1 < Integer.MAX_VALUE;
 
-		logger.finest("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
+		LOGGER.finer("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
 				+ "\t+n_horizontal: " + (tileCoordinateRight - tileCoordinateLeft + 1));
 
 		return (int) (tileCoordinateRight - tileCoordinateLeft + 1);
@@ -144,7 +144,7 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		assert tileCoordinateBottom >= tileCoordinateTop;
 		assert tileCoordinateBottom - tileCoordinateTop + 1 <= Integer.MAX_VALUE;
 
-		logger.finest("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
+		LOGGER.finer("basezoom: " + zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
 				+ "\t+n_vertical: " + (tileCoordinateBottom - tileCoordinateTop + 1));
 
 		return (int) (tileCoordinateBottom - tileCoordinateTop + 1);

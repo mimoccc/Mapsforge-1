@@ -38,7 +38,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
-	private static final Logger logger =
+	private static final Logger LOGGER =
 			Logger.getLogger(TileBasedDataStore.class.getName());
 
 	private TLongObjectHashMap<TDNode> nodes;
@@ -214,19 +214,19 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		TDWay outerWay = ways.get(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
-			logger.finer("outer way with id " + outerWayID + " not existent in relation");
+			LOGGER.finer("outer way with id " + outerWayID + " not existent in relation");
 			return false;
 		}
 		// check if outer way is polygon
 		if (!GeoUtils.isClosedPolygon(outerWay)) {
-			logger.finer("outer way is not a polygon, id: " + outerWayID);
+			LOGGER.finer("outer way is not a polygon, id: " + outerWayID);
 			return false;
 		}
 
 		// check if all inner ways exist
 		List<TDWay> innerWays = getInnerWaysOfMultipolygon(innerWayIDs);
 		if (innerWays.size() < innerWayIDs.length) {
-			logger.finer("some inner ways are missing for outer way with id " + outerWayID);
+			LOGGER.finer("some inner ways are missing for outer way with id " + outerWayID);
 			return false;
 		}
 
@@ -309,7 +309,8 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
 		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
 			return Collections.emptySet();
-		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel((byte) 12).get(0);
+		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(
+				TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
 		Set<TDWay> coastlines = tilesToCoastlines.get(correspondingOceanTile);
 		if (coastlines == null)
 			coastlines = Collections.emptySet();
@@ -323,10 +324,10 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			count += coastlines.size();
 		}
 
-		logger.info("number of coastlines: " + count);
+		LOGGER.fine("number of coastlines: " + count);
 		for (int i = 0; i < countWays.length; i++) {
-			logger.info("zoom-interval " + i + ", added ways: " + countWays[i]);
-			logger.info("zoom-interval " + i + ", average tiles per way: "
+			LOGGER.fine("zoom-interval " + i + ", added ways: " + countWays[i]);
+			LOGGER.fine("zoom-interval " + i + ", average tiles per way: "
 					+ (countWayTileFactor[i] / countWays[i]));
 		}
 

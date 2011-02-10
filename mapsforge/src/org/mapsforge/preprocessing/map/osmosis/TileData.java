@@ -33,7 +33,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
 class TileData {
 
-	static final Logger logger =
+	static final Logger LOGGER =
 			Logger.getLogger(TileData.class.getName());
 
 	private Set<TDNode> pois;
@@ -95,6 +95,7 @@ class TileData {
 
 	static class TDNode {
 
+		private static final int MAX_ELEVATION = 9000;
 		private static final byte ZOOM_HOUSENUMBER = (byte) 17;
 		private static final byte ZOOM_NAME = (byte) 16;
 
@@ -125,8 +126,10 @@ class TileData {
 				if (tag.getKey().equalsIgnoreCase("ele")) {
 					try {
 						elevation = (short) Double.parseDouble(tag.getValue());
-						if (elevation > 32000) {
-							elevation = 32000;
+						if (elevation > MAX_ELEVATION) {
+							LOGGER.finer("invalid elevation " + elevation + " for node "
+									+ node.getId());
+							elevation = 0;
 						}
 
 					} catch (NumberFormatException e) {
@@ -316,7 +319,7 @@ class TileData {
 					waynodes[i] = er.getEntity(waynode.getNodeId());
 					if (waynodes[i] == null) {
 						validWay = false;
-						logger.finer("unknown way node: " + waynode.getNodeId()
+						LOGGER.finer("unknown way node: " + waynode.getNodeId()
 								+ " in way " + way.getId());
 					}
 					i++;
@@ -329,10 +332,10 @@ class TileData {
 					// and if the way has at least 4 way nodes
 					short waytype = 1;
 					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()) {
-						if (waynodes.length >= 4)
+						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON)
 							waytype = 2;
 						else {
-							logger.fine("Found closed polygon with fewer than 4 way nodes. Way-id: "
+							LOGGER.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
 									+ way.getId());
 							return null;
 						}

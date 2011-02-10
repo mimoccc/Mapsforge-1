@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 final class TileInfo {
 
-	private static final Logger logger =
+	private static final Logger LOGGER =
 			Logger.getLogger(TileInfo.class.getName());
 
 	private static final byte SEA = 0x2;
@@ -64,11 +64,11 @@ final class TileInfo {
 					seaTileInfo.set(i * 4 + 3);
 				}
 			}
-			logger.info("loading of tile info data took "
+			LOGGER.fine("loading of tile info data took "
 					+ (System.currentTimeMillis() - start)
 					+ " ms");
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "error loading tile info from file " + strInputFile);
+			LOGGER.log(Level.SEVERE, "error loading tile info from file " + strInputFile);
 		}
 	}
 

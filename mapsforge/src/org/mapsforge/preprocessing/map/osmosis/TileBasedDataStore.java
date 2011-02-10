@@ -35,7 +35,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way;
  */
 interface TileBasedDataStore extends EntityResolver<TDNode> {
 
-	static final int MAX_TILES_SUPPORTED = 1000000;
+	final int MAX_TILES_SUPPORTED = 1000000;
 
 	/**
 	 * Get the bounding box that describes this TileBasedDataStore.
