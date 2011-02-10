@@ -890,7 +890,7 @@ public class MapDatabase {
 			}
 
 			// store the mapping in the hash map
-			this.nodeTags.put(this.nodeTag, this.nodeTagId);
+			this.nodeTags.put(this.nodeTag, Integer.valueOf(this.nodeTagId));
 		}
 
 		// get and check the number of way tags (2 bytes)
@@ -920,7 +920,7 @@ public class MapDatabase {
 			}
 
 			// store the mapping in the hash map
-			this.wayTags.put(this.wayTag, this.wayTagId);
+			this.wayTags.put(this.wayTag, Integer.valueOf(this.wayTagId));
 		}
 
 		// get and check the comment text

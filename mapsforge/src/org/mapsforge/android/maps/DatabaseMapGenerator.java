@@ -1636,17 +1636,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* aeroway */
 		if (this.tagIDsNodes.aeroway$aerodrome != null
-				&& nodeTagIds[this.tagIDsNodes.aeroway$aerodrome]
+				&& nodeTagIds[this.tagIDsNodes.aeroway$aerodrome.intValue()]
 				&& this.currentTile.zoomLevel <= 14) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.airport);
 		} else if (this.tagIDsNodes.aeroway$helipad != null
-				&& nodeTagIds[this.tagIDsNodes.aeroway$helipad]) {
+				&& nodeTagIds[this.tagIDsNodes.aeroway$helipad.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.helipad);
 		}
 
 		/* amenity */
 		else if (this.tagIDsNodes.amenity$pub != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$pub]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$pub.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.pub);
 			if (nodeName != null) {
@@ -1655,7 +1655,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cinema != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$cinema]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$cinema.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.cinema);
 			if (nodeName != null) {
@@ -1664,7 +1664,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$theatre != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$theatre]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$theatre.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.theatre);
 			if (nodeName != null) {
@@ -1673,7 +1673,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fire_station != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$fire_station]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$fire_station.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.firebrigade);
 			if (nodeName != null) {
@@ -1682,7 +1682,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$shelter != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$shelter]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$shelter.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.shelter);
 			if (nodeName != null) {
@@ -1691,7 +1691,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$school != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$school]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$school.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.school);
 			if (nodeName != null) {
@@ -1700,7 +1700,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$university != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$university]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$university.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.university);
 			if (nodeName != null) {
@@ -1709,7 +1709,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$place_of_worship != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$place_of_worship]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$place_of_worship.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.church);
 			if (nodeName != null) {
@@ -1718,7 +1718,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$atm != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$atm]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$atm.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.atm);
 			if (nodeName != null) {
@@ -1727,7 +1727,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$library != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$library]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$library.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.library);
 			if (nodeName != null) {
@@ -1736,7 +1736,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fast_food != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$fast_food]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$fast_food.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.fastfood);
 			if (nodeName != null) {
@@ -1745,7 +1745,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$parking != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$parking]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$parking.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.parking);
 			if (nodeName != null) {
@@ -1754,7 +1754,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$hospital != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$hospital]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$hospital.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.hospital);
 			if (nodeName != null) {
@@ -1763,7 +1763,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$restaurant != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$restaurant]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$restaurant.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.restaurant);
 			if (nodeName != null) {
@@ -1772,7 +1772,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bank != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$bank]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$bank.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.bank);
 			if (nodeName != null) {
@@ -1781,7 +1781,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cafe != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$cafe]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$cafe.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.cafe);
 			if (nodeName != null) {
@@ -1790,7 +1790,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fuel != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$fuel]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$fuel.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.petrolStation);
 			if (nodeName != null) {
@@ -1799,7 +1799,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bus_station != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$bus_station]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$bus_station.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.bus_sta);
 			if (nodeName != null) {
@@ -1808,34 +1808,34 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$post_box != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$post_box]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$post_box.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postbox);
 		} else if (this.tagIDsNodes.amenity$post_office != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$post_office]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$post_office.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postoffice);
 		} else if (this.tagIDsNodes.amenity$pharmacy != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$pharmacy]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$pharmacy.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pharmacy);
 		} else if (this.tagIDsNodes.amenity$fountain != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$fountain]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$fountain.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fountain);
 		} else if (this.tagIDsNodes.amenity$recycling != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$recycling]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$recycling.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.recycling);
 		} else if (this.tagIDsNodes.amenity$telephone != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$telephone]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$telephone.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.telephone);
 		} else if (this.tagIDsNodes.amenity$toilets != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$toilets]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$toilets.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.toilets);
 		} else if (this.tagIDsNodes.amenity$bicycle_rental != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$bicycle_rental]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$bicycle_rental.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bicycle_rental);
 		}
 
 		/* barrier */
 		else if (this.tagIDsNodes.barrier$bollard != null
-				&& nodeTagIds[this.tagIDsNodes.barrier$bollard]) {
+				&& nodeTagIds[this.tagIDsNodes.barrier$bollard.intValue()]) {
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(new CircleContainer(this.currentNodeX,
 							this.currentNodeY, 1.5f), PAINT_BARRIER_BOLLARD));
@@ -1843,17 +1843,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* highway */
 		else if (this.tagIDsNodes.highway$bus_stop != null
-				&& nodeTagIds[this.tagIDsNodes.highway$bus_stop]) {
+				&& nodeTagIds[this.tagIDsNodes.highway$bus_stop.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus);
 		} else if (this.tagIDsNodes.highway$traffic_signals != null
-				&& nodeTagIds[this.tagIDsNodes.highway$traffic_signals]
+				&& nodeTagIds[this.tagIDsNodes.highway$traffic_signals.intValue()]
 				&& this.currentTile.zoomLevel >= 17) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.traffic_signal);
 		}
 
 		/* historic */
-		else if ((this.tagIDsNodes.historic$memorial != null && nodeTagIds[this.tagIDsNodes.historic$memorial])
-				|| (this.tagIDsNodes.historic$monument != null && nodeTagIds[this.tagIDsNodes.historic$monument])) {
+		else if ((this.tagIDsNodes.historic$memorial != null && nodeTagIds[this.tagIDsNodes.historic$memorial
+				.intValue()])
+				|| (this.tagIDsNodes.historic$monument != null && nodeTagIds[this.tagIDsNodes.historic$monument
+						.intValue()])) {
 			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 3);
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_INNER));
@@ -1867,19 +1869,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* leisure */
 		else if (this.tagIDsNodes.leisure$playground != null
-				&& nodeTagIds[this.tagIDsNodes.leisure$playground]) {
+				&& nodeTagIds[this.tagIDsNodes.leisure$playground.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.playground);
 		}
 
 		/* man_made */
 		else if (this.tagIDsNodes.man_made$windmill != null
-				&& nodeTagIds[this.tagIDsNodes.man_made$windmill]) {
+				&& nodeTagIds[this.tagIDsNodes.man_made$windmill.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.windmill);
 		}
 
 		/* natural */
 		else if (this.tagIDsNodes.natural$cave_entrance != null
-				&& nodeTagIds[this.tagIDsNodes.natural$cave_entrance]) {
+				&& nodeTagIds[this.tagIDsNodes.natural$cave_entrance.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.cave_entrance);
 			if (nodeName != null) {
@@ -1888,7 +1890,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.natural$peak != null
-				&& nodeTagIds[this.tagIDsNodes.natural$peak]) {
+				&& nodeTagIds[this.tagIDsNodes.natural$peak.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.peak);
 			if (nodeName != null) {
@@ -1903,7 +1905,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 								PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (this.tagIDsNodes.natural$volcano != null
-				&& nodeTagIds[this.tagIDsNodes.natural$volcano]) {
+				&& nodeTagIds[this.tagIDsNodes.natural$volcano.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.vulcan);
 			if (nodeName != null && this.currentTile.zoomLevel >= 14) {
@@ -1920,26 +1922,30 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* place */
-		else if (this.tagIDsNodes.place$city != null && nodeTagIds[this.tagIDsNodes.place$city]) {
+		else if (this.tagIDsNodes.place$city != null
+				&& nodeTagIds[this.tagIDsNodes.place$city.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 14) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
 			}
 		} else if (this.tagIDsNodes.place$country != null
-				&& nodeTagIds[this.tagIDsNodes.place$country]) {
+				&& nodeTagIds[this.tagIDsNodes.place$country.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 6) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
 			}
 		} else if (this.tagIDsNodes.place$island != null
-				&& nodeTagIds[this.tagIDsNodes.place$island]) {
+				&& nodeTagIds[this.tagIDsNodes.place$island.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_20, PAINT_NAME_WHITE_STROKE_20));
 			}
-		} else if ((this.tagIDsNodes.place$suburb != null && nodeTagIds[this.tagIDsNodes.place$suburb])
-				|| (this.tagIDsNodes.place$town != null && nodeTagIds[this.tagIDsNodes.place$town])
-				|| (this.tagIDsNodes.place$village != null && nodeTagIds[this.tagIDsNodes.place$village])) {
+		} else if ((this.tagIDsNodes.place$suburb != null && nodeTagIds[this.tagIDsNodes.place$suburb
+				.intValue()])
+				|| (this.tagIDsNodes.place$town != null && nodeTagIds[this.tagIDsNodes.place$town
+						.intValue()])
+				|| (this.tagIDsNodes.place$village != null && nodeTagIds[this.tagIDsNodes.place$village
+						.intValue()])) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLACK_15, PAINT_NAME_WHITE_STROKE_15));
@@ -1948,12 +1954,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* railway */
 		else if (this.tagIDsNodes.railway$level_crossing != null
-				&& nodeTagIds[this.tagIDsNodes.railway$level_crossing]) {
+				&& nodeTagIds[this.tagIDsNodes.railway$level_crossing.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.railway_crossing);
 		} else if (this.tagIDsNodes.railway$station != null
-				&& nodeTagIds[this.tagIDsNodes.railway$station]) {
-			if ((this.tagIDsNodes.station$light_rail != null && nodeTagIds[this.tagIDsNodes.station$light_rail])
-					|| (this.tagIDsNodes.station$subway != null && nodeTagIds[this.tagIDsNodes.station$subway])) {
+				&& nodeTagIds[this.tagIDsNodes.railway$station.intValue()]) {
+			if ((this.tagIDsNodes.station$light_rail != null && nodeTagIds[this.tagIDsNodes.station$light_rail
+					.intValue()])
+					|| (this.tagIDsNodes.station$subway != null && nodeTagIds[this.tagIDsNodes.station$subway
+							.intValue()])) {
 				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY,
 						4);
 				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL)
@@ -1985,8 +1993,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							this.currentNodeY, PAINT_NAME_RED_13, PAINT_NAME_WHITE_STROKE_13));
 				}
 			}
-		} else if ((this.tagIDsNodes.railway$halt != null && nodeTagIds[this.tagIDsNodes.railway$halt])
-				|| (this.tagIDsNodes.railway$tram_stop != null && nodeTagIds[this.tagIDsNodes.railway$tram_stop])) {
+		} else if ((this.tagIDsNodes.railway$halt != null && nodeTagIds[this.tagIDsNodes.railway$halt
+				.intValue()])
+				|| (this.tagIDsNodes.railway$tram_stop != null && nodeTagIds[this.tagIDsNodes.railway$tram_stop
+						.intValue()])) {
 			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 4);
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
@@ -2000,7 +2010,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* shop */
 		else if (this.tagIDsNodes.shop$bakery != null
-				&& nodeTagIds[this.tagIDsNodes.shop$bakery]) {
+				&& nodeTagIds[this.tagIDsNodes.shop$bakery.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.bakery);
 			if (nodeName != null) {
@@ -2009,13 +2019,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.shop$organic != null
-				&& nodeTagIds[this.tagIDsNodes.shop$organic]) {
+				&& nodeTagIds[this.tagIDsNodes.shop$organic.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (this.tagIDsNodes.shop$supermarket != null
-				&& nodeTagIds[this.tagIDsNodes.shop$supermarket]) {
+				&& nodeTagIds[this.tagIDsNodes.shop$supermarket.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.supermarket);
 			if (nodeName != null) {
@@ -2027,16 +2037,16 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* tourism */
 		else if (this.tagIDsNodes.tourism$information != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$information]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$information.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.information);
 		} else if (this.tagIDsNodes.tourism$museum != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$museum]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$museum.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (this.tagIDsNodes.tourism$hostel != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$hostel]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$hostel.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.hostel);
 			if (nodeName != null) {
@@ -2045,7 +2055,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$hotel != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$hotel]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$hotel.intValue()]) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.hotel);
 			if (nodeName != null) {
@@ -2054,13 +2064,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$attraction != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$attraction]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$attraction.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
 						this.currentNodeY, PAINT_NAME_PURPLE_10, PAINT_NAME_WHITE_STROKE_10));
 			}
 		} else if (this.tagIDsNodes.tourism$viewpoint != null
-				&& nodeTagIds[this.tagIDsNodes.tourism$viewpoint]) {
+				&& nodeTagIds[this.tagIDsNodes.tourism$viewpoint.intValue()]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
 		}
 
@@ -2150,12 +2160,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* highway */
 		if ((wayTagBitmap & BITMAP_HIGHWAY) != 0) {
-			if (this.tagIDsWays.tunnel$yes != null && wayTagIds[this.tagIDsWays.tunnel$yes]) {
+			if (this.tagIDsWays.tunnel$yes != null
+					&& wayTagIds[this.tagIDsWays.tunnel$yes.intValue()]) {
 				this.layer.get(LayerIds.HIGHWAY_TUNNEL$YES).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TUNNEL));
 			} else if (this.tagIDsWays.highway$motorway != null
-					&& wayTagIds[this.tagIDsWays.highway$motorway]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$motorway.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2180,8 +2192,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$motorway_link != null
-					&& wayTagIds[this.tagIDsWays.highway$motorway_link]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$motorway_link.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_MOTORWAY_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2206,8 +2219,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$trunk != null
-					&& wayTagIds[this.tagIDsWays.highway$trunk]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$trunk.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRUNK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2229,8 +2243,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$trunk_link != null
-					&& wayTagIds[this.tagIDsWays.highway$trunk_link]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$trunk_link.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRUNK_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2255,8 +2270,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$primary != null
-					&& wayTagIds[this.tagIDsWays.highway$primary]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$primary.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PRIMARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2284,8 +2300,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$primary_link != null
-					&& wayTagIds[this.tagIDsWays.highway$primary_link]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$primary_link.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PRIMARY_LINK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2310,8 +2327,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$secondary != null
-					&& wayTagIds[this.tagIDsWays.highway$secondary]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$secondary.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SECONDARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2336,8 +2354,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$tertiary != null
-					&& wayTagIds[this.tagIDsWays.highway$tertiary]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$tertiary.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TERTIARY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2362,8 +2381,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$unclassified != null
-					&& wayTagIds[this.tagIDsWays.highway$unclassified]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$unclassified.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_UNCLASSIFIED1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2388,8 +2408,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$road != null
-					&& wayTagIds[this.tagIDsWays.highway$road]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$road.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_ROAD1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2411,8 +2432,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$residential != null
-					&& wayTagIds[this.tagIDsWays.highway$residential]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$residential.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_RESIDENTIAL1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2437,8 +2459,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$living_street != null
-					&& wayTagIds[this.tagIDsWays.highway$living_street]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$living_street.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_LIVING_STREET1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2463,8 +2486,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$service != null
-					&& wayTagIds[this.tagIDsWays.highway$service]) {
-				if (this.tagIDsWays.area$yes != null && wayTagIds[this.tagIDsWays.area$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$service.intValue()]) {
+				if (this.tagIDsWays.area$yes != null
+						&& wayTagIds[this.tagIDsWays.area$yes.intValue()]) {
 					this.layer.get(LayerIds.HIGHWAY$SERVICE_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SERVICE_AREA_OUTLINE));
@@ -2473,7 +2497,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 									PAINT_HIGHWAY_SERVICE_AREA_FILL));
 					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (this.tagIDsWays.bridge$yes != null
-						&& wayTagIds[this.tagIDsWays.bridge$yes]) {
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SERVICE1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2501,8 +2525,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$track != null
-					&& wayTagIds[this.tagIDsWays.highway$track]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$track.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_TRACK1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2524,8 +2549,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$pedestrian != null
-					&& wayTagIds[this.tagIDsWays.highway$pedestrian]) {
-				if (this.tagIDsWays.area$yes != null && wayTagIds[this.tagIDsWays.area$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$pedestrian.intValue()]) {
+				if (this.tagIDsWays.area$yes != null
+						&& wayTagIds[this.tagIDsWays.area$yes.intValue()]) {
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN_AREA_OUTLINE));
@@ -2534,7 +2560,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 									PAINT_HIGHWAY_PEDESTRIAN_AREA_FILL));
 					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (this.tagIDsWays.bridge$yes != null
-						&& wayTagIds[this.tagIDsWays.bridge$yes]) {
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PEDESTRIAN1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2559,8 +2585,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$path != null
-					&& wayTagIds[this.tagIDsWays.highway$path]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$path.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_PATH1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2582,8 +2609,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$cycleway != null
-					&& wayTagIds[this.tagIDsWays.highway$cycleway]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$cycleway.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_CYCLEWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2608,8 +2636,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$footway != null
-					&& wayTagIds[this.tagIDsWays.highway$footway]) {
-				if (this.tagIDsWays.area$yes != null && wayTagIds[this.tagIDsWays.area$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$footway.intValue()]) {
+				if (this.tagIDsWays.area$yes != null
+						&& wayTagIds[this.tagIDsWays.area$yes.intValue()]) {
 					this.layer.get(LayerIds.HIGHWAY$FOOTWAY_AREA$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_FOOTWAY_AREA_OUTLINE));
@@ -2618,7 +2647,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 									PAINT_HIGHWAY_FOOTWAY_AREA_FILL));
 					addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				} else if (this.tagIDsWays.bridge$yes != null
-						&& wayTagIds[this.tagIDsWays.bridge$yes]) {
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_FOOTWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2647,8 +2676,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$bridleway != null
-					&& wayTagIds[this.tagIDsWays.highway$bridleway]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$bridleway.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_BRIDLEWAY1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2673,8 +2703,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$steps != null
-					&& wayTagIds[this.tagIDsWays.highway$steps]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$steps.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_STEPS1);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					paint1Bridge.setColor(Color.BLACK);
@@ -2696,8 +2727,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			} else if (this.tagIDsWays.highway$construction != null
-					&& wayTagIds[this.tagIDsWays.highway$construction]) {
-				if (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes]) {
+					&& wayTagIds[this.tagIDsWays.highway$construction.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
 					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_CONSTRUCTION);
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
@@ -2722,18 +2754,26 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* building */
 		if ((wayTagBitmap & BITMAP_BUILDING) != 0) {
 			if (this.tagIDsWays.building$roof != null
-					&& wayTagIds[this.tagIDsWays.building$roof]) {
+					&& wayTagIds[this.tagIDsWays.building$roof.intValue()]) {
 				this.layer.get(LayerIds.BUILDING$ROOF).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BUILDING_ROOF_OUTLINE));
-			} else if ((this.tagIDsWays.building$apartments != null && wayTagIds[this.tagIDsWays.building$apartments])
-					|| (this.tagIDsWays.building$embassy != null && wayTagIds[this.tagIDsWays.building$embassy])
-					|| (this.tagIDsWays.building$government != null && wayTagIds[this.tagIDsWays.building$government])
-					|| (this.tagIDsWays.building$gym != null && wayTagIds[this.tagIDsWays.building$gym])
-					|| (this.tagIDsWays.building$sports != null && wayTagIds[this.tagIDsWays.building$sports])
-					|| (this.tagIDsWays.building$train_station != null && wayTagIds[this.tagIDsWays.building$train_station])
-					|| (this.tagIDsWays.building$university != null && wayTagIds[this.tagIDsWays.building$university])
-					|| (this.tagIDsWays.building$yes != null && wayTagIds[this.tagIDsWays.building$yes])) {
+			} else if ((this.tagIDsWays.building$apartments != null && wayTagIds[this.tagIDsWays.building$apartments
+					.intValue()])
+					|| (this.tagIDsWays.building$embassy != null && wayTagIds[this.tagIDsWays.building$embassy
+							.intValue()])
+					|| (this.tagIDsWays.building$government != null && wayTagIds[this.tagIDsWays.building$government
+							.intValue()])
+					|| (this.tagIDsWays.building$gym != null && wayTagIds[this.tagIDsWays.building$gym
+							.intValue()])
+					|| (this.tagIDsWays.building$sports != null && wayTagIds[this.tagIDsWays.building$sports
+							.intValue()])
+					|| (this.tagIDsWays.building$train_station != null && wayTagIds[this.tagIDsWays.building$train_station
+							.intValue()])
+					|| (this.tagIDsWays.building$university != null && wayTagIds[this.tagIDsWays.building$university
+							.intValue()])
+					|| (this.tagIDsWays.building$yes != null && wayTagIds[this.tagIDsWays.building$yes
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.BUILDING$YES)
 						.add(
@@ -2749,8 +2789,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* railway */
 		if ((wayTagBitmap & BITMAP_RAILWAY) != 0) {
-			if (this.tagIDsWays.railway$rail != null && wayTagIds[this.tagIDsWays.railway$rail]) {
-				if (this.tagIDsWays.tunnel$yes != null && wayTagIds[this.tagIDsWays.tunnel$yes]) {
+			if (this.tagIDsWays.railway$rail != null
+					&& wayTagIds[this.tagIDsWays.railway$rail.intValue()]) {
+				if (this.tagIDsWays.tunnel$yes != null
+						&& wayTagIds[this.tagIDsWays.tunnel$yes.intValue()]) {
 					this.layer.get(LayerIds.RAILWAY$RAIL_TUNNEL$YES).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_RAILWAY_RAIL_TUNNEL));
@@ -2761,13 +2803,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_RAIL2));
 				}
 			} else if (this.tagIDsWays.railway$tram != null
-					&& wayTagIds[this.tagIDsWays.railway$tram]) {
+					&& wayTagIds[this.tagIDsWays.railway$tram.intValue()]) {
 				this.layer.get(LayerIds.RAILWAY$TRAM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_TRAM1));
 				this.layer.get(LayerIds.RAILWAY$TRAM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_TRAM2));
 			} else if (this.tagIDsWays.railway$light_rail != null
-					&& wayTagIds[this.tagIDsWays.railway$light_rail]) {
+					&& wayTagIds[this.tagIDsWays.railway$light_rail.intValue()]) {
 				this.layer.get(LayerIds.RAILWAY$LIGHT_RAIL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2777,9 +2819,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_RAILWAY_LIGHT_RAIL2));
 			} else if (this.tagIDsWays.railway$subway != null
-					&& wayTagIds[this.tagIDsWays.railway$subway]) {
-				if ((this.tagIDsWays.tunnel$no != null && wayTagIds[this.tagIDsWays.tunnel$no])
-						|| (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes])) {
+					&& wayTagIds[this.tagIDsWays.railway$subway.intValue()]) {
+				if ((this.tagIDsWays.tunnel$no != null && wayTagIds[this.tagIDsWays.tunnel$no
+						.intValue()])
+						|| (this.tagIDsWays.bridge$yes != null && wayTagIds[this.tagIDsWays.bridge$yes
+								.intValue()])) {
 					this.layer.get(LayerIds.RAILWAY$SUBWAY)
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
@@ -2794,7 +2838,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 									PAINT_RAILWAY_SUBWAY_TUNNEL));
 				}
 			} else if (this.tagIDsWays.railway$station != null
-					&& wayTagIds[this.tagIDsWays.railway$station]) {
+					&& wayTagIds[this.tagIDsWays.railway$station.intValue()]) {
 				this.layer.get(LayerIds.RAILWAY$STATION).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_RAILWAY_STATION_OUTLINE));
@@ -2811,7 +2855,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* landuse */
 		if ((wayTagBitmap & BITMAP_LANDUSE) != 0) {
 			if (this.tagIDsWays.landuse$allotments != null
-					&& wayTagIds[this.tagIDsWays.landuse$allotments]) {
+					&& wayTagIds[this.tagIDsWays.landuse$allotments.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
 						new ShapePaintContainer(this.shapeContainer,
@@ -2819,25 +2863,32 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_ALLOTMENTS_OUTLINE));
-			} else if ((this.tagIDsWays.landuse$cemetery != null && wayTagIds[this.tagIDsWays.landuse$cemetery])
-					|| (this.tagIDsWays.landuse$farm != null && wayTagIds[this.tagIDsWays.landuse$farm])
-					|| (this.tagIDsWays.landuse$recreation_ground != null && wayTagIds[this.tagIDsWays.landuse$recreation_ground])) {
+			} else if ((this.tagIDsWays.landuse$cemetery != null && wayTagIds[this.tagIDsWays.landuse$cemetery
+					.intValue()])
+					|| (this.tagIDsWays.landuse$farm != null && wayTagIds[this.tagIDsWays.landuse$farm
+							.intValue()])
+					|| (this.tagIDsWays.landuse$recreation_ground != null && wayTagIds[this.tagIDsWays.landuse$recreation_ground
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_CEMETERY_FILL));
-			} else if ((this.tagIDsWays.landuse$basin != null && wayTagIds[this.tagIDsWays.landuse$basin])
-					|| (this.tagIDsWays.landuse$reservoir != null && wayTagIds[this.tagIDsWays.landuse$reservoir])) {
+			} else if ((this.tagIDsWays.landuse$basin != null && wayTagIds[this.tagIDsWays.landuse$basin
+					.intValue()])
+					|| (this.tagIDsWays.landuse$reservoir != null && wayTagIds[this.tagIDsWays.landuse$reservoir
+							.intValue()])) {
 				this.layer.get(LayerIds.LANDUSE$BASIN).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_BASIN_FILL));
-			} else if ((this.tagIDsWays.landuse$brownfield != null && wayTagIds[this.tagIDsWays.landuse$brownfield])
-					|| (this.tagIDsWays.landuse$industrial != null && wayTagIds[this.tagIDsWays.landuse$industrial])) {
+			} else if ((this.tagIDsWays.landuse$brownfield != null && wayTagIds[this.tagIDsWays.landuse$brownfield
+					.intValue()])
+					|| (this.tagIDsWays.landuse$industrial != null && wayTagIds[this.tagIDsWays.landuse$industrial
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$INDUSTRIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_INDUSTRIAL_FILL));
 			} else if (this.tagIDsWays.landuse$commercial != null
-					&& wayTagIds[this.tagIDsWays.landuse$commercial]) {
+					&& wayTagIds[this.tagIDsWays.landuse$commercial.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
@@ -2845,37 +2896,44 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LANDUSE$COMMERCIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_COMMERCIAL_OUTLINE));
-			} else if ((this.tagIDsWays.landuse$construction != null && wayTagIds[this.tagIDsWays.landuse$construction])
-					|| (this.tagIDsWays.landuse$greenfield != null && wayTagIds[this.tagIDsWays.landuse$greenfield])) {
+			} else if ((this.tagIDsWays.landuse$construction != null && wayTagIds[this.tagIDsWays.landuse$construction
+					.intValue()])
+					|| (this.tagIDsWays.landuse$greenfield != null && wayTagIds[this.tagIDsWays.landuse$greenfield
+							.intValue()])) {
 				this.layer.get(LayerIds.LANDUSE$CONSTRUCTION).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_CONSTRUCTION_FILL));
-			} else if ((this.tagIDsWays.landuse$forest != null && wayTagIds[this.tagIDsWays.landuse$forest])
-					|| (this.tagIDsWays.landuse$wood != null && wayTagIds[this.tagIDsWays.landuse$wood])) {
+			} else if ((this.tagIDsWays.landuse$forest != null && wayTagIds[this.tagIDsWays.landuse$forest
+					.intValue()])
+					|| (this.tagIDsWays.landuse$wood != null && wayTagIds[this.tagIDsWays.landuse$wood
+							.intValue()])) {
 				this.layer.get(LayerIds.LANDUSE$FOREST)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
 										PAINT_LANDUSE_FOREST_FILL));
-			} else if ((this.tagIDsWays.landuse$farmland != null && wayTagIds[this.tagIDsWays.landuse$farmland])
-					|| (this.tagIDsWays.landuse$grass != null && wayTagIds[this.tagIDsWays.landuse$grass])
-					|| (this.tagIDsWays.landuse$village_green != null && wayTagIds[this.tagIDsWays.landuse$village_green])) {
+			} else if ((this.tagIDsWays.landuse$farmland != null && wayTagIds[this.tagIDsWays.landuse$farmland
+					.intValue()])
+					|| (this.tagIDsWays.landuse$grass != null && wayTagIds[this.tagIDsWays.landuse$grass
+							.intValue()])
+					|| (this.tagIDsWays.landuse$village_green != null && wayTagIds[this.tagIDsWays.landuse$village_green
+							.intValue()])) {
 				this.layer.get(LayerIds.LANDUSE$GRASS).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_GRASS_FILL));
 				this.layer.get(LayerIds.LANDUSE$GRASS).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_GRASS_OUTLINE));
 			} else if (this.tagIDsWays.landuse$military != null
-					&& wayTagIds[this.tagIDsWays.landuse$military]) {
+					&& wayTagIds[this.tagIDsWays.landuse$military.intValue()]) {
 				this.layer.get(LayerIds.LANDUSE$MILITARY).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_MILITARY_FILL));
 			} else if (this.tagIDsWays.landuse$residential != null
-					&& wayTagIds[this.tagIDsWays.landuse$residential]) {
+					&& wayTagIds[this.tagIDsWays.landuse$residential.intValue()]) {
 				this.layer.get(LayerIds.LANDUSE$RESIDENTIAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_RESIDENTIAL_FILL));
 			} else if (this.tagIDsWays.landuse$retail != null
-					&& wayTagIds[this.tagIDsWays.landuse$retail]) {
+					&& wayTagIds[this.tagIDsWays.landuse$retail.intValue()]) {
 				this.layer.get(LayerIds.LANDUSE$RETAIL)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -2888,12 +2946,18 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* leisure */
 		if ((wayTagBitmap & BITMAP_LEISURE) != 0) {
-			if ((this.tagIDsWays.leisure$common != null && wayTagIds[this.tagIDsWays.leisure$common])
-					|| (this.tagIDsWays.leisure$garden != null && wayTagIds[this.tagIDsWays.leisure$garden])
-					|| (this.tagIDsWays.leisure$golf_course != null && wayTagIds[this.tagIDsWays.leisure$golf_course])
-					|| (this.tagIDsWays.leisure$park != null && wayTagIds[this.tagIDsWays.leisure$park])
-					|| (this.tagIDsWays.leisure$pitch != null && wayTagIds[this.tagIDsWays.leisure$pitch])
-					|| (this.tagIDsWays.leisure$playground != null && wayTagIds[this.tagIDsWays.leisure$playground])) {
+			if ((this.tagIDsWays.leisure$common != null && wayTagIds[this.tagIDsWays.leisure$common
+					.intValue()])
+					|| (this.tagIDsWays.leisure$garden != null && wayTagIds[this.tagIDsWays.leisure$garden
+							.intValue()])
+					|| (this.tagIDsWays.leisure$golf_course != null && wayTagIds[this.tagIDsWays.leisure$golf_course
+							.intValue()])
+					|| (this.tagIDsWays.leisure$park != null && wayTagIds[this.tagIDsWays.leisure$park
+							.intValue()])
+					|| (this.tagIDsWays.leisure$pitch != null && wayTagIds[this.tagIDsWays.leisure$pitch
+							.intValue()])
+					|| (this.tagIDsWays.leisure$playground != null && wayTagIds[this.tagIDsWays.leisure$playground
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$COMMON)
 						.add(
@@ -2902,10 +2966,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LEISURE$COMMON).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LEISURE_COMMON_OUTLINE));
-			} else if ((this.tagIDsWays.leisure$sports_centre != null && wayTagIds[this.tagIDsWays.leisure$sports_centre])
-					|| (this.tagIDsWays.leisure$stadium != null && wayTagIds[this.tagIDsWays.leisure$stadium])
-					|| (this.tagIDsWays.leisure$track != null && wayTagIds[this.tagIDsWays.leisure$track])
-					|| (this.tagIDsWays.leisure$water_park != null && wayTagIds[this.tagIDsWays.leisure$park])) {
+			} else if ((this.tagIDsWays.leisure$sports_centre != null && wayTagIds[this.tagIDsWays.leisure$sports_centre
+					.intValue()])
+					|| (this.tagIDsWays.leisure$stadium != null && wayTagIds[this.tagIDsWays.leisure$stadium
+							.intValue()])
+					|| (this.tagIDsWays.leisure$track != null && wayTagIds[this.tagIDsWays.leisure$track
+							.intValue()])
+					|| (this.tagIDsWays.leisure$water_park != null && wayTagIds[this.tagIDsWays.leisure$park
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.LEISURE$STADIUM)
 						.add(
@@ -2922,9 +2990,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* amenity */
 		if ((wayTagBitmap & BITMAP_AMENITY) != 0) {
-			if ((this.tagIDsWays.amenity$college != null && wayTagIds[this.tagIDsWays.amenity$college])
-					|| (this.tagIDsWays.amenity$school != null && wayTagIds[this.tagIDsWays.amenity$school])
-					|| (this.tagIDsWays.amenity$university != null && wayTagIds[this.tagIDsWays.amenity$university])) {
+			if ((this.tagIDsWays.amenity$college != null && wayTagIds[this.tagIDsWays.amenity$college
+					.intValue()])
+					|| (this.tagIDsWays.amenity$school != null && wayTagIds[this.tagIDsWays.amenity$school
+							.intValue()])
+					|| (this.tagIDsWays.amenity$university != null && wayTagIds[this.tagIDsWays.amenity$university
+							.intValue()])) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.AMENITY$SCHOOL)
 						.add(
@@ -2934,19 +3005,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_SCHOOL_OUTLINE));
 			} else if (this.tagIDsWays.amenity$grave_yard != null
-					&& wayTagIds[this.tagIDsWays.amenity$grave_yard]) {
+					&& wayTagIds[this.tagIDsWays.amenity$grave_yard.intValue()]) {
 				this.layer.get(LayerIds.AMENITY$GRAVE_YARD).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_GRAVE_YARD_FILL));
 			} else if (this.tagIDsWays.amenity$hospital != null
-					&& wayTagIds[this.tagIDsWays.amenity$hospital]) {
+					&& wayTagIds[this.tagIDsWays.amenity$hospital.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 18);
 				addAreaSymbol(this.mapSymbols.hospital, (byte) 16);
 				this.layer.get(LayerIds.AMENITY$HOSPITAL).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_HOSPITAL_FILL));
 			} else if (this.tagIDsWays.amenity$parking != null
-					&& wayTagIds[this.tagIDsWays.amenity$parking]) {
+					&& wayTagIds[this.tagIDsWays.amenity$parking.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 18);
 				addAreaSymbol(this.mapSymbols.parking, (byte) 17);
 				this.layer.get(LayerIds.AMENITY$PARKING)
@@ -2957,7 +3028,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_AMENITY_PARKING_OUTLINE));
 			} else if (this.tagIDsWays.amenity$fountain != null
-					&& wayTagIds[this.tagIDsWays.amenity$fountain]) {
+					&& wayTagIds[this.tagIDsWays.amenity$fountain.intValue()]) {
 				addAreaSymbol(this.mapSymbols.fountain, (byte) 16);
 			}
 			if (--this.remainingTags <= 0) {
@@ -2968,32 +3039,34 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* natural */
 		if ((wayTagBitmap & BITMAP_NATURAL) != 0) {
 			if (this.tagIDsWays.natural$beach != null
-					&& wayTagIds[this.tagIDsWays.natural$beach]) {
+					&& wayTagIds[this.tagIDsWays.natural$beach.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$BEACH).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_BEACH_FILL));
 			} else if (this.tagIDsWays.natural$heath != null
-					&& wayTagIds[this.tagIDsWays.natural$heath]) {
+					&& wayTagIds[this.tagIDsWays.natural$heath.intValue()]) {
 				this.layer.get(LayerIds.NATURAL$HEATH).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_HEATH_FILL));
 			} else if (this.tagIDsWays.natural$land != null
-					&& wayTagIds[this.tagIDsWays.natural$land]) {
+					&& wayTagIds[this.tagIDsWays.natural$land.intValue()]) {
 				this.layer.get(LayerIds.NATURAL$LAND).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_LAND_FILL));
-			} else if ((this.tagIDsWays.natural$scrub != null && wayTagIds[this.tagIDsWays.natural$scrub])
-					|| (this.tagIDsWays.natural$wood != null && wayTagIds[this.tagIDsWays.natural$wood])) {
+			} else if ((this.tagIDsWays.natural$scrub != null && wayTagIds[this.tagIDsWays.natural$scrub
+					.intValue()])
+					|| (this.tagIDsWays.natural$wood != null && wayTagIds[this.tagIDsWays.natural$wood
+							.intValue()])) {
 				this.layer.get(LayerIds.NATURAL$WOOD).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WOOD_FILL));
 			} else if (this.tagIDsWays.natural$water != null
-					&& wayTagIds[this.tagIDsWays.natural$water]) {
+					&& wayTagIds[this.tagIDsWays.natural$water.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WATER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
 			} else if (this.tagIDsWays.natural$coastline != null
-					&& wayTagIds[this.tagIDsWays.natural$coastline]) {
+					&& wayTagIds[this.tagIDsWays.natural$coastline.intValue()]) {
 				this.coastlineAlgorithm.addCoastlineSegment(this.coordinates[0]);
 			} else if (this.tagIDsWays.natural$glacier != null
-					&& wayTagIds[this.tagIDsWays.natural$glacier]) {
+					&& wayTagIds[this.tagIDsWays.natural$glacier.intValue()]) {
 				this.layer.get(LayerIds.NATURAL$GLACIER)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -3008,7 +3081,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* man_made */
-		if (this.tagIDsWays.man_made$pier != null && wayTagIds[this.tagIDsWays.man_made$pier]) {
+		if (this.tagIDsWays.man_made$pier != null
+				&& wayTagIds[this.tagIDsWays.man_made$pier.intValue()]) {
 			this.layer.get(LayerIds.MAN_MADE$PIER).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MAN_MADE_PIER));
 			if (--this.remainingTags <= 0) {
@@ -3018,21 +3092,23 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* waterway */
 		if ((wayTagBitmap & BITMAP_WATERWAY) != 0) {
-			if ((this.tagIDsWays.waterway$canal != null && wayTagIds[this.tagIDsWays.waterway$canal])
-					|| (this.tagIDsWays.waterway$drain != null && wayTagIds[this.tagIDsWays.waterway$drain])) {
+			if ((this.tagIDsWays.waterway$canal != null && wayTagIds[this.tagIDsWays.waterway$canal
+					.intValue()])
+					|| (this.tagIDsWays.waterway$drain != null && wayTagIds[this.tagIDsWays.waterway$drain
+							.intValue()])) {
 				this.layer.get(LayerIds.WATERWAY$CANAL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_WATERWAY_CANAL));
 			} else if (this.tagIDsWays.waterway$river != null
-					&& wayTagIds[this.tagIDsWays.waterway$river]) {
+					&& wayTagIds[this.tagIDsWays.waterway$river.intValue()]) {
 				this.layer.get(LayerIds.WATERWAY$RIVER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_WATERWAY_RIVER));
 			} else if (this.tagIDsWays.waterway$riverbank != null
-					&& wayTagIds[this.tagIDsWays.waterway$riverbank]) {
+					&& wayTagIds[this.tagIDsWays.waterway$riverbank.intValue()]) {
 				this.layer.get(LayerIds.WATERWAY$RIVERBANK).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_WATERWAY_RIVERBANK_FILL));
 			} else if (this.tagIDsWays.waterway$stream != null
-					&& wayTagIds[this.tagIDsWays.waterway$stream]) {
+					&& wayTagIds[this.tagIDsWays.waterway$stream.intValue()]) {
 				this.layer.get(LayerIds.WATERWAY$STREAM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_WATERWAY_STREAM));
 			}
@@ -3042,8 +3118,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* barrier */
-		if ((this.tagIDsWays.barrier$fence != null && wayTagIds[this.tagIDsWays.barrier$fence])
-				|| (this.tagIDsWays.barrier$wall != null && wayTagIds[this.tagIDsWays.barrier$wall])) {
+		if ((this.tagIDsWays.barrier$fence != null && wayTagIds[this.tagIDsWays.barrier$fence
+				.intValue()])
+				|| (this.tagIDsWays.barrier$wall != null && wayTagIds[this.tagIDsWays.barrier$wall
+						.intValue()])) {
 			if (this.currentTile.zoomLevel > 15) {
 				this.layer.get(LayerIds.BARRIER$WALL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_BARRIER_WALL));
@@ -3055,34 +3133,34 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* boundary */
 		if (this.tagIDsWays.boundary$administrative != null
-				&& wayTagIds[this.tagIDsWays.boundary$administrative]) {
+				&& wayTagIds[this.tagIDsWays.boundary$administrative.intValue()]) {
 			if (this.tagIDsWays.admin_level$2 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$2]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$2.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$2).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_2));
 			} else if (this.tagIDsWays.admin_level$4 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$4]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$4.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$4).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_4));
 			} else if (this.tagIDsWays.admin_level$6 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$6]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$6.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$6).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_6));
 			} else if (this.tagIDsWays.admin_level$8 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$8]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$8.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$8).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_8));
 			} else if (this.tagIDsWays.admin_level$9 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$9]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$9.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$9).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_9));
 			} else if (this.tagIDsWays.admin_level$10 != null
-					&& wayTagIds[this.tagIDsWays.admin_level$10]) {
+					&& wayTagIds[this.tagIDsWays.admin_level$10.intValue()]) {
 				this.layer.get(LayerIds.ADMIN_LEVEL$10).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10));
@@ -3091,13 +3169,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.boundary$national_park != null
-				&& wayTagIds[this.tagIDsWays.boundary$national_park]) {
+				&& wayTagIds[this.tagIDsWays.boundary$national_park.intValue()]) {
 			this.layer.get(LayerIds.BOUNDARY$NATIONAL_PARK).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_BOUNDARY_NATIONAL_PARK));
 		}
 
 		/* sport */
-		if (this.tagIDsWays.sport$shooting != null && wayTagIds[this.tagIDsWays.sport$shooting]) {
+		if (this.tagIDsWays.sport$shooting != null
+				&& wayTagIds[this.tagIDsWays.sport$shooting.intValue()]) {
 			this.layer.get(LayerIds.SPORT$SHOOTING).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SHOOTING_FILL));
 			this.layer.get(LayerIds.SPORT$SHOOTING).add(
@@ -3106,7 +3185,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.sport$swimming != null
-				&& wayTagIds[this.tagIDsWays.sport$swimming]) {
+				&& wayTagIds[this.tagIDsWays.sport$swimming.intValue()]) {
 			this.layer.get(LayerIds.SPORT$SWIMMING).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SWIMMING_FILL));
 			this.layer.get(LayerIds.SPORT$SWIMMING).add(
@@ -3116,7 +3195,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.sport$tennis != null
-				&& wayTagIds[this.tagIDsWays.sport$tennis]) {
+				&& wayTagIds[this.tagIDsWays.sport$tennis.intValue()]) {
 			this.layer.get(LayerIds.SPORT$TENNIS).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_TENNIS_FILL));
 			this.layer.get(LayerIds.SPORT$TENNIS).add(
@@ -3128,7 +3207,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* aeroway */
 		if (this.tagIDsWays.aeroway$aerodrome != null
-				&& wayTagIds[this.tagIDsWays.aeroway$aerodrome]) {
+				&& wayTagIds[this.tagIDsWays.aeroway$aerodrome.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$AERODROME).add(
 					new ShapePaintContainer(this.shapeContainer,
 							PAINT_AEROWAY_AERODROME_OUTLINE));
@@ -3138,14 +3217,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$apron != null
-				&& wayTagIds[this.tagIDsWays.aeroway$apron]) {
+				&& wayTagIds[this.tagIDsWays.aeroway$apron.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$APRON).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_APRON_FILL));
 			if (--this.remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$runway != null
-				&& wayTagIds[this.tagIDsWays.aeroway$runway]) {
+				&& wayTagIds[this.tagIDsWays.aeroway$runway.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$RUNWAY1).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_RUNWAY1));
 			this.layer.get(LayerIds.AEROWAY$RUNWAY2).add(
@@ -3154,7 +3233,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$taxiway != null
-				&& wayTagIds[this.tagIDsWays.aeroway$taxiway]) {
+				&& wayTagIds[this.tagIDsWays.aeroway$taxiway.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$TAXIWAY1).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_TAXIWAY1));
 			this.layer.get(LayerIds.AEROWAY$TAXIWAY2).add(
@@ -3163,7 +3242,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$terminal != null
-				&& wayTagIds[this.tagIDsWays.aeroway$terminal]) {
+				&& wayTagIds[this.tagIDsWays.aeroway$terminal.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$TERMINAL)
 					.add(
 							new ShapePaintContainer(this.shapeContainer,
@@ -3177,7 +3256,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* tourism */
 		if (this.tagIDsWays.tourism$attraction != null
-				&& wayTagIds[this.tagIDsWays.tourism$attraction]) {
+				&& wayTagIds[this.tagIDsWays.tourism$attraction.intValue()]) {
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_RED, (byte) 0);
 			this.layer.get(LayerIds.TOURISM$ATTRACTION)
 					.add(
@@ -3187,7 +3266,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				return;
 			}
 		} else if (this.tagIDsWays.tourism$zoo != null
-				&& wayTagIds[this.tagIDsWays.tourism$zoo]) {
+				&& wayTagIds[this.tagIDsWays.tourism$zoo.intValue()]) {
 			this.layer.get(LayerIds.TOURISM$ZOO).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ZOO_FILL));
 			this.layer.get(LayerIds.TOURISM$ZOO).add(
@@ -3198,7 +3277,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* route */
-		if (this.tagIDsWays.route$ferry != null && wayTagIds[this.tagIDsWays.route$ferry]) {
+		if (this.tagIDsWays.route$ferry != null
+				&& wayTagIds[this.tagIDsWays.route$ferry.intValue()]) {
 			this.layer.get(LayerIds.ROUTE$FERRY).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_ROUTE_FERRY));
 			if (--this.remainingTags <= 0) {
@@ -3207,15 +3287,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* military */
-		if ((this.tagIDsWays.military$airfield != null && wayTagIds[this.tagIDsWays.military$airfield])
-				|| (this.tagIDsWays.military$barracks != null && wayTagIds[this.tagIDsWays.military$barracks])) {
+		if ((this.tagIDsWays.military$airfield != null && wayTagIds[this.tagIDsWays.military$airfield
+				.intValue()])
+				|| (this.tagIDsWays.military$barracks != null && wayTagIds[this.tagIDsWays.military$barracks
+						.intValue()])) {
 			this.layer.get(LayerIds.MILITARY$BARRACKS).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MILITARY_BARRACKS_FILL));
 			if (--this.remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.military$naval_base != null
-				&& wayTagIds[this.tagIDsWays.military$naval_base]) {
+				&& wayTagIds[this.tagIDsWays.military$naval_base.intValue()]) {
 			this.layer.get(LayerIds.MILITARY$NAVAL_BASE)
 					.add(
 							new ShapePaintContainer(this.shapeContainer,
@@ -3226,7 +3308,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* historic */
-		if (this.tagIDsWays.historic$ruins != null && wayTagIds[this.tagIDsWays.historic$ruins]) {
+		if (this.tagIDsWays.historic$ruins != null
+				&& wayTagIds[this.tagIDsWays.historic$ruins.intValue()]) {
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;
@@ -3234,7 +3317,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		/* place */
-		if (this.tagIDsWays.place$locality != null && wayTagIds[this.tagIDsWays.place$locality]) {
+		if (this.tagIDsWays.place$locality != null
+				&& wayTagIds[this.tagIDsWays.place$locality.intValue()]) {
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLACK, (byte) 0);
 			if (--this.remainingTags <= 0) {
 				return;

@@ -442,8 +442,8 @@ class CoastlineAlgorithm {
 			this.virtualTileSize = Tile.TILE_SIZE << this.zoomLevelDifference;
 			this.relativeX1 = (int) ((readCoastlineTile.pixelX << this.zoomLevelDifference) - currentTile.pixelX);
 			this.relativeY1 = (int) ((readCoastlineTile.pixelY << this.zoomLevelDifference) - currentTile.pixelY);
-			this.relativeX2 = relativeX1 + this.virtualTileSize;
-			this.relativeY2 = relativeY1 + this.virtualTileSize;
+			this.relativeX2 = this.relativeX1 + this.virtualTileSize;
+			this.relativeY2 = this.relativeY1 + this.virtualTileSize;
 
 			this.virtualTileBoundaries[0] = this.relativeX1;
 			this.virtualTileBoundaries[1] = this.relativeY1;

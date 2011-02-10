@@ -1,3 +1,15 @@
+Version 0.2.1 (2011-02-10)
+--------------------------
++ Optimized binary map format, reduces the file size by 15-20%.
++ Rewritten overlay implementation with many new features and bug fixes.
++ Zoom level can now be changed by multi-tap and double-tap gestures.
++ The mapfile writer supports hard disk as temporary storage device.
++ The mapfile writer depends no longer on the JTS library and works faster.
++ Added support for a couple of OpenStreetMap tags.
++ Better rendering of way names.
++ Better rendering of coastline and water areas.
++ Many other minor improvements and bugfixes.
+
 Version 0.2.0 (2010-11-22)
 --------------------------
 + New binary map format for more detailed and faster map rendering.
