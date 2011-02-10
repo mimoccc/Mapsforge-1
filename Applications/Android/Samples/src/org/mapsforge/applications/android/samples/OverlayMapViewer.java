@@ -24,7 +24,6 @@ import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.OverlayItem;
 import org.mapsforge.android.maps.RouteOverlay;
 
-import android.R;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
@@ -49,12 +48,12 @@ public class OverlayMapViewer extends MapActivity {
 		GeoPoint geoPoint3 = new GeoPoint(52.525, 13.369444); // Berlin Central Station
 
 		// create the paint objects for the CircleOverlay and set all parameters
-		Paint circleFillPaint = new Paint();
+		Paint circleFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		circleFillPaint.setStyle(Paint.Style.FILL);
 		circleFillPaint.setColor(Color.CYAN);
 		circleFillPaint.setAlpha(64);
 
-		Paint circleOutlinePaint = new Paint();
+		Paint circleOutlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		circleOutlinePaint.setStyle(Paint.Style.STROKE);
 		circleOutlinePaint.setColor(Color.CYAN);
 		circleOutlinePaint.setAlpha(128);
@@ -65,7 +64,7 @@ public class OverlayMapViewer extends MapActivity {
 		circleOverlay.setCircleData(geoPoint3, 75);
 
 		// create the paint object for the RouteOverlay and set all parameters
-		Paint routePaint = new Paint();
+		Paint routePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		routePaint.setStyle(Paint.Style.STROKE);
 		routePaint.setColor(Color.BLUE);
 		routePaint.setAlpha(160);
@@ -74,11 +73,11 @@ public class OverlayMapViewer extends MapActivity {
 		routePaint.setStrokeJoin(Paint.Join.ROUND);
 
 		// create the RouteOverlay and set the way nodes
-		RouteOverlay routeOverlay = new RouteOverlay(routePaint);
+		RouteOverlay routeOverlay = new RouteOverlay(routePaint, null);
 		routeOverlay.setRouteData(new GeoPoint[] { geoPoint1, geoPoint2 });
 
 		// create the ItemizedOverlay with a default marker and set the items
-		Drawable defaultMarker = getResources().getDrawable(R.drawable.btn_star);
+		Drawable defaultMarker = getResources().getDrawable(R.drawable.marker);
 		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(defaultMarker, this);
 
 		OverlayItem item1 = new OverlayItem(geoPoint1, "Victory Column",

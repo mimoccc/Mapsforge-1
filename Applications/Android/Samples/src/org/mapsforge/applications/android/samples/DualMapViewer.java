@@ -41,20 +41,20 @@ public class DualMapViewer extends MapActivity {
 			return true;
 		}
 		// forward the event to both MapViews for simultaneous movement
-		return (this.mapView1.onKeyDown(keyCode, event) | this.mapView2.onKeyDown(keyCode,
-				event));
+		return this.mapView1.onKeyDown(keyCode, event)
+				| this.mapView2.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		// forward the event to both MapViews for simultaneous movement
-		return (this.mapView1.onKeyUp(keyCode, event) | this.mapView2.onKeyUp(keyCode, event));
+		return this.mapView1.onKeyUp(keyCode, event) | this.mapView2.onKeyUp(keyCode, event);
 	}
 
 	@Override
 	public boolean onTrackballEvent(MotionEvent event) {
 		// forward the event to both MapViews for simultaneous movement
-		return (this.mapView1.onTrackballEvent(event) | this.mapView2.onTrackballEvent(event));
+		return this.mapView1.onTrackballEvent(event) | this.mapView2.onTrackballEvent(event);
 	}
 
 	@Override
