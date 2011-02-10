@@ -39,7 +39,7 @@ import org.mapsforge.server.routing.IVertex;
  */
 public class HHRouter implements IRouter {
 
-	private static final double MAX_RTREE_SEARCH_RADIUS = 2500;
+	private static final double MAX_RTREE_SEARCH_RADIUS = 2000;
 
 	final HHRoutingGraph routingGraph;
 	final HHAlgorithm hhAlgorithm;
@@ -216,8 +216,8 @@ public class HHRouter implements IRouter {
 				for (int i = 1; i < waypoints.length - 1; i++) {
 					waypoints[i] = new
 							GeoCoordinate(edge.waypoints[(i - 1) * 2],
-							edge.waypoints[((i - 1) * 2) +
-							1]);
+									edge.waypoints[((i - 1) * 2) +
+									1]);
 				}
 				waypoints[waypoints.length - 1] = new GeoCoordinate(target.latitudeE6,
 						target.longitudeE6);
@@ -325,7 +325,8 @@ public class HHRouter implements IRouter {
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
 		for (IEdge e : shortestPath) {
-			System.out.println(e.getName() + " " + e.getRef() + " " + e.getType());
+			System.out.println(e.getSource().getId() + " -> " + e.getTarget().getId() + " "
+					+ e.getName() + " " + e.getRef() + " " + e.getType());
 		}
 
 		// this is just for viewing the route - testing code only

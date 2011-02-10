@@ -347,7 +347,8 @@ final class HHAlgorithm {
 			throws IOException {
 		while (fwd.eSrcId != -1) {
 			if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_RECURSIVE) {
-				expandEdgeRecursiveByHopIndices(fwd.eSrcId, fwd.eTgtId, buff, true);
+				// expandEdgeRecursiveByHopIndices(fwd.eSrcId, fwd.eTgtId, buff, true);
+				expandEdgeRecursiveDijkstra(fwd.eSrcId, fwd.eTgtId, buff, true);
 			} else if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_NONE) {
 				expandEdgeRecursiveDijkstra(fwd.eSrcId, fwd.eTgtId, buff, true);
 			}
@@ -355,7 +356,8 @@ final class HHAlgorithm {
 		}
 		while (bwd.eSrcId != -1) {
 			if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_RECURSIVE) {
-				expandEdgeRecursiveByHopIndices(bwd.eSrcId, bwd.eTgtId, buff, false);
+				// expandEdgeRecursiveByHopIndices(bwd.eSrcId, bwd.eTgtId, buff, false);
+				expandEdgeRecursiveDijkstra(bwd.eSrcId, bwd.eTgtId, buff, false);
 			} else if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_NONE) {
 				expandEdgeRecursiveDijkstra(bwd.eSrcId, bwd.eTgtId, buff, false);
 			}

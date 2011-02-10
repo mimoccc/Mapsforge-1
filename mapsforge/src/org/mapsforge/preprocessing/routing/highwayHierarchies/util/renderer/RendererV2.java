@@ -75,8 +75,8 @@ public class RendererV2 {
 
 	private final static Projection PROJ = ProjectionFactory
 			.fromPROJ4Specification(new String[] { "+proj=cass", "+lat_0=52.41864827777778",
-			"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
-			"+datum=potsdam", "+units=m", "+no_defs" });
+					"+lon_0=13.62720366666667", "+x_0=40000", "+y_0=10000", "+ellps=bessel",
+					"+datum=potsdam", "+units=m", "+no_defs" });
 
 	private static double[] getZoomLevels(int n) {
 		double[] tmp = new double[n];
