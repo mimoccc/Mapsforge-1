@@ -265,10 +265,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
 	private MapSymbols mapSymbols;
 	private ArrayList<PointTextContainer> nodes;
-	private double segmentLengthInPixel;
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
+	private double segmentLengthInPixel;
 	private ShapeContainer shapeContainer;
 	private int skipPixels;
 	private SymbolContainer symbolContainer;
@@ -1846,7 +1846,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				&& nodeTagIds[this.tagIDsNodes.highway$bus_stop]) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus);
 		} else if (this.tagIDsNodes.highway$traffic_signals != null
-				&& nodeTagIds[this.tagIDsNodes.highway$traffic_signals]) {
+				&& nodeTagIds[this.tagIDsNodes.highway$traffic_signals]
+				&& this.currentTile.zoomLevel >= 17) {
 			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.traffic_signal);
 		}
 
