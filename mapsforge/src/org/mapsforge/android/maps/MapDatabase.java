@@ -79,9 +79,9 @@ public class MapDatabase {
 	private static final float LOAD_FACTOR = 0.6f;
 
 	/**
-	 * Maximum size of a single block that is supported by this implementation.
+	 * Maximum size of a single block in bytes that is supported by this implementation.
 	 */
-	private static final int MAXIMUM_BLOCK_SIZE = 2000000;
+	private static final int MAXIMUM_BLOCK_SIZE = 2500000;
 
 	/**
 	 * Maximum number of inner ways which is considered as valid.
@@ -1412,6 +1412,7 @@ public class MapDatabase {
 						continue;
 					} else if (this.currentBlockSize > MAXIMUM_BLOCK_SIZE) {
 						// the current block is too large, continue with the next block
+						Logger.d("current block size too large: " + this.currentBlockSize);
 						continue;
 					} else if (this.currentBlockPointer + this.currentBlockSize > this.fileSize) {
 						Logger.d("invalid current block size: " + this.currentBlockSize);
