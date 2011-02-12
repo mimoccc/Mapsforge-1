@@ -53,6 +53,8 @@ public class MapFileWriterTask implements Sink {
 	private static final Logger LOGGER = Logger.getLogger(MapFileWriterTask.class
 			.getName());
 
+	private static final String VERSION = "0.2.1";
+
 	private TileBasedDataStore tileBasedGeoObjectStore;
 
 	// temporary node data
@@ -87,6 +89,9 @@ public class MapFileWriterTask implements Sink {
 			throw new IllegalArgumentException(
 					"file parameter points to a directory, must be a file");
 		}
+
+		LOGGER.info("mapfile-writer version " + VERSION);
+
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate
 				.fromString(mapStartPosition);
 		this.debugInfo = debugInfo;
