@@ -62,10 +62,12 @@ public class CircleOverlay extends Overlay {
 	 * @param radius
 	 *            the radius of the circle in meters.
 	 */
-	public synchronized void setCircleData(GeoPoint center, float radius) {
-		this.center = center;
-		this.radius = radius;
-		this.cachedZoomLevel = Byte.MIN_VALUE;
+	public void setCircleData(GeoPoint center, float radius) {
+		synchronized (this.path) {
+			this.center = center;
+			this.radius = radius;
+			this.cachedZoomLevel = Byte.MIN_VALUE;
+		}
 		super.requestRedraw();
 	}
 
@@ -77,41 +79,46 @@ public class CircleOverlay extends Overlay {
 	 * @param outlinePaint
 	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
-	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
-		this.fillPaint = fillPaint;
-		this.outlinePaint = outlinePaint;
+	public void setPaint(Paint fillPaint, Paint outlinePaint) {
+		synchronized (this.path) {
+			this.fillPaint = fillPaint;
+			this.outlinePaint = outlinePaint;
+		}
+		super.requestRedraw();
 	}
 
 	@Override
-	protected synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel) {
-		if (this.center == null || this.radius < 0) {
-			// no valid parameters to draw the circle
-			return;
-		} else if (this.fillPaint == null && this.outlinePaint == null) {
-			// no paint to draw
-			return;
-		}
+	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
+			byte drawZoomLevel) {
+		synchronized (this.path) {
+			if (this.center == null || this.radius < 0) {
+				// no valid parameters to draw the circle
+				return;
+			} else if (this.fillPaint == null && this.outlinePaint == null) {
+				// no paint to draw
+				return;
+			}
 
-		// make sure that the cached center position is valid
-		if (drawZoomLevel != this.cachedZoomLevel) {
-			this.cachedCenterPosition = projection.toPoint(this.center,
-					this.cachedCenterPosition, drawZoomLevel);
-			this.cachedZoomLevel = drawZoomLevel;
-		}
+			// make sure that the cached center position is valid
+			if (drawZoomLevel != this.cachedZoomLevel) {
+				this.cachedCenterPosition = projection.toPoint(this.center,
+						this.cachedCenterPosition, drawZoomLevel);
+				this.cachedZoomLevel = drawZoomLevel;
+			}
 
-		// assemble the path
-		this.path.reset();
-		this.path.addCircle(this.cachedCenterPosition.x - drawPosition.x,
-				this.cachedCenterPosition.y - drawPosition.y, projection.metersToPixels(
-						this.radius, drawZoomLevel), Path.Direction.CCW);
+			// assemble the path
+			this.path.reset();
+			this.path.addCircle(this.cachedCenterPosition.x - drawPosition.x,
+					this.cachedCenterPosition.y - drawPosition.y, projection.metersToPixels(
+							this.radius, drawZoomLevel), Path.Direction.CCW);
 
-		// draw the path on the canvas
-		if (this.fillPaint != null) {
-			canvas.drawPath(this.path, this.fillPaint);
-		}
-		if (this.outlinePaint != null) {
-			canvas.drawPath(this.path, this.outlinePaint);
+			// draw the path on the canvas
+			if (this.outlinePaint != null) {
+				canvas.drawPath(this.path, this.outlinePaint);
+			}
+			if (this.fillPaint != null) {
+				canvas.drawPath(this.path, this.fillPaint);
+			}
 		}
 	}
 

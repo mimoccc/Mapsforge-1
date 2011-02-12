@@ -172,17 +172,7 @@ class MercatorProjection implements Projection {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoom);
 	}
 
-	private GeoPoint mapCenter1;
-	private GeoPoint mapCenter2;
 	private final MapView mapView;
-	private byte mapZoomLevel1;
-	private byte mapZoomLevel2;
-	private double pixelX1;
-	private double pixelX2;
-	private double pixelY1;
-	private double pixelY2;
-	private Point returnPoint2;
-	private Point returnPoint3;
 
 	/**
 	 * Constructs a new MercatorProjection that uses the parameters of the given MapView.
@@ -202,18 +192,18 @@ class MercatorProjection implements Projection {
 		}
 
 		// save the current position and zoom level of the map
-		this.mapCenter1 = this.mapView.getMapCenter();
-		this.mapZoomLevel1 = this.mapView.getZoomLevel();
+		GeoPoint mapCenter = this.mapView.getMapCenter();
+		byte mapZoomLevel = this.mapView.getZoomLevel();
 
 		// calculate the pixel coordinates of the top left corner
-		this.pixelX1 = longitudeToPixelX(this.mapCenter1.getLongitude(), this.mapZoomLevel1)
+		double pixelX = longitudeToPixelX(mapCenter.getLongitude(), mapZoomLevel)
 				- (this.mapView.getWidth() >> 1);
-		this.pixelY1 = latitudeToPixelY(this.mapCenter1.getLatitude(), this.mapZoomLevel1)
+		double pixelY = latitudeToPixelY(mapCenter.getLatitude(), mapZoomLevel)
 				- (this.mapView.getHeight() >> 1);
 
-		// convert the pixel coordinates to a GeoPoint
-		return new GeoPoint(pixelYToLatitude(this.pixelY1 + y, this.mapZoomLevel1),
-				pixelXToLongitude(this.pixelX1 + x, this.mapZoomLevel1));
+		// convert the pixel coordinates to a GeoPoint and return it
+		return new GeoPoint(pixelYToLatitude(pixelY + y, mapZoomLevel), pixelXToLongitude(
+				pixelX + x, mapZoomLevel));
 	}
 
 	@Override
@@ -236,39 +226,37 @@ class MercatorProjection implements Projection {
 		}
 
 		// save the current position and zoom level of the map
-		this.mapCenter2 = this.mapView.getMapCenter();
-		this.mapZoomLevel2 = this.mapView.getZoomLevel();
+		GeoPoint mapCenter = this.mapView.getMapCenter();
+		byte mapZoomLevel = this.mapView.getZoomLevel();
 
 		// calculate the pixel coordinates of the top left corner
-		this.pixelX2 = longitudeToPixelX(this.mapCenter2.getLongitude(), this.mapZoomLevel2)
+		double pixelX = longitudeToPixelX(mapCenter.getLongitude(), mapZoomLevel)
 				- (this.mapView.getWidth() >> 1);
-		this.pixelY2 = latitudeToPixelY(this.mapCenter2.getLatitude(), this.mapZoomLevel2)
+		double pixelY = latitudeToPixelY(mapCenter.getLatitude(), mapZoomLevel)
 				- (this.mapView.getHeight() >> 1);
 
 		if (out == null) {
-			// create a new point object
-			this.returnPoint2 = new Point();
-		} else {
-			// reuse the existing point object
-			this.returnPoint2 = out;
+			// create a new point object and return it
+			return new Point(
+					(int) (longitudeToPixelX(in.getLongitude(), mapZoomLevel) - pixelX),
+					(int) (latitudeToPixelY(in.getLatitude(), mapZoomLevel) - pixelY));
 		}
-
-		this.returnPoint2.x = (int) (longitudeToPixelX(in.getLongitude(), this.mapZoomLevel2) - this.pixelX2);
-		this.returnPoint2.y = (int) (latitudeToPixelY(in.getLatitude(), this.mapZoomLevel2) - this.pixelY2);
-		return this.returnPoint2;
+		// reuse the existing point object
+		out.x = (int) (longitudeToPixelX(in.getLongitude(), mapZoomLevel) - pixelX);
+		out.y = (int) (latitudeToPixelY(in.getLatitude(), mapZoomLevel) - pixelY);
+		return out;
 	}
 
 	@Override
 	public Point toPoint(GeoPoint in, Point out, byte zoom) {
 		if (out == null) {
-			// create a new point object
-			this.returnPoint3 = new Point();
-		} else {
-			// reuse the existing point object
-			this.returnPoint3 = out;
+			// create a new point object and return it
+			return new Point((int) longitudeToPixelX(in.getLongitude(), zoom),
+					(int) latitudeToPixelY(in.getLatitude(), zoom));
 		}
-		this.returnPoint3.x = (int) longitudeToPixelX(in.getLongitude(), zoom);
-		this.returnPoint3.y = (int) latitudeToPixelY(in.getLatitude(), zoom);
-		return this.returnPoint3;
+		// reuse the existing point object
+		out.x = (int) longitudeToPixelX(in.getLongitude(), zoom);
+		out.y = (int) latitudeToPixelY(in.getLatitude(), zoom);
+		return out;
 	}
 }

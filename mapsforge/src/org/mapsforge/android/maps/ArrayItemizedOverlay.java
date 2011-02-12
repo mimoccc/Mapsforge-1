@@ -56,8 +56,10 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param overlayItem
 	 *            the item that should be added to the Overlay.
 	 */
-	public synchronized void addOverlay(OverlayItem overlayItem) {
-		this.overlayItems.add(overlayItem);
+	public void addOverlay(OverlayItem overlayItem) {
+		synchronized (this.overlayItems) {
+			this.overlayItems.add(overlayItem);
+		}
 		populate();
 	}
 
@@ -67,16 +69,20 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param c
 	 *            collection whose items should be added to the Overlay.
 	 */
-	public synchronized void addOverlays(Collection<? extends OverlayItem> c) {
-		this.overlayItems.addAll(c);
+	public void addOverlays(Collection<? extends OverlayItem> c) {
+		synchronized (this.overlayItems) {
+			this.overlayItems.addAll(c);
+		}
 		populate();
 	}
 
 	/**
 	 * Removes all items from the Overlay.
 	 */
-	public synchronized void clear() {
-		this.overlayItems.clear();
+	public void clear() {
+		synchronized (this.overlayItems) {
+			this.overlayItems.clear();
+		}
 		populate();
 	}
 
@@ -91,28 +97,36 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param overlayItem
 	 *            the item that should be removed from the Overlay.
 	 */
-	public synchronized void removeOverlay(OverlayItem overlayItem) {
-		this.overlayItems.remove(overlayItem);
+	public void removeOverlay(OverlayItem overlayItem) {
+		synchronized (this.overlayItems) {
+			this.overlayItems.remove(overlayItem);
+		}
 		populate();
 	}
 
 	@Override
-	public synchronized int size() {
-		return this.overlayItems.size();
+	public int size() {
+		synchronized (this.overlayItems) {
+			return this.overlayItems.size();
+		}
 	}
 
 	@Override
-	protected synchronized OverlayItem createItem(int i) {
-		return this.overlayItems.get(i);
+	protected OverlayItem createItem(int i) {
+		synchronized (this.overlayItems) {
+			return this.overlayItems.get(i);
+		}
 	}
 
 	@Override
-	protected synchronized boolean onTap(int index) {
-		this.item = this.overlayItems.get(index);
-		this.dialog = new AlertDialog.Builder(this.context);
-		this.dialog.setTitle(this.item.getTitle());
-		this.dialog.setMessage(this.item.getSnippet());
-		this.dialog.show();
-		return true;
+	protected boolean onTap(int index) {
+		synchronized (this.overlayItems) {
+			this.item = this.overlayItems.get(index);
+			this.dialog = new AlertDialog.Builder(this.context);
+			this.dialog.setTitle(this.item.getTitle());
+			this.dialog.setMessage(this.item.getSnippet());
+			this.dialog.show();
+			return true;
+		}
 	}
 }

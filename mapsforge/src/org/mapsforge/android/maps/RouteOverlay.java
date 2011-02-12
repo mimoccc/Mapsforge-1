@@ -61,9 +61,12 @@ public class RouteOverlay extends Overlay {
 	 * @param outlinePaint
 	 *            the paint object which will be used to draw the outline of the overlay.
 	 */
-	public synchronized void setPaint(Paint fillPaint, Paint outlinePaint) {
-		this.fillPaint = fillPaint;
-		this.outlinePaint = outlinePaint;
+	public void setPaint(Paint fillPaint, Paint outlinePaint) {
+		synchronized (this.path) {
+			this.fillPaint = fillPaint;
+			this.outlinePaint = outlinePaint;
+		}
+		super.requestRedraw();
 	}
 
 	/**
@@ -72,50 +75,54 @@ public class RouteOverlay extends Overlay {
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes.
 	 */
-	public synchronized void setRouteData(GeoPoint[] wayNodes) {
-		this.wayNodes = wayNodes;
-		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
-			this.cachedWayPositions = new Point[this.wayNodes.length];
+	public void setRouteData(GeoPoint[] wayNodes) {
+		synchronized (this.path) {
+			this.wayNodes = wayNodes;
+			if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
+				this.cachedWayPositions = new Point[this.wayNodes.length];
+			}
+			this.cachedZoomLevel = Byte.MIN_VALUE;
 		}
-		this.cachedZoomLevel = Byte.MIN_VALUE;
 		super.requestRedraw();
 	}
 
 	@Override
-	protected synchronized void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel) {
-		if (this.wayNodes == null || this.wayNodes.length < 1) {
-			// no way nodes to draw
-			return;
-		} else if (this.fillPaint == null && this.outlinePaint == null) {
-			// no paint to draw
-			return;
-		}
-
-		// make sure that the cached way node positions are valid
-		if (drawZoomLevel != this.cachedZoomLevel) {
-			for (int i = 0; i < this.cachedWayPositions.length; ++i) {
-				this.cachedWayPositions[i] = projection.toPoint(this.wayNodes[i],
-						this.cachedWayPositions[i], drawZoomLevel);
+	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
+			byte drawZoomLevel) {
+		synchronized (this.path) {
+			if (this.wayNodes == null || this.wayNodes.length < 1) {
+				// no way nodes to draw
+				return;
+			} else if (this.fillPaint == null && this.outlinePaint == null) {
+				// no paint to draw
+				return;
 			}
-			this.cachedZoomLevel = drawZoomLevel;
-		}
 
-		// assemble the path
-		this.path.reset();
-		this.path.moveTo(this.cachedWayPositions[0].x - drawPosition.x,
-				this.cachedWayPositions[0].y - drawPosition.y);
-		for (int i = 1; i < this.cachedWayPositions.length; ++i) {
-			this.path.lineTo(this.cachedWayPositions[i].x - drawPosition.x,
-					this.cachedWayPositions[i].y - drawPosition.y);
-		}
+			// make sure that the cached way node positions are valid
+			if (drawZoomLevel != this.cachedZoomLevel) {
+				for (int i = 0; i < this.cachedWayPositions.length; ++i) {
+					this.cachedWayPositions[i] = projection.toPoint(this.wayNodes[i],
+							this.cachedWayPositions[i], drawZoomLevel);
+				}
+				this.cachedZoomLevel = drawZoomLevel;
+			}
 
-		// draw the path on the canvas
-		if (this.fillPaint != null) {
-			canvas.drawPath(this.path, this.fillPaint);
-		}
-		if (this.outlinePaint != null) {
-			canvas.drawPath(this.path, this.outlinePaint);
+			// assemble the path
+			this.path.reset();
+			this.path.moveTo(this.cachedWayPositions[0].x - drawPosition.x,
+					this.cachedWayPositions[0].y - drawPosition.y);
+			for (int i = 1; i < this.cachedWayPositions.length; ++i) {
+				this.path.lineTo(this.cachedWayPositions[i].x - drawPosition.x,
+						this.cachedWayPositions[i].y - drawPosition.y);
+			}
+
+			// draw the path on the canvas
+			if (this.outlinePaint != null) {
+				canvas.drawPath(this.path, this.outlinePaint);
+			}
+			if (this.fillPaint != null) {
+				canvas.drawPath(this.path, this.fillPaint);
+			}
 		}
 	}
 
