@@ -113,6 +113,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_HIGHWAY_RESIDENTIAL2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_ROAD1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_ROAD2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_SECONDARY_LINK1 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_SECONDARY_LINK2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_SECONDARY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_SECONDARY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_SERVICE_AREA_FILL = new Paint(
@@ -776,6 +778,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_HIGHWAY_SECONDARY2.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_SECONDARY2.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_HIGHWAY_SECONDARY2.setColor(Color.rgb(253, 191, 111));
+		PAINT_HIGHWAY_SECONDARY_LINK1.setStyle(Paint.Style.STROKE);
+		PAINT_HIGHWAY_SECONDARY_LINK1.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_HIGHWAY_SECONDARY_LINK1.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_SECONDARY_LINK1.setColor(Color.rgb(163, 123, 72));
+		PAINT_HIGHWAY_SECONDARY_LINK2.setStyle(Paint.Style.STROKE);
+		PAINT_HIGHWAY_SECONDARY_LINK2.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_HIGHWAY_SECONDARY_LINK2.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_SECONDARY_LINK2.setColor(Color.rgb(253, 191, 111));
 		PAINT_HIGHWAY_SERVICE_AREA_FILL.setStyle(Paint.Style.FILL);
 		PAINT_HIGHWAY_SERVICE_AREA_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_SERVICE_AREA_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1346,6 +1356,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_HIGHWAY_RESIDENTIAL2.setStrokeWidth(1.5f * paintScaleFactor);
 		PAINT_HIGHWAY_ROAD1.setStrokeWidth(1.8f * paintScaleFactor);
 		PAINT_HIGHWAY_ROAD2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_SECONDARY_LINK1.setStrokeWidth(2 * paintScaleFactor);
+		PAINT_HIGHWAY_SECONDARY_LINK2.setStrokeWidth(1.7f * paintScaleFactor);
 		PAINT_HIGHWAY_SECONDARY1.setStrokeWidth(2 * paintScaleFactor);
 		PAINT_HIGHWAY_SECONDARY2.setStrokeWidth(1.7f * paintScaleFactor);
 		PAINT_HIGHWAY_SERVICE_AREA_OUTLINE.setStrokeWidth(0.1f * paintScaleFactor);
@@ -2351,6 +2363,33 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 									PAINT_HIGHWAY_SECONDARY2));
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SECONDARY2);
+					}
+				}
+			} else if (this.tagIDsWays.highway$secondary_link != null
+					&& wayTagIds[this.tagIDsWays.highway$secondary_link.intValue()]) {
+				if (this.tagIDsWays.bridge$yes != null
+						&& wayTagIds[this.tagIDsWays.bridge$yes.intValue()]) {
+					Paint paint1Bridge = new Paint(PAINT_HIGHWAY_SECONDARY_LINK1);
+					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
+					paint1Bridge.setColor(Color.BLACK);
+					paint1Bridge.setStrokeWidth(paint1Bridge.getStrokeWidth() * 1.05f);
+					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK1).add(
+							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
+					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK2).add(
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_SECONDARY_LINK2));
+					if (wayName != null && this.currentTile.zoomLevel > 15) {
+						addWayName(wayName, PAINT_HIGHWAY_SECONDARY_LINK2);
+					}
+				} else {
+					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK1).add(
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_SECONDARY_LINK1));
+					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK2).add(
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_HIGHWAY_SECONDARY_LINK2));
+					if (wayName != null && this.currentTile.zoomLevel > 15) {
+						addWayName(wayName, PAINT_HIGHWAY_SECONDARY_LINK2);
 					}
 				}
 			} else if (this.tagIDsWays.highway$tertiary != null

@@ -63,6 +63,7 @@ highway=raceway;13
 highway=residential;14
 highway=road;12
 highway=secondary;9
+highway=secondary_link;9
 highway=service;14
 highway=services;14
 highway=steps;16

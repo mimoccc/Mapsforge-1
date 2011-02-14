@@ -66,6 +66,7 @@ class TagIDsWays {
 	Integer highway$residential;
 	Integer highway$road;
 	Integer highway$secondary;
+	Integer highway$secondary_link;
 	Integer highway$service;
 	Integer highway$steps;
 	Integer highway$tertiary;
@@ -191,6 +192,7 @@ class TagIDsWays {
 		this.highway$residential = nodeTags.get("highway=residential");
 		this.highway$road = nodeTags.get("highway=road");
 		this.highway$secondary = nodeTags.get("highway=secondary");
+		this.highway$secondary_link = nodeTags.get("highway=secondary_link");
 		this.highway$service = nodeTags.get("highway=service");
 		this.highway$steps = nodeTags.get("highway=steps");
 		this.highway$tertiary = nodeTags.get("highway=tertiary");
