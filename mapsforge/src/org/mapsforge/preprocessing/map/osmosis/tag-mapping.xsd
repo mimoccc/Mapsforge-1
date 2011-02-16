@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://mapsforge.org/tag-mapping" xmlns:tns="http://mapsforge.org/tag-mapping" elementFormDefault="qualified">
+
+
+
+    <complexType name="osm-tag">
+    	<attribute name="key" use="required" default="highway">
+    		<simpleType>
+    			<restriction base="string">
+    				<minLength value="1"></minLength>
+    				<maxLength value="100"></maxLength>
+    				<whiteSpace value="collapse"></whiteSpace>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="value" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<maxLength value="100"></maxLength>
+    				<minLength value="1"></minLength>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="zoom-appear" use="optional" default="17">
+    		<simpleType>
+    			<restriction base="int">
+    				<minInclusive value="0"></minInclusive>
+    				<maxInclusive value="21"></maxInclusive>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="enabled" type="boolean" use="optional" default="false"></attribute>
+    	<attribute name="renderable" type="boolean" use="optional" default="false"></attribute>
+    </complexType>
+    
+    <complexType name="tag-group">
+    	<sequence>
+    		<element name="osm-tag" type="tns:osm-tag"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    	</sequence>
+    	<attribute name="enabled" type="boolean" use="optional" default="false"></attribute>
+    </complexType>
+    
+
+
+
+    <complexType name="tag-mapping">
+    	<sequence>
+    		<element name="pois" type="tns:tag-group"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    		<element name="ways" type="tns:tag-group"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    	</sequence>
+    	<attribute name="default-zoom-appear" default="17" use="required">
+    		<simpleType>
+    			<restriction base="int">
+    				<minInclusive value="0"></minInclusive>
+    				<maxInclusive value="21"></maxInclusive>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="profile-name" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<minLength value="3"></minLength>
+    				<maxLength value="100"></maxLength>
+    				<whiteSpace value="collapse"></whiteSpace>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <element name="tag-mapping" type="tns:tag-mapping"></element>
+</schema>

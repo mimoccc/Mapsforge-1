@@ -41,6 +41,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_THREAD_POOL_SIZE = "thread-pool-size";
 	private static final String PARAM_TYPE = "type";
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
+	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -60,9 +61,10 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
 		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
 				DEFAULT_PARAM_BBOX_ENLARGEMENT);
+		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
 				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
-				threadpoolSize, type, bboxEnlargement);
+				threadpoolSize, type, bboxEnlargement, tagConfFile);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

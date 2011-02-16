@@ -16,8 +16,11 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import gnu.trove.list.array.TShortArrayList;
+import gnu.trove.set.TShortSet;
+import gnu.trove.set.hash.TShortHashSet;
+
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -107,7 +110,7 @@ class TileData {
 		private final String houseNumber;
 		private final byte layer;
 		private final String name;
-		private EnumSet<PoiEnum> tags;
+		private short[] tags;
 
 		static TDNode fromNode(Node node) {
 			// special tags
@@ -116,12 +119,11 @@ class TileData {
 			String name = null;
 			String housenumber = null;
 
-			EnumSet<PoiEnum> tags = EnumSet.noneOf(PoiEnum.class);
-			PoiEnum currentTag = null;
+			OSMTag currentTag = null;
+			TShortArrayList currentTags = new TShortArrayList();
 
 			// Process Tags
 			for (Tag tag : node.getTags()) {
-				String fullTag = tag.getKey() + "=" + tag.getValue();
 				// test for special tags
 				if (tag.getKey().equalsIgnoreCase("ele")) {
 					try {
@@ -147,14 +149,15 @@ class TileData {
 					} catch (NumberFormatException e) {
 						// nothing to do here as layer is initialized with 5
 					}
-				} else if ((currentTag = PoiEnum.fromString(fullTag)) != null) {
-					tags.add(currentTag);
+				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tag.getKey(),
+						tag.getValue())) != null) {
+					currentTags.add(currentTag.getId());
 				}
 			}
 			return new TDNode(node.getId(),
 					GeoCoordinate.doubleToInt(node.getLatitude()),
 					GeoCoordinate.doubleToInt(node.getLongitude()), elevation,
-					layer, housenumber, name, tags);
+					layer, housenumber, name, currentTags.toArray());
 		}
 
 		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
@@ -169,7 +172,7 @@ class TileData {
 		}
 
 		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
-				String houseNumber, String name, EnumSet<PoiEnum> tags) {
+				String houseNumber, String name, short[] tags) {
 			this.id = id;
 			this.latitude = latitude;
 			this.longitude = longitude;
@@ -181,7 +184,7 @@ class TileData {
 		}
 
 		boolean isPOI() {
-			return houseNumber != null || elevation != 0 || name != null || tags.size() > 0;
+			return houseNumber != null || elevation != 0 || name != null || tags.length > 0;
 		}
 
 		byte getMinimumZoomLevel() {
@@ -192,18 +195,21 @@ class TileData {
 				min = (byte) Math.min(min, ZOOM_NAME);
 			if (tags == null)
 				return min;
-			for (PoiEnum poiEnum : tags) {
-				min = (byte) Math.min(min, poiEnum.zoomlevel());
+			OSMTag tag;
+			for (short tagID : tags) {
+				tag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tagID);
+				if (tag.isRenderable())
+					min = (byte) Math.min(min, tag.getZoomAppear());
 			}
 
 			return min;
 		}
 
-		EnumSet<PoiEnum> getTags() {
+		short[] getTags() {
 			return tags;
 		}
 
-		void setTags(EnumSet<PoiEnum> tags) {
+		void setTags(short[] tags) {
 			this.tags = tags;
 		}
 
@@ -270,7 +276,7 @@ class TileData {
 		private final byte layer;
 		private final String name;
 		private final String ref;
-		private EnumSet<WayEnum> tags;
+		private short[] tags;
 		private short waytype;
 		private final TDNode[] wayNodes;
 
@@ -283,12 +289,11 @@ class TileData {
 			String name = null;
 			String ref = null;
 
-			EnumSet<WayEnum> tags = EnumSet.noneOf(WayEnum.class);
-			WayEnum currentTag = null;
+			TShortArrayList currentTags = new TShortArrayList();
+			OSMTag currentTag = null;
 
 			// Process Tags
 			for (Tag tag : way.getTags()) {
-				String fullTag = tag.getKey() + "=" + tag.getValue();
 				// test for special tags
 				if (tag.getKey().equalsIgnoreCase("name")) {
 					name = tag.getValue();
@@ -302,8 +307,9 @@ class TileData {
 					}
 				} else if (tag.getKey().equalsIgnoreCase("ref")) {
 					ref = tag.getValue();
-				} else if ((currentTag = WayEnum.fromString(fullTag)) != null) {
-					tags.add(currentTag);
+				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getWayTag(tag.getKey(),
+						tag.getValue())) != null) {
+					currentTags.add(currentTag.getId());
 				}
 			}
 
@@ -342,7 +348,7 @@ class TileData {
 					}
 
 					return new TDWay(way.getId(), layer, name,
-							ref, tags, waytype, waynodes);
+							ref, currentTags.toArray(), waytype, waynodes);
 				}
 			}
 
@@ -357,7 +363,7 @@ class TileData {
 			this.wayNodes = wayNodes;
 		}
 
-		TDWay(long id, byte layer, String name, String ref, EnumSet<WayEnum> tags,
+		TDWay(long id, byte layer, String name, String ref, short[] tags,
 				short waytype, TDNode[] wayNodes) {
 			this.id = id;
 			this.layer = layer;
@@ -395,9 +401,13 @@ class TileData {
 			byte min = Byte.MAX_VALUE;
 			if (tags == null)
 				return min;
-			for (WayEnum wayEnum : tags) {
-				if (wayEnum.zoomlevel() < min)
-					min = wayEnum.zoomlevel();
+
+			OSMTag tag = null;
+			for (short tagID : tags) {
+				tag = MapFileWriterTask.TAG_MAPPING.getWayTag(tagID);
+				if (tag.isRenderable())
+					min = (byte) Math.min(min, tag.getZoomAppear());
+
 			}
 
 			return min;
@@ -419,7 +429,7 @@ class TileData {
 			return ref;
 		}
 
-		EnumSet<WayEnum> getTags() {
+		short[] getTags() {
 			return tags;
 		}
 
@@ -431,16 +441,40 @@ class TileData {
 			this.waytype = waytype;
 		}
 
-		void setTags(EnumSet<WayEnum> tags) {
+		void setTags(short[] tags) {
 			this.tags = tags;
 		}
 
-		void addTag(WayEnum tag) {
+		void addTags(short[] addendum) {
 			if (tags == null)
-				tags = EnumSet.of(tag);
-			else
-				tags.add(tag);
+				tags = addendum;
+			else {
+				TShortSet tags2 = new TShortHashSet();
+				tags2.addAll(tags);
+				tags2.addAll(addendum);
+				tags = tags2.toArray();
+			}
 
+		}
+
+		void removeTags(short[] substract) {
+			TShortSet tags2 = new TShortHashSet();
+			tags2.addAll(tags);
+			tags2.removeAll(substract);
+			tags = tags2.toArray();
+		}
+
+		boolean isCoastline() {
+			if (tags == null)
+				return false;
+			OSMTag tag;
+			for (short tagID : tags) {
+				tag = MapFileWriterTask.TAG_MAPPING.getWayTag(tagID);
+				if (tag.isCoastline())
+					return true;
+			}
+
+			return false;
 		}
 
 		TDNode[] getWayNodes() {

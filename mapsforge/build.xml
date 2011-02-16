@@ -149,12 +149,12 @@ purpose.
 		<jar destfile="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"
 		     duplicate="preserve">
 			<fileset dir="${mapsforge.src}"
-			         includes="org/mapsforge/preprocessing/map/osmosis/"
-			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml" />
+			         excludes="org/mapsforge/preprocessing/map/osmosis/plugin.xml"
+			         includes="org/mapsforge/preprocessing/map/osmosis/"/>
 			<!-- excludes="org/mapsforge/preprocessing/map/osmosis/*.xml,org/mapsforge/preprocessing/map/osmosis/*.dat" /> -->
 			<fileset dir="${mapsforge.bin}"
-			         includes="org/mapsforge/preprocessing/map/osmosis/"
-			         excludes="org/mapsforge/preprocessing/map/osmosis/*.xml" />
+			         excludes="org/mapsforge/preprocessing/map/osmosis/plugin.xml"
+			         includes="org/mapsforge/preprocessing/map/osmosis/"/>
 			<!-- excludes="org/mapsforge/preprocessing/map/osmosis/*.xml,org/mapsforge/preprocessing/map/osmosis/*.dat" /> -->
 			<fileset dir="${mapsforge.src}"
 			         includes="org/mapsforge/core/Rect.java,
@@ -167,7 +167,7 @@ purpose.
 						org/mapsforge/core/MercatorProjection.class,
 						org/mapsforge/core/WGS84.class" />
 			<fileset dir="${mapsforge.src}/org/mapsforge/preprocessing/map/osmosis/"
-			         includes="*.xml" />
+			         includes="plugin.xml" />
 			<fileset refid="info" />
 		</jar>
 		<antcall target="eclipse-refresh">

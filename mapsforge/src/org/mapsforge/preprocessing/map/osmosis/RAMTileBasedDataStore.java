@@ -21,7 +21,6 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -170,7 +169,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		byte minZoomLevel = tdWay.getMinimumZoomLevel();
 		int bboxEnlargementLocal = bboxEnlargement;
 
-		if (tdWay.getTags() != null && tdWay.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+		if (tdWay.getTags() != null && tdWay.isCoastline()) {
 			bboxEnlargementLocal = 0;
 			// find matching tiles on zoom level 12
 			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(tdWay,
@@ -210,7 +209,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			EnumSet<WayEnum> relationTags) {
+			List<OSMTag> relationTags) {
 		TDWay outerWay = ways.get(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
@@ -231,22 +230,18 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		}
 
 		// add relation tags to outer way
-		if (outerWay.getTags() == null) {
-			if (relationTags.size() > 0)
-				outerWay.setTags(relationTags);
-		} else
-			outerWay.getTags().addAll(relationTags);
+		outerWay.addTags(MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags));
 
 		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
 				.hasNext();) {
 			TDWay innerWay = innerWaysIterator.next();
 			// remove all tags from the inner way that are already present in the outer way
 			if (outerWay.getTags() != null && innerWay.getTags() != null) {
-				innerWay.getTags().removeAll(outerWay.getTags());
+				innerWay.removeTags(outerWay.getTags());
 			}
 			// only remove from normal ways, if the inner way has no tags other than the
 			// outer way
-			if (innerWay.getTags() == null || innerWay.getTags().size() == 0) {
+			if (innerWay.getTags() == null || innerWay.getTags().length == 0) {
 				for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 					Set<TileCoordinate> associatedTiles = GeoUtils.mapWayToTiles(innerWay,
 							zoomIntervalConfiguration.getBaseZoom(i), bboxEnlargement);

@@ -19,11 +19,12 @@ package org.mapsforge.preprocessing.map.osmosis;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.TShortSet;
 import gnu.trove.set.hash.TLongHashSet;
+import gnu.trove.set.hash.TShortHashSet;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +55,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	private final HDTileData[][][] tileData;
 	private final HashMap<TileCoordinate, TLongHashSet> tilesToCoastlines;
 	private final TLongObjectHashMap<TLongHashSet> multipolygons;
-	private final TLongObjectHashMap<EnumSet<WayEnum>> multipolygonTags;
+	private final TLongObjectHashMap<TShortSet> multipolygonTags;
 	private final IdTracker innerWayTracker;
 	private final IdTracker multipolygonTracker;
 
@@ -89,7 +90,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 		tilesToCoastlines = new HashMap<TileCoordinate, TLongHashSet>();
 		multipolygons = new TLongObjectHashMap<TLongHashSet>();
-		multipolygonTags = new TLongObjectHashMap<EnumSet<WayEnum>>();
+		multipolygonTags = new TLongObjectHashMap<TShortSet>();
 		innerWayTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 		multipolygonTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 	}
@@ -166,7 +167,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			EnumSet<WayEnum> relationTags) {
+			List<OSMTag> relationTags) {
 
 		TLongHashSet iw = multipolygons.get(outerWayID);
 		if (iw == null) {
@@ -175,11 +176,12 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		}
 		iw.addAll(innerWayIDs);
 		if (relationTags != null && relationTags.size() > 0) {
-			EnumSet<WayEnum> tags = multipolygonTags.get(outerWayID);
-			if (tags != null) {
-				relationTags.addAll(tags);
+			TShortSet tags = multipolygonTags.get(outerWayID);
+			if (tags == null) {
+				tags = new TShortHashSet();
 			}
-			multipolygonTags.put(outerWayID, relationTags);
+			tags.addAll(MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags));
+			multipolygonTags.put(outerWayID, tags);
 		}
 
 		multipolygonTracker.set(outerWayID);
@@ -253,7 +255,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				continue;
 
 			int bboxEnlargementLocal = bboxEnlargement;
-			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+			if (way.isCoastline()) {
 				// find matching tiles on zoom level 12
 				bboxEnlargementLocal = 0;
 				Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(way,
@@ -340,9 +342,9 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 									.getWayNodes().length - 1].getId())
 						way.setWaytype((short) 3);
 
-					EnumSet<WayEnum> relationTags = multipolygonTags.get(way.getId());
+					TShortSet relationTags = multipolygonTags.get(way.getId());
 					if (relationTags != null) {
-						way.getTags().addAll(relationTags);
+						way.addTags(relationTags.toArray());
 					}
 				}
 				td.addWay(way);

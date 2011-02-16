@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -256,15 +255,18 @@ class MapFileWriter {
 		containerHeaderBuffer.putLong(date);
 
 		// store the mapping of tags to tag ids
-		containerHeaderBuffer.putShort((short) PoiEnum.values().length);
-		for (PoiEnum poiEnum : PoiEnum.values()) {
-			writeUTF8(poiEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort((short) poiEnum.ordinal());
+		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.poiMapping()
+				.size());
+		for (OSMTag poiTag : MapFileWriterTask.TAG_MAPPING.poiMapping().values()) {
+			writeUTF8(poiTag.tagKey(), containerHeaderBuffer);
+			containerHeaderBuffer.putShort(poiTag.getZoomAppear());
 		}
-		containerHeaderBuffer.putShort((short) WayEnum.values().length);
-		for (WayEnum wayEnum : WayEnum.values()) {
-			writeUTF8(wayEnum.toString(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort((short) wayEnum.ordinal());
+
+		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.wayMapping()
+				.size());
+		for (OSMTag wayTag : MapFileWriterTask.TAG_MAPPING.wayMapping().values()) {
+			writeUTF8(wayTag.tagKey(), containerHeaderBuffer);
+			containerHeaderBuffer.putShort(wayTag.getZoomAppear());
 		}
 
 		// comment
@@ -457,13 +459,12 @@ class MapFileWriter {
 
 							// write byte with layer and tag amount info
 							poiBuffer.put(infoByteLayerAndTagAmount(poi.getLayer(),
-									poi.getTags() == null ? 0 : (short) poi.getTags().size()));
+									poi.getTags() == null ? 0 : (short) poi.getTags().length));
 
 							// write tag ids to the file
 							if (poi.getTags() != null) {
-								for (PoiEnum poiEnum : poi.getTags()) {
-									poiBuffer.put(Serializer.getVariableByteUnsigned(poiEnum
-											.ordinal()));
+								for (short tagID : poi.getTags()) {
+									poiBuffer.put(Serializer.getVariableByteUnsigned(tagID));
 								}
 							}
 
@@ -534,7 +535,7 @@ class MapFileWriter {
 
 							// write byte with layer and tag amount
 							wayBuffer.put(infoByteLayerAndTagAmount(way.getLayer(),
-									way.getTags() == null ? 0 : (short) way.getTags().size()));
+									way.getTags() == null ? 0 : (short) way.getTags().length));
 
 							// write byte with amount of tags which are rendered
 							wayBuffer.put(infoByteWayAmountRenderedTags(
@@ -545,9 +546,8 @@ class MapFileWriter {
 
 							// write tag ids
 							if (way.getTags() != null) {
-								for (WayEnum wayEnum : way.getTags()) {
-									wayBuffer.put(Serializer.getVariableByteUnsigned(wayEnum
-											.ordinal()));
+								for (short tagID : way.getTags()) {
+									wayBuffer.put(Serializer.getVariableByteUnsigned(tagID));
 								}
 							}
 							// write the amount of way nodes to the file
@@ -808,13 +808,13 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte infoByteWayAmountRenderedTags(EnumSet<WayEnum> tags) {
+	private byte infoByteWayAmountRenderedTags(short[] tags) {
 
 		byte infoByte = 0;
 		short counter = 0;
 		if (tags != null) {
-			for (WayEnum wayEnum : tags) {
-				if (wayEnum.associatedWithValidZoomlevel())
+			for (short tagID : tags) {
+				if (MapFileWriterTask.TAG_MAPPING.getWayTag(tagID).isRenderable())
 					counter++;
 			}
 			infoByte = (byte) (counter << 5);
@@ -823,13 +823,13 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte infoByteTagBitmask(EnumSet<WayEnum> tags) {
+	private byte infoByteTagBitmask(short[] tags) {
 		if (tags == null)
 			return 0;
 		byte infoByte = 0;
 
-		for (WayEnum wayEnum : tags) {
-			switch (wayEnum.waytype()) {
+		for (short tagID : tags) {
+			switch (WayType.fromString(MapFileWriterTask.TAG_MAPPING.getWayTag(tagID).getKey())) {
 				case HIGHWAY:
 					infoByte |= BITMAP_HIGHWAY;
 					break;
@@ -951,7 +951,7 @@ class MapFileWriter {
 
 		@Override
 		public Short call() {
-			if (way.getTags() != null && way.getTags().contains(WayEnum.NATURAL$COASTLINE)) {
+			if (way.isCoastline()) {
 				return COASTLINE_BITMASK;
 			}
 			return GeoUtils.computeBitmask(way, baseTile, bboxEnlargement);

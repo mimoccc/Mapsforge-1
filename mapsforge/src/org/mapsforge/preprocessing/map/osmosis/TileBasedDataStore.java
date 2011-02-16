@@ -16,7 +16,6 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -93,7 +92,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 * @return true if the multipolygon has been successfully added
 	 */
 	boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			EnumSet<WayEnum> relationTags);
+			List<OSMTag> relationTags);
 
 	/**
 	 * Retrieves all the data that is associated with a tile.

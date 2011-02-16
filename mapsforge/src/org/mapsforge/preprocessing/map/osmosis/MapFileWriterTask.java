@@ -19,11 +19,12 @@ package org.mapsforge.preprocessing.map.osmosis;
 import gnu.trove.list.array.TLongArrayList;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +57,7 @@ public class MapFileWriterTask implements Sink {
 	private static final String VERSION = "0.2.1";
 
 	private TileBasedDataStore tileBasedGeoObjectStore;
+	static OSMTagMapping TAG_MAPPING;
 
 	// temporary node data
 	// IndexStore<Long, MapNode> indexStore;
@@ -83,7 +85,7 @@ public class MapFileWriterTask implements Sink {
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
-			int threadpoolSize, String type, int bboxEnlargement) {
+			int threadpoolSize, String type, int bboxEnlargement, String tagConfFile) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException(
@@ -99,6 +101,23 @@ public class MapFileWriterTask implements Sink {
 		this.pixelFilter = pixelFilter;
 		this.polygonClipping = polygonClipping;
 		this.comment = comment;
+		if (tagConfFile == null) {
+			TAG_MAPPING = new OSMTagMapping(
+					MapFileWriterTask.class.getClassLoader()
+							.getResourceAsStream(
+									"org/mapsforge/preprocessing/map/osmosis/tag-mapping.xml"));
+		} else {
+			File tagConf = new File(tagConfFile);
+			if (tagConf.isDirectory()) {
+				throw new IllegalArgumentException(
+						"tag-conf-file points to a directory, must be a file");
+			}
+			try {
+				TAG_MAPPING = new OSMTagMapping(new FileInputStream(tagConf));
+			} catch (FileNotFoundException e) {
+				throw new IllegalArgumentException(e);
+			}
+		}
 
 		if (threadpoolSize < 1 || threadpoolSize > MAX_THREADPOOL_SIZE)
 			throw new IllegalArgumentException("make sure that 1 <= threadpool size <= 128");
@@ -239,10 +258,9 @@ public class MapFileWriterTask implements Sink {
 				Relation currentRelation = (Relation) entity;
 
 				if (isWayMultiPolygon(currentRelation)) {
-					EnumSet<WayEnum> relationTags = EnumSet.noneOf(WayEnum.class);
+					List<OSMTag> relationTags = new ArrayList<OSMTag>();
 					for (Tag tag : currentRelation.getTags()) {
-						WayEnum wayTag = WayEnum
-								.fromString(tag.getKey() + "=" + tag.getValue());
+						OSMTag wayTag = TAG_MAPPING.getWayTag(tag.getKey(), tag.getValue());
 						if (wayTag != null)
 							relationTags.add(wayTag);
 					}
