@@ -23,6 +23,11 @@ import android.graphics.Point;
  */
 class MercatorProjection implements Projection {
 	/**
+	 * The circumference of the earth at the equator in meter.
+	 */
+	private static final double EARTH_CIRCUMFERENCE = 40075016.686;
+
+	/**
 	 * Calculates the distance on the ground that is represented by a single pixel on the map.
 	 * 
 	 * @param latitude
@@ -32,7 +37,7 @@ class MercatorProjection implements Projection {
 	 * @return the ground resolution at the given latitude and zoom level.
 	 */
 	static double calculateGroundResolution(double latitude, byte zoom) {
-		return Math.cos(latitude * Math.PI / 180) * 40075016.686
+		return Math.cos(latitude * (Math.PI / 180)) * EARTH_CIRCUMFERENCE
 				/ ((long) Tile.TILE_SIZE << zoom);
 	}
 
@@ -47,7 +52,7 @@ class MercatorProjection implements Projection {
 	 * @return the pixel Y coordinate of the latitude value.
 	 */
 	static double latitudeToPixelY(double latitude, byte zoom) {
-		double sinLatitude = Math.sin(latitude * Math.PI / 180);
+		double sinLatitude = Math.sin(latitude * (Math.PI / 180));
 		return (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI))
 				* ((long) Tile.TILE_SIZE << zoom);
 	}
@@ -130,7 +135,7 @@ class MercatorProjection implements Projection {
 	 */
 	static double pixelYToLatitude(double pixelY, byte zoom) {
 		double y = 0.5 - (pixelY / ((long) Tile.TILE_SIZE << zoom));
-		return 90 - 360 * Math.atan(Math.exp(-y * 2 * Math.PI)) / Math.PI;
+		return 90 - 360 * Math.atan(Math.exp(-y * (2 * Math.PI))) / Math.PI;
 	}
 
 	/**
