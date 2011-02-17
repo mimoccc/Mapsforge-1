@@ -473,16 +473,11 @@ final class HHRoutingGraph {
 			// need to read 4 bytes to much since the Deserializer requires that.
 			int nBytes = pointer.lengthBytes + 4;
 
-			// Block block = evalSpeedupCache.getItem(blockId);
-			// if (block == null) {
-			long startNanos = System.nanoTime();
 			raf.seek(startAddr);
 			byte[] buff = new byte[nBytes];
 			raf.readFully(buff);
-			long endNanos = System.nanoTime();
+
 			Block block = new Block(blockId, buff, this);
-			// evalSpeedupCache.putItem(block);
-			// }
 			return block;
 		}
 		return null;
@@ -516,7 +511,7 @@ final class HHRoutingGraph {
 		sb.append("  #entries = " + blockAddressTable.size() + "\n");
 		sb.append("  bits / entry = "
 				+ df1.format(((double) blockAddressTable.byteSize() * 8) / blockAddressTable
-				.size()) + "\n");
+						.size()) + "\n");
 		sb.append("\n");
 
 		sb.append("StaticRTree\n");
@@ -560,8 +555,8 @@ final class HHRoutingGraph {
 					+ levelEdges[i]
 					+ " edges, "
 					+ df1
-					.format(((double) levelBytes[i] * 8)
-					/ (levelNodes[i] + levelEdges[i]))
+							.format(((double) levelBytes[i] * 8)
+									/ (levelNodes[i] + levelEdges[i]))
 					+ " bits/entry, "
 					+ " avg Block Size = "
 					+ (levelBytes[i] / Math.max(1, (levelNodes[i] / 75))) + "\n"
