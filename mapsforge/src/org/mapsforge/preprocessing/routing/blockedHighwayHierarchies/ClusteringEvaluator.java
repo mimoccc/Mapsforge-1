@@ -24,10 +24,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
-import org.mapsforge.preprocessing.util.DBConnection;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 

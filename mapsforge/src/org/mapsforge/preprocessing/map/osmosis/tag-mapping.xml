@@ -276,12 +276,11 @@
 	<!-- OTHER TAGS -->
 	<ways>
 		<osm-tag key="aerialway" value="cable_car" zoom-appear="16" />
-		<osm-tag key="aerialway" value="cable_car" zoom-appear="16" />
+		<osm-tag key="aerialway" value="chair_lift" zoom-appear="16" />
 		<osm-tag key="barrier" value="fence" zoom-appear="16" />
 		<osm-tag key="barrier" value="wall" zoom-appear="17" />
 		<osm-tag key="man_made" value="pier" zoom-appear="15" />
 		<osm-tag key="place" value="locality" zoom-appear="17" />
-		<osm-tag key="route" value="ferry" zoom-appear="17" />
 		<osm-tag key="military" value="airfield" zoom-appear="12" />
 		<osm-tag key="military" value="barracks" zoom-appear="12" />
 		<osm-tag key="military" value="naval_base" zoom-appear="12" />

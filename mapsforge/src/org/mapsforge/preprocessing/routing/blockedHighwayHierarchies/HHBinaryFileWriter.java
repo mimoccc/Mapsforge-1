@@ -28,13 +28,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.util.DBConnection;
 
 class HHBinaryFileWriter {
 
@@ -70,7 +70,7 @@ class HHBinaryFileWriter {
 					.getProperty("blockedHH.clustering.avgVerticesPerCluster"));
 			int kcenterOversamplingFac = Integer
 					.parseInt(props
-					.getProperty("blockedHH.clustering.oversamplingFac"));
+							.getProperty("blockedHH.clustering.oversamplingFac"));
 
 			int addressLookupTableMaxGroupSize = Integer.parseInt(props
 					.getProperty("blockedHH.addressLookupTable.maxGroupSize"));

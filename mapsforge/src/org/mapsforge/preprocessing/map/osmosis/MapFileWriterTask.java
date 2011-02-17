@@ -19,10 +19,9 @@ package org.mapsforge.preprocessing.map.osmosis;
 import gnu.trove.list.array.TLongArrayList;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.MalformedURLException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +103,7 @@ public class MapFileWriterTask implements Sink {
 		if (tagConfFile == null) {
 			TAG_MAPPING = new OSMTagMapping(
 					MapFileWriterTask.class.getClassLoader()
-							.getResourceAsStream(
+							.getResource(
 									"org/mapsforge/preprocessing/map/osmosis/tag-mapping.xml"));
 		} else {
 			File tagConf = new File(tagConfFile);
@@ -113,8 +112,8 @@ public class MapFileWriterTask implements Sink {
 						"tag-conf-file points to a directory, must be a file");
 			}
 			try {
-				TAG_MAPPING = new OSMTagMapping(new FileInputStream(tagConf));
-			} catch (FileNotFoundException e) {
+				TAG_MAPPING = new OSMTagMapping(tagConf.toURI().toURL());
+			} catch (MalformedURLException e) {
 				throw new IllegalArgumentException(e);
 			}
 		}

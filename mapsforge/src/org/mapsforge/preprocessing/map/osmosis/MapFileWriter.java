@@ -259,14 +259,14 @@ class MapFileWriter {
 				.size());
 		for (OSMTag poiTag : MapFileWriterTask.TAG_MAPPING.poiMapping().values()) {
 			writeUTF8(poiTag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(poiTag.getZoomAppear());
+			containerHeaderBuffer.putShort(poiTag.getId());
 		}
 
 		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.wayMapping()
 				.size());
 		for (OSMTag wayTag : MapFileWriterTask.TAG_MAPPING.wayMapping().values()) {
 			writeUTF8(wayTag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(wayTag.getZoomAppear());
+			containerHeaderBuffer.putShort(wayTag.getId());
 		}
 
 		// comment

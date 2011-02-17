@@ -17,10 +17,11 @@
 package org.mapsforge.preprocessing.map.osmosis;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -38,6 +39,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 final class OSMTagMapping {
+
+	private static final Logger LOGGER =
+			Logger.getLogger(OSMTagMapping.class.getName());
 
 	private final HashMap<String, OSMTag> stringToPoiTag = new HashMap<String, OSMTag>();
 	private final HashMap<String, OSMTag> stringToWayTag = new HashMap<String, OSMTag>();
@@ -63,13 +67,12 @@ final class OSMTagMapping {
 					+ "(../@enabled='true' or not(../@enabled)) and (./@enabled='true' or not(./@enabled)) "
 					+ "or (../@enabled='false' and ./@enabled='true')]";
 
-	OSMTagMapping(InputStream is) throws IllegalStateException {
+	OSMTagMapping(URL tagConf) throws IllegalStateException {
 		try {
 			// ---- Parse XML file ----
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			// factory.setNamespaceAware(true);
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document document = builder.parse(is);
+			Document document = builder.parse(tagConf.openStream());
 
 			XPath xpath = XPathFactory.newInstance().newXPath();
 
@@ -95,6 +98,12 @@ final class OSMTagMapping {
 								.getTextContent());
 
 				OSMTag osmTag = new OSMTag(poiID, key, value, zoom, renderable);
+				if (stringToPoiTag.containsKey(osmTag.tagKey())) {
+					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
+							+ osmTag);
+					continue;
+				}
+				LOGGER.finest("adding poi: " + osmTag);
 				stringToPoiTag.put(osmTag.tagKey(), osmTag);
 				idToPoiTag.put(poiID, osmTag);
 				poiID++;
@@ -118,6 +127,12 @@ final class OSMTagMapping {
 								.getTextContent());
 
 				OSMTag osmTag = new OSMTag(wayID, key, value, zoom, renderable);
+				if (stringToWayTag.containsKey(osmTag.tagKey())) {
+					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
+							+ osmTag);
+					continue;
+				}
+				LOGGER.finest("adding way: " + osmTag);
 				stringToWayTag.put(osmTag.tagKey(), osmTag);
 				idToWayTag.put(wayID, osmTag);
 				wayID++;
@@ -173,4 +188,14 @@ final class OSMTagMapping {
 
 		return tagIDs;
 	}
+
+	// public static void main(String[] args) {
+	// OSMTagMapping otm =
+	// new OSMTagMapping(
+	// OSMTagMapping.class.getClassLoader().getResource(
+	// "org/mapsforge/preprocessing/map/osmosis/tag-mapping.xml"));
+	//
+	// System.out.println(otm.poiMapping().size());
+	// System.out.println(otm.wayMapping().size());
+	// }
 }
