@@ -79,6 +79,11 @@ public class MapDatabase {
 	private static final float LOAD_FACTOR = 0.6f;
 
 	/**
+	 * Maximum tag ID which is considered as valid.
+	 */
+	private static final int MAXIMUM_ALLOWED_TAG_ID = 8192;
+
+	/**
 	 * Maximum size of a single block in bytes that is supported by this implementation.
 	 */
 	private static final int MAXIMUM_BLOCK_SIZE = 2500000;
@@ -242,6 +247,8 @@ public class MapDatabase {
 	private long mapFileSize;
 	private MapFileParameters[] mapFilesList;
 	private MapFileParameters[] mapFilesLookupTable;
+	private int maximumNodeTagId;
+	private int maximumWayTagId;
 	private byte metaFlags;
 	private long nextBlockPointer;
 	private String nodeElevation;
@@ -874,7 +881,8 @@ public class MapDatabase {
 		this.nodeTags = new HashMap<String, Integer>(
 				(int) (this.numberOfNodeTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
 
-		// get the node tags
+		// get the node tag mapping and store the maximum node tag ID
+		this.maximumNodeTagId = 0;
 		for (this.tempInt = 0; this.tempInt < this.numberOfNodeTags; ++this.tempInt) {
 			// get and check the node tag
 			this.nodeTag = readUTF8EncodedString(true);
@@ -884,13 +892,25 @@ public class MapDatabase {
 
 			// get and check the node tag ID (2 bytes)
 			this.nodeTagId = readShort();
-			if (this.nodeTagId < 0) {
+			if (this.nodeTagId < 0 || this.nodeTagId > MAXIMUM_ALLOWED_TAG_ID) {
 				Logger.d("invalid node tag ID: " + this.nodeTagId);
+				return false;
+			}
+
+			// check for an existing mapping of this node tag
+			if (this.nodeTags.containsKey(this.nodeTag)) {
+				Logger.d("duplicate node tag mapping: " + this.nodeTag);
+				Logger.d("IDs: " + this.nodeTags.get(this.nodeTag) + " " + this.nodeTagId);
 				return false;
 			}
 
 			// store the mapping in the hash map
 			this.nodeTags.put(this.nodeTag, Integer.valueOf(this.nodeTagId));
+
+			// update the maximum node tag ID information
+			if (this.nodeTagId > this.maximumNodeTagId) {
+				this.maximumNodeTagId = this.nodeTagId;
+			}
 		}
 
 		// get and check the number of way tags (2 bytes)
@@ -904,7 +924,8 @@ public class MapDatabase {
 		this.wayTags = new HashMap<String, Integer>(
 				(int) (this.numberOfWayTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
 
-		// get the way tags
+		// get the way tag mapping and store the maximum way tag ID
+		this.maximumWayTagId = 0;
 		for (this.tempInt = 0; this.tempInt < this.numberOfWayTags; ++this.tempInt) {
 			// get and check the way tag
 			this.wayTag = readUTF8EncodedString(true);
@@ -914,13 +935,25 @@ public class MapDatabase {
 
 			// get and check the way tag ID (2 bytes)
 			this.wayTagId = readShort();
-			if (this.wayTagId < 0) {
+			if (this.wayTagId < 0 || this.wayTagId > MAXIMUM_ALLOWED_TAG_ID) {
 				Logger.d("invalid way tag ID: " + this.wayTagId);
+				return false;
+			}
+
+			// check for an existing mapping of this way tag
+			if (this.wayTags.containsKey(this.wayTag)) {
+				Logger.d("duplicate way tag mapping: " + this.wayTag);
+				Logger.d("IDs: " + this.wayTags.get(this.wayTag) + " " + this.wayTagId);
 				return false;
 			}
 
 			// store the mapping in the hash map
 			this.wayTags.put(this.wayTag, Integer.valueOf(this.wayTagId));
+
+			// update the maximum way tag ID information
+			if (this.wayTagId > this.maximumWayTagId) {
+				this.maximumWayTagId = this.wayTagId;
+			}
 		}
 
 		// get and check the comment text
@@ -1545,10 +1578,10 @@ public class MapDatabase {
 			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
 
 			// create the tag arrays
-			this.defaultTagIds = new boolean[Math
-					.max(this.nodeTags.size(), this.wayTags.size())];
-			this.nodeTagIds = new boolean[this.nodeTags.size()];
-			this.wayTagIds = new boolean[this.wayTags.size()];
+			this.defaultTagIds = new boolean[Math.max(this.maximumNodeTagId,
+					this.maximumWayTagId) + 1];
+			this.nodeTagIds = new boolean[this.maximumNodeTagId + 1];
+			this.wayTagIds = new boolean[this.maximumWayTagId + 1];
 
 			return true;
 		} catch (IOException e) {
