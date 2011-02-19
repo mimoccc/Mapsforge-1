@@ -340,8 +340,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			if (wayLabelPosition == null) {
 				this.areaNamePositions = calculateCenterOfBoundingBox();
 			} else {
-				this.areaNamePositions = new float[] { scaleLatitude(wayLabelPosition[0]),
-						scaleLongitude(wayLabelPosition[1]) };
+				this.areaNamePositions = new float[] { scaleLongitude(wayLabelPosition[0]),
+						scaleLatitude(wayLabelPosition[1]) };
 			}
 			// choose the correct text paint
 			if (nameColor == AREA_NAME_BLUE) {

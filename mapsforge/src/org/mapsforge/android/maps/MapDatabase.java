@@ -651,13 +651,20 @@ public class MapDatabase {
 
 			// check if the way has a label position
 			if (this.wayFeatureLabelPosition) {
-				this.wayLabelPosition = new int[2];
-				// get the label position latitude offset (VBE-S)
-				this.wayLabelPosition[0] = this.wayNodesSequence[1]
-						+ readVariableByteEncodedSignedInt();
-				// get the label position longitude offset (VBE-S)
-				this.wayLabelPosition[1] = this.wayNodesSequence[0]
-						+ readVariableByteEncodedSignedInt();
+				if (this.queryReadWayNames) {
+					this.wayLabelPosition = new int[2];
+					// get the label position latitude offset (VBE-S)
+					this.wayLabelPosition[1] = this.wayNodesSequence[1]
+							+ readVariableByteEncodedSignedInt();
+					// get the label position longitude offset (VBE-S)
+					this.wayLabelPosition[0] = this.wayNodesSequence[0]
+							+ readVariableByteEncodedSignedInt();
+				} else {
+					// skip the label position latitude and longitude offsets (VBE-S)
+					readVariableByteEncodedSignedInt();
+					readVariableByteEncodedSignedInt();
+					this.wayLabelPosition = null;
+				}
 			} else {
 				// no label position
 				this.wayLabelPosition = null;
