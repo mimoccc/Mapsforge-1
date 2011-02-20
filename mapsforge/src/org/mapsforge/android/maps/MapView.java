@@ -17,6 +17,8 @@
 package org.mapsforge.android.maps;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +32,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.Bitmap.CompressFormat;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -915,6 +918,31 @@ public class MapView extends ViewGroup {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapFile != null;
+	}
+
+	/**
+	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom
+	 * buttons, scale bar, options menu and title bar are not included in the resulting picture.
+	 * 
+	 * @param fileName
+	 *            the name of the image file. If the file exists, it will be overwritten.
+	 * @param format
+	 *            the format of the compressed image.
+	 * @param quality
+	 *            value from 0 (low) to 100 (high). Has no effect on some formats like PNG.
+	 * @return true if the image was saved successfully, false otherwise.
+	 * @throws IOException
+	 *             if an error occurs while writing to the file.
+	 */
+	public boolean makeScreenshot(CompressFormat format, int quality, String fileName)
+			throws IOException {
+		FileOutputStream outputStream = new FileOutputStream(fileName);
+		boolean success;
+		synchronized (this.matrix) {
+			success = this.mapViewBitmap1.compress(format, quality, outputStream);
+		}
+		outputStream.close();
+		return success;
 	}
 
 	@Override
