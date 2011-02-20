@@ -300,8 +300,8 @@ public class MapView extends ViewGroup {
 						overlay.requestRedraw();
 					}
 				}
-				handleTiles(true);
 			}
+			handleTiles(true);
 		}
 	}
 
@@ -545,6 +545,11 @@ public class MapView extends ViewGroup {
 	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
 
 	/**
+	 * Default minimum zoom level.
+	 */
+	private static final byte DEFAULT_ZOOM_LEVEL_MIN = 0;
+
+	/**
 	 * Path to the caching folder on the external storage.
 	 */
 	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
@@ -590,7 +595,7 @@ public class MapView extends ViewGroup {
 	/**
 	 * Minimum possible zoom level.
 	 */
-	private static final byte ZOOM_MIN = 0;
+	private static final byte ZOOM_LEVEL_MIN = 0;
 
 	/**
 	 * Maximum possible latitude value of the map.
@@ -707,6 +712,7 @@ public class MapView extends ViewGroup {
 	private ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	private byte zoomLevel;
+	private byte zoomLevelMin;
 
 	/**
 	 * Thread-safe Overlay list. It is necessary to manually synchronize on this list when
@@ -1205,6 +1211,16 @@ public class MapView extends ViewGroup {
 		handleTiles(true);
 	}
 
+	/**
+	 * Sets the minimum zoom level of the map to which the user may zoom out.
+	 * 
+	 * @param zoomLevelMin
+	 *            the minimum zoom level.
+	 */
+	public void setZoomMin(byte zoomLevelMin) {
+		this.zoomLevelMin = (byte) Math.max(zoomLevelMin, ZOOM_LEVEL_MIN);
+	}
+
 	private synchronized void clearMapView() {
 		// clear the MapView bitmaps
 		if (this.mapViewBitmap1 != null) {
@@ -1216,8 +1232,8 @@ public class MapView extends ViewGroup {
 	}
 
 	private byte getValidZoomLevel(byte zoom) {
-		if (zoom < ZOOM_MIN) {
-			return ZOOM_MIN;
+		if (zoom < this.zoomLevelMin) {
+			return this.zoomLevelMin;
 		} else if (zoom > this.mapGenerator.getMaxZoomLevel()) {
 			return this.mapGenerator.getMaxZoomLevel();
 		}
@@ -1486,6 +1502,7 @@ public class MapView extends ViewGroup {
 		this.latitude = defaultStartPoint.getLatitude();
 		this.longitude = defaultStartPoint.getLongitude();
 		this.zoomLevel = this.mapGenerator.getDefaultZoomLevel();
+		this.zoomLevelMin = DEFAULT_ZOOM_LEVEL_MIN;
 
 		// create and start the MapMover thread
 		this.mapMover = new MapMover();
@@ -2212,9 +2229,9 @@ public class MapView extends ViewGroup {
 			}
 
 			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+			this.zoomControls.setIsZoomInEnabled(this.zoomLevel < this.mapGenerator
 					.getMaxZoomLevel());
-			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
 			handleTiles(true);
 		}
 	}
@@ -2297,7 +2314,7 @@ public class MapView extends ViewGroup {
 			this.matrixScaleFactor = 1 << zoomLevelDiff;
 		} else if (zoomLevelDiff < 0) {
 			// check if zoom out is possible
-			if (this.zoomLevel + zoomLevelDiff < ZOOM_MIN) {
+			if (this.zoomLevel + zoomLevelDiff < this.zoomLevelMin) {
 				return false;
 			}
 			this.matrixScaleFactor = 1.0f / (1 << -zoomLevelDiff);
@@ -2327,9 +2344,9 @@ public class MapView extends ViewGroup {
 		}
 
 		// enable or disable the zoom buttons if necessary
-		this.zoomControls.setIsZoomInEnabled(this.zoomLevel != this.mapGenerator
+		this.zoomControls.setIsZoomInEnabled(this.zoomLevel < this.mapGenerator
 				.getMaxZoomLevel());
-		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel != ZOOM_MIN);
+		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
 
 		hideZoomControlsDelayed();
 		handleTiles(true);
