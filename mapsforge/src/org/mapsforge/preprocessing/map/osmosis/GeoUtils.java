@@ -106,7 +106,7 @@ final class GeoUtils {
 			return matchedTiles;
 		}
 		// check for valid closed polygon
-		if (way.getWaytype() > 1 && waynodes.length < MIN_COORDINATES_POLYGON) {
+		if (way.isPolygon() && waynodes.length < MIN_COORDINATES_POLYGON) {
 			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
 					+ way.getId());
 			return matchedTiles;
@@ -118,7 +118,7 @@ final class GeoUtils {
 			for (int l = bbox[0].getY(); l <= bbox[1].getY(); l++) {
 				double[] currentBBox = getBoundingBoxAsArray(k, l, baseZoomLevel,
 						enlargementInMeter);
-				if (way.getWaytype() == 1) {
+				if (!way.isPolygon()) {
 					if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)) {
 						matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
 					}
@@ -155,10 +155,9 @@ final class GeoUtils {
 
 		List<TileCoordinate> subtiles = tile.translateToZoomLevel((byte) (tile.getZoomlevel()
 				+ SUBTILE_ZOOMLEVEL_DIFFERENCE));
-		// computeSubtiles(tile, SUBTILE_ZOOMLEVEL_DIFFERENCE);
 		double[] waynodes = way.wayNodesAsArray();
 		// check for valid closed polygon
-		if (way.getWaytype() > 1 && waynodes.length < MIN_COORDINATES_POLYGON) {
+		if (way.isPolygon() && waynodes.length < MIN_COORDINATES_POLYGON) {
 			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
 					+ way.getId());
 			return 0;
@@ -169,9 +168,7 @@ final class GeoUtils {
 		for (TileCoordinate subtile : subtiles) {
 			double[] currentBBox = getBoundingBoxAsArray(subtile.getX(), subtile.getY(),
 					subtile.getZoomlevel(), enlargementInMeters);
-			if (way.getWaytype() == 1) {
-				// if (geoWay.intersects(subtilePolygon) || geoWay.crosses(subtilePolygon)
-				// || geoWay.coveredBy(subtilePolygon))
+			if (!way.isPolygon()) {
 				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)) {
 					bitmask |= TILE_BITMASK_VALUES[tileCounter];
 				}
@@ -837,8 +834,6 @@ final class GeoUtils {
 
 					// Now we move outside point to intersection point to clip
 					// and get ready for next pass.
-					// TODO i do not recognize the sense of these warnings for a "call by value"
-					// parameter
 					if (outcodeOut == outcode1) {
 						x1Copy = x;
 						y1Copy = y;

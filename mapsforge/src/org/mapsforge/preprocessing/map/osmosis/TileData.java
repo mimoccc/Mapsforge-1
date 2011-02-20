@@ -272,12 +272,16 @@ class TileData {
 	}
 
 	static class TDWay {
+		static final byte LINE = 0x0;
+		static final byte SIMPLE_POLYGON = 0x1;
+		static final byte MULTI_POLYGON = 0x2;
+
 		private final long id;
 		private final byte layer;
 		private final String name;
 		private final String ref;
 		private short[] tags;
-		private short waytype;
+		private byte shape;
 		private final TDNode[] wayNodes;
 
 		static TDWay fromWay(Way way, EntityResolver<TDNode> er) {
@@ -334,12 +338,12 @@ class TileData {
 				// for a valid way all way nodes must be existent in the input data
 				if (validWay) {
 
-					// mark the way as area if the first and the last way node are the same
+					// mark the way as polygon if the first and the last way node are the same
 					// and if the way has at least 4 way nodes
-					short waytype = 1;
+					byte shape = LINE;
 					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()) {
 						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON)
-							waytype = 2;
+							shape = SIMPLE_POLYGON;
 						else {
 							LOGGER.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
 									+ way.getId());
@@ -348,7 +352,7 @@ class TileData {
 					}
 
 					return new TDWay(way.getId(), layer, name,
-							ref, currentTags.toArray(), waytype, waynodes);
+							ref, currentTags.toArray(), shape, waynodes);
 				}
 			}
 
@@ -364,13 +368,13 @@ class TileData {
 		}
 
 		TDWay(long id, byte layer, String name, String ref, short[] tags,
-				short waytype, TDNode[] wayNodes) {
+				byte shape, TDNode[] wayNodes) {
 			this.id = id;
 			this.layer = layer;
 			this.name = name;
 			this.ref = ref;
 			this.tags = tags;
-			this.waytype = waytype;
+			this.shape = shape;
 			this.wayNodes = wayNodes;
 		}
 
@@ -433,12 +437,12 @@ class TileData {
 			return tags;
 		}
 
-		short getWaytype() {
-			return waytype;
+		public byte getShape() {
+			return shape;
 		}
 
-		void setWaytype(short waytype) {
-			this.waytype = waytype;
+		public void setShape(byte shape) {
+			this.shape = shape;
 		}
 
 		void setTags(short[] tags) {
@@ -462,6 +466,10 @@ class TileData {
 			tags2.addAll(tags);
 			tags2.removeAll(substract);
 			tags = tags2.toArray();
+		}
+
+		boolean isPolygon() {
+			return shape == SIMPLE_POLYGON || shape == MULTI_POLYGON;
 		}
 
 		boolean isCoastline() {
@@ -505,8 +513,8 @@ class TileData {
 
 		@Override
 		public String toString() {
-			return "TDWay [id=" + id + ", name=" + name + ", tags=" + tags + ", waytype="
-					+ waytype + "]";
+			return "TDWay [id=" + id + ", name=" + name + ", tags=" + tags + ", polygon="
+					+ shape + "]";
 		}
 
 	}

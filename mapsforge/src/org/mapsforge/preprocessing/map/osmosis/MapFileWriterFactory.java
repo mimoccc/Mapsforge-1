@@ -21,6 +21,12 @@ import org.openstreetmap.osmosis.core.pipeline.common.TaskManager;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManagerFactory;
 import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 
+/**
+ * Factory for the mapfile writer osmosis plugin.
+ * 
+ * @author bross
+ * 
+ */
 class MapFileWriterFactory extends TaskManagerFactory {
 
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";

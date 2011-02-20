@@ -47,6 +47,12 @@ import org.openstreetmap.osmosis.core.store.NoSuchIndexElementException;
 import org.openstreetmap.osmosis.core.store.SimpleObjectStore;
 import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactory;
 
+/**
+ * A TileBasedDataStore that uses the hard disk as storage device for temporary data structures.
+ * 
+ * @author bross
+ * 
+ */
 final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 	private final IndexedObjectStore<Node> indexedNodeStore;
@@ -336,12 +342,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				continue;
 			if (!innerWayTracker.get(way.getId())) {
 				if (multipolygonTracker.get(way.getId())) {
-					if (way.getWayNodes() != null
-							&& way.getWayNodes().length >= GeoUtils.MIN_NODES_POLYGON
-							&& way.getWayNodes()[0].getId() == way.getWayNodes()[way
-									.getWayNodes().length - 1].getId())
-						way.setWaytype((short) 3);
-
+					way.setShape(TDWay.MULTI_POLYGON);
 					TShortSet relationTags = multipolygonTags.get(way.getId());
 					if (relationTags != null) {
 						way.addTags(relationTags.toArray());

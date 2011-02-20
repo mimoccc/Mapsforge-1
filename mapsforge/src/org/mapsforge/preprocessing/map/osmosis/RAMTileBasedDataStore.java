@@ -36,6 +36,12 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
+/**
+ * A TileBasedDataStore that uses the RAM as storage device for temporary data structures.
+ * 
+ * @author bross
+ * 
+ */
 final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	private static final Logger LOGGER =
 			Logger.getLogger(TileBasedDataStore.class.getName());
@@ -45,8 +51,6 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	protected TLongObjectHashMap<TLongArrayList> multipolygons;
 	protected TileData[][][] tileData;
 	private final HashMap<TileCoordinate, Set<TDWay>> tilesToCoastlines;
-
-	// private TileData[][][] wayTileData;
 
 	private RAMTileBasedDataStore(
 			double minLat, double maxLat,
@@ -148,10 +152,6 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 				long tileCoordinateY = MercatorProjection.latitudeToTileY(
 						GeoCoordinate.intToDouble(node.getLatitude()),
 						zoomIntervalConfiguration.getBaseZoom(i));
-				//
-				// System.out.println("adding poi: " + tileCoordinateX + "\t" + tileCoordinateY
-				// + "\t" + zoomIntervalConfiguration.getBaseZoom(i));
-				// System.out.println(node);
 				TileData td = getTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
 				if (td != null) {
 					td.addPOI(node);
@@ -261,7 +261,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 		}
 
-		// only change way type to multipolygon if inner ways are existent
+		// add inner ways to multipolygon
 		if (innerWays.size() > 0) {
 			TLongArrayList innerWayIDList = multipolygons.get(outerWayID);
 			if (innerWayIDList == null) {
@@ -269,10 +269,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 			innerWayIDList.add(innerWayIDs);
 			multipolygons.put(outerWayID, innerWayIDList);
-
-			// TODO document this side effect
-
-			outerWay.setWaytype((short) 3);
+			outerWay.setShape(TDWay.MULTI_POLYGON);
 		}
 
 		return true;

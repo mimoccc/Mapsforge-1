@@ -32,9 +32,6 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	protected final ZoomIntervalConfiguration zoomIntervalConfiguration;
 	protected final int bboxEnlargement;
 
-	// protected final int[] tileOffsetsHorizontal;
-	// protected final int[] tileOffsetsVertical;
-
 	// accounting
 	protected float[] countWays;
 	protected float[] countWayTileFactor;
@@ -63,20 +60,14 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			TileCoordinate upperLeft = new TileCoordinate(
-													(int) MercatorProjection.longitudeToTileX(
-															GeoCoordinate
-																	.intToDouble(boundingbox.minLongitudeE6),
-															zoomIntervalConfiguration
-																	.getBaseZoom(i)),
-													(int) MercatorProjection.latitudeToTileY(
-																	GeoCoordinate
-																			.intToDouble(boundingbox.maxLatitudeE6),
-																	zoomIntervalConfiguration
-																			.getBaseZoom(i)),
-																	zoomIntervalConfiguration
-																			.getBaseZoom(i)
-													);
+			TileCoordinate upperLeft =
+					new TileCoordinate((int) MercatorProjection.longitudeToTileX(
+							GeoCoordinate.intToDouble(boundingbox.minLongitudeE6),
+							zoomIntervalConfiguration.getBaseZoom(i)),
+							(int) MercatorProjection.latitudeToTileY(
+									GeoCoordinate.intToDouble(boundingbox.maxLatitudeE6),
+									zoomIntervalConfiguration.getBaseZoom(i)),
+								zoomIntervalConfiguration.getBaseZoom(i));
 			this.tileGridLayouts[i] = new TileGridLayout(upperLeft,
 					computeNumberOfHorizontalTiles(i), computeNumberOfVerticalTiles(i));
 		}

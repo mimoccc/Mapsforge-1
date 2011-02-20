@@ -37,6 +37,12 @@ import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
+/**
+ * Writes the binary file format for mapsforge maps.
+ * 
+ * @author bross
+ * 
+ */
 class MapFileWriter {
 
 	private static final int DEBUG_BLOCK_SIZE = 32;
@@ -568,9 +574,7 @@ class MapFileWriter {
 							// write a byte with name, label and way type information
 							wayBuffer.put(infoByteWay(way.getName(), way.getRef(),
 										wayNodePreprocessingResult.getLabelPosition() != null,
-									// false,
-									way.getWaytype()
-									));
+									way.getShape() == TDWay.MULTI_POLYGON));
 
 							// // if the way has a name, write it to the file
 							if (way.getName() != null && way.getName().length() > 0) {
@@ -600,7 +604,7 @@ class MapFileWriter {
 							}
 
 							// ***************** MULTIPOLYGONS WITH INNER WAYS ***************
-							if (way.getWaytype() == 3) {
+							if (way.getShape() == TDWay.MULTI_POLYGON) {
 								List<TDWay> innerways = dataStore
 										.getInnerWaysOfMultipolygon(way.getId());
 								if (innerways != null && innerways.size() > 0) {
@@ -710,39 +714,30 @@ class MapFileWriter {
 					maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA);
 		}
 
-		// if the way is a multipolygon without a name, clip the way to the
-		// tile
+		// if the way is a polygon, clip the way to the current tile
 		if (polygonClipping && minZoomCurrentInterval >= MIN_ZOOMLEVEL_POLYGON_CLIPPING) {
-			// if (false && way.getWaytype() == 1 && waynodeCoordinates.size() >= 2) {
-			// List<GeoCoordinate> clipped = GeoUtils.clipLineToTile(waynodeCoordinates, tile,
-			// bboxEnlargement);
-			// if (clipped != null && !clipped.isEmpty())
-			// waynodeCoordinates = clipped;
-			// else
-			// return null;
-			// }
-			if (way.getWaytype() >= 2
-					&& waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON
-					// TODO activate polygon clipping of named polygons
-					&& (way.getName() == null || way.getName().equals(""))) {
+			if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
 						waynodeCoordinates, tile, bboxEnlargement);
 				if (clipped != null && !clipped.isEmpty()) {
 					waynodeCoordinates = clipped;
-					// TODO activate polygon clipping of named polygons
-					// if (way.getName() != null && way.getName().length() > 0) {
-					// polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates);
-					// if (polygonCentroid != null) {
-					// logger.info("centroid for way '" + way.getName() + "' ("
-					// + way.getId() + ") is: " + polygonCentroid);
-					// }
-					// }
-					// if (polygonCentroid != null
-					// && !GeoUtils.pointInTile(polygonCentroid,
-					// tile))
-					// polygonCentroid = null;
-				} else
+					// if the polygon is named, we need to compute a label position
+					if (way.getName() != null && way.getName().length() > 0) {
+						polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates);
+						// if the label position is not located in the current tile
+						// we can ignore it
+						if (polygonCentroid != null
+								&& !GeoUtils.pointInTile(polygonCentroid, tile))
+							polygonCentroid = null;
+					}
+				} else {
+					// the clipped polygon is not included in the current tile
+					// !! should not happen !! (as the way would not have been mapped to this
+					// tile)
+					LOGGER.fine("clipped polygon not in tile: " + way.getId() + " tile: "
+							+ tile.toString());
 					return null;
+				}
 			}
 		}
 
@@ -789,7 +784,8 @@ class MapFileWriter {
 		return infoByte;
 	}
 
-	private byte infoByteWay(String name, String ref, boolean labelPosition, int wayType) {
+	private byte infoByteWay(String name, String ref, boolean labelPosition,
+			boolean isMultiPolygon) {
 		byte infoByte = 0;
 
 		if (name != null && name.length() > 0) {
@@ -801,7 +797,7 @@ class MapFileWriter {
 		if (labelPosition) {
 			infoByte |= BITMAP_LABEL;
 		}
-		if (wayType == 3) {
+		if (isMultiPolygon) {
 			infoByte |= BITMAP_MULTIPOLYGON;
 		}
 
