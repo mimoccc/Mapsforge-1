@@ -723,7 +723,8 @@ class MapFileWriter {
 					waynodeCoordinates = clipped;
 					// if the polygon is named, we need to compute a label position
 					if (way.getName() != null && way.getName().length() > 0) {
-						polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates);
+						polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates,
+								way);
 						// if the label position is not located in the current tile
 						// we can ignore it
 						if (polygonCentroid != null

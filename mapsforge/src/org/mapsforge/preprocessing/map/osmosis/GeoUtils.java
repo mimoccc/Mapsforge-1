@@ -312,7 +312,8 @@ final class GeoUtils {
 		return area / 2;
 	}
 
-	static GeoCoordinate computePolygonCentroid(final Collection<GeoCoordinate> coordinates) {
+	static GeoCoordinate computePolygonCentroid(final Collection<GeoCoordinate> coordinates,
+			TDWay way) {
 		if (coordinates.size() < MIN_NODES_POLYGON) {
 			LOGGER.finer("closed polygon must consist of at least 4 coordinates");
 			return null;
@@ -336,7 +337,14 @@ final class GeoUtils {
 			cLat += (c1.getLatitude() + c2.getLatitude()) * factor;
 		}
 
-		return new GeoCoordinate(cLat / area, cLon / area);
+		GeoCoordinate gc = null;
+		try {
+			gc = new GeoCoordinate(cLat / area, cLon / area);
+		} catch (IllegalArgumentException e) {
+			LOGGER.fine("unable to compute valid polygon centroid for way: " + way.getId());
+		}
+
+		return gc;
 
 	}
 

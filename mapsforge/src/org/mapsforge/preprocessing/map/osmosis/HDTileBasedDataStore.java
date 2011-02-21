@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
@@ -55,6 +56,9 @@ import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactor
  */
 final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
+	private static final Logger LOGGER =
+			Logger.getLogger(HDTileBasedDataStore.class.getName());
+
 	private final IndexedObjectStore<Node> indexedNodeStore;
 	private final IndexedObjectStore<Way> indexedWayStore;
 	private final SimpleObjectStore<Way> wayStore;
@@ -63,6 +67,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	private final TLongObjectHashMap<TLongHashSet> multipolygons;
 	private final TLongObjectHashMap<TShortSet> multipolygonTags;
 	private final IdTracker innerWayTracker;
+	private final IdTracker innerWaysWithAdditionalTags;
 	private final IdTracker multipolygonTracker;
 
 	private IndexedObjectStoreReader<Node> nodeIndexReader;
@@ -98,6 +103,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		multipolygons = new TLongObjectHashMap<TLongHashSet>();
 		multipolygonTags = new TLongObjectHashMap<TShortSet>();
 		innerWayTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
+		innerWaysWithAdditionalTags = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 		multipolygonTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 	}
 
@@ -240,7 +246,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		try {
 			return TDNode.fromNode(nodeIndexReader.get(id));
 		} catch (NoSuchIndexElementException e) {
-			// TODO logging
+			LOGGER.finer("node cannot be found in index: " + id);
 			return null;
 		}
 	}
@@ -261,6 +267,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				continue;
 
 			int bboxEnlargementLocal = bboxEnlargement;
+			// COASTLINE DETECTION
 			if (way.isCoastline()) {
 				// find matching tiles on zoom level 12
 				bboxEnlargementLocal = 0;
@@ -276,6 +283,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				}
 			}
 
+			// ADD WAY TO CORRESPONDING TILES
 			byte minZoomLevel = way.getMinimumZoomLevel();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 				// is way seen in a zoom interval?
@@ -291,15 +299,33 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				}
 			}
 
+			// REMOVE WAYS FROM LIST OF INNER WAYS IF THEY CONTAIN ADDITIONAL
+			// TAGS TO THEIR CORRESPONDING OUTER WAY
+
+			// look at all outer ways and fetch corresponding inner ways
+			if (way.isPolygon() && multipolygonTracker.get(way.getId())) {
+				// retrieve all tags of the outer way
+				TShortSet relationTags = multipolygonTags.get(way.getId());
+				if (relationTags == null)
+					relationTags = new TShortHashSet();
+				if (way.getTags() != null && way.getTags().length > 0) {
+					relationTags.addAll(way.getTags());
+				}
+
+				// compare with tags of inner way
+				List<TDWay> correspondingInnerWays = getInnerWaysOfMultipolygon(way.getId());
+				TShortSet innerwayTagsSet = null;
+				for (TDWay innerWay : correspondingInnerWays) {
+					if (innerWay.getTags() == null || innerWay.getTags().length == 0)
+						continue;
+					innerwayTagsSet = new TShortHashSet(innerWay.getTags());
+					if (!relationTags.containsAll(innerwayTagsSet)) {
+						innerWaysWithAdditionalTags.set(innerWay.getId());
+					}
+				}
+			}
+
 		}
-
-		// logger.info("number of coastlines: " + count);
-		// for (int i = 0; i < countWays.length; i++) {
-		// logger.info("zoom-interval " + i + ", added ways: " + countWays[i]);
-		// logger.info("zoom-interval " + i + ", average tiles per way: "
-		// + (countWayTileFactor[i] / countWays[i]));
-		// }
-
 	}
 
 	@Override
@@ -342,16 +368,33 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				continue;
 			if (!innerWayTracker.get(way.getId())) {
 				if (multipolygonTracker.get(way.getId())) {
+					// the way must be a valid polygon, i.e.
+					// it must have been marked as such before
+					// see TDWay.fromWay()
+					if (!way.isPolygon()) {
+						// encountered an invalid polygon
+						LOGGER.finer("outer way is not a polygon, id: " + way.getId());
+						continue;
+					}
+
 					way.setShape(TDWay.MULTI_POLYGON);
 					TShortSet relationTags = multipolygonTags.get(way.getId());
 					if (relationTags != null) {
 						way.addTags(relationTags.toArray());
 					}
 				}
+
+				// only add ways that are not inner ways
+				// inner ways are retrieved through the getInnerWaysOfMultipolygonMethod
 				td.addWay(way);
 			} else {
-				// TODO do not remove inner ways if they contain
-				// other tags than the outer way
+				// we encountered an inner way
+				// only add inner ways that have additional tags compared
+				// to their outer way, we have checked for this during completion
+				// and have marked such ways
+				if (innerWaysWithAdditionalTags.get(way.getId())) {
+					td.addWay(way);
+				}
 			}
 		}
 

@@ -342,9 +342,9 @@ class TileData {
 					// and if the way has at least 4 way nodes
 					byte shape = LINE;
 					if (waynodes[0].getId() == waynodes[waynodes.length - 1].getId()) {
-						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON)
+						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON) {
 							shape = SIMPLE_POLYGON;
-						else {
+						} else {
 							LOGGER.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
 									+ way.getId());
 							return null;
