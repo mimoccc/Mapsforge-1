@@ -45,6 +45,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
+	private static final byte MIN_ZOOM_LEVEL_AREA_PATTERNS = 16;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
 	private static final Paint PAINT_AEROWAY_AERODROME_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_AERODROME_OUTLINE = new Paint(
@@ -144,11 +145,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_BASIN_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_CEMETERY_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LANDUSE_CEMETERY_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_COMMERCIAL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_COMMERCIAL_OUTLINE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_CONSTRUCTION_FILL = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LANDUSE_FARM_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_FOREST_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_GRASS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_GRASS_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -265,6 +268,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private LabelPlacement labelPlacement;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
+	private MapPatterns mapPatterns;
 	private MapSymbols mapSymbols;
 	private ArrayList<PointTextContainer> nodes;
 	private float previousX;
@@ -880,6 +884,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LANDUSE_CEMETERY_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_CEMETERY_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_LANDUSE_CEMETERY_FILL.setColor(Color.rgb(189, 227, 203));
+		PAINT_LANDUSE_CEMETERY_PATTERN.setShader(this.mapPatterns.cemeteryShader);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -892,6 +897,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_LANDUSE_CONSTRUCTION_FILL.setColor(Color.rgb(164, 124, 65));
+		PAINT_LANDUSE_FARM_FILL.setStyle(Paint.Style.FILL);
+		PAINT_LANDUSE_FARM_FILL.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_LANDUSE_FARM_FILL.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_LANDUSE_FARM_FILL.setColor(Color.rgb(189, 227, 203));
 		PAINT_LANDUSE_FOREST_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_FOREST_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_FOREST_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1436,11 +1445,18 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	@Override
 	final void cleanup() {
-		// free the tileBitmap memory of the map symbols
+		// free the memory of the map symbols
 		if (this.mapSymbols != null) {
 			this.mapSymbols.recycle();
 			this.mapSymbols = null;
 		}
+
+		// free the memory memory of the map patterns
+		if (this.mapPatterns != null) {
+			this.mapPatterns.recycle();
+			this.mapPatterns = null;
+		}
+
 		this.currentTile = null;
 		this.tileBitmap = null;
 		this.database = null;
@@ -2902,16 +2918,24 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LANDUSE$ALLOTMENTS).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_ALLOTMENTS_OUTLINE));
-			} else if ((this.tagIDsWays.landuse$cemetery != null && wayTagIds[this.tagIDsWays.landuse$cemetery
-					.intValue()])
-					|| (this.tagIDsWays.landuse$farm != null && wayTagIds[this.tagIDsWays.landuse$farm
-							.intValue()])
-					|| (this.tagIDsWays.landuse$recreation_ground != null && wayTagIds[this.tagIDsWays.landuse$recreation_ground
-							.intValue()])) {
+			} else if (this.tagIDsWays.landuse$cemetery != null
+					&& wayTagIds[this.tagIDsWays.landuse$cemetery.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
+				if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_PATTERNS) {
+					this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
+							new ShapePaintContainer(this.shapeContainer,
+									PAINT_LANDUSE_CEMETERY_PATTERN));
+				}
 				this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LANDUSE_CEMETERY_FILL));
+			} else if ((this.tagIDsWays.landuse$farm != null && wayTagIds[this.tagIDsWays.landuse$farm
+					.intValue()])
+					|| (this.tagIDsWays.landuse$recreation_ground != null && wayTagIds[this.tagIDsWays.landuse$recreation_ground
+							.intValue()])) {
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
+				this.layer.get(LayerIds.LANDUSE$FARM).add(
+						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_FARM_FILL));
 			} else if ((this.tagIDsWays.landuse$basin != null && wayTagIds[this.tagIDsWays.landuse$basin
 					.intValue()])
 					|| (this.tagIDsWays.landuse$reservoir != null && wayTagIds[this.tagIDsWays.landuse$reservoir
@@ -3384,6 +3408,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		this.coastlineAlgorithm = new CoastlineAlgorithm();
 		this.labelPlacement = new LabelPlacement();
+		this.mapPatterns = new MapPatterns();
 		this.mapSymbols = new MapSymbols();
 
 		initializePaints();
