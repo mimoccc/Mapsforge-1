@@ -212,7 +212,7 @@ purpose.
 	<target name="mapsforge-routinggraph-writer-jar-create">
 		<mkdir dir="${mapsforge.dist}" />
 		<!-- Include source code and generated class files, avoid duplicates -->
-		<jar destfile="${mapsforge.dist}/mapsforge-routingGraph-writer-${mapsforge.version}.jar"
+		<jar destfile="${mapsforge.dist}/mapsforge-routinggraph-writer-${mapsforge.version}.jar"
 		     duplicate="preserve">
 			<fileset dir="${mapsforge.src}"
 			         excludes="org/mapsforge/preprocessing/routingGraph/osmosis/plugin.xml"
