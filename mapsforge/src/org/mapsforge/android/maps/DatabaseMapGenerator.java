@@ -169,6 +169,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_MAP_SCALE2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_BARRACKS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_NAVAL_BASE_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_MILITARY_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_10_CENTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -976,6 +977,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MILITARY_NAVAL_BASE_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_MILITARY_NAVAL_BASE_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_MILITARY_NAVAL_BASE_FILL.setColor(Color.rgb(181, 214, 241));
+		PAINT_MILITARY_PATTERN.setShader(this.mapPatterns.militaryShader);
 
 		PAINT_NAME_BLACK_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		PAINT_NAME_BLACK_10.setTextAlign(Align.LEFT);
@@ -3371,6 +3373,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				.intValue()])
 				|| (this.tagIDsWays.military$barracks != null && wayTagIds[this.tagIDsWays.military$barracks
 						.intValue()])) {
+			if (this.currentTile.zoomLevel >= 14) {
+				this.layer.get(LayerIds.MILITARY$BARRACKS).add(
+						new ShapePaintContainer(this.shapeContainer, PAINT_MILITARY_PATTERN));
+			}
 			this.layer.get(LayerIds.MILITARY$BARRACKS).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MILITARY_BARRACKS_FILL));
 			if (--this.remainingTags <= 0) {

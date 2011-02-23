@@ -28,9 +28,11 @@ import android.graphics.Shader.TileMode;
  */
 class MapPatterns {
 	private final Bitmap cemetery;
+	private final Bitmap military;
 	private final Bitmap woodDeciduous;
 	private final Bitmap woodMixed;
 	final Shader cemeteryShader;
+	final Shader militaryShader;
 	final Shader woodDeciduousShader;
 	final Shader woodMixedShader;
 
@@ -38,6 +40,9 @@ class MapPatterns {
 		this.cemetery = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/cemetery.png"));
 		this.cemeteryShader = new BitmapShader(this.cemetery, TileMode.REPEAT, TileMode.REPEAT);
+		this.military = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"patterns/military.png"));
+		this.militaryShader = new BitmapShader(this.military, TileMode.REPEAT, TileMode.REPEAT);
 		this.woodDeciduous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/wood-deciduous.png"));
 		this.woodDeciduousShader = new BitmapShader(this.woodDeciduous, TileMode.REPEAT,
