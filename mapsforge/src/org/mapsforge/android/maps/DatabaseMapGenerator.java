@@ -45,7 +45,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
-	private static final byte MIN_ZOOM_LEVEL_AREA_PATTERNS = 16;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
 	private static final Paint PAINT_AEROWAY_AERODROME_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_AERODROME_OUTLINE = new Paint(
@@ -230,6 +229,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_WATERWAY_RIVER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVERBANK_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_WOOD_DECIDUOUS_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_WOOD_MIXED_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
@@ -1228,6 +1229,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_WATERWAY_STREAM.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_WATERWAY_STREAM.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_WATERWAY_STREAM.setColor(Color.rgb(179, 213, 241));
+
+		PAINT_WOOD_DECIDUOUS_PATTERN.setShader(this.mapPatterns.woodDeciduousShader);
+		PAINT_WOOD_MIXED_PATTERN.setShader(this.mapPatterns.woodMixedShader);
 	}
 
 	/**
@@ -2921,7 +2925,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			} else if (this.tagIDsWays.landuse$cemetery != null
 					&& wayTagIds[this.tagIDsWays.landuse$cemetery.intValue()]) {
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
-				if (this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_AREA_PATTERNS) {
+				if (this.currentTile.zoomLevel >= 16) {
 					this.layer.get(LayerIds.LANDUSE$CEMETERY).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_LANDUSE_CEMETERY_PATTERN));
@@ -2970,6 +2974,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					.intValue()])
 					|| (this.tagIDsWays.landuse$wood != null && wayTagIds[this.tagIDsWays.landuse$wood
 							.intValue()])) {
+				if (this.currentTile.zoomLevel >= 14) {
+					if (this.tagIDsWays.wood$deciduous != null
+							&& wayTagIds[this.tagIDsWays.wood$deciduous.intValue()]) {
+						this.layer.get(LayerIds.LANDUSE$FOREST).add(
+								new ShapePaintContainer(this.shapeContainer,
+										PAINT_WOOD_DECIDUOUS_PATTERN));
+					} else if (this.tagIDsWays.wood$mixed != null
+							&& wayTagIds[this.tagIDsWays.wood$mixed.intValue()]) {
+						this.layer.get(LayerIds.LANDUSE$FOREST).add(
+								new ShapePaintContainer(this.shapeContainer,
+										PAINT_WOOD_MIXED_PATTERN));
+					}
+				}
 				this.layer.get(LayerIds.LANDUSE$FOREST)
 						.add(
 								new ShapePaintContainer(this.shapeContainer,

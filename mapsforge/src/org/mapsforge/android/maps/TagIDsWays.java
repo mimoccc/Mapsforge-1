@@ -135,6 +135,9 @@ class TagIDsWays {
 	Integer waterway$river;
 	Integer waterway$riverbank;
 	Integer waterway$stream;
+	Integer wood$coniferous;
+	Integer wood$deciduous;
+	Integer wood$mixed;
 
 	void update(HashMap<String, Integer> nodeTags) {
 		this.admin_level$10 = nodeTags.get("admin_level=10");
@@ -274,5 +277,9 @@ class TagIDsWays {
 		this.waterway$river = nodeTags.get("waterway=river");
 		this.waterway$riverbank = nodeTags.get("waterway=riverbank");
 		this.waterway$stream = nodeTags.get("waterway=stream");
+
+		this.wood$coniferous = nodeTags.get("wood=coniferous");
+		this.wood$deciduous = nodeTags.get("wood=deciduous");
+		this.wood$mixed = nodeTags.get("wood=mixed");
 	}
 }

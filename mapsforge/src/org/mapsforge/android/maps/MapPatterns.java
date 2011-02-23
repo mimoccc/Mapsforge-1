@@ -28,17 +28,35 @@ import android.graphics.Shader.TileMode;
  */
 class MapPatterns {
 	private final Bitmap cemetery;
+	private final Bitmap woodDeciduous;
+	private final Bitmap woodMixed;
 	final Shader cemeteryShader;
+	final Shader woodDeciduousShader;
+	final Shader woodMixedShader;
 
 	MapPatterns() {
 		this.cemetery = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/cemetery.png"));
 		this.cemeteryShader = new BitmapShader(this.cemetery, TileMode.REPEAT, TileMode.REPEAT);
+		this.woodDeciduous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"patterns/wood-deciduous.png"));
+		this.woodDeciduousShader = new BitmapShader(this.woodDeciduous, TileMode.REPEAT,
+				TileMode.REPEAT);
+		this.woodMixed = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"patterns/wood-mixed.png"));
+		this.woodMixedShader = new BitmapShader(this.woodMixed, TileMode.REPEAT,
+				TileMode.REPEAT);
 	}
 
 	void recycle() {
 		if (this.cemetery != null) {
 			this.cemetery.recycle();
+		}
+		if (this.woodDeciduous != null) {
+			this.woodDeciduous.recycle();
+		}
+		if (this.woodMixed != null) {
+			this.woodMixed.recycle();
 		}
 	}
 }
