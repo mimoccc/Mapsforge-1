@@ -81,21 +81,26 @@ class Serializer {
 
 	private static void writeBits(byte val, int nBits, byte[] buff, int byteOffset,
 			int bitOffset) {
-		if (nBits + bitOffset >= BITS_PER_BYTE) {
-			buff[byteOffset] &= BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE - bitOffset];
-			buff[byteOffset] |= shl(val, bitOffset);
+		byte _val = val;
+		int _nBits = nBits;
+		int _byteOffset = byteOffset;
+		int _bitOffset = bitOffset;
+		// compiler warnings crap till here
+		if (_nBits + _bitOffset >= BITS_PER_BYTE) {
+			buff[_byteOffset] &= BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE - _bitOffset];
+			buff[_byteOffset] |= shl(_val, _bitOffset);
 
-			val = shr(val, BITS_PER_BYTE - bitOffset);
-			nBits -= (BITS_PER_BYTE - bitOffset);
-			bitOffset = 0;
-			byteOffset++;
+			_val = shr(_val, BITS_PER_BYTE - _bitOffset);
+			_nBits -= (BITS_PER_BYTE - _bitOffset);
+			_bitOffset = 0;
+			_byteOffset++;
 		}
-		if (nBits > 0) {
-			buff[byteOffset] = (byte) ((buff[byteOffset] & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
-					- bitOffset]) | (buff[byteOffset] & BITMAKS_BYTE_LOW_CLEARED[bitOffset
-					+ nBits]));
-			buff[byteOffset] |= shl((byte) (val & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
-					- nBits]), bitOffset);
+		if (_nBits > 0) {
+			buff[_byteOffset] = (byte) ((buff[_byteOffset] & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
+					- _bitOffset]) | (buff[_byteOffset] & BITMAKS_BYTE_LOW_CLEARED[_bitOffset
+					+ _nBits]));
+			buff[_byteOffset] |= shl((byte) (_val & BITMAKS_BYTE_HIGH_CLEARED[BITS_PER_BYTE
+					- _nBits]), _bitOffset);
 		}
 	}
 
@@ -112,7 +117,7 @@ class Serializer {
 				- bitOffset]) | shl(val, bitOffset));
 		buff[byteOffset + 1] = (byte) ((buff[byteOffset + 1] &
 				BITMAKS_BYTE_LOW_CLEARED[bitOffset]) | shr(
-				val, BITS_PER_BYTE - bitOffset));
+						val, BITS_PER_BYTE - bitOffset));
 	}
 
 	public static void writeShort(short val, byte[] buff, int byteOffset, int bitOffset) {
@@ -122,37 +127,46 @@ class Serializer {
 	}
 
 	public static void writeInt(int val, byte[] buff, int byteOffset, int bitOffset) {
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+
 		intToBytes(val, BUFFER);
-		writeByte(BUFFER[0], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[1], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[2], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[3], buff, byteOffset++, bitOffset);
+		writeByte(BUFFER[0], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[1], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[2], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[3], buff, _byteOffset++, bitOffset);
 	}
 
 	public static void writeLong(long val, byte[] buff, int byteOffset, int bitOffset) {
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+
 		longToBytes(val, BUFFER);
-		writeByte(BUFFER[0], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[1], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[2], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[3], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[4], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[5], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[6], buff, byteOffset++, bitOffset);
-		writeByte(BUFFER[7], buff, byteOffset++, bitOffset);
+		writeByte(BUFFER[0], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[1], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[2], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[3], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[4], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[5], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[6], buff, _byteOffset++, bitOffset);
+		writeByte(BUFFER[7], buff, _byteOffset++, bitOffset);
 	}
 
 	public static void writeUInt(long val, int nBits, byte[] buff, int byteOffset, int bitOffset) {
-		assert (nBits < BITS_PER_LONG);
+		int _nBits = nBits;
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+
 		longToBytes(val, BUFFER);
 		int j = 0;
 
-		while (nBits >= BITS_PER_BYTE) {
-			writeByte(BUFFER[j++], buff, byteOffset++, bitOffset);
-			nBits -= BITS_PER_BYTE;
+		while (_nBits >= BITS_PER_BYTE) {
+			writeByte(BUFFER[j++], buff, _byteOffset++, bitOffset);
+			_nBits -= BITS_PER_BYTE;
 
 		}
-		if (nBits > 0) {
-			writeBits(BUFFER[j], nBits, buff, byteOffset, bitOffset);
+		if (_nBits > 0) {
+			writeBits(BUFFER[j], _nBits, buff, _byteOffset, bitOffset);
 		}
 	}
 
@@ -179,39 +193,48 @@ class Serializer {
 	}
 
 	public static short readShort(byte[] buff, int byteOffset, int bitOffset) {
-		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[1] = readByte(buff, byteOffset, bitOffset);
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+		BUFFER[0] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[1] = readByte(buff, _byteOffset, bitOffset);
 		return bytesToShort(BUFFER);
 	}
 
 	public static int readInt(byte[] buff, int byteOffset, int bitOffset) {
-		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[1] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[2] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[3] = readByte(buff, byteOffset, bitOffset);
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+		BUFFER[0] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[1] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[2] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[3] = readByte(buff, _byteOffset, bitOffset);
 		return bytesToInt(BUFFER);
 	}
 
 	public static long readLong(byte[] buff, int byteOffset, int bitOffset) {
-		BUFFER[0] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[1] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[2] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[3] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[4] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[5] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[6] = readByte(buff, byteOffset++, bitOffset);
-		BUFFER[7] = readByte(buff, byteOffset, bitOffset);
+		int _byteOffset = byteOffset;
+		// compiler warnings crap till here
+		BUFFER[0] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[1] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[2] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[3] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[4] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[5] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[6] = readByte(buff, _byteOffset++, bitOffset);
+		BUFFER[7] = readByte(buff, _byteOffset, bitOffset);
 		return bytesToLong(BUFFER);
 	}
 
 	public static long readUInt(byte[] buff, int nBits, int byteOffset, int bitOffset) {
+		int _byteOffset = byteOffset;
+		int _nBits = nBits;
+		// compiler warnings crap till here
 		int j = 0;
 		while (nBits >= BITS_PER_BYTE) {
-			BUFFER[j++] = readByte(buff, byteOffset++, bitOffset);
-			nBits -= 8;
+			BUFFER[j++] = readByte(buff, _byteOffset++, bitOffset);
+			_nBits -= 8;
 		}
-		if (nBits > 0) {
-			BUFFER[j++] = readBits(buff, nBits, byteOffset, bitOffset);
+		if (_nBits > 0) {
+			BUFFER[j++] = readBits(buff, _nBits, byteOffset, bitOffset);
 		}
 		while (j < 8) {
 			BUFFER[j++] = 0;

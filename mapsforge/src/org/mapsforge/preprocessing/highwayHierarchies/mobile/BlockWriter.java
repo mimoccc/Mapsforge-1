@@ -66,13 +66,8 @@ class BlockWriter {
 	private static HashMap<String, Integer> streetTypeIds;
 
 	public static int[] writeClusterBlocks(File targetFile, LevelGraph levelGraph,
-			Clustering[] clustering, ClusterBlockMapping mapping, int includeHopIndices)
+			Clustering[] clustering, ClusterBlockMapping mapping, boolean includeHopIndices)
 			throws IOException {
-		if (includeHopIndices != HOP_INDICES_NONE && includeHopIndices != HOP_INDICES_RECURSIVE
-				&& includeHopIndices != HOP_INDICES_DIRECT) {
-			includeHopIndices = HOP_INDICES_DEFAULT;
-		}
-
 		_levelGraph = levelGraph;
 		_clustering = clustering;
 		dijkstraAlgorithm = new DijkstraAlgorithm(_levelGraph);
@@ -96,7 +91,7 @@ class BlockWriter {
 
 		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
 				new FileOutputStream(
-				targetFile), OUTPUT_BUFFER_SIZE));
+						targetFile), OUTPUT_BUFFER_SIZE));
 
 		// write header
 		out.writeByte(_levelGraph.numLevels());
@@ -104,7 +99,7 @@ class BlockWriter {
 		out.writeByte(bitsPerVertexOffset);
 		out.writeByte(bitsPerEdgeWeight);
 		out.writeByte(bitsPerStreetType);
-		out.writeInt(includeHopIndices);
+		out.writeBoolean(includeHopIndices);
 
 		out.writeByte(streetTypes.length);
 		for (int i = 0; i < streetTypes.length; i++) {
@@ -360,7 +355,7 @@ class BlockWriter {
 		}
 	}
 
-	private static byte[] serializeBlock(Cluster cluster, int includeHopIndices)
+	private static byte[] serializeBlock(Cluster cluster, boolean includeHopIndices)
 			throws IOException {
 
 		// write everything two times,
@@ -632,12 +627,12 @@ class BlockWriter {
 						}
 
 						// write hop indices for expanding shortcuts
-						if (e.getMinLevel() > 0 && includeHopIndices == HOP_INDICES_RECURSIVE) {
+						if (e.getMinLevel() > 0 && includeHopIndices) {
 							LinkedList<Integer> hopIndices = new LinkedList<Integer>();
 							dijkstraAlgorithm.getShortestPath(e.getSource().getId(), e
 									.getTarget().getId(), e.getMinLevel() - 1,
 									new LinkedList<LevelVertex>(), hopIndices, e.isForward(), e
-									.isBackward(), true);
+											.isBackward(), true);
 							if (hopIndices.size() < 31) {
 								out.writeUInt(hopIndices.size(), 5);
 							} else {

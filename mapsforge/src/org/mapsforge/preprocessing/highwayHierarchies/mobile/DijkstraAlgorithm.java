@@ -71,6 +71,8 @@ class DijkstraAlgorithm {
 	 * @param backward
 	 *            if the to true, edges must have the backward flag set, else they are ignored
 	 *            by the dijkstra search.
+	 * @param coreOnly
+	 *            search only the core
 	 * @return the sum of the edge weights along the shortest path.
 	 */
 	public int getShortestPath(int sourceId, int targetId, int level,

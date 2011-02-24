@@ -397,13 +397,14 @@ class LevelGraph implements Serializable {
 				}
 
 				private int getNextVertex(int startId) {
-					while (startId < numVertices) {
-						if (getVertexLvl(startId) >= lvl) {
+					int _startId = startId;
+					while (_startId < numVertices) {
+						if (getVertexLvl(_startId) >= lvl) {
 							break;
 						}
-						startId++;
+						_startId++;
 					}
-					return startId;
+					return _startId;
 				}
 			};
 		}

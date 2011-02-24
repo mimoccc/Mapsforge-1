@@ -74,7 +74,7 @@ class HHBinaryFileWriter {
 
 			int addressLookupTableMaxGroupSize = Integer.parseInt(props
 					.getProperty("blockedHH.addressLookupTable.maxGroupSize"));
-			int hopIndices = Integer.parseInt(props
+			boolean hopIndices = Boolean.parseBoolean(props
 					.getProperty("blockedHH.hopIndices"));
 			int rtreeBlockSize = Integer.parseInt(props
 					.getProperty("blockedHH.rtree.blockSize"));
@@ -158,7 +158,7 @@ class HHBinaryFileWriter {
 
 	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
 			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize,
-			int includeHopIndices) throws IOException {
+			boolean includeHopIndices) throws IOException {
 
 		// ---------------- WRITE TEMPORARY FILES --------------------------
 

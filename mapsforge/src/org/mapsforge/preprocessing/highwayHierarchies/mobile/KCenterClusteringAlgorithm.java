@@ -103,7 +103,6 @@ class KCenterClusteringAlgorithm {
 	 */
 	public static KCenterClustering computeClustering(Graph graph, int k, int oversamplingFac,
 			int heuristic) {
-		k = Math.max(k, 1);
 		int k_ = Math.min(graph.numVertices(), k * oversamplingFac);
 		System.out.println("computing k-center clustering (k = " + k + ", k' = " + k_ + ")");
 

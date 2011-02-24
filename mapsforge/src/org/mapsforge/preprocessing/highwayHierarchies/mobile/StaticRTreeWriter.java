@@ -97,6 +97,7 @@ class StaticRTreeWriter {
 	 */
 	private static void packSTR(IndexSortableNodeEntries rectangles, int blockSizeBytes,
 			RandomAccessFile raf, int nodeId, boolean isLeaf) throws IOException {
+		int _nodeId = nodeId;
 		// number of rectangles
 		int r = rectangles.size();
 		// rectangles per block
@@ -135,23 +136,23 @@ class StaticRTreeWriter {
 				}
 				// set nodeId of current node
 				if (n > 1) {
-					nodeId++;
+					_nodeId++;
 				} else {
 					// put root into block number one (number 0 is header)
-					nodeId = 1;
+					_nodeId = 1;
 				}
 
 				int nodeStart = i;
 				int nodeEnd = nodeStart + Math.min(b, rectangles.size() - i);
 
-				raf.seek(nodeId * blockSizeBytes);
+				raf.seek(_nodeId * blockSizeBytes);
 				raf.writeBoolean(isLeaf);
 				raf.writeShort(nodeEnd - nodeStart);
 				parentEntries.minLon[parentEntryIdx] = rectangles.minLon[i];
 				parentEntries.maxLon[parentEntryIdx] = rectangles.maxLon[i];
 				parentEntries.minLat[parentEntryIdx] = rectangles.minLat[i];
 				parentEntries.maxLat[parentEntryIdx] = rectangles.maxLat[i];
-				parentEntries.pointer[parentEntryIdx] = nodeId;
+				parentEntries.pointer[parentEntryIdx] = _nodeId;
 			}
 
 			// write node entry
@@ -177,7 +178,7 @@ class StaticRTreeWriter {
 
 		// recursively pack next level of the tree
 		if (n > 1) {
-			packSTR(parentEntries, blockSizeBytes, raf, nodeId, false);
+			packSTR(parentEntries, blockSizeBytes, raf, _nodeId, false);
 		} else {
 			// write header
 			raf.seek(0);
