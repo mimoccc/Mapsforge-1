@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
+package org.mapsforge.preprocessing.routingGraph.dao.impl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -23,7 +23,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgDAO;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 
 /**
  * Implementation of the Routing graph interface. Access the routing graph stored in the

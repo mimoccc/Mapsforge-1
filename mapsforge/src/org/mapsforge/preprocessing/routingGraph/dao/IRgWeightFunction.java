@@ -14,17 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
+package org.mapsforge.preprocessing.routingGraph.dao;
 
 /**
- * Implement for listening for OsmElements at OsmXmlParser.
+ * @param <E>
+ *            weights should be scaled so that summing up weights should not exceed respective
+ *            data-type max value.
  */
-public interface IOsmRelationListener {
+public interface IRgWeightFunction<E extends IRgEdge> {
+
 	/**
-	 * Callback method.
 	 * 
-	 * @param relation
-	 *            the relation to be handled.
+	 * @param edge
+	 *            the edge to be weighted.
+	 * @return weight as double precision.
 	 */
-	public void handleRelation(OsmRelation relation);
+	public double getWeightDouble(E edge);
+
+	/**
+	 * @param edge
+	 *            the edge to be weighted.
+	 * @return weight as int.
+	 */
+	public int getWeightInt(E edge);
 }

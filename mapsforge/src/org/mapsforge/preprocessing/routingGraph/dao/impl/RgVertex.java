@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
+package org.mapsforge.preprocessing.routingGraph.dao.impl;
 
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;
 
 /**
  * This class implements an Object representation of the vertices stored in the routing graph db

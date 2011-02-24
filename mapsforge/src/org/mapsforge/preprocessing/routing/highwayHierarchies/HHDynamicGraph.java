@@ -27,13 +27,13 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgDAO;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArrayGrowable;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.IntArrayGrowable;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArrayGrowable;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
 
 /**
  * Array based Graph for use in preprocessing holding additional inbound adjacency lists.

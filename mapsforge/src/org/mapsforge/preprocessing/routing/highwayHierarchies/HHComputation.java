@@ -35,18 +35,18 @@ import java.util.LinkedList;
 import java.util.Properties;
 
 import org.mapsforge.core.DBConnection;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgWeightFunctionDistance;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgWeightFunctionTime;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgDAO;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgEdge;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgVertex;
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArraySynchronized;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgEdge;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionDistance;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionTime;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 

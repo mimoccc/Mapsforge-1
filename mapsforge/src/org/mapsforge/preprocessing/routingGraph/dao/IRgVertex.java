@@ -14,16 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.osmxml;
-
+package org.mapsforge.preprocessing.routingGraph.dao;
 
 /**
- * Implement for listening for OsmElements at OsmXmlParser.
+ * 
  */
-public interface IOsmNodeListener {
+public interface IRgVertex {
+
 	/**
-	 * @param node
-	 *            the node to be handled.
+	 * @return id of this vertex.
 	 */
-	public void handleNode(OsmNode node);
+	public int getId();
+
+	/**
+	 * @return in degree.
+	 */
+	public double getLongitude();
+
+	/**
+	 * @return in degree.
+	 */
+	public double getLatitude();
+
+	/**
+	 * @return True if vertex is not in the real road graph, e.g. has no coordinate but was
+	 *         inserted for modeling some property e.g. turning restriction.
+	 */
+	public boolean isDummy();
 }

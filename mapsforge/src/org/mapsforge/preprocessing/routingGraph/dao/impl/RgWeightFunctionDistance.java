@@ -14,36 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.routingGraphInterface;
+package org.mapsforge.preprocessing.routingGraph.dao.impl;
+
+import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
 
 /**
+ * For shortest distance graphs.
  * 
  */
-public interface IRgEdge {
+public class RgWeightFunctionDistance implements IRgWeightFunction<RgEdge> {
 
 	/**
-	 * @return vertex id of source vertex.
+	 * 
 	 */
-	public int getSourceId();
+	public RgWeightFunctionDistance() {
+		//
+	}
 
-	/**
-	 * @return vertex id of target vertex.
-	 */
-	public int getTargetId();
+	@Override
+	public double getWeightDouble(RgEdge edge) {
+		return edge.getLengthMeters() * 10;
+	}
 
-	/**
-	 * @return directed or undirected.
-	 */
-	public boolean isUndirected();
-
-	/**
-	 * @return returns waypoint longitudes in degree.
-	 */
-	public double[] getLongitudes();
-
-	/**
-	 * @return returns waypoint latitudes in degree.
-	 */
-	public double[] getLatitudes();
-
+	@Override
+	public int getWeightInt(RgEdge edge) {
+		return (int) Math.rint(getWeightDouble(edge));
+	}
 }

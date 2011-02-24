@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.osm2rg.routingGraph;
+package org.mapsforge.preprocessing.routingGraph.dao.impl;
 
 import java.io.File;
 import java.io.FileReader;
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.HashMap;
 
-import org.mapsforge.preprocessing.graph.routingGraphInterface.IRgWeightFunction;
+import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
 
 /**
  * No good heuristcs until now, should be extended along with edge data.

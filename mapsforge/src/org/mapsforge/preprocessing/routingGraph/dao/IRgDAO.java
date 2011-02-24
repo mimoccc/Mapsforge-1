@@ -14,27 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.routingGraphInterface;
+package org.mapsforge.preprocessing.routingGraph.dao;
 
 /**
+ * @param <V>
+ *            data type of vertices.
  * @param <E>
- *            weights should be scaled so that summing up weights should not exceed respective
- *            data-type max value.
+ *            data type of edges. This interface can be used as input for routing graph
+ *            preprocessing. For a graph consisting of n vertices, ids should range from 0 to
+ *            n-1.
  */
-public interface IRgWeightFunction<E extends IRgEdge> {
+public interface IRgDAO<V extends IRgVertex, E extends IRgEdge> {
 
 	/**
-	 * 
-	 * @param edge
-	 *            the edge to be weighted.
-	 * @return weight as double precision.
+	 * @return the number of vertices in the routing graph.
 	 */
-	public double getWeightDouble(E edge);
+	public int getNumVertices();
 
 	/**
-	 * @param edge
-	 *            the edge to be weighted.
-	 * @return weight as int.
+	 * @return the number of edges in the routing graph.
 	 */
-	public int getWeightInt(E edge);
+	public int getNumEdges();
+
+	/**
+	 * @return iterates over all vertices in the graph.
+	 */
+	public Iterable<V> getVertices();
+
+	/**
+	 * @return iterates over all edges in this graph.
+	 */
+	public Iterable<E> getEdges();
+
 }

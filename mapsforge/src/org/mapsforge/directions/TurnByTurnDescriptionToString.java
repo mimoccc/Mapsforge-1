@@ -33,7 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.preprocessing.graph.osm2rg.osmxml.TagHighway;
+import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 

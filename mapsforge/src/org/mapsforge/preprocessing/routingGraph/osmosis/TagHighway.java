@@ -21,7 +21,7 @@ import java.util.HashMap;
 /**
  * List of known highway tags (only roads for now).
  */
-class TagHighway {
+public class TagHighway {
 
 	// roads
 	/** */
@@ -100,8 +100,9 @@ class TagHighway {
 	public static final String BUS_GUIDEWAY = "bus_guideway";
 	/** */
 	public static final byte BUS_GUIDEWAY_BYTE = 19;
-
+	/** map tag to bytes */
 	public static HashMap<String, Byte> kv = new HashMap<String, Byte>();
+	/** map bytes to tag */
 	public static String[] vk; // reverse kv
 
 	/**

@@ -14,31 +14,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.graph.routingGraphInterface;
+package org.mapsforge.preprocessing.routingGraph.dao;
 
 /**
  * 
  */
-public interface IRgVertex {
+public interface IRgEdge {
 
 	/**
-	 * @return id of this vertex.
+	 * @return vertex id of source vertex.
 	 */
-	public int getId();
+	public int getSourceId();
 
 	/**
-	 * @return in degree.
+	 * @return vertex id of target vertex.
 	 */
-	public double getLongitude();
+	public int getTargetId();
 
 	/**
-	 * @return in degree.
+	 * @return directed or undirected.
 	 */
-	public double getLatitude();
+	public boolean isUndirected();
 
 	/**
-	 * @return True if vertex is not in the real road graph, e.g. has no coordinate but was
-	 *         inserted for modeling some property e.g. turning restriction.
+	 * @return returns waypoint longitudes in degree.
 	 */
-	public boolean isDummy();
+	public double[] getLongitudes();
+
+	/**
+	 * @return returns waypoint latitudes in degree.
+	 */
+	public double[] getLatitudes();
+
 }

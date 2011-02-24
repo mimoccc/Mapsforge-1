@@ -30,8 +30,8 @@ import java.util.Iterator;
 
 import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgEdge;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgEdge;
 
 final class EdgeIndex {
 

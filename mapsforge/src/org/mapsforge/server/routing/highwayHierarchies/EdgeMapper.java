@@ -25,11 +25,11 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import org.mapsforge.core.DBConnection;
-import org.mapsforge.preprocessing.graph.osm2rg.routingGraph.RgDAO;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
 import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
+import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 
 class EdgeMapper implements Serializable {
 
