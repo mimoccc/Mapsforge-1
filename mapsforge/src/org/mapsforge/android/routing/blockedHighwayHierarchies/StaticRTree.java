@@ -24,7 +24,7 @@ import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.HHGlobals;
+import org.mapsforge.preprocessing.highwayHierarchies.mobile.HHGlobals;
 
 /**
  * This class implements a static rtree variant. It supports the overlaps query which is the key

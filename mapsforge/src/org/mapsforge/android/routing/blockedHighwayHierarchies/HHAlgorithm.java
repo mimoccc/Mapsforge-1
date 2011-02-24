@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.BinaryMinHeap;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.prioQueue.IBinaryHeapItem;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.server.routing.IEdge;
 
 final class HHAlgorithm {

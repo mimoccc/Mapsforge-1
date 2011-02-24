@@ -29,13 +29,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertexLvl;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.BitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHVertexLvl;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
 
 /**
  * Array based implementation of a graph. Level are collapsed (no extra adjacency list per

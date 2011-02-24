@@ -28,14 +28,14 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.routing.highwayHierarchies.DijkstraAlgorithm;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHEdge;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArray;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedByteArrayGrowable;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedFourBitArray;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.arrays.UnsignedFourBitArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.DijkstraAlgorithm;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArray;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArrayGrowable;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 

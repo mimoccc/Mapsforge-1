@@ -30,9 +30,9 @@ import java.util.Random;
 
 import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.HHDbReader.HHVertex;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.Serializer;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgVertex;
 

@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.core.WGS84;
-import org.mapsforge.preprocessing.routing.blockedHighwayHierarchies.HHGlobals;
+import org.mapsforge.preprocessing.highwayHierarchies.mobile.HHGlobals;
 
 /**
  * This class implements the routing graph, the highway hierarchies algorithm directly works on.

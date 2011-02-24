@@ -25,7 +25,7 @@ import java.util.LinkedList;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.routing.highwayHierarchies.util.renderer.RendererV2;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
 import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
