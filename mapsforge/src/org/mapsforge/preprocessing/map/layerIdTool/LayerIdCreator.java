@@ -73,7 +73,7 @@ class LayerIdCreator {
 				for (String word : words) {
 					// write the current word and ID
 					System.out.println("static final byte "
-							+ word.replace('=', '$').toUpperCase(Locale.ENGLISH) + " = "
+							+ word.replaceAll("=|:", "\\$").toUpperCase(Locale.ENGLISH) + " = "
 							+ currentId + ";");
 					map.put(word, currentId);
 				}

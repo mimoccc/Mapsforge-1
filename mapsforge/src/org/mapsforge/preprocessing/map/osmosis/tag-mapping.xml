@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tag-mapping xmlns="http://mapsforge.org/tag-mapping"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<tag-mapping xmlns="http://mapsforge.org/tag-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://mapsforge.org/tag-mapping tag-mapping.xsd"
 	default-zoom-appear="16" profile-name="default-profile">
 
@@ -92,7 +91,7 @@
 	<!-- NATURAL TAGS -->
 	<pois>
 		<osm-tag key="natural" value="cave_entrance" zoom-appear="14" />
-		<osm-tag key="natural" value="peak" zoom-appear="15" />
+		<osm-tag key="natural" value="peak" zoom-appear="14" />
 		<osm-tag key="natural" value="spring" zoom-appear="17" />
 		<osm-tag key="natural" value="tree" zoom-appear="17" />
 		<osm-tag key="natural" value="volcano" zoom-appear="12" />
@@ -266,27 +265,30 @@
 		<osm-tag key="admin_level" value="10" zoom-appear="16" />
 	</ways>
 
-	<!-- NOT TO RENDER -->
+	<!-- AIRPORT TAGS -->
 	<ways>
-		<osm-tag key="area" value="yes" renderable="false" />
+		<osm-tag key="aeroway" value="aerodrome" zoom-appear="13" />
+		<osm-tag key="aeroway" value="apron" zoom-appear="13" />
+		<osm-tag key="aeroway" value="helipad" zoom-appear="17" />
+		<osm-tag key="aeroway" value="runway" zoom-appear="10" />
+		<osm-tag key="aeroway" value="taxiway" zoom-appear="10" />
+		<osm-tag key="aeroway" value="terminal" zoom-appear="16" />
+	</ways>
 
-		<osm-tag key="boundary" value="administrative" renderable="false" />
-
-		<osm-tag key="bridge" value="yes" renderable="false" />
-
-		<osm-tag key="tunnel" value="yes" renderable="false" />
-		<osm-tag key="tunnel" value="no" renderable="false" />
-
-		<osm-tag key="wood" value="coniferous" renderable="false" />
-		<osm-tag key="wood" value="deciduous" renderable="false" />
-		<osm-tag key="wood" value="mixed" renderable="false" />
+	<!-- SKI SLOPES TAGS -->
+	<ways>
+		<osm-tag key="piste:type" value="downhill" zoom-appear="13" />
+		<osm-tag key="aerialway" value="cable_car" zoom-appear="13" />
+		<osm-tag key="aerialway" value="chair_lift" zoom-appear="13" />
+		<osm-tag key="aerialway" value="drag_lift" zoom-appear="13" />
+		<osm-tag key="aerialway" value="gondola" zoom-appear="13" />
+		<osm-tag key="aerialway" value="magic_carpet" zoom-appear="13" />
+		<osm-tag key="aerialway" value="mixed_lift" zoom-appear="13" />
+		<osm-tag key="aerialway" value="rope_tow" zoom-appear="13" />
 	</ways>
 
 	<!-- OTHER TAGS -->
 	<ways>
-		<osm-tag key="aerialway" value="cable_car" zoom-appear="16" />
-		<osm-tag key="aerialway" value="chair_lift" zoom-appear="16" />
-
 		<osm-tag key="barrier" value="fence" zoom-appear="16" />
 		<osm-tag key="barrier" value="wall" zoom-appear="17" />
 
@@ -303,13 +305,25 @@
 		<osm-tag key="place" value="locality" zoom-appear="17" />
 	</ways>
 
-	<!-- AIRPORT TAGS -->
+	<!-- NOT TO RENDER -->
 	<ways>
-		<osm-tag key="aeroway" value="aerodrome" zoom-appear="13" />
-		<osm-tag key="aeroway" value="apron" zoom-appear="13" />
-		<osm-tag key="aeroway" value="helipad" zoom-appear="17" />
-		<osm-tag key="aeroway" value="runway" zoom-appear="10" />
-		<osm-tag key="aeroway" value="taxiway" zoom-appear="10" />
-		<osm-tag key="aeroway" value="terminal" zoom-appear="16" />
+		<osm-tag key="area" value="yes" renderable="false" />
+
+		<osm-tag key="boundary" value="administrative" renderable="false" />
+
+		<osm-tag key="bridge" value="yes" renderable="false" />
+
+		<osm-tag key="piste:difficulty" value="novice" renderable="false" />
+		<osm-tag key="piste:difficulty" value="easy" renderable="false" />
+		<osm-tag key="piste:difficulty" value="intermediate" renderable="false" />
+		<osm-tag key="piste:difficulty" value="advanced" renderable="false" />
+		<osm-tag key="piste:difficulty" value="expert" renderable="false" />
+
+		<osm-tag key="tunnel" value="yes" renderable="false" />
+		<osm-tag key="tunnel" value="no" renderable="false" />
+
+		<osm-tag key="wood" value="coniferous" renderable="false" />
+		<osm-tag key="wood" value="deciduous" renderable="false" />
+		<osm-tag key="wood" value="mixed" renderable="false" />
 	</ways>
 </tag-mapping>

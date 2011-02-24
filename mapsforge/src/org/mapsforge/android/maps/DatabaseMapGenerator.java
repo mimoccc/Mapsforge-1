@@ -46,6 +46,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_AREA_NAMES = 17;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 15;
+
+	private static final Paint PAINT_AERIALWAY = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_AEROWAY_AERODROME_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_AERODROME_OUTLINE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
@@ -56,14 +59,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_AEROWAY_TAXIWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_TERMINAL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AEROWAY_TERMINAL_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_AMENITY_GRAVE_YARD_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AMENITY_HOSPITAL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AMENITY_PARKING_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AMENITY_PARKING_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AMENITY_SCHOOL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_AMENITY_SCHOOL_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_BARRIER_BOLLARD = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BARRIER_WALL = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10 = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_2 = new Paint(
@@ -77,9 +83,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_9 = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BOUNDARY_NATIONAL_PARK = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_BUILDING_ROOF_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BUILDING_YES_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_BUILDING_YES_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_HIGHWAY_BRIDLEWAY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_BRIDLEWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_CONSTRUCTION = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -136,9 +144,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_HIGHWAY_TUNNEL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_UNCLASSIFIED1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_UNCLASSIFIED2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_HISTORIC_CIRCLE_INNER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HISTORIC_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_INFO_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_LANDUSE_ALLOTMENTS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_ALLOTMENTS_OUTLINE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
@@ -158,18 +169,18 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_LANDUSE_MILITARY_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_RESIDENTIAL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_RETAIL_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_LEISURE_COMMON_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_COMMON_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_STADIUM_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_STADIUM_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_MAN_MADE_PIER = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_MAP_SCALE_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_MAP_SCALE_TEXT_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_MAP_SCALE1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_MAP_SCALE2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_MILITARY_BARRACKS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_NAVAL_BASE_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_NAME_BLACK_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_10_CENTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_BLACK_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -191,6 +202,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_NAME_WHITE_STROKE_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NAME_WHITE_STROKE_25 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_NATURAL_BEACH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE_INVALID = new Paint(
@@ -201,6 +213,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_NATURAL_LAND_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_WATER_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_WOOD_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_ADVANCED = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_EASY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_EXPERT = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_NOVICE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_RAILWAY_CIRCLE_INNER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_LIGHT_RAIL1 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -215,23 +238,31 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_RAILWAY_SUBWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_TRAM1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_TRAM2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_ROUTE_FERRY = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_SPORT_SHOOTING_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_SHOOTING_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_SWIMMING_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_SWIMMING_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_TENNIS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SPORT_TENNIS_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_TOURISM_ATTRACTION_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TOURISM_ZOO_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_TOURISM_ZOO_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_WATER_TILE_HIGHTLIGHT = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_WATERWAY_CANAL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_RIVERBANK_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WATERWAY_STREAM = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+	private static final Paint PAINT_WOOD_CONIFEROUS_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WOOD_DECIDUOUS_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WOOD_MIXED_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
@@ -397,7 +428,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param wayName
 	 *            the way name to render.
 	 * @param outline
-	 *            if specified, this color will be used for the name outline.
+	 *            if specified, the color of this paint will be used for the name outline.
 	 */
 	private void addWayName(String wayName, Paint outline) {
 		// calculate the way name length plus some margin of safety
@@ -549,6 +580,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * Sets the style, color and stroke parameters for all paints.
 	 */
 	private void initializePaints() {
+		PAINT_AERIALWAY.setStyle(Paint.Style.STROKE);
+		PAINT_AERIALWAY.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_AERIALWAY.setStrokeCap(Paint.Cap.SQUARE);
+		PAINT_AERIALWAY.setColor(Color.rgb(32, 32, 32));
+
 		PAINT_AEROWAY_AERODROME_FILL.setStyle(Paint.Style.FILL);
 		PAINT_AEROWAY_AERODROME_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_AEROWAY_AERODROME_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -954,21 +990,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MAN_MADE_PIER.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_MAN_MADE_PIER.setColor(Color.rgb(228, 228, 228));
 
-		PAINT_MAP_SCALE1.setStyle(Paint.Style.STROKE);
-		PAINT_MAP_SCALE1.setStrokeWidth(2);
-		PAINT_MAP_SCALE2.setStyle(Paint.Style.STROKE);
-		PAINT_MAP_SCALE2.setStrokeWidth(4);
-		PAINT_MAP_SCALE2.setColor(Color.rgb(255, 255, 255));
-		PAINT_MAP_SCALE_TEXT.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_MAP_SCALE_TEXT.setTextSize(12);
-		PAINT_MAP_SCALE_TEXT.setTextAlign(Align.RIGHT);
-		PAINT_MAP_SCALE_TEXT_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_MAP_SCALE_TEXT_STROKE.setTextSize(12);
-		PAINT_MAP_SCALE_TEXT_STROKE.setTextAlign(Align.RIGHT);
-		PAINT_MAP_SCALE_TEXT_STROKE.setStyle(Paint.Style.STROKE);
-		PAINT_MAP_SCALE_TEXT_STROKE.setStrokeWidth(2);
-		PAINT_MAP_SCALE_TEXT_STROKE.setColor(Color.rgb(255, 255, 255));
-
 		PAINT_MILITARY_BARRACKS_FILL.setStyle(Paint.Style.FILL);
 		PAINT_MILITARY_BARRACKS_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_MILITARY_BARRACKS_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1113,6 +1134,27 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_WOOD_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_WOOD_FILL.setColor(Color.rgb(114, 191, 129));
 
+		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setColor(Color.argb(136, 0, 0, 0));
+		PAINT_PISTE_TYPE_DOWNHILL_EASY.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_EASY.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_EASY.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_EASY.setColor(Color.argb(136, 64, 64, 255));
+		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setColor(Color.argb(136, 246, 128, 10));
+		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setColor(Color.argb(136, 255, 64, 64));
+		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setColor(Color.argb(136, 64, 255, 64));
+
 		PAINT_RAILWAY_CIRCLE_INNER.setStyle(Paint.Style.FILL);
 		PAINT_RAILWAY_CIRCLE_INNER.setColor(Color.rgb(236, 46, 46));
 		PAINT_RAILWAY_CIRCLE_OUTER.setStyle(Paint.Style.STROKE);
@@ -1232,6 +1274,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_WATERWAY_STREAM.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_WATERWAY_STREAM.setColor(Color.rgb(179, 213, 241));
 
+		PAINT_WOOD_CONIFEROUS_PATTERN.setShader(this.mapPatterns.woodConiferousShader);
 		PAINT_WOOD_DECIDUOUS_PATTERN.setShader(this.mapPatterns.woodDeciduousShader);
 		PAINT_WOOD_MIXED_PATTERN.setShader(this.mapPatterns.woodMixedShader);
 	}
@@ -1303,6 +1346,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				paintScaleFactor = 1;
 				break;
 		}
+
+		PAINT_AERIALWAY.setStrokeWidth(0.5f * paintScaleFactor);
 
 		PAINT_AEROWAY_AERODROME_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_AEROWAY_RUNWAY1.setStrokeWidth(7.5f * paintScaleFactor);
@@ -1409,6 +1454,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_COASTLINE.setStrokeWidth(1 * paintScaleFactor);
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeWidth(1 * paintScaleFactor);
 		PAINT_NATURAL_GLACIER_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+
+		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_DOWNHILL_EASY.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeWidth(2.4f * paintScaleFactor);
 
 		PAINT_RAILWAY_RAIL_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
 				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
@@ -2977,7 +3028,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					|| (this.tagIDsWays.landuse$wood != null && wayTagIds[this.tagIDsWays.landuse$wood
 							.intValue()])) {
 				if (this.currentTile.zoomLevel >= 14) {
-					if (this.tagIDsWays.wood$deciduous != null
+					if (this.tagIDsWays.wood$coniferous != null
+							&& wayTagIds[this.tagIDsWays.wood$coniferous.intValue()]) {
+						this.layer.get(LayerIds.LANDUSE$FOREST).add(
+								new ShapePaintContainer(this.shapeContainer,
+										PAINT_WOOD_CONIFEROUS_PATTERN));
+					} else if (this.tagIDsWays.wood$deciduous != null
 							&& wayTagIds[this.tagIDsWays.wood$deciduous.intValue()]) {
 						this.layer.get(LayerIds.LANDUSE$FOREST).add(
 								new ShapePaintContainer(this.shapeContainer,
@@ -3353,6 +3409,80 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ZOO_FILL));
 			this.layer.get(LayerIds.TOURISM$ZOO).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ZOO_OUTLINE));
+			if (--this.remainingTags <= 0) {
+				return;
+			}
+		}
+
+		/* aerial ways */
+		if ((this.tagIDsWays.aerialway$cable_car != null && wayTagIds[this.tagIDsWays.aerialway$cable_car
+				.intValue()])
+				|| (this.tagIDsWays.aerialway$chair_lift != null && wayTagIds[this.tagIDsWays.aerialway$chair_lift
+						.intValue()])
+				|| (this.tagIDsWays.aerialway$drag_lift != null && wayTagIds[this.tagIDsWays.aerialway$drag_lift
+						.intValue()])
+				|| (this.tagIDsWays.aerialway$gondola != null && wayTagIds[this.tagIDsWays.aerialway$gondola
+						.intValue()])
+				|| (this.tagIDsWays.aerialway$magic_carpet != null && wayTagIds[this.tagIDsWays.aerialway$magic_carpet
+						.intValue()])
+				|| (this.tagIDsWays.aerialway$mixed_lift != null && wayTagIds[this.tagIDsWays.aerialway$mixed_lift
+						.intValue()])
+				|| (this.tagIDsWays.aerialway$rope_tow != null && wayTagIds[this.tagIDsWays.aerialway$rope_tow
+						.intValue()])) {
+			this.layer.get(LayerIds.AERIALWAY$CABLE_CAR).add(
+					new ShapePaintContainer(this.shapeContainer, PAINT_AERIALWAY));
+			if (wayName != null && this.currentTile.zoomLevel >= 15) {
+				addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+			}
+			if (--this.remainingTags <= 0) {
+				return;
+			}
+		}
+
+		/* pistes */
+		if (this.tagIDsWays.piste$type$downhill != null
+				&& wayTagIds[this.tagIDsWays.piste$type$downhill.intValue()]) {
+			if (this.tagIDsWays.piste$difficulty$novice != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$novice.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_NOVICE));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			} else if (this.tagIDsWays.piste$difficulty$easy != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$easy.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_EASY));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			} else if (this.tagIDsWays.piste$difficulty$intermediate != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$intermediate.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			} else if (this.tagIDsWays.piste$difficulty$advanced != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$advanced.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_ADVANCED));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			} else if (this.tagIDsWays.piste$difficulty$expert != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$expert.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_EXPERT));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			}
 			if (--this.remainingTags <= 0) {
 				return;
 			}

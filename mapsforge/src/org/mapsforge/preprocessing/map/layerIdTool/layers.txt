@@ -1,5 +1,5 @@
-// this is a sorted list of tags in the order they should be rendered
-// to generate java code with layer IDs run the layerIdTool on this file
+// This is a sorted list of tags in the order they should be rendered.
+// To generate java code with layer IDs run the layerIdTool on this file.
 
 // Man-made areas
 landuse=military
@@ -19,7 +19,7 @@ amenity=college amenity=fountain amenity=hospital amenity=school amenity=univers
 landuse=cemetery
 amenity=grave_yard
 
-// special entry for rendered sea areas
+// Special entry for rendered sea areas
 SEA_AREAS
 
 // Natural features
@@ -74,7 +74,7 @@ highway=service_area=yes
 aeroway=terminal
 building=apartments building=embassy building=government building=gym building=roof building=sports building=train_station building=university building=yes
 
-// marine features
+// Marine features
 man_made=pier
 
 // Non-physical routes
@@ -83,6 +83,7 @@ route=ferry
 // Barriers
 barrier=fence barrier=wall
 
+// Highways
 highway_tunnel=yes
 
 highway=construction
@@ -131,13 +132,18 @@ highway=primary2
 highway=trunk2
 highway=motorway2
 
+// Pistes
+piste:type=downhill
+aerialway=cable_car aerialway=chair_lift aerialway=drag_lift aerialway=gondola aerialway=magic_carpet aerialway=mixed_lift aerialway=rope_tow
+
+// Railways
 railway=light_rail railway=rail railway=rail_tunnel=yes railway=subway railway=subway_tunnel railway=station railway=tram
 
 // Non-physical boundaries
 admin_level=2 admin_level=4 admin_level=6 admin_level=8 admin_level=9 admin_level=10
 
-// special entry for the circle symbol of POIs
+// Special entry for the circle symbol of POIs
 POI_CIRCLE_SYMBOL
 
-// the following line must be the last line in the file to get the highest ID
+// The following line must be the last line in the file to get the highest ID
 LEVELS_PER_LAYER

@@ -20,12 +20,19 @@ package org.mapsforge.android.maps;
  * List of all layers that are used for correct rendering.
  */
 final class LayerIds {
-	static final byte ADMIN_LEVEL$10 = 94;
-	static final byte ADMIN_LEVEL$2 = 94;
-	static final byte ADMIN_LEVEL$4 = 94;
-	static final byte ADMIN_LEVEL$6 = 94;
-	static final byte ADMIN_LEVEL$8 = 94;
-	static final byte ADMIN_LEVEL$9 = 94;
+	static final byte ADMIN_LEVEL$10 = 96;
+	static final byte ADMIN_LEVEL$2 = 96;
+	static final byte ADMIN_LEVEL$4 = 96;
+	static final byte ADMIN_LEVEL$6 = 96;
+	static final byte ADMIN_LEVEL$8 = 96;
+	static final byte ADMIN_LEVEL$9 = 96;
+	static final byte AERIALWAY$CABLE_CAR = 94;
+	static final byte AERIALWAY$CHAIR_LIFT = 94;
+	static final byte AERIALWAY$DRAG_LIFT = 94;
+	static final byte AERIALWAY$GONDOLA = 94;
+	static final byte AERIALWAY$MAGIC_CARPET = 94;
+	static final byte AERIALWAY$MIXED_LIFT = 94;
+	static final byte AERIALWAY$ROPE_TOW = 94;
 	static final byte AEROWAY$AERODROME = 22;
 	static final byte AEROWAY$APRON = 23;
 	static final byte AEROWAY$RUNWAY1 = 28;
@@ -128,7 +135,7 @@ final class LayerIds {
 	static final byte LEISURE$STADIUM = 20;
 	static final byte LEISURE$TRACK = 21;
 	static final byte LEISURE$WATER_PARK = 20;
-	static final byte LEVELS_PER_LAYER = 96;
+	static final byte LEVELS_PER_LAYER = 98;
 	static final byte MAN_MADE$PIER = 46;
 	static final byte MILITARY$AIRFIELD = 1;
 	static final byte MILITARY$BARRACKS = 1;
@@ -141,14 +148,15 @@ final class LayerIds {
 	static final byte NATURAL$SCRUB = 15;
 	static final byte NATURAL$WATER = 36;
 	static final byte NATURAL$WOOD = 15;
-	static final byte POI_CIRCLE_SYMBOL = 95;
-	static final byte RAILWAY$LIGHT_RAIL = 93;
-	static final byte RAILWAY$RAIL = 93;
-	static final byte RAILWAY$RAIL_TUNNEL$YES = 93;
-	static final byte RAILWAY$STATION = 93;
-	static final byte RAILWAY$SUBWAY = 93;
-	static final byte RAILWAY$SUBWAY_TUNNEL = 93;
-	static final byte RAILWAY$TRAM = 93;
+	static final byte PISTE$TYPE$DOWNHILL = 93;
+	static final byte POI_CIRCLE_SYMBOL = 97;
+	static final byte RAILWAY$LIGHT_RAIL = 95;
+	static final byte RAILWAY$RAIL = 95;
+	static final byte RAILWAY$RAIL_TUNNEL$YES = 95;
+	static final byte RAILWAY$STATION = 95;
+	static final byte RAILWAY$SUBWAY = 95;
+	static final byte RAILWAY$SUBWAY_TUNNEL = 95;
+	static final byte RAILWAY$TRAM = 95;
 	static final byte ROUTE$FERRY = 47;
 	static final byte SEA_AREAS = 10;
 	static final byte SPORT$SHOOTING = 24;

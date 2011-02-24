@@ -922,7 +922,7 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom
-	 * buttons, scale bar, options menu and title bar are not included in the resulting picture.
+	 * buttons, scale bar, overlays, menus and the title bar are not included in the screenshot.
 	 * 
 	 * @param fileName
 	 *            the name of the image file. If the file exists, it will be overwritten.

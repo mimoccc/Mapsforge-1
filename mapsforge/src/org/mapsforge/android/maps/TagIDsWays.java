@@ -25,6 +25,13 @@ class TagIDsWays {
 	Integer admin_level$6;
 	Integer admin_level$8;
 	Integer admin_level$9;
+	Integer aerialway$cable_car;
+	Integer aerialway$chair_lift;
+	Integer aerialway$drag_lift;
+	Integer aerialway$gondola;
+	Integer aerialway$magic_carpet;
+	Integer aerialway$mixed_lift;
+	Integer aerialway$rope_tow;
 	Integer aeroway$aerodrome;
 	Integer aeroway$apron;
 	Integer aeroway$runway;
@@ -116,6 +123,12 @@ class TagIDsWays {
 	Integer natural$scrub;
 	Integer natural$water;
 	Integer natural$wood;
+	Integer piste$difficulty$advanced;
+	Integer piste$difficulty$easy;
+	Integer piste$difficulty$expert;
+	Integer piste$difficulty$intermediate;
+	Integer piste$difficulty$novice;
+	Integer piste$type$downhill;
 	Integer place$locality;
 	Integer railway$light_rail;
 	Integer railway$rail;
@@ -146,6 +159,14 @@ class TagIDsWays {
 		this.admin_level$6 = nodeTags.get("admin_level=6");
 		this.admin_level$8 = nodeTags.get("admin_level=8");
 		this.admin_level$9 = nodeTags.get("admin_level=9");
+
+		this.aerialway$cable_car = nodeTags.get("aerialway=cable_car");
+		this.aerialway$chair_lift = nodeTags.get("aerialway=chair_lift");
+		this.aerialway$drag_lift = nodeTags.get("aerialway=drag_lift");
+		this.aerialway$gondola = nodeTags.get("aerialway=gondola");
+		this.aerialway$magic_carpet = nodeTags.get("aerialway=magic_carpet");
+		this.aerialway$mixed_lift = nodeTags.get("aerialway=mixed_lift");
+		this.aerialway$rope_tow = nodeTags.get("aerialway=rope_tow");
 
 		this.aeroway$aerodrome = nodeTags.get("aeroway=aerodrome");
 		this.aeroway$apron = nodeTags.get("aeroway=apron");
@@ -251,6 +272,13 @@ class TagIDsWays {
 		this.natural$scrub = nodeTags.get("natural=scrub");
 		this.natural$water = nodeTags.get("natural=water");
 		this.natural$wood = nodeTags.get("natural=wood");
+
+		this.piste$type$downhill = nodeTags.get("piste:type=downhill");
+		this.piste$difficulty$novice = nodeTags.get("piste:difficulty=novice");
+		this.piste$difficulty$easy = nodeTags.get("piste:difficulty=easy");
+		this.piste$difficulty$intermediate = nodeTags.get("piste:difficulty=intermediate");
+		this.piste$difficulty$advanced = nodeTags.get("piste:difficulty=advanced");
+		this.piste$difficulty$expert = nodeTags.get("piste:difficulty=expert");
 
 		this.place$locality = nodeTags.get("place=locality");
 
