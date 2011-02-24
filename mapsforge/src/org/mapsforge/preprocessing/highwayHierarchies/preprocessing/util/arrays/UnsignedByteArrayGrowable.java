@@ -43,7 +43,8 @@ public class UnsignedByteArrayGrowable implements Serializable {
 	 *            added to the end
 	 */
 	public void add(int val) {
-		val &= 0x000000ff;
+		int _val = val;
+		_val &= 0x000000ff;
 		if (byteOffset == 4) {
 			byteOffset = 0;
 			fourByteOffset++;
@@ -51,7 +52,7 @@ public class UnsignedByteArrayGrowable implements Serializable {
 		}
 		data.set(fourByteOffset,
 				(data.get(fourByteOffset) & (~(0x000000ff << (byteOffset * 8))))
-				| (val << (byteOffset * 8)));
+						| (_val << (byteOffset * 8)));
 		byteOffset++;
 		size++;
 	}
@@ -63,11 +64,12 @@ public class UnsignedByteArrayGrowable implements Serializable {
 	 *            new value put at position.
 	 */
 	public void set(int idx, int val) {
-		val &= 0x000000ff;
+		int _val = val;
+		_val &= 0x000000ff;
 		int offsetA = idx / 4;
 		int offsetB = idx % 4;
 		data.set(offsetA, (data.get(offsetA) & (~(0x000000ff << (offsetB * 8))))
-				| (val << (offsetB * 8)));
+				| (_val << (offsetB * 8)));
 	}
 
 	/**

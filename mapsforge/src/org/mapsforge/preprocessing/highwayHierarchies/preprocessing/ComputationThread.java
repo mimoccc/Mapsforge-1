@@ -17,7 +17,7 @@
 package org.mapsforge.preprocessing.highwayHierarchies.preprocessing;
 
 /**
- * @author Frank Viernau
+ * Thead progress interface.
  */
 abstract class ComputationThread extends Thread {
 

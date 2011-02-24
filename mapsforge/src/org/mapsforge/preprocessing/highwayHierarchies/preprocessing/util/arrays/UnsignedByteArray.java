@@ -46,11 +46,12 @@ public class UnsignedByteArray implements Serializable {
 	 *            new value.
 	 */
 	public void set(int idx, int val) {
-		val &= 0x000000ff;
+		int _val = val;
+		_val &= 0x000000ff;
 		int arrayOffset = idx / 4;
 		int bitOffset = (idx % 4) * 8;
 		data[arrayOffset] = (data[arrayOffset] & ~(0x000000ff << bitOffset))
-				| (val << bitOffset);
+				| (_val << bitOffset);
 	}
 
 	/**

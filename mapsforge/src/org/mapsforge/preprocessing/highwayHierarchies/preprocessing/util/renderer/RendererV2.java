@@ -748,8 +748,16 @@ public class RendererV2 {
 		}
 	}
 
-	public static void main(String[] agrs) throws FileNotFoundException, IOException,
-			ClassNotFoundException {
+	/**
+	 * 
+	 * @param agrs
+	 *            bla
+	 * @throws FileNotFoundException
+	 *             bli
+	 * @throws IOException
+	 *             blub
+	 */
+	public static void main(String[] agrs) throws FileNotFoundException, IOException {
 		IRouter router = new HHRouter(new File(
 				"evaluation/opthh/ger_12_quad_tree_100_true.blockedHH"), 1024 * 1024);
 		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);

@@ -29,7 +29,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdg
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
- * iplementation dijkstra s' algorithm an some hh specific details.
+ * implementation dijkstra s' algorithm an some hh specific details.
  * 
  */
 public final class DijkstraAlgorithm {
@@ -119,7 +119,7 @@ public final class DijkstraAlgorithm {
 			boolean backward, int lvl) {
 		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = getQueue();
 		TIntObjectHashMap<DijkstraDistanceVertex> discoveredVertices = getMap();
-		rank = Math.max(1, rank);
+		int _rank = Math.max(1, rank);
 		DijkstraDistanceVertex s = new DijkstraDistanceVertex(source, 0);
 		queue.insert(s);
 		discoveredVertices.put(source.getId(), s);
@@ -131,7 +131,7 @@ public final class DijkstraAlgorithm {
 			numSettled++;
 			maxDistance = u.distance;
 			// check abort criterion
-			if (numSettled == rank) {
+			if (numSettled == _rank) {
 				break;
 			}
 

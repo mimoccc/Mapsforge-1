@@ -48,11 +48,12 @@ public class UnsignedFourBitArray implements Serializable {
 	 *            new value
 	 */
 	public void set(int idx, int val) {
-		val &= 0x0000000f;
+		int _val = val;
+		_val &= 0x0000000f;
 		int arrayOffset = idx / 8;
 		int bitOffset = (idx % 8) * 4;
 		data[arrayOffset] = (data[arrayOffset] & ~(0x0000000f << bitOffset))
-				| (val << bitOffset);
+				| (_val << bitOffset);
 	}
 
 	/**

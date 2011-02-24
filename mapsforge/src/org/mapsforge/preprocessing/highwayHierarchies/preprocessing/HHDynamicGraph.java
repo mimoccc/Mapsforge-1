@@ -171,11 +171,11 @@ class HHDynamicGraph implements Serializable {
 			}
 
 			private int getNextId(int id) {
-				id++;
-				while (id < vertices.length && vertices[id].length <= lvl) {
-					id++;
+				int _id = id + 1;
+				while (_id < vertices.length && vertices[_id].length <= lvl) {
+					_id++;
 				}
-				return id;
+				return _id;
 			}
 
 			@Override
@@ -239,8 +239,10 @@ class HHDynamicGraph implements Serializable {
 
 	public HHDynamicEdge addEdge(int sourceId, int targetId, int weight, boolean forward,
 			boolean backward, int lvl) {
-		if (weight <= 0) {
-			weight = 1;
+		int _weight = weight;
+
+		if (_weight <= 0) {
+			_weight = 1;
 		}
 		// increase vertex level of source and target
 		if (vertices[sourceId].length <= lvl) {
@@ -255,7 +257,7 @@ class HHDynamicGraph implements Serializable {
 			edgeId = freeEdgeSlots.pop();
 			eSource.set(edgeId, sourceId);
 			eTarget.set(edgeId, targetId);
-			eWeight.set(edgeId, weight);
+			eWeight.set(edgeId, _weight);
 			eMinLevel.set(edgeId, lvl);
 			eMaxLevel.set(edgeId, lvl);
 			eHops.set(edgeId, 1);
@@ -267,7 +269,7 @@ class HHDynamicGraph implements Serializable {
 			edgeId = nextEdgeId++;
 			eSource.add(sourceId);
 			eTarget.add(targetId);
-			eWeight.add(weight);
+			eWeight.add(_weight);
 			eMinLevel.add(lvl);
 			eMaxLevel.add(lvl);
 			eHops.add(1);

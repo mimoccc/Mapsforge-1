@@ -44,14 +44,15 @@ public class UnsignedFourBitArrayGrowable implements Serializable {
 	 *            added to the end
 	 */
 	public void add(int val) {
-		val &= 0x0000000f;
+		int _val = val;
+		_val &= 0x0000000f;
 		if (bitOffset == 32) {
 			bitOffset = 0;
 			arrayOffset++;
 			data.add(0);
 		}
 		data.set(arrayOffset, (data.get(arrayOffset) & (~(0x0000000f << (bitOffset))))
-				| (val << (bitOffset)));
+				| (_val << (bitOffset)));
 		bitOffset += 4;
 		size++;
 	}
@@ -63,11 +64,12 @@ public class UnsignedFourBitArrayGrowable implements Serializable {
 	 *            is put to position
 	 */
 	public void set(int idx, int val) {
-		val &= 0x0000000f;
+		int _val = val;
+		_val &= 0x0000000f;
 		int arrOffs = idx / 8;
 		int bitOffs = (idx % 8) * 4;
 		data.set(arrOffs, (data.get(arrOffs) & (~(0x0000000f << (bitOffs))))
-				| (val << (bitOffs)));
+				| (_val << (bitOffs)));
 	}
 
 	/**

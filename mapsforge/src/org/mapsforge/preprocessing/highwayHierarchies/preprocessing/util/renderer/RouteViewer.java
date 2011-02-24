@@ -31,7 +31,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -41,8 +40,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.jdesktop.swingx.JXMapKit;
-import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.JXMapKit.DefaultProviders;
+import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
 import org.mapsforge.core.GeoCoordinate;
@@ -50,6 +49,9 @@ import org.mapsforge.server.routing.IEdge;
 import org.mapsforge.server.routing.IRouter;
 import org.mapsforge.server.routing.IVertex;
 
+/**
+ *
+ */
 public class RouteViewer {
 
 	private static final long serialVersionUID = 1L;
@@ -70,9 +72,15 @@ public class RouteViewer {
 
 	}
 
-	private LinkedList<IEdge[]> sortedEdges = new LinkedList<IEdge[]>();
+	LinkedList<IEdge[]> sortedEdges = new LinkedList<IEdge[]>();
 	HashMap<IEdge[], DrawStyle> edges = new HashMap<IEdge[], DrawStyle>();
 
+	/**
+	 * Constructs a route viewer for the given router.
+	 * 
+	 * @param router
+	 *            the router to use for rendering.
+	 */
 	public RouteViewer(IRouter router) {
 		this.frame = new JFrame("RouteViewer");
 		this.frame.setSize(800, 600);
@@ -82,8 +90,7 @@ public class RouteViewer {
 		mapKit.setDefaultProvider(DefaultProviders.OpenStreetMaps);
 		mapKit.setDataProviderCreditShown(true);
 
-		this.overlay = new RouteOverlay(router, Color.RED.darker(),
-				Color.BLUE.darker().darker());
+		this.overlay = new RouteOverlay(router, Color.RED.darker());
 		mapKit.getMainMap().setOverlayPainter(overlay);
 		mapKit.getMainMap().addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
@@ -100,6 +107,8 @@ public class RouteViewer {
 	}
 
 	class BWMapKit extends JXMapKit {
+
+		private static final long serialVersionUID = -2663786941719804979L;
 
 		private ColorConvertOp op;
 
@@ -138,18 +147,38 @@ public class RouteViewer {
 
 	}
 
-	public void drawEdges(LinkedList<IEdge> edges, Color c, int strokeWidth) {
+	/**
+	 * Draws an edge.
+	 * 
+	 * @param e
+	 *            the edge to draw
+	 * @param c
+	 *            the color
+	 * @param strokeWidth
+	 *            with in pixels
+	 */
+	public void drawEdges(LinkedList<IEdge> e, Color c, int strokeWidth) {
 		synchronized (sortedEdges) {
-			IEdge[] arr = new IEdge[edges.size()];
-			edges.toArray(arr);
+			IEdge[] arr = new IEdge[e.size()];
+			e.toArray(arr);
 			drawEdges(arr, c, strokeWidth);
 		}
 	}
 
-	public void drawEdges(IEdge[] edges, Color c, int strokeWidth) {
+	/**
+	 * Draws some edges.
+	 * 
+	 * @param e
+	 *            the edges to be drawn.
+	 * @param c
+	 *            the color of the edges.
+	 * @param strokeWidth
+	 *            with in pixels.
+	 */
+	public void drawEdges(IEdge[] e, Color c, int strokeWidth) {
 		synchronized (sortedEdges) {
-			sortedEdges.addLast(edges);
-			this.edges.put(edges, new DrawStyle(c, strokeWidth));
+			sortedEdges.addLast(e);
+			this.edges.put(e, new DrawStyle(c, strokeWidth));
 		}
 	}
 
@@ -202,7 +231,7 @@ public class RouteViewer {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
 								routeSource.getLongitude()),
 								new GeoCoordinate(routeDestination.getLatitude(),
-								routeDestination.getLongitude()));
+										routeDestination.getLongitude()));
 						routeSource = null;
 						routeDestination = null;
 					}
@@ -230,7 +259,7 @@ public class RouteViewer {
 						overlay.setRoute(new GeoCoordinate(routeSource.getLatitude(),
 								routeSource.getLongitude()),
 								new GeoCoordinate(routeDestination.getLatitude(),
-								routeDestination.getLongitude()));
+										routeDestination.getLongitude()));
 						routeSource = null;
 						routeDestination = null;
 					}
@@ -246,39 +275,35 @@ public class RouteViewer {
 	private class RouteOverlay implements Painter<JXMapViewer> {
 
 		private final IRouter router;
-		private final Color cRoute, cSearchSpace;
+		private final Color cRoute;
 		private IEdge[] route;
-		private LinkedList<IEdge> searchSpace;
 
-		public RouteOverlay(IRouter router, Color cRoute, Color cSearchSpace) {
+		public RouteOverlay(IRouter router, Color cRoute) {
 			this.router = router;
-			this.searchSpace = new LinkedList<IEdge>();
 			this.route = null;
 			this.cRoute = cRoute;
-			this.cSearchSpace = cSearchSpace;
 		}
 
 		public void setRoute(GeoCoordinate src, GeoCoordinate tgt) {
 			synchronized (sortedEdges) {
 				IVertex s = router.getNearestVertex(src);
 				IVertex t = router.getNearestVertex(tgt);
-				searchSpace.clear();
-				this.route = router.getShortestPathDebug(s.getId(), t.getId(), searchSpace);
+				this.route = router.getShortestPath(s.getId(), t.getId());
 				mapKit.repaint();
 			}
 		}
 
 		@Override
 		public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
-			g = (Graphics2D) g.create();
+			Graphics2D _g = (Graphics2D) g.create();
 			Rectangle rect = mapKit.getMainMap().getViewportBounds();
-			g.translate(-rect.x, -rect.y);
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+			_g.translate(-rect.x, -rect.y);
+			_g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 					RenderingHints.VALUE_ANTIALIAS_ON);
 			synchronized (sortedEdges) {
 				for (IEdge[] arr : sortedEdges) {
-					g.setColor(edges.get(arr).c);
-					g.setStroke(new BasicStroke(edges.get(arr).strokeWidth));
+					_g.setColor(edges.get(arr).c);
+					_g.setStroke(new BasicStroke(edges.get(arr).strokeWidth));
 					for (IEdge e : arr) {
 						GeoCoordinate[] coords = e.getAllWaypoints();
 						for (int j = 1; j < coords.length; j++) {
@@ -288,34 +313,18 @@ public class RouteViewer {
 									coords[j].getLongitude() };
 							Point2D s = mapKit.getMainMap().getTileFactory()
 									.geoToPixel(new GeoPosition(cs),
-									mapKit.getMainMap().getZoom());
+											mapKit.getMainMap().getZoom());
 							Point2D t = mapKit.getMainMap().getTileFactory()
 									.geoToPixel(new GeoPosition(ct),
-									mapKit.getMainMap().getZoom());
-							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
+											mapKit.getMainMap().getZoom());
+							_g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
 									(int) t.getY());
 						}
 					}
 				}
 
-				for (IEdge e : searchSpace) {
-					GeoCoordinate[] coords = e.getAllWaypoints();
-					for (int j = 1; j < coords.length; j++) {
-						double[] cs = new double[] { coords[j - 1].getLatitude(),
-								coords[j - 1].getLongitude() };
-						double[] ct = new double[] { coords[j].getLatitude(),
-								coords[j].getLongitude() };
-						Point2D s = mapKit.getMainMap().getTileFactory()
-								.geoToPixel(new GeoPosition(cs), mapKit.getMainMap().getZoom());
-						Point2D t = mapKit.getMainMap().getTileFactory()
-								.geoToPixel(new GeoPosition(ct), mapKit.getMainMap().getZoom());
-						g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
-								(int) t.getY());
-					}
-				}
-
-				g.setStroke(new BasicStroke(2));
-				g.setColor(cRoute);
+				_g.setStroke(new BasicStroke(2));
+				_g.setColor(cRoute);
 				if (route != null) {
 					for (IEdge e : route) {
 						GeoCoordinate[] coords = e.getAllWaypoints();
@@ -328,23 +337,19 @@ public class RouteViewer {
 									.getMainMap()
 									.getTileFactory()
 									.geoToPixel(new GeoPosition(cs),
-									mapKit.getMainMap().getZoom());
+											mapKit.getMainMap().getZoom());
 							Point2D t = mapKit
 									.getMainMap()
 									.getTileFactory()
 									.geoToPixel(new GeoPosition(ct),
-									mapKit.getMainMap().getZoom());
-							g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
+											mapKit.getMainMap().getZoom());
+							_g.drawLine((int) s.getX(), (int) s.getY(), (int) t.getX(),
 									(int) t.getY());
 						}
 					}
 				}
 			}
-			g.dispose();
+			_g.dispose();
 		}
-	}
-
-	public static void main(String[] args) throws IOException {
-
 	}
 }
