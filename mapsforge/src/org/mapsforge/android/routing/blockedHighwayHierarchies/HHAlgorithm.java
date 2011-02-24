@@ -345,19 +345,19 @@ final class HHAlgorithm {
 	private void expandEdges(HHHeapItem fwd, HHHeapItem bwd, LinkedList<HHEdge> buff)
 			throws IOException {
 		while (fwd.eSrcId != -1) {
-			if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_RECURSIVE) {
+			if (graph.hasShortcutHopIndices) {
 				// expandEdgeRecursiveByHopIndices(fwd.eSrcId, fwd.eTgtId, buff, true);
 				expandEdgeRecursiveDijkstra(fwd.eSrcId, fwd.eTgtId, buff, true);
-			} else if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_NONE) {
+			} else if (graph.hasShortcutHopIndices) {
 				expandEdgeRecursiveDijkstra(fwd.eSrcId, fwd.eTgtId, buff, true);
 			}
 			fwd = discovered[FWD].get(fwd.parentIdLvlZero);
 		}
 		while (bwd.eSrcId != -1) {
-			if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_RECURSIVE) {
+			if (graph.hasShortcutHopIndices) {
 				// expandEdgeRecursiveByHopIndices(bwd.eSrcId, bwd.eTgtId, buff, false);
 				expandEdgeRecursiveDijkstra(bwd.eSrcId, bwd.eTgtId, buff, false);
-			} else if (graph.hasShortcutHopIndices == HHRoutingGraph.HOP_INDICES_NONE) {
+			} else if (graph.hasShortcutHopIndices) {
 				expandEdgeRecursiveDijkstra(bwd.eSrcId, bwd.eTgtId, buff, false);
 			}
 			bwd = discovered[BWD].get(bwd.parentIdLvlZero);

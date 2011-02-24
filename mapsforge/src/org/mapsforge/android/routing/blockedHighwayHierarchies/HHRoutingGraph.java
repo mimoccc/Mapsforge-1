@@ -135,7 +135,7 @@ final class HHRoutingGraph {
 	 * true if the graph stores hop indices, which can be used to expand shortcuts recursively
 	 * without using dijkstra's algorithm.
 	 */
-	final int hasShortcutHopIndices;
+	final boolean hasShortcutHopIndices;
 	/**
 	 * osm street types.
 	 */
@@ -190,7 +190,7 @@ final class HHRoutingGraph {
 		this.bitsPerVertexOffset = iStream.readByte();
 		this.bitsPerEdgeWeight = iStream.readByte();
 		this.bitsPerStreetType = iStream.readByte();
-		this.hasShortcutHopIndices = iStream.readInt();
+		this.hasShortcutHopIndices = iStream.readBoolean();
 
 		int numStreetTypes = iStream.readByte();
 		this.streetTypes = new String[numStreetTypes];
@@ -244,7 +244,7 @@ final class HHRoutingGraph {
 	/**
 	 * @return Returns true if this graph stores hop indices.
 	 */
-	public int hasShortcutHopIndices() {
+	public boolean hasShortcutHopIndices() {
 		return hasShortcutHopIndices;
 	}
 

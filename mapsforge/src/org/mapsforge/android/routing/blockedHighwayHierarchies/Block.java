@@ -498,13 +498,13 @@ final class Block implements CacheItem {
 				for (int j = 0; j < numWaypoints; j++) {
 					edge.waypoints[j * 2] = minLatitudeE6
 							+ (int) Deserializer.readUInt(data, bitsPerCoordinate,
-							bitOffset / 8,
-							bitOffset % 8);
+									bitOffset / 8,
+									bitOffset % 8);
 					bitOffset += bitsPerCoordinate;
 					edge.waypoints[(j * 2) + 1] = minLongitudeE6
 							+ (int) Deserializer.readUInt(data, bitsPerCoordinate,
-							bitOffset / 8,
-							bitOffset % 8);
+									bitOffset / 8,
+									bitOffset % 8);
 					bitOffset += bitsPerCoordinate;
 				}
 			}
@@ -519,7 +519,7 @@ final class Block implements CacheItem {
 			// set hop indices if this edge is a shortcut
 			edge.hopIndices = null;
 			if (edge.minLevel > 0
-					&& routingGraph.hasShortcutHopIndices != HHRoutingGraph.HOP_INDICES_NONE) {
+					&& routingGraph.hasShortcutHopIndices) {
 				int numHopIndices = (int) Deserializer.readUInt(data, 5, bitOffset / 8,
 						bitOffset % 8);
 				bitOffset += 5;
