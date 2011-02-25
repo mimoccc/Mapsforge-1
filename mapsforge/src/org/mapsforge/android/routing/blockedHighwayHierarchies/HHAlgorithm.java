@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.server.routing.IEdge;
+import org.mapsforge.server.routing.Edge;
 
 final class HHAlgorithm {
 
@@ -695,10 +695,10 @@ final class HHAlgorithm {
 				"router/berlin.blockedHH"), 100 * 1000 * 1024);
 
 		// RouteViewer rv = new RouteViewer(router);
-		LinkedList<IEdge> edges = new LinkedList<IEdge>();
+		LinkedList<Edge> edges = new LinkedList<Edge>();
 		for (Shortcut x : sc[7]) {
-			IEdge[] sp = router.getShortestPath(x.sourceId, x.targetId);
-			for (IEdge e : sp) {
+			Edge[] sp = router.getShortestPath(x.sourceId, x.targetId);
+			for (Edge e : sp) {
 				edges.add(e);
 			}
 		}

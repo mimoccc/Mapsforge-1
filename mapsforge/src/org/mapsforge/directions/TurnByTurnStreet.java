@@ -21,7 +21,7 @@ import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.server.routing.IEdge;
+import org.mapsforge.server.routing.Edge;
 
 /**
  * Represents one or many routing graph edges which belong to the same street
@@ -50,7 +50,7 @@ class TurnByTurnStreet {
 	 * @param edge
 	 *            turn this IEdge into a new TurnByTurnStreet
 	 */
-	TurnByTurnStreet(IEdge edge) {
+	TurnByTurnStreet(Edge edge) {
 		name = edge.getName();
 		ref = edge.getRef();
 		type = edge.getType();
@@ -66,7 +66,7 @@ class TurnByTurnStreet {
 	 * @param edge
 	 *            The edge to take the GeoCoordinates from
 	 */
-	void appendCoordinatesFromEdge(IEdge edge) {
+	void appendCoordinatesFromEdge(Edge edge) {
 		if (edge != null) {
 			GeoCoordinate[] newWaypoints = edge.getAllWaypoints();
 			if (points.size() > 0 && newWaypoints[0].equals(points.lastElement())) {

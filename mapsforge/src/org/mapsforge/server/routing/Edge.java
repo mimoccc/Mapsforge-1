@@ -21,7 +21,7 @@ import org.mapsforge.core.GeoCoordinate;
 /**
  * This interface represents a directed edge within a routing graph.
  */
-public interface IEdge {
+public interface Edge {
 
 	/**
 	 * @return Returns the unique identifier of this edge.
@@ -31,12 +31,12 @@ public interface IEdge {
 	/**
 	 * @return Returns the source vertex of this edge.
 	 */
-	public IVertex getSource();
+	public Vertex getSource();
 
 	/**
 	 * @return Returns the target vertex of this edge.
 	 */
-	public IVertex getTarget();
+	public Vertex getTarget();
 
 	/**
 	 * @return Returns the coordinates of this edge sorted from source to target excluding the

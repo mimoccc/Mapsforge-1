@@ -21,7 +21,7 @@ import org.mapsforge.core.GeoCoordinate;
 /**
  * Routing graph Vertex.
  */
-public interface IVertex {
+public interface Vertex {
 
 	/**
 	 * @return Unique identifier within the scope of the routing graph.
@@ -31,7 +31,7 @@ public interface IVertex {
 	/**
 	 * @return Returns all edges leaving this vertex.
 	 */
-	public IEdge[] getOutboundEdges();
+	public Edge[] getOutboundEdges();
 
 	/**
 	 * @return Returns the geographic position of this vertex.

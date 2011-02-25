@@ -55,9 +55,9 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.Cluster;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.Clustering;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Router;
+import org.mapsforge.server.routing.Vertex;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
@@ -89,8 +89,8 @@ public class RendererV2 {
 
 	final BufferedCanvas canvas;
 
-	final IRouter router;
-	private final HashMap<IEdge[], Color> routes;
+	final Router router;
+	private final HashMap<Edge[], Color> routes;
 	private Clustering clustering;
 	private HashMap<Cluster, Color> clusterColors;
 	private final HashMap<GeoCoordinate, Color> circles;
@@ -121,7 +121,7 @@ public class RendererV2 {
 	 * @param fgColor
 	 *            foreground.
 	 */
-	public RendererV2(int width, int height, IRouter router, Color bgColor, Color fgColor) {
+	public RendererV2(int width, int height, Router router, Color bgColor, Color fgColor) {
 		this.clustering = null;
 		this.screenW = width;
 		this.screenH = height;
@@ -130,7 +130,7 @@ public class RendererV2 {
 		this.bgColor = bgColor;
 		this.fgColor = fgColor;
 
-		this.routes = new HashMap<IEdge[], Color>();
+		this.routes = new HashMap<Edge[], Color>();
 		this.circles = new HashMap<GeoCoordinate, Color>();
 		this.circlesList = new LinkedList<GeoCoordinate>();
 		this.multilines = new HashMap<GeoCoordinate[], Color>();
@@ -221,7 +221,7 @@ public class RendererV2 {
 	 * @param c
 	 *            color for drawing the given route.
 	 */
-	public void addRoute(IEdge[] route, Color c) {
+	public void addRoute(Edge[] route, Color c) {
 		if (route != null && c != null) {
 			synchronized (routes) {
 				routes.put(route, c);
@@ -309,7 +309,7 @@ public class RendererV2 {
 	private Cluster[] getAdjClusters(Cluster cluster) {
 		THashSet<Cluster> set = new THashSet<Cluster>();
 		for (int v : cluster.getVertices()) {
-			for (IEdge e : router.getVertex(v).getOutboundEdges()) {
+			for (Edge e : router.getVertex(v).getOutboundEdges()) {
 				Cluster c = clustering.getCluster(e.getTarget().getId());
 				if (c != null && !c.equals(cluster)) {
 					set.add(c);
@@ -322,10 +322,10 @@ public class RendererV2 {
 	}
 
 	private void drawGraph() {
-		for (Iterator<? extends IVertex> iter = router.getVerticesWithinBox(
+		for (Iterator<? extends Vertex> iter = router.getVerticesWithinBox(
 				new Rect(minLon, maxLon, minLat, maxLat)); iter.hasNext();) {
-			IVertex v = iter.next();
-			for (IEdge e : v.getOutboundEdges()) {
+			Vertex v = iter.next();
+			for (Edge e : v.getOutboundEdges()) {
 				drawEdge(e, fgColor);
 				if (clustering != null) {
 					Cluster c1 = clustering.getCluster(e.getSource().getId());
@@ -342,7 +342,7 @@ public class RendererV2 {
 		}
 	}
 
-	private void drawEdge(IEdge e, Color c) {
+	private void drawEdge(Edge e, Color c) {
 		GeoCoordinate[] wp = e.getAllWaypoints();
 		for (int i = 1; i < wp.length; i++) {
 			ScreenCoordinate sc1 = geoToScreen(wp[i - 1]);
@@ -351,7 +351,7 @@ public class RendererV2 {
 		}
 	}
 
-	private void drawEdge(IEdge e, Color c, int width) {
+	private void drawEdge(Edge e, Color c, int width) {
 		GeoCoordinate[] wp = e.getAllWaypoints();
 		for (int i = 1; i < wp.length; i++) {
 			ScreenCoordinate sc1 = geoToScreen(wp[i - 1]);
@@ -360,14 +360,14 @@ public class RendererV2 {
 		}
 	}
 
-	private void drawRoute(IEdge[] route, Color c) {
-		for (IEdge e : route) {
+	private void drawRoute(Edge[] route, Color c) {
+		for (Edge e : route) {
 			drawEdge(e, c, 2);
 		}
 	}
 
 	private void drawRoutes() {
-		for (IEdge[] route : routes.keySet()) {
+		for (Edge[] route : routes.keySet()) {
 			Color c = routes.get(route);
 			drawRoute(route, c);
 		}
@@ -501,9 +501,9 @@ public class RendererV2 {
 		private void triggerRouteComputation() {
 			synchronized (lockSrcTgt) {
 				if (routeSource != null && routeDestination != null) {
-					IVertex s = router.getNearestVertex(routeSource);
-					IVertex t = router.getNearestVertex(routeDestination);
-					IEdge[] route = router.getShortestPath(s.getId(), t.getId());
+					Vertex s = router.getNearestVertex(routeSource);
+					Vertex t = router.getNearestVertex(routeDestination);
+					Edge[] route = router.getShortestPath(s.getId(), t.getId());
 					addRoute(route, Color.BLUE);
 					routeSource = null;
 					routeDestination = null;
@@ -758,7 +758,7 @@ public class RendererV2 {
 	 *             blub
 	 */
 	public static void main(String[] agrs) throws FileNotFoundException, IOException {
-		IRouter router = new HHRouter(new File(
+		Router router = new HHRouter(new File(
 				"evaluation/opthh/ger_12_quad_tree_100_true.blockedHH"), 1024 * 1024);
 		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);
 		LineNumberReader lnr = new LineNumberReader(new FileReader(new File(
@@ -767,11 +767,11 @@ public class RendererV2 {
 		String[] tmp = line.split(";");
 		String[] c1 = tmp[0].split(",");
 		String[] c2 = tmp[1].split(",");
-		IVertex s = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c1[0]), Double
+		Vertex s = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c1[0]), Double
 				.parseDouble(c1[1])));
-		IVertex t = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c2[0]), Double
+		Vertex t = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c2[0]), Double
 				.parseDouble(c2[1])));
-		IEdge[] route = router.getShortestPath(s.getId(), t.getId());
+		Edge[] route = router.getShortestPath(s.getId(), t.getId());
 		r.addRoute(route, Color.BLUE);
 
 		while ((line = lnr.readLine()) != null) {

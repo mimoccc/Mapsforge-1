@@ -23,9 +23,9 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Router;
+import org.mapsforge.server.routing.Vertex;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**
@@ -66,20 +66,20 @@ public class TurnByTurnDescription {
 	 * @param routeEdges
 	 *            is the IEdges array to convert to directions
 	 */
-	public TurnByTurnDescription(IEdge[] routeEdges) {
+	public TurnByTurnDescription(Edge[] routeEdges) {
 		generateDirectionsFromPath(routeEdges);
 	}
 
-	void generateDirectionsFromPath(IEdge[] edges) {
+	void generateDirectionsFromPath(Edge[] edges) {
 		if (edges == null || edges.length == 0)
 			return;
 		// These are the edges which are used to make decisions based on local information
-		IEdge lastEdge;
-		IEdge edgeBeforePoint;
-		IEdge edgeAfterPoint;
-		IEdge nextEdge;
+		Edge lastEdge;
+		Edge edgeBeforePoint;
+		Edge edgeAfterPoint;
+		Edge nextEdge;
 		// These are both the current decision point, which is at the end of the current edge
-		IVertex decisionPointVertex;
+		Vertex decisionPointVertex;
 		GeoCoordinate decisionPointCoord;
 		// These don't change in the process, they are the beginning and end of the route
 		GeoCoordinate startPoint = edges[0].getSource().getCoordinate();
@@ -215,8 +215,8 @@ public class TurnByTurnDescription {
 	 *            the current street as a whole
 	 * @return if a new street should be started
 	 */
-	private boolean startNewStreetCityMode(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+	private boolean startNewStreetCityMode(Edge lastEdge, Edge edgeBeforePoint,
+			Edge edgeAfterPoint, Edge nextEdge, TurnByTurnStreet currentStreet) {
 		// Only one instruction per U-turn is necessary
 		// also U-Turns are really the sum of two right angle turns
 		if (isUTurn(lastEdge, edgeBeforePoint, edgeAfterPoint)) {
@@ -260,8 +260,8 @@ public class TurnByTurnDescription {
 	 *            the current street as a whole
 	 * @return if a new street should be started
 	 */
-	private boolean startNewStreetRegionalMode(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+	private boolean startNewStreetRegionalMode(Edge lastEdge, Edge edgeBeforePoint,
+			Edge edgeAfterPoint, Edge nextEdge, TurnByTurnStreet currentStreet) {
 		// haveSameRef(edgeBeforePoint, edgeAfterPoint)
 		if (landmarkService != null) {
 			currentStreet.addtown(landmarkService.getCity(
@@ -293,15 +293,15 @@ public class TurnByTurnDescription {
 	 *            the current street as a whole
 	 * @return if a new street should be started
 	 */
-	private boolean startNewStreetMotorwayMode(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+	private boolean startNewStreetMotorwayMode(Edge lastEdge, Edge edgeBeforePoint,
+			Edge edgeAfterPoint, Edge nextEdge, TurnByTurnStreet currentStreet) {
 		if (haveSameRef(edgeBeforePoint, edgeAfterPoint)) {
 			return false;
 		}
 		return true;
 	}
 
-	private boolean haveSameName(IEdge edge1, IEdge edge2) {
+	private boolean haveSameName(Edge edge1, Edge edge2) {
 		if (edge2 == null)
 			return false;
 		if (edge1 == null)
@@ -313,7 +313,7 @@ public class TurnByTurnDescription {
 		return edge1.getName().equalsIgnoreCase(edge2.getName());
 	}
 
-	private boolean haveSameRef(IEdge edge1, IEdge edge2) {
+	private boolean haveSameRef(Edge edge1, Edge edge2) {
 		if (edge2 == null)
 			return false;
 		if (edge1 == null)
@@ -325,8 +325,8 @@ public class TurnByTurnDescription {
 		return edge1.getRef().equalsIgnoreCase(edge2.getRef());
 	}
 
-	private boolean isInTwoLaneJunction(IEdge lastEdge, IEdge edgeBeforePoint,
-			IEdge edgeAfterPoint, IEdge nextEdge, TurnByTurnStreet currentStreet) {
+	private boolean isInTwoLaneJunction(Edge lastEdge, Edge edgeBeforePoint,
+			Edge edgeAfterPoint, Edge nextEdge, TurnByTurnStreet currentStreet) {
 		//
 		// debug("isInTwoLaneJunction: " + edgeBeforePoint.getName());
 		// debug("angle before: " +
@@ -370,20 +370,20 @@ public class TurnByTurnDescription {
 		return (360d - 45d < angle || angle < 45d);
 	}
 
-	private boolean isVeryShortEdge(IEdge edge) {
+	private boolean isVeryShortEdge(Edge edge) {
 		GeoCoordinate source = edge.getSource().getCoordinate();
 		GeoCoordinate destination = edge.getTarget().getCoordinate();
 		return source.sphericalDistance(destination) < VERY_SHORT_STREET_LENGTH;
 	}
 
-	static boolean isMotorway(IEdge curEdge) {
+	static boolean isMotorway(Edge curEdge) {
 		return curEdge.getType() == TagHighway.MOTORWAY ||
 				curEdge.getType() == TagHighway.MOTORWAY_LINK ||
 				curEdge.getType() == TagHighway.TRUNK ||
 				curEdge.getType() == TagHighway.TRUNK_LINK;
 	}
 
-	boolean isPrimary(IEdge curEdge) {
+	boolean isPrimary(Edge curEdge) {
 		return curEdge.getType() == TagHighway.PRIMARY ||
 				curEdge.getType() == TagHighway.PRIMARY_LINK;
 	}
@@ -399,7 +399,7 @@ public class TurnByTurnDescription {
 	 *            current Edge
 	 * @return true if the edges form a u-turn around the 2nd edge
 	 */
-	private boolean isUTurn(IEdge edge1, IEdge edge2, IEdge edge3) {
+	private boolean isUTurn(Edge edge1, Edge edge2, Edge edge3) {
 		if (edge1 == null || edge2 == null || edge3 == null)
 			return false;
 		double angleSum = (getAngleOfEdges(edge1, edge2) + getAngleOfEdges(
@@ -421,7 +421,7 @@ public class TurnByTurnDescription {
 	 *            the IEdge of the street after the crossing
 	 * @return the angle between the given streets
 	 */
-	private double getAngleOfEdges(IEdge edge1, IEdge edge2) {
+	private double getAngleOfEdges(Edge edge1, Edge edge2) {
 		if (edge1 != null && edge2 != null) {
 			// Let's see if i can get the angle between the last street and this
 			// This is the crossing
@@ -488,7 +488,7 @@ public class TurnByTurnDescription {
 		try {
 			long time = System.currentTimeMillis();
 			FileInputStream iStream = new FileInputStream("C:/uni/niedersachsen_car.hh");
-			IRouter router = HHRouterServerside.deserialize(iStream);
+			Router router = HHRouterServerside.deserialize(iStream);
 			iStream.close();
 			time = System.currentTimeMillis() - time;
 			debug("Loaded Router in " + time + " ms");
@@ -510,7 +510,7 @@ public class TurnByTurnDescription {
 					new GeoCoordinate(53.032582591161, 8.6618994748688)).getId();
 			int target = router.getNearestVertex(
 					new GeoCoordinate(53.134937444613, 8.2331393661737)).getId();
-			IEdge[] shortestPath = router.getShortestPath(source, target);
+			Edge[] shortestPath = router.getShortestPath(source, target);
 
 			time = System.currentTimeMillis() - time;
 			TurnByTurnDescription directions = new TurnByTurnDescription(shortestPath);

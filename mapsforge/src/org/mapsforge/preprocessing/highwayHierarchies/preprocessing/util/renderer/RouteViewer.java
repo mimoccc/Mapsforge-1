@@ -45,9 +45,9 @@ import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Router;
+import org.mapsforge.server.routing.Vertex;
 
 /**
  *
@@ -72,8 +72,8 @@ public class RouteViewer {
 
 	}
 
-	LinkedList<IEdge[]> sortedEdges = new LinkedList<IEdge[]>();
-	HashMap<IEdge[], DrawStyle> edges = new HashMap<IEdge[], DrawStyle>();
+	LinkedList<Edge[]> sortedEdges = new LinkedList<Edge[]>();
+	HashMap<Edge[], DrawStyle> edges = new HashMap<Edge[], DrawStyle>();
 
 	/**
 	 * Constructs a route viewer for the given router.
@@ -81,7 +81,7 @@ public class RouteViewer {
 	 * @param router
 	 *            the router to use for rendering.
 	 */
-	public RouteViewer(IRouter router) {
+	public RouteViewer(Router router) {
 		this.frame = new JFrame("RouteViewer");
 		this.frame.setSize(800, 600);
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -157,9 +157,9 @@ public class RouteViewer {
 	 * @param strokeWidth
 	 *            with in pixels
 	 */
-	public void drawEdges(LinkedList<IEdge> e, Color c, int strokeWidth) {
+	public void drawEdges(LinkedList<Edge> e, Color c, int strokeWidth) {
 		synchronized (sortedEdges) {
-			IEdge[] arr = new IEdge[e.size()];
+			Edge[] arr = new Edge[e.size()];
 			e.toArray(arr);
 			drawEdges(arr, c, strokeWidth);
 		}
@@ -175,7 +175,7 @@ public class RouteViewer {
 	 * @param strokeWidth
 	 *            with in pixels.
 	 */
-	public void drawEdges(IEdge[] e, Color c, int strokeWidth) {
+	public void drawEdges(Edge[] e, Color c, int strokeWidth) {
 		synchronized (sortedEdges) {
 			sortedEdges.addLast(e);
 			this.edges.put(e, new DrawStyle(c, strokeWidth));
@@ -274,11 +274,11 @@ public class RouteViewer {
 
 	private class RouteOverlay implements Painter<JXMapViewer> {
 
-		private final IRouter router;
+		private final Router router;
 		private final Color cRoute;
-		private IEdge[] route;
+		private Edge[] route;
 
-		public RouteOverlay(IRouter router, Color cRoute) {
+		public RouteOverlay(Router router, Color cRoute) {
 			this.router = router;
 			this.route = null;
 			this.cRoute = cRoute;
@@ -286,8 +286,8 @@ public class RouteViewer {
 
 		public void setRoute(GeoCoordinate src, GeoCoordinate tgt) {
 			synchronized (sortedEdges) {
-				IVertex s = router.getNearestVertex(src);
-				IVertex t = router.getNearestVertex(tgt);
+				Vertex s = router.getNearestVertex(src);
+				Vertex t = router.getNearestVertex(tgt);
 				this.route = router.getShortestPath(s.getId(), t.getId());
 				mapKit.repaint();
 			}
@@ -301,10 +301,10 @@ public class RouteViewer {
 			_g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 					RenderingHints.VALUE_ANTIALIAS_ON);
 			synchronized (sortedEdges) {
-				for (IEdge[] arr : sortedEdges) {
+				for (Edge[] arr : sortedEdges) {
 					_g.setColor(edges.get(arr).c);
 					_g.setStroke(new BasicStroke(edges.get(arr).strokeWidth));
-					for (IEdge e : arr) {
+					for (Edge e : arr) {
 						GeoCoordinate[] coords = e.getAllWaypoints();
 						for (int j = 1; j < coords.length; j++) {
 							double[] cs = new double[] { coords[j - 1].getLatitude(),
@@ -326,7 +326,7 @@ public class RouteViewer {
 				_g.setStroke(new BasicStroke(2));
 				_g.setColor(cRoute);
 				if (route != null) {
-					for (IEdge e : route) {
+					for (Edge e : route) {
 						GeoCoordinate[] coords = e.getAllWaypoints();
 						for (int j = 1; j < coords.length; j++) {
 							double[] cs = new double[] { coords[j - 1].getLatitude(),

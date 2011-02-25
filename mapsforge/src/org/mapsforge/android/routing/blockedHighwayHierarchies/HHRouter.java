@@ -26,9 +26,9 @@ import java.util.LinkedList;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Router;
+import org.mapsforge.server.routing.Vertex;
 
 /**
  * This class implements the router interface which is already used server sided. There is some
@@ -37,7 +37,7 @@ import org.mapsforge.server.routing.IVertex;
  * solution has to be found. This implementation can not provide id's for edes, thus always -1
  * is returned.
  */
-public class HHRouter implements IRouter {
+public class HHRouter implements Router {
 
 	private static final double MAX_RTREE_SEARCH_RADIUS = 2000;
 
@@ -70,8 +70,8 @@ public class HHRouter implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getNearestEdges(GeoCoordinate coord) {
-		IVertex vertex = getNearestVertex(coord);
+	public Edge[] getNearestEdges(GeoCoordinate coord) {
+		Vertex vertex = getNearestVertex(coord);
 		if (vertex == null) {
 			return null;
 		}
@@ -79,7 +79,7 @@ public class HHRouter implements IRouter {
 	}
 
 	@Override
-	public IVertex getNearestVertex(GeoCoordinate coord) {
+	public Vertex getNearestVertex(GeoCoordinate coord) {
 		try {
 			HHVertex vertex = routingGraph.getNearestVertex(coord, MAX_RTREE_SEARCH_RADIUS);
 			if (vertex == null) {
@@ -92,7 +92,7 @@ public class HHRouter implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getShortestPath(int sourceId, int targetId) {
+	public Edge[] getShortestPath(int sourceId, int targetId) {
 		try {
 			LinkedList<HHEdge> shortestPath = new LinkedList<HHEdge>();
 			hhAlgorithm.getShortestPath(sourceId, targetId, shortestPath, false);
@@ -108,13 +108,13 @@ public class HHRouter implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getShortestPathDebug(int sourceId, int targetId,
-			Collection<IEdge> searchspaceBuff) {
+	public Edge[] getShortestPathDebug(int sourceId, int targetId,
+			Collection<Edge> searchspaceBuff) {
 		return getShortestPath(sourceId, targetId);
 	}
 
 	@Override
-	public IVertex getVertex(int id) {
+	public Vertex getVertex(int id) {
 		HHVertex vertex;
 		try {
 			vertex = routingGraph.getVertex(id);
@@ -125,10 +125,10 @@ public class HHRouter implements IRouter {
 	}
 
 	@Override
-	public Iterator<? extends IVertex> getVerticesWithinBox(Rect bbox) {
+	public Iterator<? extends Vertex> getVerticesWithinBox(Rect bbox) {
 		try {
 			final LinkedList<HHVertex> vertices = routingGraph.getVerticesWithinBBox(bbox);
-			return new Iterator<IVertex>() {
+			return new Iterator<Vertex>() {
 
 				@Override
 				public boolean hasNext() {
@@ -136,7 +136,7 @@ public class HHRouter implements IRouter {
 				}
 
 				@Override
-				public IVertex next() {
+				public Vertex next() {
 					return new VertexImpl(vertices.removeFirst());
 				}
 
@@ -150,7 +150,7 @@ public class HHRouter implements IRouter {
 		}
 	}
 
-	private class VertexImpl implements IVertex {
+	private class VertexImpl implements Vertex {
 
 		private final HHVertex vertex;
 
@@ -169,7 +169,7 @@ public class HHRouter implements IRouter {
 		}
 
 		@Override
-		public IEdge[] getOutboundEdges() {
+		public Edge[] getOutboundEdges() {
 			try {
 				HHEdge[] edges = routingGraph.getOutboundEdges(vertex);
 				// do not return backward only edges
@@ -195,7 +195,7 @@ public class HHRouter implements IRouter {
 		}
 	}
 
-	private class EdgeImpl implements IEdge {
+	private class EdgeImpl implements Edge {
 
 		private final HHEdge edge;
 
@@ -254,7 +254,7 @@ public class HHRouter implements IRouter {
 		}
 
 		@Override
-		public IVertex getSource() {
+		public Vertex getSource() {
 			try {
 				HHVertex source = routingGraph.getVertex(edge.sourceId);
 				return new VertexImpl(source);
@@ -264,7 +264,7 @@ public class HHRouter implements IRouter {
 		}
 
 		@Override
-		public IVertex getTarget() {
+		public Vertex getTarget() {
 			try {
 				HHVertex source = routingGraph.getVertex(edge.targetId);
 				return new VertexImpl(source);
@@ -321,10 +321,10 @@ public class HHRouter implements IRouter {
 		int cacheSize = 1024 * 1024 * 2;
 		HHRouter router = new HHRouter(new File(
 				"berlin.mobileHH"), cacheSize);
-		IVertex source = router.getNearestVertex(new GeoCoordinate(52.60818, 13.48487));
-		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
-		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
-		for (IEdge e : shortestPath) {
+		Vertex source = router.getNearestVertex(new GeoCoordinate(52.60818, 13.48487));
+		Vertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
+		Edge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
+		for (Edge e : shortestPath) {
 			System.out.println(e.getSource().getId() + " -> " + e.getTarget().getId() + " "
 					+ e.getName() + " " + e.getRef() + " " + e.getType());
 		}

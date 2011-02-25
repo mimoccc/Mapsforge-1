@@ -19,18 +19,18 @@ package org.mapsforge.directions;
 import java.util.Vector;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Vertex;
 
 /**
  * Dummy vertex class
  * 
  * @author Eike
  */
-public class DummyVertex implements IVertex {
+public class DummyVertex implements Vertex {
 
 	GeoCoordinate geo;
-	Vector<IEdge> outbound;
+	Vector<Edge> outbound;
 
 	DummyVertex(GeoCoordinate geo) {
 		this.geo = geo;
@@ -46,13 +46,13 @@ public class DummyVertex implements IVertex {
 		return 0;
 	}
 
-	public void addEdge(IEdge newEdge) {
+	public void addEdge(Edge newEdge) {
 		outbound.add(newEdge);
 	}
 
 	@Override
-	public IEdge[] getOutboundEdges() {
-		return (IEdge[]) outbound.toArray();
+	public Edge[] getOutboundEdges() {
+		return (Edge[]) outbound.toArray();
 	}
 
 }

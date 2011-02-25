@@ -28,7 +28,7 @@ import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
-import org.mapsforge.server.routing.IRouter;
+import org.mapsforge.server.routing.Router;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 class ClusteringEvaluator {
@@ -82,7 +82,7 @@ class ClusteringEvaluator {
 		}
 
 		// render
-		IRouter router = HHRouterServerside
+		Router router = HHRouterServerside
 				.deserialize(new FileInputStream("router/berlin.hh"));
 		renderClustering(router, kCenterClustering);
 		renderClustering(router, quadClustering);
@@ -90,7 +90,7 @@ class ClusteringEvaluator {
 		evaluateClustering(quadClustering, graph);
 	}
 
-	private static void renderClustering(IRouter router, Clustering clustering) {
+	private static void renderClustering(Router router, Clustering clustering) {
 		RendererV2 renderer1 = new RendererV2(1024, 768, router, Color.white, Color.black);
 		renderer1.setClustering(clustering);
 

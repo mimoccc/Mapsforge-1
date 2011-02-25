@@ -30,9 +30,9 @@ import java.util.LinkedList;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IRouter;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Router;
+import org.mapsforge.server.routing.Vertex;
 import org.mapsforge.server.routing.highwayHierarchies.EdgeMapper.EdgeMapping;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
@@ -41,7 +41,7 @@ import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVer
  * This class servers the highway hierarchies routing functionality to other packages, thus it
  * is the interface of this package.
  */
-public class HHRouterServerside implements IRouter {
+public class HHRouterServerside implements Router {
 
 	private static final String ALGORITHM_NAME = "Highway Hierarchies";
 
@@ -176,7 +176,7 @@ public class HHRouterServerside implements IRouter {
 	}
 
 	@Override
-	public IVertex getNearestVertex(GeoCoordinate coord) {
+	public Vertex getNearestVertex(GeoCoordinate coord) {
 		int id = vertexIndex.getNearestNeighborIdx(coord.getLongitudeE6(), coord
 				.getLatitudeE6());
 		return new HHVertex(routingGraph.getVertex(id));
@@ -207,8 +207,8 @@ public class HHRouterServerside implements IRouter {
 	}
 
 	@Override
-	public IEdge[] getShortestPathDebug(int sourceId, int targetId,
-			Collection<IEdge> searchspaceBuff) {
+	public Edge[] getShortestPathDebug(int sourceId, int targetId,
+			Collection<Edge> searchspaceBuff) {
 		LinkedList<HHStaticEdge> searchSpace = new LinkedList<HHStaticEdge>();
 		LinkedList<HHStaticEdge> fwd = new LinkedList<HHStaticEdge>();
 		LinkedList<HHStaticEdge> bwd = new LinkedList<HHStaticEdge>();
@@ -291,11 +291,11 @@ public class HHRouterServerside implements IRouter {
 	}
 
 	@Override
-	public IVertex getVertex(int id) {
+	public Vertex getVertex(int id) {
 		return new HHVertex(routingGraph.getVertex(id));
 	}
 
-	private class HHEdge implements IEdge {
+	private class HHEdge implements Edge {
 
 		private HHStaticEdge e;
 
@@ -315,12 +315,12 @@ public class HHRouterServerside implements IRouter {
 		}
 
 		@Override
-		public IVertex getSource() {
+		public Vertex getSource() {
 			return new HHVertex(e.getSource());
 		}
 
 		@Override
-		public IVertex getTarget() {
+		public Vertex getTarget() {
 			return new HHVertex(e.getTarget());
 		}
 
@@ -393,7 +393,7 @@ public class HHRouterServerside implements IRouter {
 		}
 	}
 
-	private class HHVertex implements IVertex {
+	private class HHVertex implements Vertex {
 
 		private HHStaticVertex v;
 
@@ -412,7 +412,7 @@ public class HHRouterServerside implements IRouter {
 		}
 
 		@Override
-		public IEdge[] getOutboundEdges() {
+		public Edge[] getOutboundEdges() {
 			HHStaticEdge[] e = v.getAdjacentLevel0Edges();
 			HHEdge[] e_ = new HHEdge[e.length];
 			for (int i = 0; i < e.length; i++) {

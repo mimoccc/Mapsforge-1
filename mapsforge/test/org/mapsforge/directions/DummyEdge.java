@@ -17,15 +17,15 @@
 package org.mapsforge.directions;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.routing.IEdge;
-import org.mapsforge.server.routing.IVertex;
+import org.mapsforge.server.routing.Edge;
+import org.mapsforge.server.routing.Vertex;
 
 /**
  * This Class is for testing purposes only.
  * 
  * @author Eike
  */
-public class DummyEdge implements IEdge {
+public class DummyEdge implements Edge {
 	GeoCoordinate[] wayPoints;
 	int id;
 	String name = "";
@@ -63,13 +63,13 @@ public class DummyEdge implements IEdge {
 	}
 
 	@Override
-	public IVertex getSource() {
+	public Vertex getSource() {
 		DummyVertex src = new DummyVertex(wayPoints[0]);
 		return src;
 	}
 
 	@Override
-	public IVertex getTarget() {
+	public Vertex getTarget() {
 		DummyVertex target = new DummyVertex(wayPoints[wayPoints.length - 1]);
 		return target;
 	}
