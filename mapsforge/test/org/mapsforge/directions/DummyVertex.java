@@ -18,9 +18,9 @@ package org.mapsforge.directions;
 
 import java.util.Vector;
 
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Vertex;
+import org.mapsforge.core.Vertex;
 
 /**
  * Dummy vertex class

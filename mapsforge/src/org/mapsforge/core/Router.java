@@ -14,13 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.routing;
+package org.mapsforge.core;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.core.Rect;
 
 /**
  * This class functionality is composed of spatial indices allowing for nearest neighbor

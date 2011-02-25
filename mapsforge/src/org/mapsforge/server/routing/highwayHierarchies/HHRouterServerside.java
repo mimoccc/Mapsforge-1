@@ -28,11 +28,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Router;
-import org.mapsforge.server.routing.Vertex;
+import org.mapsforge.core.Router;
+import org.mapsforge.core.Vertex;
 import org.mapsforge.server.routing.highwayHierarchies.EdgeMapper.EdgeMapping;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;

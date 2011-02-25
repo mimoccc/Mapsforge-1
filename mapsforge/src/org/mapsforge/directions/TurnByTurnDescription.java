@@ -19,13 +19,13 @@ package org.mapsforge.directions;
 import java.io.FileInputStream;
 import java.util.Vector;
 
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.Router;
+import org.mapsforge.core.Vertex;
 import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Router;
-import org.mapsforge.server.routing.Vertex;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
 
 /**

@@ -51,13 +51,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.mapsforge.android.routing.blockedHighwayHierarchies.HHRouter;
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
+import org.mapsforge.core.Router;
+import org.mapsforge.core.Vertex;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.Cluster;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.Clustering;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Router;
-import org.mapsforge.server.routing.Vertex;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;

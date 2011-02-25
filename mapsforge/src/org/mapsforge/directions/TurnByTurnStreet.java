@@ -19,9 +19,9 @@ package org.mapsforge.directions;
 import java.util.Arrays;
 import java.util.Vector;
 
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.poi.PointOfInterest;
-import org.mapsforge.server.routing.Edge;
 
 /**
  * Represents one or many routing graph edges which belong to the same street

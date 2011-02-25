@@ -23,12 +23,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
+import org.mapsforge.core.Router;
+import org.mapsforge.core.Vertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Router;
-import org.mapsforge.server.routing.Vertex;
 
 /**
  * This class implements the router interface which is already used server sided. There is some

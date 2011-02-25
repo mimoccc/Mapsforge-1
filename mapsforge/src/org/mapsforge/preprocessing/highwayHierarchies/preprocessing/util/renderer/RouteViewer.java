@@ -44,10 +44,10 @@ import org.jdesktop.swingx.JXMapKit.DefaultProviders;
 import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
+import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.server.routing.Edge;
-import org.mapsforge.server.routing.Router;
-import org.mapsforge.server.routing.Vertex;
+import org.mapsforge.core.Router;
+import org.mapsforge.core.Vertex;
 
 /**
  *
