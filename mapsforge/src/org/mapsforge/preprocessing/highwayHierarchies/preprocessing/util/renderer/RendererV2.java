@@ -50,7 +50,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.mapsforge.android.routing.blockedHighwayHierarchies.HHRouter;
+import org.mapsforge.android.mobileHighwayHierarchies.HHRouter;
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;

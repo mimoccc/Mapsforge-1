@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
-import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
+import org.mapsforge.server.highwayHierarchies.DistanceTable;
 
 /**
  * This class allows for object oriented reading of the hihway hierarchies database.

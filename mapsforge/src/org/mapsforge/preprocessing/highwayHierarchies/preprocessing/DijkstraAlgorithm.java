@@ -24,9 +24,9 @@ import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGra
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * implementation dijkstra s' algorithm an some hh specific details.

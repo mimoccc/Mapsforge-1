@@ -21,7 +21,7 @@ import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.DijkstraAlgorithm.DijkstraTreeVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicVertex;
-import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
+import org.mapsforge.server.highwayHierarchies.DistanceTable;
 
 /**
  * computes the distance table.

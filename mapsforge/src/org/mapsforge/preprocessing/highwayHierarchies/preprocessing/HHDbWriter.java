@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
-import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
+import org.mapsforge.server.highwayHierarchies.DistanceTable;
 
 /**
  * This class provides write access to the highway hierarchies database.

@@ -26,7 +26,7 @@ import org.mapsforge.core.Router;
 import org.mapsforge.core.Vertex;
 import org.mapsforge.poi.PointOfInterest;
 import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
+import org.mapsforge.server.highwayHierarchies.HHRouterServerside;
 
 /**
  * Turn by turn directions contain a way which was found by a routing algorithm. Streets which

@@ -39,7 +39,7 @@ import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
-import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
+import org.mapsforge.server.highwayHierarchies.DistanceTable;
 
 /**
  * 

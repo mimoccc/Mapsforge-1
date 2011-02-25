@@ -32,7 +32,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHComputatio
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionTime;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
+import org.mapsforge.server.highwayHierarchies.HHRouterServerside;
 
 class RoutingPreprocessingCommandLineUtil {
 

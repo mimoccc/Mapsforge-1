@@ -29,7 +29,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
+import org.mapsforge.server.highwayHierarchies.HHRouterServerside;
 
 class ClusteringEvaluator {
 
