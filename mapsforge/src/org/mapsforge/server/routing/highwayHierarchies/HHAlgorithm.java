@@ -652,24 +652,29 @@ class HHAlgorithm {
 	}
 
 	private void addEdgesToAllParents(DiscoveredVertex v, LinkedList<HHStaticEdge> buff) {
-		while (v.edgeToParent != null) {
-			buff.addFirst(v.edgeToParent);
-			v = v.parent;
+		DiscoveredVertex v_ = v;
+		// ...compiler warning
+		while (v_.edgeToParent != null) {
+			buff.addFirst(v_.edgeToParent);
+			v_ = v_.parent;
 		}
 	}
 
 	private void getShortestPathByTable(HHStaticGraph graph, HHStaticVertex s,
 			HHStaticVertex t, DistanceTable dt, LinkedList<HHStaticEdge> buff) {
-		int distance = dt.get(s.getId(), t.getId());
+		HHStaticVertex ss = s;
+		// ...compiler warning
+
+		int distance = dt.get(ss.getId(), t.getId());
 		int lvl = graph.numLevels() - 1;
-		HHStaticVertex s_ = s;
+		HHStaticVertex s_ = ss;
 
 		while (s_.getId() != t.getId()) {
-			for (HHStaticEdge e : s.getAdjacentEdges(lvl)) {
+			for (HHStaticEdge e : ss.getAdjacentEdges(lvl)) {
 				s_ = e.getTarget();
 				if (s_.getNeighborhood(lvl) < INFINITY_1
 						&& distance - e.getWeight() == dt.get(s_.getId(), t.getId())) {
-					s = s_;
+					ss = s_;
 					distance = distance - e.getWeight();
 					buff.addLast(e);
 					break;

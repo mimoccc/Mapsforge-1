@@ -139,42 +139,45 @@ class GeoCoordinateKDTree implements Serializable {
 	}
 
 	private int nearestNeighbor(int[] coord, int p, int r, int dim, Integer best) {
+		Integer best_ = best;
+		// ...warning crap
+
 		if (p > r) {
-			return best;
+			return best_;
 		}
 		// c is index of split axis or the coordinate compared in current recursion step
 		int c = (p + r) / 2;
-		if (best == null) {
-			best = c;
+		if (best_ == null) {
+			best_ = c;
 		}
 		// calculate distance to nearest (best) coordinate found so far
 		double dBest = GeoCoordinate.sphericalDistance(coord[0], coord[1],
-				coords[0][ind[best]], coords[1][ind[best]]);
+				coords[0][ind[best_]], coords[1][ind[best_]]);
 		double dCurrent = GeoCoordinate.sphericalDistance(coord[0], coord[1],
 				coords[0][ind[c]], coords[1][ind[c]]);
 
 		if (dCurrent < dBest) {
-			best = c;
+			best_ = c;
 		}
 		// always search the containing branch
 		if (coord[dim] < coords[dim][ind[c]]) {
-			best = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best);
+			best_ = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best_);
 		} else if (coord[dim] > coords[dim][ind[c]]) {
-			best = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best);
+			best_ = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best_);
 		} else {
-			int best1 = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best);
-			int best2 = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best);
+			int best1 = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best_);
+			int best2 = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best_);
 			if (best1 < best2) {
-				best = best1;
+				best_ = best1;
 			} else {
-				best = best2;
+				best_ = best2;
 			}
 		}
 		// sometimes search the other branch
 
 		// calculate distance to nearest (best) coordinate found so far
-		dBest = GeoCoordinate.sphericalDistance(coord[0], coord[1], coords[0][ind[best]],
-				coords[1][ind[best]]);
+		dBest = GeoCoordinate.sphericalDistance(coord[0], coord[1], coords[0][ind[best_]],
+				coords[1][ind[best_]]);
 
 		// calculate distance to split axis
 		double dAxis;
@@ -188,12 +191,12 @@ class GeoCoordinateKDTree implements Serializable {
 		// search the other branch if necessary
 		if (dAxis < dBest) {
 			if (coord[dim] > coords[dim][ind[c]]) {
-				best = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best);
+				best_ = nearestNeighbor(coord, p, c - 1, (dim + 1) % 2, best_);
 			} else if (coord[dim] < coords[dim][ind[c]]) {
-				best = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best);
+				best_ = nearestNeighbor(coord, c + 1, r, (dim + 1) % 2, best_);
 			}
 		}
-		return best;
+		return best_;
 	}
 
 	private void construct(int p, int r, int dim) {
