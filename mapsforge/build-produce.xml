@@ -27,11 +27,11 @@
 		<!--
 		<get dest="${data.osm}/baden-wuerttemberg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/baden-wuerttemberg.osm.pbf" usetimestamp="true"/>
 		<get dest="${data.osm}/bayern.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bayern.osm.pbf" usetimestamp="true"/>
-		<get dest="${data.osm}/berlin.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/berlin.osm.pbf" usetimestamp="true"/>
-		<get dest="${data.osm}/brandenburg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/brandenburg.osm.pbf" usetimestamp="true"/>
 		-->
-		<get dest="${data.osm}/bremen.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bremen.osm.pbf" usetimestamp="true"/>
+		<get dest="${data.osm}/berlin.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/berlin.osm.pbf" usetimestamp="true"/>
 		<!--
+		<get dest="${data.osm}/brandenburg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/brandenburg.osm.pbf" usetimestamp="true"/>
+		<get dest="${data.osm}/bremen.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bremen.osm.pbf" usetimestamp="true"/>
 		-->
 	</target>
 
@@ -50,7 +50,6 @@
 	</target>
 	
 	<target name="produce-binaries-loop" depends="get-osm">
-		<!--
 		<antcall target="extract-rg">
 			<param name="file" value="${file}"/>
 		</antcall>
@@ -60,7 +59,6 @@
 		<antcall target="produce-onboard-routing-binary">
 			<param name="file" value="${file}"/>
 		</antcall>
-		-->
 		<antcall target="produce-offboard-routing-binary">
 			<param name="file" value="${file}"/>
 		</antcall>
