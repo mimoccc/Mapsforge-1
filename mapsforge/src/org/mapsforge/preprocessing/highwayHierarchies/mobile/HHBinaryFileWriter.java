@@ -48,6 +48,31 @@ public class HHBinaryFileWriter {
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 
+	/**
+	 * Writes the binary file for the mobile highway hierarchies algorithm. input is take from a
+	 * database.
+	 * 
+	 * @param conn
+	 *            input database.
+	 * @param clusteringAlgorithmName
+	 *            name of the clustering algorithm, see static class variables.
+	 * @param clusterSizeThreshold
+	 *            limit on the number of nodes per logical block of the graph.
+	 * @param kcenterOversamplingFactor
+	 *            controls the quality of the k-center clusters.
+	 * @param targetFile
+	 *            file to write output to.
+	 * @param indexGroupSizeThreshold
+	 *            controls compression and runtime overhead of the address lookup table.
+	 * @param rtreeBlockSize
+	 *            sets size and alignment of r tree nodes.
+	 * @param includeHopIndices
+	 *            set to true for storing pre-computed information for shortcut expansion.
+	 * @throws IOException
+	 *             on error reading or writing file.
+	 * @throws SQLException
+	 *             on error with database.
+	 */
 	public static void writeBinaryFile(Connection conn, String clusteringAlgorithmName,
 			int clusterSizeThreshold, int kcenterOversamplingFactor,
 			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize,
