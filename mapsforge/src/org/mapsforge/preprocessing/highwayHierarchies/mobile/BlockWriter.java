@@ -657,14 +657,6 @@ class BlockWriter {
 								_w += _e.getWeight();
 								_v = _e.getTarget();
 							}
-							if (hopIndices.size() > 31) {
-								System.out.println("--------------------");
-								System.out.println("targetID : " + e.getTarget().getId()
-										+ " == "
-										+ _v.getId());
-								System.out.println("weight : " + e.getWeight() + " == " + _w);
-								System.out.println("numHops : " + hopIndices.size());
-							}
 						}
 					}
 				}

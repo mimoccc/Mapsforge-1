@@ -44,7 +44,20 @@ public class DBConnection {
 	 */
 	public static Connection getJdbcConnectionPg(String hostName, int port, String dbName,
 			String username, String password) throws SQLException {
+		System.out.println("CP : ");
 		String url = "jdbc:postgresql://" + hostName + "/" + dbName;
+		try {
+			Class.forName("org.postgresql.Driver").newInstance();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return DriverManager.getConnection(url, username, password);
 	}
 }

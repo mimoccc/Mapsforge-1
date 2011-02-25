@@ -339,6 +339,9 @@ purpose.
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="${mapsforge.dist}/mapsforge-offboard-routing-${mapsforge.version}.jar"
 		     duplicate="preserve">
+			<!--manifest>
+				<attribute name="Main-Class" value="org.mapsforge.preprocessing.highwayHierarchies.CommandLineUtil"/>
+			</manifest-->
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/highwayHierarchies/" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/highwayHierarchies/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/" />

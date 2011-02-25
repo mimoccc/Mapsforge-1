@@ -116,7 +116,7 @@ class RoutingGraphWriterTask implements Sink {
 		for (int i = 0; i < wayTypes.length; i++) {
 			wayTypes_2_id.put(wayTypes[i], i);
 			id_2_wayTypes.put(i, wayTypes[i]);
-			System.out.println("   " + wayTypes[i] + "(" + i + ")");
+			System.out.println("   " + wayTypes[i] + " (" + i + ")");
 		}
 		this.usedNodes = new TLongIntHashMap();
 
@@ -278,21 +278,11 @@ class RoutingGraphWriterTask implements Sink {
 
 	private void transformToEdgesAndWrite(Way way, int[] latitudeE6, int[] longitudeE6) {
 		LinkedList<Integer> indices = new LinkedList<Integer>();
-		boolean debug = false;
 		for (int i = 0; i < way.getWayNodes().size(); i++) {
-
 			int idx = usedNodes.get(way.getWayNodes().get(i).getNodeId());
 			if (idx < numVertices) {
 				indices.addLast(i);
 			}
-			if (way.getWayNodes().get(i).getNodeId() == 270183178) {
-				System.out.println("node index in list = " + i + " vertexId = " + idx);
-				debug = true;
-			}
-
-		}
-		if (debug) {
-			System.out.println(indices.size() + " " + way.getWayNodes().size());
 		}
 
 		for (int i = 1; i < indices.size(); i++) {
@@ -331,10 +321,6 @@ class RoutingGraphWriterTask implements Sink {
 			// this is for motorways and primary roads
 			Tag wayRef = getTag(way, "ref");
 			// this is for motorway links which lead onto a highway
-
-			if (debug) {
-				System.out.println(sourceId + " -> " + targetId + " " + wayName);
-			}
 
 			writeEdge(
 					sourceId,
