@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="mapsforge-produce">
-			
+	
+	<!-- osmosis executable (adjust to linux or windows) -->
+	<property name="osmosis" value="osmosis.bat"/>		
+	
 	<!-- directories -->
 	<property name="lib" value="lib/"/>
 	<property name="data.osm" value="data/osm/"/>
@@ -70,7 +73,7 @@
 	<!-- extract routing graph -->
 	<target name="extract-rg">
 		<basename file="${file}" property="basename" suffix=".osm.pbf"/>
-		<exec executable="osmosis.bat">
+		<exec executable="${osmosis}">
 		    <arg value="--rb"/>
 		    <arg value="${file}"/>
 		    <arg value="--rgw"/>
@@ -129,7 +132,7 @@
 	<!-- produce map binary -->
 	<target name="produce-map-binary">
 		<basename file="${file}" property="basename" suffix=".osm.pbf"/>
-		<exec executable="osmosis.bat">
+		<exec executable="${osmosis}">
 			    <arg value="--rb"/>
 			    <arg value="${file}"/>
 			    <arg value="--mw"/>
