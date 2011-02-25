@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *  
  */
-package org.mapsforge.server.routing.highwayHierarchies;
+package org.mapsforge.server.highwayHierarchies;
 
 import gnu.trove.list.array.TIntArrayList;
 

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.routing.highwayHierarchies;
+package org.mapsforge.server.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntLongHashMap;
@@ -36,8 +36,8 @@ import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArrayGrowable;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArray;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArrayGrowable;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * Maps shortcuts to low level edges by a multi leveled index.

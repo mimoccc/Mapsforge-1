@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.routing.highwayHierarchies;
+package org.mapsforge.server.highwayHierarchies;
 
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -27,8 +27,8 @@ import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArray;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * Hash index for finding reverse edges. This is usefull for all bidirected dijkstra

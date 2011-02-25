@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.server.routing.highwayHierarchies;
+package org.mapsforge.server.highwayHierarchies;
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
@@ -33,9 +33,9 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.core.Router;
 import org.mapsforge.core.Vertex;
-import org.mapsforge.server.routing.highwayHierarchies.EdgeMapper.EdgeMapping;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticEdge;
-import org.mapsforge.server.routing.highwayHierarchies.HHStaticGraph.HHStaticVertex;
+import org.mapsforge.server.highwayHierarchies.EdgeMapper.EdgeMapping;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
+import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
  * This class servers the highway hierarchies routing functionality to other packages, thus it
