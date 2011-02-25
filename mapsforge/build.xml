@@ -348,6 +348,8 @@ purpose.
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/highwayHierarchies/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routingGraph/dao/" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routingGraph/dao/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routingGraph/osmosis/TagHighway.*" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routingGraph/osmosis/TagHighway.*" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
 			<fileset refid="info" />
