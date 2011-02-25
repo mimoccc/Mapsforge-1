@@ -289,13 +289,13 @@ purpose.
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/server/routing/IRouter.*" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/server/routing/IRouter.*" />
 			<fileset dir="${mapsforge.bin}"
-			         includes="org/mapsforge/preprocessing/routing/blockedHighwayHierarchies/HHGlobals.*" />
+			         includes="org/mapsforge/preprocessing/highwayHierarchies/mobile/HHGlobals.*" />
 			<fileset dir="${mapsforge.src}"
-			         includes="org/mapsforge/preprocessing/routing/blockedHighwayHierarchies/HHGlobals.*" />
+			         includes="org/mapsforge/preprocessing/highwayHierarchies/mobile/HHGlobals.*" />
 			<fileset dir="${mapsforge.bin}"
-			         includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+			         includes="org/mapsforge/preprocessing/highwayHierarchies/preprocessing" />
 			<fileset dir="${mapsforge.src}"
-			         includes="org/mapsforge/preprocessing/routing/highwayHierarchies/" />
+			         includes="org/mapsforge/preprocessing/highwayHierarchies/preprocessing/" />
 		</jar>
 		<antcall target="eclipse-refresh">
 			<param name="ressource" value="mapsforge/${mapsforge.dist}" />

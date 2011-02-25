@@ -32,10 +32,6 @@ import org.mapsforge.preprocessing.highwayHierarchies.mobile.QuadTreeClustering.
 class QuadTreeClusteringAlgorithm {
 
 	/**
-	 * the name of this alorithm.
-	 */
-	public static final String ALGORITHM_NAME = "quad_tree";
-	/**
 	 * This heuristic chooses the center of the rectangle as split coordinate.
 	 */
 	public static final int HEURISTIC_CENTER = 0;

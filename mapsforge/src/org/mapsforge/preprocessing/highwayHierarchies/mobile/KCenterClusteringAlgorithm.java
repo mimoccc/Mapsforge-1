@@ -37,10 +37,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQue
  * contrast to other algorithm like e.g. quad tree algorithm.
  */
 class KCenterClusteringAlgorithm {
-	/**
-	 * The name of this algorithm
-	 */
-	public static final String ALGORITHM_NAME = "k_center";
+
 	/**
 	 * interval for console output for cluster building.
 	 */

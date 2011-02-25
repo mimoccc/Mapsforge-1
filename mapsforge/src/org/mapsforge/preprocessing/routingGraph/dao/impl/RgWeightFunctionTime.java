@@ -16,11 +16,8 @@
  */
 package org.mapsforge.preprocessing.routingGraph.dao.impl;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.HashMap;
+import java.util.Properties;
 
 import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
 
@@ -47,39 +44,18 @@ public class RgWeightFunctionTime implements IRgWeightFunction<RgEdge> {
 	/**
 	 * Read the average speed form a highwayLevel2AverageSpeed File.
 	 * 
-	 * @param file
-	 *            the source file.
-	 * @throws IOException
-	 *             on error reading file.
+	 * @param props
+	 *            the properties representing the mapping.
 	 */
-	public RgWeightFunctionTime(File file) throws IOException {
-		LineNumberReader reader = new LineNumberReader(new FileReader(file));
-		String line = reader.readLine();
+	public RgWeightFunctionTime(Properties props) {
 		this.highwayLevelAverageSpeed = new HashMap<String, Double>();
-		while (line != null) {
-
-			line = line.trim();
-			if (!line.startsWith("#") && line.length() > 0) {
-				String[] tmp = line.split("=");
-				if (tmp.length == 2) {
-					String key = tmp[0];
-					try {
-						double value = Double.parseDouble(tmp[1]);
-						if (key.equals("DEFAULT_VALUE")) {
-							this.defaultSpeed = value;
-						} else {
-							highwayLevelAverageSpeed.put(key, value);
-						}
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-						throw new IllegalArgumentException("wrong file format!");
-					}
-				} else {
-					throw new IllegalArgumentException("wrong file format!");
-				}
+		for (Object o : props.keySet()) {
+			String key = (String) o;
+			double value = Double.parseDouble(props.getProperty(key));
+			highwayLevelAverageSpeed.put(key, value);
+			if (key.equals("DEFAULT_VALUE")) {
+				this.defaultSpeed = value;
 			}
-			line = reader.readLine();
-
 		}
 	}
 

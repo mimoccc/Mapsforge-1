@@ -320,8 +320,8 @@ public class HHRouter implements IRouter {
 		// this code is required for android routing:
 		int cacheSize = 1024 * 1024 * 2;
 		HHRouter router = new HHRouter(new File(
-				"router/ger.blockedHH"), cacheSize);
-		IVertex source = router.getNearestVertex(new GeoCoordinate(52.50818, 13.28487));
+				"berlin.mobileHH"), cacheSize);
+		IVertex source = router.getNearestVertex(new GeoCoordinate(52.60818, 13.48487));
 		IVertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		IEdge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
 		for (IEdge e : shortestPath) {

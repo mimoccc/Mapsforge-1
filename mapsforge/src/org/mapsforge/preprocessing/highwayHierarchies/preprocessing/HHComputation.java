@@ -20,21 +20,17 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 import gnu.trove.stack.array.TIntArrayStack;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Properties;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
@@ -43,14 +39,7 @@ import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgWeightFunction;
-import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
-import org.mapsforge.preprocessing.routingGraph.dao.impl.RgEdge;
-import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionDistance;
-import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionTime;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
-import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
-
-//select x.c as degree, count(*) * 100.0 / (select count(*) from hh_vertex where lvl = 0) as count from (select source_id, count(*) as c from hh_edge group by source_id order by c) as x group by x.c order by degree;
 
 /**
  * 
@@ -80,6 +69,8 @@ public final class HHComputation {
 	 */
 	public static final int INFINITY_2 = Integer.MAX_VALUE - 1;
 
+	private static final String SQL_CREATE_TABLES_FILE = "createTables.sql";
+
 	/* hierarchy construction parameters */
 	private static int H;
 	static int HOP_LIMIT;
@@ -87,16 +78,45 @@ public final class HHComputation {
 	private static boolean DOWNGRADE_EDGES_LEAVING_CORE;
 	static double C;
 
-	private static <V extends IRgVertex, E extends IRgEdge> void doPreprocessing(
+	/**
+	 * 
+	 * @param <V>
+	 *            type of vertices
+	 * @param <E>
+	 *            type of edges
+	 * @param rgDao
+	 *            data access object to input graph
+	 * @param wFunc
+	 *            weight function
+	 * @param h
+	 *            h-neighborhood
+	 * @param hopLimit
+	 *            max. length of shortcuts in hops
+	 * @param c
+	 *            contraction rate
+	 * @param vertexThreshold
+	 *            recursion anchor for highway network construction
+	 * @param downgradeEdges
+	 *            server side optimization (not for mobile routing)
+	 * @param numThreads
+	 *            number of threads used for re-computation
+	 * @param outputDb
+	 *            database to write to
+	 * @throws SQLException
+	 *             on error with database
+	 * @throws IOException
+	 *             on error reading createTablesFile
+	 */
+	public static <V extends IRgVertex, E extends IRgEdge> void doPreprocessing(
 			IRgDAO<V, E> rgDao, IRgWeightFunction<E> wFunc, int h, int hopLimit, double c,
 			int vertexThreshold, boolean downgradeEdges, int numThreads, Connection outputDb)
-			throws SQLException {
+			throws SQLException, IOException {
 		DecimalFormat df = new DecimalFormat("#.#");
 
 		System.out.println("import routing graph : ");
 		HHDynamicGraph graph = HHDynamicGraph.importRoutingGraph(rgDao, wFunc);
 
-		System.out.println("\nstart hierarchy coputation : ");
+		System.out.println("\nstart hierarchy computation : ");
 		System.out.println("input-graph : |V| = " + graph.numVertices() + " |E| = "
 				+ graph.numEdges());
 		System.out.println("h = " + h);
@@ -105,6 +125,9 @@ public final class HHComputation {
 		System.out.println("vertexThreshold = " + vertexThreshold);
 		System.out.println("downgradeEdges = " + downgradeEdges);
 		System.out.println("numThreads = " + numThreads);
+
+		System.out.println("create database schema");
+		createTables(outputDb);
 
 		// compute hierarchy
 		long hierarchyComputationStart = System.currentTimeMillis();
@@ -354,10 +377,10 @@ public final class HHComputation {
 	private static void addLevelInfo(HHDynamicGraph graph, LinkedList<HHLevelStats> levelInfo) {
 		levelInfo
 				.add(new HHLevelStats(graph.numLevels() - 2, graph
-				.numEdges(graph.numLevels() - 2), graph
-				.numVertices(graph.numLevels() - 2), graph
-				.numEdges(graph.numLevels() - 1), graph
-				.numVertices(graph.numLevels() - 1)));
+						.numEdges(graph.numLevels() - 2), graph
+						.numVertices(graph.numLevels() - 2), graph
+						.numEdges(graph.numLevels() - 1), graph
+						.numVertices(graph.numLevels() - 1)));
 	}
 
 	private static boolean verifyInputGraph(HHDynamicGraph graph) {
@@ -441,7 +464,7 @@ public final class HHComputation {
 				if ((!e.isBackward() || (e.isBackward() && e.getWeight() > dBwd.get(e
 						.getTarget().getId())))
 						&& (!e.isForward() || (e.isForward() && e.getWeight() > dFwd.get(e
-						.getTarget().getId())))) {
+								.getTarget().getId())))) {
 					graph.removeEdge(e, lvl);
 
 				}
@@ -548,17 +571,6 @@ public final class HHComputation {
 			return 1;
 
 		}
-
-		// private static int getUndirectedDegree(DynamicLevelVertex v, int lvl){
-		// TIntHashSet incidentVertices = new TIntHashSet();
-		// for(DynamicLevelEdge e : v.getInboundEdges(lvl)){
-		// incidentVertices.add(e.getSource().getId());
-		// }
-		// for(DynamicLevelEdge e : v.getOutboundEdges(lvl)){
-		// incidentVertices.add(e.getTarget().getId());
-		// }
-		// return incidentVertices.size();
-		// }
 	}
 
 	static class HierarchyComputationResult {
@@ -584,155 +596,13 @@ public final class HHComputation {
 		}
 	}
 
-	/**
-	 * @param args
-	 *            1 argument, filename of the properties file.
-	 * @throws SQLException
-	 *             shit happens
-	 * @throws FileNotFoundException
-	 *             shit happens
-	 * @throws IOException
-	 *             shit happens
-	 */
-	public static void main(String[] args) throws SQLException, FileNotFoundException,
-			IOException {
-
-		// parameters
-		int h;
-		double c;
-		int hopLimit;
-		int vertexThreshold;
-		boolean downgradeEdges;
-		String weightFunction;
-		int numThreads;
-		Connection inputDb, outputDb;
-		File outputFile;
-		File highwayLevelToAverageSpeed;
-
-		// initialize parameters
-		if (args.length == 1) {
-			// get parameters from properties file
-			Properties props = new Properties();
-			props.load(new FileInputStream(args[0]));
-
-			inputDb = getInputDbConnection(props);
-			outputDb = getOutputDbConnection(props);
-
-			h = Integer.parseInt(props.getProperty("preprocessing.param.h"));
-			hopLimit = Integer.parseInt(props.getProperty("preprocessing.param.hopLimit"));
-			c = Double.parseDouble(props.getProperty("preprocessing.param.c"));
-			vertexThreshold = Integer.parseInt(props
-					.getProperty("preprocessing.param.vertexThreshold"));
-			downgradeEdges = Boolean.parseBoolean(props
-					.getProperty("preprocessing.param.downgradeEdges"));
-			numThreads = Integer.parseInt(props.getProperty("preprocessing.param.numThreads"));
-			outputFile = new File(props.getProperty("output.file"));
-
-			weightFunction = props.getProperty("preprocessing.param.weightFunction");
-			highwayLevelToAverageSpeed = new File(props
-					.getProperty("preprocessing.param.weightFunction.time.input.file"));
-		} else if (args.length == 14) {
-			// get parameters from command line
-			// this can be removed in near future : currently in use by scripts which will be
-			// changed later on.
-			h = Integer.parseInt(args[0]);
-			c = Double.parseDouble(args[1]);
-			hopLimit = Integer.parseInt(args[2]);
-			vertexThreshold = 0;
-			downgradeEdges = false;
-			weightFunction = "TIME";
-			numThreads = Integer.parseInt(args[3]);
-			inputDb = DBConnection.getJdbcConnectionPg(args[4], Integer.parseInt(args[5]),
-					args[6], args[7], args[8]);
-			outputDb = DBConnection.getJdbcConnectionPg(args[9], Integer.parseInt(args[10]),
-					args[11], args[12], args[13]);
-			outputFile = null;
-			highwayLevelToAverageSpeed = new File("res/conf/highwayLevel2AverageSpeed.txt");
-		} else if (args.length == 18) {
-			// get parameters from command line
-			h = Integer.parseInt(args[0]);
-			c = Double.parseDouble(args[1]);
-			hopLimit = Integer.parseInt(args[2]);
-			vertexThreshold = Integer.parseInt(args[3]);
-			downgradeEdges = Boolean.parseBoolean(args[4]);
-			weightFunction = args[5];
-			numThreads = Integer.parseInt(args[6]);
-			inputDb = DBConnection.getJdbcConnectionPg(args[7], Integer.parseInt(args[8]),
-					args[9], args[10], args[11]);
-			outputDb = DBConnection.getJdbcConnectionPg(args[12], Integer.parseInt(args[13]),
-					args[14], args[15], args[16]);
-			outputFile = new File(args[17]);
-			highwayLevelToAverageSpeed = new File("res/conf/highwayLevel2AverageSpeed.txt");
-		} else {
-			usage();
-			return;
-		}
-
-		// initialize weight function
-		IRgWeightFunction<RgEdge> wFunc;
-		if (weightFunction != null && weightFunction.equals("DISTANCE")) {
-			wFunc = new RgWeightFunctionDistance();
-		} else {
-			wFunc = new RgWeightFunctionTime(highwayLevelToAverageSpeed);
-		}
-
-		// read input database and write to output database
-		RgDAO rgDao = new RgDAO(inputDb);
-		doPreprocessing(rgDao, wFunc, h, hopLimit, c, vertexThreshold, downgradeEdges,
-				numThreads, outputDb);
-
-		// read highway hierarchies from database and create java binary file
-		if (outputFile != null) {
-			System.out.println("create binary file...");
-			File dir = new File(outputFile.getAbsolutePath().substring(0,
-					outputFile.getAbsolutePath().lastIndexOf(File.separatorChar))
-					+ File.separatorChar);
-			dir.mkdirs();
-			HHRouterServerside router = HHRouterServerside.getFromDb(outputDb);
-			router.serialize(new FileOutputStream(outputFile));
-			System.out.println("finished.");
-		}
-	}
-
-	private static void usage() {
-		System.out.println("HHComputation <properties-file>\n");
-		System.out
-				.println("HHComputation <h> <c> <hopLimit> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass>\n");
-		System.out
-				.println("HHComputation <h> <c> <hopLimit> <vertexThreshold> <downgradeEdges> <weightFunction> <numThreads> <in.db.host> <in.db.port> <in.db.name> <in.db.user> <in.db.pass> <out.db.host> <out.db.port> <out.db.name> <out.db.user> <out.db.pass> <output.file>\n");
-
-		System.out.println(" <h> neighborhood - [60, 150]");
-		System.out.println(" <c> contraction factor - [1.0, 2.0]");
-		System.out.println(" <hopLimit> eges per shortcut - [5, 15]");
-		System.out
-				.println(" <vertexThreshold> create distance table if level has less vertices - [0 .. 10000]");
-		System.out
-				.println(" <downgrade edges> edges leaving core are downgraded(faster) [true|false]");
-		System.out.println(" <weight function> [DISTANCE|TIME]");
-		System.out.println(" <numThreads> [1, ?]");
-		System.out.println(" <output.file> server side binary file");
-
-	}
-
-	private static Connection getInputDbConnection(Properties props) throws SQLException,
-			NumberFormatException {
-		String host = props.getProperty("input.db.host");
-		int port = Integer.parseInt(props.getProperty("input.db.port"));
-		String dbName = props.getProperty("input.db.name");
-		String user = props.getProperty("input.db.user");
-		String pass = props.getProperty("input.db.pass");
-
-		return new DBConnection(host, dbName, user, pass, port).getConnection();
-	}
-
-	private static Connection getOutputDbConnection(Properties props) throws SQLException,
-			NumberFormatException {
-		String outHostName = props.getProperty("output.db.host");
-		int outPort = Integer.parseInt(props.getProperty("output.db.port"));
-		String outDbName = props.getProperty("output.db.name");
-		String outUser = props.getProperty("output.db.user");
-		String outPass = props.getProperty("output.db.pass");
-		return new DBConnection(outHostName, outDbName, outUser, outPass, outPort)
-				.getConnection();
+	private static void createTables(Connection conn) throws IOException, SQLException {
+		InputStream in = HHComputation.class.getResourceAsStream(SQL_CREATE_TABLES_FILE);
+		byte[] b = new byte[in.available()];
+		in.read(b);
+		in.close();
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate(new String(b));
+		stmt.close();
 	}
 }

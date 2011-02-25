@@ -12,5 +12,6 @@
 	<classpathentry kind="lib" path="lib/swingx.jar"/>
 	<classpathentry kind="lib" path="lib/swingx-ws.jar"/>
 	<classpathentry kind="lib" path="lib/trove-3.0.0rc1.jar"/>
+	<classpathentry kind="lib" path="lib/postgresql-8.4-701.jdbc4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

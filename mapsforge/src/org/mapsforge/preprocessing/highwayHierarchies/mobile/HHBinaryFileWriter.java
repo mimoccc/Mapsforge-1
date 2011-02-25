@@ -26,141 +26,61 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
 
-class HHBinaryFileWriter {
+/**
+ * This class is responsible for writing a binary file for the mobile highway hierarchies
+ * algorithm.
+ */
+public class HHBinaryFileWriter {
+	/** parameter for specifying the clustering algorithm */
+	public static final String CLUSTERING_ALGORTHM_K_CENTER = "k_center";
+	/** parameter for specifying the clustering algorithm */
+	public static final String CLUSTERING_ALGORITHM_QUAD_TREE = "quad_tree";
 
 	private final static byte[] HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
 	private final static int HEADER_LENGTH = HHGlobals.BINARY_FILE_HEADER_LENGTH;
 
 	private final static int BUFFER_SIZE = 16384 * 1000;
 
-	public static void writeBinaryFile(Properties props) {
-		try {
-			/*
-			 * read the config from properties
-			 */
-
-			String dbHost = props.getProperty("blockedHH.input.db.host");
-			int dbPort = Integer.parseInt(props.getProperty("blockedHH.input.db.port"));
-			String dbName = props.getProperty("blockedHH.input.db.name");
-			String dbUser = props.getProperty("blockedHH.input.db.user");
-			String dbPassword = props.getProperty("blockedHH.input.db.password");
-
-			File inputFile;
-			try {
-				inputFile = new File(props.getProperty("blockedHH.input.file"));
-			} catch (NullPointerException e) {
-				inputFile = null;
-			}
-			File outputFile = new File(props.getProperty("blockedHH.output.file"));
-
-			String clusteringAlgorithm = props.getProperty("blockedHH.clustering.algorithm");
-			int quadtreeVertexThreshold = Integer.parseInt(props
-					.getProperty("blockedHH.clustering.vertexThreshold"));
-			int kcenterAvgVerticesPerCluster = Integer.parseInt(props
-					.getProperty("blockedHH.clustering.avgVerticesPerCluster"));
-			int kcenterOversamplingFac = Integer
-					.parseInt(props
-							.getProperty("blockedHH.clustering.oversamplingFac"));
-
-			int addressLookupTableMaxGroupSize = Integer.parseInt(props
-					.getProperty("blockedHH.addressLookupTable.maxGroupSize"));
-			boolean hopIndices = Boolean.parseBoolean(props
-					.getProperty("blockedHH.hopIndices"));
-			int rtreeBlockSize = Integer.parseInt(props
-					.getProperty("blockedHH.rtree.blockSize"));
-
-			/* print parameters */
-			System.out.println("create blocked highway hierarchies binary :"
-					+ outputFile.getAbsolutePath() + "'");
-			System.out.println("outputFile = '" + outputFile.getAbsolutePath() + "'");
-			System.out.println("clusteringAlgorithm = " + clusteringAlgorithm);
-			System.out.println("quadtreeVertexThreshold = " + quadtreeVertexThreshold);
-			System.out
-					.println("kcenterAvgVerticesPerCluster = " + kcenterAvgVerticesPerCluster);
-			System.out.println("kcenterOversamplingFac = " + kcenterOversamplingFac);
-			System.out.println("addressLookupTableMaxGroupSize = "
-					+ addressLookupTableMaxGroupSize);
-			System.out.println("hopIndices = " + hopIndices);
-			System.out.println("rtreeBlockSize = " + rtreeBlockSize);
-
-			LevelGraph levelGraph = null;
-			if (inputFile != null && inputFile.exists() && inputFile.isFile()) {
-				// load graph from file
-				try {
-					System.out.print("loading the graph : '" + inputFile.getAbsolutePath()
-							+ "'" + " .. ");
-					levelGraph = Serializer.deserialize(inputFile);
-					System.out.println("successfull!");
-				} catch (ClassNotFoundException e) {
-					System.out.println("not successfull!");
-				}
-			}
-			if (levelGraph == null) {
-				// load graph from database
-				System.out.println("loading the graph : 'jdbc://" + dbHost + ":" + dbPort + "/"
-						+ dbName + "'");
-				Connection conn = DBConnection.getJdbcConnectionPg(dbHost, dbPort, dbName,
-						dbUser,
-						dbPassword);
-				levelGraph = new LevelGraph(conn);
-				conn.close();
-			}
-
-			// compute clustering
-			System.out.println("compute clustering");
-			Clustering[] clustering;
-			if (clusteringAlgorithm.equals(QuadTreeClusteringAlgorithm.ALGORITHM_NAME)) {
-				System.out.println("algorithm = quad_tree");
-				System.out.println("threshold = " + quadtreeVertexThreshold);
-				clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph
-						.getLevels(),
-						levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
-						QuadTreeClusteringAlgorithm.HEURISTIC_MEDIAN,
-						quadtreeVertexThreshold);
-
-			} else if (clusteringAlgorithm.equals(KCenterClusteringAlgorithm.ALGORITHM_NAME)) {
-				System.out.println("algorithm = k_center");
-				System.out.println("verticesPerCluster = " + kcenterAvgVerticesPerCluster);
-				clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph
-						.getLevels(), kcenterAvgVerticesPerCluster, kcenterOversamplingFac,
-						KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
-			} else {
-				System.out.println("invalid clustering algorithm specified in properties.");
-				return;
-			}
-			// create the binary file
-			System.out.println("serialize data to '" + outputFile.getAbsolutePath() + "'");
-			writeBinaryFile(levelGraph, clustering, outputFile, addressLookupTableMaxGroupSize,
-					rtreeBlockSize, hopIndices);
-			System.out.println("ready!");
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private static void writeBinaryFile(LevelGraph levelGraph, Clustering[] clustering,
+	public static void writeBinaryFile(Connection conn, String clusteringAlgorithmName,
+			int clusterSizeThreshold, int kcenterOversamplingFactor,
 			File targetFile, int indexGroupSizeThreshold, int rtreeBlockSize,
-			boolean includeHopIndices) throws IOException {
+			boolean includeHopIndices) throws IOException, SQLException {
+
+		// load the graph into ram
+		LevelGraph levelGraph = new LevelGraph(conn);
+		conn.close();
+
+		// compute the clustering
+		// compute clustering
+		System.out.println("compute clustering: ");
+		System.out.println("algorithm = " + clusteringAlgorithmName);
+		System.out.println("clusterSizeThreshold = " + clusterSizeThreshold);
+		Clustering[] clustering;
+		if (clusteringAlgorithmName.equals(CLUSTERING_ALGORITHM_QUAD_TREE)) {
+			clustering = QuadTreeClusteringAlgorithm.computeClustering(levelGraph
+					.getLevels(),
+					levelGraph.getVertexLongitudesE6(), levelGraph.getVertexLatitudesE6(),
+					QuadTreeClusteringAlgorithm.HEURISTIC_MEDIAN,
+					clusterSizeThreshold);
+
+		} else if (clusteringAlgorithmName.equals(CLUSTERING_ALGORTHM_K_CENTER)) {
+			clustering = KCenterClusteringAlgorithm.computeClustering(levelGraph
+					.getLevels(), clusterSizeThreshold, kcenterOversamplingFactor,
+					KCenterClusteringAlgorithm.HEURISTIC_MIN_SIZE);
+		} else {
+			System.out.println("invalid clustering algorithm specified in properties.");
+			return;
+		}
 
 		// ---------------- WRITE TEMPORARY FILES --------------------------
+		System.out.println("targetFile = '" + targetFile.getAbsolutePath() + "'");
 
 		File fBlocks = new File(targetFile.getAbsolutePath() + ".blocks");
 		File fileAddressLookupTable = new File(targetFile.getAbsolutePath()
@@ -230,6 +150,8 @@ class HHBinaryFileWriter {
 		writeFile(fileAddressLookupTable, out);
 		writeFile(fRTree, out);
 
+		System.out.println(out.size() + " bytes written to '" + targetFile + "'");
+
 		out.flush();
 		out.close();
 
@@ -291,11 +213,5 @@ class HHBinaryFileWriter {
 		}
 		in.close();
 		return offset;
-	}
-
-	public static void main(String[] args) throws IOException {
-		Properties props = new Properties();
-		props.load(new FileInputStream("res/conf/blockedHH.properties"));
-		writeBinaryFile(props);
 	}
 }
