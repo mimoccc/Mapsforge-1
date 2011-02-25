@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.blockedHighwayHierarchies;
+package org.mapsforge.android.mobileHighwayHierarchies;
 
 /**
  * A Simple implementation of a pointer, it points to a specific 63 bit address and holds the

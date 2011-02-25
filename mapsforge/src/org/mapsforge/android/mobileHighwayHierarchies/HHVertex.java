@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.blockedHighwayHierarchies;
+package org.mapsforge.android.mobileHighwayHierarchies;
 
-import org.mapsforge.android.routing.blockedHighwayHierarchies.ObjectPool.Poolable;
+import org.mapsforge.android.mobileHighwayHierarchies.ObjectPool.Poolable;
 
 /**
  * A package visible vertex. Decided not to use of information hiding here, since it would

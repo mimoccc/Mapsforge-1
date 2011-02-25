@@ -1,3 +1,4 @@
+package org.mapsforge.android.mobileHighwayHierarchies;
 //package org.mapsforge.android.routing.blockedHighwayHierarchies;
 //
 ///*

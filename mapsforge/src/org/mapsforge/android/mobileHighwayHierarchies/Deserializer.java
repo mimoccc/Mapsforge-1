@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.blockedHighwayHierarchies;
+package org.mapsforge.android.mobileHighwayHierarchies;
 
 /**
  * Low level serialization class. This is an reduced and optimized version from the class

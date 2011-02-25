@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.routing.blockedHighwayHierarchies;
+package org.mapsforge.android.mobileHighwayHierarchies;
 
 /**
  * This interface must be implemented by a classes which are added to a Cache implementation.
