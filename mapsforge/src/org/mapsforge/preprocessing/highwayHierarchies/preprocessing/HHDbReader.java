@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
 import org.mapsforge.server.routing.highwayHierarchies.DistanceTable;
 
@@ -152,8 +151,8 @@ public class HHDbReader {
 			TIntIntHashMap map = new TIntIntHashMap();
 
 			String selectRows = "SELECT row_idx, vertex_id, distances FROM hh_distance_table_row;";
-			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
-					selectRows);
+			PreparedStatement pstmt = getResultStreamingPreparedStatemet(conn,
+					selectRows, FETCH_SIZE);
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				int rowIdx = rs.getInt("row_idx");
@@ -207,7 +206,7 @@ public class HHDbReader {
 	 */
 	public Iterator<HHVertex> getVertices() {
 		try {
-			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
+			final PreparedStatement pstmt = getResultStreamingPreparedStatemet(
 					conn, SQL_SELECT_VERTICES, FETCH_SIZE);
 			final ResultSet rs = pstmt.executeQuery();
 
@@ -264,7 +263,7 @@ public class HHDbReader {
 	 */
 	public Iterator<HHVertexLvl> getVertexLvls() {
 		try {
-			final PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(
+			final PreparedStatement pstmt = getResultStreamingPreparedStatemet(
 					conn, SQL_SELECT_VERTEX_LVLS, FETCH_SIZE);
 			final ResultSet rs = pstmt.executeQuery();
 
@@ -321,7 +320,7 @@ public class HHDbReader {
 	 */
 	public Iterator<HHEdge> getEdges() {
 		try {
-			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+			PreparedStatement pstmt = getResultStreamingPreparedStatemet(conn,
 					SQL_SELECT_EDGES, FETCH_SIZE);
 			return getEdges(pstmt);
 		} catch (SQLException e) {
@@ -339,7 +338,7 @@ public class HHDbReader {
 	 */
 	public Iterator<HHEdge> getEdges(int lvl) {
 		try {
-			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+			PreparedStatement pstmt = getResultStreamingPreparedStatemet(conn,
 					SQL_SELECT_EDGES_LVL, FETCH_SIZE);
 			pstmt.setInt(1, lvl);
 			pstmt.setInt(2, lvl);
@@ -358,7 +357,7 @@ public class HHDbReader {
 	 */
 	public Iterator<HHEdgeLvl> getEdgesLvl() {
 		try {
-			PreparedStatement pstmt = DBConnection.getResultStreamingPreparedStatemet(conn,
+			PreparedStatement pstmt = getResultStreamingPreparedStatemet(conn,
 					SQL_SELECT_LVL_EDGES, FETCH_SIZE);
 			return getEdgesLvl(pstmt);
 
@@ -656,5 +655,13 @@ public class HHDbReader {
 			this.longitude = longitude;
 			this.latitude = latitude;
 		}
+	}
+
+	private static PreparedStatement getResultStreamingPreparedStatemet(Connection conn,
+			String sql, int fetchSize) throws SQLException {
+		PreparedStatement pstmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+				ResultSet.CONCUR_READ_ONLY);
+		pstmt.setFetchSize(fetchSize);
+		return pstmt;
 	}
 }

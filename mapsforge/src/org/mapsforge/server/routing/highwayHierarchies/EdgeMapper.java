@@ -24,9 +24,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHEdge;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;

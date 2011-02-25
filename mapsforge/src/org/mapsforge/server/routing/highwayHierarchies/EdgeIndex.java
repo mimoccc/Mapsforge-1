@@ -28,8 +28,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.core.GeoCoordinate;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgEdge;
 

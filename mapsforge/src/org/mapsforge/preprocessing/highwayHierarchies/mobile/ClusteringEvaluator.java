@@ -24,9 +24,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import org.mapsforge.core.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
+import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
 import org.mapsforge.server.routing.Router;
 import org.mapsforge.server.routing.highwayHierarchies.HHRouterServerside;
