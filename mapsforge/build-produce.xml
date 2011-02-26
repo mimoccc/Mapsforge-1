@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="mapsforge-produce">
 	
+	<!-- JVM args -->
+	<property name="xmx" value="1200M"/>
+	
 	<!-- osmosis executable (adjust to linux or windows) -->
 	<property name="osmosis" value="osmosis.bat"/>		
+	
+	<!-- psql executable (adjust to linux or windows) -->
+	<property name="psql" value="psql.exe"/>		
+		
 	
 	<!-- directories -->
 	<property name="lib" value="lib/"/>
@@ -32,8 +39,8 @@
 		<get dest="${data.osm}/bayern.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bayern.osm.pbf" usetimestamp="true"/>
 		-->
 		<get dest="${data.osm}/berlin.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/berlin.osm.pbf" usetimestamp="true"/>
-		<!--
 		<get dest="${data.osm}/brandenburg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/brandenburg.osm.pbf" usetimestamp="true"/>
+		<!--
 		<get dest="${data.osm}/bremen.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bremen.osm.pbf" usetimestamp="true"/>
 		-->
 	</target>
@@ -84,7 +91,7 @@
 	<!-- import routing graph to database -->
 	<target name="import-rg">
 		<basename file="${file}" property="basename" suffix=".osm.pbf"/>
-		<exec executable="psql">
+		<exec executable="${psql}">
 			<env key="PGPASSWORD" value="${db.pass}"/> 
 		    <arg value="-U"/>
 			<arg value="${db.user}"/>

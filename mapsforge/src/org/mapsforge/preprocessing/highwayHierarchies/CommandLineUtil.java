@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.Properties;
 
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.HHBinaryFileWriter;
@@ -43,6 +44,8 @@ public class CommandLineUtil {
 	private static final String DEFAULT_AVERAGE_SPEED_FILE = "highwayLevel2AverageSpeed.properties";
 	private static final String DEFAULT_FORMAT = "mobile";
 	private static final int OUTPUT_BUFFER_SIZE = 32 * 1024 * 1024;
+
+	private static final DecimalFormat df = new DecimalFormat("###.###.###.###");
 
 	/**
 	 * entry point.
@@ -173,8 +176,11 @@ public class CommandLineUtil {
 			router.serialize(out);
 			out.flush();
 			out.close();
-			System.out.println(out.size() + " bytes written to '" + outputFile + "'");
+			System.out
+					.println(df.format(out.size()) + " bytes written to '" + outputFile + "'");
 		}
+		conn1.close();
+		conn2.close();
 	}
 
 	private static CommandLineParameters parseArguments(String[] args) {
