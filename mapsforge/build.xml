@@ -278,8 +278,8 @@ purpose.
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="${mapsforge.dist}/mapsforge-onboard-routing-${mapsforge.version}.jar"
 		     duplicate="preserve">
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/routing/" />
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/routing/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/mobileHighwayHierarchies/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/mobileHighwayHierarchies/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/mobile/HHGlobals.*" />
