@@ -2,7 +2,7 @@
 <project name="mapsforge-produce">
 	
 	<!-- JVM args -->
-	<property name="xmx" value="1200M"/>
+	<property name="xmx" value="1600M"/>
 	
 	<!-- osmosis executable (adjust to linux or windows) -->
 	<property name="osmosis" value="osmosis.bat"/>		
@@ -109,7 +109,7 @@
 	<!-- produce onboard routing binary -->
 	<target name="produce-onboard-routing-binary">
 		<basename file="${file}" property="basename" suffix=".osm.pbf"/>
-		<java classname="org.mapsforge.preprocessing.highwayHierarchies.CommandLineUtil">
+		<java  jvmargs="Xmx${xmx}" classname="org.mapsforge.preprocessing.highwayHierarchies.CommandLineUtil">
          	<arg value="${data.binary}/${basename}.mobileHH"/>
 			<arg value="--format=mobile"/>
 			<classpath>
@@ -124,7 +124,7 @@
 	<!-- produce offboard routing binary -->
 	<target name="produce-offboard-routing-binary">
 		<basename file="${file}" property="basename" suffix=".osm.pbf"/>
-	    <java classname="org.mapsforge.preprocessing.highwayHierarchies.CommandLineUtil">
+	    <java jvmargs="Xmx${xmx}" classname="org.mapsforge.preprocessing.highwayHierarchies.CommandLineUtil">
          	<arg value="${data.binary}/${basename}.hh"/>
 	    	<arg value="--format=server"/>
 	    		<classpath>
