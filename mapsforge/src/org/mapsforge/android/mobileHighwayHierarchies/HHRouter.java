@@ -320,7 +320,7 @@ public class HHRouter implements Router {
 		// this code is required for android routing:
 		int cacheSize = 1024 * 1024 * 2;
 		HHRouter router = new HHRouter(new File(
-				"berlin.mobileHH"), cacheSize);
+				"data/binary/berlin.mobileHH"), cacheSize);
 		Vertex source = router.getNearestVertex(new GeoCoordinate(52.60818, 13.48487));
 		Vertex target = router.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805));
 		Edge[] shortestPath = router.getShortestPath(source.getId(), target.getId());
