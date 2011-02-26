@@ -45,7 +45,7 @@ public class CommandLineUtil {
 	private static final String DEFAULT_FORMAT = "mobile";
 	private static final int OUTPUT_BUFFER_SIZE = 32 * 1024 * 1024;
 
-	private static final DecimalFormat df = new DecimalFormat("###.###.###.###");
+	private static final DecimalFormat df = new DecimalFormat("###,###,###,###");
 
 	/**
 	 * entry point.
