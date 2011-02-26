@@ -172,6 +172,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private static final Paint PAINT_LEISURE_COMMON_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_COMMON_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LEISURE_NATURE_RESERVE_OUTLINE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_LEISURE_NATURE_RESERVE_PATTERN = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_STADIUM_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LEISURE_STADIUM_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -211,6 +215,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_NATURAL_GLACIER_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_HEATH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_LAND_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NATURAL_MARSH_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_WATER_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_WOOD_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -976,6 +981,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LEISURE_COMMON_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LEISURE_COMMON_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_LEISURE_COMMON_OUTLINE.setColor(Color.rgb(123, 200, 145));
+		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStyle(Paint.Style.STROKE);
+		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setColor(Color.rgb(112, 193, 142));
+		PAINT_LEISURE_NATURE_RESERVE_PATTERN.setShader(this.mapPatterns.natureReserveShader);
 		PAINT_LEISURE_STADIUM_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LEISURE_STADIUM_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LEISURE_STADIUM_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1125,6 +1135,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_LAND_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_LAND_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_LAND_FILL.setColor(Color.rgb(248, 248, 248));
+		PAINT_NATURAL_MARSH_PATTERN.setShader(this.mapPatterns.marshShader);
 		PAINT_NATURAL_WATER_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_WATER_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_WATER_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1447,6 +1458,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LANDUSE_GRASS_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_LEISURE_COMMON_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
+		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 		PAINT_LEISURE_STADIUM_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_MAN_MADE_PIER.setStrokeWidth(0.8f * paintScaleFactor);
@@ -2878,6 +2890,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.intValue()])
 					|| (this.tagIDsWays.building$gym != null && wayTagIds[this.tagIDsWays.building$gym
 							.intValue()])
+					|| (this.tagIDsWays.building$ruins != null && wayTagIds[this.tagIDsWays.building$ruins
+							.intValue()])
 					|| (this.tagIDsWays.building$sports != null && wayTagIds[this.tagIDsWays.building$sports
 							.intValue()])
 					|| (this.tagIDsWays.building$train_station != null && wayTagIds[this.tagIDsWays.building$train_station
@@ -3104,6 +3118,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LEISURE$COMMON).add(
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_LEISURE_COMMON_OUTLINE));
+			} else if (this.tagIDsWays.leisure$nature_reserve != null
+					&& wayTagIds[this.tagIDsWays.leisure$nature_reserve.intValue()]) {
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
+				this.layer.get(LayerIds.LEISURE$NATURE_RESERVE).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_LEISURE_NATURE_RESERVE_PATTERN));
+				this.layer.get(LayerIds.LEISURE$NATURE_RESERVE).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_LEISURE_NATURE_RESERVE_OUTLINE));
 			} else if ((this.tagIDsWays.leisure$sports_centre != null && wayTagIds[this.tagIDsWays.leisure$sports_centre
 					.intValue()])
 					|| (this.tagIDsWays.leisure$stadium != null && wayTagIds[this.tagIDsWays.leisure$stadium
@@ -3193,6 +3216,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					.intValue()])
 					|| (this.tagIDsWays.natural$wood != null && wayTagIds[this.tagIDsWays.natural$wood
 							.intValue()])) {
+				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WOOD).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WOOD_FILL));
 			} else if (this.tagIDsWays.natural$water != null
@@ -3200,6 +3224,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
 				this.layer.get(LayerIds.NATURAL$WATER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_WATER_FILL));
+			} else if ((this.tagIDsWays.natural$marsh != null && wayTagIds[this.tagIDsWays.natural$marsh
+					.intValue()])
+					|| (this.tagIDsWays.natural$wetland != null && wayTagIds[this.tagIDsWays.natural$wetland
+							.intValue()])) {
+				this.layer.get(LayerIds.NATURAL$MARSH).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_NATURAL_MARSH_PATTERN));
 			} else if (this.tagIDsWays.natural$coastline != null
 					&& wayTagIds[this.tagIDsWays.natural$coastline.intValue()]) {
 				this.coastlineAlgorithm.addCoastlineSegment(this.coordinates[0]);

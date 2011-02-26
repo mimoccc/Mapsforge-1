@@ -28,12 +28,16 @@ import android.graphics.Shader.TileMode;
  */
 class MapPatterns {
 	private final Bitmap cemetery;
+	private final Bitmap marsh;
 	private final Bitmap military;
+	private final Bitmap natureReserve;
 	private final Bitmap woodConiferous;
 	private final Bitmap woodDeciduous;
 	private final Bitmap woodMixed;
 	final Shader cemeteryShader;
+	final Shader marshShader;
 	final Shader militaryShader;
+	final Shader natureReserveShader;
 	final Shader woodConiferousShader;
 	final Shader woodDeciduousShader;
 	final Shader woodMixedShader;
@@ -41,29 +45,78 @@ class MapPatterns {
 	MapPatterns() {
 		this.cemetery = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/cemetery.png"));
-		this.cemeteryShader = new BitmapShader(this.cemetery, TileMode.REPEAT, TileMode.REPEAT);
+		if (this.cemetery == null) {
+			this.cemeteryShader = null;
+		} else {
+			this.cemeteryShader = new BitmapShader(this.cemetery, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
+
+		this.marsh = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"patterns/marsh.png"));
+		if (this.marsh == null) {
+			this.marshShader = null;
+		} else {
+			this.marshShader = new BitmapShader(this.marsh, TileMode.REPEAT, TileMode.REPEAT);
+		}
 
 		this.military = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/military.png"));
-		this.militaryShader = new BitmapShader(this.military, TileMode.REPEAT, TileMode.REPEAT);
+		if (this.military == null) {
+			this.militaryShader = null;
+		} else {
+			this.militaryShader = new BitmapShader(this.military, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
+
+		this.natureReserve = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"patterns/nature-reserve.png"));
+		if (this.natureReserve == null) {
+			this.natureReserveShader = null;
+		} else {
+			this.natureReserveShader = new BitmapShader(this.natureReserve, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
 
 		this.woodConiferous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/wood-coniferous.png"));
-		this.woodConiferousShader = new BitmapShader(this.woodConiferous, TileMode.REPEAT,
-				TileMode.REPEAT);
+		if (this.woodConiferous == null) {
+			this.woodConiferousShader = null;
+		} else {
+			this.woodConiferousShader = new BitmapShader(this.woodConiferous, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
 		this.woodDeciduous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/wood-deciduous.png"));
-		this.woodDeciduousShader = new BitmapShader(this.woodDeciduous, TileMode.REPEAT,
-				TileMode.REPEAT);
+		if (this.woodDeciduous == null) {
+			this.woodDeciduousShader = null;
+		} else {
+			this.woodDeciduousShader = new BitmapShader(this.woodDeciduous, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
+
 		this.woodMixed = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"patterns/wood-mixed.png"));
-		this.woodMixedShader = new BitmapShader(this.woodMixed, TileMode.REPEAT,
-				TileMode.REPEAT);
+		if (this.woodMixed == null) {
+			this.woodMixedShader = null;
+		} else {
+			this.woodMixedShader = new BitmapShader(this.woodMixed, TileMode.REPEAT,
+					TileMode.REPEAT);
+		}
 	}
 
 	void recycle() {
 		if (this.cemetery != null) {
 			this.cemetery.recycle();
+		}
+		if (this.marsh != null) {
+			this.marsh.recycle();
+		}
+		if (this.military != null) {
+			this.military.recycle();
+		}
+		if (this.natureReserve != null) {
+			this.natureReserve.recycle();
 		}
 		if (this.woodConiferous != null) {
 			this.woodConiferous.recycle();

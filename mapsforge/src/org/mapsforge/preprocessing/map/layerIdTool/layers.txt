@@ -60,11 +60,13 @@ waterway=stream
 waterway=canal
 waterway=drain
 natural=water
+natural=marsh natural=wetland
 landuse=reservoir
 landuse=basin
 waterway=riverbank
 
 boundary=national_park
+leisure=nature_reserve
 
 highway=footway_area=yes
 highway=pedestrian_area=yes
@@ -72,7 +74,7 @@ highway=service_area=yes
 
 // Buildings
 aeroway=terminal
-building=apartments building=embassy building=government building=gym building=roof building=sports building=train_station building=university building=yes
+building=apartments building=embassy building=government building=gym building=roof building=ruins building=sports building=train_station building=university building=yes
 
 // Marine features
 man_made=pier

@@ -55,6 +55,7 @@ class TagIDsWays {
 	Integer building$government;
 	Integer building$gym;
 	Integer building$roof;
+	Integer building$ruins;
 	Integer building$sports;
 	Integer building$train_station;
 	Integer building$university;
@@ -104,6 +105,7 @@ class TagIDsWays {
 	Integer leisure$common;
 	Integer leisure$garden;
 	Integer leisure$golf_course;
+	Integer leisure$nature_reserve;
 	Integer leisure$park;
 	Integer leisure$pitch;
 	Integer leisure$playground;
@@ -120,8 +122,10 @@ class TagIDsWays {
 	Integer natural$glacier;
 	Integer natural$heath;
 	Integer natural$land;
+	Integer natural$marsh;
 	Integer natural$scrub;
 	Integer natural$water;
+	Integer natural$wetland;
 	Integer natural$wood;
 	Integer piste$difficulty$advanced;
 	Integer piste$difficulty$easy;
@@ -197,6 +201,7 @@ class TagIDsWays {
 		this.building$government = nodeTags.get("building=government");
 		this.building$gym = nodeTags.get("building=gym");
 		this.building$roof = nodeTags.get("building=roof");
+		this.building$ruins = nodeTags.get("building=ruins");
 		this.building$sports = nodeTags.get("building=sports");
 		this.building$train_station = nodeTags.get("building=train_station");
 		this.building$university = nodeTags.get("building=university");
@@ -250,6 +255,7 @@ class TagIDsWays {
 		this.leisure$common = nodeTags.get("leisure=common");
 		this.leisure$garden = nodeTags.get("leisure=garden");
 		this.leisure$golf_course = nodeTags.get("leisure=golf_course");
+		this.leisure$nature_reserve = nodeTags.get("leisure=nature_reserve");
 		this.leisure$park = nodeTags.get("leisure=park");
 		this.leisure$pitch = nodeTags.get("leisure=pitch");
 		this.leisure$playground = nodeTags.get("leisure=playground");
@@ -269,8 +275,10 @@ class TagIDsWays {
 		this.natural$glacier = nodeTags.get("natural=glacier");
 		this.natural$heath = nodeTags.get("natural=heath");
 		this.natural$land = nodeTags.get("natural=land");
+		this.natural$marsh = nodeTags.get("natural=marsh");
 		this.natural$scrub = nodeTags.get("natural=scrub");
 		this.natural$water = nodeTags.get("natural=water");
+		this.natural$wetland = nodeTags.get("natural=wetland");
 		this.natural$wood = nodeTags.get("natural=wood");
 
 		this.piste$type$downhill = nodeTags.get("piste:type=downhill");

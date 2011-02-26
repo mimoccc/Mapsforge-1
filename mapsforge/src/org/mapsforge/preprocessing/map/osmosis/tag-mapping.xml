@@ -158,8 +158,10 @@
 		<osm-tag key="natural" value="glacier" zoom-appear="8" />
 		<osm-tag key="natural" value="heath" zoom-appear="12" />
 		<osm-tag key="natural" value="land" zoom-appear="12" />
+		<osm-tag key="natural" value="marsh" zoom-appear="14" />
 		<osm-tag key="natural" value="scrub" zoom-appear="12" />
 		<osm-tag key="natural" value="water" zoom-appear="12" />
+		<osm-tag key="natural" value="wetland" zoom-appear="14" />
 		<osm-tag key="natural" value="wood" zoom-appear="12" />
 
 		<osm-tag key="waterway" value="canal" zoom-appear="9" />
@@ -201,6 +203,7 @@
 		<osm-tag key="leisure" value="common" zoom-appear="12" />
 		<osm-tag key="leisure" value="garden" zoom-appear="12" />
 		<osm-tag key="leisure" value="golf_course" zoom-appear="12" />
+		<osm-tag key="leisure" value="nature_reserve" zoom-appear="14" />
 		<osm-tag key="leisure" value="park" zoom-appear="12" />
 		<osm-tag key="leisure" value="pitch" zoom-appear="15" />
 		<osm-tag key="leisure" value="playground" zoom-appear="16" />
@@ -249,6 +252,7 @@
 		<osm-tag key="building" value="government" zoom-appear="16" />
 		<osm-tag key="building" value="gym" zoom-appear="16" />
 		<osm-tag key="building" value="roof" zoom-appear="16" />
+		<osm-tag key="building" value="ruins" zoom-appear="16" />
 		<osm-tag key="building" value="sports" zoom-appear="16" />
 		<osm-tag key="building" value="train_station" zoom-appear="16" />
 		<osm-tag key="building" value="university" zoom-appear="16" />
