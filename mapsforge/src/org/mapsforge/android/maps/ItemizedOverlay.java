@@ -22,7 +22,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 /**
- * ItemizedOverlay is an abstract base class to display a list of OverlayItems.
+ * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}.
  * 
  * @param <Item>
  *            the type of items handled by this Overlay.
