@@ -93,24 +93,4 @@ final class TileInfo {
 		}
 		return true;
 	}
-
-	// public static void main(String[] args) throws Exception {
-	//
-	// TileInfo ti = TileInfo.getInstance();
-	//
-	// // TileCoordinate tc1 = new TileCoordinate(1660, 167, (byte) 12);
-	// TileCoordinate tc2 = new TileCoordinate(2141, 1325, (byte) 12);
-	// // TileCoordinate tc3 = new TileCoordinate(1065, 659, (byte) 11);
-	// // TileCoordinate tc4 = new TileCoordinate(1065, 660, (byte) 11);
-	// // TileCoordinate tc5 = new TileCoordinate(65, 40, (byte) 7);
-	// // TileCoordinate tc6 = new TileCoordinate(4283, 2651, (byte) 13);
-	// // System.out.println(ti.isWaterTile(tc1));
-	// System.out.println(ti.isWaterTile(tc2));
-	// // System.out.println(ti.isWaterTile(tc3));
-	// // System.out.println(ti.isWaterTile(tc4));
-	// // System.out.println(ti.isWaterTile(tc5));
-	// // System.out.println(ti.isWaterTile(tc6));
-	//
-	// }
-
 }

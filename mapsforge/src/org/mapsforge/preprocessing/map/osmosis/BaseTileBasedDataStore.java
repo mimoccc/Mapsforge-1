@@ -16,11 +16,15 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import gnu.trove.map.hash.TShortIntHashMap;
+
 import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Rect;
+import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
+import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
 abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 
@@ -35,6 +39,9 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 	// accounting
 	protected float[] countWays;
 	protected float[] countWayTileFactor;
+
+	protected final TShortIntHashMap histogramPoiTags;
+	protected final TShortIntHashMap histogramWayTags;
 
 	public BaseTileBasedDataStore(
 			double minLat, double maxLat,
@@ -56,6 +63,9 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		this.countWays = new float[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
 		this.countWayTileFactor = new float[zoomIntervalConfiguration
 				.getNumberOfZoomIntervals()];
+
+		this.histogramPoiTags = new TShortIntHashMap();
+		this.histogramWayTags = new TShortIntHashMap();
 
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels
@@ -102,6 +112,22 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 					.getAmountTilesVertical();
 		}
 		return cumulated;
+	}
+
+	protected void countPoiTags(TDNode poi) {
+		if (poi == null || poi.getTags() == null)
+			return;
+		for (short tag : poi.getTags()) {
+			histogramPoiTags.adjustOrPutValue(tag, 1, 1);
+		}
+	}
+
+	protected void countWayTags(TDWay way) {
+		if (way == null || way.getTags() == null)
+			return;
+		for (short tag : way.getTags()) {
+			histogramWayTags.adjustOrPutValue(tag, 1, 1);
+		}
 	}
 
 	private int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {

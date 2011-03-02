@@ -44,6 +44,11 @@ class OSMTag {
 		this.renderable = true;
 	}
 
+	static OSMTag fromOSMTag(OSMTag osmTag, short newID) {
+		return new OSMTag(newID, osmTag.getKey(), osmTag.getValue(), osmTag.getZoomAppear(),
+				osmTag.isRenderable());
+	}
+
 	short getId() {
 		return id;
 	}

@@ -135,29 +135,27 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	public boolean addNode(Node node) {
 		TDNode tdNode = TDNode.fromNode(node);
 		nodes.put(tdNode.getId(), tdNode);
-		if (tdNode.isPOI())
-			addPOI(tdNode);
-		return true;
-	}
+		if (tdNode.isPOI()) {
+			byte minZoomLevel = tdNode.getMinimumZoomLevel();
+			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
-	private void addPOI(TDNode node) {
-		byte minZoomLevel = node.getMinimumZoomLevel();
-		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-
-			// is poi seen in a zoom interval?
-			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
-				long tileCoordinateX = MercatorProjection.longitudeToTileX(
-						GeoCoordinate.intToDouble(node.getLongitude()),
-						zoomIntervalConfiguration.getBaseZoom(i));
-				long tileCoordinateY = MercatorProjection.latitudeToTileY(
-						GeoCoordinate.intToDouble(node.getLatitude()),
-						zoomIntervalConfiguration.getBaseZoom(i));
-				TileData td = getTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
-				if (td != null) {
-					td.addPOI(node);
+				// is poi seen in a zoom interval?
+				if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
+					long tileCoordinateX = MercatorProjection.longitudeToTileX(
+							GeoCoordinate.intToDouble(tdNode.getLongitude()),
+							zoomIntervalConfiguration.getBaseZoom(i));
+					long tileCoordinateY = MercatorProjection.latitudeToTileY(
+							GeoCoordinate.intToDouble(tdNode.getLatitude()),
+							zoomIntervalConfiguration.getBaseZoom(i));
+					TileData td = getTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
+					if (td != null) {
+						td.addPOI(tdNode);
+						countPoiTags(tdNode);
+					}
 				}
 			}
 		}
+		return true;
 	}
 
 	@Override
@@ -194,6 +192,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 				for (TileCoordinate matchedTile : matchedTiles) {
 					TileData td = getTile(i, matchedTile.getX(), matchedTile.getY());
 					if (td != null) {
+						countWayTags(tdWay);
 						countWayTileFactor[i]++;
 						added = true;
 						td.addWay(tdWay);
@@ -311,6 +310,9 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public void complete() {
+		MapFileWriterTask.TAG_MAPPING.optimizePoiOrdering(histogramPoiTags);
+		MapFileWriterTask.TAG_MAPPING.optimizeWayOrdering(histogramWayTags);
+
 		int count = 0;
 		for (Set<TDWay> coastlines : tilesToCoastlines.values()) {
 			count += coastlines.size();

@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -98,7 +99,7 @@ class MapFileWriter {
 
 	private static final byte MAX_ZOOMLEVEL_PIXEL_FILTER = 11;
 
-	private static final byte MIN_ZOOMLEVEL_POLYGON_CLIPPING = 8;
+	// private static final byte MIN_ZOOMLEVEL_POLYGON_CLIPPING = 8;
 
 	private static final Charset UTF8_CHARSET = Charset.forName("utf8");
 
@@ -261,18 +262,24 @@ class MapFileWriter {
 		containerHeaderBuffer.putLong(date);
 
 		// store the mapping of tags to tag ids
-		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.poiMapping()
+		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.optimizedPoiIds()
 				.size());
-		for (OSMTag poiTag : MapFileWriterTask.TAG_MAPPING.poiMapping().values()) {
-			writeUTF8(poiTag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(poiTag.getId());
+
+		for (Entry<Short, Short> idMapping : MapFileWriterTask.TAG_MAPPING.optimizedPoiIds()
+				.entrySet()) {
+			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getPoiTag(idMapping.getKey());
+			writeUTF8(tag.tagKey(), containerHeaderBuffer);
+			containerHeaderBuffer.putShort(idMapping.getValue());
 		}
 
-		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.wayMapping()
+		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.optimizedWayIds()
 				.size());
-		for (OSMTag wayTag : MapFileWriterTask.TAG_MAPPING.wayMapping().values()) {
-			writeUTF8(wayTag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(wayTag.getId());
+
+		for (Entry<Short, Short> idMapping : MapFileWriterTask.TAG_MAPPING.optimizedWayIds()
+				.entrySet()) {
+			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getWayTag(idMapping.getKey());
+			writeUTF8(tag.tagKey(), containerHeaderBuffer);
+			containerHeaderBuffer.putShort(idMapping.getValue());
 		}
 
 		// comment
@@ -470,7 +477,10 @@ class MapFileWriter {
 							// write tag ids to the file
 							if (poi.getTags() != null) {
 								for (short tagID : poi.getTags()) {
-									poiBuffer.put(Serializer.getVariableByteUnsigned(tagID));
+									poiBuffer
+											.put(Serializer
+													.getVariableByteUnsigned(MapFileWriterTask.TAG_MAPPING
+															.optimizedPoiIds().get(tagID)));
 								}
 							}
 
@@ -519,7 +529,7 @@ class MapFileWriter {
 
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
-									maxZoomCurrentInterval, minZoomCurrentInterval,
+									maxZoomCurrentInterval, baseZoomCurrentInterval,
 									currentTileCoordinate);
 
 							if (wayNodePreprocessingResult == null) {
@@ -553,7 +563,10 @@ class MapFileWriter {
 							// write tag ids
 							if (way.getTags() != null) {
 								for (short tagID : way.getTags()) {
-									wayBuffer.put(Serializer.getVariableByteUnsigned(tagID));
+									wayBuffer.put(
+											Serializer.getVariableByteUnsigned(
+													MapFileWriterTask.TAG_MAPPING
+															.optimizedWayIds().get(tagID)));
 								}
 							}
 							// write the amount of way nodes to the file
@@ -618,7 +631,7 @@ class MapFileWriter {
 															pixelCompression,
 															false,
 															maxZoomCurrentInterval,
-															minZoomCurrentInterval,
+															baseZoomCurrentInterval,
 															currentTileCoordinate);
 										// write the amount of way nodes to the file
 										wayBuffer
@@ -701,7 +714,7 @@ class MapFileWriter {
 	private WayNodePreprocessingResult preprocessWayNodes(TDWay way,
 			boolean waynodeCompression,
 			boolean pixelCompression, boolean polygonClipping, byte maxZoomCurrentInterval,
-			byte minZoomCurrentInterval,
+			byte baseZoomCurrentInterval,
 			TileCoordinate tile) {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
@@ -715,16 +728,25 @@ class MapFileWriter {
 		}
 
 		// if the way is a polygon, clip the way to the current tile
-		if (polygonClipping && minZoomCurrentInterval >= MIN_ZOOMLEVEL_POLYGON_CLIPPING) {
+		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
 			if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
 						waynodeCoordinates, tile, bboxEnlargement);
+
 				if (clipped != null && !clipped.isEmpty()) {
 					waynodeCoordinates = clipped;
-					// if the polygon is named, we need to compute a label position
+					// DO WE NEED TO COMPUTE A LABEL POSITION?
 					if (way.getName() != null && way.getName().length() > 0) {
-						polygonCentroid = GeoUtils.computePolygonCentroid(waynodeCoordinates,
-								way);
+						// check if the polygon is completely contained in the current tile
+						// in that case clipped polygon equals the original polygon
+						// as a consequence we do not try to compute a label position
+						// this is left to the renderer for more flexibility
+						if (clipped.size() != waynodeCoordinates.size()
+								&& !waynodeCoordinates.containsAll(clipped)) {
+
+							polygonCentroid = GeoUtils.computePolygonCentroid(
+									waynodeCoordinates, way);
+						}
 						// if the label position is not located in the current tile
 						// we can ignore it
 						if (polygonCentroid != null
@@ -735,7 +757,7 @@ class MapFileWriter {
 					// the clipped polygon is not included in the current tile
 					// !! should not happen !! (as the way would not have been mapped to this
 					// tile)
-					LOGGER.fine("clipped polygon not in tile: " + way.getId() + " tile: "
+					LOGGER.warning("clipped polygon not in tile: " + way.getId() + " tile: "
 							+ tile.toString());
 					return null;
 				}

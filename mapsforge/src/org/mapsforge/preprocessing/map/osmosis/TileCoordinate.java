@@ -21,7 +21,6 @@ import java.util.List;
 
 class TileCoordinate {
 
-	private static final int MAX_ZOOMLEVEL_DISTANCE = 6;
 	private final int x;
 	private final int y;
 	private final byte zoomlevel;
@@ -48,11 +47,6 @@ class TileCoordinate {
 	List<TileCoordinate> translateToZoomLevel(byte zoomlevelNew) {
 		List<TileCoordinate> tiles = null;
 		int zoomlevelDistance = zoomlevelNew - this.zoomlevel;
-
-		if (zoomlevelDistance > 0 && zoomlevelDistance > MAX_ZOOMLEVEL_DISTANCE)
-			throw new IllegalArgumentException(
-					"zoom level distance too large, allowed is a distance <= "
-							+ MAX_ZOOMLEVEL_DISTANCE);
 
 		int factor = (int) Math.pow(2, Math.abs(zoomlevelDistance));
 		if (zoomlevelDistance > 0) {

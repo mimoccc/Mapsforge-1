@@ -148,6 +148,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 					HDTileData htd = getHDTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
 					if (htd != null) {
 						htd.addPOI(tdNode.getId());
+						countPoiTags(tdNode);
 					}
 				}
 			}
@@ -293,8 +294,10 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 							bboxEnlargementLocal);
 					for (TileCoordinate matchedTile : matchedTiles) {
 						HDTileData hdt = getHDTile(i, matchedTile.getX(), matchedTile.getY());
-						if (hdt != null)
+						if (hdt != null) {
 							hdt.addWay(way.getId());
+							countWayTags(way);
+						}
 					}
 				}
 			}
@@ -326,6 +329,9 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 
 		}
+
+		MapFileWriterTask.TAG_MAPPING.optimizePoiOrdering(histogramPoiTags);
+		MapFileWriterTask.TAG_MAPPING.optimizeWayOrdering(histogramWayTags);
 	}
 
 	@Override

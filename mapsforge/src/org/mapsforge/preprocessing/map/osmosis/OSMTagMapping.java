@@ -16,11 +16,15 @@
  */
 package org.mapsforge.preprocessing.map.osmosis;
 
+import gnu.trove.map.hash.TShortIntHashMap;
+import gnu.trove.procedure.TShortIntProcedure;
+
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -43,11 +47,16 @@ final class OSMTagMapping {
 	private static final Logger LOGGER =
 			Logger.getLogger(OSMTagMapping.class.getName());
 
-	private final HashMap<String, OSMTag> stringToPoiTag = new HashMap<String, OSMTag>();
-	private final HashMap<String, OSMTag> stringToWayTag = new HashMap<String, OSMTag>();
+	// we use LinkedHashMaps as they guarantee to uphold the
+	// insertion order when iterating over the key or value "set"
+	private LinkedHashMap<String, OSMTag> stringToPoiTag = new LinkedHashMap<String, OSMTag>();
+	private LinkedHashMap<String, OSMTag> stringToWayTag = new LinkedHashMap<String, OSMTag>();
 
-	private final HashMap<Short, OSMTag> idToPoiTag = new HashMap<Short, OSMTag>();
-	private final HashMap<Short, OSMTag> idToWayTag = new HashMap<Short, OSMTag>();
+	private LinkedHashMap<Short, OSMTag> idToPoiTag = new LinkedHashMap<Short, OSMTag>();
+	private LinkedHashMap<Short, OSMTag> idToWayTag = new LinkedHashMap<Short, OSMTag>();
+
+	private LinkedHashMap<Short, Short> optimizedPoiIds = new LinkedHashMap<Short, Short>();
+	private LinkedHashMap<Short, Short> optimizedWayIds = new LinkedHashMap<Short, Short>();
 
 	private short poiID = 0;
 	private short wayID = 0;
@@ -189,13 +198,122 @@ final class OSMTagMapping {
 		return tagIDs;
 	}
 
-	// public static void main(String[] args) {
-	// OSMTagMapping otm =
-	// new OSMTagMapping(
-	// OSMTagMapping.class.getClassLoader().getResource(
-	// "org/mapsforge/preprocessing/map/osmosis/tag-mapping.xml"));
-	//
-	// System.out.println(otm.poiMapping().size());
-	// System.out.println(otm.wayMapping().size());
-	// }
+	LinkedHashMap<Short, Short> optimizedPoiIds() {
+		return optimizedPoiIds;
+	}
+
+	LinkedHashMap<Short, Short> optimizedWayIds() {
+		return optimizedWayIds;
+	}
+
+	void optimizePoiOrdering(TShortIntHashMap histogram) {
+		final TreeSet<HistogramEntry> poiOrdering = new TreeSet<OSMTagMapping.HistogramEntry>();
+
+		histogram.forEachEntry(new TShortIntProcedure() {
+			@Override
+			public boolean execute(short tag, int amount) {
+				poiOrdering.add(new HistogramEntry(tag, amount));
+				return true;
+			}
+		});
+
+		short tmpPoiID = 0;
+
+		OSMTag currentTag = null;
+		for (HistogramEntry histogramEntry : poiOrdering.descendingSet()) {
+			currentTag = idToPoiTag.get(histogramEntry.id);
+			optimizedPoiIds.put(histogramEntry.id, tmpPoiID);
+			LOGGER.finer("adding poi tag: " + currentTag.tagKey() + " id:" + tmpPoiID
+					+ " amount: "
+					+ histogramEntry.amount);
+			tmpPoiID++;
+		}
+	}
+
+	void optimizeWayOrdering(TShortIntHashMap histogram) {
+		final TreeSet<HistogramEntry> wayOrdering = new TreeSet<OSMTagMapping.HistogramEntry>();
+
+		histogram.forEachEntry(new TShortIntProcedure() {
+			@Override
+			public boolean execute(short tag, int amount) {
+				wayOrdering.add(new HistogramEntry(tag, amount));
+				return true;
+			}
+		});
+		short tmpWayID = 0;
+
+		OSMTag currentTag = null;
+		for (HistogramEntry histogramEntry : wayOrdering.descendingSet()) {
+			currentTag = idToWayTag.get(histogramEntry.id);
+			optimizedWayIds.put(histogramEntry.id, tmpWayID);
+			LOGGER.finer("adding way tag: " + currentTag.tagKey() + " id:" + tmpWayID
+					+ " amount: "
+					+ histogramEntry.amount);
+			tmpWayID++;
+		}
+	}
+
+	private class HistogramEntry implements Comparable<HistogramEntry> {
+
+		final short id;
+		final int amount;
+
+		public HistogramEntry(short id, int amount) {
+			super();
+			this.id = id;
+			this.amount = amount;
+		}
+
+		/**
+		 * First order: amount Second order: id (reversed order)
+		 */
+		@Override
+		public int compareTo(HistogramEntry o) {
+			if (amount > o.amount) {
+				return 1;
+			} else if (amount < o.amount) {
+				return -1;
+			} else {
+				if (id < o.id) {
+					return 1;
+				} else if (id > o.id) {
+					return -1;
+				} else {
+					return 0;
+				}
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + amount;
+			result = prime * result + id;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			HistogramEntry other = (HistogramEntry) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (amount != other.amount)
+				return false;
+			if (id != other.id)
+				return false;
+			return true;
+		}
+
+		private OSMTagMapping getOuterType() {
+			return OSMTagMapping.this;
+		}
+	}
 }
