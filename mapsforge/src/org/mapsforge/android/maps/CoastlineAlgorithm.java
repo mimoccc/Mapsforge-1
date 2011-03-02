@@ -308,7 +308,7 @@ class CoastlineAlgorithm {
 					closedPolygonHandler.onIslandPolygon(coastline);
 				}
 			} else if (CoastlineWay.isValid(coastline, this.virtualTileBoundaries)) {
-				coastline = CoastlineWay.shortenCoastlineSegment(coastline,
+				coastline = SutherlandHodgmanClipping.clipPolyline(coastline,
 						this.virtualTileBoundaries);
 				if (coastline != null) {
 					this.coastlineWays.add(new CoastlineWay(coastline,
@@ -416,7 +416,7 @@ class CoastlineAlgorithm {
 
 				// replace the end segment in the list with the new segment
 				this.coastlineWays.remove(this.coastlineEnd);
-				newSegment = CoastlineWay.shortenCoastlineSegment(newSegment,
+				newSegment = SutherlandHodgmanClipping.clipPolyline(newSegment,
 						this.virtualTileBoundaries);
 				if (newSegment != null) {
 					this.coastlineWays.add(new CoastlineWay(newSegment,
