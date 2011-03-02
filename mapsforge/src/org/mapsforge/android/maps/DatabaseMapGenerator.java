@@ -211,6 +211,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE_INVALID = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NATURAL_COASTLINE_VALID = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_GLACIER_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_GLACIER_OUTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_HEATH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -349,6 +350,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				new ShapePaintContainer(getWayContainer(coastline), PAINT_NATURAL_LAND_FILL));
 		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
 				new ShapePaintContainer(getWayContainer(coastline), PAINT_NATURAL_COASTLINE));
+	}
+
+	@Override
+	public void onValidCoastlineSegment(float[] coastline) {
+		this.ways.get(DEFAULT_LAYER).get(LayerIds.NATURAL$COASTLINE).add(
+				new ShapePaintContainer(getWayContainer(coastline),
+						PAINT_NATURAL_COASTLINE_VALID));
 	}
 
 	@Override
@@ -1119,6 +1127,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_COASTLINE_INVALID.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_COASTLINE_INVALID.setColor(Color.rgb(112, 133, 153));
+		PAINT_NATURAL_COASTLINE_VALID.setStyle(Paint.Style.STROKE);
+		PAINT_NATURAL_COASTLINE_VALID.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_NATURAL_COASTLINE_VALID.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_NATURAL_COASTLINE_VALID.setColor(Color.rgb(181, 214, 241));
 		PAINT_NATURAL_GLACIER_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_GLACIER_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_GLACIER_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1464,7 +1476,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MAN_MADE_PIER.setStrokeWidth(0.8f * paintScaleFactor);
 
 		PAINT_NATURAL_COASTLINE.setStrokeWidth(1 * paintScaleFactor);
-		PAINT_NATURAL_COASTLINE_INVALID.setStrokeWidth(1 * paintScaleFactor);
+		PAINT_NATURAL_COASTLINE_INVALID.setStrokeWidth(2 * paintScaleFactor);
+		PAINT_NATURAL_COASTLINE_VALID.setStrokeWidth(2 * paintScaleFactor);
 		PAINT_NATURAL_GLACIER_OUTLINE.setStrokeWidth(0.3f * paintScaleFactor);
 
 		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStrokeWidth(2.4f * paintScaleFactor);

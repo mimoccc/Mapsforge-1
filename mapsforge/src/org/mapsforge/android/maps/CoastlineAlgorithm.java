@@ -120,6 +120,14 @@ class CoastlineAlgorithm {
 		void onIslandPolygon(float[] coastline);
 
 		/**
+		 * Called when a valid coastline segment has been detected.
+		 * 
+		 * @param coastline
+		 *            the coordinates of the valid coastline segment.
+		 */
+		void onValidCoastlineSegment(float[] coastline);
+
+		/**
 		 * Called when a closed water polygon has been generated.
 		 * 
 		 * @param coastline
@@ -150,6 +158,7 @@ class CoastlineAlgorithm {
 	private EndPoints endPoints;
 	private final HashSet<EndPoints> handledCoastlineSegments;
 	private final HelperPoint[] helperPoints;
+	private boolean invalidCoastline;
 	private boolean islandSituation;
 	private float[] matchPath;
 	private boolean needHelperPoint;
@@ -294,6 +303,7 @@ class CoastlineAlgorithm {
 
 		this.islandSituation = false;
 		this.waterBackground = true;
+		this.invalidCoastline = false;
 		for (float[] coastline : this.coastlineSegments) {
 			// is the current segment already closed?
 			if (CoastlineWay.isClosed(coastline)) {
@@ -315,9 +325,17 @@ class CoastlineAlgorithm {
 							this.virtualTileBoundaries, this.virtualTileSize));
 				}
 			} else {
-				this.waterBackground = false;
+				this.invalidCoastline = true;
 				closedPolygonHandler.onInvalidCoastlineSegment(coastline);
 			}
+		}
+
+		if (this.invalidCoastline) {
+			// do not create any closed polygons, just draw the coastline segments
+			for (CoastlineWay coastlineWay : this.coastlineWays) {
+				closedPolygonHandler.onValidCoastlineSegment(coastlineWay.data);
+			}
+			return;
 		}
 
 		// check if there are no errors and the tile needs a water background
