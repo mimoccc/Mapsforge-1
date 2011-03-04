@@ -22,12 +22,15 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * RouteOverlay is a special Overlay to display a sequence of way nodes. To draw an arbitrary
- * polygon, add a way node sequence where the first and the last way node are equal.
+ * RouteOverlay is an overlay to display a sequence of way nodes. It may be used to show
+ * additional ways such as calculated routes. Closed polygons, for example buildings or areas,
+ * are also supported. The list of way nodes is considered as a closed polygon if the first and
+ * the last way node are equal.
  * <p>
- * All rendering parameters like color, stroke width, pattern and transparency can be configured
- * via the two {@link android.graphics.Paint Paint} objects in the
- * {@link #RouteOverlay(Paint,Paint)} constructor.
+ * The way data of a RouteOverlay may be modified at any time. All rendering parameters like
+ * color, stroke width, pattern and transparency can be configured via two {@link Paint}
+ * objects. The overlay is drawn twice – once with each paint object – to allow for different
+ * outlines and fillings.
  */
 public class RouteOverlay extends Overlay {
 	private static final String THREAD_NAME = "RouteOverlay";
@@ -43,9 +46,10 @@ public class RouteOverlay extends Overlay {
 	 * Constructs a new RouteOverlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
+	 *            the paint object which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
+	 *            the paint object which will be used to draw the outline of the overlay (may be
+	 *            null).
 	 */
 	public RouteOverlay(Paint fillPaint, Paint outlinePaint) {
 		this.path = new Path();
@@ -57,9 +61,10 @@ public class RouteOverlay extends Overlay {
 	 * Sets the paint objects which will be used to draw the overlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
+	 *            the paint object which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
+	 *            the paint object which will be used to draw the outline of the overlay (may be
+	 *            null).
 	 */
 	public void setPaint(Paint fillPaint, Paint outlinePaint) {
 		synchronized (this.path) {

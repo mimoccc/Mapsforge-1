@@ -22,7 +22,10 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 /**
- * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}.
+ * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The
+ * class defines some methods to access the backing data structure of deriving subclasses.
+ * Besides organizing the redrawing process it handles tap events from the user to check if an
+ * OverlayItem has been touched and {@link #onTap(int)} must be executed.
  * 
  * @param <Item>
  *            the type of items handled by this Overlay.
@@ -35,9 +38,9 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	 * 
 	 * @param balloon
 	 *            the drawable whose bounds should be set.
-	 * @return the given drawable.
+	 * @return the given drawable with set bounds.
 	 */
-	protected static Drawable boundCenter(Drawable balloon) {
+	public static Drawable boundCenter(Drawable balloon) {
 		balloon.setBounds(balloon.getIntrinsicWidth() / -2, balloon.getIntrinsicHeight() / -2,
 				balloon.getIntrinsicWidth() / 2, balloon.getIntrinsicHeight() / 2);
 		return balloon;
@@ -48,9 +51,9 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	 * 
 	 * @param balloon
 	 *            the drawable whose bounds should be set.
-	 * @return the given drawable.
+	 * @return the given drawable with set bounds.
 	 */
-	protected static Drawable boundCenterBottom(Drawable balloon) {
+	public static Drawable boundCenterBottom(Drawable balloon) {
 		balloon.setBounds(balloon.getIntrinsicWidth() / -2, -balloon.getIntrinsicHeight(),
 				balloon.getIntrinsicWidth() / 2, 0);
 		return balloon;
@@ -79,7 +82,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	 * Constructs a new ItemizedOverlay.
 	 * 
 	 * @param defaultMarker
-	 *            the default marker for each item.
+	 *            the default marker (may be null).
 	 */
 	public ItemizedOverlay(Drawable defaultMarker) {
 		this.defaultMarker = defaultMarker;
@@ -111,6 +114,10 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 			// select the correct marker for the item and get the position
 			if (this.tapOverlayItem.getMarker() == null) {
+				if (this.defaultMarker == null) {
+					// no marker to draw the item
+					continue;
+				}
 				this.tapMarkerBounds = this.defaultMarker.getBounds();
 			} else {
 				this.tapMarkerBounds = this.tapOverlayItem.getMarker().getBounds();
@@ -182,6 +189,10 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 			// get the correct marker for the item
 			if (this.overlayItem.getMarker() == null) {
+				if (this.defaultMarker == null) {
+					// no marker to draw the item
+					continue;
+				}
 				this.itemMarker = this.defaultMarker;
 			} else {
 				this.itemMarker = this.overlayItem.getMarker();

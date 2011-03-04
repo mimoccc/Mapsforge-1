@@ -23,11 +23,15 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 
 /**
- * Overlay is the abstract base class to display geographical data such as points and ways on
- * top of the map. To add an Overlay to a <code>MapView</code>, create a subclass of this class
- * and add an instance to the list returned by {@link MapView#getOverlays()}.
+ * Overlay is the abstract base class for all types of overlays. It handles the lifecycle of the
+ * overlay thread and implements those parts of the redrawing process which all overlays have in
+ * common.
  * <p>
- * This implementation runs in a separate thread to avoid blocking the UI thread.
+ * To add an Overlay to a <code>MapView</code>, create a subclass of this class and add an
+ * instance to the list returned by {@link MapView#getOverlays()}. When an overlay gets removed
+ * from the list, the corresponding thread is automatically interrupted and all its resources
+ * are freed. Re-adding a previously removed overlay to the list will therefore cause an
+ * {@link IllegalThreadStateException}.
  */
 public abstract class Overlay extends Thread {
 	private static final String THREAD_NAME = "Overlay";

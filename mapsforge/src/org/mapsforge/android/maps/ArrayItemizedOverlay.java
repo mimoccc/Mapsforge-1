@@ -24,8 +24,14 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 /**
- * Thread-safe implementation of the {@link ItemizedOverlay} class using an {@link ArrayList} as
- * internal data structure.
+ * ArrayItemizedOverlay is a thread-safe implementation of the {@link ItemizedOverlay} class
+ * using an {@link ArrayList} as internal data structure. A default marker for all
+ * {@link OverlayItem OverlayItems} without an individual marker can be defined via the
+ * constructor.
+ * <p>
+ * The ArrayItemizedOverlay handles tap events on OverlayItems by displaying their title and
+ * description in an {@link AlertDialog}. This behavior can easily be changed by overriding the
+ * {@link #onTap} method.
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
@@ -40,12 +46,13 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * Constructs a new ArrayItemizedOverlay.
 	 * 
 	 * @param defaultMarker
-	 *            the default marker.
+	 *            the default marker (may be null). This marker is aligned to the center of its
+	 *            bottom line to allow for conical symbols such as a pin or a needle.
 	 * @param context
 	 *            the reference to the application context.
 	 */
 	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
-		super(boundCenterBottom(defaultMarker));
+		super(defaultMarker == null ? null : boundCenterBottom(defaultMarker));
 		this.context = context;
 		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);
 	}

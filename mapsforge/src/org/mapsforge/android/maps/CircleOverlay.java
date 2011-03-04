@@ -22,12 +22,14 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * CircleOverlay is a special Overlay to display a circle on top of the map. The radius of the
- * circle is specified in meters and will be automatically converted to pixels at each redraw.
+ * CircleOverlay is an overlay to display a circle. It may be used to indicate positions which
+ * have a known accuracy, such as GPS fixes. The radius of the circle is specified in meters and
+ * will be automatically converted to pixels at each redraw.
  * <p>
- * All rendering parameters like color, stroke width, pattern and transparency can be configured
- * via the two {@link android.graphics.Paint Paint} objects in the
- * {@link #CircleOverlay(Paint,Paint)} constructor.
+ * Radius and center position of a CircleOverlay may be modified at any time. All rendering
+ * parameters like color, stroke width, pattern and transparency can be configured via two
+ * {@link Paint} objects. The overlay is drawn twice – once with each paint object – to allow
+ * for different outlines and fillings.
  */
 public class CircleOverlay extends Overlay {
 	private static final String THREAD_NAME = "CircleOverlay";
@@ -44,9 +46,10 @@ public class CircleOverlay extends Overlay {
 	 * Constructs a new CircleOverlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
+	 *            the paint object which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
+	 *            the paint object which will be used to draw the outline of the overlay (may be
+	 *            null).
 	 */
 	public CircleOverlay(Paint fillPaint, Paint outlinePaint) {
 		this.path = new Path();
@@ -75,9 +78,10 @@ public class CircleOverlay extends Overlay {
 	 * Sets the paint objects which will be used to draw the overlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay.
+	 *            the paint object which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay.
+	 *            the paint object which will be used to draw the outline of the overlay (may be
+	 *            null).
 	 */
 	public void setPaint(Paint fillPaint, Paint outlinePaint) {
 		synchronized (this.path) {

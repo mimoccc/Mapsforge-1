@@ -70,9 +70,9 @@ import android.widget.ZoomControls;
  * Map tiles are automatically cached in a separate directory on the memory card. The size of
  * this cache may be adjusted via the {@link #setMemoryCardCacheSize(int)} method.
  * <p>
- * To draw an {@link Overlay} on top of the map, add it to the list returned by
- * {@link #getOverlays()}. More than one Overlay can be used at the same time to display
- * geographical data such as points and ways.
+ * {@link Overlay Overlays} can be used to display geographical data such as points and ways. To
+ * draw an overlay on top of the map, add it to the list returned by {@link #getOverlays()}.
+ * Overlays may be added or removed from the list at any time.
  * <p>
  * Some text strings in the user interface of a MapView are customizable. See
  * {@link #setText(String, String)} for the names of the text fields that can be overridden at
