@@ -14,29 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays;
 
 import java.io.Serializable;
 
 /**
- * 
+ * dynamic growing array
  */
-public class UnsignedFourBitArrayGrowable implements Serializable {
+public class UnsignedByteArrayGrowable implements Serializable {
 
 	private static final long serialVersionUID = 5352302212205236878L;
-
 	private final IntArrayGrowable data;
 	private int size;
-	private int arrayOffset, bitOffset;
+	private int fourByteOffset, byteOffset;
 
 	/**
 	 * @param chunkSize
-	 *            amount to increase size
+	 *            amount to increase in size
 	 */
-	public UnsignedFourBitArrayGrowable(int chunkSize) {
+	public UnsignedByteArrayGrowable(int chunkSize) {
 		data = new IntArrayGrowable(chunkSize / 4);
 		data.add(0);
-		arrayOffset = bitOffset = size = 0;
+		fourByteOffset = byteOffset = size = 0;
 	}
 
 	/**
@@ -45,15 +44,16 @@ public class UnsignedFourBitArrayGrowable implements Serializable {
 	 */
 	public void add(int val) {
 		int _val = val;
-		_val &= 0x0000000f;
-		if (bitOffset == 32) {
-			bitOffset = 0;
-			arrayOffset++;
+		_val &= 0x000000ff;
+		if (byteOffset == 4) {
+			byteOffset = 0;
+			fourByteOffset++;
 			data.add(0);
 		}
-		data.set(arrayOffset, (data.get(arrayOffset) & (~(0x0000000f << (bitOffset))))
-				| (_val << (bitOffset)));
-		bitOffset += 4;
+		data.set(fourByteOffset,
+				(data.get(fourByteOffset) & (~(0x000000ff << (byteOffset * 8))))
+						| (_val << (byteOffset * 8)));
+		byteOffset++;
 		size++;
 	}
 
@@ -61,30 +61,30 @@ public class UnsignedFourBitArrayGrowable implements Serializable {
 	 * @param idx
 	 *            position
 	 * @param val
-	 *            is put to position
+	 *            new value put at position.
 	 */
 	public void set(int idx, int val) {
 		int _val = val;
-		_val &= 0x0000000f;
-		int arrOffs = idx / 8;
-		int bitOffs = (idx % 8) * 4;
-		data.set(arrOffs, (data.get(arrOffs) & (~(0x0000000f << (bitOffs))))
-				| (_val << (bitOffs)));
+		_val &= 0x000000ff;
+		int offsetA = idx / 4;
+		int offsetB = idx % 4;
+		data.set(offsetA, (data.get(offsetA) & (~(0x000000ff << (offsetB * 8))))
+				| (_val << (offsetB * 8)));
 	}
 
 	/**
 	 * @param idx
-	 *            addresses the value
-	 * @return value at pos.
+	 *            position
+	 * @return value at index
 	 */
 	public int get(int idx) {
-		int offsetA = idx / 8;
-		int offsetB = (idx % 8) * 4;
-		return (data.get(offsetA) >>> (offsetB)) & 0x0000000f;
+		int offsetA = idx / 4;
+		int offsetB = idx % 4;
+		return (data.get(offsetA) >>> (offsetB * 8)) & 0x000000ff;
 	}
 
 	/**
-	 * @return size of this array.
+	 * @return size of this array
 	 */
 	public int size() {
 		return size;

@@ -28,7 +28,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbR
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.Serializer;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArray;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 
 class EdgeMapper implements Serializable {

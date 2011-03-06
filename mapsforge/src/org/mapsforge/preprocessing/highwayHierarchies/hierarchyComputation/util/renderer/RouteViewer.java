@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.renderer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

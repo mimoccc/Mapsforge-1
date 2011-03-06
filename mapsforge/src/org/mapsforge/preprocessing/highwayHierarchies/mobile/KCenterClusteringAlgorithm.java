@@ -25,9 +25,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Random;
 
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.BinaryMinHeap;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.KCenterClustering.KCenterCluster;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
 
 /**
  * Implementation of the k-center clustering algorithm as proposed in the publication of the

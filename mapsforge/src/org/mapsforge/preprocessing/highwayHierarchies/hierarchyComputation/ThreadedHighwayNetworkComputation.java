@@ -21,7 +21,7 @@ import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArraySynchronized;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArraySynchronized;
 
 /**
  * computes the highway network out of a core.

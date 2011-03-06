@@ -21,10 +21,10 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.LinkedList;
 
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHComputation;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.BinaryMinHeap;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
 
 /**
  * A Binary Heap and hash map based implementation of the Algorithm of dijkstra.

@@ -34,7 +34,7 @@ import java.util.LinkedList;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHGraphProperties.HHLevelStats;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArraySynchronized;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArraySynchronized;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;

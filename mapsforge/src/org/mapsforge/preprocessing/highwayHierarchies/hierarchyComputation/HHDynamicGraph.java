@@ -27,9 +27,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArrayGrowable;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.IntArrayGrowable;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.IntArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.UnsignedByteArrayGrowable;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgVertex;

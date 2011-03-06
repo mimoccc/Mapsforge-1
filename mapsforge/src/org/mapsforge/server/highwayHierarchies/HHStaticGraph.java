@@ -35,7 +35,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbR
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.Serializer;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArray;
 
 /**
  * Array based implementation of a graph. Level are collapsed (no extra adjacency list per

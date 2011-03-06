@@ -24,8 +24,8 @@ import java.util.LinkedList;
 
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.BinaryMinHeap;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.IBinaryHeapItem;
 
 final class HHAlgorithm {
 

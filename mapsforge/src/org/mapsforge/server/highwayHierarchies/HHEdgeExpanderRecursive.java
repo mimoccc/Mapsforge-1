@@ -32,10 +32,10 @@ import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.Dijks
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.Serializer;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArray;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedByteArrayGrowable;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArray;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.UnsignedByteArray;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.UnsignedByteArrayGrowable;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.UnsignedFourBitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.UnsignedFourBitArrayGrowable;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 

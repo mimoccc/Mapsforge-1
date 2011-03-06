@@ -14,28 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays;
 
 import java.io.Serializable;
 
 /**
- * 
+ * array of bytes
  */
-public class UnsignedFourBitArray implements Serializable {
+public class UnsignedByteArray implements Serializable {
 
-	private static final long serialVersionUID = -4385361050427649174L;
+	private static final long serialVersionUID = 2422456076440395610L;
 
 	private final int[] data;
-	private final int size;
 
 	/**
 	 * @param size
 	 *            of this array
 	 */
-	public UnsignedFourBitArray(int size) {
-		this.size = size;
-		int len = size / 8;
-		if (size % 8 != 0) {
+	public UnsignedByteArray(int size) {
+		int len = size / 4;
+		if (size % 4 != 0) {
 			len++;
 		}
 		data = new int[len];
@@ -43,34 +41,27 @@ public class UnsignedFourBitArray implements Serializable {
 
 	/**
 	 * @param idx
-	 *            position the put value
+	 *            index to modify
 	 * @param val
-	 *            new value
+	 *            new value.
 	 */
 	public void set(int idx, int val) {
 		int _val = val;
-		_val &= 0x0000000f;
-		int arrayOffset = idx / 8;
-		int bitOffset = (idx % 8) * 4;
-		data[arrayOffset] = (data[arrayOffset] & ~(0x0000000f << bitOffset))
+		_val &= 0x000000ff;
+		int arrayOffset = idx / 4;
+		int bitOffset = (idx % 4) * 8;
+		data[arrayOffset] = (data[arrayOffset] & ~(0x000000ff << bitOffset))
 				| (_val << bitOffset);
 	}
 
 	/**
 	 * @param idx
-	 *            postition.
-	 * @return value at position
+	 *            position.
+	 * @return value at index.
 	 */
 	public int get(int idx) {
-		int arrayOffset = idx / 8;
-		int bitOffset = (idx % 8) * 4;
-		return (data[arrayOffset] >>> bitOffset) & 0x0000000f;
-	}
-
-	/**
-	 * @return this of this array
-	 */
-	public int size() {
-		return size;
+		int arrayOffset = idx / 4;
+		int bitOffset = (idx % 4) * 8;
+		return (data[arrayOffset] >>> bitOffset) & 0x000000ff;
 	}
 }

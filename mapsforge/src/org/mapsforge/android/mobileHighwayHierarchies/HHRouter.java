@@ -28,7 +28,7 @@ import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
 import org.mapsforge.core.Router;
 import org.mapsforge.core.Vertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.renderer.RendererV2;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.renderer.RendererV2;
 
 /**
  * This class implements the router interface which is already used server sided. There is some

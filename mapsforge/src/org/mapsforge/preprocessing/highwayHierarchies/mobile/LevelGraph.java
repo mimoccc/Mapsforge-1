@@ -27,7 +27,7 @@ import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbR
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHEdgeLvl;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHVertexLvl;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.arrays.BitArray;
 
 /**
  * Multileveled array based graph implementation. For computing the binary file, it is necessary
