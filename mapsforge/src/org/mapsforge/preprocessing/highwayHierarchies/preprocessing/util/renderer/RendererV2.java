@@ -31,9 +31,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -759,31 +757,8 @@ public class RendererV2 {
 	 */
 	public static void main(String[] agrs) throws FileNotFoundException, IOException {
 		Router router = new HHRouter(new File(
-				"evaluation/opthh/ger_12_quad_tree_100_true.blockedHH"), 1024 * 1024);
+				"data/binary/berlin.mobileHH"), 1024 * 1024);
 		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);
-		LineNumberReader lnr = new LineNumberReader(new FileReader(new File(
-				"evaluation/naviRoute/2097152.txt")));
-		String line = lnr.readLine();
-		String[] tmp = line.split(";");
-		String[] c1 = tmp[0].split(",");
-		String[] c2 = tmp[1].split(",");
-		Vertex s = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c1[0]), Double
-				.parseDouble(c1[1])));
-		Vertex t = router.getNearestVertex(new GeoCoordinate(Double.parseDouble(c2[0]), Double
-				.parseDouble(c2[1])));
-		Edge[] route = router.getShortestPath(s.getId(), t.getId());
-		r.addRoute(route, Color.BLUE);
 
-		while ((line = lnr.readLine()) != null) {
-			tmp = line.split(";");
-			c1 = tmp[0].split(",");
-			GeoCoordinate gc = new GeoCoordinate(Double.parseDouble(c1[0]), Double
-					.parseDouble(c1[1]));
-			System.out.println(gc);
-			r.addCircle(
-					gc,
-					Color.RED
-					);
-		}
 	}
 }

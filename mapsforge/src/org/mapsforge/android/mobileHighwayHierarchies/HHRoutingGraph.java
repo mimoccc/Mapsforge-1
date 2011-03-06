@@ -174,10 +174,6 @@ final class HHRoutingGraph {
 		long endAddrBlockIndex = iStream.readLong();
 		long startAddrRTree = iStream.readLong();
 		long endAddrRTree = iStream.readLong();
-		System.out.println("file size " + hhBinaryFile.length());
-		System.out.println("graph " + (endAddrGraph - startAddrGraph));
-		System.out.println("rtree " + (endAddrRTree - startAddrRTree));
-		System.out.println("addrTable " + (endAddrBlockIndex - startAddrBlockIndex));
 
 		// READ THE HEADER OF THE CLUSTER BLOCKS SECTION
 		raf.seek(startAddrGraph);
@@ -352,7 +348,6 @@ final class HHRoutingGraph {
 		int minLat = GeoCoordinate.doubleToInt(c.getLatitude() - alphaLat);
 		int maxLat = GeoCoordinate.doubleToInt(c.getLatitude() + alphaLat);
 		LinkedList<Integer> blockIds = blockIndex.overlaps(minLon, maxLon, minLat, maxLat);
-		System.out.println(maxDistanceMeters + "\t" + blockIds.size());
 		double dBest = Double.MAX_VALUE;
 		HHVertex vBest = null;
 		for (int blockId : blockIds) {

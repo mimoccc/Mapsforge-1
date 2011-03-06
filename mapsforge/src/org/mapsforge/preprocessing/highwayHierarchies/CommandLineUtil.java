@@ -36,7 +36,7 @@ import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionTime;
 import org.mapsforge.server.highwayHierarchies.HHRouterServerside;
 
 /**
- * this class implements a command line interface to hh preprocessing.
+ * this class implements a command line interface to highway hierarchies preprocessing.
  */
 public class CommandLineUtil {
 
@@ -129,26 +129,29 @@ public class CommandLineUtil {
 				config.getProperty("db.user"),
 				config.getProperty("db.pass"));
 
-		// compute hierarchy
-		HHComputation.doPreprocessing(
-				new RgDAO(conn1),
-				weightFunction,
-				Integer.parseInt(config.getProperty(format + ".hierarchie.h")),
-				Integer.parseInt(config
-						.getProperty(format + ".hierarchie.hopLimit")),
-				Double.parseDouble(config.getProperty(format + ".hierarchie.c")),
-				Integer.parseInt(config.getProperty(format
-						+ ".hierarchie.vertexThreshold")),
-				Boolean.parseBoolean(config.getProperty(format
-						+ ".hierarchie.downgradeEdges")),
-				Integer.parseInt(config.getProperty("numThreads")),
-				conn2);
+		if (!p.getSkipHierarchyComputation()) {
+			// compute hierarchy
+			HHComputation.doPreprocessing(
+					new RgDAO(conn1),
+					weightFunction,
+					Integer.parseInt(config.getProperty(format + ".hierarchie.h")),
+					Integer.parseInt(config
+							.getProperty(format + ".hierarchie.hopLimit")),
+					Double.parseDouble(config.getProperty(format + ".hierarchie.c")),
+					Integer.parseInt(config.getProperty(format
+							+ ".hierarchie.vertexThreshold")),
+					Boolean.parseBoolean(config.getProperty(format
+							+ ".hierarchie.downgradeEdges")),
+					Integer.parseInt(config.getProperty("numThreads")),
+					conn2);
+		}
 
 		// write output
 		if (format.equals("mobile")) {
 			String clusteringAlgorithm = config.getProperty("clusteringAlgorithm");
 			int clusterSizeThreshold;
-			if (clusteringAlgorithm.equals(HHBinaryFileWriter.CLUSTERING_ALGORITHM_QUAD_TREE)) {
+			if (clusteringAlgorithm
+					.equals(HHBinaryFileWriter.CLUSTERING_ALGORITHM_QUAD_TREE)) {
 				clusterSizeThreshold = Integer.parseInt(config
 						.getProperty("quad-tree.clusterSizeThreshold"));
 			} else {
@@ -177,8 +180,10 @@ public class CommandLineUtil {
 			out.flush();
 			out.close();
 			System.out
-					.println(df.format(out.size()) + " bytes written to '" + outputFile + "'");
+					.println(df.format(out.size()) + " bytes written to '" + outputFile
+							+ "'");
 		}
+
 		conn1.close();
 		conn2.close();
 	}
@@ -211,6 +216,10 @@ public class CommandLineUtil {
 		sb.append("\n");
 		sb.append("  -wf, --weight-function=[AVERAGE_SPEED_FILE]");
 		sb.append("\n");
+		sb.append("  -s, --skip-hierarchy-computation");
+		sb.append("\n");
+		sb.append("      only write the contents from the database to a binary file");
+		sb.append("\n");
 
 		return sb.toString();
 	}
@@ -220,6 +229,7 @@ public class CommandLineUtil {
 		private String format;
 		private String configFile;
 		private String averageSpeedFile;
+		private boolean skipHierarchyComputation = false;
 
 		public void setOutputFile(String outputFile) {
 			this.outputFile = outputFile;
@@ -230,11 +240,14 @@ public class CommandLineUtil {
 			if (tmp.length == 2) {
 				return setParameter(tmp[0], tmp[1]);
 			}
-			return false;
+			return setParameter(arg, null);
 		}
 
 		private boolean setParameter(String name, String value) {
 			if (name.equals("-f") || name.equals("--format")) {
+				if (value == null) {
+					return false;
+				}
 				if (format == null) {
 					if (value.equals("mobile") || value.equals("server")) {
 						format = value;
@@ -243,17 +256,29 @@ public class CommandLineUtil {
 				}
 				return false;
 			} else if (name.equals("-c") || name.equals("--config.file")) {
+				if (value == null) {
+					return false;
+				}
 				if (configFile == null) {
 					configFile = value;
 					return true;
 				}
 				return false;
-			} else if (name.equals("wf") || name.equals("--weight-function")) {
+			} else if (name.equals("-wf") || name.equals("--weight-function")) {
+				if (value == null) {
+					return false;
+				}
 				if (averageSpeedFile == null) {
 					averageSpeedFile = value;
 					return true;
 				}
 				return false;
+			} else if (name.equals("-s") || name.equals("--skip-hierarchy-computation")) {
+				if (value != null) {
+					return false;
+				}
+				skipHierarchyComputation = true;
+				return true;
 			}
 			return false;
 		}
@@ -273,5 +298,10 @@ public class CommandLineUtil {
 		public String getAverageSpeedFile() {
 			return averageSpeedFile;
 		}
+
+		public boolean getSkipHierarchyComputation() {
+			return skipHierarchyComputation;
+		}
+
 	}
 }

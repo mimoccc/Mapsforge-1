@@ -2,7 +2,7 @@
 <project name="mapsforge-produce">
 	
 	<!-- JVM args -->
-	<property name="xmx" value="1600M"/>
+	<property name="xmx" value="4000M"/>
 	
 	<!-- osmosis executable (adjust to linux or windows) -->
 	<property name="osmosis" value="osmosis.bat"/>		
@@ -37,12 +37,12 @@
 		<!--
 		<get dest="${data.osm}/baden-wuerttemberg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/baden-wuerttemberg.osm.pbf" usetimestamp="true"/>
 		<get dest="${data.osm}/bayern.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bayern.osm.pbf" usetimestamp="true"/>
-		<get dest="${data.osm}/berlin.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/berlin.osm.pbf" usetimestamp="true"/>
 		<get dest="${data.osm}/brandenburg.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/brandenburg.osm.pbf" usetimestamp="true"/>
 		<get dest="${data.osm}/bremen.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/bremen.osm.pbf" usetimestamp="true"/>
-		-->
 		<get dest="${data.osm}/germany.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany.osm.pbf" usetimestamp="true"/>
-				
+		-->
+		<get dest="${data.osm}/berlin.osm.pbf" src="http://download.geofabrik.de/osm/europe/germany/berlin.osm.pbf" usetimestamp="true"/>
+						
 	</target>
 
 	<!-- produce map and routing binaries -->
