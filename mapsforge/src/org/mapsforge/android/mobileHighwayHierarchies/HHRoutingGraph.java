@@ -68,6 +68,10 @@ final class HHRoutingGraph {
 	 * the initial size of the edge pool.
 	 */
 	private static final int INITIAL_POOL_SIZE_EDGES = 1;
+	/**
+	 * the initial size of the Offset pool.
+	 */
+	private static final int INITIAL_POOL_SIZE_OFFSETS = 1;
 
 	private static final int getBitmask(int shiftClusterId) {
 		int bMask = 0;
@@ -92,11 +96,15 @@ final class HHRoutingGraph {
 	/**
 	 * Object pool for the vertices.
 	 */
-	final ObjectPool<HHVertex> vertexPool;
+	final ObjectPool<HHVertex> poolVertices;
 	/**
 	 * Object pool for the edges.
 	 */
-	final ObjectPool<HHEdge> edgePool;
+	final ObjectPool<HHEdge> poolEdges;
+	/**
+	 * Object pool for Offsets.
+	 */
+	final ObjectPool<Offset> poolOffsets;
 
 	/**
 	 * The highway hierarchies binary file.
@@ -169,7 +177,7 @@ final class HHRoutingGraph {
 		}
 
 		long startAddrGraph = iStream.readLong();
-		long endAddrGraph = iStream.readLong();
+		/* long endAddrGraph = */iStream.readLong();
 		long startAddrBlockIndex = iStream.readLong();
 		long endAddrBlockIndex = iStream.readLong();
 		long startAddrRTree = iStream.readLong();
@@ -214,27 +222,30 @@ final class HHRoutingGraph {
 		this.blockAddressTable = new AddressLookupTable(startAddrBlockIndex, endAddrBlockIndex,
 				hhBinaryFile);
 		this.blockCache = new LRUCache<Block>(cacheSizeBytes);
-		// this.blockCache = new DummyCache<Block>();
-		this.vertexPool = new ObjectPool<HHVertex>(new ObjectPool.PoolableFactory<HHVertex>() {
+		this.poolVertices = new ObjectPool<HHVertex>(
+				new ObjectPool.PoolableFactory<HHVertex>() {
 
-			@Override
-			public HHVertex makeObject() {
-				return new HHVertex();
-			}
-		}, INITIAL_POOL_SIZE_VERTICES);
-		this.edgePool = new ObjectPool<HHEdge>(new ObjectPool.PoolableFactory<HHEdge>() {
+					@Override
+					public HHVertex makeObject() {
+						return new HHVertex();
+					}
+				}, INITIAL_POOL_SIZE_VERTICES);
+		this.poolEdges = new ObjectPool<HHEdge>(
+				new ObjectPool.PoolableFactory<HHEdge>() {
 
-			@Override
-			public HHEdge makeObject() {
-				return new HHEdge();
-			}
+					@Override
+					public HHEdge makeObject() {
+						return new HHEdge();
+					}
+				}, INITIAL_POOL_SIZE_EDGES);
 
-		}, INITIAL_POOL_SIZE_EDGES);
-
-		// for (int i = 0; i < blockAddressTable.size(); i++) {
-		// readBlock(i);
-		// }
-		clearCache();
+		this.poolOffsets = new ObjectPool<Offset>(
+				new ObjectPool.PoolableFactory<Offset>() {
+					@Override
+					public Offset makeObject() {
+						return new Offset();
+					}
+				}, INITIAL_POOL_SIZE_OFFSETS);
 	}
 
 	/**
@@ -421,7 +432,7 @@ final class HHRoutingGraph {
 	 *            the vertex to be released.
 	 */
 	public void releaseVertex(HHVertex vertex) {
-		vertexPool.release(vertex);
+		poolVertices.release(vertex);
 	}
 
 	/**
@@ -431,7 +442,7 @@ final class HHRoutingGraph {
 	 *            the edge to be released.
 	 */
 	public void releaseEdge(HHEdge edge) {
-		edgePool.release(edge);
+		poolEdges.release(edge);
 	}
 
 	/**
