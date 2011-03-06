@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.Serializer;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.UnsignedFourBitArray;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;

@@ -33,10 +33,10 @@ import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHComputation;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelEdge;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.LevelGraph.Level.LevelVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHComputation;
 
 class BlockWriter {
 

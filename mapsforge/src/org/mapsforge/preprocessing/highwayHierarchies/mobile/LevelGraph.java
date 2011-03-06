@@ -23,10 +23,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHEdgeLvl;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader.HHVertexLvl;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHEdgeLvl;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHVertex;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader.HHVertexLvl;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArray;
 
 /**

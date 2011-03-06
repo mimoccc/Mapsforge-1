@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHGraphProperties.HHLevelStats;
 import org.mapsforge.server.highwayHierarchies.DistanceTable;
 
 /**

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation;
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
@@ -31,9 +31,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicEdge;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicVertex;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHGraphProperties.HHLevelStats;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicEdge;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicVertex;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHGraphProperties.HHLevelStats;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.arrays.BitArraySynchronized;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.IRgEdge;

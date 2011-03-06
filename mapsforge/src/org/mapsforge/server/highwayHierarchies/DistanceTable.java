@@ -31,8 +31,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDbReader;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.Serializer;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDbReader;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.Serializer;
 
 /**
  * Maps vertex id|s to table rows / cols and hold distances in an array.

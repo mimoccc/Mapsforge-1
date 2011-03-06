@@ -20,7 +20,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHComputation;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHComputation;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;

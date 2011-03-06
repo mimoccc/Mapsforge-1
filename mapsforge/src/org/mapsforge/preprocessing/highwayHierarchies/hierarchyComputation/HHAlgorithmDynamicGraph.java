@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.highwayHierarchies.preprocessing;
+package org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.LinkedList;
 
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicEdge;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHDynamicGraph.HHDynamicVertex;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicEdge;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHDynamicGraph.HHDynamicVertex;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.prioQueue.IBinaryHeapItem;
 

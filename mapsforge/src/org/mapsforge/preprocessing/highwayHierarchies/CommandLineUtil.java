@@ -28,9 +28,9 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.Properties;
 
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.HHComputation;
+import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.DBConnection;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.HHBinaryFileWriter;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.HHComputation;
-import org.mapsforge.preprocessing.highwayHierarchies.preprocessing.util.DBConnection;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgDAO;
 import org.mapsforge.preprocessing.routingGraph.dao.impl.RgWeightFunctionTime;
 import org.mapsforge.server.highwayHierarchies.HHRouterServerside;

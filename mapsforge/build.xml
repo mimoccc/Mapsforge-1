@@ -284,8 +284,8 @@ purpose.
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
 			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/mobile/HHGlobals.*" />
 			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/highwayHierarchies/mobile/HHGlobals.*" />
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/preprocessing/" />
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/highwayHierarchies/preprocessing/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/hierarchyComputation/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/highwayHierarchies/hierarchyComputation/" />
 		</jar>
 		<antcall target="eclipse-refresh">
 			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
