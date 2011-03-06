@@ -759,6 +759,6 @@ public class RendererV2 {
 		Router router = new HHRouter(new File(
 				"data/binary/berlin.mobileHH"), 1024 * 1024);
 		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);
-
+		r.setZoomLevel(5);
 	}
 }
