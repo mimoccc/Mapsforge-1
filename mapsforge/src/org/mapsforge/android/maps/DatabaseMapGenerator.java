@@ -225,10 +225,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_EASY = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_EXPERT = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_FREERIDE = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_PISTE_TYPE_DOWNHILL_NOVICE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_PISTE_TYPE_NORDIC = new Paint(Paint.ANTI_ALIAS_FLAG);
 
 	private static final Paint PAINT_RAILWAY_CIRCLE_INNER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_RAILWAY_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -1169,6 +1172,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setColor(Color.argb(136, 246, 128, 10));
+		PAINT_PISTE_TYPE_DOWNHILL_FREERIDE.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_DOWNHILL_FREERIDE.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_FREERIDE.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_PISTE_TYPE_DOWNHILL_FREERIDE.setColor(Color.argb(136, 246, 221, 10));
 		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStyle(Paint.Style.STROKE);
 		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeCap(Paint.Cap.ROUND);
@@ -1177,6 +1184,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setColor(Color.argb(136, 64, 255, 64));
+		PAINT_PISTE_TYPE_NORDIC.setStyle(Paint.Style.STROKE);
+		PAINT_PISTE_TYPE_NORDIC.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_PISTE_TYPE_NORDIC.setStrokeCap(Paint.Cap.BUTT);
+		PAINT_PISTE_TYPE_NORDIC.setColor(Color.rgb(192, 0, 0));
 
 		PAINT_RAILWAY_CIRCLE_INNER.setStyle(Paint.Style.FILL);
 		PAINT_RAILWAY_CIRCLE_INNER.setColor(Color.rgb(236, 46, 46));
@@ -1483,8 +1494,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_PISTE_TYPE_DOWNHILL_ADVANCED.setStrokeWidth(2.4f * paintScaleFactor);
 		PAINT_PISTE_TYPE_DOWNHILL_EASY.setStrokeWidth(2.4f * paintScaleFactor);
 		PAINT_PISTE_TYPE_DOWNHILL_EXPERT.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_DOWNHILL_FREERIDE.setStrokeWidth(2.4f * paintScaleFactor);
 		PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE.setStrokeWidth(2.4f * paintScaleFactor);
 		PAINT_PISTE_TYPE_DOWNHILL_NOVICE.setStrokeWidth(2.4f * paintScaleFactor);
+		PAINT_PISTE_TYPE_NORDIC.setPathEffect(new DashPathEffect(new float[] {
+				3 * paintScaleFactor, 2 * paintScaleFactor }, 0));
+		PAINT_PISTE_TYPE_NORDIC.setStrokeWidth(1.2f * paintScaleFactor);
 
 		PAINT_RAILWAY_RAIL_TUNNEL.setPathEffect(new DashPathEffect(new float[] {
 				1.5f * paintScaleFactor, 1.5f * paintScaleFactor }, 0));
@@ -3526,6 +3541,24 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
 					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
 				}
+			} else if (this.tagIDsWays.piste$difficulty$freeride != null
+					&& wayTagIds[this.tagIDsWays.piste$difficulty$freeride.intValue()]) {
+				this.layer.get(LayerIds.PISTE$TYPE$DOWNHILL).add(
+						new ShapePaintContainer(this.shapeContainer,
+								PAINT_PISTE_TYPE_DOWNHILL_FREERIDE));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				}
+			}
+			if (--this.remainingTags <= 0) {
+				return;
+			}
+		} else if (this.tagIDsWays.piste$type$nordic != null
+				&& wayTagIds[this.tagIDsWays.piste$type$nordic.intValue()]) {
+			this.layer.get(LayerIds.PISTE$TYPE$NORDIC).add(
+					new ShapePaintContainer(this.shapeContainer, PAINT_PISTE_TYPE_NORDIC));
+			if (wayName != null && this.currentTile.zoomLevel > 15) {
+				addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
 			}
 			if (--this.remainingTags <= 0) {
 				return;

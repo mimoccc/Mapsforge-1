@@ -136,6 +136,7 @@ highway=motorway2
 
 // Pistes
 piste:type=downhill
+piste:type=nordic
 aerialway=cable_car aerialway=chair_lift aerialway=drag_lift aerialway=gondola aerialway=magic_carpet aerialway=mixed_lift aerialway=rope_tow
 
 // Railways

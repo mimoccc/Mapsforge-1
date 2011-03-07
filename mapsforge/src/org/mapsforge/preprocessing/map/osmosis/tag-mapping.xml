@@ -282,6 +282,7 @@
 	<!-- SKI SLOPES TAGS -->
 	<ways>
 		<osm-tag key="piste:type" value="downhill" zoom-appear="13" />
+		<osm-tag key="piste:type" value="nordic" zoom-appear="13" />
 		<osm-tag key="aerialway" value="cable_car" zoom-appear="13" />
 		<osm-tag key="aerialway" value="chair_lift" zoom-appear="13" />
 		<osm-tag key="aerialway" value="drag_lift" zoom-appear="13" />
@@ -322,6 +323,7 @@
 		<osm-tag key="piste:difficulty" value="intermediate" renderable="false" />
 		<osm-tag key="piste:difficulty" value="advanced" renderable="false" />
 		<osm-tag key="piste:difficulty" value="expert" renderable="false" />
+		<osm-tag key="piste:difficulty" value="freeride" renderable="false" />
 
 		<osm-tag key="tunnel" value="yes" renderable="false" />
 		<osm-tag key="tunnel" value="no" renderable="false" />

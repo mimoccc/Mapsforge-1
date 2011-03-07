@@ -130,9 +130,11 @@ class TagIDsWays {
 	Integer piste$difficulty$advanced;
 	Integer piste$difficulty$easy;
 	Integer piste$difficulty$expert;
+	Integer piste$difficulty$freeride;
 	Integer piste$difficulty$intermediate;
 	Integer piste$difficulty$novice;
 	Integer piste$type$downhill;
+	Integer piste$type$nordic;
 	Integer place$locality;
 	Integer railway$light_rail;
 	Integer railway$rail;
@@ -282,11 +284,14 @@ class TagIDsWays {
 		this.natural$wood = nodeTags.get("natural=wood");
 
 		this.piste$type$downhill = nodeTags.get("piste:type=downhill");
+		this.piste$type$nordic = nodeTags.get("piste:type=nordic");
+
 		this.piste$difficulty$novice = nodeTags.get("piste:difficulty=novice");
 		this.piste$difficulty$easy = nodeTags.get("piste:difficulty=easy");
 		this.piste$difficulty$intermediate = nodeTags.get("piste:difficulty=intermediate");
 		this.piste$difficulty$advanced = nodeTags.get("piste:difficulty=advanced");
 		this.piste$difficulty$expert = nodeTags.get("piste:difficulty=expert");
+		this.piste$difficulty$freeride = nodeTags.get("piste:difficulty=freeride");
 
 		this.place$locality = nodeTags.get("place=locality");
 
