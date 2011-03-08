@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
-import org.mapsforge.android.maps.LabelPlacement.ReferencePosition;
-
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -1065,7 +1063,7 @@ class DependencyCache {
 	 * @param refPos
 	 *            possible label positions form the two or four point Greedy
 	 */
-	void removeReferencePointsFromDependencyCache(ReferencePosition[] refPos) {
+	void removeReferencePointsFromDependencyCache(LabelPlacement.ReferencePosition[] refPos) {
 		Tile lefttmp = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile righttmp = new Tile(this.currentTile.x + 1, this.currentTile.y,
@@ -1092,7 +1090,7 @@ class DependencyCache {
 		tmp = this.dependencyTable.get(downtmp);
 		down = tmp == null ? false : tmp.drawn;
 
-		ReferencePosition ref;
+		LabelPlacement.ReferencePosition ref;
 
 		for (int i = 0; i < refPos.length; i++) {
 			ref = refPos[i];

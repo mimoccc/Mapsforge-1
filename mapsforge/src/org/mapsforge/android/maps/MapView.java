@@ -553,6 +553,11 @@ public class MapView extends ViewGroup {
 	private static final byte DEFAULT_ZOOM_LEVEL_MIN = 0;
 
 	/**
+	 * Names which are used to detect the Android emulator from the SDK.
+	 */
+	private static final String[] EMULATOR_NAMES = { "google_sdk", "sdk" };
+
+	/**
 	 * Path to the caching folder on the external storage.
 	 */
 	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
@@ -566,7 +571,6 @@ public class MapView extends ViewGroup {
 	 * Message code for the handler to hide the zoom controls.
 	 */
 	private static final int MSG_ZOOM_CONTROLS_HIDE = 0;
-
 	private static final Paint PAINT_SCALE_BAR = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -576,7 +580,6 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
-
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -1268,6 +1271,22 @@ public class MapView extends ViewGroup {
 		return zoom;
 	}
 
+	/**
+	 * Detects if the code is currently executed on the emulator from the Android SDK. This
+	 * method can be used for code branches to work around known bugs in the Android emulator.
+	 * 
+	 * @return true if the Android emulator has been detected, false otherwise.
+	 */
+	private boolean isAndroidEmulator() {
+		for (String name : EMULATOR_NAMES) {
+			if (Build.PRODUCT.equals(name)) {
+				// we have a match
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void renderScaleBar() {
 		synchronized (this) {
 			// check if recalculating and drawing of the map scale is necessary
@@ -1365,7 +1384,13 @@ public class MapView extends ViewGroup {
 			this.touchEventHandler = new MultiTouchHandler();
 		}
 
-		this.tileMemoryCardCacheSize = DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE;
+		if (isAndroidEmulator()) {
+			// disable the memory card cache to avoid emulator freezes
+			this.tileMemoryCardCacheSize = 0;
+		} else {
+			this.tileMemoryCardCacheSize = DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE;
+		}
+
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 
 		setBackgroundColor(MAP_VIEW_BACKGROUND);

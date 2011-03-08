@@ -342,18 +342,27 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the comment text of the binary map file.
+	 * Returns the comment text of the current map file.
 	 * 
-	 * @return the comment text of the binary map file.
+	 * @return the comment text of the current map file.
 	 */
 	public String getCommentText() {
 		return this.commentText;
 	}
 
 	/**
+	 * Returns the area coordinates of the current map file in microdegrees.
+	 * 
+	 * @return the area coordinates of the current map file in microdegrees.
+	 */
+	public Rect getMapBoundary() {
+		return this.mapBoundary;
+	}
+
+	/**
 	 * Returns the center of the current map file (may be null).
 	 * 
-	 * @return the center of the current map file.
+	 * @return the center of the current map file (may be null).
 	 */
 	public GeoPoint getMapCenter() {
 		if (this.mapBoundary != null) {
@@ -363,9 +372,9 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the date of the map data in the binary map file.
+	 * Returns the date of the map data in the current map file.
 	 * 
-	 * @return the date of the map data.
+	 * @return the date of the map data in the current map file.
 	 */
 	public long getMapDate() {
 		return this.mapDate;
@@ -374,7 +383,7 @@ public class MapDatabase {
 	/**
 	 * Returns the start position from the map file header (may be null).
 	 * 
-	 * @return the start position from the map file header.
+	 * @return the start position from the map file header (may be null).
 	 */
 	public GeoPoint getStartPosition() {
 		if (this.headerStartPosition) {
@@ -1494,15 +1503,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the area coordinates of the current map file.
-	 * 
-	 * @return the area coordinates in microdegrees.
-	 */
-	Rect getMapBoundary() {
-		return this.mapBoundary;
-	}
-
-	/***
 	 * Returns the mapping of node tags to IDs in the current map file.
 	 * 
 	 * @return a map containing the tags and their corresponding IDs.
@@ -1520,7 +1520,7 @@ public class MapDatabase {
 		return this.projectionName;
 	}
 
-	/***
+	/**
 	 * Returns the mapping of way tags to IDs in the current map file.
 	 * 
 	 * @return a map containing the tags and their corresponding IDs.
