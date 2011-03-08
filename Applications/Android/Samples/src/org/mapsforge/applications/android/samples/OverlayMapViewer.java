@@ -17,12 +17,13 @@
 package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.ArrayItemizedOverlay;
+import org.mapsforge.android.maps.ArrayRouteOverlay;
 import org.mapsforge.android.maps.CircleOverlay;
 import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.OverlayItem;
-import org.mapsforge.android.maps.RouteOverlay;
+import org.mapsforge.android.maps.OverlayRoute;
 
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -83,8 +84,10 @@ public class OverlayMapViewer extends MapActivity {
 		routePaint2.setStrokeJoin(Paint.Join.ROUND);
 
 		// create the RouteOverlay and set the way nodes
-		RouteOverlay routeOverlay = new RouteOverlay(routePaint1, routePaint2);
-		routeOverlay.setRouteData(new GeoPoint[] { geoPoint1, geoPoint2 });
+		ArrayRouteOverlay routeOverlay = new ArrayRouteOverlay(routePaint1, routePaint2);
+		OverlayRoute route = new OverlayRoute(new GeoPoint[] { geoPoint1, geoPoint2 }, null,
+				null);
+		routeOverlay.addRoute(route);
 
 		// create the ItemizedOverlay with a default marker and set the items
 		Drawable defaultMarker = getResources().getDrawable(R.drawable.marker);
