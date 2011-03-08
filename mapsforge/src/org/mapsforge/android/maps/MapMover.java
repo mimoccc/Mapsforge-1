@@ -73,7 +73,7 @@ class MapMover extends Thread {
 				}
 			}
 
-			// move the map and the Overlays
+			// move the map and the overlays
 			this.mapView.moveMap(this.timeElapsed * this.moveX, this.timeElapsed * this.moveY);
 			synchronized (this.mapView.overlays) {
 				for (Overlay overlay : this.mapView.overlays) {

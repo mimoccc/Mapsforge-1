@@ -28,7 +28,7 @@ import android.graphics.drawable.Drawable;
  * OverlayItem has been touched and {@link #onTap(int)} must be executed.
  * 
  * @param <Item>
- *            the type of items handled by this Overlay.
+ *            the type of items handled by this overlay.
  */
 public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay {
 	private static final String THREAD_NAME = "ItemizedOverlay";
@@ -142,14 +142,14 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	/**
-	 * Returns the numbers of items in this Overlay.
+	 * Returns the numbers of items in this overlay.
 	 * 
-	 * @return the numbers of items in this Overlay.
+	 * @return the numbers of items in this overlay.
 	 */
 	public abstract int size();
 
 	/**
-	 * Creates an item in the Overlay.
+	 * Creates an item in the overlay.
 	 * 
 	 * @param i
 	 *            the index of the item.
@@ -166,10 +166,10 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			return;
 		}
 
-		// draw the Overlay items
-		for (int i = 0; i < this.numberOfItems; ++i) {
+		// draw the overlay items
+		for (int itemIndex = 0; itemIndex < this.numberOfItems; ++itemIndex) {
 			// get the current item
-			this.overlayItem = createItem(i);
+			this.overlayItem = createItem(itemIndex);
 
 			// check if the item has a position
 			if (this.overlayItem.getPoint() == null) {
@@ -242,7 +242,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	/**
-	 * This method should be called after items have been added to the Overlay.
+	 * This method should be called after items have been added to the overlay.
 	 */
 	protected final void populate() {
 		super.requestRedraw();

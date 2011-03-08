@@ -152,7 +152,7 @@ public class MapView extends ViewGroup {
 					}
 				}
 
-				// move the map and the Overlays
+				// move the map and the overlays
 				moveMap(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
@@ -356,7 +356,7 @@ public class MapView extends ViewGroup {
 					}
 				}
 
-				// move the map and the Overlays
+				// move the map and the overlays
 				moveMap(this.moveX, this.moveY);
 				synchronized (MapView.this.overlays) {
 					for (Overlay overlay : MapView.this.overlays) {
@@ -721,7 +721,7 @@ public class MapView extends ViewGroup {
 	private byte zoomLevelMin;
 
 	/**
-	 * Thread-safe Overlay list. It is necessary to manually synchronize on this list when
+	 * Thread-safe overlay list. It is necessary to manually synchronize on this list when
 	 * iterating over it.
 	 */
 	List<Overlay> overlays;
@@ -881,7 +881,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the thread-safe list of Overlays for this MapView. It is necessary to manually
+	 * Returns the thread-safe list of overlays for this MapView. It is necessary to manually
 	 * synchronize on this list when iterating over it.
 	 * 
 	 * @return the overlay list.
@@ -1004,7 +1004,7 @@ public class MapView extends ViewGroup {
 				}
 			}
 
-			// move the map and the Overlays
+			// move the map and the overlays
 			this.moveMap(this.mapMoveX, this.mapMoveY);
 			synchronized (this.overlays) {
 				for (Overlay overlay : this.overlays) {
@@ -1407,7 +1407,7 @@ public class MapView extends ViewGroup {
 		// create the transformation matrix
 		this.matrix = new Matrix();
 
-		// create the thread-safe Overlay list
+		// create the thread-safe overlay list
 		this.overlays = Collections.synchronizedList(new ArrayList<Overlay>(4) {
 			private static final long serialVersionUID = 1L;
 
@@ -1692,7 +1692,7 @@ public class MapView extends ViewGroup {
 			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 		}
 
-		// draw the Overlays
+		// draw the overlays
 		synchronized (this.overlays) {
 			for (Overlay overlay : this.overlays) {
 				overlay.draw(canvas, this, false);
@@ -1768,7 +1768,7 @@ public class MapView extends ViewGroup {
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
 			handleTiles(true);
 
-			// set up the Overlays
+			// set up the overlays
 			synchronized (this.overlays) {
 				for (Overlay overlay : this.overlays) {
 					overlay.setupOverlay(this);
@@ -2269,7 +2269,7 @@ public class MapView extends ViewGroup {
 				}
 			}
 
-			// move the map and the Overlays
+			// move the map and the overlays
 			synchronized (this) {
 				this.latitude = getValidLatitude(point.getLatitude());
 				this.longitude = point.getLongitude();

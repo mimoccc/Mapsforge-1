@@ -22,111 +22,117 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * RouteOverlay is an overlay to display a sequence of way nodes. It may be used to show
+ * RouteOverlay is an abstract base class to display {@link OverlayRoute OverlayRoutes}. The
+ * class defines some methods to access the backing data structure of deriving subclasses.
+ * 
+ * RouteOverlay is an overlay to display sequences of way nodes. It may be used to show
  * additional ways such as calculated routes. Closed polygons, for example buildings or areas,
- * are also supported. The list of way nodes is considered as a closed polygon if the first and
+ * are also supported. A way node sequence is considered as a closed polygon if the first and
  * the last way node are equal.
  * <p>
  * The way data of a RouteOverlay may be modified at any time. All rendering parameters like
  * color, stroke width, pattern and transparency can be configured via two {@link Paint}
- * objects. The overlay is drawn twice – once with each paint object – to allow for different
+ * objects. Each route is drawn twice – once with each paint object – to allow for different
  * outlines and fillings.
+ * 
+ * @param <Route>
+ *            the type of routes handled by this overlay.
  */
-public class RouteOverlay extends Overlay {
+public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 	private static final String THREAD_NAME = "RouteOverlay";
 
-	private Point[] cachedWayPositions;
-	private byte cachedZoomLevel;
-	private Paint fillPaint;
-	private Paint outlinePaint;
+	private int numberOfRoutes;
+	private Route overlayRoute;
+	private final Paint paintFill;
+	private final Paint paintOutline;
 	private final Path path;
-	private GeoPoint[] wayNodes;
 
 	/**
 	 * Constructs a new RouteOverlay.
 	 * 
-	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay (may be null).
-	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay (may be
-	 *            null).
+	 * @param paintFill
+	 *            the paint which will be used to fill the overlay (may be null).
+	 * @param paintOutline
+	 *            the paint which will be used to draw the outline of the overlay (may be null).
 	 */
-	public RouteOverlay(Paint fillPaint, Paint outlinePaint) {
+	public RouteOverlay(Paint paintFill, Paint paintOutline) {
+		this.paintFill = paintFill;
+		this.paintOutline = paintOutline;
 		this.path = new Path();
-		this.cachedWayPositions = new Point[0];
-		setPaint(fillPaint, outlinePaint);
 	}
 
 	/**
-	 * Sets the paint objects which will be used to draw the overlay.
+	 * Returns the numbers of routes in this overlay.
 	 * 
-	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay (may be null).
-	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay (may be
-	 *            null).
+	 * @return the numbers of routes in this overlay.
 	 */
-	public void setPaint(Paint fillPaint, Paint outlinePaint) {
-		synchronized (this.path) {
-			this.fillPaint = fillPaint;
-			this.outlinePaint = outlinePaint;
-		}
-		super.requestRedraw();
-	}
+	public abstract int size();
 
 	/**
-	 * Sets the way nodes of the route.
+	 * Creates a route in the overlay.
 	 * 
-	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes.
+	 * @param i
+	 *            the index of the route.
+	 * @return the route.
 	 */
-	public void setRouteData(GeoPoint[] wayNodes) {
-		synchronized (this.path) {
-			this.wayNodes = wayNodes;
-			if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
-				this.cachedWayPositions = new Point[this.wayNodes.length];
-			}
-			this.cachedZoomLevel = Byte.MIN_VALUE;
-		}
-		super.requestRedraw();
-	}
+	protected abstract Route createRoute(int i);
 
 	@Override
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
 			byte drawZoomLevel) {
-		synchronized (this.path) {
-			if (this.wayNodes == null || this.wayNodes.length < 1) {
-				// no way nodes to draw
-				return;
-			} else if (this.fillPaint == null && this.outlinePaint == null) {
-				// no paint to draw
-				return;
-			}
+		this.numberOfRoutes = size();
+		if (this.numberOfRoutes < 1) {
+			// no routes to draw
+			return;
+		}
 
-			// make sure that the cached way node positions are valid
-			if (drawZoomLevel != this.cachedZoomLevel) {
-				for (int i = 0; i < this.cachedWayPositions.length; ++i) {
-					this.cachedWayPositions[i] = projection.toPoint(this.wayNodes[i],
-							this.cachedWayPositions[i], drawZoomLevel);
+		// draw the overlay routes
+		for (int routeIndex = 0; routeIndex < this.numberOfRoutes; ++routeIndex) {
+			// get the current route
+			this.overlayRoute = createRoute(routeIndex);
+
+			synchronized (this.path) {
+				if (this.overlayRoute.wayNodes == null) {
+					// the current route has no way nodes
+					continue;
 				}
-				this.cachedZoomLevel = drawZoomLevel;
-			}
 
-			// assemble the path
-			this.path.reset();
-			this.path.moveTo(this.cachedWayPositions[0].x - drawPosition.x,
-					this.cachedWayPositions[0].y - drawPosition.y);
-			for (int i = 1; i < this.cachedWayPositions.length; ++i) {
-				this.path.lineTo(this.cachedWayPositions[i].x - drawPosition.x,
-						this.cachedWayPositions[i].y - drawPosition.y);
-			}
+				// make sure that the cached way node positions are valid
+				if (drawZoomLevel != this.overlayRoute.cachedZoomLevel) {
+					for (int i = 0; i < this.overlayRoute.cachedWayPositions.length; ++i) {
+						this.overlayRoute.cachedWayPositions[i] = projection.toPoint(
+								this.overlayRoute.wayNodes[i],
+								this.overlayRoute.cachedWayPositions[i], drawZoomLevel);
+					}
+					this.overlayRoute.cachedZoomLevel = drawZoomLevel;
+				}
 
-			// draw the path on the canvas
-			if (this.outlinePaint != null) {
-				canvas.drawPath(this.path, this.outlinePaint);
-			}
-			if (this.fillPaint != null) {
-				canvas.drawPath(this.path, this.fillPaint);
+				// assemble the path
+				this.path.reset();
+				this.path.moveTo(this.overlayRoute.cachedWayPositions[0].x - drawPosition.x,
+						this.overlayRoute.cachedWayPositions[0].y - drawPosition.y);
+				for (int j = 1; j < this.overlayRoute.cachedWayPositions.length; ++j) {
+					this.path.lineTo(
+							this.overlayRoute.cachedWayPositions[j].x - drawPosition.x,
+							this.overlayRoute.cachedWayPositions[j].y - drawPosition.y);
+				}
+
+				// draw the path on the canvas
+				if (this.overlayRoute.hasPaint) {
+					if (this.overlayRoute.paintOutline != null) {
+						canvas.drawPath(this.path, this.overlayRoute.paintOutline);
+					}
+					if (this.overlayRoute.paintFill != null) {
+						canvas.drawPath(this.path, this.overlayRoute.paintFill);
+					}
+				} else {
+					if (this.paintOutline != null) {
+						canvas.drawPath(this.path, this.paintOutline);
+					}
+					if (this.paintFill != null) {
+						canvas.drawPath(this.path, this.paintFill);
+					}
+				}
 			}
 		}
 	}
@@ -134,5 +140,12 @@ public class RouteOverlay extends Overlay {
 	@Override
 	protected String getThreadName() {
 		return THREAD_NAME;
+	}
+
+	/**
+	 * This method should be called after routes have been added to the overlay.
+	 */
+	protected final void populate() {
+		super.requestRedraw();
 	}
 }

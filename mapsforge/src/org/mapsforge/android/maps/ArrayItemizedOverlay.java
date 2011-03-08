@@ -58,10 +58,10 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	/**
-	 * Adds the given item to the Overlay.
+	 * Adds the given item to the overlay.
 	 * 
 	 * @param overlayItem
-	 *            the item that should be added to the Overlay.
+	 *            the item that should be added to the overlay.
 	 */
 	public void addOverlay(OverlayItem overlayItem) {
 		synchronized (this.overlayItems) {
@@ -71,10 +71,10 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	/**
-	 * Adds all items of the given collection to the Overlay.
+	 * Adds all items of the given collection to the overlay.
 	 * 
 	 * @param c
-	 *            collection whose items should be added to the Overlay.
+	 *            collection whose items should be added to the overlay.
 	 */
 	public void addOverlays(Collection<? extends OverlayItem> c) {
 		synchronized (this.overlayItems) {
@@ -84,7 +84,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	/**
-	 * Removes all items from the Overlay.
+	 * Removes all items from the overlay.
 	 */
 	public void clear() {
 		synchronized (this.overlayItems) {
@@ -99,10 +99,10 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	/**
-	 * Removes the given item from the Overlay.
+	 * Removes the given item from the overlay.
 	 * 
 	 * @param overlayItem
-	 *            the item that should be removed from the Overlay.
+	 *            the item that should be removed from the overlay.
 	 */
 	public void removeOverlay(OverlayItem overlayItem) {
 		synchronized (this.overlayItems) {

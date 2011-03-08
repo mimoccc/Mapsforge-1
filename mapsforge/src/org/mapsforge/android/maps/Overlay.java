@@ -27,7 +27,7 @@ import android.graphics.Point;
  * overlay thread and implements those parts of the redrawing process which all overlays have in
  * common.
  * <p>
- * To add an Overlay to a <code>MapView</code>, create a subclass of this class and add an
+ * To add an overlay to a <code>MapView</code>, create a subclass of this class and add an
  * instance to the list returned by {@link MapView#getOverlays()}. When an overlay gets removed
  * from the list, the corresponding thread is automatically interrupted and all its resources
  * are freed. Re-adding a previously removed overlay to the list will therefore cause an
@@ -42,7 +42,7 @@ public abstract class Overlay extends Thread {
 	private MapView internalMapView;
 
 	/**
-	 * Flag to indicate if this Overlay is set up and ready to work.
+	 * Flag to indicate if this overlay is set up and ready to work.
 	 */
 	private boolean isSetUp;
 
@@ -52,7 +52,7 @@ public abstract class Overlay extends Thread {
 	private Projection mapViewProjection;
 
 	/**
-	 * Transformation matrix for the Overlay.
+	 * Transformation matrix for the overlay.
 	 */
 	private final Matrix matrix;
 
@@ -62,22 +62,22 @@ public abstract class Overlay extends Thread {
 	private float matrixScaleFactor;
 
 	/**
-	 * First internal bitmap for the Overlay to draw on.
+	 * First internal bitmap for the overlay to draw on.
 	 */
 	private Bitmap overlayBitmap1;
 
 	/**
-	 * Second internal bitmap for the Overlay to draw on.
+	 * Second internal bitmap for the overlay to draw on.
 	 */
 	private Bitmap overlayBitmap2;
 
 	/**
-	 * A temporary reference to swap the two Overlay bitmaps.
+	 * A temporary reference to swap the two overlay bitmaps.
 	 */
 	private Bitmap overlayBitmapSwap;
 
 	/**
-	 * Canvas that is used in the Overlay for drawing.
+	 * Canvas that is used in the overlay for drawing.
 	 */
 	private Canvas overlayCanvas;
 
@@ -97,7 +97,7 @@ public abstract class Overlay extends Thread {
 	private Point positionBeforeDraw;
 
 	/**
-	 * Flag to indicate if the Overlay should redraw itself.
+	 * Flag to indicate if the overlay should redraw itself.
 	 */
 	private boolean redraw;
 
@@ -168,7 +168,7 @@ public abstract class Overlay extends Thread {
 			}
 		}
 
-		// free the Overlay bitmaps memory
+		// free the overlay bitmaps memory
 		if (this.overlayBitmap1 != null) {
 			this.overlayBitmap1.recycle();
 			this.overlayBitmap1 = null;
@@ -186,7 +186,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Redraws the Overlay.
+	 * Redraws the overlay.
 	 */
 	private void redraw() {
 		this.mapViewProjection = this.internalMapView.getProjection();
@@ -217,7 +217,7 @@ public abstract class Overlay extends Thread {
 					.getMapCenter(), this.positionAfterDraw, this.zoomLevelBeforeDraw);
 		}
 
-		// adjust the transformation matrix of the Overlay
+		// adjust the transformation matrix of the overlay
 		synchronized (this.matrix) {
 			this.matrix.reset();
 			this.matrix.postTranslate(this.positionBeforeDraw.x - this.positionAfterDraw.x,
@@ -240,7 +240,7 @@ public abstract class Overlay extends Thread {
 										.getHeight() >> 1);
 			}
 
-			// swap the two Overlay bitmaps
+			// swap the two overlay bitmaps
 			this.overlayBitmapSwap = this.overlayBitmap1;
 			this.overlayBitmap1 = this.overlayBitmap2;
 			this.overlayBitmap2 = this.overlayBitmapSwap;
@@ -251,10 +251,10 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Draws the Overlay on the canvas.
+	 * Draws the overlay on the canvas.
 	 * 
 	 * @param canvas
-	 *            the canvas to draw the Overlay on.
+	 *            the canvas to draw the overlay on.
 	 * @param drawPosition
 	 *            the top-left position of the map relative to the world map.
 	 * @param projection
@@ -266,17 +266,17 @@ public abstract class Overlay extends Thread {
 			Projection projection, byte drawZoomLevel);
 
 	/**
-	 * Returns the name of the Overlay implementation. It will be used as the name for the
-	 * Overlay thread.
+	 * Returns the name of the overlay implementation. It will be used as the name for the
+	 * overlay thread.
 	 * 
-	 * @return the name of the Overlay implementation.
+	 * @return the name of the overlay implementation.
 	 */
 	protected String getThreadName() {
 		return THREAD_NAME;
 	}
 
 	/**
-	 * Requests a redraw of the Overlay.
+	 * Requests a redraw of the overlay.
 	 */
 	protected final void requestRedraw() {
 		this.redraw = true;
@@ -286,10 +286,10 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Draws the Overlay on top of the map. This will be called by the MapView.
+	 * Draws the overlay on top of the map. This will be called by the MapView.
 	 * 
 	 * @param canvas
-	 *            the canvas the Overlay will be drawn onto.
+	 *            the canvas the overlay will be drawn onto.
 	 * @param mapView
 	 *            the calling MapView.
 	 * @param shadow
@@ -330,18 +330,18 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Initializes the Overlay. This method must be called by the MapView once on each new
-	 * Overlay and every time the size or the projection of the MapView has changed.
+	 * Initializes the overlay. This method must be called by the MapView once on each new
+	 * overlay and every time the size or the projection of the MapView has changed.
 	 * 
 	 * @param mapView
 	 *            the calling MapView.
 	 */
 	final void setupOverlay(MapView mapView) {
 		if (isInterrupted() || !isAlive()) {
-			throw new IllegalThreadStateException("Overlay thread already destroyed");
+			throw new IllegalThreadStateException("overlay thread already destroyed");
 		}
 
-		// check if the previous Overlay bitmaps must be recycled
+		// check if the previous overlay bitmaps must be recycled
 		if (this.overlayBitmap1 != null) {
 			this.overlayBitmap1.recycle();
 		}
@@ -356,7 +356,7 @@ public abstract class Overlay extends Thread {
 
 		this.internalMapView = mapView;
 
-		// create the two Overlay bitmaps with the correct dimensions
+		// create the two overlay bitmaps with the correct dimensions
 		this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
 				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 		this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),

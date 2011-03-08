@@ -46,10 +46,9 @@ public class CircleOverlay extends Overlay {
 	 * Constructs a new CircleOverlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay (may be null).
+	 *            the paint which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay (may be
-	 *            null).
+	 *            the paint which will be used to draw the outline of the overlay (may be null).
 	 */
 	public CircleOverlay(Paint fillPaint, Paint outlinePaint) {
 		this.path = new Path();
@@ -75,13 +74,12 @@ public class CircleOverlay extends Overlay {
 	}
 
 	/**
-	 * Sets the paint objects which will be used to draw the overlay.
+	 * Sets the paints which will be used to draw the overlay.
 	 * 
 	 * @param fillPaint
-	 *            the paint object which will be used to fill the overlay (may be null).
+	 *            the paint which will be used to fill the overlay (may be null).
 	 * @param outlinePaint
-	 *            the paint object which will be used to draw the outline of the overlay (may be
-	 *            null).
+	 *            the paint which will be used to draw the outline of the overlay (may be null).
 	 */
 	public void setPaint(Paint fillPaint, Paint outlinePaint) {
 		synchronized (this.path) {
