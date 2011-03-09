@@ -16,8 +16,6 @@
  */
 package org.mapsforge.android.maps;
 
-import java.util.ArrayList;
-
 /**
  * Implementation of the Sutherland-Hodgman clipping algorithm.
  */
@@ -27,11 +25,11 @@ class SutherlandHodgmanClipping {
 			return null;
 		}
 
-		ArrayList<Float> clippedPolyline = new ArrayList<Float>();
-
+		float[] clippedPolyline = new float[polyline.length * 2];
+		int clippedPolylineEntries = 0;
 		float x1, y1, x2, y2;
-		boolean isStartPointInside = false; // TODO remove
-		boolean isEndPointInside = false; // TODO remove
+		boolean isStartPointInside;
+		boolean isEndPointInside;
 
 		for (int i = 0; i < polyline.length - 2; i += 2) {
 			x1 = polyline[i];
@@ -43,36 +41,33 @@ class SutherlandHodgmanClipping {
 			isEndPointInside = isInside(x2, y2, edge);
 
 			if (isStartPointInside) {
-				if (clippedPolyline.isEmpty()) {
-					clippedPolyline.add(x1);
-					clippedPolyline.add(y1);
+				if (clippedPolylineEntries == 0) {
+					clippedPolyline[clippedPolylineEntries++] = x1;
+					clippedPolyline[clippedPolylineEntries++] = y1;
 				}
-
 				if (isEndPointInside) {
-					clippedPolyline.add(x2);
-					clippedPolyline.add(y2);
+					clippedPolyline[clippedPolylineEntries++] = x2;
+					clippedPolyline[clippedPolylineEntries++] = y2;
 				} else {
 					float[] intersection = computeIntersection(edge, x1, y1, x2, y2);
-					clippedPolyline.add(Float.valueOf(intersection[0]));
-					clippedPolyline.add(Float.valueOf(intersection[1]));
+					clippedPolyline[clippedPolylineEntries++] = intersection[0];
+					clippedPolyline[clippedPolylineEntries++] = intersection[1];
 				}
 			} else if (isEndPointInside) {
 				float[] intersection = computeIntersection(edge, x1, y1, x2, y2);
-				clippedPolyline.add(Float.valueOf(intersection[0]));
-				clippedPolyline.add(Float.valueOf(intersection[1]));
-				clippedPolyline.add(x2);
-				clippedPolyline.add(y2);
+				clippedPolyline[clippedPolylineEntries++] = intersection[0];
+				clippedPolyline[clippedPolylineEntries++] = intersection[1];
+				clippedPolyline[clippedPolylineEntries++] = x2;
+				clippedPolyline[clippedPolylineEntries++] = y2;
 			}
 		}
 
-		if (clippedPolyline.size() == 0) {
+		if (clippedPolylineEntries == 0) {
 			return null;
 		}
 
-		float[] retVal = new float[clippedPolyline.size()];
-		for (int i = 0; i < clippedPolyline.size(); ++i) {
-			retVal[i] = clippedPolyline.get(i);
-		}
+		float[] retVal = new float[clippedPolylineEntries];
+		System.arraycopy(clippedPolyline, 0, retVal, 0, clippedPolylineEntries);
 		return retVal;
 	}
 

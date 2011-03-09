@@ -20,8 +20,10 @@ import android.graphics.Paint;
 import android.graphics.Point;
 
 /**
- * OverlayRoute holds all parameters of a single route on a {@link RouteOverlay}, such as way
- * points and paint parameters.
+ * OverlayRoute holds all parameters of a single route on a {@link RouteOverlay}. All rendering
+ * parameters like color, stroke width, pattern and transparency can be configured via two
+ * {@link Paint} objects. Each route is drawn twice – once with each paint object – to allow for
+ * different outlines and fillings.
  */
 public class OverlayRoute {
 	/**

@@ -24,16 +24,10 @@ import android.graphics.Point;
 /**
  * RouteOverlay is an abstract base class to display {@link OverlayRoute OverlayRoutes}. The
  * class defines some methods to access the backing data structure of deriving subclasses.
- * 
- * RouteOverlay is an overlay to display sequences of way nodes. It may be used to show
- * additional ways such as calculated routes. Closed polygons, for example buildings or areas,
- * are also supported. A way node sequence is considered as a closed polygon if the first and
- * the last way node are equal.
  * <p>
- * The way data of a RouteOverlay may be modified at any time. All rendering parameters like
- * color, stroke width, pattern and transparency can be configured via two {@link Paint}
- * objects. Each route is drawn twice – once with each paint object – to allow for different
- * outlines and fillings.
+ * The overlay may be used to show additional ways such as calculated routes. Closed polygons,
+ * for example buildings or areas, are also supported. A way node sequence is considered as a
+ * closed polygon if the first and the last way node are equal.
  * 
  * @param <Route>
  *            the type of routes handled by this overlay.
@@ -43,21 +37,21 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 
 	private int numberOfRoutes;
 	private Route overlayRoute;
-	private final Paint paintFill;
-	private final Paint paintOutline;
+	private final Paint defaultPaintFill;
+	private final Paint defaultPaintOutline;
 	private final Path path;
 
 	/**
 	 * Constructs a new RouteOverlay.
 	 * 
-	 * @param paintFill
-	 *            the paint which will be used to fill the overlay (may be null).
-	 * @param paintOutline
-	 *            the paint which will be used to draw the outline of the overlay (may be null).
+	 * @param defaultPaintFill
+	 *            the default paint which will be used to fill the routes (may be null).
+	 * @param defaultPaintOutline
+	 *            the default paint which will be used to draw the route outlines (may be null).
 	 */
-	public RouteOverlay(Paint paintFill, Paint paintOutline) {
-		this.paintFill = paintFill;
-		this.paintOutline = paintOutline;
+	public RouteOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
+		this.defaultPaintFill = defaultPaintFill;
+		this.defaultPaintOutline = defaultPaintOutline;
 		this.path = new Path();
 	}
 
@@ -69,7 +63,7 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 	public abstract int size();
 
 	/**
-	 * Creates a route in the overlay.
+	 * Creates a route in this overlay.
 	 * 
 	 * @param i
 	 *            the index of the route.
@@ -119,6 +113,7 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 
 				// draw the path on the canvas
 				if (this.overlayRoute.hasPaint) {
+					// use the paints from the current route
 					if (this.overlayRoute.paintOutline != null) {
 						canvas.drawPath(this.path, this.overlayRoute.paintOutline);
 					}
@@ -126,11 +121,12 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 						canvas.drawPath(this.path, this.overlayRoute.paintFill);
 					}
 				} else {
-					if (this.paintOutline != null) {
-						canvas.drawPath(this.path, this.paintOutline);
+					// use the default paint objects
+					if (this.defaultPaintOutline != null) {
+						canvas.drawPath(this.path, this.defaultPaintOutline);
 					}
-					if (this.paintFill != null) {
-						canvas.drawPath(this.path, this.paintFill);
+					if (this.defaultPaintFill != null) {
+						canvas.drawPath(this.path, this.defaultPaintFill);
 					}
 				}
 			}

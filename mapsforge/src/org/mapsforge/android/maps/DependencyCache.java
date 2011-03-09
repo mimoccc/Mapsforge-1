@@ -182,15 +182,17 @@ class DependencyCache {
 
 	private void addLabelsFromDependencyOnTile(ArrayList<PointTextContainer> labels) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
-			depLabel = this.currentDependencyOnTile.labels.get(i);
-			if (depLabel.value.paintBack != null) {
-				labels.add(new PointTextContainer(depLabel.value.text, depLabel.point.x,
-						depLabel.point.y, depLabel.value.paintFront, depLabel.value.paintBack));
+			this.depLabel = this.currentDependencyOnTile.labels.get(i);
+			if (this.depLabel.value.paintBack != null) {
+				labels.add(new PointTextContainer(this.depLabel.value.text,
+						this.depLabel.point.x, this.depLabel.point.y,
+						this.depLabel.value.paintFront, this.depLabel.value.paintBack));
 			} else {
-				labels.add(new PointTextContainer(depLabel.value.text, depLabel.point.x,
-						depLabel.point.y, depLabel.value.paintFront));
+				labels.add(new PointTextContainer(this.depLabel.value.text,
+						this.depLabel.point.x, this.depLabel.point.y,
+						this.depLabel.value.paintFront));
 			}
-			depLabel.value.depCounter++;
+			this.depLabel.value.depCounter++;
 		}
 
 	}
@@ -689,20 +691,20 @@ class DependencyCache {
 		PointTextContainer pTC;
 
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
-			depLabel = this.currentDependencyOnTile.labels.get(i);
-			rect1 = new android.graphics.Rect((int) (depLabel.point.x),
-					(int) (depLabel.point.y - depLabel.value.boundary.height()),
-					(int) (depLabel.point.x + depLabel.value.boundary.width()),
-					(int) (depLabel.point.y));
+			this.depLabel = this.currentDependencyOnTile.labels.get(i);
+			this.rect1 = new android.graphics.Rect((int) (this.depLabel.point.x),
+					(int) (this.depLabel.point.y - this.depLabel.value.boundary.height()),
+					(int) (this.depLabel.point.x + this.depLabel.value.boundary.width()),
+					(int) (this.depLabel.point.y));
 
 			for (int x = 0; x < areaLabels.size(); x++) {
 				pTC = areaLabels.get(x);
 
-				rect2 = new android.graphics.Rect((int) pTC.x, (int) pTC.y
+				this.rect2 = new android.graphics.Rect((int) pTC.x, (int) pTC.y
 						- pTC.boundary.height(), (int) pTC.x + pTC.boundary.width(),
 						(int) pTC.y);
 
-				if (android.graphics.Rect.intersects(rect2, rect1)) {
+				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 					areaLabels.remove(x);
 					x--;
 				}
@@ -716,18 +718,18 @@ class DependencyCache {
 
 		for (Dependency<DependencySymbol> depSmb : this.currentDependencyOnTile.symbols) {
 
-			rect1 = new android.graphics.Rect((int) depSmb.point.x, (int) depSmb.point.y,
+			this.rect1 = new android.graphics.Rect((int) depSmb.point.x, (int) depSmb.point.y,
 					(int) depSmb.point.x + depSmb.value.symbol.getWidth(), (int) depSmb.point.y
 							+ depSmb.value.symbol.getHeight());
 
 			for (int x = 0; x < areaLabels.size(); x++) {
 				label = areaLabels.get(x);
 
-				rect2 = new android.graphics.Rect((int) (label.x),
+				this.rect2 = new android.graphics.Rect((int) (label.x),
 						(int) (label.y - label.boundary.height()),
 						(int) (label.x + label.boundary.width()), (int) (label.y));
 
-				if (android.graphics.Rect.intersects(rect2, rect1)) {
+				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 					areaLabels.remove(x);
 					x--;
 				}
@@ -760,17 +762,17 @@ class DependencyCache {
 
 		for (int x = 0; x < this.currentDependencyOnTile.symbols.size(); x++) {
 			sym2 = this.currentDependencyOnTile.symbols.get(x);
-			rect1 = new android.graphics.Rect((int) sym2.point.x - dis, (int) sym2.point.y
+			this.rect1 = new android.graphics.Rect((int) sym2.point.x - dis, (int) sym2.point.y
 					- dis, (int) sym2.point.x + sym2.value.symbol.getWidth() + dis,
 					(int) sym2.point.y + sym2.value.symbol.getHeight() + dis);
 
 			for (int y = 0; y < symbols.size(); y++) {
 
 				sym = symbols.get(y);
-				rect2 = new android.graphics.Rect((int) sym.x, (int) sym.y, (int) sym.x
+				this.rect2 = new android.graphics.Rect((int) sym.x, (int) sym.y, (int) sym.x
 						+ sym.symbol.getWidth(), (int) sym.y + sym.symbol.getHeight());
 
-				if (android.graphics.Rect.intersects(rect2, rect1)) {
+				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 					symbols.remove(y);
 					y--;
 				}
@@ -780,19 +782,20 @@ class DependencyCache {
 
 	private void removeOverlappingSymbolsWithDependencyLabels(ArrayList<SymbolContainer> symbols) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
-			depLabel = this.currentDependencyOnTile.labels.get(i);
-			rect1 = new android.graphics.Rect((int) (depLabel.point.x),
-					(int) (depLabel.point.y - depLabel.value.boundary.height()),
-					(int) (depLabel.point.x + depLabel.value.boundary.width()),
-					(int) (depLabel.point.y));
+			this.depLabel = this.currentDependencyOnTile.labels.get(i);
+			this.rect1 = new android.graphics.Rect((int) (this.depLabel.point.x),
+					(int) (this.depLabel.point.y - this.depLabel.value.boundary.height()),
+					(int) (this.depLabel.point.x + this.depLabel.value.boundary.width()),
+					(int) (this.depLabel.point.y));
 
 			for (int x = 0; x < symbols.size(); x++) {
-				smb = symbols.get(x);
+				this.smb = symbols.get(x);
 
-				rect2 = new android.graphics.Rect((int) smb.x, (int) smb.y, (int) smb.x
-						+ smb.symbol.getWidth(), (int) smb.y + smb.symbol.getHeight());
+				this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+						(int) this.smb.x + this.smb.symbol.getWidth(), (int) this.smb.y
+								+ this.smb.symbol.getHeight());
 
-				if (android.graphics.Rect.intersects(rect2, rect1)) {
+				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 					symbols.remove(x);
 					x--;
 				}
@@ -865,11 +868,11 @@ class DependencyCache {
 		}
 
 		for (int i = 0; i < cache.labels.size(); i++) {
-			depLabel = cache.labels.get(i);
-			depLabel.value.depCounter--;
-			if (depLabel.value.depCounter == 0) {
-				for (Tile tmpTile : depLabel.value.tiles) {
-					this.dependencyTable.get(tmpTile).labels.remove(depLabel);
+			this.depLabel = cache.labels.get(i);
+			this.depLabel.value.depCounter--;
+			if (this.depLabel.value.depCounter == 0) {
+				for (Tile tmpTile : this.depLabel.value.tiles) {
+					this.dependencyTable.get(tmpTile).labels.remove(this.depLabel);
 				}
 			}
 		}
@@ -978,17 +981,17 @@ class DependencyCache {
 		boolean right;
 		boolean down;
 
-		tmp = this.dependencyTable.get(lefttmp);
-		left = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(lefttmp);
+		left = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(righttmp);
-		right = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(righttmp);
+		right = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(uptmp);
-		up = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(uptmp);
+		up = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(downtmp);
-		down = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(downtmp);
+		down = this.tmp == null ? false : this.tmp.drawn;
 
 		PointTextContainer label;
 
@@ -1078,17 +1081,17 @@ class DependencyCache {
 		boolean right;
 		boolean down;
 
-		tmp = this.dependencyTable.get(lefttmp);
-		left = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(lefttmp);
+		left = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(righttmp);
-		right = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(righttmp);
+		right = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(uptmp);
-		up = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(uptmp);
+		up = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(downtmp);
-		down = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(downtmp);
+		down = this.tmp == null ? false : this.tmp.drawn;
 
 		LabelPlacement.ReferencePosition ref;
 
@@ -1134,19 +1137,21 @@ class DependencyCache {
 		if (this.currentDependencyOnTile != null) {
 			if (this.currentDependencyOnTile.labels != null) {
 				for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
-					depLabel = this.currentDependencyOnTile.labels.get(i);
-					rect1 = new android.graphics.Rect((int) depLabel.point.x - dis,
-							(int) (depLabel.point.y - depLabel.value.boundary.height()) - dis,
-							(int) (depLabel.point.x + depLabel.value.boundary.width() + dis),
-							(int) (depLabel.point.y + dis));
+					this.depLabel = this.currentDependencyOnTile.labels.get(i);
+					this.rect1 = new android.graphics.Rect((int) this.depLabel.point.x - dis,
+							(int) (this.depLabel.point.y - this.depLabel.value.boundary
+									.height())
+									- dis, (int) (this.depLabel.point.x
+									+ this.depLabel.value.boundary.width() + dis),
+							(int) (this.depLabel.point.y + dis));
 
 					for (int y = 0; y < refPos.length; y++) {
 						if (refPos[y] != null) {
-							rect2 = new android.graphics.Rect((int) refPos[y].x,
+							this.rect2 = new android.graphics.Rect((int) refPos[y].x,
 									(int) (refPos[y].y - refPos[y].height),
 									(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-							if (android.graphics.Rect.intersects(rect2, rect1)) {
+							if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 								refPos[y] = null;
 							}
 						}
@@ -1157,18 +1162,18 @@ class DependencyCache {
 			if (this.currentDependencyOnTile.symbols != null) {
 				for (Dependency<DependencySymbol> symbols2 : this.currentDependencyOnTile.symbols) {
 
-					rect1 = new android.graphics.Rect((int) symbols2.point.x,
+					this.rect1 = new android.graphics.Rect((int) symbols2.point.x,
 							(int) (symbols2.point.y),
 							(int) (symbols2.point.x + symbols2.value.symbol.getWidth()),
 							(int) (symbols2.point.y + symbols2.value.symbol.getHeight()));
 
 					for (int y = 0; y < refPos.length; y++) {
 						if (refPos[y] != null) {
-							rect2 = new android.graphics.Rect((int) refPos[y].x,
+							this.rect2 = new android.graphics.Rect((int) refPos[y].x,
 									(int) (refPos[y].y - refPos[y].height),
 									(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-							if (android.graphics.Rect.intersects(rect2, rect1)) {
+							if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
 								refPos[y] = null;
 							}
 						}
@@ -1193,17 +1198,17 @@ class DependencyCache {
 		boolean right;
 		boolean down;
 
-		tmp = this.dependencyTable.get(lefttmp);
-		left = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(lefttmp);
+		left = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(righttmp);
-		right = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(righttmp);
+		right = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(uptmp);
-		up = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(uptmp);
+		up = this.tmp == null ? false : this.tmp.drawn;
 
-		tmp = this.dependencyTable.get(downtmp);
-		down = tmp == null ? false : tmp.drawn;
+		this.tmp = this.dependencyTable.get(downtmp);
+		down = this.tmp == null ? false : this.tmp.drawn;
 
 		SymbolContainer ref;
 

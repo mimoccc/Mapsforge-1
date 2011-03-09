@@ -104,36 +104,38 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			// get the current item
 			this.tapOverlayItem = createItem(i);
 
-			// check if the item has a position
-			if (this.tapOverlayItem.getPoint() == null) {
-				continue;
-			}
-
-			this.tapItemPoint = projection.toPixels(this.tapOverlayItem.getPoint(),
-					this.tapItemPoint);
-
-			// select the correct marker for the item and get the position
-			if (this.tapOverlayItem.getMarker() == null) {
-				if (this.defaultMarker == null) {
-					// no marker to draw the item
+			synchronized (this.tapOverlayItem) {
+				// check if the item has a position
+				if (this.tapOverlayItem.getPoint() == null) {
 					continue;
 				}
-				this.tapMarkerBounds = this.defaultMarker.getBounds();
-			} else {
-				this.tapMarkerBounds = this.tapOverlayItem.getMarker().getBounds();
-			}
 
-			// calculate the bounding box of the marker
-			this.tapLeft = this.tapItemPoint.x + this.tapMarkerBounds.left;
-			this.tapRight = this.tapItemPoint.x + this.tapMarkerBounds.right;
-			this.tapTop = this.tapItemPoint.y + this.tapMarkerBounds.top;
-			this.tapBottom = this.tapItemPoint.y + this.tapMarkerBounds.bottom;
+				this.tapItemPoint = projection.toPixels(this.tapOverlayItem.getPoint(),
+						this.tapItemPoint);
 
-			// check if the hit position is within the bounds of the marker
-			if (this.tapRight >= this.tapPosition.x && this.tapLeft <= this.tapPosition.x
-					&& this.tapBottom >= this.tapPosition.y
-					&& this.tapTop <= this.tapPosition.y) {
-				return onTap(i);
+				// select the correct marker for the item and get the position
+				if (this.tapOverlayItem.getMarker() == null) {
+					if (this.defaultMarker == null) {
+						// no marker to draw the item
+						continue;
+					}
+					this.tapMarkerBounds = this.defaultMarker.getBounds();
+				} else {
+					this.tapMarkerBounds = this.tapOverlayItem.getMarker().getBounds();
+				}
+
+				// calculate the bounding box of the marker
+				this.tapLeft = this.tapItemPoint.x + this.tapMarkerBounds.left;
+				this.tapRight = this.tapItemPoint.x + this.tapMarkerBounds.right;
+				this.tapTop = this.tapItemPoint.y + this.tapMarkerBounds.top;
+				this.tapBottom = this.tapItemPoint.y + this.tapMarkerBounds.bottom;
+
+				// check if the hit position is within the bounds of the marker
+				if (this.tapRight >= this.tapPosition.x && this.tapLeft <= this.tapPosition.x
+						&& this.tapBottom >= this.tapPosition.y
+						&& this.tapTop <= this.tapPosition.y) {
+					return onTap(i);
+				}
 			}
 		}
 
@@ -149,7 +151,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	public abstract int size();
 
 	/**
-	 * Creates an item in the overlay.
+	 * Creates an item in this overlay.
 	 * 
 	 * @param i
 	 *            the index of the item.
@@ -171,53 +173,55 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			// get the current item
 			this.overlayItem = createItem(itemIndex);
 
-			// check if the item has a position
-			if (this.overlayItem.getPoint() == null) {
-				continue;
-			}
-
-			// make sure that the cached item position is valid
-			if (drawZoomLevel != this.overlayItem.cachedZoomLevel) {
-				this.overlayItem.cachedMapPosition = projection.toPoint(this.overlayItem
-						.getPoint(), this.overlayItem.cachedMapPosition, drawZoomLevel);
-				this.overlayItem.cachedZoomLevel = drawZoomLevel;
-			}
-
-			// calculate the relative item position on the display
-			this.itemPosition.x = this.overlayItem.cachedMapPosition.x - drawPosition.x;
-			this.itemPosition.y = this.overlayItem.cachedMapPosition.y - drawPosition.y;
-
-			// get the correct marker for the item
-			if (this.overlayItem.getMarker() == null) {
-				if (this.defaultMarker == null) {
-					// no marker to draw the item
+			synchronized (this.overlayItem) {
+				// check if the item has a position
+				if (this.overlayItem.getPoint() == null) {
 					continue;
 				}
-				this.itemMarker = this.defaultMarker;
-			} else {
-				this.itemMarker = this.overlayItem.getMarker();
-			}
 
-			// get the position of the marker
-			this.markerBounds = this.itemMarker.copyBounds();
+				// make sure that the cached item position is valid
+				if (drawZoomLevel != this.overlayItem.cachedZoomLevel) {
+					this.overlayItem.cachedMapPosition = projection.toPoint(this.overlayItem
+							.getPoint(), this.overlayItem.cachedMapPosition, drawZoomLevel);
+					this.overlayItem.cachedZoomLevel = drawZoomLevel;
+				}
 
-			// calculate the bounding box of the marker
-			this.left = this.itemPosition.x + this.markerBounds.left;
-			this.right = this.itemPosition.x + this.markerBounds.right;
-			this.top = this.itemPosition.y + this.markerBounds.top;
-			this.bottom = this.itemPosition.y + this.markerBounds.bottom;
+				// calculate the relative item position on the display
+				this.itemPosition.x = this.overlayItem.cachedMapPosition.x - drawPosition.x;
+				this.itemPosition.y = this.overlayItem.cachedMapPosition.y - drawPosition.y;
 
-			// check if the bounding box of the marker intersects with the canvas
-			if (this.right >= 0 && this.left <= canvas.getWidth() && this.bottom >= 0
-					&& this.top <= canvas.getHeight()) {
-				// set the position of the marker
-				this.itemMarker.setBounds(this.left, this.top, this.right, this.bottom);
+				// get the correct marker for the item
+				if (this.overlayItem.getMarker() == null) {
+					if (this.defaultMarker == null) {
+						// no marker to draw the item
+						continue;
+					}
+					this.itemMarker = this.defaultMarker;
+				} else {
+					this.itemMarker = this.overlayItem.getMarker();
+				}
 
-				// draw the item marker on the canvas
-				this.itemMarker.draw(canvas);
+				// get the position of the marker
+				this.markerBounds = this.itemMarker.copyBounds();
 
-				// restore the position of the marker
-				this.itemMarker.setBounds(this.markerBounds);
+				// calculate the bounding box of the marker
+				this.left = this.itemPosition.x + this.markerBounds.left;
+				this.right = this.itemPosition.x + this.markerBounds.right;
+				this.top = this.itemPosition.y + this.markerBounds.top;
+				this.bottom = this.itemPosition.y + this.markerBounds.bottom;
+
+				// check if the bounding box of the marker intersects with the canvas
+				if (this.right >= 0 && this.left <= canvas.getWidth() && this.bottom >= 0
+						&& this.top <= canvas.getHeight()) {
+					// set the position of the marker
+					this.itemMarker.setBounds(this.left, this.top, this.right, this.bottom);
+
+					// draw the item marker on the canvas
+					this.itemMarker.draw(canvas);
+
+					// restore the position of the marker
+					this.itemMarker.setBounds(this.markerBounds);
+				}
 			}
 		}
 	}

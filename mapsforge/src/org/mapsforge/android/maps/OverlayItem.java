@@ -118,7 +118,7 @@ public class OverlayItem {
 	 * @param marker
 	 *            the marker that is drawn for this item (may be null).
 	 */
-	public void setMarker(Drawable marker) {
+	public synchronized void setMarker(Drawable marker) {
 		this.marker = marker;
 	}
 }

@@ -23,7 +23,8 @@ import android.graphics.Paint;
 
 /**
  * ArrayRouteOverlay is a thread-safe implementation of the {@link RouteOverlay} class using an
- * {@link ArrayList} as internal data structure.
+ * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayRoute
+ * OverlayRoutes} without individual paints can be defined via the constructor.
  */
 public class ArrayRouteOverlay extends RouteOverlay<OverlayRoute> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
@@ -33,9 +34,14 @@ public class ArrayRouteOverlay extends RouteOverlay<OverlayRoute> {
 
 	/**
 	 * Constructs a new ArrayRouteOverlay.
+	 * 
+	 * @param defaultPaintFill
+	 *            the default paint which will be used to fill the routes (may be null).
+	 * @param defaultPaintOutline
+	 *            the default paint which will be used to draw the route outlines (may be null).
 	 */
-	public ArrayRouteOverlay(Paint paintFill, Paint paintOutline) {
-		super(paintFill, paintOutline);
+	public ArrayRouteOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
+		super(defaultPaintFill, defaultPaintOutline);
 		this.overlayRoutes = new ArrayList<OverlayRoute>(ARRAY_LIST_INITIAL_CAPACITY);
 	}
 

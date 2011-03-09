@@ -30,7 +30,7 @@ import android.graphics.drawable.Drawable;
  * constructor.
  * <p>
  * The ArrayItemizedOverlay handles tap events on OverlayItems by displaying their title and
- * description in an {@link AlertDialog}. This behavior can easily be changed by overriding the
+ * description in an {@link AlertDialog}. This behavior can be changed by overriding the
  * {@link #onTap} method.
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
