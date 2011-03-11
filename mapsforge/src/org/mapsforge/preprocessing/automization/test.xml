@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:configuration osmosis-home="osmosis-home" output-dir="/tmp" workspace="workspace" xmlns:p="http://mapsforge.org/mapsforge-preprocessing-conf" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://mapsforge.org/mapsforge-preprocessing-conf mapsforge-preprocessing-conf.xsd ">
+  <p:pipeline name="test-pipeline">
+    <p:read-pbf file="/tmp/planet.osm.pbf">
+    	<p:bbox-area-filter name="europe" maxlat="0" minlat="0" maxlon="0" minlon="0">
+    		<p:bbox-area-filter name="germany" maxlat="0" minlat="0" maxlon="0" minlon="0">
+    			<p:write-pbf file="/tmp/germany.osm.pbf"/>
+    		</p:bbox-area-filter>
+    		<p:bbox-area-filter name="austria" maxlat="0" minlat="0" maxlon="0" minlon="0">
+    			<p:write-pbf file="/tmp/austria.osm.pbf"/>
+    		</p:bbox-area-filter>
+    	</p:bbox-area-filter>
+    	<p:write-pbf file="/tmp/file1"/>
+    	<p:write-pbf file="/tmp/file2"/>
+    </p:read-pbf>    
+  </p:pipeline>
+</p:configuration>
