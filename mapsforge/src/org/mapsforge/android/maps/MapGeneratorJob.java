@@ -16,13 +16,19 @@
  */
 package org.mapsforge.android.maps;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 /**
  * A container class that holds all immutable rendering parameters for a single map image
  * together with a mutable priority field, which indicates the importance of this task.
  */
-class MapGeneratorJob implements Comparable<MapGeneratorJob> {
-	private final int hashCode;
-	private MapGeneratorJob other;
+class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
+	private static final long serialVersionUID = 1L;
+
+	private transient int hashCode;
+	private transient MapGeneratorJob other;
 
 	/**
 	 * Flag if the tile coordinates should be drawn on the image for debugging.
@@ -52,7 +58,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 	/**
 	 * Rendering priority of this job.
 	 */
-	int priority;
+	transient int priority;
 
 	/**
 	 * Tile that is rendered to a map image.
@@ -83,7 +89,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 		this.drawTileFrames = drawTileFrames;
 		this.drawTileCoordinates = drawTileCoordinates;
 		this.highlightWater = highlightWater;
-		this.hashCode = calculateHashCode();
+		calculateTransientValues();
 	}
 
 	@Override
@@ -139,5 +145,18 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob> {
 		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
 		result = prime * result + (this.highlightWater ? 1231 : 1237);
 		return result;
+	}
+
+	/**
+	 * Calculates the values of some transient variables.
+	 */
+	private void calculateTransientValues() {
+		this.hashCode = calculateHashCode();
+	}
+
+	private void readObject(ObjectInputStream objectInputStream) throws IOException,
+			ClassNotFoundException {
+		objectInputStream.defaultReadObject();
+		calculateTransientValues();
 	}
 }

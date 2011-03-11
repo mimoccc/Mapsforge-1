@@ -76,7 +76,7 @@ public class OverlayRoute {
 	 * 
 	 * @return the way nodes of the route.
 	 */
-	public GeoPoint[] getRouteData() {
+	public synchronized GeoPoint[] getRouteData() {
 		return this.wayNodes;
 	}
 

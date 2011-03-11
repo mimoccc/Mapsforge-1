@@ -68,7 +68,8 @@ import android.widget.ZoomControls;
  * that returns some metadata about the map file, use the {@link #getMapDatabase()} method.
  * <p>
  * Map tiles are automatically cached in a separate directory on the memory card. The size of
- * this cache may be adjusted via the {@link #setMemoryCardCacheSize(int)} method.
+ * this cache may be adjusted via the {@link #setMemoryCardCacheSize(int)} method. The
+ * {@link MapView#setMemoryCardCachePersistence(boolean)} method sets the cache persistence.
  * <p>
  * {@link Overlay Overlays} can be used to display geographical data such as points and ways. To
  * draw an overlay on top of the map, add it to the list returned by {@link #getOverlays()}.
@@ -700,6 +701,7 @@ public class MapView extends ViewGroup {
 	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
+	private boolean persistence;
 	private long previousTime;
 	private Projection projection;
 	private boolean showFpsCounter;
@@ -1120,11 +1122,22 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Sets the persistence of the memory card cache. If set to true, cached image files will
+	 * not be deleted when the MapView gets destroyed. The default value is false.
+	 * 
+	 * @param persistence
+	 *            the new persistence of the memory card cache.
+	 */
+	public void setMemoryCardCachePersistence(boolean persistence) {
+		this.persistence = persistence;
+	}
+
+	/**
 	 * Sets the new size of the memory card cache. If the cache already contains more items than
 	 * the new capacity allows, items are discarded based on the cache policy.
 	 * 
 	 * @param newCacheSize
-	 *            the new capacity of the file cache.
+	 *            the new capacity of the memory card cache.
 	 * @throws IllegalArgumentException
 	 *             if the new capacity is negative.
 	 */
@@ -1849,7 +1862,7 @@ public class MapView extends ViewGroup {
 
 		// destroy the image file cache
 		if (this.tileMemoryCardCache != null) {
-			this.tileMemoryCardCache.destroy();
+			this.tileMemoryCardCache.destroy(this.persistence);
 			this.tileMemoryCardCache = null;
 		}
 
@@ -1948,10 +1961,14 @@ public class MapView extends ViewGroup {
 						putTileOnBitmap(this.currentJob,
 								this.tileRAMCache.get(this.currentJob), false);
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
-						// file cache hit
-						this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer);
-						this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-						putTileOnBitmap(this.currentJob, this.tileBitmap, true);
+						// memory card cache hit
+						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
+							this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+							putTileOnBitmap(this.currentJob, this.tileBitmap, true);
+						} else {
+							// the image data could not be read from the cache
+							this.mapGenerator.addJob(this.currentJob);
+						}
 					} else {
 						// cache miss
 						this.mapGenerator.addJob(this.currentJob);

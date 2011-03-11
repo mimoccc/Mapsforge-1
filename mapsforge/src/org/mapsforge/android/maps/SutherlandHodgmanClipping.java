@@ -19,7 +19,7 @@ package org.mapsforge.android.maps;
 /**
  * Implementation of the Sutherland-Hodgman clipping algorithm.
  */
-class SutherlandHodgmanClipping {
+final class SutherlandHodgmanClipping {
 	private static float[] clipPolylineToEdge(float[] polyline, int[] edge) {
 		if (polyline == null) {
 			return null;
@@ -122,5 +122,12 @@ class SutherlandHodgmanClipping {
 		// left edge
 		return clipPolylineToEdge(clippedPolyline, new int[] { rectangle[0], rectangle[3],
 				rectangle[0], rectangle[1] });
+	}
+
+	/**
+	 * Empty private constructor to prevent object creation.
+	 */
+	private SutherlandHodgmanClipping() {
+		// do nothing
 	}
 }

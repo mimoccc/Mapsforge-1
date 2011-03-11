@@ -77,7 +77,7 @@ public class OverlayItem {
 	 * 
 	 * @return the marker used to indicate the item (may be null).
 	 */
-	public Drawable getMarker() {
+	public synchronized Drawable getMarker() {
 		return this.marker;
 	}
 

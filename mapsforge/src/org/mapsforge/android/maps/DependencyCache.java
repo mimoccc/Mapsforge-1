@@ -163,10 +163,11 @@ class DependencyCache {
 
 	private DependencyOnTile currentDependencyOnTile;
 	private Tile currentTile;
+
 	/**
 	 * Hash table, that connects the Tiles with their entries in the dependency cache.
 	 */
-	Hashtable<Tile, DependencyOnTile> dependencyTable;
+	final Hashtable<Tile, DependencyOnTile> dependencyTable;
 	Dependency<DependencyText> depLabel;
 	Rect rect1;
 	Rect rect2;
@@ -668,7 +669,7 @@ class DependencyCache {
 		}
 	}
 
-	private boolean isDependenyEmpty(DependencyOnTile cache) {
+	private boolean isDependencyEmpty(DependencyOnTile cache) {
 		if (cache.labels == null) {
 			if (cache.symbols == null) {
 				return true;
@@ -862,7 +863,7 @@ class DependencyCache {
 		if (cache == null) {
 			return;
 		}
-		if (isDependenyEmpty(cache)) {
+		if (isDependencyEmpty(cache)) {
 			this.dependencyTable.remove(tile);
 			return;
 		}
@@ -877,7 +878,7 @@ class DependencyCache {
 			}
 		}
 
-		if (isDependenyEmpty(cache)) {
+		if (isDependencyEmpty(cache)) {
 			this.dependencyTable.remove(tile);
 			return;
 		}
@@ -888,7 +889,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -898,7 +899,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -907,7 +908,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -916,7 +917,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -925,7 +926,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -934,16 +935,16 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
 		}
-		// righttup
+		// rightup
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -952,7 +953,7 @@ class DependencyCache {
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
 		if (cache != null) {
-			if (isDependenyEmpty(cache)) {
+			if (isDependencyEmpty(cache)) {
 				this.dependencyTable.remove(tile);
 				return;
 			}
@@ -966,7 +967,7 @@ class DependencyCache {
 	 * @param areaLabels
 	 *            current area Labels, that will be displayed
 	 */
-	void removeAreaLabelsInalreadyDrawnareas(ArrayList<PointTextContainer> areaLabels) {
+	void removeAreaLabelsInAlreadyDrawnAreas(ArrayList<PointTextContainer> areaLabels) {
 		Tile lefttmp = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile righttmp = new Tile(this.currentTile.x + 1, this.currentTile.y,

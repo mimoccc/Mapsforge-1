@@ -35,10 +35,10 @@ import android.graphics.Point;
 public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 	private static final String THREAD_NAME = "RouteOverlay";
 
-	private int numberOfRoutes;
-	private Route overlayRoute;
 	private final Paint defaultPaintFill;
 	private final Paint defaultPaintOutline;
+	private int numberOfRoutes;
+	private Route overlayRoute;
 	private final Path path;
 
 	/**

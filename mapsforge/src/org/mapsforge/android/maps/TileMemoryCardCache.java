@@ -18,8 +18,11 @@ package org.mapsforge.android.maps;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,12 +34,41 @@ import android.graphics.Bitmap;
  */
 class TileMemoryCardCache {
 	/**
+	 * Filename extension for cached image files.
+	 */
+	private static final String IMAGE_FILE_NAME_EXTENSION = ".tile";
+
+	/**
 	 * Load factor of the internal HashMap.
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
+	/**
+	 * Name of the file used for serialization of the cache map.
+	 */
+	private static final String SERIALIZATION_FILE_NAME = "cache.ser";
+
+	private static LinkedHashMap<MapGeneratorJob, File> createMap(final int initialCapacity) {
+		return new LinkedHashMap<MapGeneratorJob, File>(
+				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, File> eldest) {
+				if (size() > initialCapacity) {
+					// remove the entry from the cache and delete the cached file
+					this.remove(eldest.getKey());
+					if (!eldest.getValue().delete()) {
+						eldest.getValue().deleteOnExit();
+					}
+				}
+				return false;
+			}
+		};
+	}
+
 	private final ByteBuffer bitmapBuffer;
-	private int cacheId;
+	private long cacheId;
 	private int capacity;
 	private FileInputStream fileInputStream;
 	private FileOutputStream fileOutputStream;
@@ -58,10 +90,11 @@ class TileMemoryCardCache {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}
+
 		this.tempDir = new File(tempDir);
 		// check if the cache directory exists
 		if (!this.tempDir.exists()) {
-			// check if the cache directory could be created
+			// check if the cache directory can be created
 			if (this.tempDir.mkdirs()) {
 				this.capacity = capacity;
 			} else {
@@ -74,43 +107,18 @@ class TileMemoryCardCache {
 			this.capacity = capacity;
 		}
 
-		this.map = createMap(this.capacity);
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
-	}
 
-	private LinkedHashMap<MapGeneratorJob, File> createMap(final int initialCapacity) {
-		return new LinkedHashMap<MapGeneratorJob, File>(
-				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, File> eldest) {
-				if (size() > initialCapacity) {
-					// remove the entry from the cache and delete the cached file
-					this.remove(eldest.getKey());
-					if (!eldest.getValue().delete()) {
-						eldest.getValue().deleteOnExit();
-					}
-				}
-				return false;
-			}
-		};
+		// restore the serialized cache map if possible
+		if (!deserializeCacheMap()) {
+			this.map = createMap(this.capacity);
+		}
 	}
 
 	/**
-	 * @param mapGeneratorJob
-	 *            key of the image whose presence in the cache should be tested.
-	 * @return true if the cache contains an image for the specified key, false otherwise.
-	 * @see Map#containsKey(Object)
+	 * Deletes all cached files and the cache directory itself.
 	 */
-	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
-		return this.map.containsKey(mapGeneratorJob);
-	}
-
-	/**
-	 * Destroy the cache at the end of its lifetime.
-	 */
-	synchronized void destroy() {
+	private void deleteCachedFiles() {
 		// delete all cached files
 		if (this.map != null) {
 			for (File file : this.map.values()) {
@@ -130,13 +138,127 @@ class TileMemoryCardCache {
 	}
 
 	/**
+	 * Restores the serialized cache map if possible.
+	 * 
+	 * @return true if the map was restored successfully, false otherwise.
+	 */
+	private boolean deserializeCacheMap() {
+		try {
+			// check if the serialization file exists and is readable
+			File file = new File(this.tempDir, SERIALIZATION_FILE_NAME);
+			if (!file.exists()) {
+				return false;
+			} else if (!file.isFile()) {
+				return false;
+			} else if (!file.canRead()) {
+				return false;
+			}
+
+			// create the input streams
+			this.fileInputStream = new FileInputStream(file);
+			ObjectInputStream objectInputStream = new ObjectInputStream(this.fileInputStream);
+
+			// restore the serialized cache map (the compiler warning cannot be fixed)
+			this.map = (LinkedHashMap<MapGeneratorJob, File>) objectInputStream.readObject();
+
+			// close the input streams
+			objectInputStream.close();
+			this.fileInputStream.close();
+
+			// delete the serialization file
+			if (!file.delete()) {
+				file.deleteOnExit();
+			}
+
+			return true;
+		} catch (IOException e) {
+			Logger.e(e);
+			return false;
+		} catch (ClassNotFoundException e) {
+			Logger.e(e);
+			return false;
+		}
+	}
+
+	/**
+	 * Serializes the cache map.
+	 * 
+	 * @return true if the map was serialized successfully, false otherwise.
+	 */
+	private boolean serializeCacheMap() {
+		try {
+			// check if the serialization file exists and is readable
+			File file = new File(this.tempDir, SERIALIZATION_FILE_NAME);
+
+			// check for an existing file
+			if (file.exists()) {
+				// try to delete the existing file
+				if (!file.delete()) {
+					return false;
+				}
+			}
+
+			// check if the cache map exists
+			if (this.map == null) {
+				return false;
+			}
+
+			// create the output streams
+			this.fileOutputStream = new FileOutputStream(file);
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+					this.fileOutputStream);
+
+			// serialize the cache map
+			objectOutputStream.writeObject(this.map);
+
+			// close the output streams
+			objectOutputStream.close();
+			this.fileOutputStream.close();
+
+			return true;
+		} catch (IOException e) {
+			Logger.e(e);
+			return false;
+		}
+	}
+
+	/**
+	 * @param mapGeneratorJob
+	 *            key of the image whose presence in the cache should be tested.
+	 * @return true if the cache contains an image for the specified key, false otherwise.
+	 * @see Map#containsKey(Object)
+	 */
+	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
+		return this.map.containsKey(mapGeneratorJob);
+	}
+
+	/**
+	 * Destroy the cache at the end of its lifetime.
+	 * 
+	 * @param persistence
+	 *            true if the cached images should be deleted, false otherwise.
+	 */
+	synchronized void destroy(boolean persistence) {
+		if (persistence) {
+			// delete all files only if serialization of the cache map fails
+			if (!serializeCacheMap()) {
+				deleteCachedFiles();
+			}
+			this.map = null;
+		} else {
+			deleteCachedFiles();
+		}
+	}
+
+	/**
 	 * @param mapGeneratorJob
 	 *            key of the image whose data should be returned.
 	 * @param buffer
 	 *            the buffer in which the image data should be copied.
+	 * @return true if the image data were copied successfully, false otherwise.
 	 * @see Map#get(Object)
 	 */
-	synchronized void get(MapGeneratorJob mapGeneratorJob, ByteBuffer buffer) {
+	synchronized boolean get(MapGeneratorJob mapGeneratorJob, ByteBuffer buffer) {
 		try {
 			this.fileInputStream = new FileInputStream(this.map.get(mapGeneratorJob));
 			if (this.fileInputStream.read(buffer.array()) == buffer.array().length) {
@@ -144,8 +266,13 @@ class TileMemoryCardCache {
 				buffer.rewind();
 			}
 			this.fileInputStream.close();
+			return true;
+		} catch (FileNotFoundException e) {
+			this.map.remove(mapGeneratorJob);
+			return false;
 		} catch (IOException e) {
 			Logger.e(e);
+			return false;
 		}
 	}
 
@@ -162,7 +289,14 @@ class TileMemoryCardCache {
 			try {
 				bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 				this.bitmapBuffer.rewind();
-				this.imageFile = new File(this.tempDir, ++this.cacheId + ".tile");
+				this.imageFile = new File(this.tempDir, ++this.cacheId
+						+ IMAGE_FILE_NAME_EXTENSION);
+				// check for an existing file with that name
+				while (this.imageFile.exists()) {
+					// increment the cache ID to avoid overwriting the existing file
+					this.imageFile = new File(this.tempDir, ++this.cacheId
+							+ IMAGE_FILE_NAME_EXTENSION);
+				}
 				this.fileOutputStream = new FileOutputStream(this.imageFile, false);
 				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
 						.array().length);

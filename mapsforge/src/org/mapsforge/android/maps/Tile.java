@@ -16,6 +16,10 @@
  */
 package org.mapsforge.android.maps;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import android.graphics.Rect;
 
 /**
@@ -23,7 +27,9 @@ import android.graphics.Rect;
  * and Y number together with their zoom level. The actual area that a tile covers on a map
  * depends on the underlying map projection.
  */
-class Tile {
+class Tile implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Amount of bytes per pixel of a map tile.
 	 */
@@ -39,18 +45,18 @@ class Tile {
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
 
-	private final int hashCode;
-	private Tile other;
+	private transient int hashCode;
+	private transient Tile other;
 
 	/**
 	 * Pixel X coordinate of the upper left corner of this tile on the world map.
 	 */
-	final long pixelX;
+	transient long pixelX;
 
 	/**
 	 * Pixel Y coordinate of the upper left corner of this tile on the world map.
 	 */
-	final long pixelY;
+	transient long pixelY;
 
 	/**
 	 * X number of this tile.
@@ -81,9 +87,7 @@ class Tile {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;
-		this.hashCode = calculateHashCode();
-		this.pixelX = x * TILE_SIZE;
-		this.pixelY = y * TILE_SIZE;
+		calculateTransientValues();
 	}
 
 	@Override
@@ -127,6 +131,21 @@ class Tile {
 		result = prime * result + (int) (this.y ^ (this.y >>> 32));
 		result = prime * result + this.zoomLevel;
 		return result;
+	}
+
+	/**
+	 * Calculates the values of some transient variables.
+	 */
+	private void calculateTransientValues() {
+		this.pixelX = x * TILE_SIZE;
+		this.pixelY = y * TILE_SIZE;
+		this.hashCode = calculateHashCode();
+	}
+
+	private void readObject(ObjectInputStream objectInputStream) throws IOException,
+			ClassNotFoundException {
+		objectInputStream.defaultReadObject();
+		calculateTransientValues();
 	}
 
 	/**

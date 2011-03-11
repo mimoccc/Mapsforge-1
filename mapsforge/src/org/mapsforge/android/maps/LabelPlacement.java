@@ -61,7 +61,7 @@ class LabelPlacement {
 	private int startDistanceToSymbols = 4;
 	private int symbolDistanceToSymbol = 2;
 
-	DependencyCache dependencyCache;
+	final DependencyCache dependencyCache;
 	PointTextContainer label;
 	Rect rect1;
 	Rect rect2;
@@ -109,7 +109,7 @@ class LabelPlacement {
 		removeOverlappingAreaLabels(areaLabels);
 
 		if (areaLabels.size() != 0) {
-			this.dependencyCache.removeAreaLabelsInalreadyDrawnareas(areaLabels);
+			this.dependencyCache.removeAreaLabelsInAlreadyDrawnAreas(areaLabels);
 		}
 	}
 
@@ -652,7 +652,7 @@ class LabelPlacement {
 		}
 	}
 
-	int getlabelDistanceToLabel() {
+	int getLabelDistanceToLabel() {
 		return this.labelDistanceToLabel;
 	}
 
@@ -664,11 +664,11 @@ class LabelPlacement {
 		return this.placementOption;
 	}
 
-	int getstartDistanceToSymbols() {
+	int getStartDistanceToSymbols() {
 		return this.startDistanceToSymbols;
 	}
 
-	int getsymbolDistanceToSymbol() {
+	int getSymbolDistanceToSymbol() {
 		return this.symbolDistanceToSymbol;
 	}
 
@@ -760,7 +760,7 @@ class LabelPlacement {
 		}
 	}
 
-	void setlabelDistanceToLabel(int labelDistanceToLabel) {
+	void setLabelDistanceToLabel(int labelDistanceToLabel) {
 		this.labelDistanceToLabel = labelDistanceToLabel;
 	}
 
@@ -768,11 +768,11 @@ class LabelPlacement {
 		this.labelDistanceToSymbol = labelDistanceToSymbol;
 	}
 
-	void setstartDistanceToSymbols(int startDistanceToSymbols) {
+	void setStartDistanceToSymbols(int startDistanceToSymbols) {
 		this.startDistanceToSymbols = startDistanceToSymbols;
 	}
 
-	void setsymbolDistanceToSymbol(int symbolDistanceToSymbol) {
+	void setSymbolDistanceToSymbol(int symbolDistanceToSymbol) {
 		this.symbolDistanceToSymbol = symbolDistanceToSymbol;
 	}
 }
