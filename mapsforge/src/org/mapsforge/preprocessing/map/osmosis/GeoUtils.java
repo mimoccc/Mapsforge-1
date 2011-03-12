@@ -38,8 +38,6 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
  * @author bross
  */
 final class GeoUtils {
-
-	private static final int CLIPPED_COVERING_POLYGON_SIZE = 10;
 	static final int MIN_NODES_POLYGON = 4;
 	static final int MIN_COORDINATES_POLYGON = 8;
 	private static final byte SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
@@ -124,7 +122,7 @@ final class GeoUtils {
 					}
 				} else {
 					if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)
-							|| SutherlandHodgmanClipping.accept(waynodes, currentBBox)) {
+							|| SutherlandHodgmanClipping.accept(waynodes, currentBBox, false)) {
 						matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
 					}
 				}
@@ -174,7 +172,7 @@ final class GeoUtils {
 				}
 			} else {
 				if (CohenSutherlandClipping.intersectsClippingRegion(waynodes, currentBBox)
-						|| SutherlandHodgmanClipping.accept(waynodes, currentBBox)) {
+						|| SutherlandHodgmanClipping.accept(waynodes, currentBBox, false)) {
 					bitmask |= TILE_BITMASK_VALUES[tileCounter];
 				}
 			}
@@ -396,11 +394,15 @@ final class GeoUtils {
 	 *            the tile which represents the clipping area
 	 * @param enlargementInMeters
 	 *            the enlargement of bounding boxes in meters
+	 * @param coordinateSystemOriginUpperLeft
+	 *            set flag if the origin of the coordinate system is in the upper left,
+	 *            otherwise the origin is assumed to be in the bottom left
 	 * @return the clipped polygon, null if the polygon is not valid or if the intersection
 	 *         between polygon and the tile's bounding box is empty
 	 */
 	static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
-			final TileCoordinate tile, int enlargementInMeters) {
+			final TileCoordinate tile, int enlargementInMeters,
+			boolean coordinateSystemOriginUpperLeft) {
 		if (polygon == null) {
 			throw new IllegalArgumentException("polygon is null");
 		}
@@ -413,7 +415,8 @@ final class GeoUtils {
 				enlargementInMeters);
 		double[] polygonArray = geocoordinatesAsArray(polygon);
 
-		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox);
+		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox,
+				coordinateSystemOriginUpperLeft);
 
 		if (clippedPolygon == null || clippedPolygon.length == 0) {
 			LOGGER.finer("clipped polygon is empty: " + polygon);
@@ -429,8 +432,7 @@ final class GeoUtils {
 		return ret;
 	}
 
-	static boolean covers(float[] polygon,
-			final TileCoordinate tile, int enlargementInMeters) {
+	static boolean intersects(float[] polygon, boolean coordinateSystemUpperLeft) {
 		if (polygon == null) {
 			throw new IllegalArgumentException("polygon is null");
 		}
@@ -439,24 +441,77 @@ final class GeoUtils {
 			throw new IllegalArgumentException(
 					"a valid closed polygon must have at least 4 points");
 
-		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
-				enlargementInMeters);
 		double[] polygonAsDoubleArray = new double[polygon.length];
 		for (int i = 0; i < polygon.length; i++) {
 			polygonAsDoubleArray[i] = polygon[i];
 		}
 
+		// double[] bbox = new double[] { 0, 0, Tile.TILE_SIZE, Tile.TILE_SIZE,
+		// Tile.TILE_SIZE, 0, 0, 0, 0, Tile.TILE_SIZE };
+		double[] bbox = new double[] { 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0 };
 		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonAsDoubleArray,
-				bbox);
+				bbox, coordinateSystemUpperLeft);
 
 		if (clippedPolygon == null || clippedPolygon.length == 0
-				|| clippedPolygon.length != CLIPPED_COVERING_POLYGON_SIZE) {
+				|| clippedPolygon.length <= MIN_COORDINATES_POLYGON) {
 			return false;
 		}
 
-		// TODO implement
+		// double[] bboxWay = new double[] { 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+		// Tile.TILE_SIZE, 0, Tile.TILE_SIZE, 0, 0 };
+		// return fuzzyMatch(bboxWay, clippedPolygon, 0.1d);
 		return true;
 
+	}
+
+	static boolean covers(float[] polygon, boolean coordinateSystemOriginUpperLeft) {
+		if (polygon == null) {
+			throw new IllegalArgumentException("polygon is null");
+		}
+
+		if (polygon.length < MIN_COORDINATES_POLYGON)
+			throw new IllegalArgumentException(
+					"a valid closed polygon must have at least 4 points");
+
+		double[] polygonAsDoubleArray = new double[polygon.length];
+		for (int i = 0; i < polygon.length; i++) {
+			polygonAsDoubleArray[i] = polygon[i];
+		}
+
+		// double[] bbox = new double[] { 0, 0, Tile.TILE_SIZE, Tile.TILE_SIZE,
+		// Tile.TILE_SIZE, 0, 0, 0, 0, Tile.TILE_SIZE };
+		double[] bbox = new double[] { 0, Tile.TILE_SIZE, Tile.TILE_SIZE, 0 };
+		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonAsDoubleArray,
+				bbox, coordinateSystemOriginUpperLeft);
+
+		if (clippedPolygon == null || clippedPolygon.length == 0
+				|| clippedPolygon.length <= MIN_COORDINATES_POLYGON) {
+			return false;
+		}
+
+		double[] bboxWay = new double[] { 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
+				Tile.TILE_SIZE, 0, Tile.TILE_SIZE, 0, 0 };
+		return fuzzyMatch(bboxWay, clippedPolygon, 0.1d);
+
+	}
+
+	private static boolean fuzzyMatch(double[] d1, double[] d2, double epsilon) {
+		if (d1.length != d2.length)
+			return false;
+
+		for (int i = 0; i < d1.length - 1; i += 2) {
+			boolean matched = false;
+			for (int j = 0; j < d2.length - 1; j += 2) {
+				if (Math.abs(d1[i] - d2[j]) <= epsilon
+						&& Math.abs(d1[i + 1] - d2[j + 1]) <= epsilon) {
+					matched = true;
+				}
+			}
+			if (!matched)
+				return false;
+		}
+
+		return true;
 	}
 
 	private static double[] getBoundingBoxAsArray(long tileX, long tileY, byte zoom,
@@ -578,11 +633,15 @@ final class GeoUtils {
 		 * @param rectangle
 		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
 		 *            ymin, xmax, ymax]
+		 * @param coordinateSystemOriginUpperLeft
+		 *            set flag if the origin of the coordinate system is in the upper left,
+		 *            otherwise the origin is assumed to be in the bottom left
 		 * @return true if the polygon "touches" (includes "covers") the clipping region, false
 		 *         otherwise
 		 */
-		static boolean accept(final double[] polygon, final double[] rectangle) {
-			double[] clipped = clipPolygon(polygon, rectangle);
+		static boolean accept(final double[] polygon, final double[] rectangle,
+				boolean coordinateSystemOriginUpperLeft) {
+			double[] clipped = clipPolygon(polygon, rectangle, coordinateSystemOriginUpperLeft);
 			return clipped != null && clipped.length > 0;
 		}
 
@@ -595,10 +654,14 @@ final class GeoUtils {
 		 * @param rectangle
 		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
 		 *            ymin, xmax, ymax]
+		 * @param coordinateSystemOriginUpperLeft
+		 *            set flag if the origin of the coordinate system is in the upper left,
+		 *            otherwise the origin is assumed to be in the bottom left
 		 * @return the clipped polygon if the polygon "touches" the clipping region, an empty
 		 *         array otherwise
 		 */
-		static double[] clipPolygon(final double[] polygon, final double[] rectangle) {
+		static double[] clipPolygon(final double[] polygon, final double[] rectangle,
+				boolean coordinateSystemOriginUpperLeft) {
 			if (polygon == null) {
 				throw new IllegalArgumentException("polygon is null");
 			}
@@ -609,39 +672,41 @@ final class GeoUtils {
 
 			// bottom edge
 			double[] clippedPolygon = clipPolygonToEdge(polygon, new double[] { rectangle[0],
-					rectangle[1], rectangle[2], rectangle[1] });
+					rectangle[1], rectangle[2], rectangle[1] }, coordinateSystemOriginUpperLeft);
 			// right edge
 			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[2],
-					rectangle[1], rectangle[2], rectangle[3] });
+					rectangle[1], rectangle[2], rectangle[3] }, coordinateSystemOriginUpperLeft);
 			// top edge
 			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[2],
-					rectangle[3], rectangle[0], rectangle[3] });
+					rectangle[3], rectangle[0], rectangle[3] }, coordinateSystemOriginUpperLeft);
 			// left edge
 			clippedPolygon = clipPolygonToEdge(clippedPolygon, new double[] { rectangle[0],
-					rectangle[3], rectangle[0], rectangle[1] });
+					rectangle[3], rectangle[0], rectangle[1] }, coordinateSystemOriginUpperLeft);
 
 			return clippedPolygon;
 		}
 
-		private static boolean inside(double x, double y, double[] edge) {
+		private static boolean inside(double x, double y, double[] edge,
+				boolean coordinateSystemOriginUpperLeft) {
 
 			if (edge[0] < edge[2]) {
 				// bottom edge
-				return y >= edge[1];
+				return coordinateSystemOriginUpperLeft ? y <= edge[1] : y >= edge[1];
 			} else if (edge[0] > edge[2]) {
 				// top edge
-				return y <= edge[1];
+				return coordinateSystemOriginUpperLeft ? y >= edge[1] : y <= edge[1];
 			} else if (edge[1] < edge[3]) {
-				// right edge
-				return x <= edge[0];
+				// right edge if !coordinateSystemOriginUpperLeft, left edge otherwise
+				return coordinateSystemOriginUpperLeft ? x >= edge[0] : x <= edge[0];
 			} else if (edge[1] > edge[3]) {
-				// left edge
-				return x >= edge[0];
+				// left edge if !coordinateSystemOriginUpperLeft, right edge otherwise
+				return coordinateSystemOriginUpperLeft ? x <= edge[0] : x >= edge[0];
 			} else
 				throw new IllegalArgumentException();
 		}
 
-		private static double[] clipPolygonToEdge(final double[] polygon, double[] edge) {
+		private static double[] clipPolygonToEdge(final double[] polygon, double[] edge,
+				boolean coordinateSystemOriginUpperLeft) {
 			TDoubleArrayList clippedPolygon = new TDoubleArrayList();
 
 			if (polygon.length < MIN_COORDINATES_POLYGON)
@@ -661,8 +726,8 @@ final class GeoUtils {
 				y1 = polygon[i + 1];
 				x2 = polygon[i + 2];
 				y2 = polygon[i + 3];
-				startPointInside = inside(x1, y1, edge);
-				endPointInside = inside(x2, y2, edge);
+				startPointInside = inside(x1, y1, edge, coordinateSystemOriginUpperLeft);
+				endPointInside = inside(x2, y2, edge, coordinateSystemOriginUpperLeft);
 				if (startPointInside) {
 					if (endPointInside) {
 						clippedPolygon.add(x2);

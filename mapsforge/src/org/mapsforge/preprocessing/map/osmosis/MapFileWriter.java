@@ -58,6 +58,8 @@ class MapFileWriter {
 
 	private static final String MAGIC_BYTE = "mapsforge binary OSM";
 
+	private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
+
 	// DEBUG STRINGS
 	private static final String DEBUG_STRING_POI_HEAD = "***POIStart";
 	private static final String DEBUG_STRING_POI_TAIL = "***";
@@ -386,19 +388,18 @@ class MapFileWriter {
 				byte[] indexBytes = Serializer.getFiveBytes(currentSubfileOffset);
 				if (TILE_INFO.isWaterTile(currentTileCoordinate)) {
 					indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
+				} else {
+					// the TileInfo class may produce false negatives for tiles on zoom level
+					// greater than TileInfo.TILE_INFO_ZOOMLEVEL
+					// we need to run the coastline algorithm to detect whether the tile is
+					// completely covered by water or not
+					if (currentTileCoordinate.getZoomlevel() > TileInfo.TILE_INFO_ZOOMLEVEL) {
+						if (COASTLINE_HANDLER.isWaterTile(currentTileCoordinate,
+								dataStore.getCoastLines(currentTileCoordinate))) {
+							indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
+						}
+					}
 				}
-				// else {
-				// // the TileInfo class may produce false negatives for tiles on zoom level
-				// // greater than TileInfo.TILE_INFO_ZOOMLEVEL
-				// // we need to run the coastline algorithm to detect whether the tile is
-				// // completely covered by water or not
-				// if (currentTileCoordinate.getZoomlevel() > TileInfo.TILE_INFO_ZOOMLEVEL) {
-				// if (COASTLINE_HANDLER.isWaterTile(currentTileCoordinate,
-				// dataStore.getCoastLines(currentTileCoordinate))) {
-				// indexBytes[0] |= BITMAP_INDEX_ENTRY_WATER;
-				// }
-				// }
-				// }
 
 				// seek to index frame of this tile and write relative offset of this
 				// tile as five bytes to the index
@@ -731,7 +732,7 @@ class MapFileWriter {
 		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
 			if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
-						waynodeCoordinates, tile, bboxEnlargement);
+						waynodeCoordinates, tile, bboxEnlargement, false);
 
 				if (clipped != null && !clipped.isEmpty()) {
 					waynodeCoordinates = clipped;
