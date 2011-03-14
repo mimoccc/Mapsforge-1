@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -119,7 +120,7 @@ class TileMemoryCardCache {
 	 * Deletes all cached files and the cache directory itself.
 	 */
 	private void deleteCachedFiles() {
-		// delete all cached files
+		// delete all files in the cache map
 		if (this.map != null) {
 			for (File file : this.map.values()) {
 				if (!file.delete()) {
@@ -129,10 +130,28 @@ class TileMemoryCardCache {
 			this.map.clear();
 			this.map = null;
 		}
-		// delete the cache directory
-		if (this.tempDir != null) {
-			if (!this.tempDir.delete()) {
-				this.tempDir.deleteOnExit();
+
+		if (this.tempDir != null && this.tempDir.isDirectory()) {
+			// create a filename filter that matches all cached image files
+			FilenameFilter filenameFilter = new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(IMAGE_FILE_NAME_EXTENSION);
+				}
+			};
+
+			// delete all other cached image files
+			for (File file : this.tempDir.listFiles(filenameFilter)) {
+				if (!file.delete()) {
+					file.deleteOnExit();
+				}
+			}
+
+			// delete the cache directory
+			if (this.tempDir != null) {
+				if (!this.tempDir.delete()) {
+					this.tempDir.deleteOnExit();
+				}
 			}
 		}
 	}

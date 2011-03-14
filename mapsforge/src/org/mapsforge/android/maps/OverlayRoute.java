@@ -27,9 +27,26 @@ import android.graphics.Point;
  */
 public class OverlayRoute {
 	/**
+	 * Checks the given way nodes for null elements.
+	 * 
+	 * @param wayNodes
+	 *            the way nodes to check for null elements.
+	 * @return true if the way nodes contain at least one null element, false otherwise.
+	 */
+	private static boolean containsNullElements(GeoPoint[] wayNodes) {
+		for (int i = wayNodes.length - 1; i >= 0; --i) {
+			if (wayNodes[i] == null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Paint which will be used to fill the route.
 	 */
 	protected Paint paintFill;
+
 	/**
 	 * Paint which will be used to draw the route outline.
 	 */
@@ -59,11 +76,13 @@ public class OverlayRoute {
 	 * Constructs a new OverlayRoute.
 	 * 
 	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes.
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @param paintFill
 	 *            the paint which will be used to fill the route (may be null).
 	 * @param paintOutline
 	 *            the paint which will be used to draw the route outline (may be null).
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
 	 */
 	public OverlayRoute(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
@@ -98,12 +117,21 @@ public class OverlayRoute {
 	 * Sets the way nodes of the route.
 	 * 
 	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes.
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
 	 */
 	public synchronized void setRouteData(GeoPoint[] wayNodes) {
+		// check for illegal null elements
+		if (wayNodes != null && containsNullElements(wayNodes)) {
+			throw new IllegalArgumentException("way nodes must not contain null elements");
+		}
+
 		this.wayNodes = wayNodes;
 		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
 			this.cachedWayPositions = new Point[this.wayNodes.length];
+		} else {
+			this.cachedWayPositions = new Point[0];
 		}
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}

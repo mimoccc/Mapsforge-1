@@ -393,6 +393,15 @@ public class MapDatabase {
 	}
 
 	/**
+	 * Informs about the existence of debug information in the current map file.
+	 * 
+	 * @return true if the current map file includes debug information, false otherwise.
+	 */
+	public boolean isDebugFile() {
+		return this.debugFile;
+	}
+
+	/**
 	 * Reads a single block and calls the render functions on all map elements.
 	 * 
 	 * @param databaseMapGenerator
