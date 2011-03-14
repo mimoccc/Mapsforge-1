@@ -98,4 +98,8 @@ public class Pipeline {
 		this.name = value;
 	}
 
+	public String generate() {
+		return source.getValue().generate();
+	}
+
 }

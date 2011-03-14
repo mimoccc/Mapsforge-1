@@ -71,7 +71,10 @@ public class PolygonAreaFilter
 		StringBuilder sb = new StringBuilder();
 		sb.append("--bp").append(" ");
 		sb.append("file=").append(polygonFile).append(" ");
-		return PolygonAreaFilter.class.getName();
+
+		sb.append(super.generate());
+
+		return sb.toString();
 	}
 
 }
