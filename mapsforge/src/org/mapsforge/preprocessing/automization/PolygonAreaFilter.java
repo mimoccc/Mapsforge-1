@@ -36,6 +36,9 @@ import javax.xml.bind.annotation.XmlType;
 public class PolygonAreaFilter
 		extends SinkSource {
 
+	/**
+	 * The path to the polygon file that is needed to extract the data of a polygon area.
+	 */
 	@XmlAttribute(name = "polygon-file", required = true)
 	protected String polygonFile;
 
@@ -62,6 +65,9 @@ public class PolygonAreaFilter
 
 	@Override
 	public String generate() {
+
+		// TODO: clipIncompleteEntities
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("--bp").append(" ");
 		sb.append("file=").append(polygonFile).append(" ");

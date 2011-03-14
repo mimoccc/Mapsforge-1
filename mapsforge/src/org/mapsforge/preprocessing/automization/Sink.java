@@ -5,7 +5,6 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -14,11 +13,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for sink complex type.
+ * <p>
+ * Java class for sink complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="sink">
@@ -35,39 +35,44 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "sink")
 @XmlSeeAlso({
-    RoutinggraphWriter.class,
-    WritePbf.class,
-    MapfileWriter.class
-})
+		RoutinggraphWriter.class,
+		WritePbf.class,
+		MapfileWriter.class })
 public abstract class Sink {
 
-    @XmlAttribute(required = true)
-    protected String file;
+	/**
+	 * The path to file. This is needed for every sink to store their execution data anywhere.
+	 */
+	@XmlAttribute(required = true)
+	protected String file;
 
-    /**
-     * Gets the value of the file property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getFile() {
-        return file;
-    }
+	/**
+	 * Gets the value of the file property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getFile() {
+		return file;
+	}
 
-    /**
-     * Sets the value of the file property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setFile(String value) {
-        this.file = value;
-    }
-    
-    public abstract String generate();
+	/**
+	 * Sets the value of the file property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setFile(String value) {
+		this.file = value;
+	}
+
+	/**
+	 * A abstract method that every sink must implemented to generate their explicit osmosis
+	 * task call string.
+	 * 
+	 * @return the generated string to start a osmosis sink.
+	 */
+	public abstract String generate();
 
 }

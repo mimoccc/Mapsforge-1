@@ -59,24 +59,66 @@ import javax.xml.bind.annotation.XmlType;
 public class MapfileWriter
 		extends Sink {
 
+	/**
+	 * A parameter to declare if the output of the mapfile-writer should be stored in ram or on
+	 * disk before writing the map file.
+	 */
 	@XmlAttribute
 	protected String type;
+
+	/**
+	 * The parameter for the bbox feature of the mapfile-writer. This is a comma separated
+	 * string of doubles that should not have any white space.
+	 */
 	@XmlAttribute
 	protected String bbox;
+
+	/**
+	 * The start position to centralized the map.
+	 */
 	@XmlAttribute(name = "map-start-position")
 	protected String mapStartPosition;
+
+	/**
+	 * The comment of the user of the mapfile-writer.
+	 */
 	@XmlAttribute
 	protected String comment;
+
+	/**
+	 * The parameter to turn on the waynode-compression.
+	 */
 	@XmlAttribute(name = "waynode-compression")
 	protected Boolean waynodeCompression;
+
+	/**
+	 * A parameter to turn on the picel-filter.
+	 */
 	@XmlAttribute(name = "pixel-filter")
 	protected Boolean pixelFilter;
+
+	/**
+	 * A parameter to turn on the polygon-clipping.
+	 */
 	@XmlAttribute(name = "polygon-clipping")
 	protected Boolean polygonClipping;
+
+	/**
+	 * The parameter to configure the zoom intervals.
+	 */
 	@XmlAttribute(name = "zoom-interval-conf")
 	protected String zoomIntervalConf;
+
+	/**
+	 * A parameter to set the number of thread that are used to generate the map file. The value
+	 * should be twice as the number of cores.
+	 */
 	@XmlAttribute(name = "thread-pool-size")
 	protected Integer threadPoolSize;
+
+	/**
+	 * A boolean to switch for writing the debug information into the written map file.
+	 */
 	@XmlAttribute(name = "debug-file")
 	protected Boolean debugFile;
 
@@ -313,17 +355,27 @@ public class MapfileWriter
 		StringBuilder sb = new StringBuilder();
 		sb.append("--mw").append(" ");
 		sb.append("file=").append(file).append(" ");
-		sb.append("type=").append(getType()).append(" ");
-		// TODO: bbox check and implementation
-		// sb.append("bbox").append(bbox)
-		sb.append("map-start-position=").append(mapStartPosition).append(" ");
-		sb.append("comment=").append(comment).append(" ");
-		sb.append("waynode-compression=").append(getWaynodeCompression()).append(" ");
-		sb.append("pixel-filter=").append(getPixelFilter()).append(" ");
-		sb.append("polygon-clipping=").append(getPolygonClipping()).append(" ");
-		sb.append("zoom-interval-conf=").append(getZoomIntervalConf()).append(" ");
-		sb.append("thread-pool-size=").append(threadPoolSize).append(" ");
-		sb.append("debug-file=").append(getDebugFile()).append(" ");
+		if (type != null)
+			sb.append("type=").append(getType()).append(" ");
+
+		if (bbox != null)
+			sb.append("bbox=").append(bbox).append(" ");
+		if (mapStartPosition != null)
+			sb.append("map-start-position=").append(mapStartPosition).append(" ");
+		if (comment != null)
+			sb.append("comment=").append(comment).append(" ");
+		if (waynodeCompression != null)
+			sb.append("waynode-compression=").append(getWaynodeCompression()).append(" ");
+		if (pixelFilter != null)
+			sb.append("pixel-filter=").append(getPixelFilter()).append(" ");
+		if (polygonClipping != null)
+			sb.append("polygon-clipping=").append(getPolygonClipping()).append(" ");
+		if (zoomIntervalConf != null)
+			sb.append("zoom-interval-conf=").append(getZoomIntervalConf()).append(" ");
+		if (threadPoolSize != null)
+			sb.append("thread-pool-size=").append(threadPoolSize).append(" ");
+		if (debugFile != null)
+			sb.append("debug-file=").append(getDebugFile()).append(" ");
 		return sb.toString();
 	}
 }

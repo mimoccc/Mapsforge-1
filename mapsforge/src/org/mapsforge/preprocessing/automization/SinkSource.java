@@ -51,10 +51,21 @@ import javax.xml.bind.annotation.XmlType;
 		BboxAreaFilter.class })
 public abstract class SinkSource {
 
+	/**
+	 * A list of sink-sources that would be used the data of the this one to do their execution.
+	 */
 	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends SinkSource>> sinkSource;
+
+	/**
+	 * A list of sinks that used the data of this sink-source as source to do their execution.
+	 */
 	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends Sink>> sink;
+
+	/**
+	 * 
+	 */
 	@XmlAttribute
 	protected String name;
 
@@ -78,6 +89,8 @@ public abstract class SinkSource {
 	 * Objects of the following type(s) are allowed in the list {@link JAXBElement }{@code <}
 	 * {@link SinkSource }{@code >} {@link JAXBElement }{@code <}{@link BboxAreaFilter }{@code >}
 	 * {@link JAXBElement }{@code <}{@link PolygonAreaFilter }{@code >}
+	 * 
+	 * @return returns a list of sink-sources that should be executed in this task.
 	 * 
 	 * 
 	 */
@@ -110,6 +123,8 @@ public abstract class SinkSource {
 	 * {@link JAXBElement }{@code <}{@link MapfileWriter }{@code >} {@link JAXBElement }{@code <}
 	 * {@link RoutinggraphWriter }{@code >}
 	 * 
+	 * @return returns a list of sinks that should be executed in this task.
+	 * 
 	 * 
 	 */
 	public List<JAXBElement<? extends Sink>> getSink() {
@@ -140,13 +155,25 @@ public abstract class SinkSource {
 		this.name = value;
 	}
 
+	/**
+	 * The default implementation for all sink-sources. Here is the call to split the pipe for
+	 * each task that need this data as source. Also the osmosis call of each task would be
+	 * generated.
+	 * 
+	 * It is necessary that every implementation of a sink-source call the super constructor of
+	 * this method to implement this too.
+	 * 
+	 * @return returns the generated string to call this osmosis task and all the task that use
+	 *         this data.
+	 */
 	public String generate() {
 		StringBuilder sb = new StringBuilder();
 		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
 				+ (this.sink != null ? this.sink.size() : 0);
 
-		sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
-				.append(" ");
+		if (teeTotal >= 2)
+			sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
+					.append(" ");
 
 		if (this.sinkSource != null) {
 			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {

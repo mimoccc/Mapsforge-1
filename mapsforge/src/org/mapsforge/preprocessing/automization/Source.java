@@ -46,35 +46,23 @@ import javax.xml.bind.annotation.XmlType;
 @XmlSeeAlso({ ReadPbf.class })
 public abstract class Source {
 
+	/**
+	 * A list of sink-sources that use this source.
+	 */
 	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends SinkSource>> sinkSource;
+
+	/**
+	 * A list of sinks that use this source.
+	 */
 	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends Sink>> sink;
+
+	/**
+	 * The path to the file that is the source file.
+	 */
 	@XmlAttribute(required = true)
 	protected String file;
-
-	public String generate() {
-		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
-				+ (this.sink != null ? this.sink.size() : 0);
-
-		StringBuilder sb = new StringBuilder();
-		if (teeTotal >= 2)
-			sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
-					.append(" ");
-
-		if (this.sinkSource != null) {
-			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
-				sb.append(ss.getValue().generate()).append(" ");
-			}
-		}
-
-		if (this.sink != null) {
-			for (JAXBElement<? extends Sink> s : this.sink) {
-				sb.append(s.getValue().generate()).append(" ");
-			}
-		}
-		return sb.toString();
-	}
 
 	/**
 	 * Gets the value of the sinkSource property.
@@ -96,6 +84,9 @@ public abstract class Source {
 	 * Objects of the following type(s) are allowed in the list {@link JAXBElement }{@code <}
 	 * {@link SinkSource }{@code >} {@link JAXBElement }{@code <}{@link BboxAreaFilter }{@code >}
 	 * {@link JAXBElement }{@code <}{@link PolygonAreaFilter }{@code >}
+	 * 
+	 * @return returns a list of all sink-sources that need the data of the source for their
+	 *         execution.
 	 * 
 	 * 
 	 */
@@ -128,6 +119,8 @@ public abstract class Source {
 	 * {@link JAXBElement }{@code <} {@link MapfileWriter }{@code >} {@link JAXBElement }{@code <}
 	 * {@link RoutinggraphWriter }{@code >}
 	 * 
+	 * @return returns a list of all sinks that use this data for their execution.
+	 * 
 	 * 
 	 */
 	public List<JAXBElement<? extends Sink>> getSink() {
@@ -156,6 +149,40 @@ public abstract class Source {
 	 */
 	public void setFile(String value) {
 		this.file = value;
+	}
+
+	/**
+	 * The default implementation for all sources. Here is the call to split the pipe for each
+	 * task that need this data as source. Also the osmosis call of each task would be
+	 * generated.
+	 * 
+	 * It is necessary that every implementation of a source call the super constructor of this
+	 * method to implement this too.
+	 * 
+	 * @return returns the generated string to call this osmosis task and all the task that use
+	 *         this data.
+	 */
+	public String generate() {
+		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
+				+ (this.sink != null ? this.sink.size() : 0);
+
+		StringBuilder sb = new StringBuilder();
+		if (teeTotal >= 2)
+			sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
+					.append(" ");
+
+		if (this.sinkSource != null) {
+			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
+				sb.append(ss.getValue().generate()).append(" ");
+			}
+		}
+
+		if (this.sink != null) {
+			for (JAXBElement<? extends Sink> s : this.sink) {
+				sb.append(s.getValue().generate()).append(" ");
+			}
+		}
+		return sb.toString();
 	}
 
 }

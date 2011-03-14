@@ -5,7 +5,6 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
 import javax.xml.bind.JAXBElement;
@@ -15,11 +14,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for pipeline complex type.
+ * <p>
+ * Java class for pipeline complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="pipeline">
@@ -38,63 +38,64 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "pipeline", propOrder = {
-    "source"
+		"source"
 })
 public class Pipeline {
 
-    @XmlElementRef(name = "source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-    protected JAXBElement<? extends Source> source;
-    @XmlAttribute(required = true)
-    protected String name;
+	/**
+	 * The source of the pipeline. The point where the execution started.
+	 */
+	@XmlElementRef(name = "source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
+	protected JAXBElement<? extends Source> source;
 
-    /**
-     * Gets the value of the source property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link JAXBElement }{@code <}{@link Source }{@code >}
-     *     {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
-     *     
-     */
-    public JAXBElement<? extends Source> getSource() {
-        return source;
-    }
+	/**
+	 * The name of the pipeline.
+	 */
+	@XmlAttribute(required = true)
+	protected String name;
 
-    /**
-     * Sets the value of the source property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link JAXBElement }{@code <}{@link Source }{@code >}
-     *     {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
-     *     
-     */
-    public void setSource(JAXBElement<? extends Source> value) {
-        this.source = ((JAXBElement<? extends Source> ) value);
-    }
+	/**
+	 * Gets the value of the source property.
+	 * 
+	 * @return possible object is {@link JAXBElement }{@code <}{@link Source }{@code >}
+	 *         {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 * 
+	 */
+	public JAXBElement<? extends Source> getSource() {
+		return source;
+	}
 
-    /**
-     * Gets the value of the name property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * Sets the value of the source property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link JAXBElement }{@code <}{@link Source }{@code >}
+	 *            {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 * 
+	 */
+	public void setSource(JAXBElement<? extends Source> value) {
+		this.source = value;
+	}
 
-    /**
-     * Sets the value of the name property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setName(String value) {
-        this.name = value;
-    }
+	/**
+	 * Gets the value of the name property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Sets the value of the name property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setName(String value) {
+		this.name = value;
+	}
 
 }

@@ -104,12 +104,14 @@ public class WritePbf
 		StringBuilder sb = new StringBuilder();
 		sb.append("--wb").append(" ");
 		sb.append("file=").append(file).append(" ");
+
 		sb.append("compress=");
 		if (getCompress())
 			sb.append("deflate");
 		else
 			sb.append("none");
 		sb.append(" ");
+
 		sb.append("omitmetadata=");
 		if (getOmitMetadata())
 			sb.append("true");
