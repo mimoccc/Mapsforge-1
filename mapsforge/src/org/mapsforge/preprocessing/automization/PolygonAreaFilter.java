@@ -5,7 +5,6 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -13,11 +12,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for polygon-area-filter complex type.
+ * <p>
+ * Java class for polygon-area-filter complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="polygon-area-filter">
@@ -34,42 +34,38 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "polygon-area-filter")
 public class PolygonAreaFilter
-    extends SinkSource
-{
+		extends SinkSource {
 
-    @XmlAttribute(name = "polygon-file", required = true)
-    protected String polygonFile;
+	@XmlAttribute(name = "polygon-file", required = true)
+	protected String polygonFile;
 
-    /**
-     * Gets the value of the polygonFile property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getPolygonFile() {
-        return polygonFile;
-    }
+	/**
+	 * Gets the value of the polygonFile property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getPolygonFile() {
+		return polygonFile;
+	}
 
-    /**
-     * Sets the value of the polygonFile property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setPolygonFile(String value) {
-        this.polygonFile = value;
-    }
+	/**
+	 * Sets the value of the polygonFile property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setPolygonFile(String value) {
+		this.polygonFile = value;
+	}
 
 	@Override
 	public String generate() {
-		
+		StringBuilder sb = new StringBuilder();
+		sb.append("--bp").append(" ");
+		sb.append("file=").append(polygonFile).append(" ");
 		return PolygonAreaFilter.class.getName();
 	}
-    
-    
 
 }

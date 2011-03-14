@@ -5,7 +5,6 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -13,11 +12,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for write-pbf complex type.
+ * <p>
+ * Java class for write-pbf complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="write-pbf">
@@ -35,75 +35,89 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "write-pbf")
 public class WritePbf
-    extends Sink
-{
+		extends Sink {
 
-    @XmlAttribute(name = "omit-metadata")
-    protected Boolean omitMetadata;
-    @XmlAttribute
-    protected Boolean compress;
+	/**
+	 * This parameter defines if the osm meta data should be transfered into the written pbf
+	 * file or if the are filtered.
+	 */
+	@XmlAttribute(name = "omit-metadata")
+	protected Boolean omitMetadata;
 
-    /**
-     * Gets the value of the omitMetadata property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getOmitMetadata() {
-        if (omitMetadata == null) {
-            return false;
-        } else {
-            return omitMetadata;
-        }
-    }
+	/**
+	 * This parameter defines if the deflate or no compression method should use for writing the
+	 * pbf file.
+	 */
+	@XmlAttribute
+	protected Boolean compress;
 
-    /**
-     * Sets the value of the omitMetadata property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setOmitMetadata(Boolean value) {
-        this.omitMetadata = value;
-    }
+	/**
+	 * Gets the value of the omitMetadata property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getOmitMetadata() {
+		if (omitMetadata == null) {
+			return false;
+		}
+		return omitMetadata;
+	}
 
-    /**
-     * Gets the value of the compress property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getCompress() {
-        if (compress == null) {
-            return true;
-        } else {
-            return compress;
-        }
-    }
+	/**
+	 * Sets the value of the omitMetadata property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setOmitMetadata(Boolean value) {
+		this.omitMetadata = value;
+	}
 
-    /**
-     * Sets the value of the compress property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setCompress(Boolean value) {
-        this.compress = value;
-    }
+	/**
+	 * Gets the value of the compress property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getCompress() {
+		if (compress == null) {
+			return true;
+		}
+		return compress;
+	}
+
+	/**
+	 * Sets the value of the compress property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setCompress(Boolean value) {
+		this.compress = value;
+	}
 
 	@Override
 	public String generate() {
-		return WritePbf.class.getName();
+		StringBuilder sb = new StringBuilder();
+		sb.append("--wb").append(" ");
+		sb.append("file=").append(file).append(" ");
+		sb.append("compress=");
+		if (getCompress())
+			sb.append("deflate");
+		else
+			sb.append("none");
+		sb.append(" ");
+		sb.append("omitmetadata=");
+		if (getOmitMetadata())
+			sb.append("true");
+		else
+			sb.append("false");
+		sb.append(" ");
+
+		return sb.toString();
 	}
-    
-    
 
 }

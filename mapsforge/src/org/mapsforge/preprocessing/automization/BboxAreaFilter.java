@@ -17,8 +17,7 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for bbox-area-filter complex type.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within
- * this class.
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="bbox-area-filter">
@@ -39,17 +38,34 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "bbox-area-filter")
 public class BboxAreaFilter extends SinkSource {
 
+	/**
+	 * This is the value of the bottom edge of the bounding box.
+	 */
 	@XmlAttribute(required = true)
 	protected double minlat;
+
+	/**
+	 * This is the value of the left edge of the bounding box.
+	 */
 	@XmlAttribute(required = true)
 	protected double minlon;
+
+	/**
+	 * This is the value of the top edge of the bounding box.
+	 */
 	@XmlAttribute(required = true)
 	protected double maxlat;
+
+	/**
+	 * This is the value of the right edge of the bounding box.
+	 */
 	@XmlAttribute(required = true)
 	protected double maxlon;
 
 	/**
 	 * Gets the value of the minlat property.
+	 * 
+	 * @return returns the latitude value of the bottom of the bounding box.
 	 * 
 	 */
 	public double getMinlat() {
@@ -59,6 +75,9 @@ public class BboxAreaFilter extends SinkSource {
 	/**
 	 * Sets the value of the minlat property.
 	 * 
+	 * @param value
+	 *            the latitude value of the bottom of the bounding box.
+	 * 
 	 */
 	public void setMinlat(double value) {
 		this.minlat = value;
@@ -66,6 +85,8 @@ public class BboxAreaFilter extends SinkSource {
 
 	/**
 	 * Gets the value of the minlon property.
+	 * 
+	 * @return returns the value of the left boarder of the bounding box.
 	 * 
 	 */
 	public double getMinlon() {
@@ -75,6 +96,9 @@ public class BboxAreaFilter extends SinkSource {
 	/**
 	 * Sets the value of the minlon property.
 	 * 
+	 * @param value
+	 *            the value of the left boarder of the bounding box.
+	 * 
 	 */
 	public void setMinlon(double value) {
 		this.minlon = value;
@@ -82,6 +106,8 @@ public class BboxAreaFilter extends SinkSource {
 
 	/**
 	 * Gets the value of the maxlat property.
+	 * 
+	 * @return returns the latitude value of the top of the bounding box.
 	 * 
 	 */
 	public double getMaxlat() {
@@ -91,6 +117,9 @@ public class BboxAreaFilter extends SinkSource {
 	/**
 	 * Sets the value of the maxlat property.
 	 * 
+	 * @param value
+	 *            the latitude value of the top of the bounding box.
+	 * 
 	 */
 	public void setMaxlat(double value) {
 		this.maxlat = value;
@@ -98,6 +127,8 @@ public class BboxAreaFilter extends SinkSource {
 
 	/**
 	 * Gets the value of the maxlon property.
+	 * 
+	 * @return returns the longitude value of the right boarder of the bounding box.
 	 * 
 	 */
 	public double getMaxlon() {
@@ -107,6 +138,9 @@ public class BboxAreaFilter extends SinkSource {
 	/**
 	 * Sets the value of the maxlon property.
 	 * 
+	 * @param value
+	 *            the longitude value of the right boarder of the bounding box.
+	 * 
 	 */
 	public void setMaxlon(double value) {
 		this.maxlon = value;
@@ -114,17 +148,23 @@ public class BboxAreaFilter extends SinkSource {
 
 	@Override
 	public String generate() {
-		
-		StringBuilder sb = new StringBuilder();		
-		
+
+		/*
+		 * Generate the string for the procedure call of the osmosis pipeline task to extract a
+		 * bounding box of an .osm file. The enlargment of the bounding box is parameterized by
+		 * the attributes minlon, minlat, maxlon and maxlat.
+		 */
+
+		StringBuilder sb = new StringBuilder();
+
 		sb.append("--bb").append(" ");
 		sb.append("left=").append(minlon).append(" ");
 		sb.append("right=").append(maxlon).append(" ");
 		sb.append("bottom=").append(minlat).append(" ");
 		sb.append("top=").append(maxlat).append(" ");
-				
+
 		sb.append(super.generate());
-		
+
 		return sb.toString();
 	}
 

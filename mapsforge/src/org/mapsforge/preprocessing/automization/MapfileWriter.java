@@ -5,7 +5,6 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -13,11 +12,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for mapfile-writer complex type.
+ * <p>
+ * Java class for mapfile-writer complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="mapfile-writer">
@@ -57,306 +57,273 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapfile-writer")
 public class MapfileWriter
-    extends Sink
-{
+		extends Sink {
 
-    @XmlAttribute
-    protected String type;
-    @XmlAttribute
-    protected String bbox;
-    @XmlAttribute(name = "map-start-position")
-    protected String mapStartPosition;
-    @XmlAttribute
-    protected String comment;
-    @XmlAttribute(name = "waynode-compression")
-    protected Boolean waynodeCompression;
-    @XmlAttribute(name = "pixel-filter")
-    protected Boolean pixelFilter;
-    @XmlAttribute(name = "polygon-clipping")
-    protected Boolean polygonClipping;
-    @XmlAttribute(name = "zoom-interval-conf")
-    protected String zoomIntervalConf;
-    @XmlAttribute(name = "thread-pool-size")
-    protected Integer threadPoolSize;
-    @XmlAttribute(name = "debug-file")
-    protected Boolean debugFile;
+	@XmlAttribute
+	protected String type;
+	@XmlAttribute
+	protected String bbox;
+	@XmlAttribute(name = "map-start-position")
+	protected String mapStartPosition;
+	@XmlAttribute
+	protected String comment;
+	@XmlAttribute(name = "waynode-compression")
+	protected Boolean waynodeCompression;
+	@XmlAttribute(name = "pixel-filter")
+	protected Boolean pixelFilter;
+	@XmlAttribute(name = "polygon-clipping")
+	protected Boolean polygonClipping;
+	@XmlAttribute(name = "zoom-interval-conf")
+	protected String zoomIntervalConf;
+	@XmlAttribute(name = "thread-pool-size")
+	protected Integer threadPoolSize;
+	@XmlAttribute(name = "debug-file")
+	protected Boolean debugFile;
 
-    /**
-     * Gets the value of the type property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getType() {
-        if (type == null) {
-            return "ram";
-        } else {
-            return type;
-        }
-    }
+	/**
+	 * Gets the value of the type property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getType() {
+		if (type == null) {
+			return "ram";
+		}
+		return type;
+	}
 
-    /**
-     * Sets the value of the type property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setType(String value) {
-        this.type = value;
-    }
+	/**
+	 * Sets the value of the type property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setType(String value) {
+		this.type = value;
+	}
 
-    /**
-     * Gets the value of the bbox property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getBbox() {
-        return bbox;
-    }
+	/**
+	 * Gets the value of the bbox property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getBbox() {
+		return bbox;
+	}
 
-    /**
-     * Sets the value of the bbox property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setBbox(String value) {
-        this.bbox = value;
-    }
+	/**
+	 * Sets the value of the bbox property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setBbox(String value) {
+		this.bbox = value;
+	}
 
-    /**
-     * Gets the value of the mapStartPosition property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getMapStartPosition() {
-        return mapStartPosition;
-    }
+	/**
+	 * Gets the value of the mapStartPosition property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getMapStartPosition() {
+		return mapStartPosition;
+	}
 
-    /**
-     * Sets the value of the mapStartPosition property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setMapStartPosition(String value) {
-        this.mapStartPosition = value;
-    }
+	/**
+	 * Sets the value of the mapStartPosition property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setMapStartPosition(String value) {
+		this.mapStartPosition = value;
+	}
 
-    /**
-     * Gets the value of the comment property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getComment() {
-        return comment;
-    }
+	/**
+	 * Gets the value of the comment property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getComment() {
+		return comment;
+	}
 
-    /**
-     * Sets the value of the comment property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setComment(String value) {
-        this.comment = value;
-    }
+	/**
+	 * Sets the value of the comment property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setComment(String value) {
+		this.comment = value;
+	}
 
-    /**
-     * Gets the value of the waynodeCompression property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getWaynodeCompression() {
-        if (waynodeCompression == null) {
-            return true;
-        } else {
-            return waynodeCompression;
-        }
-    }
+	/**
+	 * Gets the value of the waynodeCompression property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getWaynodeCompression() {
+		if (waynodeCompression == null) {
+			return true;
+		}
+		return waynodeCompression;
+	}
 
-    /**
-     * Sets the value of the waynodeCompression property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setWaynodeCompression(Boolean value) {
-        this.waynodeCompression = value;
-    }
+	/**
+	 * Sets the value of the waynodeCompression property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setWaynodeCompression(Boolean value) {
+		this.waynodeCompression = value;
+	}
 
-    /**
-     * Gets the value of the pixelFilter property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getPixelFilter() {
-        if (pixelFilter == null) {
-            return true;
-        } else {
-            return pixelFilter;
-        }
-    }
+	/**
+	 * Gets the value of the pixelFilter property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getPixelFilter() {
+		if (pixelFilter == null) {
+			return true;
+		}
+		return pixelFilter;
+	}
 
-    /**
-     * Sets the value of the pixelFilter property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setPixelFilter(Boolean value) {
-        this.pixelFilter = value;
-    }
+	/**
+	 * Sets the value of the pixelFilter property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setPixelFilter(Boolean value) {
+		this.pixelFilter = value;
+	}
 
-    /**
-     * Gets the value of the polygonClipping property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getPolygonClipping() {
-        if (polygonClipping == null) {
-            return true;
-        } else {
-            return polygonClipping;
-        }
-    }
+	/**
+	 * Gets the value of the polygonClipping property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getPolygonClipping() {
+		if (polygonClipping == null) {
+			return true;
+		}
+		return polygonClipping;
+	}
 
-    /**
-     * Sets the value of the polygonClipping property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setPolygonClipping(Boolean value) {
-        this.polygonClipping = value;
-    }
+	/**
+	 * Sets the value of the polygonClipping property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setPolygonClipping(Boolean value) {
+		this.polygonClipping = value;
+	}
 
-    /**
-     * Gets the value of the zoomIntervalConf property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getZoomIntervalConf() {
-        if (zoomIntervalConf == null) {
-            return "8,0,11,14,12,21";
-        } else {
-            return zoomIntervalConf;
-        }
-    }
+	/**
+	 * Gets the value of the zoomIntervalConf property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getZoomIntervalConf() {
+		if (zoomIntervalConf == null) {
+			return "8,0,11,14,12,21";
+		}
+		return zoomIntervalConf;
+	}
 
-    /**
-     * Sets the value of the zoomIntervalConf property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setZoomIntervalConf(String value) {
-        this.zoomIntervalConf = value;
-    }
+	/**
+	 * Sets the value of the zoomIntervalConf property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setZoomIntervalConf(String value) {
+		this.zoomIntervalConf = value;
+	}
 
-    /**
-     * Gets the value of the threadPoolSize property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Integer }
-     *     
-     */
-    public Integer getThreadPoolSize() {
-        return threadPoolSize;
-    }
+	/**
+	 * Gets the value of the threadPoolSize property.
+	 * 
+	 * @return possible object is {@link Integer }
+	 * 
+	 */
+	public Integer getThreadPoolSize() {
+		return threadPoolSize;
+	}
 
-    /**
-     * Sets the value of the threadPoolSize property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Integer }
-     *     
-     */
-    public void setThreadPoolSize(Integer value) {
-        this.threadPoolSize = value;
-    }
+	/**
+	 * Sets the value of the threadPoolSize property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Integer }
+	 * 
+	 */
+	public void setThreadPoolSize(Integer value) {
+		this.threadPoolSize = value;
+	}
 
-    /**
-     * Gets the value of the debugFile property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean getDebugFile() {
-        if (debugFile == null) {
-            return false;
-        } else {
-            return debugFile;
-        }
-    }
+	/**
+	 * Gets the value of the debugFile property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean getDebugFile() {
+		if (debugFile == null) {
+			return false;
+		}
+		return debugFile;
+	}
 
-    /**
-     * Sets the value of the debugFile property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDebugFile(Boolean value) {
-        this.debugFile = value;
-    }
+	/**
+	 * Sets the value of the debugFile property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setDebugFile(Boolean value) {
+		this.debugFile = value;
+	}
 
 	@Override
 	public String generate() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("--mw").append(" ");
 		sb.append("file=").append(file).append(" ");
-		if(type != null)
-			sb.append("type=").append(type).append(" ");
-		//...
-			
+		sb.append("type=").append(getType()).append(" ");
+		// TODO: bbox check and implementation
+		// sb.append("bbox").append(bbox)
+		sb.append("map-start-position=").append(mapStartPosition).append(" ");
+		sb.append("comment=").append(comment).append(" ");
+		sb.append("waynode-compression=").append(getWaynodeCompression()).append(" ");
+		sb.append("pixel-filter=").append(getPixelFilter()).append(" ");
+		sb.append("polygon-clipping=").append(getPolygonClipping()).append(" ");
+		sb.append("zoom-interval-conf=").append(getZoomIntervalConf()).append(" ");
+		sb.append("thread-pool-size=").append(threadPoolSize).append(" ");
+		sb.append("debug-file=").append(getDebugFile()).append(" ");
 		return sb.toString();
 	}
-    
-    
-
 }

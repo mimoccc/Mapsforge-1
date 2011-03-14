@@ -7,7 +7,7 @@
     			<p:write-pbf file="/tmp/germany.osm.pbf"/>
     		</p:bbox-area-filter>
     		<p:bbox-area-filter name="austria" maxlat="0" minlat="0" maxlon="0" minlon="0">
-    			<p:write-pbf file="/tmp/austria.osm.pbf"/>
+			<p:mapfile-writer file="austia.map" map-start-position="45, -12" thread-pool-size="119"/>
     		</p:bbox-area-filter>
     	</p:bbox-area-filter>
     	<p:write-pbf file="/tmp/file1"/>

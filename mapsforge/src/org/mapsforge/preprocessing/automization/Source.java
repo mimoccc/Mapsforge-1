@@ -9,6 +9,7 @@ package org.mapsforge.preprocessing.automization;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -22,8 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for source complex type.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within
- * this class.
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="source">
@@ -46,9 +46,9 @@ import javax.xml.bind.annotation.XmlType;
 @XmlSeeAlso({ ReadPbf.class })
 public abstract class Source {
 
-	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class, required = false)
+	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends SinkSource>> sinkSource;
-	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class, required = false)
+	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
 	protected List<JAXBElement<? extends Sink>> sink;
 	@XmlAttribute(required = true)
 	protected String file;
@@ -57,9 +57,10 @@ public abstract class Source {
 		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
 				+ (this.sink != null ? this.sink.size() : 0);
 
-		StringBuilder sb = new StringBuilder();		
-		sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
-				.append(" ");
+		StringBuilder sb = new StringBuilder();
+		if (teeTotal >= 2)
+			sb.append("--tee").append(" ").append("outputCount=").append(teeTotal)
+					.append(" ");
 
 		if (this.sinkSource != null) {
 			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
@@ -79,10 +80,9 @@ public abstract class Source {
 	 * Gets the value of the sinkSource property.
 	 * 
 	 * <p>
-	 * This accessor method returns a reference to the live list, not a
-	 * snapshot. Therefore any modification you make to the returned list will
-	 * be present inside the JAXB object. This is why there is not a
-	 * <CODE>set</CODE> method for the sinkSource property.
+	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
+	 * modification you make to the returned list will be present inside the JAXB object. This
+	 * is why there is not a <CODE>set</CODE> method for the sinkSource property.
 	 * 
 	 * <p>
 	 * For example, to add a new item, do as follows:
@@ -93,9 +93,8 @@ public abstract class Source {
 	 * 
 	 * 
 	 * <p>
-	 * Objects of the following type(s) are allowed in the list
-	 * {@link JAXBElement }{@code <}{@link SinkSource }{@code >}
-	 * {@link JAXBElement }{@code <}{@link BboxAreaFilter }{@code >}
+	 * Objects of the following type(s) are allowed in the list {@link JAXBElement }{@code <}
+	 * {@link SinkSource }{@code >} {@link JAXBElement }{@code <}{@link BboxAreaFilter }{@code >}
 	 * {@link JAXBElement }{@code <}{@link PolygonAreaFilter }{@code >}
 	 * 
 	 * 
@@ -111,10 +110,9 @@ public abstract class Source {
 	 * Gets the value of the sink property.
 	 * 
 	 * <p>
-	 * This accessor method returns a reference to the live list, not a
-	 * snapshot. Therefore any modification you make to the returned list will
-	 * be present inside the JAXB object. This is why there is not a
-	 * <CODE>set</CODE> method for the sink property.
+	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
+	 * modification you make to the returned list will be present inside the JAXB object. This
+	 * is why there is not a <CODE>set</CODE> method for the sink property.
 	 * 
 	 * <p>
 	 * For example, to add a new item, do as follows:
@@ -125,10 +123,9 @@ public abstract class Source {
 	 * 
 	 * 
 	 * <p>
-	 * Objects of the following type(s) are allowed in the list
-	 * {@link JAXBElement }{@code <}{@link Sink }{@code >} {@link JAXBElement }
-	 * {@code <}{@link WritePbf }{@code >} {@link JAXBElement }{@code <}
-	 * {@link MapfileWriter }{@code >} {@link JAXBElement }{@code <}
+	 * Objects of the following type(s) are allowed in the list {@link JAXBElement }{@code <}
+	 * {@link Sink }{@code >} {@link JAXBElement } {@code <}{@link WritePbf }{@code >}
+	 * {@link JAXBElement }{@code <} {@link MapfileWriter }{@code >} {@link JAXBElement }{@code <}
 	 * {@link RoutinggraphWriter }{@code >}
 	 * 
 	 * 
