@@ -184,10 +184,13 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			for (int itemIndex = 0; itemIndex < this.numberOfItems; ++itemIndex) {
 				// get the current item
 				this.overlayItem = createItem(itemIndex);
+				if (this.overlayItem == null) {
+					continue;
+				}
 
 				synchronized (this.overlayItem) {
-					// make sure that the current item is not null and has a position
-					if (this.overlayItem == null || this.overlayItem.getPoint() == null) {
+					// make sure that the current item has a position
+					if (this.overlayItem.getPoint() == null) {
 						continue;
 					}
 

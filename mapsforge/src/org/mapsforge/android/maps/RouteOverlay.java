@@ -84,10 +84,13 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 		for (int routeIndex = 0; routeIndex < this.numberOfRoutes; ++routeIndex) {
 			// get the current route
 			this.overlayRoute = createRoute(routeIndex);
+			if (this.overlayRoute == null) {
+				continue;
+			}
 
 			synchronized (this.overlayRoute) {
-				// make sure that the current route is not null and has way nodes
-				if (this.overlayRoute == null || this.overlayRoute.wayNodes == null) {
+				// make sure that the current route has way nodes
+				if (this.overlayRoute.wayNodes == null) {
 					continue;
 				}
 
