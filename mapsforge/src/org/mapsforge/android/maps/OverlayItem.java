@@ -56,7 +56,7 @@ public class OverlayItem {
 	byte cachedZoomLevel;
 
 	/**
-	 * Constructs a new OverlayItem.
+	 * Constructs a new OverlayItem which will be drawn with the default marker of the overlay.
 	 * 
 	 * @param point
 	 *            the geographical position of the item.
@@ -69,6 +69,30 @@ public class OverlayItem {
 		this.point = point;
 		this.title = title;
 		this.snippet = snippet;
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+	}
+
+	/**
+	 * Constructs a new OverlayItem which will be drawn with the given marker. If the marker is
+	 * null, the default marker of the overlay will be drawn instead.
+	 * <p>
+	 * The bounds of the marker must already have been set properly, for example by calling
+	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.
+	 * 
+	 * @param point
+	 *            the geographical position of the item.
+	 * @param title
+	 *            the title of the item (may be null).
+	 * @param snippet
+	 *            the short description of the item (may be null).
+	 * @param marker
+	 *            the marker that is drawn for this item (may be null).
+	 */
+	public OverlayItem(GeoPoint point, String title, String snippet, Drawable marker) {
+		this.point = point;
+		this.title = title;
+		this.snippet = snippet;
+		this.marker = marker;
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
@@ -109,8 +133,8 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Sets the marker that is drawn for this item. If the item marker is null, the default
-	 * marker of the overlay will be drawn instead.
+	 * Sets the marker that is drawn for this item. If the marker is null, the default marker of
+	 * the overlay will be drawn instead.
 	 * <p>
 	 * The bounds of the marker must already have been set properly, for example by calling
 	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.

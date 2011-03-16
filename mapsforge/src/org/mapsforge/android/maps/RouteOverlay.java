@@ -86,8 +86,8 @@ public abstract class RouteOverlay<Route extends OverlayRoute> extends Overlay {
 			this.overlayRoute = createRoute(routeIndex);
 
 			synchronized (this.overlayRoute) {
-				if (this.overlayRoute.wayNodes == null) {
-					// the current route has no way nodes
+				// make sure that the current route is not null and has way nodes
+				if (this.overlayRoute == null || this.overlayRoute.wayNodes == null) {
 					continue;
 				}
 
