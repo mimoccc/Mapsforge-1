@@ -111,8 +111,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 				this.tapOverlayItem = createItem(itemIndex.intValue());
 
 				synchronized (this.tapOverlayItem) {
-					// check if the item has a position
-					if (this.tapOverlayItem.getPoint() == null) {
+					// make sure that the current item is not null and has a position
+					if (this.tapOverlayItem == null || this.tapOverlayItem.getPoint() == null) {
 						continue;
 					}
 
@@ -186,8 +186,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 				this.overlayItem = createItem(itemIndex);
 
 				synchronized (this.overlayItem) {
-					// check if the item has a position
-					if (this.overlayItem.getPoint() == null) {
+					// make sure that the current item is not null and has a position
+					if (this.overlayItem == null || this.overlayItem.getPoint() == null) {
 						continue;
 					}
 
