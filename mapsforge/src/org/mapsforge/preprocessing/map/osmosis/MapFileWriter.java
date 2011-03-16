@@ -528,12 +528,19 @@ class MapFileWriter {
 						for (TDWay way : ways) {
 							wayBuffer.clear();
 
+							// TODO Polygons that become invalid by pixel filtering should
+							// not be included in the map file. Currently we write the number
+							// of ways of a given tile before we know that a way may become
+							// invalid. We need to track the number of ways we have actually
+							// written and reinsert this information afterwards
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
 									maxZoomCurrentInterval, baseZoomCurrentInterval,
-									currentTileCoordinate);
+									currentTileCoordinate, false);
 
 							if (wayNodePreprocessingResult == null) {
+								// length of way is zero
+								tileBuffer.put(Serializer.getVariableByteUnsigned(0));
 								continue;
 							}
 							if (debugStrings) {
@@ -633,7 +640,7 @@ class MapFileWriter {
 															false,
 															maxZoomCurrentInterval,
 															baseZoomCurrentInterval,
-															currentTileCoordinate);
+															currentTileCoordinate, false);
 										// write the amount of way nodes to the file
 										wayBuffer
 												.put(Serializer
@@ -716,16 +723,21 @@ class MapFileWriter {
 			boolean waynodeCompression,
 			boolean pixelCompression, boolean polygonClipping, byte maxZoomCurrentInterval,
 			byte baseZoomCurrentInterval,
-			TileCoordinate tile) {
+			TileCoordinate tile, boolean skipInvalidPolygons) {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
 
 		// if the sub file for lower zoom levels is written, remove all way
 		// nodes from the list which are projected on the same pixel
 		if (pixelCompression && maxZoomCurrentInterval <= MAX_ZOOMLEVEL_PIXEL_FILTER) {
+			boolean checkOrientation = way.isCoastline() && way.isPolygon();
 			waynodeCoordinates = GeoUtils.filterWaynodesOnSamePixel(
-					waynodeCoordinates,
-					maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA);
+					waynodeCoordinates, maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA,
+					checkOrientation);
+			if (skipInvalidPolygons && way.isPolygon()
+					&& waynodeCoordinates.size() < GeoUtils.MIN_NODES_POLYGON) {
+				return null;
+			}
 		}
 
 		// if the way is a polygon, clip the way to the current tile

@@ -193,14 +193,22 @@ final class GeoUtils {
 	 *            the zoom level which is used to do the computation
 	 * @param delta
 	 *            the minimum distance in pixels that separates two way nodes
+	 * @param checkOrientation
+	 *            filtering pixels of concave polygons may reverse its orientation, set this
+	 *            flag if it is important that the orientation is preserved
 	 * @return a new list of way nodes that includes only those way nodes that do not fall onto
 	 *         the same or adjacent pixels
 	 */
 	static List<GeoCoordinate> filterWaynodesOnSamePixel(
 			final List<GeoCoordinate> waynodes,
-			byte zoom, float delta) {
+			byte zoom, float delta, boolean checkOrientation) {
 		if (waynodes == null)
 			throw new IllegalArgumentException("parameter waynodes is null");
+
+		double originalOrientation = 0;
+		if (checkOrientation) {
+			originalOrientation = Math.signum(computePolygonArea(waynodes));
+		}
 
 		List<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
 		double pixelXPrev;
@@ -227,6 +235,16 @@ final class GeoUtils {
 			}
 		}
 		result.add(waynodes.get(waynodes.size() - 1));
+
+		// filtering pixels of concave polygons may reverse the orientation
+		// of the polygon
+		// the orientation can be computed by looking at the sign of the area of a polygon
+		if (checkOrientation) {
+			if (originalOrientation != Math.signum(computePolygonArea(result))) {
+				// we need to reverse the order of the result polygon
+				Collections.reverse(result);
+			}
+		}
 
 		return result;
 	}
