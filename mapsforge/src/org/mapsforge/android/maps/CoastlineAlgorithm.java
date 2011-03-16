@@ -216,6 +216,11 @@ class CoastlineAlgorithm {
 	 *            the coordinates of the coastline segment.
 	 */
 	void addCoastlineSegment(float[] coastline) {
+		if (CoastlineWay.isClosed(coastline) && coastline.length < 6) {
+			// invalid polygon, skip it
+			return;
+		}
+
 		// all coastline segments are accumulated and merged together if possible
 		this.nodesSequence = coastline;
 		this.coastlineStartPoint = new ImmutablePoint(this.nodesSequence[0],
