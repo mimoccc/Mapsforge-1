@@ -137,8 +137,8 @@ class Tile implements Serializable {
 	 * Calculates the values of some transient variables.
 	 */
 	private void calculateTransientValues() {
-		this.pixelX = x * TILE_SIZE;
-		this.pixelY = y * TILE_SIZE;
+		this.pixelX = this.x * TILE_SIZE;
+		this.pixelY = this.y * TILE_SIZE;
 		this.hashCode = calculateHashCode();
 	}
 

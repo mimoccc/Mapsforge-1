@@ -53,7 +53,7 @@ public class OverlayRoute {
 	protected Paint paintOutline;
 
 	/**
-	 * The geographical coordinates of the way nodes.
+	 * Geographical coordinates of the way nodes.
 	 */
 	protected GeoPoint[] wayNodes;
 
@@ -74,6 +74,26 @@ public class OverlayRoute {
 
 	/**
 	 * Constructs a new OverlayRoute.
+	 */
+	public OverlayRoute() {
+		this.cachedWayPositions = new Point[0];
+	}
+
+	/**
+	 * Constructs a new OverlayRoute.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 */
+	public OverlayRoute(GeoPoint[] wayNodes) {
+		this.cachedWayPositions = new Point[0];
+		setRouteData(wayNodes);
+	}
+
+	/**
+	 * Constructs a new OverlayRoute.
 	 * 
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
@@ -87,6 +107,21 @@ public class OverlayRoute {
 	public OverlayRoute(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
 		setRouteData(wayNodes);
+		setPaint(paintFill, paintOutline);
+	}
+
+	/**
+	 * Constructs a new OverlayRoute.
+	 * 
+	 * @param paintFill
+	 *            the paint which will be used to fill the route (may be null).
+	 * @param paintOutline
+	 *            the paint which will be used to draw the route outline (may be null).
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 */
+	public OverlayRoute(Paint paintFill, Paint paintOutline) {
+		this.cachedWayPositions = new Point[0];
 		setPaint(paintFill, paintOutline);
 	}
 

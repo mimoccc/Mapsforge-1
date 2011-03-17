@@ -75,11 +75,31 @@ import android.widget.ZoomControls;
  * draw an overlay on top of the map, add it to the list returned by {@link #getOverlays()}.
  * Overlays may be added or removed from the list at any time.
  * <p>
- * Some text strings in the user interface of a MapView are customizable. See
- * {@link #setText(String, String)} for the names of the text fields that can be overridden at
- * runtime. The default texts are in English.
+ * All text fields from the {@link TextField} enumeration can be overridden at runtime via the
+ * {@link #setText(TextField, String)} method. The default texts are in English.
  */
 public class MapView extends ViewGroup {
+	/**
+	 * Enumeration of all text fields that can be overridden at runtime via the
+	 * {@link MapView#setText(TextField, String)} method.
+	 */
+	public enum TextField {
+		/**
+		 * Unit symbol kilometer.
+		 */
+		KILOMETER,
+
+		/**
+		 * Unit symbol meter.
+		 */
+		METER,
+
+		/**
+		 * OK text message.
+		 */
+		OKAY;
+	}
+
 	/**
 	 * Implementation for multi-touch capable devices.
 	 */
@@ -534,19 +554,24 @@ public class MapView extends ViewGroup {
 	private static final int DEFAULT_MOVE_SPEED = 10;
 
 	/**
-	 * Default capacity of the memory card cache.
-	 */
-	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
-
-	/**
 	 * Default value for the kilometer text field.
 	 */
-	private static final String DEFAULT_UNIT_SYMBOL_KILOMETER = " km";
+	private static final String DEFAULT_TEXT_KILOMETER = " km";
 
 	/**
 	 * Default value for the meter text field.
 	 */
-	private static final String DEFAULT_UNIT_SYMBOL_METER = " m";
+	private static final String DEFAULT_TEXT_METER = " m";
+
+	/**
+	 * Default value for the OK text field.
+	 */
+	private static final String DEFAULT_TEXT_OK = "OK";
+
+	/**
+	 * Default capacity of the memory card cache.
+	 */
+	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
 
 	/**
 	 * Default minimum zoom level.
@@ -567,7 +592,6 @@ public class MapView extends ViewGroup {
 	 * Default background color of the MapView.
 	 */
 	private static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
-
 	/**
 	 * Message code for the handler to hide the zoom controls.
 	 */
@@ -581,6 +605,7 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
+
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -707,6 +732,9 @@ public class MapView extends ViewGroup {
 	private boolean showFpsCounter;
 	private boolean showScaleBar;
 	private boolean showZoomControls;
+	private String text_kilometer;
+	private String text_meter;
+	private String text_ok;
 	private Bitmap tileBitmap;
 	private ByteBuffer tileBuffer;
 	private TileMemoryCardCache tileMemoryCardCache;
@@ -715,8 +743,6 @@ public class MapView extends ViewGroup {
 	private long tileX;
 	private long tileY;
 	private TouchEventHandler touchEventHandler;
-	private String unit_symbol_kilometer;
-	private String unit_symbol_meter;
 	private ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	private byte zoomLevel;
@@ -1185,29 +1211,28 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Overrides an internal text field with the given string.
+	 * Overrides the specified text field with the given string.
 	 * 
-	 * Currently the following text fields can be set:
-	 * <ul>
-	 * <li>unit_symbol_kilometer</li>
-	 * <li>unit_symbol_meter</li>
-	 * </ul>
-	 * 
-	 * @param name
-	 *            the name of the text field to override.
+	 * @param textField
+	 *            the text field to override.
 	 * @param value
 	 *            the new value of the text field.
-	 * @return true if the new value could be set, false otherwise.
 	 */
-	public boolean setText(String name, String value) {
-		if (name.equals("unit_symbol_kilometer")) {
-			this.unit_symbol_kilometer = value;
-			return true;
-		} else if (name.equals("unit_symbol_meter")) {
-			this.unit_symbol_meter = value;
-			return true;
+	public void setText(TextField textField, String value) {
+		switch (textField) {
+			case KILOMETER:
+				this.text_kilometer = value;
+				break;
+			case METER:
+				this.text_meter = value;
+				break;
+			case OKAY:
+				this.text_ok = value;
+				break;
+			default:
+				// all cases are covered, the default case should never occur
+				break;
 		}
-		return false;
 	}
 
 	/**
@@ -1342,14 +1367,14 @@ public class MapView extends ViewGroup {
 
 		// draw the scale text
 		if (this.mapScale < 1000) {
-			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
+			this.mapScaleCanvas.drawText(this.mapScale + getText(TextField.METER), 10, 15,
 					PAINT_SCALE_BAR_TEXT_WHITE_STROKE);
-			this.mapScaleCanvas.drawText(this.mapScale + this.unit_symbol_meter, 10, 15,
+			this.mapScaleCanvas.drawText(this.mapScale + getText(TextField.METER), 10, 15,
 					PAINT_SCALE_BAR_TEXT);
 		} else {
-			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
+			this.mapScaleCanvas.drawText((this.mapScale / 1000) + getText(TextField.KILOMETER),
 					10, 15, PAINT_SCALE_BAR_TEXT_WHITE_STROKE);
-			this.mapScaleCanvas.drawText((this.mapScale / 1000) + this.unit_symbol_kilometer,
+			this.mapScaleCanvas.drawText((this.mapScale / 1000) + getText(TextField.KILOMETER),
 					10, 15, PAINT_SCALE_BAR_TEXT);
 		}
 	}
@@ -1368,8 +1393,9 @@ public class MapView extends ViewGroup {
 		this.mapScaleCanvas = new Canvas(this.mapScaleBitmap);
 
 		// set the default text fields for the map scale
-		this.unit_symbol_kilometer = DEFAULT_UNIT_SYMBOL_KILOMETER;
-		this.unit_symbol_meter = DEFAULT_UNIT_SYMBOL_METER;
+		setText(TextField.KILOMETER, DEFAULT_TEXT_KILOMETER);
+		setText(TextField.METER, DEFAULT_TEXT_METER);
+		setText(TextField.OKAY, DEFAULT_TEXT_OK);
 
 		// set up the paints to draw the map scale
 		PAINT_SCALE_BAR.setStrokeWidth(2);
@@ -1900,6 +1926,27 @@ public class MapView extends ViewGroup {
 	 */
 	MapActivity getMapActivity() {
 		return this.mapActivity;
+	}
+
+	/**
+	 * Returns the current value of the given text field.
+	 * 
+	 * @param textField
+	 *            the text field whose value should be returned.
+	 * @return the current value of the text field (may be null).
+	 */
+	String getText(TextField textField) {
+		switch (textField) {
+			case KILOMETER:
+				return this.text_kilometer;
+			case METER:
+				return this.text_meter;
+			case OKAY:
+				return this.text_ok;
+			default:
+				// all cases are covered, the default case should never occur
+				return null;
+		}
 	}
 
 	/**

@@ -19,6 +19,8 @@ package org.mapsforge.android.maps;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.mapsforge.android.maps.MapView.TextField;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -37,8 +39,8 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayItemizedOverlay";
 
+	private AlertDialog.Builder builder;
 	private final Context context;
-	private AlertDialog.Builder dialog;
 	private OverlayItem item;
 	private final ArrayList<OverlayItem> overlayItems;
 
@@ -63,7 +65,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param overlayItem
 	 *            the item that should be added to the overlay.
 	 */
-	public void addOverlay(OverlayItem overlayItem) {
+	public void addItem(OverlayItem overlayItem) {
 		synchronized (this.overlayItems) {
 			this.overlayItems.add(overlayItem);
 		}
@@ -76,7 +78,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param c
 	 *            collection whose items should be added to the overlay.
 	 */
-	public void addOverlays(Collection<? extends OverlayItem> c) {
+	public void addItems(Collection<? extends OverlayItem> c) {
 		synchronized (this.overlayItems) {
 			this.overlayItems.addAll(c);
 		}
@@ -104,7 +106,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param overlayItem
 	 *            the item that should be removed from the overlay.
 	 */
-	public void removeOverlay(OverlayItem overlayItem) {
+	public void removeItem(OverlayItem overlayItem) {
 		synchronized (this.overlayItems) {
 			this.overlayItems.remove(overlayItem);
 		}
@@ -129,10 +131,12 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	protected boolean onTap(int index) {
 		synchronized (this.overlayItems) {
 			this.item = this.overlayItems.get(index);
-			this.dialog = new AlertDialog.Builder(this.context);
-			this.dialog.setTitle(this.item.getTitle());
-			this.dialog.setMessage(this.item.getSnippet());
-			this.dialog.show();
+			this.builder = new AlertDialog.Builder(this.context);
+			this.builder.setIcon(android.R.drawable.ic_menu_info_details);
+			this.builder.setTitle(this.item.getTitle());
+			this.builder.setMessage(this.item.getSnippet());
+			this.builder.setPositiveButton(this.internalMapView.getText(TextField.OKAY), null);
+			this.builder.show();
 			return true;
 		}
 	}

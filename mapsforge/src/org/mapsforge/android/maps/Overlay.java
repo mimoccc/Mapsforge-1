@@ -37,11 +37,6 @@ public abstract class Overlay extends Thread {
 	private static final String THREAD_NAME = "Overlay";
 
 	/**
-	 * Reference to the MapView instance.
-	 */
-	private MapView internalMapView;
-
-	/**
 	 * Flag to indicate if this overlay is set up and ready to work.
 	 */
 	private boolean isSetUp;
@@ -115,6 +110,11 @@ public abstract class Overlay extends Thread {
 	 * Used to calculate the zoom level difference.
 	 */
 	private byte zoomLevelDiff;
+
+	/**
+	 * Reference to the MapView instance.
+	 */
+	protected MapView internalMapView;
 
 	/**
 	 * Default constructor which must be called by all subclasses.

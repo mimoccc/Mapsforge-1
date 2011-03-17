@@ -92,7 +92,7 @@ public class ArrayRouteOverlay extends RouteOverlay<OverlayRoute> {
 	 * @param overlayRoute
 	 *            the route that should be removed from the overlay.
 	 */
-	public void removeOverlay(OverlayRoute overlayRoute) {
+	public void removeRoute(OverlayRoute overlayRoute) {
 		synchronized (this.overlayRoutes) {
 			this.overlayRoutes.remove(overlayRoute);
 		}
