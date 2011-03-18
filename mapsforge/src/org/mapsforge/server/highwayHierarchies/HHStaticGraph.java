@@ -129,7 +129,7 @@ public class HHStaticGraph implements Serializable {
 
 	static HHStaticGraph deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (HHStaticGraph) Serializer.deserialize(iStream);
 	}
 
 	void serialize(File f) throws IOException {

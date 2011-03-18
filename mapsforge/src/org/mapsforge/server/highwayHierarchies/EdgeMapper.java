@@ -60,9 +60,9 @@ class EdgeMapper implements Serializable {
 		}
 		return new EdgeMapping[] {
 				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
-				reversed.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
+						reversed.get(rgEdgeIdToHhEdgeId[0][rgEdgeId])),
 				new EdgeMapping(rgEdgeIdToHhEdgeId[0][rgEdgeId], rgEdgeId,
-				reversed.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
+						reversed.get(rgEdgeIdToHhEdgeId[1][rgEdgeId])), };
 	}
 
 	public void serialize(OutputStream oStream) throws IOException {
@@ -71,7 +71,7 @@ class EdgeMapper implements Serializable {
 
 	public static EdgeMapper deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (EdgeMapper) Serializer.deserialize(iStream);
 	}
 
 	public static EdgeMapper importFromDb(Connection conn) throws SQLException {

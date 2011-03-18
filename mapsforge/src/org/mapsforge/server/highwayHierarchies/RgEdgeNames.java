@@ -98,7 +98,7 @@ class RgEdgeNames implements Serializable {
 
 	public static RgEdgeNames deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (RgEdgeNames) Serializer.deserialize(iStream);
 	}
 
 	public static RgEdgeNames importFromDb(Connection conn) throws SQLException {

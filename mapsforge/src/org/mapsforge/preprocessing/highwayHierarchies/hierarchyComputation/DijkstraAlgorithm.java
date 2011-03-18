@@ -37,6 +37,40 @@ public final class DijkstraAlgorithm {
 	private static final int INITIAL_HEAP_SIZE = 1000;
 	private static final int INITIAL_MAP_SIZE = 5000;
 
+	// hack around java bug (compiler bug) and limitations of generics and warnings!!!
+	private static class DistanceVertexHeap extends
+			BinaryMinHeap<DijkstraDistanceVertex, Integer> {
+		public DistanceVertexHeap(int initialSize) {
+			super(initialSize);
+		}
+
+	}
+
+	// hack around java bug (compiler bug) and limitations of generics and warnings!!!
+	private static class TreeVertexHeap extends
+			BinaryMinHeap<DijkstraTreeVertex, Integer> {
+		public TreeVertexHeap(int initialSize) {
+			super(initialSize);
+		}
+	}
+
+	// hack around java bug (compiler bug) and limitations of generics and warnings!!!
+	private static class TreeVertexHeap2 extends
+			BinaryMinHeap<DijkstraTreeVertex2, Integer> {
+		public TreeVertexHeap2(int initialSize) {
+			super(initialSize);
+		}
+	}
+
+	// hack around java bug (compiler bug) and limitations of generics and warnings!!!
+	private static class SlackVertexHeap extends
+			BinaryMinHeap<DijkstraSlackVertex, Integer> {
+		public SlackVertexHeap(int initialSize) {
+			super(initialSize);
+		}
+
+	}
+
 	/**
 	 * dijkstra shortest distance.
 	 * 
@@ -58,7 +92,8 @@ public final class DijkstraAlgorithm {
 			return -1;
 		}
 
-		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = new DistanceVertexHeap(
+				INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraDistanceVertex> discoveredVertices = getMap();
 
 		DijkstraDistanceVertex s = new DijkstraDistanceVertex(source, 0);
@@ -117,7 +152,8 @@ public final class DijkstraAlgorithm {
 	 */
 	public static int shortestDistance(HHDynamicVertex source, int rank, boolean forward,
 			boolean backward, int lvl) {
-		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraDistanceVertex, Integer> queue = new DistanceVertexHeap(
+				INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraDistanceVertex> discoveredVertices = getMap();
 		int _rank = Math.max(1, rank);
 		DijkstraDistanceVertex s = new DijkstraDistanceVertex(source, 0);
@@ -229,7 +265,7 @@ public final class DijkstraAlgorithm {
 	 */
 	public static LinkedList<DijkstraTreeVertex> shortestPathTree(HHDynamicVertex source,
 			boolean forward, boolean backward, int lvl) {
-		BinaryMinHeap<DijkstraTreeVertex, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraTreeVertex, Integer> queue = new TreeVertexHeap(INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraTreeVertex> discoveredVertices = getMap();
 		DijkstraTreeVertex s = new DijkstraTreeVertex(source, 0, null, null, -1);
 		LinkedList<DijkstraTreeVertex> settledVertices = new LinkedList<DijkstraTreeVertex>();
@@ -366,7 +402,8 @@ public final class DijkstraAlgorithm {
 
 	private static DijkstraTreeVertex2 shortestPath(HHStaticVertex source,
 			HHStaticVertex target, boolean forward, boolean backward, int lvl, int[] eMinLvl) {
-		BinaryMinHeap<DijkstraTreeVertex2, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraTreeVertex2, Integer> queue = new TreeVertexHeap2(
+				INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraTreeVertex2> discoveredVertices = getMap();
 		DijkstraTreeVertex2 s = new DijkstraTreeVertex2(source, 0, null, -1);
 		queue.insert(s);
@@ -415,7 +452,7 @@ public final class DijkstraAlgorithm {
 
 	private static DijkstraTreeVertex shortestPath(HHDynamicVertex source,
 			HHDynamicVertex target, boolean forward, boolean backward, int lvl) {
-		BinaryMinHeap<DijkstraTreeVertex, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraTreeVertex, Integer> queue = new TreeVertexHeap(INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraTreeVertex> discoveredVertices = getMap();
 		DijkstraTreeVertex s = new DijkstraTreeVertex(source, 0, null, null, -1);
 		queue.insert(s);
@@ -463,7 +500,8 @@ public final class DijkstraAlgorithm {
 	private static LinkedList<DijkstraSlackVertex> dag(HHDynamicVertex source, boolean forward,
 			boolean backward, int lvl) {
 		// initialize queue and mapping from vertex to dijkstra-vertex
-		BinaryMinHeap<DijkstraSlackVertex, Integer> queue = getQueue();
+		BinaryMinHeap<DijkstraSlackVertex, Integer> queue = new SlackVertexHeap(
+				INITIAL_HEAP_SIZE);
 		TIntObjectHashMap<DijkstraSlackVertex> discoveredVertices = getMap();
 		LinkedList<DijkstraSlackVertex> settledVertices = new LinkedList<DijkstraSlackVertex>();
 		// initialize and enqueue source
@@ -583,10 +621,6 @@ public final class DijkstraAlgorithm {
 		}
 		return x.borderDistance = max;
 
-	}
-
-	private static <S extends IBinaryHeapItem<T>, T extends Comparable<T>> BinaryMinHeap<S, T> getQueue() {
-		return new BinaryMinHeap<S, T>(INITIAL_HEAP_SIZE);
 	}
 
 	private static <T> TIntObjectHashMap<T> getMap() {

@@ -61,8 +61,6 @@ public class Serializer {
 	}
 
 	/**
-	 * @param <S>
-	 *            class of the object to be read.
 	 * @param iStream
 	 *            stream to read object from
 	 * @return the read object.
@@ -71,17 +69,14 @@ public class Serializer {
 	 * @throws ClassNotFoundException
 	 *             cast error.
 	 */
-	public static <S extends Serializable> S deserialize(InputStream iStream)
+	public static Serializable deserialize(InputStream iStream)
 			throws IOException, ClassNotFoundException {
 		ObjectInputStream in = new ObjectInputStream(iStream);
-		S readObject = (S) in.readObject();
-		S s = readObject;
+		Serializable s = (Serializable) in.readObject();
 		return s;
 	}
 
 	/**
-	 * @param <S>
-	 *            class of the object to be read.
 	 * @param src
 	 *            file to read from
 	 * @return the read object.
@@ -90,12 +85,13 @@ public class Serializer {
 	 * @throws ClassNotFoundException
 	 *             cast error.
 	 */
-	public static <S extends Serializable> S deserialize(File src) throws IOException,
+	public static Serializable deserialize(File src) throws IOException,
 			ClassNotFoundException {
-		InputStream iStream = new BufferedInputStream(new FileInputStream(src),
-				64 * 1000 * 1024);
-		S s = deserialize(iStream);
-		iStream.close();
+		ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(
+				new FileInputStream(src),
+				64 * 1000 * 1024));
+		Serializable s = (Serializable) in.readObject();
+		in.close();
 		return s;
 	}
 

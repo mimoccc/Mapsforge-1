@@ -18,12 +18,9 @@ package org.mapsforge.android.mobileHighwayHierarchies;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import org.mapsforge.core.Edge;
-import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.BinaryMinHeap;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.prioQueue.IBinaryHeapItem;
 
@@ -138,99 +135,6 @@ final class HHAlgorithm {
 		return distance;
 	}
 
-	static class Shortcut {
-		int sourceId;
-		int targetId;
-
-		public Shortcut(int sourceId, int targetId) {
-			this.sourceId = sourceId;
-			this.targetId = targetId;
-		}
-	}
-
-	public int getShortestPath(int sourceId, int targetId, LinkedList<HHEdge> shortestPathBuff,
-			boolean clearCacheAfterPhaseA, LinkedList<Shortcut>[] shortcutBuff)
-			throws IOException {
-
-		int direction = FWD;
-		int distance = Integer.MAX_VALUE;
-		int searchScopeHitId = -1;
-
-		HHVertex s = graph.getVertex(sourceId);
-		HHHeapItem sItem = new HHHeapItem(0, 0, s.neighborhood, sourceId, sourceId, -1, -1, -1);
-		queue[FWD].insert(sItem);
-		discovered[FWD].put(s.vertexIds[0], sItem);
-		graph.releaseVertex(s);
-
-		HHVertex t = graph.getVertex(targetId);
-		HHHeapItem tItem = new HHHeapItem(0, 0, t.neighborhood, targetId, targetId, -1, -1, -1);
-		queue[BWD].insert(tItem);
-		discovered[BWD].put(t.vertexIds[0], tItem);
-		graph.releaseVertex(t);
-
-		while (!queue[FWD].isEmpty() || !queue[BWD].isEmpty()) {
-
-			if (queue[direction].isEmpty()) {
-				direction = (direction + 1) % 2;
-			}
-			HHHeapItem uItem = queue[direction].extractMin();
-			uItem.heapIdx = HEAP_IDX_SETTLED;
-
-			if (uItem.distance > distance) {
-				queue[direction].clear();
-				continue;
-			}
-
-			HHHeapItem uItem_ = discovered[(direction + 1) % 2].get(uItem.idLvlZero);
-			if (uItem_ != null && uItem_.heapIdx == HEAP_IDX_SETTLED) {
-				if (distance > uItem.distance + uItem_.distance) {
-					distance = uItem.distance + uItem_.distance;
-					searchScopeHitId = uItem.idLvlZero;
-				}
-			}
-
-			HHVertex u = graph.getVertex(uItem.id);
-			if (uItem.gap == Integer.MAX_VALUE) {
-				uItem.gap = u.neighborhood;
-			}
-			int lvl = uItem.level;
-			int gap = uItem.gap;
-			while (!relaxAdjacentEdges(uItem, u, direction, lvl, gap, shortcutBuff)
-					&& u.vertexIds[lvl + 1] != -1) {
-				// switch to next level
-				lvl++;
-
-				int levelId = u.vertexIds[lvl];
-				graph.releaseVertex(u);
-				u = graph.getVertex(levelId);
-
-				uItem.id = u.vertexIds[lvl];
-				gap = u.neighborhood;
-			}
-			direction = (direction + 1) % 2;
-			graph.releaseVertex(u);
-		}
-		if (searchScopeHitId != -1) {
-
-			if (clearCacheAfterPhaseA) {
-				graph.clearCache();
-			}
-
-			expandEdges(discovered[FWD].get(searchScopeHitId), discovered[BWD]
-					.get(searchScopeHitId), shortestPathBuff);
-		}
-
-		// clear temporary data
-		this.discovered[FWD].clear();
-		this.discovered[BWD].clear();
-		this.queue[FWD].clear();
-		this.queue[BWD].clear();
-		this.queueDijkstra.clear();
-		this.discoveredDijkstra.clear();
-
-		return distance;
-	}
-
 	private boolean relaxAdjacentEdges(HHHeapItem uItem, HHVertex u, int direction, int lvl,
 			int gap) throws IOException {
 		boolean result = true;
@@ -262,64 +166,6 @@ final class HHAlgorithm {
 
 			HHVertex v = graph.getVertex(e.targetId);
 			HHHeapItem vItem = discovered[direction].get(v.vertexIds[0]);
-			if (vItem == null) {
-				vItem = new HHHeapItem(uItem.distance + e.weight, lvl, gap_, e.targetId,
-						v.vertexIds[0], u.vertexIds[0], e.sourceId, e.targetId);
-				discovered[direction].put(v.vertexIds[0], vItem);
-				queue[direction].insert(vItem);
-			} else if (vItem.compareTo(uItem.distance + e.weight, lvl, gap_) > 0) {
-				vItem.distance = uItem.distance + e.weight;
-				vItem.level = lvl;
-				vItem.id = e.targetId;
-				vItem.gap = gap_;
-				vItem.parentIdLvlZero = u.vertexIds[0];
-				vItem.eSrcId = e.sourceId;
-				vItem.eTgtId = e.targetId;
-				queue[direction].decreaseKey(vItem, vItem);
-			}
-			graph.releaseEdge(e);
-			graph.releaseVertex(v);
-		}
-
-		return result;
-	}
-
-	private boolean relaxAdjacentEdges(HHHeapItem uItem, HHVertex u, int direction, int lvl,
-			int gap, LinkedList<Shortcut>[] shortcutBuff) throws IOException {
-		boolean result = true;
-		boolean forward = (direction == FWD);
-
-		HHEdge[] adjEdges = graph.getOutboundEdges(u);
-		for (int i = 0; i < adjEdges.length; i++) {
-			HHEdge e = adjEdges[i];
-			if ((forward && !e.isForward) || (!forward && !e.isBackward)) {
-				graph.releaseEdge(e);
-				continue;
-			}
-
-			int gap_ = gap;
-			if (gap != Integer.MAX_VALUE) {
-				gap_ = gap - e.weight;
-				if (!e.isCore) {
-					// don't leave the core
-					graph.releaseEdge(e);
-					continue;
-				}
-				if (gap_ < 0) {
-					// edge crosses neighborhood of entry point, don't relax it
-					result = false;
-					graph.releaseEdge(e);
-					continue;
-				}
-			}
-
-			HHVertex v = graph.getVertex(e.targetId);
-			HHHeapItem vItem = discovered[direction].get(v.vertexIds[0]);
-			if (forward) {
-				shortcutBuff[u.getLevel()].add(new Shortcut(u.vertexIds[0], v.vertexIds[0]));
-			} else {
-				shortcutBuff[u.getLevel()].add(new Shortcut(v.vertexIds[0], u.vertexIds[0]));
-			}
 			if (vItem == null) {
 				vItem = new HHHeapItem(uItem.distance + e.weight, lvl, gap_, e.targetId,
 						v.vertexIds[0], u.vertexIds[0], e.sourceId, e.targetId);
@@ -672,36 +518,5 @@ final class HHAlgorithm {
 		public HHQueue(int initialSize) {
 			super(initialSize);
 		}
-	}
-
-	public static void main(String[] args) throws IOException {
-		HHRoutingGraph routinGraph = new HHRoutingGraph(new File(
-				"router/berlin.blockedHH"), 100 * 1000 * 1024);
-		HHAlgorithm algo = new HHAlgorithm(routinGraph);
-		HHVertex s = routinGraph
-				.getNearestVertex(new GeoCoordinate(51.306994, 9.487123), 300);
-		HHVertex t = routinGraph.getNearestVertex(new GeoCoordinate(52.4556941, 13.2918805),
-				300);
-
-		LinkedList<Shortcut>[] sc = new LinkedList[12];
-		for (int i = 0; i < sc.length; i++) {
-			sc[i] = new LinkedList<Shortcut>();
-		}
-
-		algo.getShortestPath(s.vertexIds[0], t.vertexIds[0], new LinkedList<HHEdge>(), false,
-				sc);
-
-		HHRouter router = new HHRouter(new File(
-				"router/berlin.blockedHH"), 100 * 1000 * 1024);
-
-		// RouteViewer rv = new RouteViewer(router);
-		LinkedList<Edge> edges = new LinkedList<Edge>();
-		for (Shortcut x : sc[7]) {
-			Edge[] sp = router.getShortestPath(x.sourceId, x.targetId);
-			for (Edge e : sp) {
-				edges.add(e);
-			}
-		}
-		// rv.drawEdges(edges);
 	}
 }

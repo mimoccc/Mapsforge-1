@@ -76,7 +76,7 @@ class HHEdgeReverser implements Serializable {
 
 	public static HHEdgeReverser deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (HHEdgeReverser) Serializer.deserialize(iStream);
 	}
 
 	private int getHopIdx(HHStaticVertex s, HHStaticVertex t) {

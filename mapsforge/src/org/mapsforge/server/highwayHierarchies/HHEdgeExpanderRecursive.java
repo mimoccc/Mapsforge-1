@@ -70,7 +70,7 @@ class HHEdgeExpanderRecursive implements Serializable {
 
 	public static HHEdgeExpanderRecursive deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (HHEdgeExpanderRecursive) Serializer.deserialize(iStream);
 	}
 
 	public void expandShortestPath(LinkedList<HHStaticEdge> edges, LinkedList<HHStaticEdge> buff) {

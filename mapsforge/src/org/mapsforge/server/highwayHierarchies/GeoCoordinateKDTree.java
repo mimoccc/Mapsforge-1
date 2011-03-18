@@ -75,7 +75,7 @@ class GeoCoordinateKDTree implements Serializable {
 
 	public static GeoCoordinateKDTree deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (GeoCoordinateKDTree) Serializer.deserialize(iStream);
 	}
 
 	public int getMinLongitude() {

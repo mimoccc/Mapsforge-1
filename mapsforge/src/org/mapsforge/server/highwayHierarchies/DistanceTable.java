@@ -86,7 +86,7 @@ public class DistanceTable implements Serializable {
 	 */
 	public static DistanceTable deserialize(InputStream iStream) throws IOException,
 			ClassNotFoundException {
-		return Serializer.deserialize(iStream);
+		return (DistanceTable) Serializer.deserialize(iStream);
 	}
 
 	/**
