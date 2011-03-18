@@ -7,6 +7,8 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -27,6 +29,9 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="minlon" use="required" type="{http://mapsforge.org/mapsforge-preprocessing-conf}longitude" />
  *       &lt;attribute name="maxlat" use="required" type="{http://mapsforge.org/mapsforge-preprocessing-conf}latitude" />
  *       &lt;attribute name="maxlon" use="required" type="{http://mapsforge.org/mapsforge-preprocessing-conf}longitude" />
+ *       &lt;attribute name="completeWays" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="completeRelations" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="clipIncompleteEntities" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -42,25 +47,43 @@ public class BboxAreaFilter extends SinkSource {
 	 * This is the value of the bottom edge of the bounding box.
 	 */
 	@XmlAttribute(required = true)
-	protected double minlat;
+	private double minlat;
 
 	/**
 	 * This is the value of the left edge of the bounding box.
 	 */
 	@XmlAttribute(required = true)
-	protected double minlon;
+	private double minlon;
 
 	/**
 	 * This is the value of the top edge of the bounding box.
 	 */
 	@XmlAttribute(required = true)
-	protected double maxlat;
+	private double maxlat;
 
 	/**
 	 * This is the value of the right edge of the bounding box.
 	 */
 	@XmlAttribute(required = true)
-	protected double maxlon;
+	private double maxlon;
+
+	/**
+	 * The parameter to turn on the completeWays function.
+	 */
+	@XmlAttribute(name = "completeWays")
+	private Boolean completeWays;
+
+	/**
+	 * The parameter to turn on the completeRelations function.
+	 */
+	@XmlAttribute(name = "completeRelations")
+	private Boolean completeRelations;
+
+	/**
+	 * The parameter to turn on the clipIncompleteEntities function.
+	 */
+	@XmlAttribute(name = "clipIncompleteEntities")
+	private Boolean clipIncompleteEntities;
 
 	/**
 	 * Gets the value of the minlat property.
@@ -146,8 +169,80 @@ public class BboxAreaFilter extends SinkSource {
 		this.maxlon = value;
 	}
 
+	/**
+	 * Gets the value of the completeWays property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isCompleteWays() {
+		if (completeWays == null) {
+			return false;
+		}
+		return completeWays;
+	}
+
+	/**
+	 * Sets the value of the completeWays property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setCompleteWays(Boolean value) {
+		this.completeWays = value;
+	}
+
+	/**
+	 * Gets the value of the completeRelations property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isCompleteRelations() {
+		if (completeRelations == null) {
+			return false;
+		}
+		return completeRelations;
+	}
+
+	/**
+	 * Sets the value of the completeRelations property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setCompleteRelations(Boolean value) {
+		this.completeRelations = value;
+	}
+
+	/**
+	 * Gets the value of the clipIncompleteEntities property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isClipIncompleteEntities() {
+		if (clipIncompleteEntities == null) {
+			return false;
+		}
+		return clipIncompleteEntities;
+	}
+
+	/**
+	 * Sets the value of the clipIncompleteEntities property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setClipIncompleteEntities(Boolean value) {
+		this.clipIncompleteEntities = value;
+	}
+
 	@Override
-	public String generate() {
+	public String generate(List<String> md5List, String absolutePath) {
 
 		/*
 		 * Generate the string for the procedure call of the osmosis pipeline task to extract a
@@ -163,7 +258,14 @@ public class BboxAreaFilter extends SinkSource {
 		sb.append("bottom=").append(minlat).append(" ");
 		sb.append("top=").append(maxlat).append(" ");
 
-		sb.append(super.generate());
+		if (completeWays != null)
+			sb.append("completeWays=").append(completeWays).append(" ");
+		if (completeRelations != null)
+			sb.append("completeRelations=").append(completeRelations).append(" ");
+		if (clipIncompleteEntities != null)
+			sb.append("clipIncompleteEntities=").append(clipIncompleteEntities).append(" ");
+
+		sb.append(super.generate(md5List, absolutePath));
 
 		return sb.toString();
 	}

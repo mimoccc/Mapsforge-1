@@ -31,8 +31,11 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="pipeline" type="{http://mapsforge.org/mapsforge-preprocessing-conf}pipeline" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *       &lt;attribute name="osmosis-home" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="workspace" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="working-dir" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="output-dir" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="logging-dir" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="destination-dir" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="move" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -50,26 +53,31 @@ public class Configuration {
 	 * A list of all pipelines that should run in this configuration.
 	 */
 	@XmlElement(required = true)
-	protected List<Pipeline> pipeline;
+	private List<Pipeline> pipeline;
 
 	/**
 	 * The path to the osmosis home directory.
 	 */
 	@XmlAttribute(name = "osmosis-home", required = true)
-	protected String osmosisHome;
+	private String osmosisHome;
 
 	/**
-	 * The path to the workspace directory. This is the place where the configuration data
-	 * (logs, files, scripts, etc.) would be stored.
+	 * The path to the working directory. This is the place where the configuration data (logs,
+	 * files, maps, etc.) would be stored.
 	 */
-	@XmlAttribute(required = true)
-	protected String workspace;
-
+	@XmlAttribute(name = "working-dir", required = true)
+	private String workingDir;
 	/**
-	 * The path to the directory where the generated content of the script should be stored.
+	 * The path to the directory where the generated content should be stored.
 	 */
 	@XmlAttribute(name = "output-dir", required = true)
-	protected String outputDir;
+	private String outputDir;
+	@XmlAttribute(name = "logging-dir", required = true)
+	private String loggingDir;
+	@XmlAttribute(name = "destination-dir")
+	private String destinationDir;
+	@XmlAttribute
+	private Boolean move;
 
 	/**
 	 * Gets the value of the pipeline property.
@@ -123,24 +131,24 @@ public class Configuration {
 	}
 
 	/**
-	 * Gets the value of the workspace property.
+	 * Gets the value of the workingDir property.
 	 * 
 	 * @return possible object is {@link String }
 	 * 
 	 */
-	public String getWorkspace() {
-		return workspace;
+	public String getWorkingDir() {
+		return workingDir;
 	}
 
 	/**
-	 * Sets the value of the workspace property.
+	 * Sets the value of the workingDir property.
 	 * 
 	 * @param value
 	 *            allowed object is {@link String }
 	 * 
 	 */
-	public void setWorkspace(String value) {
-		this.workspace = value;
+	public void setWorkingDir(String value) {
+		this.workingDir = value;
 	}
 
 	/**
@@ -162,6 +170,72 @@ public class Configuration {
 	 */
 	public void setOutputDir(String value) {
 		this.outputDir = value;
+	}
+
+	/**
+	 * Gets the value of the loggingDir property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getLoggingDir() {
+		return loggingDir;
+	}
+
+	/**
+	 * Sets the value of the loggingDir property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setLoggingDir(String value) {
+		this.loggingDir = value;
+	}
+
+	/**
+	 * Gets the value of the destinationDir property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getDestinationDir() {
+		return destinationDir;
+	}
+
+	/**
+	 * Sets the value of the destinationDir property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setDestinationDir(String value) {
+		this.destinationDir = value;
+	}
+
+	/**
+	 * Gets the value of the move property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isMove() {
+		if (move == null) {
+			return false;
+		}
+		return move;
+	}
+
+	/**
+	 * Sets the value of the move property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setMove(Boolean value) {
+		this.move = value;
 	}
 
 }

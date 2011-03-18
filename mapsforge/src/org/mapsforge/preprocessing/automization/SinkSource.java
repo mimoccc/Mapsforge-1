@@ -42,32 +42,27 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "sink-source", propOrder = {
-		"sinkSource",
-		"sink"
-})
-@XmlSeeAlso({
-		PolygonAreaFilter.class,
-		BboxAreaFilter.class })
+@XmlType(name = "sink-source", propOrder = { "sinkSource", "sink" })
+@XmlSeeAlso({ PolygonAreaFilter.class, BboxAreaFilter.class })
 public abstract class SinkSource {
 
 	/**
 	 * A list of sink-sources that would be used the data of the this one to do their execution.
 	 */
 	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-	protected List<JAXBElement<? extends SinkSource>> sinkSource;
+	private List<JAXBElement<? extends SinkSource>> sinkSource;
 
 	/**
 	 * A list of sinks that used the data of this sink-source as source to do their execution.
 	 */
 	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-	protected List<JAXBElement<? extends Sink>> sink;
+	private List<JAXBElement<? extends Sink>> sink;
 
 	/**
 	 * 
 	 */
 	@XmlAttribute
-	protected String name;
+	private String name;
 
 	/**
 	 * Gets the value of the sinkSource property.
@@ -163,10 +158,12 @@ public abstract class SinkSource {
 	 * It is necessary that every implementation of a sink-source call the super constructor of
 	 * this method to implement this too.
 	 * 
+	 * @param outputDir
+	 * 
 	 * @return returns the generated string to call this osmosis task and all the task that use
 	 *         this data.
 	 */
-	public String generate() {
+	public String generate(List<String> md5List, String absolutePath) {
 		StringBuilder sb = new StringBuilder();
 		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
 				+ (this.sink != null ? this.sink.size() : 0);
@@ -177,13 +174,15 @@ public abstract class SinkSource {
 
 		if (this.sinkSource != null) {
 			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
-				sb.append(ss.getValue().generate()).append(" ");
+				sb.append(ss.getValue().generate(md5List, absolutePath))
+						.append(" ");
 			}
 		}
 
 		if (this.sink != null) {
 			for (JAXBElement<? extends Sink> s : this.sink) {
-				sb.append(s.getValue().generate()).append(" ");
+				sb.append(s.getValue().generate(md5List, absolutePath))
+						.append(" ");
 			}
 		}
 

@@ -7,6 +7,8 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -33,14 +35,31 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "polygon-area-filter")
-public class PolygonAreaFilter
-		extends SinkSource {
+public class PolygonAreaFilter extends SinkSource {
 
 	/**
 	 * The path to the polygon file that is needed to extract the data of a polygon area.
 	 */
 	@XmlAttribute(name = "polygon-file", required = true)
-	protected String polygonFile;
+	private String polygonFile;
+
+	/**
+	 * The parameter to turn on the completeWays function.
+	 */
+	@XmlAttribute(name = "completeWays")
+	private Boolean completeWays;
+
+	/**
+	 * The parameter to turn on the completeRelations function.
+	 */
+	@XmlAttribute(name = "completeRelations")
+	private Boolean completeRelations;
+
+	/**
+	 * The parameter to turn on the clipIncompleteEntities function.
+	 */
+	@XmlAttribute(name = "clipIncompleteEntities")
+	private Boolean clipIncompleteEntities;
 
 	/**
 	 * Gets the value of the polygonFile property.
@@ -63,16 +82,92 @@ public class PolygonAreaFilter
 		this.polygonFile = value;
 	}
 
-	@Override
-	public String generate() {
+	/**
+	 * Gets the value of the completeWays property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isCompleteWays() {
+		if (completeWays == null) {
+			return false;
+		}
+		return completeWays;
+	}
 
-		// TODO: clipIncompleteEntities
+	/**
+	 * Sets the value of the completeWays property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setCompleteWays(Boolean value) {
+		this.completeWays = value;
+	}
+
+	/**
+	 * Gets the value of the completeRelations property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isCompleteRelations() {
+		if (completeRelations == null) {
+			return false;
+		}
+		return completeRelations;
+	}
+
+	/**
+	 * Sets the value of the completeRelations property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setCompleteRelations(Boolean value) {
+		this.completeRelations = value;
+	}
+
+	/**
+	 * Gets the value of the clipIncompleteEntities property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isClipIncompleteEntities() {
+		if (clipIncompleteEntities == null) {
+			return false;
+		}
+		return clipIncompleteEntities;
+	}
+
+	/**
+	 * Sets the value of the clipIncompleteEntities property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setClipIncompleteEntities(Boolean value) {
+		this.clipIncompleteEntities = value;
+	}
+
+	@Override
+	public String generate(List<String> md5List, String absolutePath) {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("--bp").append(" ");
-		sb.append("file=").append(polygonFile).append(" ");
+		sb.append("file=").append(getPolygonFile()).append(" ");
+		if (completeWays != null)
+			sb.append("completeWays=").append(completeWays).append(" ");
+		if (completeRelations != null)
+			sb.append("completeRelations=").append(completeRelations).append(" ");
+		if (clipIncompleteEntities != null)
+			sb.append("clipIncompleteEntities=").append(clipIncompleteEntities).append(" ");
 
-		sb.append(super.generate());
+		sb.append(super.generate(md5List, absolutePath));
 
 		return sb.toString();
 	}

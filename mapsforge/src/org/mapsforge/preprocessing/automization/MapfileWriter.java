@@ -7,6 +7,10 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.io.File;
+import java.util.List;
+
+import javax.imageio.IIOException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -56,71 +60,70 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapfile-writer")
-public class MapfileWriter
-		extends Sink {
+public class MapfileWriter extends Sink {
 
 	/**
 	 * A parameter to declare if the output of the mapfile-writer should be stored in ram or on
 	 * disk before writing the map file.
 	 */
 	@XmlAttribute
-	protected String type;
+	private String type;
 
 	/**
 	 * The parameter for the bbox feature of the mapfile-writer. This is a comma separated
 	 * string of doubles that should not have any white space.
 	 */
 	@XmlAttribute
-	protected String bbox;
+	private String bbox;
 
 	/**
 	 * The start position to centralized the map.
 	 */
 	@XmlAttribute(name = "map-start-position")
-	protected String mapStartPosition;
+	private String mapStartPosition;
 
 	/**
 	 * The comment of the user of the mapfile-writer.
 	 */
 	@XmlAttribute
-	protected String comment;
+	private String comment;
 
 	/**
 	 * The parameter to turn on the waynode-compression.
 	 */
 	@XmlAttribute(name = "waynode-compression")
-	protected Boolean waynodeCompression;
+	private Boolean waynodeCompression;
 
 	/**
 	 * A parameter to turn on the picel-filter.
 	 */
 	@XmlAttribute(name = "pixel-filter")
-	protected Boolean pixelFilter;
+	private Boolean pixelFilter;
 
 	/**
 	 * A parameter to turn on the polygon-clipping.
 	 */
 	@XmlAttribute(name = "polygon-clipping")
-	protected Boolean polygonClipping;
+	private Boolean polygonClipping;
 
 	/**
 	 * The parameter to configure the zoom intervals.
 	 */
 	@XmlAttribute(name = "zoom-interval-conf")
-	protected String zoomIntervalConf;
+	private String zoomIntervalConf;
 
 	/**
 	 * A parameter to set the number of thread that are used to generate the map file. The value
 	 * should be twice as the number of cores.
 	 */
 	@XmlAttribute(name = "thread-pool-size")
-	protected Integer threadPoolSize;
+	private Integer threadPoolSize;
 
 	/**
 	 * A boolean to switch for writing the debug information into the written map file.
 	 */
 	@XmlAttribute(name = "debug-file")
-	protected Boolean debugFile;
+	private Boolean debugFile;
 
 	/**
 	 * Gets the value of the type property.
@@ -215,7 +218,7 @@ public class MapfileWriter
 	 * @return possible object is {@link Boolean }
 	 * 
 	 */
-	public boolean getWaynodeCompression() {
+	public boolean isWaynodeCompression() {
 		if (waynodeCompression == null) {
 			return true;
 		}
@@ -239,7 +242,7 @@ public class MapfileWriter
 	 * @return possible object is {@link Boolean }
 	 * 
 	 */
-	public boolean getPixelFilter() {
+	public boolean isPixelFilter() {
 		if (pixelFilter == null) {
 			return true;
 		}
@@ -263,7 +266,7 @@ public class MapfileWriter
 	 * @return possible object is {@link Boolean }
 	 * 
 	 */
-	public boolean getPolygonClipping() {
+	public boolean isPolygonClipping() {
 		if (polygonClipping == null) {
 			return true;
 		}
@@ -332,7 +335,7 @@ public class MapfileWriter
 	 * @return possible object is {@link Boolean }
 	 * 
 	 */
-	public boolean getDebugFile() {
+	public boolean isDebugFile() {
 		if (debugFile == null) {
 			return false;
 		}
@@ -351,12 +354,47 @@ public class MapfileWriter
 	}
 
 	@Override
-	public String generate() {
+	public String generate(List<String> md5List, String absolutePath) {
+
 		StringBuilder sb = new StringBuilder();
+		File outputFile;
+
+		// check if the path of the file is absolute
+		if (getFile().startsWith(File.separator)) {
+			// file is absolute
+			outputFile = new File(getFile());
+		} else {
+			// file is not absolute, so it must be combined with the absolute path of the output
+			// directory
+			outputFile = new File(absolutePath, getFile());
+		}
+
+		// check if path exists
+
+		try {
+			if (!outputFile.exists())
+				if (!outputFile.getParentFile().exists())
+					if (outputFile.getParentFile().canWrite()) {
+						if (!outputFile.getParentFile().mkdirs())
+							throw new IIOException("cannot create path: "
+									+ outputFile.getParent());
+					} else
+						throw new IIOException("cannot write path: "
+									+ outputFile.getParent());
+		} catch (IIOException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+
+		if (isMd5()) {
+
+			md5List.add(outputFile.getAbsolutePath());
+		}
+
 		sb.append("--mw").append(" ");
-		sb.append("file=").append(file).append(" ");
+		sb.append("file=").append(outputFile.getAbsolutePath()).append(" ");
 		if (type != null)
-			sb.append("type=").append(getType()).append(" ");
+			sb.append("type=").append(type).append(" ");
 
 		if (bbox != null)
 			sb.append("bbox=").append(bbox).append(" ");
@@ -365,17 +403,17 @@ public class MapfileWriter
 		if (comment != null)
 			sb.append("comment=").append(comment).append(" ");
 		if (waynodeCompression != null)
-			sb.append("waynode-compression=").append(getWaynodeCompression()).append(" ");
+			sb.append("waynode-compression=").append(waynodeCompression).append(" ");
 		if (pixelFilter != null)
-			sb.append("pixel-filter=").append(getPixelFilter()).append(" ");
+			sb.append("pixel-filter=").append(pixelFilter).append(" ");
 		if (polygonClipping != null)
-			sb.append("polygon-clipping=").append(getPolygonClipping()).append(" ");
+			sb.append("polygon-clipping=").append(polygonClipping).append(" ");
 		if (zoomIntervalConf != null)
-			sb.append("zoom-interval-conf=").append(getZoomIntervalConf()).append(" ");
+			sb.append("zoom-interval-conf=").append(zoomIntervalConf).append(" ");
 		if (threadPoolSize != null)
 			sb.append("thread-pool-size=").append(threadPoolSize).append(" ");
 		if (debugFile != null)
-			sb.append("debug-file=").append(getDebugFile()).append(" ");
+			sb.append("debug-file=").append(debugFile).append(" ");
 		return sb.toString();
 	}
 }

@@ -5,23 +5,29 @@
 // Generated on: 2011.03.11 at 03:25:14 PM MEZ 
 //
 
-
 package org.mapsforge.preprocessing.automization;
 
+import java.io.File;
+import java.util.List;
+
+import javax.imageio.IIOException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for routinggraph-writer complex type.
+ * <p>
+ * Java class for routinggraph-writer complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="routinggraph-writer">
  *   &lt;complexContent>
  *     &lt;extension base="{http://mapsforge.org/mapsforge-preprocessing-conf}sink">
+ *      &lt;attribute name="way-types" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -31,14 +37,74 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "routinggraph-writer")
-public class RoutinggraphWriter
-    extends Sink
-{
+public class RoutinggraphWriter extends Sink {
 
-	@Override
-	public String generate() {		
-		return RoutinggraphWriter.class.getName();
+	@XmlAttribute(name = "way-types")
+	private String wayTypes;
+
+	/**
+	 * Gets the value of the wayTypes property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getWayTypes() {
+		return wayTypes;
 	}
 
+	/**
+	 * Sets the value of the wayTypes property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setWayTypes(String value) {
+		this.wayTypes = value;
+	}
+
+	@Override
+	public String generate(List<String> md5List, String absolutePath) {
+
+		StringBuilder sb = new StringBuilder();
+		File outputFile;
+
+		// check if the path of the file is absolute
+		if (getFile().startsWith(File.separator)) {
+			// file is absolute
+			outputFile = new File(getFile());
+		} else {
+			// file is not absolute, so it must be combined with the absolute path of the output
+			// directory
+			outputFile = new File(absolutePath, getFile());
+		}
+
+		// check if path exists
+
+		try {
+			if (!outputFile.exists())
+				if (!outputFile.getParentFile().exists())
+					if (outputFile.getParentFile().canWrite()) {
+						if (!outputFile.getParentFile().mkdirs())
+							throw new IIOException("cannot create path: "
+									+ outputFile.getParent());
+					} else
+						throw new IIOException("cannot write path: "
+									+ outputFile.getParent());
+		} catch (IIOException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+
+		if (isMd5()) {
+			md5List.add(outputFile.getAbsolutePath());
+		}
+		sb.append("--rgw").append(" ");
+		sb.append("file=").append(outputFile.getAbsolutePath()).append(" ");
+		if (wayTypes != null)
+			sb.append("way-types").append(wayTypes).append(" ");
+
+		return sb.toString();
+	}
 
 }

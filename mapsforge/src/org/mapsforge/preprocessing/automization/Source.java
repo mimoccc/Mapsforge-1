@@ -50,19 +50,19 @@ public abstract class Source {
 	 * A list of sink-sources that use this source.
 	 */
 	@XmlElementRef(name = "sink-source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-	protected List<JAXBElement<? extends SinkSource>> sinkSource;
+	private List<JAXBElement<? extends SinkSource>> sinkSource;
 
 	/**
 	 * A list of sinks that use this source.
 	 */
 	@XmlElementRef(name = "sink", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-	protected List<JAXBElement<? extends Sink>> sink;
+	private List<JAXBElement<? extends Sink>> sink;
 
 	/**
 	 * The path to the file that is the source file.
 	 */
 	@XmlAttribute(required = true)
-	protected String file;
+	private String file;
 
 	/**
 	 * Gets the value of the sinkSource property.
@@ -159,10 +159,12 @@ public abstract class Source {
 	 * It is necessary that every implementation of a source call the super constructor of this
 	 * method to implement this too.
 	 * 
+	 * @param outputDir
+	 * 
 	 * @return returns the generated string to call this osmosis task and all the task that use
 	 *         this data.
 	 */
-	public String generate() {
+	public String generate(List<String> md5List, String absolutePath) {
 		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
 				+ (this.sink != null ? this.sink.size() : 0);
 
@@ -173,16 +175,15 @@ public abstract class Source {
 
 		if (this.sinkSource != null) {
 			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
-				sb.append(ss.getValue().generate()).append(" ");
+				sb.append(ss.getValue().generate(md5List, absolutePath)).append(" ");
 			}
 		}
 
 		if (this.sink != null) {
 			for (JAXBElement<? extends Sink> s : this.sink) {
-				sb.append(s.getValue().generate()).append(" ");
+				sb.append(s.getValue().generate(md5List, absolutePath)).append(" ");
 			}
 		}
 		return sb.toString();
 	}
-
 }

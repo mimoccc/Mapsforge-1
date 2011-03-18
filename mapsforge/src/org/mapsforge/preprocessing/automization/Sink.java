@@ -7,6 +7,8 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -25,6 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="file" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="md5" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -34,17 +37,18 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "sink")
-@XmlSeeAlso({
-		RoutinggraphWriter.class,
-		WritePbf.class,
-		MapfileWriter.class })
+@XmlSeeAlso({ RoutinggraphWriter.class, WritePbf.class, MapfileWriter.class })
 public abstract class Sink {
 
 	/**
 	 * The path to file. This is needed for every sink to store their execution data anywhere.
 	 */
 	@XmlAttribute(required = true)
-	protected String file;
+	private String file;
+	@XmlAttribute
+	private Boolean md5;
+
+	private String outputDir;
 
 	/**
 	 * Gets the value of the file property.
@@ -68,11 +72,45 @@ public abstract class Sink {
 	}
 
 	/**
+	 * Gets the value of the md5 property.
+	 * 
+	 * @return possible object is {@link Boolean }
+	 * 
+	 */
+	public boolean isMd5() {
+		if (md5 == null) {
+			return false;
+		}
+		return md5;
+	}
+
+	/**
+	 * Sets the value of the md5 property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link Boolean }
+	 * 
+	 */
+	public void setMd5(Boolean value) {
+		this.md5 = value;
+	}
+
+	public void setOutputDir(String outputDir) {
+		this.outputDir = outputDir;
+	}
+
+	public String getOutputDir() {
+		return outputDir;
+	}
+
+	/**
 	 * A abstract method that every sink must implemented to generate their explicit osmosis
 	 * task call string.
 	 * 
+	 * @param outputDir
+	 * 
 	 * @return the generated string to start a osmosis sink.
 	 */
-	public abstract String generate();
+	public abstract String generate(List<String> md5List, String outputDir);
 
 }

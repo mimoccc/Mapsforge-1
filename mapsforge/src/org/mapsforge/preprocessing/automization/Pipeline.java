@@ -7,6 +7,9 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.io.File;
+import java.util.List;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,6 +32,19 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element ref="{http://mapsforge.org/mapsforge-preprocessing-conf}source"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="output-dir" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="logging-level">
+ *         &lt;simpleType>
+ *           &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
+ *             &lt;enumeration value="FINE"/>
+ *             &lt;enumeration value="FINER"/>
+ *             &lt;enumeration value="FINEST"/>
+ *             &lt;enumeration value="INFO"/>
+ *             &lt;enumeration value="SEVERE"/>
+ *             &lt;enumeration value="WARNING"/>
+ *           &lt;/restriction>
+ *         &lt;/simpleType>
+ *       &lt;/attribute>
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -37,28 +53,31 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "pipeline", propOrder = {
-		"source"
-})
+@XmlType(name = "pipeline", propOrder = { "source" })
 public class Pipeline {
 
 	/**
 	 * The source of the pipeline. The point where the execution started.
 	 */
 	@XmlElementRef(name = "source", namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", type = JAXBElement.class)
-	protected JAXBElement<? extends Source> source;
+	private JAXBElement<? extends Source> source;
 
 	/**
 	 * The name of the pipeline.
 	 */
 	@XmlAttribute(required = true)
-	protected String name;
+	private String name;
+
+	@XmlAttribute(name = "output-dir")
+	private String outputDir;
+	@XmlAttribute(name = "logging-level")
+	private String loggingLevel;
 
 	/**
 	 * Gets the value of the source property.
 	 * 
-	 * @return possible object is {@link JAXBElement }{@code <}{@link Source }{@code >}
-	 *         {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 * @return possible object is {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 *         {@link JAXBElement }{@code <}{@link Source }{@code >}
 	 * 
 	 */
 	public JAXBElement<? extends Source> getSource() {
@@ -69,8 +88,8 @@ public class Pipeline {
 	 * Sets the value of the source property.
 	 * 
 	 * @param value
-	 *            allowed object is {@link JAXBElement }{@code <}{@link Source }{@code >}
-	 *            {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 *            allowed object is {@link JAXBElement }{@code <}{@link ReadPbf }{@code >}
+	 *            {@link JAXBElement }{@code <}{@link Source }{@code >}
 	 * 
 	 */
 	public void setSource(JAXBElement<? extends Source> value) {
@@ -98,8 +117,59 @@ public class Pipeline {
 		this.name = value;
 	}
 
-	public String generate() {
-		return source.getValue().generate();
+	/**
+	 * Gets the value of the outputDir property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getOutputDir() {
+		return outputDir;
+	}
+
+	/**
+	 * Sets the value of the outputDir property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setOutputDir(String value) {
+		this.outputDir = value;
+		System.out.println("set outputdir");
+
+	}
+
+	/**
+	 * Gets the value of the loggingLevel property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getLoggingLevel() {
+		return loggingLevel;
+	}
+
+	/**
+	 * Sets the value of the loggingLevel property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setLoggingLevel(String value) {
+		this.loggingLevel = value;
+	}
+
+	public String generate(List<String> md5List, String absolutePath) {
+		// check if output directory of pipeline is absolute
+		if (outputDir.startsWith(File.separator)) {
+			// output directory of pipeline is absolute, so this would be used
+			return source.getValue().generate(md5List, outputDir);
+		}
+		// output directory is relative path, so it would be added to the given absolute path of
+		// the configuration output directory
+		return source.getValue().generate(md5List, absolutePath + File.separator + outputDir);
 	}
 
 }

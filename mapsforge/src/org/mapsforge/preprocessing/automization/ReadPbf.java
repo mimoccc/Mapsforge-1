@@ -7,6 +7,8 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
@@ -16,8 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  * Java class for read-pbf complex type.
  * 
  * <p>
- * The following schema fragment specifies the expected content contained within
- * this class.
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="read-pbf">
@@ -35,10 +36,11 @@ import javax.xml.bind.annotation.XmlType;
 public class ReadPbf extends Source {
 
 	@Override
-	public String generate() {
+	public String generate(List<String> md5List, String absolutePath) {
+
 		StringBuilder sb = new StringBuilder();
-		sb.append("--rb file=").append(file).append(" ");
-		sb.append(super.generate());
+		sb.append("--rb file=").append(getFile()).append(" ");
+		sb.append(super.generate(md5List, absolutePath));
 		return sb.toString();
 	}
 
