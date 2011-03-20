@@ -47,9 +47,19 @@ public class OverlayCircle {
 	protected float radius;
 
 	/**
+	 * Title of the circle.
+	 */
+	protected String title;
+
+	/**
 	 * Cached position of the circle on the map.
 	 */
 	Point cachedCenterPosition;
+
+	/**
+	 * Cached radius of the circle in pixels.
+	 */
+	float cachedRadius;
 
 	/**
 	 * Zoom level of the cached circle position.
@@ -75,10 +85,19 @@ public class OverlayCircle {
 	 *            the geographical coordinates of the center point.
 	 * @param radius
 	 *            the radius of the circle in meters.
+	 * @param paintFill
+	 *            the paint which will be used to fill the circle (may be null).
+	 * @param paintOutline
+	 *            the paint which will be used to draw the circle outline (may be null).
+	 * @param title
+	 *            the title of the circle (may be null).
 	 */
-	public OverlayCircle(GeoPoint center, float radius) {
+	public OverlayCircle(GeoPoint center, float radius, Paint paintFill, Paint paintOutline,
+			String title) {
+		this.title = title;
 		this.cachedCenterPosition = new Point();
 		setCircleData(center, radius);
+		setPaint(paintFill, paintOutline);
 	}
 
 	/**
@@ -88,15 +107,13 @@ public class OverlayCircle {
 	 *            the geographical coordinates of the center point.
 	 * @param radius
 	 *            the radius of the circle in meters.
-	 * @param paintFill
-	 *            the paint which will be used to fill the circle (may be null).
-	 * @param paintOutline
-	 *            the paint which will be used to draw the circle outline (may be null).
+	 * @param title
+	 *            the title of the circle (may be null).
 	 */
-	public OverlayCircle(GeoPoint center, float radius, Paint paintFill, Paint paintOutline) {
+	public OverlayCircle(GeoPoint center, float radius, String title) {
+		this.title = title;
 		this.cachedCenterPosition = new Point();
 		setCircleData(center, radius);
-		setPaint(paintFill, paintOutline);
 	}
 
 	/**
@@ -110,6 +127,15 @@ public class OverlayCircle {
 	public OverlayCircle(Paint paintFill, Paint paintOutline) {
 		this.cachedCenterPosition = new Point();
 		setPaint(paintFill, paintOutline);
+	}
+
+	/**
+	 * Returns the title of this circle.
+	 * 
+	 * @return the title of this circle (may be null).
+	 */
+	public String getTitle() {
+		return this.title;
 	}
 
 	/**
@@ -138,5 +164,15 @@ public class OverlayCircle {
 		this.paintFill = paintFill;
 		this.paintOutline = paintOutline;
 		this.hasPaint = paintFill != null || paintOutline != null;
+	}
+
+	/**
+	 * Sets the title of this circle.
+	 * 
+	 * @param title
+	 *            the title of this circle (may be null).
+	 */
+	public synchronized void setTitle(String title) {
+		this.title = title;
 	}
 }

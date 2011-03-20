@@ -18,14 +18,14 @@ package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.ArrayCircleOverlay;
 import org.mapsforge.android.maps.ArrayItemizedOverlay;
-import org.mapsforge.android.maps.ArrayRouteOverlay;
+import org.mapsforge.android.maps.ArrayWayOverlay;
 import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.ItemizedOverlay;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.OverlayCircle;
 import org.mapsforge.android.maps.OverlayItem;
-import org.mapsforge.android.maps.OverlayRoute;
+import org.mapsforge.android.maps.OverlayWay;
 
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -65,55 +65,55 @@ public class OverlayMapViewer extends MapActivity {
 		circleDefaultPaintOutline.setStrokeWidth(3);
 
 		// create an individual paint object for an overlay circle
-		Paint circleIndividualPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		circleIndividualPaint.setStyle(Paint.Style.FILL);
-		circleIndividualPaint.setColor(Color.MAGENTA);
-		circleIndividualPaint.setAlpha(96);
+		Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		circlePaint.setStyle(Paint.Style.FILL);
+		circlePaint.setColor(Color.MAGENTA);
+		circlePaint.setAlpha(96);
 
 		// create the CircleOverlay and add the circles
 		ArrayCircleOverlay circleOverlay = new ArrayCircleOverlay(circleDefaultPaintFill,
-				circleDefaultPaintOutline);
-		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200);
-		OverlayCircle circle2 = new OverlayCircle(geoPoint4, 150, circleIndividualPaint, null);
+				circleDefaultPaintOutline, this);
+		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200, "Berlin Central Station");
+		OverlayCircle circle2 = new OverlayCircle(geoPoint4, 150, circlePaint, null, null);
 		circleOverlay.addCircle(circle1);
 		circleOverlay.addCircle(circle2);
 
-		// create the default paint objects for overlay routes
-		Paint routeDefaultPaintFill = new Paint(Paint.ANTI_ALIAS_FLAG);
-		routeDefaultPaintFill.setStyle(Paint.Style.STROKE);
-		routeDefaultPaintFill.setColor(Color.BLUE);
-		routeDefaultPaintFill.setAlpha(160);
-		routeDefaultPaintFill.setStrokeWidth(7);
-		routeDefaultPaintFill.setStrokeJoin(Paint.Join.ROUND);
-		routeDefaultPaintFill.setPathEffect(new DashPathEffect(new float[] { 20, 20 }, 0));
+		// create the default paint objects for overlay ways
+		Paint wayDefaultPaintFill = new Paint(Paint.ANTI_ALIAS_FLAG);
+		wayDefaultPaintFill.setStyle(Paint.Style.STROKE);
+		wayDefaultPaintFill.setColor(Color.BLUE);
+		wayDefaultPaintFill.setAlpha(160);
+		wayDefaultPaintFill.setStrokeWidth(7);
+		wayDefaultPaintFill.setStrokeJoin(Paint.Join.ROUND);
+		wayDefaultPaintFill.setPathEffect(new DashPathEffect(new float[] { 20, 20 }, 0));
 
-		Paint routeDefaultPaintOutline = new Paint(Paint.ANTI_ALIAS_FLAG);
-		routeDefaultPaintOutline.setStyle(Paint.Style.STROKE);
-		routeDefaultPaintOutline.setColor(Color.BLUE);
-		routeDefaultPaintOutline.setAlpha(128);
-		routeDefaultPaintOutline.setStrokeWidth(7);
-		routeDefaultPaintOutline.setStrokeJoin(Paint.Join.ROUND);
+		Paint wayDefaultPaintOutline = new Paint(Paint.ANTI_ALIAS_FLAG);
+		wayDefaultPaintOutline.setStyle(Paint.Style.STROKE);
+		wayDefaultPaintOutline.setColor(Color.BLUE);
+		wayDefaultPaintOutline.setAlpha(128);
+		wayDefaultPaintOutline.setStrokeWidth(7);
+		wayDefaultPaintOutline.setStrokeJoin(Paint.Join.ROUND);
 
-		// create an individual paint object for an overlay route
-		Paint routeIndividualPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		routeIndividualPaint.setStyle(Paint.Style.FILL);
-		routeIndividualPaint.setColor(Color.YELLOW);
-		routeIndividualPaint.setAlpha(192);
+		// create an individual paint object for an overlay way
+		Paint wayPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		wayPaint.setStyle(Paint.Style.FILL);
+		wayPaint.setColor(Color.YELLOW);
+		wayPaint.setAlpha(192);
 
-		// create the RouteOverlay and add the routes
-		ArrayRouteOverlay routeOverlay = new ArrayRouteOverlay(routeDefaultPaintFill,
-				routeDefaultPaintOutline);
-		OverlayRoute route1 = new OverlayRoute(new GeoPoint[] { geoPoint1, geoPoint2 });
-		OverlayRoute route2 = new OverlayRoute(new GeoPoint[] { geoPoint1, geoPoint3,
-				geoPoint4, geoPoint1 }, routeIndividualPaint, null);
-		routeOverlay.addRoute(route1);
-		routeOverlay.addRoute(route2);
+		// create the WayOverlay and add the ways
+		ArrayWayOverlay wayOverlay = new ArrayWayOverlay(wayDefaultPaintFill,
+				wayDefaultPaintOutline);
+		OverlayWay way1 = new OverlayWay(new GeoPoint[] { geoPoint1, geoPoint2 });
+		OverlayWay way2 = new OverlayWay(new GeoPoint[] { geoPoint1, geoPoint3, geoPoint4,
+				geoPoint1 }, wayPaint, null);
+		wayOverlay.addWay(way1);
+		wayOverlay.addWay(way2);
 
 		// create the default marker for overlay items
 		Drawable itemDefaultMarker = getResources().getDrawable(R.drawable.marker_red);
 
 		// create an individual marker for an overlay item
-		Drawable itemIndividualMarker = getResources().getDrawable(R.drawable.marker_green);
+		Drawable itemMarker = getResources().getDrawable(R.drawable.marker_green);
 
 		// create the ItemizedOverlay and add the items
 		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(itemDefaultMarker, this);
@@ -121,12 +121,12 @@ public class OverlayMapViewer extends MapActivity {
 				"The Victory Column is a monument in Berlin, Germany.");
 		OverlayItem item2 = new OverlayItem(geoPoint2, "Brandenburg Gate",
 				"The Brandenburg Gate is one of the main symbols of Berlin and Germany.",
-				ItemizedOverlay.boundCenterBottom(itemIndividualMarker));
+				ItemizedOverlay.boundCenterBottom(itemMarker));
 		itemizedOverlay.addItem(item1);
 		itemizedOverlay.addItem(item2);
 
 		// add all overlays to the MapView
-		mapView.getOverlays().add(routeOverlay);
+		mapView.getOverlays().add(wayOverlay);
 		mapView.getOverlays().add(circleOverlay);
 		mapView.getOverlays().add(itemizedOverlay);
 	}

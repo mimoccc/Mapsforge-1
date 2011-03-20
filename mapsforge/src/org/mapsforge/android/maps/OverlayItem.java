@@ -33,17 +33,17 @@ public class OverlayItem {
 	/**
 	 * Geographical position of the item.
 	 */
-	protected final GeoPoint point;
+	protected GeoPoint point;
 
 	/**
 	 * Short description of the item.
 	 */
-	protected final String snippet;
+	protected String snippet;
 
 	/**
 	 * Title of the item.
 	 */
-	protected final String title;
+	protected String title;
 
 	/**
 	 * Cached position of the item on the map.
@@ -86,7 +86,7 @@ public class OverlayItem {
 	 * @param snippet
 	 *            the short description of the item (may be null).
 	 * @param marker
-	 *            the marker that is drawn for this item (may be null).
+	 *            the marker that is drawn for the item (may be null).
 	 */
 	public OverlayItem(GeoPoint point, String title, String snippet, Drawable marker) {
 		this.point = point;
@@ -97,36 +97,36 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Returns the marker used to indicate the item.
+	 * Returns the marker used to indicate this item.
 	 * 
-	 * @return the marker used to indicate the item (may be null).
+	 * @return the marker used to indicate this item (may be null).
 	 */
 	public synchronized Drawable getMarker() {
 		return this.marker;
 	}
 
 	/**
-	 * Returns the position of the item.
+	 * Returns the position of this item.
 	 * 
-	 * @return the position of the item.
+	 * @return the position of this item.
 	 */
 	public GeoPoint getPoint() {
 		return this.point;
 	}
 
 	/**
-	 * Returns the short description of the item.
+	 * Returns the short description of this item.
 	 * 
-	 * @return the short description of the item (may be null).
+	 * @return the short description of this item (may be null).
 	 */
 	public String getSnippet() {
 		return this.snippet;
 	}
 
 	/**
-	 * Returns the title of the item.
+	 * Returns the title of this item.
 	 * 
-	 * @return the title of the item (may be null).
+	 * @return the title of this item (may be null).
 	 */
 	public String getTitle() {
 		return this.title;
@@ -144,5 +144,35 @@ public class OverlayItem {
 	 */
 	public synchronized void setMarker(Drawable marker) {
 		this.marker = marker;
+	}
+
+	/**
+	 * Sets the geographical position of this item.
+	 * 
+	 * @param point
+	 *            the geographical position of the item.
+	 */
+	public void setPoint(GeoPoint point) {
+		this.point = point;
+	}
+
+	/**
+	 * Sets the short description of this item.
+	 * 
+	 * @param snippet
+	 *            the short description of the item (may be null).
+	 */
+	public synchronized void setSnippet(String snippet) {
+		this.snippet = snippet;
+	}
+
+	/**
+	 * Sets the title of this item.
+	 * 
+	 * @param title
+	 *            the title of the item (may be null).
+	 */
+	public synchronized void setTitle(String title) {
+		this.title = title;
 	}
 }

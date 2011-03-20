@@ -20,12 +20,12 @@ import android.graphics.Paint;
 import android.graphics.Point;
 
 /**
- * OverlayRoute holds all parameters of a single route on a {@link RouteOverlay}. All rendering
+ * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering
  * parameters like color, stroke width, pattern and transparency can be configured via two
- * {@link Paint} objects. Each route is drawn twice – once with each paint object – to allow for
+ * {@link Paint} objects. Each way is drawn twice – once with each paint object – to allow for
  * different outlines and fillings.
  */
-public class OverlayRoute {
+public class OverlayWay {
 	/**
 	 * Checks the given way nodes for null elements.
 	 * 
@@ -43,12 +43,12 @@ public class OverlayRoute {
 	}
 
 	/**
-	 * Paint which will be used to fill the route.
+	 * Paint which will be used to fill the way.
 	 */
 	protected Paint paintFill;
 
 	/**
-	 * Paint which will be used to draw the route outline.
+	 * Paint which will be used to draw the way outline.
 	 */
 	protected Paint paintOutline;
 
@@ -58,89 +58,89 @@ public class OverlayRoute {
 	protected GeoPoint[] wayNodes;
 
 	/**
-	 * Cached way positions of the route on the map.
+	 * Cached way positions of the way nodes on the map.
 	 */
 	Point[] cachedWayPositions;
 
 	/**
-	 * Zoom level of the cached way positions.
+	 * Zoom level of the cached way node positions.
 	 */
 	byte cachedZoomLevel;
 
 	/**
-	 * Flag to indicate if at least one paint is set for this route.
+	 * Flag to indicate if at least one paint is set for this way.
 	 */
 	boolean hasPaint;
 
 	/**
-	 * Constructs a new OverlayRoute.
+	 * Constructs a new OverlayWay.
 	 */
-	public OverlayRoute() {
+	public OverlayWay() {
 		this.cachedWayPositions = new Point[0];
 	}
 
 	/**
-	 * Constructs a new OverlayRoute.
+	 * Constructs a new OverlayWay.
 	 * 
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
-	public OverlayRoute(GeoPoint[] wayNodes) {
+	public OverlayWay(GeoPoint[] wayNodes) {
 		this.cachedWayPositions = new Point[0];
-		setRouteData(wayNodes);
+		setWayData(wayNodes);
 	}
 
 	/**
-	 * Constructs a new OverlayRoute.
+	 * Constructs a new OverlayWay.
 	 * 
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @param paintFill
-	 *            the paint which will be used to fill the route (may be null).
+	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the route outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be null).
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
-	public OverlayRoute(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
+	public OverlayWay(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
-		setRouteData(wayNodes);
+		setWayData(wayNodes);
 		setPaint(paintFill, paintOutline);
 	}
 
 	/**
-	 * Constructs a new OverlayRoute.
+	 * Constructs a new OverlayWay.
 	 * 
 	 * @param paintFill
-	 *            the paint which will be used to fill the route (may be null).
+	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the route outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be null).
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
-	public OverlayRoute(Paint paintFill, Paint paintOutline) {
+	public OverlayWay(Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
 		setPaint(paintFill, paintOutline);
 	}
 
 	/**
-	 * Returns the way nodes of the route.
+	 * Returns the way nodes of this way.
 	 * 
-	 * @return the way nodes of the route.
+	 * @return the way nodes of this way.
 	 */
-	public synchronized GeoPoint[] getRouteData() {
+	public synchronized GeoPoint[] getWayData() {
 		return this.wayNodes;
 	}
 
 	/**
-	 * Sets the paints which will be used to draw the route.
+	 * Sets the paints which will be used to draw this way.
 	 * 
 	 * @param paintFill
-	 *            the paint which will be used to fill the route (may be null).
+	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the route outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be null).
 	 */
 	public synchronized void setPaint(Paint paintFill, Paint paintOutline) {
 		this.paintFill = paintFill;
@@ -149,14 +149,14 @@ public class OverlayRoute {
 	}
 
 	/**
-	 * Sets the way nodes of the route.
+	 * Sets the way nodes of this way.
 	 * 
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
-	public synchronized void setRouteData(GeoPoint[] wayNodes) {
+	public synchronized void setWayData(GeoPoint[] wayNodes) {
 		// check for illegal null elements
 		if (wayNodes != null && containsNullElements(wayNodes)) {
 			throw new IllegalArgumentException("way nodes must not contain null elements");

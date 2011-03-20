@@ -22,6 +22,7 @@ import java.util.Collection;
 import org.mapsforge.android.maps.MapView.TextField;
 
 import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
@@ -32,16 +33,14 @@ import android.graphics.drawable.Drawable;
  * constructor.
  * <p>
  * The ArrayItemizedOverlay handles tap events on OverlayItems by displaying their title and
- * description in an {@link AlertDialog}. This behavior can be changed by overriding the
- * {@link #onTap} method.
+ * description in an {@link AlertDialog}. To change this behavior, override the
+ * {@link #onTap(int)} method.
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayItemizedOverlay";
 
-	private AlertDialog.Builder builder;
 	private final Context context;
-	private OverlayItem item;
 	private final ArrayList<OverlayItem> overlayItems;
 
 	/**
@@ -130,13 +129,15 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	protected boolean onTap(int index) {
 		synchronized (this.overlayItems) {
-			this.item = this.overlayItems.get(index);
-			this.builder = new AlertDialog.Builder(this.context);
-			this.builder.setIcon(android.R.drawable.ic_menu_info_details);
-			this.builder.setTitle(this.item.getTitle());
-			this.builder.setMessage(this.item.getSnippet());
-			this.builder.setPositiveButton(this.internalMapView.getText(TextField.OKAY), null);
-			this.builder.show();
+			OverlayItem item = this.overlayItems.get(index);
+			if (item != null) {
+				Builder builder = new AlertDialog.Builder(this.context);
+				builder.setIcon(android.R.drawable.ic_menu_info_details);
+				builder.setTitle(item.getTitle());
+				builder.setMessage(item.getSnippet());
+				builder.setPositiveButton(this.internalMapView.getText(TextField.OKAY), null);
+				builder.show();
+			}
 			return true;
 		}
 	}
