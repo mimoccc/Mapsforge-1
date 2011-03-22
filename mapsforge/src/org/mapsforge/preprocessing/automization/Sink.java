@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "sink")
-@XmlSeeAlso({ RoutinggraphWriter.class, WritePbf.class, MapfileWriter.class })
+@XmlSeeAlso( { RoutinggraphWriter.class, WritePbf.class, MapfileWriter.class })
 public abstract class Sink {
 
 	/**

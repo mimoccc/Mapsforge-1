@@ -7,3 +7,4 @@
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "http://mapsforge.org/mapsforge-preprocessing-conf", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
 package org.mapsforge.preprocessing.automization;
+

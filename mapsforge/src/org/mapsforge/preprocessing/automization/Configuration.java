@@ -44,9 +44,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "configuration", propOrder = {
-		"pipeline"
-})
+@XmlType(name = "configuration", propOrder = { "pipeline" })
 public class Configuration {
 
 	/**

@@ -178,7 +178,9 @@ public class MapFileWriterTask implements Sink {
 		LOGGER.info("finished...");
 		LOGGER.fine("total processed nodes: " + nfCounts.format(amountOfNodesProcessed));
 		LOGGER.fine("total processed ways: " + nfCounts.format(amountOfWaysProcessed));
-		LOGGER.fine("total processed relations: " + nfCounts.format(amountOfRelationsProcessed));
+		LOGGER
+				.fine("total processed relations: "
+						+ nfCounts.format(amountOfRelationsProcessed));
 		LOGGER.fine("total processed multipolygons: " + amountOfMultipolygons);
 
 		System.gc();

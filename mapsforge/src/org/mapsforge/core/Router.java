@@ -19,7 +19,6 @@ package org.mapsforge.core;
 import java.util.Collection;
 import java.util.Iterator;
 
-
 /**
  * This class functionality is composed of spatial indices allowing for nearest neighbor
  * queries, a routing algorithm for shortest path queries and a graph like interface alowing

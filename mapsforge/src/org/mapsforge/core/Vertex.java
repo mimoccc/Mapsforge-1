@@ -16,7 +16,6 @@
  */
 package org.mapsforge.core;
 
-
 /**
  * Routing graph Vertex.
  */

@@ -345,8 +345,9 @@ class TileData {
 						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON) {
 							shape = SIMPLE_POLYGON;
 						} else {
-							LOGGER.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
-									+ way.getId());
+							LOGGER
+									.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
+											+ way.getId());
 							return null;
 						}
 					}

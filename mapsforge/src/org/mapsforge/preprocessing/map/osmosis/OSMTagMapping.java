@@ -108,8 +108,9 @@ final class OSMTagMapping {
 
 				OSMTag osmTag = new OSMTag(poiID, key, value, zoom, renderable);
 				if (stringToPoiTag.containsKey(osmTag.tagKey())) {
-					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
-							+ osmTag);
+					LOGGER
+							.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
+									+ osmTag);
 					continue;
 				}
 				LOGGER.finest("adding poi: " + osmTag);
@@ -137,8 +138,9 @@ final class OSMTagMapping {
 
 				OSMTag osmTag = new OSMTag(wayID, key, value, zoom, renderable);
 				if (stringToWayTag.containsKey(osmTag.tagKey())) {
-					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
-							+ osmTag);
+					LOGGER
+							.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
+									+ osmTag);
 					continue;
 				}
 				LOGGER.finest("adding way: " + osmTag);

@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "sink-source", propOrder = { "sinkSource", "sink" })
-@XmlSeeAlso({ PolygonAreaFilter.class, BboxAreaFilter.class })
+@XmlSeeAlso( { PolygonAreaFilter.class, BboxAreaFilter.class })
 public abstract class SinkSource {
 
 	/**

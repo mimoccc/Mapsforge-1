@@ -18,7 +18,6 @@ package org.mapsforge.preprocessing.highwayHierarchies.mobile;
 
 import java.io.IOException;
 
-
 /**
  * Bit-granular stream implemented on top of the BitSerializer class for writing arrays.
  */

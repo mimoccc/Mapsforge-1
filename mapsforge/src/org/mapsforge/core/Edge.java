@@ -16,7 +16,6 @@
  */
 package org.mapsforge.core;
 
-
 /**
  * This interface represents a directed edge within a routing graph.
  */

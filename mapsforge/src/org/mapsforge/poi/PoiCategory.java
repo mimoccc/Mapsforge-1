@@ -16,7 +16,6 @@
  */
 package org.mapsforge.poi;
 
-
 /**
  * This class represents a category for {@link PointOfInterest}. Every {@link PoiCategory}
  * should have a unique title so that for two {@link PoiCategory}s a and b a.equals(b) if and

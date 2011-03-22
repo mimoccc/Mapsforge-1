@@ -105,8 +105,9 @@ final class GeoUtils {
 		}
 		// check for valid closed polygon
 		if (way.isPolygon() && waynodes.length < MIN_COORDINATES_POLYGON) {
-			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
-					+ way.getId());
+			LOGGER
+					.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+							+ way.getId());
 			return matchedTiles;
 		}
 
@@ -156,8 +157,9 @@ final class GeoUtils {
 		double[] waynodes = way.wayNodesAsArray();
 		// check for valid closed polygon
 		if (way.isPolygon() && waynodes.length < MIN_COORDINATES_POLYGON) {
-			LOGGER.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
-					+ way.getId());
+			LOGGER
+					.finer("found closed polygon with fewer than 4 nodes, ignoring this way, way-id: "
+							+ way.getId());
 			return 0;
 		}
 
@@ -907,17 +909,17 @@ final class GeoUtils {
 								/ (y2Copy - y1Copy);
 						y = rectangle[3];
 					} else if ((outcodeOut & BOTTOM) != 0) { // point is below the clip
-																// rectangle
+						// rectangle
 						x = x1Copy + (x2Copy - x1Copy) * (rectangle[1] - y1Copy)
 								/ (y2Copy - y1Copy);
 						y = rectangle[1];
 					} else if ((outcodeOut & RIGHT) != 0) { // point is to the right of clip
-															// rectangle
+						// rectangle
 						y = y1Copy + (y2Copy - y1Copy) * (rectangle[2] - x1Copy)
 								/ (x2Copy - x1Copy);
 						x = rectangle[2];
 					} else if ((outcodeOut & LEFT) != 0) { // point is to the left of clip
-															// rectangle
+						// rectangle
 						y = y1Copy + (y2Copy - y1Copy) * (rectangle[0] - x1Copy)
 								/ (x2Copy - x1Copy);
 						x = rectangle[0];

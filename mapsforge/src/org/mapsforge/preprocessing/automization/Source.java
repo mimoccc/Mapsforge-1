@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "source", propOrder = { "sinkSource", "sink" })
-@XmlSeeAlso({ ReadPbf.class })
+@XmlSeeAlso( { ReadPbf.class })
 public abstract class Source {
 
 	/**

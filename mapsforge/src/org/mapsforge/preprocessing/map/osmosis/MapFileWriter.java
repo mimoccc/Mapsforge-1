@@ -900,8 +900,10 @@ class MapFileWriter {
 		if (!waynodes.isEmpty()
 				&& waynodes.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = waynodes.iterator();
-			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - currentTileLat));
-			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next() - currentTileLon));
+			buffer.put(Serializer
+					.getVariableByteSigned(waynodeIterator.next() - currentTileLat));
+			buffer.put(Serializer
+					.getVariableByteSigned(waynodeIterator.next() - currentTileLon));
 
 			while (waynodeIterator.hasNext()) {
 				buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next()));

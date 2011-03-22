@@ -67,7 +67,7 @@ class ThreadedDistanceTableComputation extends ComputationThread {
 		}
 		ThreadedComputation.executeThreads(threads, coreVertices.size(),
 				"computeDistanceTable(lvl=" + lvl + ",size=" + coreVertices.size() + "x"
-				+ coreVertices.size() + ")");
+						+ coreVertices.size() + ")");
 		return table;
 	}
 
