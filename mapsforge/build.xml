@@ -5,7 +5,7 @@ The script in not intended for building the project. Use Eclipse for this
 purpose.
 -->
 <project name="mapsforge">
-	<property name="mapsforge.version" value="0.2.1" />
+	<property name="mapsforge.version" value="0.2.2" />
 
 	<property name="mapsforge.bin" value="bin" />
 	<property name="mapsforge.lib" value="lib" />
