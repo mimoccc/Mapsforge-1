@@ -7,6 +7,9 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -36,12 +39,28 @@ import javax.xml.bind.annotation.XmlType;
 public class ReadPbf extends Source {
 
 	@Override
-	public String generate(List<String> md5List, String absolutePath) {
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
 
+		File inputFile = null;
+		try {
+			inputFile = FileOperation.createReadFile(absoluteWorkingDirPath, getFile());
+		} catch (FileNotFoundException e) {
+			System.err.println("Error! File to read does not exits.");
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error! Can not open file to read.");
+			e.printStackTrace();
+		}
+
+		if (inputFile == null)
+			throw new RuntimeException("An unexpected error occured. File is null.");
+
+		// TODO: DEBUG
+		System.out.println("DEBUG: readpbf: inputfile: " + inputFile.getAbsolutePath());
 		StringBuilder sb = new StringBuilder();
-		sb.append("--rb file=").append(getFile()).append(" ");
-		sb.append(super.generate(md5List, absolutePath));
+		sb.append("--rb file=").append(inputFile.getAbsolutePath()).append(" ");
+		sb.append(super.generate(md5List, absoluteWorkingDirPath, absoluteOutputDirPath));
 		return sb.toString();
 	}
-
 }

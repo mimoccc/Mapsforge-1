@@ -8,9 +8,9 @@
 package org.mapsforge.preprocessing.automization;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
-import javax.imageio.IIOException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -64,37 +64,24 @@ public class RoutinggraphWriter extends Sink {
 	}
 
 	@Override
-	public String generate(List<String> md5List, String absolutePath) {
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
 
 		StringBuilder sb = new StringBuilder();
-		File outputFile;
-
-		// check if the path of the file is absolute
-		if (getFile().startsWith(File.separator)) {
-			// file is absolute
-			outputFile = new File(getFile());
-		} else {
-			// file is not absolute, so it must be combined with the absolute path of the output
-			// directory
-			outputFile = new File(absolutePath, getFile());
-		}
-
-		// check if path exists
-
+		File outputFile = null;
 		try {
-			if (!outputFile.exists())
-				if (!outputFile.getParentFile().exists())
-					if (outputFile.getParentFile().canWrite()) {
-						if (!outputFile.getParentFile().mkdirs())
-							throw new IIOException("cannot create path: "
-									+ outputFile.getParent());
-					} else
-						throw new IIOException("cannot write path: "
-									+ outputFile.getParent());
-		} catch (IIOException e) {
-			System.err.println(e.getMessage());
+			outputFile = FileOperation.createWriteFile(absoluteOutputDirPath, getFile());
+		} catch (IOException e) {
+			System.err.println("MapfileWriter can not write to file.");
 			e.printStackTrace();
 		}
+
+		if (outputFile == null)
+			throw new RuntimeException("An unexpected error occured. File is null.");
+
+		// TODO: DEBUG
+		System.out.println("DEBUG: routinggraphwriter: outputFile: "
+				+ outputFile.getAbsolutePath());
 
 		if (isMd5()) {
 			md5List.add(outputFile.getAbsolutePath());

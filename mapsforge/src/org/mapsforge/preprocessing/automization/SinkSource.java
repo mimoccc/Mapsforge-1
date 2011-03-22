@@ -158,12 +158,15 @@ public abstract class SinkSource {
 	 * It is necessary that every implementation of a sink-source call the super constructor of
 	 * this method to implement this too.
 	 * 
+	 * @param absoluteOutputDirPath
+	 * 
 	 * @param outputDir
 	 * 
 	 * @return returns the generated string to call this osmosis task and all the task that use
 	 *         this data.
 	 */
-	public String generate(List<String> md5List, String absolutePath) {
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
 		StringBuilder sb = new StringBuilder();
 		int teeTotal = (this.sinkSource != null ? this.sinkSource.size() : 0)
 				+ (this.sink != null ? this.sink.size() : 0);
@@ -174,14 +177,16 @@ public abstract class SinkSource {
 
 		if (this.sinkSource != null) {
 			for (JAXBElement<? extends SinkSource> ss : this.sinkSource) {
-				sb.append(ss.getValue().generate(md5List, absolutePath))
+				sb.append(ss.getValue().generate(md5List, absoluteWorkingDirPath,
+						absoluteOutputDirPath))
 						.append(" ");
 			}
 		}
 
 		if (this.sink != null) {
 			for (JAXBElement<? extends Sink> s : this.sink) {
-				sb.append(s.getValue().generate(md5List, absolutePath))
+				sb.append(s.getValue().generate(md5List, absoluteWorkingDirPath,
+							absoluteOutputDirPath))
 						.append(" ");
 			}
 		}

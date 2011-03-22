@@ -7,6 +7,9 @@
 
 package org.mapsforge.preprocessing.automization;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -155,11 +158,27 @@ public class PolygonAreaFilter extends SinkSource {
 	}
 
 	@Override
-	public String generate(List<String> md5List, String absolutePath) {
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
+
+		File inputFile = null;
+		try {
+			inputFile = FileOperation
+					.createReadFile(absoluteWorkingDirPath, polygonFile);
+		} catch (FileNotFoundException e) {
+			System.err.println("Error! File to read does not exits.");
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("Error! Can not open file to read.");
+			e.printStackTrace();
+		}
+
+		if (inputFile == null)
+			throw new RuntimeException("An unexpected error occured. File is null.");
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("--bp").append(" ");
-		sb.append("file=").append(getPolygonFile()).append(" ");
+		sb.append("file=").append(inputFile.getAbsolutePath()).append(" ");
 		if (completeWays != null)
 			sb.append("completeWays=").append(completeWays).append(" ");
 		if (completeRelations != null)
@@ -167,9 +186,7 @@ public class PolygonAreaFilter extends SinkSource {
 		if (clipIncompleteEntities != null)
 			sb.append("clipIncompleteEntities=").append(clipIncompleteEntities).append(" ");
 
-		sb.append(super.generate(md5List, absolutePath));
-
+		sb.append(super.generate(md5List, absoluteWorkingDirPath, absoluteOutputDirPath));
 		return sb.toString();
 	}
-
 }

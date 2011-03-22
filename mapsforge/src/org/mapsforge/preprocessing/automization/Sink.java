@@ -108,9 +108,11 @@ public abstract class Sink {
 	 * task call string.
 	 * 
 	 * @param outputDir
+	 * @param absoluteOutputDirPath
 	 * 
 	 * @return the generated string to start a osmosis sink.
 	 */
-	public abstract String generate(List<String> md5List, String outputDir);
+	public abstract String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath);
 
 }

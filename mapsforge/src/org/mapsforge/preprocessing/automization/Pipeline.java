@@ -161,15 +161,30 @@ public class Pipeline {
 		this.loggingLevel = value;
 	}
 
-	public String generate(List<String> md5List, String absolutePath) {
-		// check if output directory of pipeline is absolute
-		if (outputDir.startsWith(File.separator)) {
-			// output directory of pipeline is absolute, so this would be used
-			return source.getValue().generate(md5List, outputDir);
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
+
+		// TODO: DEBUG
+		System.out
+				.println("DEBUG: Pipeline: absoluteWorkingDirPath: " + absoluteWorkingDirPath);
+		System.out.println("DEBUG: Pipeline: absoluteOutputDirPath: " + absoluteOutputDirPath);
+		System.out.println("DEBUG: Pipeline: outputDir: " + outputDir);
+		if (outputDir != null) {
+			// check if output directory of pipeline is absolute
+			if (outputDir.startsWith(File.separator)) {
+				// output directory of pipeline is absolute, so this would be used
+				return source.getValue().generate(md5List, absoluteWorkingDirPath, outputDir);
+			}
+			// output directory is relative path, so it would be added to the given absolute
+			// path of the configuration output directory
+			return source.getValue().generate(md5List, absoluteWorkingDirPath,
+					absoluteOutputDirPath + File.separator + outputDir);
 		}
-		// output directory is relative path, so it would be added to the given absolute path of
-		// the configuration output directory
-		return source.getValue().generate(md5List, absolutePath + File.separator + outputDir);
+
+		// output directory of pipeline is not set, so wie use the default output directory of
+		// the xml file
+		return source.getValue().generate(md5List, absoluteWorkingDirPath,
+				absoluteOutputDirPath);
 	}
 
 }

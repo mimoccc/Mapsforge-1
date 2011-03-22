@@ -242,7 +242,8 @@ public class BboxAreaFilter extends SinkSource {
 	}
 
 	@Override
-	public String generate(List<String> md5List, String absolutePath) {
+	public String generate(List<String> md5List, String absoluteWorkingDirPath,
+			String absoluteOutputDirPath) {
 
 		/*
 		 * Generate the string for the procedure call of the osmosis pipeline task to extract a
@@ -265,9 +266,9 @@ public class BboxAreaFilter extends SinkSource {
 		if (clipIncompleteEntities != null)
 			sb.append("clipIncompleteEntities=").append(clipIncompleteEntities).append(" ");
 
-		sb.append(super.generate(md5List, absolutePath));
+		sb.append(super.generate(md5List, absoluteWorkingDirPath,
+				absoluteOutputDirPath));
 
 		return sb.toString();
 	}
-
 }
