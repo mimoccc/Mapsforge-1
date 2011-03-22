@@ -77,6 +77,7 @@ public class OverlayWay {
 	 */
 	public OverlayWay() {
 		this.cachedWayPositions = new Point[0];
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**
@@ -89,6 +90,7 @@ public class OverlayWay {
 	 */
 	public OverlayWay(GeoPoint[] wayNodes) {
 		this.cachedWayPositions = new Point[0];
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setWayData(wayNodes);
 	}
 
@@ -106,6 +108,7 @@ public class OverlayWay {
 	 */
 	public OverlayWay(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setWayData(wayNodes);
 		setPaint(paintFill, paintOutline);
 	}
@@ -122,6 +125,7 @@ public class OverlayWay {
 	 */
 	public OverlayWay(Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0];
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setPaint(paintFill, paintOutline);
 	}
 
@@ -155,6 +159,7 @@ public class OverlayWay {
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
+	 * @see Overlay#requestRedraw()
 	 */
 	public synchronized void setWayData(GeoPoint[] wayNodes) {
 		// check for illegal null elements

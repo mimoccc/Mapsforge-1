@@ -151,9 +151,11 @@ public class OverlayItem {
 	 * 
 	 * @param point
 	 *            the geographical position of the item.
+	 * @see Overlay#requestRedraw()
 	 */
 	public void setPoint(GeoPoint point) {
 		this.point = point;
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**

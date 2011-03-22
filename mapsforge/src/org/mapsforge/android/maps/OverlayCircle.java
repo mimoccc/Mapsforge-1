@@ -76,6 +76,7 @@ public class OverlayCircle {
 	 */
 	public OverlayCircle() {
 		this.cachedCenterPosition = new Point();
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
 	/**
@@ -96,6 +97,7 @@ public class OverlayCircle {
 			String title) {
 		this.title = title;
 		this.cachedCenterPosition = new Point();
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setCircleData(center, radius);
 		setPaint(paintFill, paintOutline);
 	}
@@ -113,6 +115,7 @@ public class OverlayCircle {
 	public OverlayCircle(GeoPoint center, float radius, String title) {
 		this.title = title;
 		this.cachedCenterPosition = new Point();
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setCircleData(center, radius);
 	}
 
@@ -126,6 +129,7 @@ public class OverlayCircle {
 	 */
 	public OverlayCircle(Paint paintFill, Paint paintOutline) {
 		this.cachedCenterPosition = new Point();
+		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setPaint(paintFill, paintOutline);
 	}
 
@@ -145,6 +149,7 @@ public class OverlayCircle {
 	 *            the geographical coordinates of the center point.
 	 * @param radius
 	 *            the radius of the circle in meters.
+	 * @see Overlay#requestRedraw()
 	 */
 	public synchronized void setCircleData(GeoPoint center, float radius) {
 		this.center = center;

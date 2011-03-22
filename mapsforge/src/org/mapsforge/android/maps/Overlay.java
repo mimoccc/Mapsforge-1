@@ -142,6 +142,16 @@ public abstract class Overlay extends Thread {
 		return false;
 	}
 
+	/**
+	 * Requests a redraw of the overlay.
+	 */
+	public final void requestRedraw() {
+		this.redraw = true;
+		synchronized (this) {
+			notify();
+		}
+	}
+
 	@Override
 	public final void run() {
 		setName(getThreadName());
@@ -273,16 +283,6 @@ public abstract class Overlay extends Thread {
 	 */
 	protected String getThreadName() {
 		return THREAD_NAME;
-	}
-
-	/**
-	 * Requests a redraw of the overlay.
-	 */
-	protected final void requestRedraw() {
-		this.redraw = true;
-		synchronized (this) {
-			notify();
-		}
 	}
 
 	/**
