@@ -24,21 +24,29 @@ package org.mapsforge.android.maps;
 public enum MapViewMode {
 	/**
 	 * Map tiles are rendered using the <code>android.graphics</code> package (Skia library).
+	 * 
+	 * @see <a href="http://code.google.com/p/skia/">Skia Graphics Engine</a>
 	 */
 	CANVAS_RENDERER,
 
 	/**
 	 * Map tiles are downloaded from the Mapnik server. Requires an Internet connection.
+	 * 
+	 * @see <a href="http://wiki.openstreetmap.org/wiki/Mapnik">Mapnik</a>
 	 */
 	MAPNIK_TILE_DOWNLOAD,
 
 	/**
 	 * Map tiles are downloaded from the OpenCycleMap server. Requires an Internet connection.
+	 * 
+	 * @see <a href="http://opencyclemap.org/">OpenCycleMap</a>
 	 */
 	OPENCYCLEMAP_TILE_DOWNLOAD,
 
 	/**
 	 * Map tiles are downloaded from the Osmarender server. Requires an Internet connection.
+	 * 
+	 * @see <a href="http://wiki.openstreetmap.org/wiki/Osmarender">Osmarender</a>
 	 */
 	OSMARENDER_TILE_DOWNLOAD;
 

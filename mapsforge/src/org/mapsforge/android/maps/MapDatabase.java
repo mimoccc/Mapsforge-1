@@ -25,7 +25,7 @@ import java.util.HashMap;
 import android.graphics.Rect;
 
 /**
- * A database class for reading binary OSM files. Byte order is big-endian.
+ * A database class for reading binary map files. Byte order is big-endian.
  */
 public class MapDatabase {
 	/**

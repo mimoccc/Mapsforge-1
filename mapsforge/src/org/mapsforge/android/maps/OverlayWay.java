@@ -22,7 +22,7 @@ import android.graphics.Point;
 /**
  * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering
  * parameters like color, stroke width, pattern and transparency can be configured via two
- * {@link Paint} objects. Each way is drawn twice – once with each paint object – to allow for
+ * {@link Paint} objects. Each way is drawn twice - once with each paint object - to allow for
  * different outlines and fillings.
  */
 public class OverlayWay {

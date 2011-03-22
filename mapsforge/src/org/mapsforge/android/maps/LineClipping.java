@@ -17,7 +17,7 @@
 package org.mapsforge.android.maps;
 
 /**
- * Fast implementation of the Cohen–Sutherland line clipping algorithm.
+ * Fast implementation of the Cohen-Sutherland line clipping algorithm.
  */
 final class LineClipping {
 	private static final byte BOTTOM = 1;

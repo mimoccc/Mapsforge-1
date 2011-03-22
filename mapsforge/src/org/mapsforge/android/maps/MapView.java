@@ -958,12 +958,12 @@ public class MapView extends ViewGroup {
 	 * @param fileName
 	 *            the name of the image file. If the file exists, it will be overwritten.
 	 * @param format
-	 *            the format of the compressed image.
+	 *            the file format of the compressed image.
 	 * @param quality
 	 *            value from 0 (low) to 100 (high). Has no effect on some formats like PNG.
 	 * @return true if the image was saved successfully, false otherwise.
 	 * @throws IOException
-	 *             if an error occurs while writing to the file.
+	 *             if an error occurs while writing the file.
 	 */
 	public boolean makeScreenshot(CompressFormat format, int quality, String fileName)
 			throws IOException {
