@@ -140,6 +140,8 @@ public class OverlayWay {
 
 	/**
 	 * Sets the paints which will be used to draw this way.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param paintFill
 	 *            the paint which will be used to fill the way (may be null).
@@ -154,12 +156,13 @@ public class OverlayWay {
 
 	/**
 	 * Sets the way nodes of this way.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param wayNodes
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
-	 * @see Overlay#requestRedraw()
 	 */
 	public synchronized void setWayData(GeoPoint[] wayNodes) {
 		// check for illegal null elements

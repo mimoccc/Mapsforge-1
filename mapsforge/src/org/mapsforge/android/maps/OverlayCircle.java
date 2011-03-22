@@ -144,12 +144,13 @@ public class OverlayCircle {
 
 	/**
 	 * Sets the parameters of the circle.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param center
 	 *            the geographical coordinates of the center point.
 	 * @param radius
 	 *            the radius of the circle in meters.
-	 * @see Overlay#requestRedraw()
 	 */
 	public synchronized void setCircleData(GeoPoint center, float radius) {
 		this.center = center;
@@ -159,6 +160,8 @@ public class OverlayCircle {
 
 	/**
 	 * Sets the paints which will be used to draw the overlay.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param paintFill
 	 *            the paint which will be used to fill the circle (may be null).

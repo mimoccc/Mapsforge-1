@@ -138,6 +138,8 @@ public class OverlayItem {
 	 * <p>
 	 * The bounds of the marker must already have been set properly, for example by calling
 	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param marker
 	 *            the marker that is drawn for this item (may be null).
@@ -148,10 +150,11 @@ public class OverlayItem {
 
 	/**
 	 * Sets the geographical position of this item.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param point
 	 *            the geographical position of the item.
-	 * @see Overlay#requestRedraw()
 	 */
 	public void setPoint(GeoPoint point) {
 		this.point = point;
