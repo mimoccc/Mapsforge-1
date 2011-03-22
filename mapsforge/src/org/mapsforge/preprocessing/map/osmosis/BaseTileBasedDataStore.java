@@ -81,12 +81,6 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 			this.tileGridLayouts[i] = new TileGridLayout(upperLeft,
 					computeNumberOfHorizontalTiles(i), computeNumberOfVerticalTiles(i));
 		}
-
-		if (cumulatedNumberOfTiles() > MAX_TILES_SUPPORTED) {
-			throw new IllegalArgumentException("Bounding box of this area is too large. Need "
-					+ cumulatedNumberOfTiles() + " number of tiles, but only "
-					+ MAX_TILES_SUPPORTED + " are supported.");
-		}
 	}
 
 	@Override
