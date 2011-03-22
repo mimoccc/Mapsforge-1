@@ -110,7 +110,7 @@ public class OverlayItem {
 	 * 
 	 * @return the position of this item.
 	 */
-	public GeoPoint getPoint() {
+	public synchronized GeoPoint getPoint() {
 		return this.point;
 	}
 
@@ -119,7 +119,7 @@ public class OverlayItem {
 	 * 
 	 * @return the short description of this item (may be null).
 	 */
-	public String getSnippet() {
+	public synchronized String getSnippet() {
 		return this.snippet;
 	}
 
@@ -128,7 +128,7 @@ public class OverlayItem {
 	 * 
 	 * @return the title of this item (may be null).
 	 */
-	public String getTitle() {
+	public synchronized String getTitle() {
 		return this.title;
 	}
 
@@ -156,7 +156,7 @@ public class OverlayItem {
 	 * @param point
 	 *            the geographical position of the item.
 	 */
-	public void setPoint(GeoPoint point) {
+	public synchronized void setPoint(GeoPoint point) {
 		this.point = point;
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}

@@ -138,7 +138,7 @@ public class OverlayCircle {
 	 * 
 	 * @return the title of this circle (may be null).
 	 */
-	public String getTitle() {
+	public synchronized String getTitle() {
 		return this.title;
 	}
 
