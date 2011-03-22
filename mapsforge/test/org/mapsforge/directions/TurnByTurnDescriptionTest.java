@@ -35,11 +35,8 @@ public class TurnByTurnDescriptionTest {
 	TurnByTurnDescription shortStreet2LaneCase0;
 	TurnByTurnDescription shortStreet2LaneCase1;
 
-	/**
-	 * @throws Exception
-	 */
 	@Before
-	public void setUp() throws Exception {
+	void setUp() {
 
 		twoStreets = new TurnByTurnDescription(new DummyEdge[] {
 				new DummyEdge(new GeoCoordinate[] { new GeoCoordinate(53.08997, 8.78746),

@@ -33,12 +33,12 @@ public class DummyEdge implements Edge {
 	String type = "";
 	boolean roundabout = false;
 
-	public DummyEdge(GeoCoordinate[] wayPoints, String name) {
+	DummyEdge(GeoCoordinate[] wayPoints, String name) {
 		this.wayPoints = wayPoints;
 		this.name = name;
 	}
 
-	public DummyEdge(GeoCoordinate[] wayPoints, String name, String ref, String type,
+	DummyEdge(GeoCoordinate[] wayPoints, String name, String ref, String type,
 			boolean roundabout) {
 		this.wayPoints = wayPoints;
 		this.name = name;

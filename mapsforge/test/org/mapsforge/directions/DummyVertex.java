@@ -46,7 +46,7 @@ public class DummyVertex implements Vertex {
 		return 0;
 	}
 
-	public void addEdge(Edge newEdge) {
+	void addEdge(Edge newEdge) {
 		outbound.add(newEdge);
 	}
 
