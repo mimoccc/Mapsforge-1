@@ -26,6 +26,8 @@ import android.graphics.Point;
 /**
  * CircleOverlay is an abstract base class to display {@link OverlayCircle OverlayCircles}. The
  * class defines some methods to access the backing data structure of deriving subclasses.
+ * Besides organizing the redrawing process it handles tap events from the user to check if an
+ * OverlayCircle has been touched and {@link #onTap(int)} must be executed.
  * <p>
  * The overlay may be used to indicate positions which have a known accuracy, such as GPS fixes.
  * The radius of the circles is specified in meters and will be automatically converted to
@@ -69,6 +71,9 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 		this.path = new Path();
 	}
 
+	/**
+	 * Handles a tap event.
+	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
 		Projection projection = mapView.getProjection();

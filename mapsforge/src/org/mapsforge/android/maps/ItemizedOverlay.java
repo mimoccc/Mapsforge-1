@@ -89,6 +89,9 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 		this.visibleItemsRedraw = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
 	}
 
+	/**
+	 * Handles a tap event.
+	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
 		Projection projection = mapView.getProjection();

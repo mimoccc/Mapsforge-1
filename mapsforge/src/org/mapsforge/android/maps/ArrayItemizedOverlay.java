@@ -129,6 +129,9 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 		}
 	}
 
+	/**
+	 * Handles a tap event.
+	 */
 	@Override
 	protected boolean onTap(int index) {
 		synchronized (this.overlayItems) {

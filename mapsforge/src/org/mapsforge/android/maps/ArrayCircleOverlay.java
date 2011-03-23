@@ -129,6 +129,9 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 		}
 	}
 
+	/**
+	 * Handles a tap event.
+	 */
 	@Override
 	protected boolean onTap(int index) {
 		synchronized (this.overlayCircles) {
