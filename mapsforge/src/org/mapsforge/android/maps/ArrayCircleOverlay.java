@@ -122,6 +122,9 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	@Override
 	protected OverlayCircle createCircle(int i) {
 		synchronized (this.overlayCircles) {
+			if (i >= this.overlayCircles.size()) {
+				return null;
+			}
 			return this.overlayCircles.get(i);
 		}
 	}

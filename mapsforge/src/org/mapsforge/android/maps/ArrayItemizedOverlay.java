@@ -122,6 +122,9 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	protected OverlayItem createItem(int i) {
 		synchronized (this.overlayItems) {
+			if (i >= this.overlayItems.size()) {
+				return null;
+			}
 			return this.overlayItems.get(i);
 		}
 	}

@@ -109,6 +109,9 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	@Override
 	protected OverlayWay createWay(int i) {
 		synchronized (this.overlayWays) {
+			if (i >= this.overlayWays.size()) {
+				return null;
+			}
 			return this.overlayWays.get(i);
 		}
 	}
