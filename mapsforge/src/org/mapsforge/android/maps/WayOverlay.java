@@ -84,7 +84,7 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 
 			synchronized (this.overlayWay) {
 				// make sure that the current way has way nodes
-				if (this.overlayWay.wayNodes == null) {
+				if (this.overlayWay.wayNodes == null || this.overlayWay.wayNodes.length == 0) {
 					continue;
 				}
 

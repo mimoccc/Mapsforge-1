@@ -171,10 +171,10 @@ public class OverlayWay {
 		}
 
 		this.wayNodes = wayNodes;
-		if (this.wayNodes != null && this.wayNodes.length != this.cachedWayPositions.length) {
-			this.cachedWayPositions = new Point[this.wayNodes.length];
-		} else {
+		if (this.wayNodes == null) {
 			this.cachedWayPositions = new Point[0];
+		} else if (this.wayNodes.length != this.cachedWayPositions.length) {
+			this.cachedWayPositions = new Point[this.wayNodes.length];
 		}
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
