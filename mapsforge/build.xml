@@ -121,6 +121,7 @@ purpose.
 
 	<!-- Create the Javadoc files -->
 	<target name="mapsforge-map-javadoc-create">
+		<delete dir="${mapsforge.doc}/${mapsforge.version}" />
 		<mkdir dir="${mapsforge.doc}/${mapsforge.version}" />
 		<javadoc destdir="${mapsforge.doc}/${mapsforge.version}"
 		         author="false"
