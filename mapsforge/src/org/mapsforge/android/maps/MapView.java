@@ -592,6 +592,7 @@ public class MapView extends ViewGroup {
 	 * Default background color of the MapView.
 	 */
 	private static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
+
 	/**
 	 * Message code for the handler to hide the zoom controls.
 	 */
@@ -605,7 +606,6 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
-
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -681,6 +681,22 @@ public class MapView extends ViewGroup {
 		return isValid;
 	}
 
+	/**
+	 * Detects if the code is currently executed on the emulator from the Android SDK. This
+	 * method can be used for code branches to work around known bugs in the Android emulator.
+	 * 
+	 * @return true if the Android emulator has been detected, false otherwise.
+	 */
+	private static boolean isAndroidEmulator() {
+		for (String name : EMULATOR_NAMES) {
+			if (Build.PRODUCT.equals(name)) {
+				// we have a match
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean attachedToWindow;
 	private MapGeneratorJob currentJob;
 	private Tile currentTile;
@@ -746,6 +762,7 @@ public class MapView extends ViewGroup {
 	private ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	private byte zoomLevel;
+	private byte zoomLevelMax;
 	private byte zoomLevelMin;
 
 	/**
@@ -891,9 +908,10 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the maximum zoom level of the map.
+	 * Returns the maximum zoom level which is supported by the currently selected
+	 * {@link MapViewMode} of the MapView.
 	 * 
-	 * @return the maximum zoom level.
+	 * @return the maximum possible zoom level.
 	 */
 	public int getMaxZoomLevel() {
 		return this.mapGenerator.getMaxZoomLevel();
@@ -1281,12 +1299,36 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Sets the maximum zoom level of the map to which the user may zoom in.
+	 * <p>
+	 * The maximum possible zoom level of the MapView depends also on the currently selected
+	 * {@link MapViewMode}. For example, downloading map tiles may only be possible up to a
+	 * certain zoom level. Setting a higher maximum zoom level has no effect in this case.
+	 * 
+	 * @param zoomLevelMax
+	 *            the maximum zoom level.
+	 * @throws IllegalArgumentException
+	 *             if the maximum zoom level is smaller than the current minimum zoom level.
+	 */
+	public void setZoomMax(byte zoomLevelMax) {
+		if (zoomLevelMax < this.zoomLevelMin) {
+			throw new IllegalArgumentException();
+		}
+		this.zoomLevelMax = zoomLevelMax;
+	}
+
+	/**
 	 * Sets the minimum zoom level of the map to which the user may zoom out.
 	 * 
 	 * @param zoomLevelMin
 	 *            the minimum zoom level.
+	 * @throws IllegalArgumentException
+	 *             if the minimum zoom level is larger than the current maximum zoom level.
 	 */
 	public void setZoomMin(byte zoomLevelMin) {
+		if (zoomLevelMin > this.zoomLevelMax) {
+			throw new IllegalArgumentException();
+		}
 		this.zoomLevelMin = (byte) Math.max(zoomLevelMin, ZOOM_LEVEL_MIN);
 	}
 
@@ -1300,29 +1342,30 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private byte getValidZoomLevel(byte zoom) {
-		if (zoom < this.zoomLevelMin) {
-			return this.zoomLevelMin;
-		} else if (zoom > this.mapGenerator.getMaxZoomLevel()) {
-			return this.mapGenerator.getMaxZoomLevel();
-		}
-		return zoom;
+	/**
+	 * Returns the minimum of the maximum zoom level set via {@link #setZoomMax(byte)} and the
+	 * maximum zoom level which is supported by the currently selected {@link MapViewMode}.
+	 * 
+	 * @return the maximum possible zoom level.
+	 */
+	private byte getMaximumPossibleZoomLevel() {
+		return (byte) Math.min(this.zoomLevelMax, this.mapGenerator.getMaxZoomLevel());
 	}
 
 	/**
-	 * Detects if the code is currently executed on the emulator from the Android SDK. This
-	 * method can be used for code branches to work around known bugs in the Android emulator.
+	 * Returns the given zoom level limited to the minimum and maximum possible zoom level.
 	 * 
-	 * @return true if the Android emulator has been detected, false otherwise.
+	 * @param zoom
+	 *            the zoom level which should be limited.
+	 * @return a valid zoom level from the interval [minimum, maximum].
 	 */
-	private boolean isAndroidEmulator() {
-		for (String name : EMULATOR_NAMES) {
-			if (Build.PRODUCT.equals(name)) {
-				// we have a match
-				return true;
-			}
+	private byte getValidZoomLevel(byte zoom) {
+		if (zoom < this.zoomLevelMin) {
+			return this.zoomLevelMin;
+		} else if (zoom > getMaximumPossibleZoomLevel()) {
+			return getMaximumPossibleZoomLevel();
 		}
-		return false;
+		return zoom;
 	}
 
 	private void renderScaleBar() {
@@ -1595,6 +1638,7 @@ public class MapView extends ViewGroup {
 		this.longitude = defaultStartPoint.getLongitude();
 		this.zoomLevel = this.mapGenerator.getDefaultZoomLevel();
 		this.zoomLevelMin = DEFAULT_ZOOM_LEVEL_MIN;
+		this.zoomLevelMax = Byte.MAX_VALUE;
 
 		// create and start the MapMover thread
 		this.mapMover = new MapMover();
@@ -2346,8 +2390,8 @@ public class MapView extends ViewGroup {
 			}
 
 			// enable or disable the zoom buttons if necessary
-			this.zoomControls.setIsZoomInEnabled(this.zoomLevel < this.mapGenerator
-					.getMaxZoomLevel());
+			this.zoomControls
+					.setIsZoomInEnabled(this.zoomLevel < getMaximumPossibleZoomLevel());
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
 			handleTiles(true);
 		}
@@ -2425,7 +2469,7 @@ public class MapView extends ViewGroup {
 	boolean zoom(byte zoomLevelDiff) {
 		if (zoomLevelDiff > 0) {
 			// check if zoom in is possible
-			if (this.zoomLevel + zoomLevelDiff > this.mapGenerator.getMaxZoomLevel()) {
+			if (this.zoomLevel + zoomLevelDiff > getMaximumPossibleZoomLevel()) {
 				return false;
 			}
 			this.matrixScaleFactor = 1 << zoomLevelDiff;
@@ -2461,8 +2505,7 @@ public class MapView extends ViewGroup {
 		}
 
 		// enable or disable the zoom buttons if necessary
-		this.zoomControls.setIsZoomInEnabled(this.zoomLevel < this.mapGenerator
-				.getMaxZoomLevel());
+		this.zoomControls.setIsZoomInEnabled(this.zoomLevel < getMaximumPossibleZoomLevel());
 		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
 
 		hideZoomControlsDelayed();
