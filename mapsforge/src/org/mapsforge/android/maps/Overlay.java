@@ -132,13 +132,13 @@ public abstract class Overlay extends Thread {
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
-	 * @param p
+	 * @param geoPoint
 	 *            the point which has been tapped.
 	 * @param mapView
 	 *            the MapView that triggered the tap event.
 	 * @return true if the tap event was handled, false otherwise.
 	 */
-	public boolean onTap(GeoPoint p, MapView mapView) {
+	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
 		return false;
 	}
 

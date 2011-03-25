@@ -21,8 +21,7 @@ import android.graphics.drawable.Drawable;
 
 /**
  * OverlayItem holds all parameters of a single element on an {@link ItemizedOverlay}, such as
- * position, marker, title and textual description. Once created, only the marker of an
- * OverlayItem can be modified via the {@link #setMarker(Drawable)} method.
+ * position, marker, title and textual description.
  */
 public class OverlayItem {
 	/**
