@@ -775,7 +775,7 @@ public class MapView extends ViewGroup {
 	 * Constructs a new MapView with the default {@link MapViewMode}.
 	 * 
 	 * @param context
-	 *            the enclosing MapActivity object.
+	 *            the enclosing MapActivity instance.
 	 * @throws IllegalArgumentException
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
@@ -784,33 +784,34 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView. The {@link MapViewMode} can be configured via XML with the
-	 * "mode" attribute in the layout file.
+	 * Constructs a new MapView. The {@link MapViewMode} can be defined via a <code>mode</code>
+	 * attribute in the XML layout file. If no mode is specified, the default mode is used.
 	 * 
 	 * @param context
-	 *            the enclosing MapActivity object.
+	 *            the enclosing MapActivity instance.
 	 * @param attrs
 	 *            A set of attributes.
 	 * @throws IllegalArgumentException
-	 *             if the context object is not an instance of {@link MapActivity}.
+	 *             if the context object is not an instance of {@link MapActivity} or if the
+	 *             supplied {@link MapViewMode} is invalid.
 	 */
 	public MapView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		if (!(context instanceof MapActivity)) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("context is not an instance of MapActivity");
 		}
 		this.mapActivity = (MapActivity) context;
 		String modeValue = attrs.getAttributeValue(null, "mode");
 		if (modeValue == null) {
-			// no mode specified, use default
+			// no mode specified, use the default mode
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
 		} else {
 			try {
 				// try to use the specified mode
 				this.mapViewMode = MapViewMode.valueOf(modeValue);
 			} catch (IllegalArgumentException e) {
-				// invalid mode, use default
-				this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
+				// an invalid mode was specified, throw an exception
+				throw new IllegalArgumentException(e);
 			}
 		}
 		this.mapViewId = this.mapActivity.getMapViewId();
@@ -821,7 +822,7 @@ public class MapView extends ViewGroup {
 	 * Constructs a new MapView with the given MapViewMode.
 	 * 
 	 * @param context
-	 *            the enclosing MapActivity object.
+	 *            the enclosing MapActivity instance.
 	 * @param mapViewMode
 	 *            the mode in which the MapView should operate.
 	 * @throws IllegalArgumentException
@@ -830,7 +831,7 @@ public class MapView extends ViewGroup {
 	public MapView(Context context, MapViewMode mapViewMode) {
 		super(context);
 		if (!(context instanceof MapActivity)) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("context is not an instance of MapActivity");
 		}
 		this.mapActivity = (MapActivity) context;
 		this.mapViewMode = mapViewMode;
