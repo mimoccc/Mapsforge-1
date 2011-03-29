@@ -727,25 +727,15 @@ class MapFileWriter {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
 
-		// if the sub file for lower zoom levels is written, remove all way
-		// nodes from the list which are projected on the same pixel
-		if (pixelCompression && maxZoomCurrentInterval <= MAX_ZOOMLEVEL_PIXEL_FILTER) {
-			boolean checkOrientation = way.isCoastline() && way.isPolygon();
-			waynodeCoordinates = GeoUtils.filterWaynodesOnSamePixel(
-					waynodeCoordinates, maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA,
-					checkOrientation);
-			if (skipInvalidPolygons && way.isPolygon()
-					&& waynodeCoordinates.size() < GeoUtils.MIN_NODES_POLYGON) {
-				return null;
-			}
-		}
-
 		// if the way is a polygon, clip the way to the current tile
 		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
+
 			if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
 				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
 						waynodeCoordinates, tile, bboxEnlargement, false);
 
+				// TODO is it ok to compute the label position before thinning out
+				// via pixel filtering?
 				if (clipped != null && !clipped.isEmpty()) {
 					waynodeCoordinates = clipped;
 					// DO WE NEED TO COMPUTE A LABEL POSITION?
@@ -774,6 +764,21 @@ class MapFileWriter {
 							+ tile.toString());
 					return null;
 				}
+			}
+		}
+
+		// TODO is it possible that pixel filtering produces invalid polygons?
+
+		// if the sub file for lower zoom levels is written, remove all way
+		// nodes from the list which are projected on the same pixel
+		if (pixelCompression && maxZoomCurrentInterval <= MAX_ZOOMLEVEL_PIXEL_FILTER) {
+			boolean checkOrientation = way.isCoastline() && way.isPolygon();
+			waynodeCoordinates = GeoUtils.filterWaynodesOnSamePixel(
+					waynodeCoordinates, maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA,
+					checkOrientation);
+			if (skipInvalidPolygons && way.isPolygon()
+					&& waynodeCoordinates.size() < GeoUtils.MIN_NODES_POLYGON) {
+				return null;
 			}
 		}
 
