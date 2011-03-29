@@ -113,7 +113,7 @@
          	<arg value="${data.binary}/${basename}.mobileHH"/>
 			<arg value="--format=mobile"/>
 			<classpath>
-				<pathelement location="dist/mapsforge-offboard-routing-0.2.1.jar"/>
+				<pathelement location="dist/mapsforge-offboard-routing-0.2.2.jar"/>
 				<fileset dir="lib">
 					<include name="**/*.jar"/>
        		    </fileset>
@@ -128,7 +128,7 @@
          	<arg value="${data.binary}/${basename}.hh"/>
 	    	<arg value="--format=server"/>
 	    		<classpath>
-				<pathelement location="dist/mapsforge-offboard-routing-0.2.1.jar"/>
+				<pathelement location="dist/mapsforge-offboard-routing-0.2.2.jar"/>
 				<fileset dir="lib">
 					<include name="**/*.jar"/>
        		    </fileset>
