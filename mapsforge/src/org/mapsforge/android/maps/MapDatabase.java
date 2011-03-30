@@ -453,6 +453,7 @@ public class MapDatabase {
 				this.bufferPosition += SIGNATURE_LENGTH_NODE;
 				if (!this.nodeSignature.startsWith("***POIStart")) {
 					Logger.d("invalid node signature: " + this.nodeSignature);
+					Logger.d("block signature: " + this.blockSignature);
 					return;
 				}
 			}
@@ -480,8 +481,9 @@ public class MapDatabase {
 					Logger.d("invalid node tag ID: " + this.nodeTagId);
 					if (this.debugFile) {
 						Logger.d("node signature: " + this.nodeSignature);
+						Logger.d("block signature: " + this.blockSignature);
 					}
-					continue;
+					return;
 				}
 				this.nodeTagIds[this.nodeTagId] = true;
 			}
@@ -547,6 +549,7 @@ public class MapDatabase {
 				this.bufferPosition += SIGNATURE_LENGTH_WAY;
 				if (!this.waySignature.startsWith("---WayStart")) {
 					Logger.d("invalid way signature: " + this.waySignature);
+					Logger.d("block signature: " + this.blockSignature);
 					return;
 				}
 			}
@@ -594,8 +597,9 @@ public class MapDatabase {
 					Logger.d("invalid way tag ID: " + this.wayTagId);
 					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
+						Logger.d("block signature: " + this.blockSignature);
 					}
-					continue;
+					return;
 				}
 				this.wayTagIds[this.wayTagId] = true;
 			}
@@ -607,6 +611,7 @@ public class MapDatabase {
 				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
 				if (this.debugFile) {
 					Logger.d("way signature: " + this.waySignature);
+					Logger.d("block signature: " + this.blockSignature);
 				}
 				return;
 			}
@@ -708,6 +713,7 @@ public class MapDatabase {
 									+ this.innerWayNumberOfWayNodes);
 							if (this.debugFile) {
 								Logger.d("way signature: " + this.waySignature);
+								Logger.d("block signature: " + this.blockSignature);
 							}
 							return;
 						}
@@ -750,6 +756,7 @@ public class MapDatabase {
 					Logger.d("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
 					if (this.debugFile) {
 						Logger.d("way signature: " + this.waySignature);
+						Logger.d("block signature: " + this.blockSignature);
 					}
 					return;
 				}
