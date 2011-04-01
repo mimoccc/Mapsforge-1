@@ -16,7 +16,6 @@
  */
 package org.mapsforge.poi.persistence;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -176,8 +175,6 @@ abstract class AbstractPerstPersistenceManager<T extends BasicRootElement> imple
 		Collection<PointOfInterest> result = find(computeBoundingBox(point, radius),
 				category,
 				limit);
-
-		ArrayList<PointOfInterest> filtered = new ArrayList<PointOfInterest>();
 
 		// delete pois from result that are in the bounding box but not within the radius;
 		// for (PointOfInterest poi : result) {
