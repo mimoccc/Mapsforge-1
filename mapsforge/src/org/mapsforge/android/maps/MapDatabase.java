@@ -806,7 +806,7 @@ public class MapDatabase {
 
 		// read the header data into the buffer
 		if (!readFromMapFile(this.remainingHeaderSize)) {
-			Logger.d("reading header data has failed");
+			Logger.d("reading header data has failed: " + this.remainingHeaderSize);
 			return false;
 		}
 
@@ -1109,6 +1109,10 @@ public class MapDatabase {
 	private boolean readFromMapFile(int length) throws IOException {
 		// ensure that the read buffer is large enough
 		if (this.readBuffer == null || this.readBuffer.length < length) {
+			// ensure that the read buffer is not too large
+			if (length > MAXIMUM_BLOCK_SIZE) {
+				return false;
+			}
 			this.readBuffer = new byte[length];
 		}
 
@@ -1491,7 +1495,7 @@ public class MapDatabase {
 					// read the current block into the buffer
 					if (!readFromMapFile(this.currentBlockSize)) {
 						// skip the current block
-						Logger.d("reading current block has failed");
+						Logger.d("reading current block has failed: " + this.currentBlockSize);
 						return;
 					}
 
