@@ -61,6 +61,11 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	transient int priority;
 
 	/**
+	 * Text scale for the map rendering.
+	 */
+	final float textScale;
+
+	/**
 	 * Tile that is rendered to a map image.
 	 */
 	final Tile tile;
@@ -74,6 +79,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 *            the operation mode in which the map image should be generated.
 	 * @param mapFile
 	 *            the map file or null, if no map file is needed.
+	 * @param textScale
+	 *            the text scale for map rendering.
 	 * @param drawTileFrames
 	 *            flag to enable tile frames.
 	 * @param drawTileCoordinates
@@ -81,11 +88,12 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 * @param highlightWater
 	 *            flag to enable water tile highlighting.
 	 */
-	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, boolean drawTileFrames,
-			boolean drawTileCoordinates, boolean highlightWater) {
+	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, float textScale,
+			boolean drawTileFrames, boolean drawTileCoordinates, boolean highlightWater) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
+		this.textScale = textScale;
 		this.drawTileFrames = drawTileFrames;
 		this.drawTileCoordinates = drawTileCoordinates;
 		this.highlightWater = highlightWater;
@@ -112,6 +120,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 			} else if (this.mapFile == null && this.other.mapFile != null) {
 				return false;
 			} else if (this.mapFile != null && !this.mapFile.equals(this.other.mapFile)) {
+				return false;
+			} else if (this.textScale != this.other.textScale) {
 				return false;
 			} else if (this.drawTileFrames != this.other.drawTileFrames) {
 				return false;
@@ -141,6 +151,7 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 		result = prime * result
 				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = prime * result + Float.floatToIntBits(this.textScale);
 		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
 		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
 		result = prime * result + (this.highlightWater ? 1231 : 1237);

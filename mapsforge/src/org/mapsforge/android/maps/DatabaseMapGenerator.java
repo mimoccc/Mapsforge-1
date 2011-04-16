@@ -148,8 +148,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_HISTORIC_CIRCLE_INNER = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HISTORIC_CIRCLE_OUTER = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-	private static final Paint PAINT_INFO_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
-
 	private static final Paint PAINT_LANDUSE_ALLOTMENTS_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_LANDUSE_ALLOTMENTS_OUTLINE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
@@ -185,27 +183,28 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_MILITARY_NAVAL_BASE_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_MILITARY_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-	private static final Paint PAINT_NAME_BLACK_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_10_CENTER = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLACK_25 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_BLUE_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_PURPLE_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_RED_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_RED_11 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_RED_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_10 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_10_CENTER = new Paint(
+	private static final Paint PAINT_NAME_BLACK_HUGE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_LARGE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_LARGER = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_NORMAL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_SMALL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_TINY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLACK_TINY_CENTER = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_BLUE_TINY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_PURPLE_TINY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_RED_NORMAL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_RED_SMALLER = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_RED_TINY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_HUGE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_LARGE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_LARGER = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_NORMAL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_SMALL = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_SMALLER = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_11 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_12 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_13 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_15 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_20 = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_NAME_WHITE_STROKE_25 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_TINY = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_NAME_WHITE_STROKE_TINY_CENTER = new Paint(
+			Paint.ANTI_ALIAS_FLAG);
 
 	private static final Paint PAINT_NATURAL_BEACH_FILL = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_NATURAL_COASTLINE = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -272,6 +271,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final Paint PAINT_WOOD_DECIDUOUS_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_WOOD_MIXED_PATTERN = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+	private static final byte TEXT_SCALE_HUGE = 25;
+	private static final byte TEXT_SCALE_LARGE = 15;
+	private static final byte TEXT_SCALE_LARGER = 20;
+	private static final byte TEXT_SCALE_NORMAL = 13;
+	private static final byte TEXT_SCALE_SMALL = 12;
+	private static final byte TEXT_SCALE_SMALLER = 11;
+	private static final byte TEXT_SCALE_TINY = 10;
+
 	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
@@ -308,6 +315,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
 	private LabelPlacement labelPlacement;
+	private float lastTileTextScale;
 	private byte lastTileZoomLevel;
 	private ArrayList<ArrayList<ShapePaintContainer>> layer;
 	private MapPatterns mapPatterns;
@@ -399,14 +407,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			// choose the correct text paint
 			if (nameColor == AREA_NAME_BLUE) {
 				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_10,
-						PAINT_NAME_WHITE_STROKE_10));
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLUE_TINY,
+						PAINT_NAME_WHITE_STROKE_TINY));
 			} else if (nameColor == AREA_NAME_BLACK) {
 				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_15));
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_BLACK_LARGE));
 			} else if (nameColor == AREA_NAME_RED) {
 				this.areaLabels.add(new PointTextContainer(wayName, this.areaNamePositions[0],
-						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_10));
+						this.areaNamePositions[1] - nameOffset, PAINT_NAME_RED_TINY));
 			}
 		}
 	}
@@ -448,7 +456,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	private void addWayName(String wayName, Paint outline) {
 		// calculate the way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_10_CENTER.measureText(wayName) + 15;
+		this.wayNameWidth = PAINT_NAME_BLACK_TINY_CENTER.measureText(wayName) + 15;
 
 		// flag if the current way name has been rendered at least once
 		this.wayNameRendered = false;
@@ -487,11 +495,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.wayNamePath[3] = this.previousY;
 				}
 				this.wayNames.add(new WayTextContainer(this.wayNamePath, wayName,
-						PAINT_NAME_BLACK_10_CENTER));
+						PAINT_NAME_BLACK_TINY_CENTER));
 
 				if (outline != null) {
 					// draw the outline of the way name with the correct color
-					Paint paintOutline = new Paint(PAINT_NAME_WHITE_STROKE_10_CENTER);
+					Paint paintOutline = new Paint(PAINT_NAME_WHITE_STROKE_TINY_CENTER);
 					paintOutline.setColor(outline.getColor());
 					this.wayNames.add(new WayTextContainer(this.wayNamePath, wayName,
 							paintOutline));
@@ -533,11 +541,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				}
 			}
 			this.wayNames.add(new WayTextContainer(this.coordinates[0], wayName,
-					PAINT_NAME_BLACK_10_CENTER));
+					PAINT_NAME_BLACK_TINY_CENTER));
 
 			if (outline != null) {
 				// draw the outline of the way name with the correct color
-				Paint paintOutline = new Paint(PAINT_NAME_WHITE_STROKE_10_CENTER);
+				Paint paintOutline = new Paint(PAINT_NAME_WHITE_STROKE_TINY_CENTER);
 				paintOutline.setColor(outline.getColor());
 				this.wayNames.add(new WayTextContainer(this.coordinates[0], wayName,
 						paintOutline));
@@ -919,9 +927,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_HISTORIC_CIRCLE_OUTER.setColor(Color.rgb(90, 90, 90));
 		PAINT_HISTORIC_CIRCLE_OUTER.setStrokeWidth(2);
 
-		PAINT_INFO_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_INFO_BLACK_13.setTextSize(12);
-
 		PAINT_LANDUSE_ALLOTMENTS_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_ALLOTMENTS_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_ALLOTMENTS_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1021,102 +1026,83 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MILITARY_NAVAL_BASE_FILL.setColor(Color.rgb(181, 214, 241));
 		PAINT_MILITARY_PATTERN.setShader(this.mapPatterns.militaryShader);
 
-		PAINT_NAME_BLACK_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_10.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_10.setTextSize(10);
-		PAINT_NAME_BLACK_10.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_10_CENTER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_10_CENTER.setTextAlign(Align.CENTER);
-		PAINT_NAME_BLACK_10_CENTER.setTextSize(10);
-		PAINT_NAME_BLACK_10_CENTER.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_12.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_12.setTextSize(12);
-		PAINT_NAME_BLACK_12.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_13.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_13.setTextSize(13);
-		PAINT_NAME_BLACK_13.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_15.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_15.setTextSize(15);
-		PAINT_NAME_BLACK_15.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_20.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_20.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_20.setTextSize(20);
-		PAINT_NAME_BLACK_20.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLACK_25.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_25.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLACK_25.setTextSize(25);
-		PAINT_NAME_BLACK_25.setColor(Color.rgb(0, 0, 0));
-		PAINT_NAME_BLUE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLUE_10.setTextAlign(Align.LEFT);
-		PAINT_NAME_BLUE_10.setTextSize(10);
-		PAINT_NAME_BLUE_10.setColor(Color.rgb(64, 64, 254));
-		PAINT_NAME_PURPLE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_PURPLE_10.setTextAlign(Align.LEFT);
-		PAINT_NAME_PURPLE_10.setTextSize(10);
-		PAINT_NAME_PURPLE_10.setColor(Color.rgb(255, 4, 255));
-		PAINT_NAME_RED_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_10.setTextAlign(Align.LEFT);
-		PAINT_NAME_RED_10.setTextSize(10);
-		PAINT_NAME_RED_10.setColor(Color.rgb(236, 46, 46));
-		PAINT_NAME_RED_11.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_11.setTextAlign(Align.LEFT);
-		PAINT_NAME_RED_11.setTextSize(11);
-		PAINT_NAME_RED_11.setColor(Color.rgb(236, 46, 46));
-		PAINT_NAME_RED_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_13.setTextAlign(Align.LEFT);
-		PAINT_NAME_RED_13.setTextSize(13);
-		PAINT_NAME_RED_13.setColor(Color.rgb(236, 46, 46));
-		PAINT_NAME_WHITE_STROKE_10.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_10.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_10.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_10.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_10.setTextSize(10);
-		PAINT_NAME_WHITE_STROKE_10.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setTextAlign(Align.CENTER);
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setStrokeWidth(2);
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setTextSize(10);
-		PAINT_NAME_WHITE_STROKE_10_CENTER.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_11.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_11.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_11.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_11.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_11.setTextSize(11);
-		PAINT_NAME_WHITE_STROKE_11.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_12.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_12.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_12.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_12.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_12.setTextSize(12);
-		PAINT_NAME_WHITE_STROKE_12.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_13.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_13.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_13.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_13.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_13.setTextSize(13);
-		PAINT_NAME_WHITE_STROKE_13.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_15.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_15.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_15.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_15.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_15.setTextSize(15);
-		PAINT_NAME_WHITE_STROKE_15.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_20.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_20.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_20.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_20.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_20.setTextSize(20);
-		PAINT_NAME_WHITE_STROKE_20.setColor(Color.rgb(255, 255, 255));
-		PAINT_NAME_WHITE_STROKE_25.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_25.setTextAlign(Align.LEFT);
-		PAINT_NAME_WHITE_STROKE_25.setStyle(Paint.Style.STROKE);
-		PAINT_NAME_WHITE_STROKE_25.setStrokeWidth(3);
-		PAINT_NAME_WHITE_STROKE_25.setTextSize(25);
-		PAINT_NAME_WHITE_STROKE_25.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_BLACK_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_TINY.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_TINY.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_TINY_CENTER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_TINY_CENTER.setTextAlign(Align.CENTER);
+		PAINT_NAME_BLACK_TINY_CENTER.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_SMALL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_SMALL.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_SMALL.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_NORMAL.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_NORMAL.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_LARGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_LARGE.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_LARGE.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_LARGER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_LARGER.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_LARGER.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLACK_HUGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLACK_HUGE.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLACK_HUGE.setColor(Color.rgb(0, 0, 0));
+		PAINT_NAME_BLUE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_BLUE_TINY.setTextAlign(Align.LEFT);
+		PAINT_NAME_BLUE_TINY.setColor(Color.rgb(64, 64, 254));
+		PAINT_NAME_PURPLE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_PURPLE_TINY.setTextAlign(Align.LEFT);
+		PAINT_NAME_PURPLE_TINY.setColor(Color.rgb(255, 4, 255));
+		PAINT_NAME_RED_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_RED_TINY.setTextAlign(Align.LEFT);
+		PAINT_NAME_RED_TINY.setColor(Color.rgb(236, 46, 46));
+		PAINT_NAME_RED_SMALLER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_RED_SMALLER.setTextAlign(Align.LEFT);
+		PAINT_NAME_RED_SMALLER.setColor(Color.rgb(236, 46, 46));
+		PAINT_NAME_RED_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_RED_NORMAL.setTextAlign(Align.LEFT);
+		PAINT_NAME_RED_NORMAL.setColor(Color.rgb(236, 46, 46));
+		PAINT_NAME_WHITE_STROKE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_TINY.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_TINY.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_TINY.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_TINY.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTypeface(Typeface
+				.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTextAlign(Align.CENTER);
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setStrokeWidth(2);
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_SMALLER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_SMALLER.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_SMALLER.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_SMALLER.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_SMALLER.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_SMALL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_SMALL.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_SMALL.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_SMALL.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_SMALL.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_NORMAL.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_NORMAL.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_NORMAL.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_NORMAL.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_LARGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_LARGE.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_LARGE.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_LARGE.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_LARGE.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_LARGER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_LARGER.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_LARGER.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_LARGER.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_LARGER.setColor(Color.rgb(255, 255, 255));
+		PAINT_NAME_WHITE_STROKE_HUGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		PAINT_NAME_WHITE_STROKE_HUGE.setTextAlign(Align.LEFT);
+		PAINT_NAME_WHITE_STROKE_HUGE.setStyle(Paint.Style.STROKE);
+		PAINT_NAME_WHITE_STROKE_HUGE.setStrokeWidth(3);
+		PAINT_NAME_WHITE_STROKE_HUGE.setColor(Color.rgb(255, 255, 255));
 
 		PAINT_NATURAL_BEACH_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_BEACH_FILL.setStrokeJoin(Paint.Join.ROUND);
@@ -1338,12 +1324,45 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	}
 
 	/**
-	 * Sets the stroke width and dash coordinates effects of all paints.
+	 * Sets the font size of the paints according to the given text scale.
+	 * 
+	 * @param textScale
+	 *            the text scale for map rendering.
+	 */
+	private void setPaintTextSize(float textScale) {
+		PAINT_NAME_BLACK_TINY.setTextSize(TEXT_SCALE_TINY * textScale);
+		PAINT_NAME_BLACK_TINY_CENTER.setTextSize(TEXT_SCALE_TINY * textScale);
+		PAINT_NAME_BLACK_SMALL.setTextSize(TEXT_SCALE_SMALL * textScale);
+		PAINT_NAME_BLACK_NORMAL.setTextSize(TEXT_SCALE_NORMAL * textScale);
+		PAINT_NAME_BLACK_LARGE.setTextSize(TEXT_SCALE_LARGE * textScale);
+		PAINT_NAME_BLACK_LARGER.setTextSize(TEXT_SCALE_LARGER * textScale);
+		PAINT_NAME_BLACK_HUGE.setTextSize(TEXT_SCALE_HUGE * textScale);
+
+		PAINT_NAME_BLUE_TINY.setTextSize(TEXT_SCALE_TINY * textScale);
+
+		PAINT_NAME_PURPLE_TINY.setTextSize(TEXT_SCALE_TINY * textScale);
+
+		PAINT_NAME_RED_TINY.setTextSize(TEXT_SCALE_TINY * textScale);
+		PAINT_NAME_RED_SMALLER.setTextSize(TEXT_SCALE_SMALLER * textScale);
+		PAINT_NAME_RED_NORMAL.setTextSize(TEXT_SCALE_NORMAL * textScale);
+
+		PAINT_NAME_WHITE_STROKE_TINY.setTextSize(TEXT_SCALE_TINY * textScale);
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTextSize(TEXT_SCALE_TINY * textScale);
+		PAINT_NAME_WHITE_STROKE_SMALLER.setTextSize(TEXT_SCALE_SMALLER * textScale);
+		PAINT_NAME_WHITE_STROKE_SMALL.setTextSize(TEXT_SCALE_SMALL * textScale);
+		PAINT_NAME_WHITE_STROKE_NORMAL.setTextSize(TEXT_SCALE_NORMAL * textScale);
+		PAINT_NAME_WHITE_STROKE_LARGE.setTextSize(TEXT_SCALE_LARGE * textScale);
+		PAINT_NAME_WHITE_STROKE_LARGER.setTextSize(TEXT_SCALE_LARGER * textScale);
+		PAINT_NAME_WHITE_STROKE_HUGE.setTextSize(TEXT_SCALE_HUGE * textScale);
+	}
+
+	/**
+	 * Sets the stroke width and dash effects of the paints according to the given zoom level.
 	 * 
 	 * @param zoomLevel
 	 *            the zoom level for which the properties should be set.
 	 */
-	private void setPaintParameters(byte zoomLevel) {
+	private void setPaintZoomLevel(byte zoomLevel) {
 		float paintScaleFactor;
 		switch (zoomLevel) {
 			case 22:
@@ -1613,10 +1632,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	final boolean executeJob(MapGeneratorJob mapGeneratorJob) {
 		this.currentJob = mapGeneratorJob;
 		this.currentTile = mapGeneratorJob.tile;
-		// check if the paint parameters need to be set again
+
+		// check if the zoom level has changed
 		if (this.currentTile.zoomLevel != this.lastTileZoomLevel) {
-			setPaintParameters(this.currentTile.zoomLevel);
+			setPaintZoomLevel(this.currentTile.zoomLevel);
 			this.lastTileZoomLevel = this.currentTile.zoomLevel;
+		}
+
+		// check if the text scale has changed
+		if (this.currentJob.textScale != this.lastTileTextScale) {
+			setPaintTextSize(this.currentJob.textScale);
+			this.lastTileTextScale = this.currentJob.textScale;
 		}
 
 		this.database.executeQuery(this.currentTile,
@@ -1756,7 +1782,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* houseNumber */
 		if (houseNumber != null && this.currentTile.zoomLevel >= 17) {
 			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX,
-					this.currentNodeY, PAINT_NAME_BLACK_10, PAINT_NAME_WHITE_STROKE_10));
+					this.currentNodeY, PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 		}
 
 		/* aeroway */
@@ -1776,7 +1802,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.pub);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_RED_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_RED_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cinema != null
@@ -1785,7 +1811,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.cinema);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$theatre != null
@@ -1794,7 +1820,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.theatre);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fire_station != null
@@ -1803,7 +1829,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.firebrigade);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$shelter != null
@@ -1812,7 +1838,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.shelter);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$school != null
@@ -1821,7 +1847,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.school);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$university != null
@@ -1830,7 +1856,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.university);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$place_of_worship != null
@@ -1839,7 +1865,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.church);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$atm != null
@@ -1848,7 +1874,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.atm);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$library != null
@@ -1857,7 +1883,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.library);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fast_food != null
@@ -1866,7 +1892,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.fastfood);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$parking != null
@@ -1875,7 +1901,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.parking);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$hospital != null
@@ -1884,7 +1910,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.hospital);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$restaurant != null
@@ -1893,7 +1919,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.restaurant);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bank != null
@@ -1902,7 +1928,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.bank);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cafe != null
@@ -1911,7 +1937,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.cafe);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fuel != null
@@ -1920,7 +1946,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.petrolStation);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bus_station != null
@@ -1929,7 +1955,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.bus_sta);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$post_box != null
@@ -1987,8 +2013,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+				this.nodes
+						.add(new PointTextContainer(nodeName, this.currentNodeX,
+								this.currentNodeY - 8, PAINT_NAME_BLUE_TINY,
+								PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
@@ -2011,7 +2039,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.cave_entrance);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_12, PAINT_NAME_WHITE_STROKE_12));
+						this.currentNodeY, PAINT_NAME_BLACK_SMALL,
+						PAINT_NAME_WHITE_STROKE_SMALL));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.natural$peak != null
@@ -2020,14 +2049,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.peak);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_12, PAINT_NAME_WHITE_STROKE_12));
+						this.currentNodeY, PAINT_NAME_BLACK_SMALL,
+						PAINT_NAME_WHITE_STROKE_SMALL));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
 				this.nodes
 						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-								this.currentNodeY + 18, PAINT_NAME_BLACK_10,
-								PAINT_NAME_WHITE_STROKE_10));
+								this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
+								PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.natural$volcano != null
 				&& nodeTagIds[this.tagIDsNodes.natural$volcano.intValue()]) {
@@ -2035,14 +2065,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.vulcan);
 			if (nodeName != null && this.currentTile.zoomLevel >= 14) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_10, PAINT_NAME_WHITE_STROKE_11));
+						this.currentNodeY, PAINT_NAME_BLACK_TINY,
+						PAINT_NAME_WHITE_STROKE_SMALLER));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
 				this.nodes
 						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-								this.currentNodeY + 18, PAINT_NAME_BLACK_10,
-								PAINT_NAME_WHITE_STROKE_10));
+								this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
+								PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
@@ -2050,20 +2081,26 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		else if (this.tagIDsNodes.place$city != null
 				&& nodeTagIds[this.tagIDsNodes.place$city.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 14) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
+				this.nodes
+						.add(new PointTextContainer(nodeName, this.currentNodeX,
+								this.currentNodeY, PAINT_NAME_BLACK_HUGE,
+								PAINT_NAME_WHITE_STROKE_HUGE));
 			}
 		} else if (this.tagIDsNodes.place$country != null
 				&& nodeTagIds[this.tagIDsNodes.place$country.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 6) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_25, PAINT_NAME_WHITE_STROKE_25));
+				this.nodes
+						.add(new PointTextContainer(nodeName, this.currentNodeX,
+								this.currentNodeY, PAINT_NAME_BLACK_HUGE,
+								PAINT_NAME_WHITE_STROKE_HUGE));
 			}
 		} else if (this.tagIDsNodes.place$island != null
 				&& nodeTagIds[this.tagIDsNodes.place$island.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_20, PAINT_NAME_WHITE_STROKE_20));
+				this.nodes
+						.add(new PointTextContainer(nodeName, this.currentNodeX,
+								this.currentNodeY, PAINT_NAME_BLACK_LARGER,
+								PAINT_NAME_WHITE_STROKE_LARGER));
 			}
 		} else if ((this.tagIDsNodes.place$suburb != null && nodeTagIds[this.tagIDsNodes.place$suburb
 				.intValue()])
@@ -2073,7 +2110,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						.intValue()])) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLACK_15, PAINT_NAME_WHITE_STROKE_15));
+						this.currentNodeY, PAINT_NAME_BLACK_LARGE,
+						PAINT_NAME_WHITE_STROKE_LARGE));
 			}
 		}
 
@@ -2099,8 +2137,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 										PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
 					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 10, PAINT_NAME_RED_11,
-							PAINT_NAME_WHITE_STROKE_11));
+							this.currentNodeY - 10, PAINT_NAME_RED_SMALLER,
+							PAINT_NAME_WHITE_STROKE_SMALLER));
 				}
 			} else {
 				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY,
@@ -2115,7 +2153,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 										PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
 					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY, PAINT_NAME_RED_13, PAINT_NAME_WHITE_STROKE_13));
+							this.currentNodeY - 15, PAINT_NAME_RED_NORMAL,
+							PAINT_NAME_WHITE_STROKE_NORMAL));
 				}
 			}
 		} else if ((this.tagIDsNodes.railway$halt != null && nodeTagIds[this.tagIDsNodes.railway$halt
@@ -2129,7 +2168,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_RED_11, PAINT_NAME_WHITE_STROKE_11));
+						this.currentNodeY - 10, PAINT_NAME_RED_SMALLER,
+						PAINT_NAME_WHITE_STROKE_SMALLER));
 			}
 		}
 
@@ -2140,14 +2180,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.bakery);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.shop$organic != null
 				&& nodeTagIds[this.tagIDsNodes.shop$organic.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.shop$supermarket != null
 				&& nodeTagIds[this.tagIDsNodes.shop$supermarket.intValue()]) {
@@ -2155,7 +2195,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.supermarket);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		}
@@ -2168,7 +2208,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				&& nodeTagIds[this.tagIDsNodes.tourism$museum.intValue()]) {
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.tourism$hostel != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$hostel.intValue()]) {
@@ -2176,7 +2216,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.hostel);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$hotel != null
@@ -2185,14 +2225,16 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.mapSymbols.hotel);
 			if (nodeName != null) {
 				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_BLUE_10, PAINT_NAME_WHITE_STROKE_10));
+						this.currentNodeY, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$attraction != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$attraction.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY, PAINT_NAME_PURPLE_10, PAINT_NAME_WHITE_STROKE_10));
+				this.nodes
+						.add(new PointTextContainer(nodeName, this.currentNodeX,
+								this.currentNodeY, PAINT_NAME_PURPLE_TINY,
+								PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.tourism$viewpoint != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$viewpoint.intValue()]) {
@@ -3491,7 +3533,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.layer.get(LayerIds.AERIALWAY$CABLE_CAR).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AERIALWAY));
 			if (wayName != null && this.currentTile.zoomLevel >= 15) {
-				addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 			}
 			if (--this.remainingTags <= 0) {
 				return;
@@ -3507,7 +3549,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_NOVICE));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			} else if (this.tagIDsWays.piste$difficulty$easy != null
 					&& wayTagIds[this.tagIDsWays.piste$difficulty$easy.intValue()]) {
@@ -3515,7 +3557,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_EASY));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			} else if (this.tagIDsWays.piste$difficulty$intermediate != null
 					&& wayTagIds[this.tagIDsWays.piste$difficulty$intermediate.intValue()]) {
@@ -3523,7 +3565,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_INTERMEDIATE));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			} else if (this.tagIDsWays.piste$difficulty$advanced != null
 					&& wayTagIds[this.tagIDsWays.piste$difficulty$advanced.intValue()]) {
@@ -3531,7 +3573,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_ADVANCED));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			} else if (this.tagIDsWays.piste$difficulty$expert != null
 					&& wayTagIds[this.tagIDsWays.piste$difficulty$expert.intValue()]) {
@@ -3539,7 +3581,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_EXPERT));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			} else if (this.tagIDsWays.piste$difficulty$freeride != null
 					&& wayTagIds[this.tagIDsWays.piste$difficulty$freeride.intValue()]) {
@@ -3547,7 +3589,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_PISTE_TYPE_DOWNHILL_FREERIDE));
 				if (wayName != null && this.currentTile.zoomLevel > 15) {
-					addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			}
 			if (--this.remainingTags <= 0) {
@@ -3558,7 +3600,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.layer.get(LayerIds.PISTE$TYPE$NORDIC).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_PISTE_TYPE_NORDIC));
 			if (wayName != null && this.currentTile.zoomLevel > 15) {
-				addWayName(wayName, PAINT_NAME_WHITE_STROKE_10);
+				addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 			}
 			if (--this.remainingTags <= 0) {
 				return;
