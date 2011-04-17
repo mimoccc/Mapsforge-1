@@ -2070,13 +2070,13 @@ public class MapView extends ViewGroup {
 							this.drawTileCoordinates, this.highlightWaterTiles);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
-						putTileOnBitmap(this.currentJob,
-								this.tileRAMCache.get(this.currentJob), false);
+						putTileOnBitmap(this.currentJob, this.tileRAMCache.get(this.currentJob));
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
 							this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-							putTileOnBitmap(this.currentJob, this.tileBitmap, true);
+							putTileOnBitmap(this.currentJob, this.tileBitmap);
+							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
 						} else {
 							// the image data could not be read from the cache
 							this.mapGenerator.addJob(this.currentJob);
@@ -2237,11 +2237,8 @@ public class MapView extends ViewGroup {
 	 *            the job with the tile.
 	 * @param bitmap
 	 *            the bitmap to be drawn.
-	 * @param putToTileRAMCache
-	 *            true if the bitmap should be stored in the RAM cache, false otherwise.
 	 */
-	synchronized void putTileOnBitmap(MapGeneratorJob mapGeneratorJob, Bitmap bitmap,
-			boolean putToTileRAMCache) {
+	synchronized void putTileOnBitmap(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		// check if the tile and the current MapView rectangle intersect
 		if (this.mapViewPixelX - mapGeneratorJob.tile.pixelX > Tile.TILE_SIZE
 				|| this.mapViewPixelX + getWidth() < mapGeneratorJob.tile.pixelX) {
@@ -2254,11 +2251,6 @@ public class MapView extends ViewGroup {
 		} else if (mapGeneratorJob.tile.zoomLevel != this.zoomLevel) {
 			// the tile doesn't fit to the current zoom level
 			return;
-		}
-
-		// check if the bitmap should go to the image bitmap cache
-		if (putToTileRAMCache) {
-			this.tileRAMCache.put(mapGeneratorJob, bitmap);
 		}
 
 		if (!matrixIsIdentity()) {

@@ -24,7 +24,7 @@ import android.os.SystemClock;
  */
 class MapMover extends Thread {
 	private static final float MOVE_SPEED = 0.2f;
-	private static final int SLEEP_MILLISECONDS = 20;
+	private static final int SLEEP_MILLISECONDS = 15;
 	private static final String THREAD_NAME = "MapMover";
 
 	private MapView mapView;

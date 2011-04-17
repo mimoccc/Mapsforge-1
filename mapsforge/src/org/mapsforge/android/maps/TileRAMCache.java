@@ -87,8 +87,10 @@ class TileRAMCache {
 	 * @return true if the cache contains an image for the specified key, false otherwise.
 	 * @see Map#containsKey(Object)
 	 */
-	synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
-		return this.map.containsKey(mapGeneratorJob);
+	boolean containsKey(MapGeneratorJob mapGeneratorJob) {
+		synchronized (this) {
+			return this.map.containsKey(mapGeneratorJob);
+		}
 	}
 
 	/**
@@ -113,8 +115,10 @@ class TileRAMCache {
 	 * @return the data of the image.
 	 * @see Map#get(Object)
 	 */
-	synchronized Bitmap get(MapGeneratorJob mapGeneratorJob) {
-		return this.map.get(mapGeneratorJob);
+	Bitmap get(MapGeneratorJob mapGeneratorJob) {
+		synchronized (this) {
+			return this.map.get(mapGeneratorJob);
+		}
 	}
 
 	/**
@@ -124,17 +128,15 @@ class TileRAMCache {
 	 *            the data of the image that should be cached.
 	 * @see Map#put(Object, Object)
 	 */
-	synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
+	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
-			if (this.map.get(mapGeneratorJob) != null) {
-				// the item is already in the cache
-				return;
-			}
 			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 			this.bitmapBuffer.rewind();
 			this.tempBitmap = this.bitmapPool.remove();
 			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
-			this.map.put(mapGeneratorJob, this.tempBitmap);
+			synchronized (this) {
+				this.map.put(mapGeneratorJob, this.tempBitmap);
+			}
 		}
 	}
 }
