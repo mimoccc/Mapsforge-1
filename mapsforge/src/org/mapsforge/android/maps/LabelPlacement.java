@@ -467,7 +467,6 @@ class LabelPlacement {
 						refPos[y] = null;
 					}
 				}
-
 			}
 		}
 

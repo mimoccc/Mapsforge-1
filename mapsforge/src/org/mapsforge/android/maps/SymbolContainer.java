@@ -38,5 +38,4 @@ class SymbolContainer {
 		this.x = x;
 		this.y = y;
 	}
-
 }

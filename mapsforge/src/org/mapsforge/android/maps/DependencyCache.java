@@ -195,7 +195,6 @@ class DependencyCache {
 			}
 			this.depLabel.value.depCounter++;
 		}
-
 	}
 
 	private void addSymbolsFromDependencyOnTile(ArrayList<SymbolContainer> symbols) {
@@ -205,7 +204,6 @@ class DependencyCache {
 							depSmb.point.y));
 			depSmb.value.depCounter++;
 		}
-
 	}
 
 	/**
@@ -283,7 +281,6 @@ class DependencyCache {
 					toAdd.addTile(rightup);
 
 				}
-
 			}
 
 			// down
@@ -328,7 +325,6 @@ class DependencyCache {
 					toAdd.addTile(rightdown);
 
 				}
-
 			}
 			// left
 
@@ -417,7 +413,6 @@ class DependencyCache {
 						toAdd.addTile(rightup);
 
 					}
-
 				}
 
 				if ((label.symbol.y + label.symbol.symbol.getHeight() >= Tile.TILE_SIZE)
@@ -1157,7 +1152,6 @@ class DependencyCache {
 							}
 						}
 					}
-
 				}
 			}
 			if (this.currentDependencyOnTile.symbols != null) {

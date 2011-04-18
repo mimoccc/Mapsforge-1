@@ -27,7 +27,7 @@ import android.os.Bundle;
  * <p>
  * Requires the INTERNET permission to be set in the AndroidManifest.xml file.
  */
-public class TileDownloadMapViewer extends MapActivity {
+public class DownloadMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
