@@ -74,7 +74,7 @@ class TileRAMCache {
 			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
-					TileRAMCache.this.bitmapPool.add(eldest.getValue());
+					TileRAMCache.this.bitmapPool.addLast(eldest.getValue());
 				}
 				return false;
 			}
@@ -132,7 +132,7 @@ class TileRAMCache {
 		if (this.capacity > 0) {
 			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 			this.bitmapBuffer.rewind();
-			this.tempBitmap = this.bitmapPool.remove();
+			this.tempBitmap = this.bitmapPool.removeFirst();
 			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);

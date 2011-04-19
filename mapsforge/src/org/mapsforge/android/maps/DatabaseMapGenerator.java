@@ -2013,10 +2013,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
-				this.nodes
-						.add(new PointTextContainer(nodeName, this.currentNodeX,
-								this.currentNodeY - 8, PAINT_NAME_BLUE_TINY,
-								PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY - 8, PAINT_NAME_BLUE_TINY,
+						PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
@@ -2054,10 +2053,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
-				this.nodes
-						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-								this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
-								PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+						this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
+						PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.natural$volcano != null
 				&& nodeTagIds[this.tagIDsNodes.natural$volcano.intValue()]) {
@@ -2070,10 +2068,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
-				this.nodes
-						.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-								this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
-								PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
+						this.currentNodeY + 18, PAINT_NAME_BLACK_TINY,
+						PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
@@ -2097,10 +2094,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		} else if (this.tagIDsNodes.place$island != null
 				&& nodeTagIds[this.tagIDsNodes.place$island.intValue()]) {
 			if (nodeName != null) {
-				this.nodes
-						.add(new PointTextContainer(nodeName, this.currentNodeX,
-								this.currentNodeY, PAINT_NAME_BLACK_LARGER,
-								PAINT_NAME_WHITE_STROKE_LARGER));
+				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
+						this.currentNodeY, PAINT_NAME_BLACK_LARGER,
+						PAINT_NAME_WHITE_STROKE_LARGER));
 			}
 		} else if ((this.tagIDsNodes.place$suburb != null && nodeTagIds[this.tagIDsNodes.place$suburb
 				.intValue()])

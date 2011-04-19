@@ -173,14 +173,7 @@ public class MapView extends ViewGroup {
 					}
 				}
 
-				// move the map and the overlays
 				moveMap(this.moveX, this.moveY);
-				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						overlay.requestRedraw();
-					}
-				}
-
 				handleTiles(true);
 				return true;
 			} else if (this.action == MotionEvent.ACTION_UP) {
@@ -189,11 +182,6 @@ public class MapView extends ViewGroup {
 				hideZoomControlsDelayed();
 				if (this.mapMoved) {
 					this.previousEventTap = false;
-					synchronized (MapView.this.overlays) {
-						for (Overlay overlay : MapView.this.overlays) {
-							overlay.requestRedraw();
-						}
-					}
 				} else {
 					if (this.previousEventTap) {
 						// calculate the distance to the previous tap position
@@ -209,10 +197,9 @@ public class MapView extends ViewGroup {
 								&& this.tapDiffTime < this.doubleTapTimeout) {
 							// double-tap event, zoom in
 							this.previousEventTap = false;
-							setCenter(getProjection().fromPixels(
-									(int) event.getX(this.pointerIndex),
-									(int) event.getY(this.pointerIndex)));
-							zoom((byte) 1);
+							setCenter(getProjection().fromPixels((int) event.getX(),
+									(int) event.getY()));
+							zoom((byte) 1, 1);
 							return true;
 						}
 					} else {
@@ -262,7 +249,7 @@ public class MapView extends ViewGroup {
 				if (this.multiTouchTime < this.doubleTapTimeout) {
 					// multi-touch tap event, zoom out
 					this.previousEventTap = false;
-					zoom((byte) -1);
+					zoom((byte) -1, 1);
 				}
 
 				return true;
@@ -306,25 +293,16 @@ public class MapView extends ViewGroup {
 			this.scaleFactor = 1;
 			this.scaleFactorApplied = this.scaleFactor;
 
-			// save the focal point of the gesture
-			this.focusX = detector.getFocusX();
-			this.focusY = detector.getFocusY();
+			this.focusX = getWidth() >> 1;
+			this.focusY = getHeight() >> 1;
 			return true;
 		}
 
 		@Override
 		public void onScaleEnd(ScaleGestureDetector detector) {
-			if (this.scaleFactorApplied <= 0.5f || this.scaleFactorApplied >= 2) {
-				// change the zoom level according to the scale gesture
-				zoom((byte) (Math.log(this.scaleFactorApplied) / Math.log(2)));
-			} else {
-				// the gesture was too small for a zoom level change
-				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						overlay.requestRedraw();
-					}
-				}
-			}
+			// change the zoom level according to the scale gesture
+			zoom((byte) Math.round(Math.log(this.scaleFactorApplied) / Math.log(2)),
+					this.scaleFactorApplied);
 			handleTiles(true);
 		}
 	}
@@ -377,25 +355,13 @@ public class MapView extends ViewGroup {
 					}
 				}
 
-				// move the map and the overlays
 				moveMap(this.moveX, this.moveY);
-				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						overlay.requestRedraw();
-					}
-				}
-
 				handleTiles(true);
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				hideZoomControlsDelayed();
 				if (this.mapMoved) {
 					this.previousEventTap = false;
-					synchronized (MapView.this.overlays) {
-						for (Overlay overlay : MapView.this.overlays) {
-							overlay.requestRedraw();
-						}
-					}
 				} else {
 					if (this.previousEventTap) {
 						// calculate the distance to the previous tap position
@@ -411,7 +377,7 @@ public class MapView extends ViewGroup {
 							this.previousEventTap = false;
 							setCenter(getProjection().fromPixels((int) event.getX(),
 									(int) event.getY()));
-							zoom((byte) 1);
+							zoom((byte) 1, 1);
 							return true;
 						}
 					} else {
@@ -611,6 +577,7 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
+
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -765,6 +732,7 @@ public class MapView extends ViewGroup {
 	private long tileX;
 	private long tileY;
 	private TouchEventHandler touchEventHandler;
+	private ZoomAnimator zoomAnimator;
 	private ZoomControls zoomControls;
 	private Handler zoomControlsHideHandler;
 	private byte zoomLevel;
@@ -1059,11 +1027,6 @@ public class MapView extends ViewGroup {
 
 			// move the map and the overlays
 			this.moveMap(this.mapMoveX, this.mapMoveY);
-			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.requestRedraw();
-				}
-			}
 
 			handleTiles(true);
 			return true;
@@ -1127,8 +1090,9 @@ public class MapView extends ViewGroup {
 		this.mapMover.pause();
 		this.mapGenerator.pause();
 
-		waitForReadyMapMover();
-		waitForReadyMapGenerator();
+		waitForZoomAnimator();
+		waitForMapMover();
+		waitForMapGenerator();
 
 		this.mapMover.stopMove();
 		this.mapGenerator.clearJobs();
@@ -1666,6 +1630,11 @@ public class MapView extends ViewGroup {
 		this.mapMover.setMapView(this);
 		this.mapMover.start();
 
+		// create and start the ZoomAnimator thread
+		this.zoomAnimator = new ZoomAnimator();
+		this.zoomAnimator.setMapView(this);
+		this.zoomAnimator.start();
+
 		// register the MapView in the MapActivity
 		this.mapActivity.registerMapView(this);
 	}
@@ -1679,13 +1648,13 @@ public class MapView extends ViewGroup {
 		this.zoomControls.setOnZoomInClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				zoom((byte) 1);
+				zoom((byte) 1, 1);
 			}
 		});
 		this.zoomControls.setOnZoomOutClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				zoom((byte) -1);
+				zoom((byte) -1, 1);
 			}
 		});
 
@@ -1747,7 +1716,7 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private void waitForReadyMapGenerator() {
+	private void waitForMapGenerator() {
 		while (!this.mapGenerator.isReady()) {
 			try {
 				Thread.sleep(100);
@@ -1758,8 +1727,19 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private void waitForReadyMapMover() {
+	private void waitForMapMover() {
 		while (!this.mapMover.isReady()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	private void waitForZoomAnimator() {
+		while (this.zoomAnimator.isExecuting()) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -1913,6 +1893,18 @@ public class MapView extends ViewGroup {
 			this.mapMover = null;
 		}
 
+		// stop the ZoomAnimator thread
+		if (this.zoomAnimator != null) {
+			this.zoomAnimator.interrupt();
+			try {
+				this.zoomAnimator.join();
+			} catch (InterruptedException e) {
+				// restore the interrupted status
+				Thread.currentThread().interrupt();
+			}
+			this.zoomAnimator = null;
+		}
+
 		stopMapGeneratorThread();
 
 		// destroy the map controller to avoid memory leaks
@@ -2037,9 +2029,17 @@ public class MapView extends ViewGroup {
 	 *            true if called from the UI thread, false otherwise.
 	 */
 	void handleTiles(boolean calledByUiThread) {
-		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
+		if (this.getWidth() == 0) {
 			return;
-		} else if (this.getWidth() == 0) {
+		}
+
+		synchronized (this.overlays) {
+			for (Overlay overlay : this.overlays) {
+				overlay.requestRedraw();
+			}
+		}
+
+		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
 			return;
 		}
 
@@ -2253,6 +2253,11 @@ public class MapView extends ViewGroup {
 			return;
 		}
 
+		if (this.zoomAnimator.isExecuting()) {
+			// do not disturb the ongoing animation
+			return;
+		}
+
 		if (!matrixIsIdentity()) {
 			// change the current MapView bitmap
 			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
@@ -2341,7 +2346,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the center of the MapView without an animation to the given point.
+	 * Sets the center of the MapView and triggers a redraw.
 	 * 
 	 * @param point
 	 *            the new center point of the map.
@@ -2351,7 +2356,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the center and zoom level of the MapView without an animation.
+	 * Sets the center and zoom level of the MapView and triggers a redraw.
 	 * 
 	 * @param point
 	 *            the new center point of the map.
@@ -2390,16 +2395,11 @@ public class MapView extends ViewGroup {
 				}
 			}
 
-			// move the map and the overlays
+			// set the new center coordinates and the zoom level
 			synchronized (this) {
 				this.latitude = getValidLatitude(point.getLatitude());
 				this.longitude = point.getLongitude();
 				this.zoomLevel = getValidZoomLevel(zoom);
-			}
-			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.requestRedraw();
-				}
 			}
 
 			// enable or disable the zoom buttons if necessary
@@ -2477,9 +2477,11 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @param zoomLevelDiff
 	 *            the difference to the current zoom level.
+	 * @param zoomStart
+	 *            the zoom factor at the begin of the animation.
 	 * @return true if the zoom level was changed, false otherwise.
 	 */
-	boolean zoom(byte zoomLevelDiff) {
+	boolean zoom(byte zoomLevelDiff, float zoomStart) {
 		if (zoomLevelDiff > 0) {
 			// check if zoom in is possible
 			if (this.zoomLevel + zoomLevelDiff > getMaximumPossibleZoomLevel()) {
@@ -2494,35 +2496,22 @@ public class MapView extends ViewGroup {
 			this.matrixScaleFactor = 1.0f / (1 << -zoomLevelDiff);
 		} else {
 			// zoom level is unchanged
-			return false;
-		}
-
-		// scale the transformation matrices
-		matrixPostScale(this.matrixScaleFactor, this.matrixScaleFactor, getWidth() >> 1,
-				getHeight() >> 1);
-		synchronized (this.overlays) {
-			for (Overlay overlay : this.overlays) {
-				overlay.matrixPostScale(this.matrixScaleFactor, this.matrixScaleFactor,
-						getWidth() >> 1, getHeight() >> 1);
-			}
+			this.matrixScaleFactor = 1;
 		}
 
 		// change the zoom level
 		synchronized (this) {
 			this.zoomLevel += zoomLevelDiff;
 		}
-		synchronized (this.overlays) {
-			for (Overlay overlay : this.overlays) {
-				overlay.requestRedraw();
-			}
-		}
 
 		// enable or disable the zoom buttons if necessary
 		this.zoomControls.setIsZoomInEnabled(this.zoomLevel < getMaximumPossibleZoomLevel());
 		this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
-
 		hideZoomControlsDelayed();
-		handleTiles(true);
+
+		this.zoomAnimator.setParameters(zoomStart, this.matrixScaleFactor, getWidth() >> 1,
+				getHeight() >> 1);
+		this.zoomAnimator.startAnimation();
 		return true;
 	}
 }

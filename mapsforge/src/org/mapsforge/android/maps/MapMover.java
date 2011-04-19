@@ -51,8 +51,8 @@ class MapMover extends Thread {
 						interrupt();
 					}
 				}
+				this.ready = false;
 			}
-			this.ready = false;
 
 			if (isInterrupted()) {
 				break;
