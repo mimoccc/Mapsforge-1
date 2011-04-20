@@ -22,7 +22,7 @@ package org.mapsforge.android.maps;
  */
 class ZoomAnimator extends Thread {
 	private static final int DEFAULT_DURATION = 300;
-	private static final int SLEEP_MILLISECONDS = 20;
+	private static final int SLEEP_MILLISECONDS = 15;
 	private static final String THREAD_NAME = "ZoomAnimator";
 
 	private int currentFrame;

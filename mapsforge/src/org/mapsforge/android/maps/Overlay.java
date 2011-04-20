@@ -286,16 +286,12 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Draws the overlay on top of the map. This will be called by the MapView.
+	 * Draws the overlay on the given canvas.
 	 * 
 	 * @param canvas
-	 *            the canvas the overlay will be drawn onto.
-	 * @param mapView
-	 *            the calling MapView.
-	 * @param shadow
-	 *            true if the shadow layer should be drawn, false otherwise.
+	 *            the canvas on which the overlay should be drawn.
 	 */
-	final void draw(Canvas canvas, MapView mapView, boolean shadow) {
+	final void draw(Canvas canvas) {
 		synchronized (this.matrix) {
 			canvas.drawBitmap(this.overlayBitmap1, this.matrix, null);
 		}

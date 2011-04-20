@@ -303,7 +303,6 @@ public class MapView extends ViewGroup {
 			// change the zoom level according to the scale gesture
 			zoom((byte) Math.round(Math.log(this.scaleFactorApplied) / Math.log(2)),
 					this.scaleFactorApplied);
-			handleTiles(true);
 		}
 	}
 
@@ -1779,7 +1778,7 @@ public class MapView extends ViewGroup {
 		// draw the overlays
 		synchronized (this.overlays) {
 			for (Overlay overlay : this.overlays) {
-				overlay.draw(canvas, this, false);
+				overlay.draw(canvas);
 			}
 		}
 
