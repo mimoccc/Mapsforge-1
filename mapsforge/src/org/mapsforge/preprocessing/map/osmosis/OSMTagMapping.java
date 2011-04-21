@@ -116,6 +116,10 @@ final class OSMTagMapping {
 				LOGGER.finest("adding poi: " + osmTag);
 				stringToPoiTag.put(osmTag.tagKey(), osmTag);
 				idToPoiTag.put(poiID, osmTag);
+
+				// also fill optimization mapping with identity
+				optimizedPoiIds.put(poiID, poiID);
+
 				poiID++;
 			}
 
@@ -146,6 +150,10 @@ final class OSMTagMapping {
 				LOGGER.finest("adding way: " + osmTag);
 				stringToWayTag.put(osmTag.tagKey(), osmTag);
 				idToWayTag.put(wayID, osmTag);
+
+				// also fill optimization mapping with identity
+				optimizedWayIds.put(wayID, wayID);
+
 				wayID++;
 			}
 
@@ -209,6 +217,7 @@ final class OSMTagMapping {
 	}
 
 	void optimizePoiOrdering(TShortIntHashMap histogram) {
+		optimizedPoiIds.clear();
 		final TreeSet<HistogramEntry> poiOrdering = new TreeSet<OSMTagMapping.HistogramEntry>();
 
 		histogram.forEachEntry(new TShortIntProcedure() {
@@ -233,6 +242,7 @@ final class OSMTagMapping {
 	}
 
 	void optimizeWayOrdering(TShortIntHashMap histogram) {
+		optimizedWayIds.clear();
 		final TreeSet<HistogramEntry> wayOrdering = new TreeSet<OSMTagMapping.HistogramEntry>();
 
 		histogram.forEachEntry(new TShortIntProcedure() {

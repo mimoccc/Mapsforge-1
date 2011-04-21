@@ -170,7 +170,14 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		List<TDWay> innerways = new ArrayList<TileData.TDWay>();
 		TLongIterator it = innerwayIDs.iterator();
 		while (it.hasNext()) {
-			TDWay innerWay = TDWay.fromWay(wayIndexReader.get(it.next()), this);
+			TDWay innerWay = null;
+			long id = it.next();
+			try {
+				innerWay = TDWay.fromWay(wayIndexReader.get(id), this);
+			} catch (NoSuchIndexElementException e) {
+				LOGGER.finer("multipolygon with rel-id " + outerWayID
+						+ " references non-existing inner way " + id);
+			}
 			if (innerWay != null)
 				innerways.add(innerWay);
 		}
@@ -232,7 +239,13 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		TLongIterator it = coastlines.iterator();
 		HashSet<TDWay> coastlinesAsTDWay = new HashSet<TileData.TDWay>(coastlines.size());
 		while (it.hasNext()) {
-			TDWay tdWay = TDWay.fromWay(wayIndexReader.get(it.next()), this);
+			long id = it.next();
+			TDWay tdWay = null;
+			try {
+				tdWay = TDWay.fromWay(wayIndexReader.get(id), this);
+			} catch (NoSuchIndexElementException e) {
+				LOGGER.finer("coastline way non-existing" + id);
+			}
 			if (tdWay != null)
 				coastlinesAsTDWay.add(tdWay);
 		}
@@ -369,7 +382,13 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 		it = hdt.getWays().iterator();
 		while (it.hasNext()) {
-			TDWay way = TDWay.fromWay(wayIndexReader.get(it.next()), HDTileBasedDataStore.this);
+			TDWay way = null;
+			long id = it.next();
+			try {
+				way = TDWay.fromWay(wayIndexReader.get(id), HDTileBasedDataStore.this);
+			} catch (NoSuchIndexElementException e) {
+				LOGGER.finer("referenced way non-existing" + id);
+			}
 			if (way == null)
 				continue;
 			if (!innerWayTracker.get(way.getId())) {
