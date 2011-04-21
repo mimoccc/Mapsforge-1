@@ -97,6 +97,7 @@ public interface IPersistenceManager extends IPoiQuery {
 	 * insert/remove/search points of interest and categories. This should be called as soon as
 	 * you are done working with this {@link IPersistenceManager} instance.
 	 */
+	@Override
 	public void close();
 
 	/**

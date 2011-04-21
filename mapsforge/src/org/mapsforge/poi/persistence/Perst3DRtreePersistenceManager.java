@@ -40,10 +40,12 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 			this.iterator = iterator;
 		}
 
+		@Override
 		public boolean hasNext() {
 			return iterator.hasNext();
 		}
 
+		@Override
 		public PackEntry<RtreeBox, PerstPoi> next() {
 			if (!iterator.hasNext()) {
 				return null;
@@ -58,6 +60,7 @@ class Perst3DRtreePersistenceManager extends AbstractPerstPersistenceManager<Poi
 			return new PackEntry<RtreeBox, PerstPoi>(box, poi);
 		}
 
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

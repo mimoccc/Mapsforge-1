@@ -47,10 +47,12 @@ public class MultiRtreePersistenceManager extends
 			this.iterator = iterator;
 		}
 
+		@Override
 		public boolean hasNext() {
 			return iterator.hasNext();
 		}
 
+		@Override
 		public PackEntry<Rect, PerstPoi> next() {
 			if (!iterator.hasNext()) {
 				return null;
@@ -63,6 +65,7 @@ public class MultiRtreePersistenceManager extends
 					poi.longitude), poi);
 		}
 
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

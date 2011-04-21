@@ -78,6 +78,7 @@ class Rtree2DIndex<T extends IPersistent> extends PersistentCollection<T> implem
 			}
 		}
 
+		@Override
 		public boolean hasNext() {
 			while (true) {
 				Neighbor neighbor = list;
@@ -97,6 +98,7 @@ class Rtree2DIndex<T extends IPersistent> extends PersistentCollection<T> implem
 			}
 		}
 
+		@Override
 		public E next() {
 			if (!hasNext()) {
 				throw new NoSuchElementException();
@@ -112,10 +114,12 @@ class Rtree2DIndex<T extends IPersistent> extends PersistentCollection<T> implem
 			return (E) db.getObjectByOID(oid);
 		}
 
+		@Override
 		public int nextOid() {
 			return getStorage().getOid(next());
 		}
 
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

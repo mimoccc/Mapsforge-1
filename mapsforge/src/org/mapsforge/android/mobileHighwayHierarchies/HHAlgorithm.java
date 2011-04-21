@@ -212,61 +212,6 @@ final class HHAlgorithm {
 		}
 	}
 
-	private void expandEdgeRecursiveByHopIndices(int src, int tgt, LinkedList<HHEdge> buff,
-			boolean fwd) throws IOException {
-		HHVertex s = graph.getVertex(src);
-		HHVertex t = graph.getVertex(tgt);
-		HHEdge e = extractEdge(s, t, fwd);
-
-		// if edge belongs to level 0, recursion anchor is reached!
-		if (e.minLevel == 0) {
-			if (s.getLevel() > 0) {
-				HHVertex s_ = graph.getVertex(s.vertexIds[0]);
-				HHVertex t_ = graph.getVertex(t.vertexIds[0]);
-				if (fwd) {
-					graph.releaseEdge(e);
-					e = extractEdge(s_, t_, true);
-					buff.addFirst(e);
-				} else {
-					graph.releaseEdge(e);
-					e = extractEdge(t_, s_, true);
-					buff.addLast(e);
-				}
-				graph.releaseVertex(s_);
-				graph.releaseVertex(t_);
-			} else if (fwd) {
-				buff.addFirst(e);
-			} else {
-				graph.releaseEdge(e);
-				e = extractEdge(t, s, true);
-				buff.addLast(e);
-			}
-			graph.releaseVertex(s);
-			graph.releaseVertex(t);
-			return;
-		}
-
-		// edge is shortcut, expand it
-		HHVertex v = graph.getVertex(s.vertexIds[e.minLevel - 1]);
-		for (int i = 0; i < e.hopIndices.length; i++) {
-			HHEdge[] adjEdges = graph.getOutboundEdges(v);
-			int hopIdx = e.hopIndices[i];
-			expandEdgeRecursiveByHopIndices(v.vertexIds[v.getLevel()],
-					adjEdges[hopIdx].targetId,
-					buff,
-					fwd);
-			graph.releaseVertex(v);
-			v = graph.getVertex(adjEdges[hopIdx].targetId);
-			for (int j = 0; j < adjEdges.length; j++) {
-				graph.releaseEdge(adjEdges[j]);
-			}
-		}
-		graph.releaseVertex(s);
-		graph.releaseVertex(t);
-		graph.releaseVertex(v);
-		graph.releaseEdge(e);
-	}
-
 	private void expandEdgeRecursiveDijkstra(int src, int tgt, LinkedList<HHEdge> buff,
 			boolean fwd)
 			throws IOException {
