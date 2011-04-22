@@ -227,6 +227,11 @@ public abstract class Overlay extends Thread {
 					.getMapCenter(), this.positionAfterDraw, this.zoomLevelBeforeDraw);
 		}
 
+		if (this.internalMapView.getZoomAnimator().isExecuting()) {
+			// do not disturb the ongoing animation
+			return;
+		}
+
 		// adjust the transformation matrix of the overlay
 		synchronized (this.matrix) {
 			this.matrix.reset();

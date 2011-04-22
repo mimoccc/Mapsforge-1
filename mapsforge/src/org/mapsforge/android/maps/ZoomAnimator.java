@@ -16,6 +16,8 @@
  */
 package org.mapsforge.android.maps;
 
+import android.os.SystemClock;
+
 /**
  * A ZoomAnimator handles the zoom-in and zoom-out animations of the corresponding MapView. It
  * runs in a separate thread to avoid blocking the UI thread.
@@ -25,16 +27,19 @@ class ZoomAnimator extends Thread {
 	private static final int SLEEP_MILLISECONDS = 15;
 	private static final String THREAD_NAME = "ZoomAnimator";
 
-	private int currentFrame;
-	private float currentProgress;
 	private float currentZoom;
 	private int duration;
 	private boolean executeAnimation;
 	private MapView mapView;
-	private int numberOfFrames;
 	private float pivotX;
 	private float pivotY;
-	private float progressPerFrame;
+	private float scaleFactor;
+	private float scaleFactorApplied;
+	private long timeCurrent;
+	private long timeElapsed;
+	private float timeElapsedPercent;
+	private long timeStart;
+	private float zoomDifference;
 	private float zoomEnd;
 	private float zoomStart;
 
@@ -65,32 +70,21 @@ class ZoomAnimator extends Thread {
 				break;
 			}
 
-			// calculate the scale for the current frame
-			this.currentProgress = (this.currentZoom + this.progressPerFrame)
-					/ this.currentZoom;
-			this.currentZoom += this.progressPerFrame;
+			// calculate the elapsed time
+			this.timeCurrent = SystemClock.uptimeMillis();
+			this.timeElapsed = this.timeCurrent - this.timeStart;
+			this.timeElapsedPercent = Math.min(1, this.timeElapsed / (float) this.duration);
 
-			// set the current scale of the transformation matrices
-			this.mapView.matrixPostScale(this.currentProgress, this.currentProgress,
-					this.pivotX, this.pivotY);
-			synchronized (this.mapView.overlays) {
-				for (Overlay overlay : this.mapView.overlays) {
-					overlay.matrixPostScale(this.currentProgress, this.currentProgress,
-							this.pivotX, this.pivotY);
-				}
-			}
+			// calculate the zoom and scale values at the current moment
+			this.currentZoom = this.zoomStart + this.timeElapsedPercent * this.zoomDifference;
+			this.scaleFactor = this.currentZoom / this.scaleFactorApplied;
+			this.scaleFactorApplied *= this.scaleFactor;
+			this.mapView.matrixPostScale(this.scaleFactor, this.scaleFactor, this.pivotX,
+					this.pivotY);
 
-			// increase the frame counter
-			++this.currentFrame;
-
-			// check if the last frame of the animation has been reached
-			if (this.currentFrame >= this.numberOfFrames) {
+			// check if the animation time is over
+			if (this.timeElapsed >= this.duration) {
 				this.executeAnimation = false;
-				synchronized (this.mapView.overlays) {
-					for (Overlay overlay : this.mapView.overlays) {
-						overlay.requestRedraw();
-					}
-				}
 				this.mapView.handleTiles(false);
 			} else {
 				this.mapView.postInvalidate();
@@ -129,7 +123,6 @@ class ZoomAnimator extends Thread {
 			throw new IllegalArgumentException();
 		}
 		this.duration = duration;
-		this.numberOfFrames = this.duration / SLEEP_MILLISECONDS;
 	}
 
 	/**
@@ -165,10 +158,10 @@ class ZoomAnimator extends Thread {
 	 * Starts a zoom animation with the current parameters.
 	 */
 	void startAnimation() {
-		this.currentFrame = 0;
-		this.currentZoom = this.zoomStart;
-		this.progressPerFrame = (this.zoomEnd - this.zoomStart) / this.numberOfFrames;
+		this.zoomDifference = this.zoomEnd - this.zoomStart;
+		this.scaleFactorApplied = this.zoomStart;
 		this.executeAnimation = true;
+		this.timeStart = SystemClock.uptimeMillis();
 		synchronized (this) {
 			notify();
 		}

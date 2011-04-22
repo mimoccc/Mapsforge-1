@@ -165,14 +165,7 @@ public class MapView extends ViewGroup {
 				this.previousPositionX = event.getX(this.pointerIndex);
 				this.previousPositionY = event.getY(this.pointerIndex);
 
-				// add the movement to the transformation matrices
 				matrixPostTranslate(this.moveX, this.moveY);
-				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						overlay.matrixPostTranslate(this.moveX, this.moveY);
-					}
-				}
-
 				moveMap(this.moveX, this.moveY);
 				handleTiles(true);
 				return true;
@@ -277,12 +270,6 @@ public class MapView extends ViewGroup {
 			this.scaleFactor = detector.getScaleFactor();
 			this.scaleFactorApplied *= this.scaleFactor;
 			matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX, this.focusY);
-			synchronized (MapView.this.overlays) {
-				for (Overlay overlay : MapView.this.overlays) {
-					overlay.matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX,
-							this.focusY);
-				}
-			}
 			invalidate();
 			return true;
 		}
@@ -346,14 +333,7 @@ public class MapView extends ViewGroup {
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
 
-				// add the movement to the transformation matrices
 				matrixPostTranslate(this.moveX, this.moveY);
-				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						overlay.matrixPostTranslate(this.moveX, this.moveY);
-					}
-				}
-
 				moveMap(this.moveX, this.moveY);
 				handleTiles(true);
 				return true;
@@ -1016,17 +996,8 @@ public class MapView extends ViewGroup {
 			this.mapMoveX = event.getX() * (TRACKBALL_MOVE_SPEED * this.moveSpeedFactor);
 			this.mapMoveY = event.getY() * (TRACKBALL_MOVE_SPEED * this.moveSpeedFactor);
 
-			// add the movement to the transformation matrices
 			matrixPostTranslate(this.mapMoveX, this.mapMoveY);
-			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.matrixPostTranslate(this.mapMoveX, this.mapMoveY);
-				}
-			}
-
-			// move the map and the overlays
-			this.moveMap(this.mapMoveX, this.mapMoveY);
-
+			moveMap(this.mapMoveX, this.mapMoveY);
 			handleTiles(true);
 			return true;
 		}
@@ -1773,12 +1744,11 @@ public class MapView extends ViewGroup {
 		// draw the map
 		synchronized (this.matrix) {
 			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-		}
-
-		// draw the overlays
-		synchronized (this.overlays) {
-			for (Overlay overlay : this.overlays) {
-				overlay.draw(canvas);
+			// draw the overlays
+			synchronized (this.overlays) {
+				for (Overlay overlay : this.overlays) {
+					overlay.draw(canvas);
+				}
 			}
 		}
 
@@ -2022,6 +1992,15 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the ZoomAnimator of this MapView.
+	 * 
+	 * @return the ZoomAnimator of this MapView.
+	 */
+	ZoomAnimator getZoomAnimator() {
+		return this.zoomAnimator;
+	}
+
+	/**
 	 * Calculates all necessary tiles and adds jobs accordingly.
 	 * 
 	 * @param calledByUiThread
@@ -2155,6 +2134,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Scales the matrix of the MapView and all its overlays.
+	 * 
 	 * @param sx
 	 *            the horizontal scale.
 	 * @param sy
@@ -2167,10 +2148,17 @@ public class MapView extends ViewGroup {
 	void matrixPostScale(float sx, float sy, float px, float py) {
 		synchronized (this.matrix) {
 			this.matrix.postScale(sx, sy, px, py);
+			synchronized (MapView.this.overlays) {
+				for (Overlay overlay : MapView.this.overlays) {
+					overlay.matrixPostScale(sx, sy, px, py);
+				}
+			}
 		}
 	}
 
 	/**
+	 * Translates the matrix of the MapView and all its overlays.
+	 * 
 	 * @param dx
 	 *            the horizontal translation.
 	 * @param dy
@@ -2179,6 +2167,11 @@ public class MapView extends ViewGroup {
 	void matrixPostTranslate(float dx, float dy) {
 		synchronized (this.matrix) {
 			this.matrix.postTranslate(dx, dy);
+			synchronized (MapView.this.overlays) {
+				for (Overlay overlay : MapView.this.overlays) {
+					overlay.matrixPostTranslate(dx, dy);
+				}
+			}
 		}
 	}
 
@@ -2383,15 +2376,7 @@ public class MapView extends ViewGroup {
 							this.latitude, this.zoomLevel) - MercatorProjection
 							.latitudeToPixelY(point.getLatitude(), this.zoomLevel));
 				}
-
-				// add the movement to the transformation matrices
 				matrixPostTranslate(this.matrixTranslateX, this.matrixTranslateY);
-				synchronized (this.overlays) {
-					for (Overlay overlay : this.overlays) {
-						overlay.matrixPostTranslate(this.matrixTranslateX,
-								this.matrixTranslateY);
-					}
-				}
 			}
 
 			// set the new center coordinates and the zoom level
