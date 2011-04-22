@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -98,6 +97,12 @@ final class OSMTagMapping {
 				String key = attributes.getNamedItem("key").getTextContent();
 				String value = attributes.getNamedItem("value").getTextContent();
 
+				String[] equivalentValues = null;
+				if (attributes.getNamedItem("equivalent-values") != null) {
+					equivalentValues = attributes.getNamedItem("equivalent-values")
+							.getTextContent().split(",");
+				}
+
 				Byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear
 						: Byte.parseByte(attributes.getNamedItem("zoom-appear")
 								.getTextContent());
@@ -115,6 +120,11 @@ final class OSMTagMapping {
 				}
 				LOGGER.finest("adding poi: " + osmTag);
 				stringToPoiTag.put(osmTag.tagKey(), osmTag);
+				if (equivalentValues != null) {
+					for (String equivalentValue : equivalentValues) {
+						stringToPoiTag.put(OSMTag.tagKey(key, equivalentValue), osmTag);
+					}
+				}
 				idToPoiTag.put(poiID, osmTag);
 
 				// also fill optimization mapping with identity
@@ -131,6 +141,12 @@ final class OSMTagMapping {
 				NamedNodeMap attributes = ways.item(i).getAttributes();
 				String key = attributes.getNamedItem("key").getTextContent();
 				String value = attributes.getNamedItem("value").getTextContent();
+
+				String[] equivalentValues = null;
+				if (attributes.getNamedItem("equivalent-values") != null) {
+					equivalentValues = attributes.getNamedItem("equivalent-values")
+							.getTextContent().split(",");
+				}
 
 				Byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear
 						: Byte.parseByte(attributes.getNamedItem("zoom-appear")
@@ -149,6 +165,11 @@ final class OSMTagMapping {
 				}
 				LOGGER.finest("adding way: " + osmTag);
 				stringToWayTag.put(osmTag.tagKey(), osmTag);
+				if (equivalentValues != null) {
+					for (String equivalentValue : equivalentValues) {
+						stringToWayTag.put(OSMTag.tagKey(key, equivalentValue), osmTag);
+					}
+				}
 				idToWayTag.put(wayID, osmTag);
 
 				// also fill optimization mapping with identity
@@ -174,13 +195,13 @@ final class OSMTagMapping {
 		}
 	}
 
-	Map<String, OSMTag> poiMapping() {
-		return stringToPoiTag;
-	}
-
-	Map<String, OSMTag> wayMapping() {
-		return stringToWayTag;
-	}
+	// Map<String, OSMTag> poiMapping() {
+	// return stringToPoiTag;
+	// }
+	//
+	// Map<String, OSMTag> wayMapping() {
+	// return stringToWayTag;
+	// }
 
 	OSMTag getWayTag(String key, String value) {
 		return stringToWayTag.get(OSMTag.tagKey(key, value));

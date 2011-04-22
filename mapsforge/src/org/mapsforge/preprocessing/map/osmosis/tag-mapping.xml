@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tag-mapping xmlns="http://mapsforge.org/tag-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<tag-mapping xmlns="http://mapsforge.org/tag-mapping"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://mapsforge.org/tag-mapping tag-mapping.xsd"
 	default-zoom-appear="16" profile-name="default-profile">
 
@@ -294,6 +295,10 @@
 
 	<!-- OTHER TAGS -->
 	<ways>
+		<osm-tag key="oneway" value="yes" equivalent-attributes="1,true" />
+		<osm-tag key="oneway" value="-1" />
+		<osm-tag key="oneway" value="no" equivalent-attributes="0,false" />
+		<osm-tag key="area" value="yes" renderable="false" />
 		<osm-tag key="barrier" value="fence" zoom-appear="16" />
 		<osm-tag key="barrier" value="wall" zoom-appear="17" />
 
@@ -312,15 +317,14 @@
 
 	<!-- NOT TO RENDER -->
 	<ways>
-		<osm-tag key="area" value="yes" renderable="false" />
-
 		<osm-tag key="boundary" value="administrative" renderable="false" />
 
 		<osm-tag key="bridge" value="yes" renderable="false" />
 
 		<osm-tag key="piste:difficulty" value="novice" renderable="false" />
 		<osm-tag key="piste:difficulty" value="easy" renderable="false" />
-		<osm-tag key="piste:difficulty" value="intermediate" renderable="false" />
+		<osm-tag key="piste:difficulty" value="intermediate"
+			renderable="false" />
 		<osm-tag key="piste:difficulty" value="advanced" renderable="false" />
 		<osm-tag key="piste:difficulty" value="expert" renderable="false" />
 		<osm-tag key="piste:difficulty" value="freeride" renderable="false" />
