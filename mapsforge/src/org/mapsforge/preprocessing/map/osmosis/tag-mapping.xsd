@@ -82,7 +82,7 @@
     			</documentation>
     		</annotation>
     	</attribute>
-    	<attribute name="equivalent-attributes" type="string" use="optional">
+    	<attribute name="equivalent-values" type="string" use="optional">
     		<annotation>
     			<documentation>The usage of some tags such as "oneway" is quite inconsistent in the OSM dataset. Expressions such as "oneway=yes", "oneway=1" or oneway="true" are semantically equivalent.
 This attribute allows to associate these equivalent values to the single canonical value defined in the "value-attribute".</documentation>

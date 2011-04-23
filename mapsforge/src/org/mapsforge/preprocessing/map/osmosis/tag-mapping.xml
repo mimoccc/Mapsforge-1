@@ -295,10 +295,6 @@
 
 	<!-- OTHER TAGS -->
 	<ways>
-		<osm-tag key="oneway" value="yes" equivalent-attributes="1,true" />
-		<osm-tag key="oneway" value="-1" />
-		<osm-tag key="oneway" value="no" equivalent-attributes="0,false" />
-		<osm-tag key="area" value="yes" renderable="false" />
 		<osm-tag key="barrier" value="fence" zoom-appear="16" />
 		<osm-tag key="barrier" value="wall" zoom-appear="17" />
 
@@ -317,6 +313,12 @@
 
 	<!-- NOT TO RENDER -->
 	<ways>
+		<osm-tag key="oneway" value="yes" equivalent-values="1,true"
+			renderable="false" />
+		<osm-tag key="oneway" value="-1" renderable="false" />
+		<osm-tag key="oneway" value="no" equivalent-values="0,false"
+			renderable="false" />
+		<osm-tag key="area" value="yes" renderable="false" />
 		<osm-tag key="boundary" value="administrative" renderable="false" />
 
 		<osm-tag key="bridge" value="yes" renderable="false" />
