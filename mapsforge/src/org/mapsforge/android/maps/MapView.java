@@ -1687,34 +1687,40 @@ public class MapView extends ViewGroup {
 	}
 
 	private void waitForMapGenerator() {
-		while (!this.mapGenerator.isReady()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
+		synchronized (this) {
+			while (!this.mapGenerator.isReady()) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					Thread.currentThread().interrupt();
+				}
 			}
 		}
 	}
 
 	private void waitForMapMover() {
-		while (!this.mapMover.isReady()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
+		synchronized (this) {
+			while (!this.mapMover.isReady()) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					Thread.currentThread().interrupt();
+				}
 			}
 		}
 	}
 
 	private void waitForZoomAnimator() {
-		while (this.zoomAnimator.isExecuting()) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				Thread.currentThread().interrupt();
+		synchronized (this) {
+			while (this.zoomAnimator.isExecuting()) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					Thread.currentThread().interrupt();
+				}
 			}
 		}
 	}
@@ -1804,17 +1810,14 @@ public class MapView extends ViewGroup {
 			this.mapViewBitmap2.recycle();
 		}
 
-		// check if the new size is positive
+		// check if the new dimensions are positive
 		if (w > 0 && h > 0) {
 			// calculate how many tiles are needed to fill the MapView completely
-			this.numberOfTiles = ((getWidth() / Tile.TILE_SIZE) + 1)
-					* ((getHeight() / Tile.TILE_SIZE) + 1);
+			this.numberOfTiles = ((w / Tile.TILE_SIZE) + 1) * ((h / Tile.TILE_SIZE) + 1);
 
 			// create the new MapView bitmaps
-			this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(),
-					Bitmap.Config.RGB_565);
-			this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(),
-					Bitmap.Config.RGB_565);
+			this.mapViewBitmap1 = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+			this.mapViewBitmap2 = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
 
 			// create the canvas
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
@@ -1824,7 +1827,7 @@ public class MapView extends ViewGroup {
 			// set up the overlays
 			synchronized (this.overlays) {
 				for (Overlay overlay : this.overlays) {
-					overlay.setupOverlay(this);
+					overlay.onSizeChanged();
 				}
 			}
 		}

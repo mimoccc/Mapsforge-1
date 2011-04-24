@@ -23,8 +23,8 @@ import android.os.SystemClock;
  * separate thread to avoid blocking the UI thread.
  */
 class MapMover extends Thread {
+	private static final int FRAME_LENGTH = 15;
 	private static final float MOVE_SPEED = 0.2f;
-	private static final int SLEEP_MILLISECONDS = 15;
 	private static final String THREAD_NAME = "MapMover";
 
 	private MapView mapView;
@@ -82,11 +82,13 @@ class MapMover extends Thread {
 			}
 
 			this.mapView.handleTiles(false);
-			try {
-				sleep(SLEEP_MILLISECONDS);
-			} catch (InterruptedException e) {
-				// restore the interrupted status
-				interrupt();
+			synchronized (this) {
+				try {
+					wait(FRAME_LENGTH);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					interrupt();
+				}
 			}
 		}
 
@@ -99,7 +101,7 @@ class MapMover extends Thread {
 	 * 
 	 * @return true if the MapMover is not working, false otherwise.
 	 */
-	boolean isReady() {
+	synchronized boolean isReady() {
 		return this.ready;
 	}
 

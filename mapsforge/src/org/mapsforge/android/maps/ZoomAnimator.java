@@ -24,7 +24,7 @@ import android.os.SystemClock;
  */
 class ZoomAnimator extends Thread {
 	private static final int DEFAULT_DURATION = 300;
-	private static final int SLEEP_MILLISECONDS = 15;
+	private static final int FRAME_LENGTH = 15;
 	private static final String THREAD_NAME = "ZoomAnimator";
 
 	private float currentZoom;
@@ -88,11 +88,13 @@ class ZoomAnimator extends Thread {
 				this.mapView.handleTiles(false);
 			} else {
 				this.mapView.postInvalidate();
-				try {
-					sleep(SLEEP_MILLISECONDS);
-				} catch (InterruptedException e) {
-					// restore the interrupted status
-					interrupt();
+				synchronized (this) {
+					try {
+						wait(FRAME_LENGTH);
+					} catch (InterruptedException e) {
+						// restore the interrupted status
+						interrupt();
+					}
 				}
 			}
 		}

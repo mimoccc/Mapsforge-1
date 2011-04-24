@@ -153,6 +153,11 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 
 		this.numberOfCircles = size();
 		for (int circleIndex = 0; circleIndex < this.numberOfCircles; ++circleIndex) {
+			if (isInterrupted() || sizeHasChanged()) {
+				// stop working
+				return;
+			}
+
 			// get the current circle
 			this.overlayCircle = createCircle(circleIndex);
 			if (this.overlayCircle == null) {

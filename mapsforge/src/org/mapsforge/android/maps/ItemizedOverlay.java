@@ -185,6 +185,11 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 		this.numberOfItems = size();
 		for (int itemIndex = 0; itemIndex < this.numberOfItems; ++itemIndex) {
+			if (isInterrupted() || sizeHasChanged()) {
+				// stop working
+				return;
+			}
+
 			// get the current item
 			this.overlayItem = createItem(itemIndex);
 			if (this.overlayItem == null) {

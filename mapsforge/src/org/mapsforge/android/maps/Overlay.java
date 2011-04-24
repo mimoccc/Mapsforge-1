@@ -37,9 +37,14 @@ public abstract class Overlay extends Thread {
 	private static final String THREAD_NAME = "Overlay";
 
 	/**
-	 * Flag to indicate if this overlay is set up and ready to work.
+	 * Flag which is set whenever the MapView dimensions have been changed.
 	 */
-	private boolean isSetUp;
+	private boolean changeSize;
+
+	/**
+	 * Flag to indicate if the overlay has a positive width and height.
+	 */
+	private boolean hasValidDimensions;
 
 	/**
 	 * A cached reference to the MapView projection.
@@ -120,7 +125,6 @@ public abstract class Overlay extends Thread {
 	 * Default constructor which must be called by all subclasses.
 	 */
 	protected Overlay() {
-		this.isSetUp = false;
 		this.matrix = new Matrix();
 		this.point = new Point();
 		this.positionBeforeDraw = new Point();
@@ -146,8 +150,8 @@ public abstract class Overlay extends Thread {
 	 * Requests a redraw of the overlay.
 	 */
 	public final void requestRedraw() {
-		this.redraw = true;
 		synchronized (this) {
+			this.redraw = true;
 			notify();
 		}
 	}
@@ -158,7 +162,7 @@ public abstract class Overlay extends Thread {
 
 		while (!isInterrupted()) {
 			synchronized (this) {
-				while (!isInterrupted() && (!this.redraw)) {
+				while (!isInterrupted() && !this.changeSize && !this.redraw) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
@@ -172,8 +176,11 @@ public abstract class Overlay extends Thread {
 				break;
 			}
 
-			this.redraw = false;
-			if (this.isSetUp) {
+			if (this.changeSize) {
+				changeSize();
+			}
+
+			if (this.redraw) {
 				redraw();
 			}
 		}
@@ -199,6 +206,13 @@ public abstract class Overlay extends Thread {
 	 * Redraws the overlay.
 	 */
 	private void redraw() {
+		this.redraw = false;
+
+		if (!this.hasValidDimensions) {
+			// there is no area to draw on
+			return;
+		}
+
 		this.mapViewProjection = this.internalMapView.getProjection();
 
 		// clear the second bitmap and make the canvas use it
@@ -216,9 +230,19 @@ public abstract class Overlay extends Thread {
 		this.point.x = this.positionBeforeDraw.x - (this.overlayCanvas.getWidth() >> 1);
 		this.point.y = this.positionBeforeDraw.y - (this.overlayCanvas.getHeight() >> 1);
 
+		if (isInterrupted() || sizeHasChanged()) {
+			// stop working
+			return;
+		}
+
 		// call the draw implementation of the subclass
-		this.drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection,
+		drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection,
 				this.zoomLevelBeforeDraw);
+
+		if (isInterrupted() || sizeHasChanged()) {
+			// stop working
+			return;
+		}
 
 		// save the zoom level and map position after drawing
 		synchronized (this.internalMapView) {
@@ -261,12 +285,17 @@ public abstract class Overlay extends Thread {
 			this.overlayBitmap2 = this.overlayBitmapSwap;
 		}
 
+		if (isInterrupted() || sizeHasChanged()) {
+			// stop working
+			return;
+		}
+
 		// request the MapView to redraw
 		this.internalMapView.postInvalidate();
 	}
 
 	/**
-	 * Draws the overlay on the canvas.
+	 * Draws the overlay on the canvas. All subclasses need to implement this method.
 	 * 
 	 * @param canvas
 	 *            the canvas to draw the overlay on.
@@ -282,12 +311,41 @@ public abstract class Overlay extends Thread {
 
 	/**
 	 * Returns the name of the overlay implementation. It will be used as the name for the
-	 * overlay thread.
+	 * overlay thread. Subclasses should override this method to provide a more specific name.
 	 * 
 	 * @return the name of the overlay implementation.
 	 */
 	protected String getThreadName() {
 		return THREAD_NAME;
+	}
+
+	/**
+	 * Changes the size of the overlay according to the MapView dimensions.
+	 */
+	final void changeSize() {
+		this.changeSize = false;
+
+		// check if the previous overlay bitmaps must be recycled
+		if (this.overlayBitmap1 != null) {
+			this.overlayBitmap1.recycle();
+		}
+		if (this.overlayBitmap2 != null) {
+			this.overlayBitmap2.recycle();
+		}
+
+		// check if the new dimensions are positive
+		if (this.internalMapView.getWidth() > 0 && this.internalMapView.getHeight() > 0) {
+			// create the two overlay bitmaps with the correct dimensions
+			this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
+					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+			this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
+					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+			this.overlayCanvas = new Canvas();
+			this.redraw = true;
+			this.hasValidDimensions = true;
+		} else {
+			this.hasValidDimensions = false;
+		}
 	}
 
 	/**
@@ -331,8 +389,17 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Initializes the overlay. This method must be called by the MapView once on each new
-	 * overlay and every time the size or the projection of the MapView has changed.
+	 * Marks the current dimensions of the overlay as dirty.
+	 */
+	final void onSizeChanged() {
+		synchronized (this) {
+			this.changeSize = true;
+			notify();
+		}
+	}
+
+	/**
+	 * This method is called by the MapView once on each new overlay.
 	 * 
 	 * @param mapView
 	 *            the calling MapView.
@@ -341,30 +408,16 @@ public abstract class Overlay extends Thread {
 		if (isInterrupted() || !isAlive()) {
 			throw new IllegalThreadStateException("overlay thread already destroyed");
 		}
-
-		// check if the previous overlay bitmaps must be recycled
-		if (this.overlayBitmap1 != null) {
-			this.overlayBitmap1.recycle();
-		}
-		if (this.overlayBitmap2 != null) {
-			this.overlayBitmap2.recycle();
-		}
-
-		// check if the MapView has valid dimensions
-		if (mapView.getWidth() <= 0 || mapView.getHeight() <= 0) {
-			return;
-		}
-
 		this.internalMapView = mapView;
+		onSizeChanged();
+	}
 
-		// create the two overlay bitmaps with the correct dimensions
-		this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
-		this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-				this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
-		this.overlayCanvas = new Canvas();
-
-		this.isSetUp = true;
-		requestRedraw();
+	/**
+	 * Returns if the dimensions of the overlay have changed.
+	 * 
+	 * @return true if the dimensions of the overlay have changed, false otherwise.
+	 */
+	boolean sizeHasChanged() {
+		return this.changeSize;
 	}
 }

@@ -76,6 +76,11 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 			byte drawZoomLevel) {
 		this.numberOfWays = size();
 		for (int wayIndex = 0; wayIndex < this.numberOfWays; ++wayIndex) {
+			if (isInterrupted() || sizeHasChanged()) {
+				// stop working
+				return;
+			}
+
 			// get the current way
 			this.overlayWay = createWay(wayIndex);
 			if (this.overlayWay == null) {
