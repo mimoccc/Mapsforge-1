@@ -1490,10 +1490,10 @@ public class MapView extends ViewGroup {
 
 			@Override
 			public void clear() {
+				super.clear();
 				for (int i = size() - 1; i >= 0; --i) {
 					get(i).interrupt();
 				}
-				super.clear();
 				getMapActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -1504,64 +1504,64 @@ public class MapView extends ViewGroup {
 
 			@Override
 			public Overlay remove(int index) {
-				get(index).interrupt();
-				Overlay retval = super.remove(index);
+				Overlay removedElement = super.remove(index);
+				removedElement.interrupt();
 				getMapActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
 						invalidate();
 					}
 				});
-				return retval;
+				return removedElement;
 			}
 
 			@Override
 			public boolean remove(Object object) {
+				boolean listChanged = super.remove(object);
 				if (object instanceof Overlay) {
 					((Overlay) object).interrupt();
 				}
-				boolean retval = super.remove(object);
 				getMapActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
 						invalidate();
 					}
 				});
-				return retval;
+				return listChanged;
 			}
 
 			@Override
 			public boolean removeAll(Collection<?> collection) {
+				boolean listChanged = super.removeAll(collection);
 				for (Object object : collection) {
 					if (object instanceof Overlay) {
 						((Overlay) object).interrupt();
 					}
 				}
-				boolean retval = super.removeAll(collection);
 				getMapActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
 						invalidate();
 					}
 				});
-				return retval;
+				return listChanged;
 			}
 
 			@Override
 			public Overlay set(int index, Overlay overlay) {
-				get(index).interrupt();
 				if (!overlay.isAlive()) {
 					overlay.start();
 				}
 				overlay.setupOverlay(MapView.this);
-				Overlay retval = super.set(index, overlay);
+				Overlay previousElement = super.set(index, overlay);
+				previousElement.interrupt();
 				getMapActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
 						invalidate();
 					}
 				});
-				return retval;
+				return previousElement;
 			}
 		});
 
