@@ -21,12 +21,15 @@ import java.util.ArrayList;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
 
 /**
  * A map renderer which uses a Canvas for drawing.
+ * 
+ * @see <a href="http://developer.android.com/reference/android/graphics/Canvas.html">Canvas</a>
  */
 class CanvasRenderer extends DatabaseMapGenerator {
 	private static final Paint PAINT_TILE_COORDINATES = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -34,6 +37,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final String THREAD_NAME = "CanvasRenderer";
 	private int arrayListIndex;
+	private Paint bitmapFilterPaint;
 	private Canvas canvas;
 	private CircleContainer circleContainer;
 	private WayContainer complexWayContainer;
@@ -47,18 +51,10 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
 	private StringBuilder stringBuilder;
 	private SymbolContainer symbolContainer;
+	private Matrix symbolMatrix;
 	private float[] textCoordinates;
 	private float[] tileFrame;
 	private ArrayList<ShapePaintContainer> wayList;
-
-	@Override
-	void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols) {
-		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.symbolContainer = drawSymbols.get(this.arrayListIndex);
-			this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
-					this.symbolContainer.y, null);
-		}
-	}
 
 	@Override
 	void drawNodes(ArrayList<PointTextContainer> drawNodes) {
@@ -70,6 +66,24 @@ class CanvasRenderer extends DatabaseMapGenerator {
 			}
 			this.canvas.drawText(this.pointTextContainer.text, this.pointTextContainer.x,
 					this.pointTextContainer.y, this.pointTextContainer.paintFront);
+		}
+	}
+
+	@Override
+	void drawSymbols(ArrayList<SymbolContainer> drawSymbols) {
+		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+			this.symbolContainer = drawSymbols.get(this.arrayListIndex);
+			if (this.symbolContainer.rotation == 0) {
+				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
+						this.symbolContainer.y, null);
+			} else {
+				this.symbolMatrix.setRotate(this.symbolContainer.rotation,
+						this.symbolContainer.symbol.getWidth() >> 1,
+						this.symbolContainer.symbol.getHeight() >> 1);
+				this.symbolMatrix.postTranslate(this.symbolContainer.x, this.symbolContainer.y);
+				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolMatrix,
+						this.bitmapFilterPaint);
+			}
 		}
 	}
 
@@ -181,6 +195,8 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	@Override
 	void setupRenderer(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
+		this.symbolMatrix = new Matrix();
+		this.bitmapFilterPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
 		this.tileFrame = new float[] { 0, 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
 				Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE,
 				0 };

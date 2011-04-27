@@ -127,6 +127,7 @@ class TagIDsWays {
 	Integer natural$water;
 	Integer natural$wetland;
 	Integer natural$wood;
+	Integer oneway$yes;
 	Integer piste$difficulty$advanced;
 	Integer piste$difficulty$easy;
 	Integer piste$difficulty$expert;
@@ -158,169 +159,171 @@ class TagIDsWays {
 	Integer wood$deciduous;
 	Integer wood$mixed;
 
-	void update(HashMap<String, Integer> nodeTags) {
-		this.admin_level$10 = nodeTags.get("admin_level=10");
-		this.admin_level$2 = nodeTags.get("admin_level=2");
-		this.admin_level$4 = nodeTags.get("admin_level=4");
-		this.admin_level$6 = nodeTags.get("admin_level=6");
-		this.admin_level$8 = nodeTags.get("admin_level=8");
-		this.admin_level$9 = nodeTags.get("admin_level=9");
+	void update(HashMap<String, Integer> wayTags) {
+		this.admin_level$10 = wayTags.get("admin_level=10");
+		this.admin_level$2 = wayTags.get("admin_level=2");
+		this.admin_level$4 = wayTags.get("admin_level=4");
+		this.admin_level$6 = wayTags.get("admin_level=6");
+		this.admin_level$8 = wayTags.get("admin_level=8");
+		this.admin_level$9 = wayTags.get("admin_level=9");
 
-		this.aerialway$cable_car = nodeTags.get("aerialway=cable_car");
-		this.aerialway$chair_lift = nodeTags.get("aerialway=chair_lift");
-		this.aerialway$drag_lift = nodeTags.get("aerialway=drag_lift");
-		this.aerialway$gondola = nodeTags.get("aerialway=gondola");
-		this.aerialway$magic_carpet = nodeTags.get("aerialway=magic_carpet");
-		this.aerialway$mixed_lift = nodeTags.get("aerialway=mixed_lift");
-		this.aerialway$rope_tow = nodeTags.get("aerialway=rope_tow");
+		this.aerialway$cable_car = wayTags.get("aerialway=cable_car");
+		this.aerialway$chair_lift = wayTags.get("aerialway=chair_lift");
+		this.aerialway$drag_lift = wayTags.get("aerialway=drag_lift");
+		this.aerialway$gondola = wayTags.get("aerialway=gondola");
+		this.aerialway$magic_carpet = wayTags.get("aerialway=magic_carpet");
+		this.aerialway$mixed_lift = wayTags.get("aerialway=mixed_lift");
+		this.aerialway$rope_tow = wayTags.get("aerialway=rope_tow");
 
-		this.aeroway$aerodrome = nodeTags.get("aeroway=aerodrome");
-		this.aeroway$apron = nodeTags.get("aeroway=apron");
-		this.aeroway$runway = nodeTags.get("aeroway=runway");
-		this.aeroway$taxiway = nodeTags.get("aeroway=taxiway");
-		this.aeroway$terminal = nodeTags.get("aeroway=terminal");
+		this.aeroway$aerodrome = wayTags.get("aeroway=aerodrome");
+		this.aeroway$apron = wayTags.get("aeroway=apron");
+		this.aeroway$runway = wayTags.get("aeroway=runway");
+		this.aeroway$taxiway = wayTags.get("aeroway=taxiway");
+		this.aeroway$terminal = wayTags.get("aeroway=terminal");
 
-		this.amenity$college = nodeTags.get("amenity=college");
-		this.amenity$fountain = nodeTags.get("amenity=fountain");
-		this.amenity$grave_yard = nodeTags.get("amenity=grave_yard");
-		this.amenity$hospital = nodeTags.get("amenity=hospital");
-		this.amenity$parking = nodeTags.get("amenity=parking");
-		this.amenity$school = nodeTags.get("amenity=school");
-		this.amenity$university = nodeTags.get("amenity=university");
+		this.amenity$college = wayTags.get("amenity=college");
+		this.amenity$fountain = wayTags.get("amenity=fountain");
+		this.amenity$grave_yard = wayTags.get("amenity=grave_yard");
+		this.amenity$hospital = wayTags.get("amenity=hospital");
+		this.amenity$parking = wayTags.get("amenity=parking");
+		this.amenity$school = wayTags.get("amenity=school");
+		this.amenity$university = wayTags.get("amenity=university");
 
-		this.area$yes = nodeTags.get("area=yes");
+		this.area$yes = wayTags.get("area=yes");
 
-		this.barrier$fence = nodeTags.get("barrier=fence");
-		this.barrier$wall = nodeTags.get("barrier=wall");
+		this.barrier$fence = wayTags.get("barrier=fence");
+		this.barrier$wall = wayTags.get("barrier=wall");
 
-		this.boundary$administrative = nodeTags.get("boundary=administrative");
-		this.boundary$national_park = nodeTags.get("boundary=national_park");
+		this.boundary$administrative = wayTags.get("boundary=administrative");
+		this.boundary$national_park = wayTags.get("boundary=national_park");
 
-		this.bridge$yes = nodeTags.get("bridge=yes");
+		this.bridge$yes = wayTags.get("bridge=yes");
 
-		this.building$apartments = nodeTags.get("building=apartments");
-		this.building$embassy = nodeTags.get("building=embassy");
-		this.building$government = nodeTags.get("building=government");
-		this.building$gym = nodeTags.get("building=gym");
-		this.building$roof = nodeTags.get("building=roof");
-		this.building$ruins = nodeTags.get("building=ruins");
-		this.building$sports = nodeTags.get("building=sports");
-		this.building$train_station = nodeTags.get("building=train_station");
-		this.building$university = nodeTags.get("building=university");
-		this.building$yes = nodeTags.get("building=yes");
+		this.building$apartments = wayTags.get("building=apartments");
+		this.building$embassy = wayTags.get("building=embassy");
+		this.building$government = wayTags.get("building=government");
+		this.building$gym = wayTags.get("building=gym");
+		this.building$roof = wayTags.get("building=roof");
+		this.building$ruins = wayTags.get("building=ruins");
+		this.building$sports = wayTags.get("building=sports");
+		this.building$train_station = wayTags.get("building=train_station");
+		this.building$university = wayTags.get("building=university");
+		this.building$yes = wayTags.get("building=yes");
 
-		this.highway$bridleway = nodeTags.get("highway=bridleway");
-		this.highway$construction = nodeTags.get("highway=construction");
-		this.highway$cycleway = nodeTags.get("highway=cycleway");
-		this.highway$footway = nodeTags.get("highway=footway");
-		this.highway$living_street = nodeTags.get("highway=living_street");
-		this.highway$motorway = nodeTags.get("highway=motorway");
-		this.highway$motorway_link = nodeTags.get("highway=motorway_link");
-		this.highway$path = nodeTags.get("highway=path");
-		this.highway$pedestrian = nodeTags.get("highway=pedestrian");
-		this.highway$primary = nodeTags.get("highway=primary");
-		this.highway$primary_link = nodeTags.get("highway=primary_link");
-		this.highway$residential = nodeTags.get("highway=residential");
-		this.highway$road = nodeTags.get("highway=road");
-		this.highway$secondary = nodeTags.get("highway=secondary");
-		this.highway$secondary_link = nodeTags.get("highway=secondary_link");
-		this.highway$service = nodeTags.get("highway=service");
-		this.highway$steps = nodeTags.get("highway=steps");
-		this.highway$tertiary = nodeTags.get("highway=tertiary");
-		this.highway$track = nodeTags.get("highway=track");
-		this.highway$trunk = nodeTags.get("highway=trunk");
-		this.highway$trunk_link = nodeTags.get("highway=trunk_link");
-		this.highway$unclassified = nodeTags.get("highway=unclassified");
+		this.highway$bridleway = wayTags.get("highway=bridleway");
+		this.highway$construction = wayTags.get("highway=construction");
+		this.highway$cycleway = wayTags.get("highway=cycleway");
+		this.highway$footway = wayTags.get("highway=footway");
+		this.highway$living_street = wayTags.get("highway=living_street");
+		this.highway$motorway = wayTags.get("highway=motorway");
+		this.highway$motorway_link = wayTags.get("highway=motorway_link");
+		this.highway$path = wayTags.get("highway=path");
+		this.highway$pedestrian = wayTags.get("highway=pedestrian");
+		this.highway$primary = wayTags.get("highway=primary");
+		this.highway$primary_link = wayTags.get("highway=primary_link");
+		this.highway$residential = wayTags.get("highway=residential");
+		this.highway$road = wayTags.get("highway=road");
+		this.highway$secondary = wayTags.get("highway=secondary");
+		this.highway$secondary_link = wayTags.get("highway=secondary_link");
+		this.highway$service = wayTags.get("highway=service");
+		this.highway$steps = wayTags.get("highway=steps");
+		this.highway$tertiary = wayTags.get("highway=tertiary");
+		this.highway$track = wayTags.get("highway=track");
+		this.highway$trunk = wayTags.get("highway=trunk");
+		this.highway$trunk_link = wayTags.get("highway=trunk_link");
+		this.highway$unclassified = wayTags.get("highway=unclassified");
 
-		this.historic$ruins = nodeTags.get("historic=ruins");
+		this.historic$ruins = wayTags.get("historic=ruins");
 
-		this.landuse$allotments = nodeTags.get("landuse=allotments");
-		this.landuse$basin = nodeTags.get("landuse=basin");
-		this.landuse$brownfield = nodeTags.get("landuse=brownfield");
-		this.landuse$cemetery = nodeTags.get("landuse=cemetery");
-		this.landuse$commercial = nodeTags.get("landuse=commercial");
-		this.landuse$construction = nodeTags.get("landuse=construction");
-		this.landuse$farm = nodeTags.get("landuse=farm");
-		this.landuse$farmland = nodeTags.get("landuse=farmland");
-		this.landuse$forest = nodeTags.get("landuse=forest");
-		this.landuse$grass = nodeTags.get("landuse=grass");
-		this.landuse$greenfield = nodeTags.get("landuse=greenfield");
-		this.landuse$industrial = nodeTags.get("landuse=industrial");
-		this.landuse$military = nodeTags.get("landuse=military");
-		this.landuse$recreation_ground = nodeTags.get("landuse=recreation_ground");
-		this.landuse$reservoir = nodeTags.get("landuse=reservoir");
-		this.landuse$residential = nodeTags.get("landuse=residential");
-		this.landuse$retail = nodeTags.get("landuse=retail");
-		this.landuse$village_green = nodeTags.get("landuse=village_green");
-		this.landuse$wood = nodeTags.get("landuse=wood");
+		this.landuse$allotments = wayTags.get("landuse=allotments");
+		this.landuse$basin = wayTags.get("landuse=basin");
+		this.landuse$brownfield = wayTags.get("landuse=brownfield");
+		this.landuse$cemetery = wayTags.get("landuse=cemetery");
+		this.landuse$commercial = wayTags.get("landuse=commercial");
+		this.landuse$construction = wayTags.get("landuse=construction");
+		this.landuse$farm = wayTags.get("landuse=farm");
+		this.landuse$farmland = wayTags.get("landuse=farmland");
+		this.landuse$forest = wayTags.get("landuse=forest");
+		this.landuse$grass = wayTags.get("landuse=grass");
+		this.landuse$greenfield = wayTags.get("landuse=greenfield");
+		this.landuse$industrial = wayTags.get("landuse=industrial");
+		this.landuse$military = wayTags.get("landuse=military");
+		this.landuse$recreation_ground = wayTags.get("landuse=recreation_ground");
+		this.landuse$reservoir = wayTags.get("landuse=reservoir");
+		this.landuse$residential = wayTags.get("landuse=residential");
+		this.landuse$retail = wayTags.get("landuse=retail");
+		this.landuse$village_green = wayTags.get("landuse=village_green");
+		this.landuse$wood = wayTags.get("landuse=wood");
 
-		this.leisure$common = nodeTags.get("leisure=common");
-		this.leisure$garden = nodeTags.get("leisure=garden");
-		this.leisure$golf_course = nodeTags.get("leisure=golf_course");
-		this.leisure$nature_reserve = nodeTags.get("leisure=nature_reserve");
-		this.leisure$park = nodeTags.get("leisure=park");
-		this.leisure$pitch = nodeTags.get("leisure=pitch");
-		this.leisure$playground = nodeTags.get("leisure=playground");
-		this.leisure$sports_centre = nodeTags.get("leisure=sports_centre");
-		this.leisure$stadium = nodeTags.get("leisure=stadium");
-		this.leisure$track = nodeTags.get("leisure=track");
-		this.leisure$water_park = nodeTags.get("leisure=water_park");
+		this.leisure$common = wayTags.get("leisure=common");
+		this.leisure$garden = wayTags.get("leisure=garden");
+		this.leisure$golf_course = wayTags.get("leisure=golf_course");
+		this.leisure$nature_reserve = wayTags.get("leisure=nature_reserve");
+		this.leisure$park = wayTags.get("leisure=park");
+		this.leisure$pitch = wayTags.get("leisure=pitch");
+		this.leisure$playground = wayTags.get("leisure=playground");
+		this.leisure$sports_centre = wayTags.get("leisure=sports_centre");
+		this.leisure$stadium = wayTags.get("leisure=stadium");
+		this.leisure$track = wayTags.get("leisure=track");
+		this.leisure$water_park = wayTags.get("leisure=water_park");
 
-		this.man_made$pier = nodeTags.get("man_made=pier");
+		this.man_made$pier = wayTags.get("man_made=pier");
 
-		this.military$airfield = nodeTags.get("military=airfield");
-		this.military$barracks = nodeTags.get("military=barracks");
-		this.military$naval_base = nodeTags.get("military=naval_base");
+		this.military$airfield = wayTags.get("military=airfield");
+		this.military$barracks = wayTags.get("military=barracks");
+		this.military$naval_base = wayTags.get("military=naval_base");
 
-		this.natural$beach = nodeTags.get("natural=beach");
-		this.natural$coastline = nodeTags.get("natural=coastline");
-		this.natural$glacier = nodeTags.get("natural=glacier");
-		this.natural$heath = nodeTags.get("natural=heath");
-		this.natural$land = nodeTags.get("natural=land");
-		this.natural$marsh = nodeTags.get("natural=marsh");
-		this.natural$scrub = nodeTags.get("natural=scrub");
-		this.natural$water = nodeTags.get("natural=water");
-		this.natural$wetland = nodeTags.get("natural=wetland");
-		this.natural$wood = nodeTags.get("natural=wood");
+		this.natural$beach = wayTags.get("natural=beach");
+		this.natural$coastline = wayTags.get("natural=coastline");
+		this.natural$glacier = wayTags.get("natural=glacier");
+		this.natural$heath = wayTags.get("natural=heath");
+		this.natural$land = wayTags.get("natural=land");
+		this.natural$marsh = wayTags.get("natural=marsh");
+		this.natural$scrub = wayTags.get("natural=scrub");
+		this.natural$water = wayTags.get("natural=water");
+		this.natural$wetland = wayTags.get("natural=wetland");
+		this.natural$wood = wayTags.get("natural=wood");
 
-		this.piste$type$downhill = nodeTags.get("piste:type=downhill");
-		this.piste$type$nordic = nodeTags.get("piste:type=nordic");
+		this.oneway$yes = wayTags.get("oneway=yes");
 
-		this.piste$difficulty$novice = nodeTags.get("piste:difficulty=novice");
-		this.piste$difficulty$easy = nodeTags.get("piste:difficulty=easy");
-		this.piste$difficulty$intermediate = nodeTags.get("piste:difficulty=intermediate");
-		this.piste$difficulty$advanced = nodeTags.get("piste:difficulty=advanced");
-		this.piste$difficulty$expert = nodeTags.get("piste:difficulty=expert");
-		this.piste$difficulty$freeride = nodeTags.get("piste:difficulty=freeride");
+		this.piste$type$downhill = wayTags.get("piste:type=downhill");
+		this.piste$type$nordic = wayTags.get("piste:type=nordic");
 
-		this.place$locality = nodeTags.get("place=locality");
+		this.piste$difficulty$novice = wayTags.get("piste:difficulty=novice");
+		this.piste$difficulty$easy = wayTags.get("piste:difficulty=easy");
+		this.piste$difficulty$intermediate = wayTags.get("piste:difficulty=intermediate");
+		this.piste$difficulty$advanced = wayTags.get("piste:difficulty=advanced");
+		this.piste$difficulty$expert = wayTags.get("piste:difficulty=expert");
+		this.piste$difficulty$freeride = wayTags.get("piste:difficulty=freeride");
 
-		this.railway$light_rail = nodeTags.get("railway=light_rail");
-		this.railway$rail = nodeTags.get("railway=rail");
-		this.railway$station = nodeTags.get("railway=station");
-		this.railway$subway = nodeTags.get("railway=subway");
-		this.railway$tram = nodeTags.get("railway=tram");
+		this.place$locality = wayTags.get("place=locality");
 
-		this.route$ferry = nodeTags.get("route=ferry");
+		this.railway$light_rail = wayTags.get("railway=light_rail");
+		this.railway$rail = wayTags.get("railway=rail");
+		this.railway$station = wayTags.get("railway=station");
+		this.railway$subway = wayTags.get("railway=subway");
+		this.railway$tram = wayTags.get("railway=tram");
 
-		this.sport$shooting = nodeTags.get("sport=shooting");
-		this.sport$swimming = nodeTags.get("sport=swimming");
-		this.sport$tennis = nodeTags.get("sport=tennis");
+		this.route$ferry = wayTags.get("route=ferry");
 
-		this.tourism$attraction = nodeTags.get("tourism=attraction");
-		this.tourism$zoo = nodeTags.get("tourism=zoo");
+		this.sport$shooting = wayTags.get("sport=shooting");
+		this.sport$swimming = wayTags.get("sport=swimming");
+		this.sport$tennis = wayTags.get("sport=tennis");
 
-		this.tunnel$no = nodeTags.get("tunnel=no");
-		this.tunnel$yes = nodeTags.get("tunnel=yes");
+		this.tourism$attraction = wayTags.get("tourism=attraction");
+		this.tourism$zoo = wayTags.get("tourism=zoo");
 
-		this.waterway$canal = nodeTags.get("waterway=canal");
-		this.waterway$drain = nodeTags.get("waterway=drain");
-		this.waterway$river = nodeTags.get("waterway=river");
-		this.waterway$riverbank = nodeTags.get("waterway=riverbank");
-		this.waterway$stream = nodeTags.get("waterway=stream");
+		this.tunnel$no = wayTags.get("tunnel=no");
+		this.tunnel$yes = wayTags.get("tunnel=yes");
 
-		this.wood$coniferous = nodeTags.get("wood=coniferous");
-		this.wood$deciduous = nodeTags.get("wood=deciduous");
-		this.wood$mixed = nodeTags.get("wood=mixed");
+		this.waterway$canal = wayTags.get("waterway=canal");
+		this.waterway$drain = wayTags.get("waterway=drain");
+		this.waterway$river = wayTags.get("waterway=river");
+		this.waterway$riverbank = wayTags.get("waterway=riverbank");
+		this.waterway$stream = wayTags.get("waterway=stream");
+
+		this.wood$coniferous = wayTags.get("wood=coniferous");
+		this.wood$deciduous = wayTags.get("wood=deciduous");
+		this.wood$mixed = wayTags.get("wood=mixed");
 	}
 }

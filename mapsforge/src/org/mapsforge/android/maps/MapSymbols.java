@@ -44,6 +44,7 @@ class MapSymbols {
 	final Bitmap hotel;
 	final Bitmap information;
 	final Bitmap library;
+	final Bitmap oneway;
 	final Bitmap parking;
 	final Bitmap peak;
 	final Bitmap petrolStation;
@@ -90,6 +91,8 @@ class MapSymbols {
 				"symbols/church.png"));
 		this.cinema = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/cinema.png"));
+		this.oneway = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"symbols/oneway.png"));
 		this.fastfood = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/fastfood.png"));
 		this.firebrigade = BitmapFactory.decodeStream(getClass().getResourceAsStream(
@@ -187,6 +190,9 @@ class MapSymbols {
 		}
 		if (this.cinema != null) {
 			this.cinema.recycle();
+		}
+		if (this.oneway != null) {
+			this.oneway.recycle();
 		}
 		if (this.fastfood != null) {
 			this.fastfood.recycle();

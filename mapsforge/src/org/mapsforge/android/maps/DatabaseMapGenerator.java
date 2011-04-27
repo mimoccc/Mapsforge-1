@@ -310,8 +310,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private float currentX;
 	private float currentY;
 	private MapDatabase database;
-	private float distanceX;
-	private float distanceY;
+	private float diffX;
+	private float diffY;
 	private int innerWayLength;
 	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
 	private LabelPlacement labelPlacement;
@@ -321,6 +321,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private MapPatterns mapPatterns;
 	private MapSymbols mapSymbols;
 	private ArrayList<PointTextContainer> nodes;
+	private ArrayList<SymbolContainer> pointSymbols;
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
@@ -328,7 +329,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private ShapeContainer shapeContainer;
 	private int skipPixels;
 	private SymbolContainer symbolContainer;
-	private ArrayList<SymbolContainer> symbols;
 	private TagIDsNodes tagIDsNodes;
 	private TagIDsWays tagIDsWays;
 	private Bitmap tileBitmap;
@@ -339,6 +339,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private ArrayList<WayTextContainer> wayNames;
 	private float wayNameWidth;
 	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
+	private ArrayList<SymbolContainer> waySymbols;
 
 	/**
 	 * Default constructor that must be called by subclasses.
@@ -430,9 +431,61 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private void addAreaSymbol(Bitmap symbolBitmap, byte zoomLevel) {
 		if (symbolBitmap != null && this.currentTile.zoomLevel >= zoomLevel) {
 			this.areaNamePositions = calculateCenterOfBoundingBox();
-			this.symbols.add(new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
+			this.pointSymbols.add(new SymbolContainer(symbolBitmap, this.areaNamePositions[0]
 					- (symbolBitmap.getWidth() >> 1), this.areaNamePositions[1]
 					- (symbolBitmap.getHeight() >> 1)));
+		}
+	}
+
+	/**
+	 * Renders one-way signs along the current way.
+	 */
+	private void addOneway() {
+		this.skipPixels = 40;
+
+		// get the first way point coordinates
+		this.previousX = this.coordinates[0][0];
+		this.previousY = this.coordinates[0][1];
+
+		// draw one-way signs on each way segment
+		for (short i = 2; i < this.coordinates[0].length; i += 2) {
+			// get the current way point coordinates
+			this.currentX = this.coordinates[0][i];
+			this.currentY = this.coordinates[0][i + 1];
+
+			// calculate the length of the current segment (Euclidian distance)
+			this.diffX = this.currentX - this.previousX;
+			this.diffY = this.currentY - this.previousY;
+			this.segmentLengthInPixel = Math.sqrt(this.diffX * this.diffX
+					+ this.diffY * this.diffY);
+			float remainingSegmentLength = (float) this.segmentLengthInPixel;
+
+			// TODO useless > 0 check?
+			while (remainingSegmentLength > 0 && this.skipPixels <= remainingSegmentLength) {
+				float skipRatio = this.skipPixels / remainingSegmentLength;
+				this.previousX += this.diffX * skipRatio;
+				this.previousY += this.diffY * skipRatio;
+				this.waySymbols.add(new SymbolContainer(this.mapSymbols.oneway,
+						this.previousX - (this.mapSymbols.oneway.getWidth() >> 1),
+						this.previousY - (this.mapSymbols.oneway.getHeight() >> 1),
+						(float) Math.toDegrees(Math.atan2(this.currentY - this.previousY,
+								this.currentX - this.previousX))));
+
+				// calculate the remaining distances
+				this.diffX = this.currentX - this.previousX;
+				this.diffY = this.currentY - this.previousY;
+
+				// calculate the length of the remaining segment
+				remainingSegmentLength -= this.skipPixels;
+
+				// set the amount of pixels to skip before repeating the symbol
+				this.skipPixels = 200;
+			}
+			this.skipPixels -= remainingSegmentLength;
+
+			// store the previous way point coordinates
+			this.previousX = this.currentX;
+			this.previousY = this.currentY;
 		}
 	}
 
@@ -440,7 +493,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (symbolBitmap != null) {
 			this.symbolContainer = new SymbolContainer(symbolBitmap, x
 					- (symbolBitmap.getWidth() >> 1), y - (symbolBitmap.getHeight() >> 1));
-			this.symbols.add(this.symbolContainer);
+			this.pointSymbols.add(this.symbolContainer);
 			return this.symbolContainer;
 		}
 		return null;
@@ -473,10 +526,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.currentY = this.coordinates[0][i + 1];
 
 			// calculate the length of the current segment (Euclidian distance)
-			this.distanceX = this.currentX - this.previousX;
-			this.distanceY = this.currentY - this.previousY;
-			this.segmentLengthInPixel = Math.sqrt(this.distanceX * this.distanceX
-					+ this.distanceY * this.distanceY);
+			this.diffX = this.currentX - this.previousX;
+			this.diffY = this.currentY - this.previousY;
+			this.segmentLengthInPixel = Math.sqrt(this.diffX * this.diffX
+					+ this.diffY * this.diffY);
 
 			if (this.skipPixels > 0) {
 				this.skipPixels -= this.segmentLengthInPixel;
@@ -590,10 +643,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		for (short i = 2; i < this.coordinates[0].length; i += 2) {
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
-			this.distanceX = this.currentX - this.previousX;
-			this.distanceY = this.currentY - this.previousY;
-			this.segmentLengthInPixel += Math.sqrt(this.distanceX * this.distanceX
-					+ this.distanceY * this.distanceY);
+			this.diffX = this.currentX - this.previousX;
+			this.diffY = this.currentY - this.previousY;
+			this.segmentLengthInPixel += Math.sqrt(this.diffX * this.diffX
+					+ this.diffY * this.diffY);
 			this.previousX = this.currentX;
 			this.previousY = this.currentY;
 		}
@@ -1442,8 +1495,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_HIGHWAY_BRIDLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
 		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
 		PAINT_HIGHWAY_CONSTRUCTION.setStrokeWidth(1.3f * paintScaleFactor);
-		PAINT_HIGHWAY_CYCLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
-		PAINT_HIGHWAY_CYCLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_CYCLEWAY1.setStrokeWidth(1.1f * paintScaleFactor);
+		PAINT_HIGHWAY_CYCLEWAY2.setStrokeWidth(0.8f * paintScaleFactor);
 		PAINT_HIGHWAY_FOOTWAY1.setPathEffect(new DashPathEffect(new float[] {
 				1 * paintScaleFactor, 1 * paintScaleFactor }, 0));
 		PAINT_HIGHWAY_FOOTWAY1.setStrokeWidth(0.8f * paintScaleFactor);
@@ -1579,20 +1632,20 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	}
 
 	/**
-	 * This method is called when the map symbols should be rendered.
-	 * 
-	 * @param drawSymbols
-	 *            the symbols to be rendered.
-	 */
-	abstract void drawMapSymbols(ArrayList<SymbolContainer> drawSymbols);
-
-	/**
 	 * This method is called when the nodes should be rendered.
 	 * 
 	 * @param drawNodes
 	 *            the nodes to be rendered.
 	 */
 	abstract void drawNodes(ArrayList<PointTextContainer> drawNodes);
+
+	/**
+	 * This method is called when the map symbols should be rendered.
+	 * 
+	 * @param drawSymbols
+	 *            the symbols to be rendered.
+	 */
+	abstract void drawSymbols(ArrayList<SymbolContainer> drawSymbols);
 
 	/**
 	 * This method is called when the tile coordinates should be rendered.
@@ -1665,9 +1718,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			return false;
 		}
 
-		this.nodes = this.labelPlacement.placeLabels(this.nodes, this.symbols, this.areaLabels,
+		drawSymbols(this.waySymbols);
+		this.nodes = this.labelPlacement.placeLabels(this.nodes, this.pointSymbols,
+				this.areaLabels,
 				this.currentTile);
-		drawMapSymbols(this.symbols);
+		drawSymbols(this.pointSymbols);
 		if (isInterrupted()) {
 			return false;
 		}
@@ -1739,7 +1794,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.wayNames.clear();
 		this.nodes.clear();
 		this.areaLabels.clear();
-		this.symbols.clear();
+		this.waySymbols.clear();
+		this.pointSymbols.clear();
 		this.coastlineAlgorithm.clearCoastlineSegments();
 	}
 
@@ -2340,6 +2396,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_MOTORWAY2);
 					}
@@ -2350,6 +2411,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_MOTORWAY2);
 					}
@@ -2367,6 +2433,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_MOTORWAY_LINK2);
 					}
@@ -2377,6 +2448,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$MOTORWAY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_MOTORWAY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_MOTORWAY_LINK2);
 					}
@@ -2393,6 +2469,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRUNK2);
 					}
@@ -2401,6 +2482,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK1));
 					this.layer.get(LayerIds.HIGHWAY$TRUNK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRUNK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRUNK2);
 					}
@@ -2418,6 +2504,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TRUNK_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRUNK_LINK2);
 					}
@@ -2428,6 +2519,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$TRUNK_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TRUNK_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRUNK_LINK2);
 					}
@@ -2446,6 +2542,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_PRIMARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PRIMARY2);
 					}
@@ -2458,6 +2559,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_PRIMARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PRIMARY2);
 					}
@@ -2475,6 +2581,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PRIMARY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PRIMARY_LINK2);
 					}
@@ -2485,6 +2596,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$PRIMARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PRIMARY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PRIMARY_LINK2);
 					}
@@ -2502,6 +2618,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SECONDARY2);
 					}
@@ -2512,6 +2633,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SECONDARY2);
 					}
@@ -2529,6 +2655,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SECONDARY_LINK2);
 					}
@@ -2539,6 +2670,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$SECONDARY_LINK2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_SECONDARY_LINK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SECONDARY_LINK2);
 					}
@@ -2556,6 +2692,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TERTIARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TERTIARY2);
 					}
@@ -2566,6 +2707,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$TERTIARY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_TERTIARY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TERTIARY2);
 					}
@@ -2583,6 +2729,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_UNCLASSIFIED2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_UNCLASSIFIED2);
 					}
@@ -2593,6 +2744,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$UNCLASSIFIED2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_UNCLASSIFIED2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_UNCLASSIFIED2);
 					}
@@ -2609,6 +2765,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_ROAD2);
 					}
@@ -2617,6 +2778,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD1));
 					this.layer.get(LayerIds.HIGHWAY$ROAD2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_ROAD2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_ROAD2);
 					}
@@ -2634,6 +2800,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_RESIDENTIAL2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_RESIDENTIAL2);
 					}
@@ -2644,6 +2815,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$RESIDENTIAL2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_RESIDENTIAL2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_RESIDENTIAL2);
 					}
@@ -2661,6 +2837,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_LIVING_STREET2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_LIVING_STREET2);
 					}
@@ -2671,6 +2852,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$LIVING_STREET2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_LIVING_STREET2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_LIVING_STREET2);
 					}
@@ -2698,6 +2884,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_SERVICE2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SERVICE2);
 					}
@@ -2710,6 +2901,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_SERVICE2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_SERVICE2);
 					}
@@ -2726,6 +2922,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRACK2);
 					}
@@ -2734,6 +2935,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK1));
 					this.layer.get(LayerIds.HIGHWAY$TRACK2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_TRACK2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_TRACK2);
 					}
@@ -2760,6 +2966,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PEDESTRIAN2);
 					}
@@ -2770,6 +2981,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$PEDESTRIAN2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_PEDESTRIAN2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PEDESTRIAN2);
 					}
@@ -2786,6 +3002,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PATH2);
 					}
@@ -2794,6 +3015,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH1));
 					this.layer.get(LayerIds.HIGHWAY$PATH2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_PATH2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_PATH2);
 					}
@@ -2811,6 +3037,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CYCLEWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_CYCLEWAY2);
 					}
@@ -2821,6 +3052,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$CYCLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CYCLEWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_CYCLEWAY2);
 					}
@@ -2849,6 +3085,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_FOOTWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_FOOTWAY2);
 					}
@@ -2861,6 +3102,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							.add(
 									new ShapePaintContainer(this.shapeContainer,
 											PAINT_HIGHWAY_FOOTWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_FOOTWAY2);
 					}
@@ -2878,6 +3124,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_BRIDLEWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_BRIDLEWAY2);
 					}
@@ -2888,6 +3139,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$BRIDLEWAY2).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_BRIDLEWAY2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_BRIDLEWAY2);
 					}
@@ -2904,6 +3160,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_STEPS2);
 					}
@@ -2912,6 +3173,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS1));
 					this.layer.get(LayerIds.HIGHWAY$STEPS2).add(
 							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_STEPS2));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_STEPS2);
 					}
@@ -2924,6 +3190,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					paint1Bridge.setStrokeCap(Paint.Cap.BUTT);
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer, paint1Bridge));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, paint1Bridge);
 					}
@@ -2931,6 +3202,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.layer.get(LayerIds.HIGHWAY$CONSTRUCTION).add(
 							new ShapePaintContainer(this.shapeContainer,
 									PAINT_HIGHWAY_CONSTRUCTION));
+					if (this.tagIDsWays.oneway$yes != null
+							&& wayTagIds[this.tagIDsWays.oneway$yes.intValue()]
+							&& this.currentTile.zoomLevel > 15) {
+						addOneway();
+					}
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_CONSTRUCTION);
 					}
@@ -3694,7 +3970,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.wayNames = new ArrayList<WayTextContainer>(64);
 		this.nodes = new ArrayList<PointTextContainer>(64);
 		this.areaLabels = new ArrayList<PointTextContainer>(64);
-		this.symbols = new ArrayList<SymbolContainer>(64);
+		this.waySymbols = new ArrayList<SymbolContainer>(64);
+		this.pointSymbols = new ArrayList<SymbolContainer>(64);
 
 		// create the coordinates array for water tiles
 		this.waterTileCoordinates = new float[][] { { 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
