@@ -125,6 +125,7 @@ public abstract class Overlay extends Thread {
 	 * Default constructor which must be called by all subclasses.
 	 */
 	protected Overlay() {
+		this.overlayCanvas = new Canvas();
 		this.matrix = new Matrix();
 		this.point = new Point();
 		this.positionBeforeDraw = new Point();
@@ -340,7 +341,6 @@ public abstract class Overlay extends Thread {
 					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
 			this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
 					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
-			this.overlayCanvas = new Canvas();
 			this.redraw = true;
 			this.hasValidDimensions = true;
 		} else {
@@ -356,7 +356,9 @@ public abstract class Overlay extends Thread {
 	 */
 	final void draw(Canvas canvas) {
 		synchronized (this.matrix) {
-			canvas.drawBitmap(this.overlayBitmap1, this.matrix, null);
+			if (this.overlayBitmap1 != null) {
+				canvas.drawBitmap(this.overlayBitmap1, this.matrix, null);
+			}
 		}
 	}
 
