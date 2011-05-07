@@ -26,7 +26,7 @@ class SymbolContainer {
 	final float y;
 
 	/**
-	 * Creates a new symbol container. The symbol will be centered.
+	 * Creates a new symbol container. The symbol will not be centered.
 	 * 
 	 * @param symbol
 	 *            the symbol to render at the point
@@ -36,7 +36,7 @@ class SymbolContainer {
 	 *            the y coordinate of the point.
 	 */
 	SymbolContainer(Bitmap symbol, float x, float y) {
-		this(symbol, x, y, true, 0);
+		this(symbol, x, y, false, 0);
 	}
 
 	/**
