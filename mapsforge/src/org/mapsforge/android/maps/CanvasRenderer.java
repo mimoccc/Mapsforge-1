@@ -73,17 +73,20 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	void drawSymbols(ArrayList<SymbolContainer> drawSymbols) {
 		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 			this.symbolContainer = drawSymbols.get(this.arrayListIndex);
-			if (this.symbolContainer.rotation == 0) {
-				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolContainer.x,
-						this.symbolContainer.y, null);
-			} else {
+			// use the matrix for rotation and translation of the symbol
+			if (this.symbolContainer.alignCenter) {
 				this.symbolMatrix.setRotate(this.symbolContainer.rotation,
 						this.symbolContainer.symbol.getWidth() >> 1,
 						this.symbolContainer.symbol.getHeight() >> 1);
+				this.symbolMatrix.postTranslate(this.symbolContainer.x
+						- (this.symbolContainer.symbol.getWidth() >> 1), this.symbolContainer.y
+						- (this.symbolContainer.symbol.getHeight() >> 1));
+			} else {
+				this.symbolMatrix.setRotate(this.symbolContainer.rotation);
 				this.symbolMatrix.postTranslate(this.symbolContainer.x, this.symbolContainer.y);
-				this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolMatrix,
-						this.bitmapFilterPaint);
 			}
+			this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolMatrix,
+						this.bitmapFilterPaint);
 		}
 	}
 

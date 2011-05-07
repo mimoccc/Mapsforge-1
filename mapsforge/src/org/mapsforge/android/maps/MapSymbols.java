@@ -33,6 +33,7 @@ class MapSymbols {
 	final Bitmap bus_sta;
 	final Bitmap cafe;
 	final Bitmap cave_entrance;
+	final Bitmap chair_lift_2;
 	final Bitmap church;
 	final Bitmap cinema;
 	final Bitmap fastfood;
@@ -87,6 +88,8 @@ class MapSymbols {
 				"symbols/cafe.png"));
 		this.cave_entrance = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/cave_entrance.png"));
+		this.chair_lift_2 = BitmapFactory.decodeStream(getClass().getResourceAsStream(
+				"symbols/chair_lift_2.png"));
 		this.church = BitmapFactory.decodeStream(getClass().getResourceAsStream(
 				"symbols/church.png"));
 		this.cinema = BitmapFactory.decodeStream(getClass().getResourceAsStream(
@@ -184,6 +187,9 @@ class MapSymbols {
 		}
 		if (this.cave_entrance != null) {
 			this.cave_entrance.recycle();
+		}
+		if (this.chair_lift_2 != null) {
+			this.chair_lift_2.recycle();
 		}
 		if (this.church != null) {
 			this.church.recycle();

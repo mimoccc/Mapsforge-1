@@ -19,13 +19,14 @@ package org.mapsforge.android.maps;
 import android.graphics.Bitmap;
 
 class SymbolContainer {
+	final boolean alignCenter;
 	final float rotation;
 	final Bitmap symbol;
 	final float x;
 	final float y;
 
 	/**
-	 * Create a new symbol container.
+	 * Creates a new symbol container. The symbol will be centered.
 	 * 
 	 * @param symbol
 	 *            the symbol to render at the point
@@ -35,11 +36,11 @@ class SymbolContainer {
 	 *            the y coordinate of the point.
 	 */
 	SymbolContainer(Bitmap symbol, float x, float y) {
-		this(symbol, x, y, 0);
+		this(symbol, x, y, true, 0);
 	}
 
 	/**
-	 * Create a new symbol container.
+	 * Creates a new symbol container.
 	 * 
 	 * @param symbol
 	 *            the symbol to render at the point
@@ -47,13 +48,16 @@ class SymbolContainer {
 	 *            the x coordinate of the point.
 	 * @param y
 	 *            the y coordinate of the point.
+	 * @param alignCenter
+	 *            true if the symbol should be centered, false otherwise.
 	 * @param rotation
 	 *            the rotation of the symbol.
 	 */
-	SymbolContainer(Bitmap symbol, float x, float y, float rotation) {
+	SymbolContainer(Bitmap symbol, float x, float y, boolean alignCenter, float rotation) {
 		this.symbol = symbol;
 		this.x = x;
 		this.y = y;
+		this.alignCenter = alignCenter;
 		this.rotation = rotation;
 	}
 }
