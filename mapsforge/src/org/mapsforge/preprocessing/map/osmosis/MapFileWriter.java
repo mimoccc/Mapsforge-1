@@ -105,7 +105,7 @@ class MapFileWriter {
 
 	private static final Charset UTF8_CHARSET = Charset.forName("utf8");
 
-	private static final int PROGRESS_PERCENT_STEP = 10;
+	private static final float PROGRESS_PERCENT_STEP = 10f;
 
 	// data
 	private TileBasedDataStore dataStore;
@@ -126,8 +126,8 @@ class MapFileWriter {
 	private final ExecutorService executorService;
 
 	// accounting
-	private long tilesProcessed = 0;
-	private long amountOfTilesInPercentStep;
+	private double tilesProcessed = 0;
+	private double amountOfTilesInPercentStep;
 	private long emptyTiles = 0;
 	private long maxTileSize = 0;
 	private long cumulatedTileSizeOfNonEmptyTiles = 0;
@@ -142,9 +142,10 @@ class MapFileWriter {
 		super();
 		this.dataStore = dataStore;
 		this.randomAccessFile = file;
-		amountOfTilesInPercentStep = dataStore.cumulatedNumberOfTiles() / PROGRESS_PERCENT_STEP;
-		if (amountOfTilesInPercentStep == 0)
-			amountOfTilesInPercentStep = 1;
+		amountOfTilesInPercentStep = Math.ceil(dataStore.cumulatedNumberOfTiles()
+				/ PROGRESS_PERCENT_STEP);
+		// if (amountOfTilesInPercentStep == 0)
+		// amountOfTilesInPercentStep = 1;
 		executorService = Executors.newFixedThreadPool(threadpoolSize);
 		this.bboxEnlargement = bboxEnlargement;
 	}
@@ -177,6 +178,8 @@ class MapFileWriter {
 		byte[] containerB = bufferZoomIntervalConfig.array();
 		randomAccessFile.write(containerB);
 		randomAccessFile.close();
+
+		LOGGER.info("Finished writing file.");
 
 		LOGGER.fine("number of empty tiles: " + emptyTiles);
 		LOGGER.fine("percentage of empty tiles: " + (float) emptyTiles
