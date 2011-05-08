@@ -24,10 +24,10 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 /**
- * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The
- * class defines some methods to access the backing data structure of deriving subclasses.
- * Besides organizing the redrawing process it handles tap events from the user to check if an
- * OverlayItem has been touched and {@link #onTap(int)} must be executed.
+ * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The class
+ * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
+ * the redrawing process it handles tap events from the user to check if an OverlayItem has been touched
+ * and {@link #onTap(int)} must be executed.
  * 
  * @param <Item>
  *            the type of items handled by this overlay.

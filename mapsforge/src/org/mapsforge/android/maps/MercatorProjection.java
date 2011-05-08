@@ -42,8 +42,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Converts a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom
-	 * level.
+	 * Converts a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom level.
 	 * 
 	 * @param latitude
 	 *            the latitude coordinate that should be converted.
@@ -71,8 +70,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Converts a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom
-	 * level.
+	 * Converts a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom level.
 	 * 
 	 * @param longitude
 	 *            the longitude coordinate that should be converted.
@@ -85,8 +83,7 @@ class MercatorProjection implements Projection {
 	}
 
 	/**
-	 * Converts a longitude coordinate (in degrees) to the tile X number at a certain zoom
-	 * level.
+	 * Converts a longitude coordinate (in degrees) to the tile X number at a certain zoom level.
 	 * 
 	 * @param longitude
 	 *            the longitude coordinate that should be converted.

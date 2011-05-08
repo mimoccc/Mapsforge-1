@@ -17,8 +17,8 @@
 package org.mapsforge.android.maps;
 
 /**
- * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values
- * are internally stored as integer numbers.
+ * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values are
+ * internally stored as integer numbers.
  */
 public class GeoPoint implements Comparable<GeoPoint> {
 	/**
@@ -50,11 +50,11 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	 * Constructs a new GeoPoint with the given latitude and longitude, measured in degrees.
 	 * 
 	 * @param latitude
-	 *            the latitude of the point. This will be limited by the minimum and maximum
-	 *            possible latitude value.
+	 *            the latitude of the point. This will be limited by the minimum and maximum possible
+	 *            latitude value.
 	 * @param longitude
-	 *            the longitude of the point. This will be limited by the minimum and maximum
-	 *            possible longitude value.
+	 *            the longitude of the point. This will be limited by the minimum and maximum possible
+	 *            longitude value.
 	 */
 	public GeoPoint(double latitude, double longitude) {
 		this.latitudeE6 = clipLatitude((int) (latitude * CONVERSION_FACTOR));
@@ -67,11 +67,11 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	 * (degrees * 10^6).
 	 * 
 	 * @param latitudeE6
-	 *            the latitude of the point in microdegrees. This will be limited by the minimum
-	 *            and maximum possible latitude value.
+	 *            the latitude of the point in microdegrees. This will be limited by the minimum and
+	 *            maximum possible latitude value.
 	 * @param longitudeE6
-	 *            the longitude of the point in microdegrees. This will be limited by the
-	 *            minimum and maximum possible longitude value.
+	 *            the longitude of the point in microdegrees. This will be limited by the minimum and
+	 *            maximum possible longitude value.
 	 */
 	public GeoPoint(int latitudeE6, int longitudeE6) {
 		this.latitudeE6 = clipLatitude(latitudeE6);

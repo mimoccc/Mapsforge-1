@@ -25,8 +25,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 /**
- * A MapGenerator that downloads map tiles from a server. To build an implementation for a
- * certain tile server, extend this class and implement the abstract methods.
+ * A MapGenerator that downloads map tiles from a server. To build an implementation for a certain tile
+ * server, extend this class and implement the abstract methods.
  */
 abstract class TileDownloadMapGenerator extends MapGenerator {
 	private Bitmap decodedBitmap;

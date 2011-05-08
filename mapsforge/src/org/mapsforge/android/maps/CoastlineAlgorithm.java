@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.TreeMap;
 
 /**
- * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The
- * algorithm is based on the close-areas.pl script, written by Frederik Ramm for the Osmarender
- * program. This implementation is optimized for high performance and memory reusing.
+ * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The algorithm is
+ * based on the close-areas.pl script, written by Frederik Ramm for the Osmarender program. This
+ * implementation is optimized for high performance and memory reusing.
  */
 class CoastlineAlgorithm {
 	/**
@@ -208,9 +208,9 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Adds a coastline segment to the internal data structures. Coastline segments are
-	 * automatically merged into longer parts when they share the same start or end point.
-	 * Adding the same coastline segment more than once has no effect.
+	 * Adds a coastline segment to the internal data structures. Coastline segments are automatically
+	 * merged into longer parts when they share the same start or end point. Adding the same coastline
+	 * segment more than once has no effect.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -292,8 +292,8 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Generates closed water and land polygons from unconnected coastline segments. Closed
-	 * segments are handled either as water or islands, depending on their orientation.
+	 * Generates closed water and land polygons from unconnected coastline segments. Closed segments are
+	 * handled either as water or islands, depending on their orientation.
 	 * 
 	 * @param closedPolygonHandler
 	 *            the implementation which will be called to handle the generated polygons.

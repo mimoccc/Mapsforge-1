@@ -1096,9 +1096,9 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Reads the given amount of bytes from the map file into the read buffer and resets the
-	 * internal buffer position. If the capacity of the read buffer is too small, a larger read
-	 * buffer is created automatically.
+	 * Reads the given amount of bytes from the map file into the read buffer and resets the internal
+	 * buffer position. If the capacity of the read buffer is too small, a larger read buffer is created
+	 * automatically.
 	 * 
 	 * @param length
 	 *            the amount of bytes to read from the map file.
@@ -1187,8 +1187,8 @@ public class MapDatabase {
 	/**
 	 * Converts a variable amount of bytes from the read buffer to a signed int.
 	 * <p>
-	 * The first bit is for continuation info, the other six (last byte) or seven (all other
-	 * bytes) bits for data. The second bit in the last byte indicates the sign of the number.
+	 * The first bit is for continuation info, the other six (last byte) or seven (all other bytes) bits
+	 * for data. The second bit in the last byte indicates the sign of the number.
 	 * 
 	 * @return the int value.
 	 */

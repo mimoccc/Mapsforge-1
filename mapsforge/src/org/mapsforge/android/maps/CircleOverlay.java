@@ -24,14 +24,14 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * CircleOverlay is an abstract base class to display {@link OverlayCircle OverlayCircles}. The
- * class defines some methods to access the backing data structure of deriving subclasses.
- * Besides organizing the redrawing process it handles tap events from the user to check if an
- * OverlayCircle has been touched and {@link #onTap(int)} must be executed.
+ * CircleOverlay is an abstract base class to display {@link OverlayCircle OverlayCircles}. The class
+ * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
+ * the redrawing process it handles tap events from the user to check if an OverlayCircle has been
+ * touched and {@link #onTap(int)} must be executed.
  * <p>
- * The overlay may be used to indicate positions which have a known accuracy, such as GPS fixes.
- * The radius of the circles is specified in meters and will be automatically converted to
- * pixels at each redraw.
+ * The overlay may be used to indicate positions which have a known accuracy, such as GPS fixes. The
+ * radius of the circles is specified in meters and will be automatically converted to pixels at each
+ * redraw.
  * 
  * @param <Circle>
  *            the type of circles handled by this overlay.
@@ -58,8 +58,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the circles (may be null).
 	 * @param defaultPaintOutline
-	 *            the default paint which will be used to draw the circle outlines (may be
-	 *            null).
+	 *            the default paint which will be used to draw the circle outlines (may be null).
 	 */
 	public CircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		this.defaultPaintFill = defaultPaintFill;

@@ -95,8 +95,8 @@ class MapDatabaseIndexCache {
 	}
 
 	/**
-	 * Returns the index entry of a block in the given map file. If the required index entry is
-	 * not cached, it will be read from the correct map file index and put in the cache.
+	 * Returns the index entry of a block in the given map file. If the required index entry is not
+	 * cached, it will be read from the correct map file index and put in the cache.
 	 * 
 	 * @param mapFileParameters
 	 *            the parameters of the map file for which the index entry is needed.

@@ -22,12 +22,12 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class
- * defines some methods to access the backing data structure of deriving subclasses.
+ * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class defines
+ * some methods to access the backing data structure of deriving subclasses.
  * <p>
- * The overlay may be used to show additional ways such as calculated routes. Closed polygons,
- * for example buildings or areas, are also supported. A way node sequence is considered as a
- * closed polygon if the first and the last way node are equal.
+ * The overlay may be used to show additional ways such as calculated routes. Closed polygons, for
+ * example buildings or areas, are also supported. A way node sequence is considered as a closed polygon
+ * if the first and the last way node are equal.
  * 
  * @param <Way>
  *            the type of ways handled by this overlay.

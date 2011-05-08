@@ -20,10 +20,10 @@ import android.graphics.Paint;
 import android.graphics.Point;
 
 /**
- * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All
- * rendering parameters like color, stroke width, pattern and transparency can be configured via
- * two {@link Paint} objects. Each circle is drawn twice - once with each paint object - to
- * allow for different outlines and fillings.
+ * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All rendering
+ * parameters like color, stroke width, pattern and transparency can be configured via two {@link Paint}
+ * objects. Each circle is drawn twice - once with each paint object - to allow for different outlines
+ * and fillings.
  */
 public class OverlayCircle {
 	/**

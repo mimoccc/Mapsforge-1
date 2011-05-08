@@ -20,8 +20,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 /**
- * This class holds all symbols that can be rendered on the map. All bitmaps are created when
- * the MapSymbols constructor is called and are recycled when the recycle() method is called.
+ * This class holds all symbols that can be rendered on the map. All bitmaps are created when the
+ * MapSymbols constructor is called and are recycled when the recycle() method is called.
  */
 class MapSymbols {
 	final Bitmap airport;

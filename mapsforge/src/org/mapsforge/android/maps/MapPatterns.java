@@ -23,8 +23,8 @@ import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
 
 /**
- * This class holds all patterns that can be rendered on the map. All bitmaps are created when
- * the MapPatterns constructor is called and are recycled when the recycle() method is called.
+ * This class holds all patterns that can be rendered on the map. All bitmaps are created when the
+ * MapPatterns constructor is called and are recycled when the recycle() method is called.
  */
 class MapPatterns {
 	private final Bitmap cemetery;

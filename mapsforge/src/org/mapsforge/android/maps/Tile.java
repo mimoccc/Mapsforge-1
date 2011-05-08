@@ -23,9 +23,9 @@ import java.io.Serializable;
 import android.graphics.Rect;
 
 /**
- * A tile represents a rectangular part of the world map. All tiles can be identified by their X
- * and Y number together with their zoom level. The actual area that a tile covers on a map
- * depends on the underlying map projection.
+ * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y
+ * number together with their zoom level. The actual area that a tile covers on a map depends on the
+ * underlying map projection.
  */
 class Tile implements Serializable {
 	private static final long serialVersionUID = 1L;

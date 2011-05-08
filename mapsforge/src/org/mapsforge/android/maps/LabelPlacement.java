@@ -24,8 +24,8 @@ import java.util.PriorityQueue;
 import android.graphics.Rect;
 
 /**
- * This class place the labels form POIs, area labels and normal labels. The main target is
- * avoiding collisions of these different labels.
+ * This class place the labels form POIs, area labels and normal labels. The main target is avoiding
+ * collisions of these different labels.
  */
 class LabelPlacement {
 	/**
@@ -124,12 +124,11 @@ class LabelPlacement {
 	}
 
 	/**
-	 * This method uses an adapted greedy strategy for the fixed four position model, above,
-	 * under left and right form the point of interest. It uses no priority search tree, because
-	 * it will not function with symbols only with points. Instead it uses two minimum heaps.
-	 * They work similar to a sweep line algorithm but have not a O(n log n +k) runtime. To find
-	 * the rectangle that has the top edge, I use also a minimum Heap. The rectangles are sorted
-	 * by their y coordinates.
+	 * This method uses an adapted greedy strategy for the fixed four position model, above, under left
+	 * and right form the point of interest. It uses no priority search tree, because it will not
+	 * function with symbols only with points. Instead it uses two minimum heaps. They work similar to a
+	 * sweep line algorithm but have not a O(n log n +k) runtime. To find the rectangle that has the top
+	 * edge, I use also a minimum Heap. The rectangles are sorted by their y coordinates.
 	 * 
 	 * @param labels
 	 *            label positions and text
@@ -137,8 +136,8 @@ class LabelPlacement {
 	 *            symbol positions
 	 * @param areaLabels
 	 *            area label positions and text
-	 * @return list of labels without overlaps with symbols and other labels by the four fixed
-	 *         position greedy strategy
+	 * @return list of labels without overlaps with symbols and other labels by the four fixed position
+	 *         greedy strategy
 	 */
 	private ArrayList<PointTextContainer> processFourPointGreedy(
 			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
@@ -283,12 +282,11 @@ class LabelPlacement {
 	}
 
 	/**
-	 * This method uses an adapted greedy strategy for the fixed two position model, above and
-	 * under. It uses no priority search tree, because it will not function with symbols only
-	 * with points. Instead it uses two minimum heaps. They work similar to a sweep line
-	 * algorithm but have not a O(n log n +k) runtime. To find the rectangle that has the
-	 * leftest edge, I use also a minimum Heap. The rectangles are sorted by their x
-	 * coordinates.
+	 * This method uses an adapted greedy strategy for the fixed two position model, above and under. It
+	 * uses no priority search tree, because it will not function with symbols only with points. Instead
+	 * it uses two minimum heaps. They work similar to a sweep line algorithm but have not a O(n log n
+	 * +k) runtime. To find the rectangle that has the leftest edge, I use also a minimum Heap. The
+	 * rectangles are sorted by their x coordinates.
 	 * 
 	 * @param labels
 	 *            label positions and text
@@ -296,8 +294,8 @@ class LabelPlacement {
 	 *            symbol positions
 	 * @param areaLabels
 	 *            area label positions and text
-	 * @return list of labels without overlaps with symbols and other labels by the two fixed
-	 *         position greedy strategy
+	 * @return list of labels without overlaps with symbols and other labels by the two fixed position
+	 *         greedy strategy
 	 */
 	private ArrayList<PointTextContainer> processTwoPointGreedy(
 			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
@@ -435,9 +433,9 @@ class LabelPlacement {
 	}
 
 	/**
-	 * The greedy algorithms need possible label positions, to choose the best among them. This
-	 * method removes the reference points, that are not validate. Not validate means, that the
-	 * Reference overlap with another symbol or label or is outside of the tile.
+	 * The greedy algorithms need possible label positions, to choose the best among them. This method
+	 * removes the reference points, that are not validate. Not validate means, that the Reference
+	 * overlap with another symbol or label or is outside of the tile.
 	 * 
 	 * @param refPos
 	 *            list of the potential positions
@@ -583,8 +581,8 @@ class LabelPlacement {
 	}
 
 	/**
-	 * This method removes all the area labels, that overlap each other. So that the output is
-	 * collision free
+	 * This method removes all the area labels, that overlap each other. So that the output is collision
+	 * free
 	 * 
 	 * @param areaLabels
 	 *            area labels from the actual tile
@@ -672,9 +670,9 @@ class LabelPlacement {
 	}
 
 	/**
-	 * The inputs are all the label and symbol objects of the current tile. The output is
-	 * overlap free label and symbol placement with the greedy strategy. The placement model is
-	 * either the two fixed point or the four fixed point model.
+	 * The inputs are all the label and symbol objects of the current tile. The output is overlap free
+	 * label and symbol placement with the greedy strategy. The placement model is either the two fixed
+	 * point or the four fixed point model.
 	 * 
 	 * @param labels
 	 *            labels from the current tile.
@@ -728,8 +726,8 @@ class LabelPlacement {
 	}
 
 	/**
-	 * This method removes all the Symbols, that overlap each other. So that the output is
-	 * collision free.
+	 * This method removes all the Symbols, that overlap each other. So that the output is collision
+	 * free.
 	 * 
 	 * @param symbols
 	 *            symbols from the actual tile

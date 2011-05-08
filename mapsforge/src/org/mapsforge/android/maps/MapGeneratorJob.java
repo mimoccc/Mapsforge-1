@@ -21,8 +21,8 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
- * A container class that holds all immutable rendering parameters for a single map image
- * together with a mutable priority field, which indicates the importance of this task.
+ * A container class that holds all immutable rendering parameters for a single map image together with
+ * a mutable priority field, which indicates the importance of this task.
  */
 class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;

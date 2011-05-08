@@ -27,8 +27,8 @@ import android.content.Context;
 import android.graphics.Paint;
 
 /**
- * ArrayCircleOverlay is a thread-safe implementation of the {@link CircleOverlay} class using
- * an {@link ArrayList} as internal data structure. Default paints for all {@link OverlayCircle
+ * ArrayCircleOverlay is a thread-safe implementation of the {@link CircleOverlay} class using an
+ * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayCircle
  * OverlayCircles} without individual paints can be defined via the constructor.
  * <p>
  * The ArrayCircleOverlay handles tap events on CircleOverlays by displaying their title in an
@@ -47,8 +47,7 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the circles (may be null).
 	 * @param defaultPaintOutline
-	 *            the default paint which will be used to draw the circle outlines (may be
-	 *            null).
+	 *            the default paint which will be used to draw the circle outlines (may be null).
 	 * @param context
 	 *            the reference to the application context.
 	 */

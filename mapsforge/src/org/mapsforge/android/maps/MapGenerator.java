@@ -21,8 +21,8 @@ import java.util.PriorityQueue;
 import android.graphics.Bitmap;
 
 /**
- * A MapGenerator provides map images. This abstract base class handles all thread specific
- * actions and provides the queue for jobs, which need to be processed and scheduled.
+ * A MapGenerator provides map images. This abstract base class handles all thread specific actions and
+ * provides the queue for jobs, which need to be processed and scheduled.
  */
 abstract class MapGenerator extends Thread {
 	private static final GeoPoint DEFAULT_START_POINT = new GeoPoint(51.33, 10.45);
@@ -157,8 +157,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * Adds the given job to the queue. A call to this method has no effect if the given job is
-	 * already in the queue.
+	 * Adds the given job to the queue. A call to this method has no effect if the given job is already
+	 * in the queue.
 	 * 
 	 * @param mapGeneratorJob
 	 *            the job to be added to the queue.
@@ -170,8 +170,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method will by called at the end of the run method when the thread was interrupted.
-	 * It can be used to clean up objects and to close any open connections.
+	 * This method will by called at the end of the run method when the thread was interrupted. It can
+	 * be used to clean up objects and to close any open connections.
 	 */
 	abstract void cleanup();
 
@@ -242,8 +242,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method is called each time the MapView gets attached to the window. May be
-	 * overridden by subclasses to react on this event.
+	 * This method is called each time the MapView gets attached to the window. May be overridden by
+	 * subclasses to react on this event.
 	 * <p>
 	 * The default implementation of this method does nothing.
 	 */
@@ -252,8 +252,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method is called each time the MapView gets detached from the window. May be
-	 * overridden by subclasses to react on this event.
+	 * This method is called each time the MapView gets detached from the window. May be overridden by
+	 * subclasses to react on this event.
 	 * <p>
 	 * The default implementation of this method does nothing.
 	 */
@@ -269,8 +269,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method is called each time before a tile needs to be processed. It can be used to
-	 * clear any data structures that will be needed when the next map tile will be processed.
+	 * This method is called each time before a tile needs to be processed. It can be used to clear any
+	 * data structures that will be needed when the next map tile will be processed.
 	 */
 	abstract void prepareMapGeneration();
 
@@ -310,8 +310,8 @@ abstract class MapGenerator extends Thread {
 	}
 
 	/**
-	 * This method is called only once before any map tile is requested. It can be used to set
-	 * up data structures or connections that will be needed.
+	 * This method is called only once before any map tile is requested. It can be used to set up data
+	 * structures or connections that will be needed.
 	 * 
 	 * @param bitmap
 	 *            the bitmap on which all future tiles need to be copied.

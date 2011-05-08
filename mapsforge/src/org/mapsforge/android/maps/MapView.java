@@ -48,32 +48,30 @@ import android.view.ViewGroup;
 import android.widget.ZoomControls;
 
 /**
- * A MapView shows a map on the display of the device. It handles all user input and touch
- * gestures to move and zoom the map. This MapView also comes with an integrated scale bar,
- * which can be activated via the {@link #setScaleBar(boolean)} method. The built-in zoom
- * controls can be enabled with the {@link #setBuiltInZoomControls(boolean)} method. The
- * {@link #getController()} method returns a <code>MapController</code> to programmatically
- * modify the position and zoom level of the map.
+ * A MapView shows a map on the display of the device. It handles all user input and touch gestures to
+ * move and zoom the map. This MapView also comes with an integrated scale bar, which can be activated
+ * via the {@link #setScaleBar(boolean)} method. The built-in zoom controls can be enabled with the
+ * {@link #setBuiltInZoomControls(boolean)} method. The {@link #getController()} method returns a
+ * <code>MapController</code> to programmatically modify the position and zoom level of the map.
  * <p>
- * This implementation supports offline map rendering as well as downloading map images (tiles)
- * over an Internet connection. All possible operation modes are listed in the
- * {@link MapViewMode} enumeration. The operation mode of a MapView can be set in the
- * constructor and changed at runtime with the {@link #setMapViewMode(MapViewMode)} method. Some
- * MapView parameters like the maximum possible zoom level or the default starting point depend
- * on the selected operation mode.
+ * This implementation supports offline map rendering as well as downloading map images (tiles) over an
+ * Internet connection. All possible operation modes are listed in the {@link MapViewMode} enumeration.
+ * The operation mode of a MapView can be set in the constructor and changed at runtime with the
+ * {@link #setMapViewMode(MapViewMode)} method. Some MapView parameters like the maximum possible zoom
+ * level or the default starting point depend on the selected operation mode.
  * <p>
- * In offline rendering mode a special database file is required which contains the map data.
- * Such map files can be stored in any readable folder. The current map file for a MapView is
- * set by calling the {@link #setMapFile(String)} method. To retrieve a <code>MapDatabase</code>
- * that returns some metadata about the map file, use the {@link #getMapDatabase()} method.
+ * In offline rendering mode a special database file is required which contains the map data. Such map
+ * files can be stored in any readable folder. The current map file for a MapView is set by calling the
+ * {@link #setMapFile(String)} method. To retrieve a <code>MapDatabase</code> that returns some metadata
+ * about the map file, use the {@link #getMapDatabase()} method.
  * <p>
- * Map tiles are automatically cached in a separate directory on the memory card. The size of
- * this cache may be adjusted via the {@link #setMemoryCardCacheSize(int)} method. The
+ * Map tiles are automatically cached in a separate directory on the memory card. The size of this cache
+ * may be adjusted via the {@link #setMemoryCardCacheSize(int)} method. The
  * {@link MapView#setMemoryCardCachePersistence(boolean)} method sets the cache persistence.
  * <p>
- * {@link Overlay Overlays} can be used to display geographical data such as points and ways. To
- * draw an overlay on top of the map, add it to the list returned by {@link #getOverlays()}.
- * Overlays may be added or removed from the list at any time.
+ * {@link Overlay Overlays} can be used to display geographical data such as points and ways. To draw an
+ * overlay on top of the map, add it to the list returned by {@link #getOverlays()}. Overlays may be
+ * added or removed from the list at any time.
  * <p>
  * All text fields from the {@link TextField} enumeration can be overridden at runtime via the
  * {@link #setText(TextField, String)} method. The default texts are in English.
@@ -387,8 +385,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Abstract base class for the single-touch and multi-touch handler. Default visibility is
-	 * required to avoid a synthetic method.
+	 * Abstract base class for the single-touch and multi-touch handler. Default visibility is required
+	 * to avoid a synthetic method.
 	 */
 	abstract class TouchEventHandler {
 		/**
@@ -633,8 +631,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Detects if the code is currently executed on the emulator from the Android SDK. This
-	 * method can be used for code branches to work around known bugs in the Android emulator.
+	 * Detects if the code is currently executed on the emulator from the Android SDK. This method can
+	 * be used for code branches to work around known bugs in the Android emulator.
 	 * 
 	 * @return true if the Android emulator has been detected, false otherwise.
 	 */
@@ -719,8 +717,8 @@ public class MapView extends ViewGroup {
 	private byte zoomLevelMin;
 
 	/**
-	 * Thread-safe overlay list. It is necessary to manually synchronize on this list when
-	 * iterating over it.
+	 * Thread-safe overlay list. It is necessary to manually synchronize on this list when iterating
+	 * over it.
 	 */
 	List<Overlay> overlays;
 
@@ -745,8 +743,8 @@ public class MapView extends ViewGroup {
 	 * @param attrs
 	 *            A set of attributes.
 	 * @throws IllegalArgumentException
-	 *             if the context object is not an instance of {@link MapActivity} or if the
-	 *             supplied {@link MapViewMode} is invalid.
+	 *             if the context object is not an instance of {@link MapActivity} or if the supplied
+	 *             {@link MapViewMode} is invalid.
 	 */
 	public MapView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -862,8 +860,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the maximum zoom level which is supported by the currently selected
-	 * {@link MapViewMode} of the MapView.
+	 * Returns the maximum zoom level which is supported by the currently selected {@link MapViewMode}
+	 * of the MapView.
 	 * 
 	 * @return the maximum possible zoom level.
 	 */
@@ -891,8 +889,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the projection that is currently in use to convert pixel coordinates to
-	 * geographical coordinates on the map.
+	 * Returns the projection that is currently in use to convert pixel coordinates to geographical
+	 * coordinates on the map.
 	 * 
 	 * @return The projection of the MapView. Do not keep this object for a longer time.
 	 */
@@ -924,8 +922,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom
-	 * buttons, scale bar, overlays, menus and the title bar are not included in the screenshot.
+	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom buttons,
+	 * scale bar, overlays, menus and the title bar are not included in the screenshot.
 	 * 
 	 * @param fileName
 	 *            the name of the image file. If the file exists, it will be overwritten.
@@ -1107,8 +1105,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the persistence of the memory card cache. If set to true, cached image files will
-	 * not be deleted when the MapView gets destroyed. The default value is false.
+	 * Sets the persistence of the memory card cache. If set to true, cached image files will not be
+	 * deleted when the MapView gets destroyed. The default value is false.
 	 * 
 	 * @param persistence
 	 *            the new persistence of the memory card cache.
@@ -1118,8 +1116,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the new size of the memory card cache. If the cache already contains more items than
-	 * the new capacity allows, items are discarded based on the cache policy.
+	 * Sets the new size of the memory card cache. If the cache already contains more items than the new
+	 * capacity allows, items are discarded based on the cache policy.
 	 * 
 	 * @param newCacheSize
 	 *            the new capacity of the memory card cache.
@@ -1256,8 +1254,8 @@ public class MapView extends ViewGroup {
 	 * Sets the maximum zoom level of the map to which the user may zoom in.
 	 * <p>
 	 * The maximum possible zoom level of the MapView depends also on the currently selected
-	 * {@link MapViewMode}. For example, downloading map tiles may only be possible up to a
-	 * certain zoom level. Setting a higher maximum zoom level has no effect in this case.
+	 * {@link MapViewMode}. For example, downloading map tiles may only be possible up to a certain zoom
+	 * level. Setting a higher maximum zoom level has no effect in this case.
 	 * 
 	 * @param zoomLevelMax
 	 *            the maximum zoom level.
@@ -1297,8 +1295,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the minimum of the maximum zoom level set via {@link #setZoomMax(byte)} and the
-	 * maximum zoom level which is supported by the currently selected {@link MapViewMode}.
+	 * Returns the minimum of the maximum zoom level set via {@link #setZoomMax(byte)} and the maximum
+	 * zoom level which is supported by the currently selected {@link MapViewMode}.
 	 * 
 	 * @return the maximum possible zoom level.
 	 */
@@ -1929,8 +1927,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the default starting point for the map, which depends on the currently selected
-	 * operation mode of the MapView.
+	 * Returns the default starting point for the map, which depends on the currently selected operation
+	 * mode of the MapView.
 	 * 
 	 * @return the default starting point.
 	 */
@@ -1939,8 +1937,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Returns the default zoom level for the map, which depends on the currently selected
-	 * operation mode of the MapView.
+	 * Returns the default zoom level for the map, which depends on the currently selected operation
+	 * mode of the MapView.
 	 * 
 	 * @return the default zoom level.
 	 */
@@ -2356,8 +2354,8 @@ public class MapView extends ViewGroup {
 	 * @param point
 	 *            the new center point of the map.
 	 * @param zoom
-	 *            the new zoom level. This value will be limited by the maximum and minimum
-	 *            possible zoom level.
+	 *            the new zoom level. This value will be limited by the maximum and minimum possible
+	 *            zoom level.
 	 */
 	void setCenterAndZoom(GeoPoint point, byte zoom) {
 		if (point == null) {
@@ -2398,8 +2396,8 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Calculates the priority for the given job based on the current position and zoom level of
-	 * the map.
+	 * Calculates the priority for the given job based on the current position and zoom level of the
+	 * map.
 	 * 
 	 * @param mapGeneratorJob
 	 *            the job for which the priority should be calculated.

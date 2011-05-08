@@ -19,8 +19,7 @@ package org.mapsforge.android.maps;
 /**
  * A CoastlineWay is a special way to outline a sea or an island.
  * 
- * @see <a
- *      href="http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline">Tag:natural=coastline</a>
+ * @see <a href="http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline">Tag:natural=coastline</a>
  */
 class CoastlineWay {
 	private static final byte BOTTOM = 1;
@@ -29,9 +28,9 @@ class CoastlineWay {
 	private static final byte TOP = 3;
 
 	/**
-	 * Calculates the angle for a given coastline point. The angle is defined as zero at the
-	 * middle of the right tile side. The angle increases clockwise, therefore the middle of the
-	 * bottom tile side has a value of π/2 and the middle of the left tile side a value of π.
+	 * Calculates the angle for a given coastline point. The angle is defined as zero at the middle of
+	 * the right tile side. The angle increases clockwise, therefore the middle of the bottom tile side
+	 * has a value of π/2 and the middle of the left tile side a value of π.
 	 * 
 	 * @param x
 	 *            the x coordinate of the coastline point.
@@ -74,8 +73,8 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Calculates the orientation of the given coastline segment by calculating the signed area.
-	 * As the origin is in the top left corner, a positive area means clockwise.
+	 * Calculates the orientation of the given coastline segment by calculating the signed area. As the
+	 * origin is in the top left corner, a positive area means clockwise.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.

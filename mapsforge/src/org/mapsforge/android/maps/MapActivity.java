@@ -23,17 +23,17 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 /**
- * MapActivity is the abstract base class which must be extended in order to use a
- * {@link MapView}. There are no abstract methods in this implementation that subclasses need to
- * override. In addition, no API key or registration is required.
+ * MapActivity is the abstract base class which must be extended in order to use a {@link MapView}.
+ * There are no abstract methods in this implementation that subclasses need to override. In addition,
+ * no API key or registration is required.
  * <p>
- * A subclass may create a MapView either via one of the MapView constructors or by inflating an
- * XML layout file. It is possible to use more than one MapView at the same time as each of them
- * works independently from the others.
+ * A subclass may create a MapView either via one of the MapView constructors or by inflating an XML
+ * layout file. It is possible to use more than one MapView at the same time as each of them works
+ * independently from the others.
  * <p>
- * When the MapActivity is shut down, the current center position, zoom level and map file of
- * the MapView are saved in a preferences file and restored automatically during the setup
- * process of a MapView.
+ * When the MapActivity is shut down, the current center position, zoom level and map file of the
+ * MapView are saved in a preferences file and restored automatically during the setup process of a
+ * MapView.
  */
 public abstract class MapActivity extends Activity {
 	/**

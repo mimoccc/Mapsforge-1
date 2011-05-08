@@ -29,8 +29,8 @@ class PointTextContainer {
 	float y;
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
-	 * and one paint objects.
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable and one
+	 * paint objects.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -54,8 +54,8 @@ class PointTextContainer {
 	}
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable
-	 * and two paint objects.
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable and two
+	 * paint objects.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -85,8 +85,8 @@ class PointTextContainer {
 	}
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable,
-	 * two paint objects, and a reference on a symbol, if the text is connected with a POI.
+	 * Create a new point container, that holds the x-y coordinates of a point, a text variable, two
+	 * paint objects, and a reference on a symbol, if the text is connected with a POI.
 	 * 
 	 * @param text
 	 *            the text of the point.

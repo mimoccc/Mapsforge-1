@@ -25,10 +25,10 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 /**
- * This class process the methods for the Dependency Cache. It's connected with the
- * LabelPlacement class. The main goal is, to remove double labels and symbols that are already
- * rendered, from the actual tile. Labels and symbols that, would be rendered on an already
- * drawn Tile, will be deleted too.
+ * This class process the methods for the Dependency Cache. It's connected with the LabelPlacement
+ * class. The main goal is, to remove double labels and symbols that are already rendered, from the
+ * actual tile. Labels and symbols that, would be rendered on an already drawn Tile, will be deleted
+ * too.
  */
 class DependencyCache {
 	/**
@@ -207,9 +207,9 @@ class DependencyCache {
 	}
 
 	/**
-	 * Fills the dependency entry from the tile and the neighbor tiles with the dependency
-	 * information, that are necessary for drawing. To do that every label and symbol that will
-	 * be drawn, will be checked if it produces dependencies with other tiles.
+	 * Fills the dependency entry from the tile and the neighbor tiles with the dependency information,
+	 * that are necessary for drawing. To do that every label and symbol that will be drawn, will be
+	 * checked if it produces dependencies with other tiles.
 	 * 
 	 * @param pTC
 	 *            list of the labels
@@ -800,8 +800,7 @@ class DependencyCache {
 	}
 
 	/**
-	 * This method fills the entries in the dependency cache of the tiles, if their
-	 * dependencies.
+	 * This method fills the entries in the dependency cache of the tiles, if their dependencies.
 	 * 
 	 * @param labels
 	 *            current labels, that will be displayed.
@@ -827,8 +826,8 @@ class DependencyCache {
 	}
 
 	/**
-	 * This method must be called, before the dependencies will be handled correctly. Because it
-	 * sets the actual Tile and looks if it has already dependencies.
+	 * This method must be called, before the dependencies will be handled correctly. Because it sets
+	 * the actual Tile and looks if it has already dependencies.
 	 * 
 	 * @param cT
 	 *            the current Tile
@@ -844,9 +843,9 @@ class DependencyCache {
 	}
 
 	/**
-	 * Checks if tile in the dependency Cache can be deleted. Not every connected entry from the
-	 * Tile to the dependencies can be deleted, because the dependencies could have some
-	 * connection with neighbor tiles. AT THE TIME NOT TESTED AND NOT USED!!!
+	 * Checks if tile in the dependency Cache can be deleted. Not every connected entry from the Tile to
+	 * the dependencies can be deleted, because the dependencies could have some connection with
+	 * neighbor tiles. AT THE TIME NOT TESTED AND NOT USED!!!
 	 * 
 	 * @param tileToDelete
 	 *            tile which image will be remove from the cache
@@ -956,8 +955,8 @@ class DependencyCache {
 	}
 
 	/**
-	 * Removes the are labels from the actual list, that would be rendered in a Tile that has
-	 * already be drawn.
+	 * Removes the are labels from the actual list, that would be rendered in a Tile that has already be
+	 * drawn.
 	 * 
 	 * @param areaLabels
 	 *            current area Labels, that will be displayed
@@ -1055,9 +1054,9 @@ class DependencyCache {
 	}
 
 	/**
-	 * When the LabelPlacement class generates potential label positions for an POI, there
-	 * should be no possible positions, that collide with existing symbols or labels in the
-	 * dependency Cache. This class implements this functionality.
+	 * When the LabelPlacement class generates potential label positions for an POI, there should be no
+	 * possible positions, that collide with existing symbols or labels in the dependency Cache. This
+	 * class implements this functionality.
 	 * 
 	 * @param refPos
 	 *            possible label positions form the two or four point Greedy

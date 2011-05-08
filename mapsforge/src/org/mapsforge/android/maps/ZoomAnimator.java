@@ -19,8 +19,8 @@ package org.mapsforge.android.maps;
 import android.os.SystemClock;
 
 /**
- * A ZoomAnimator handles the zoom-in and zoom-out animations of the corresponding MapView. It
- * runs in a separate thread to avoid blocking the UI thread.
+ * A ZoomAnimator handles the zoom-in and zoom-out animations of the corresponding MapView. It runs in a
+ * separate thread to avoid blocking the UI thread.
  */
 class ZoomAnimator extends Thread {
 	private static final int DEFAULT_DURATION = 300;

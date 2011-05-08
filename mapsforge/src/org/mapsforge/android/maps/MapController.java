@@ -21,8 +21,8 @@ import android.view.View;
 
 /**
  * A MapController is used to programmatically modify the position and zoom level of a map. Each
- * MapController is assigned to a single MapView instance. To retrieve a MapController for a
- * given MapView, call the {@link MapView#getController()} method.
+ * MapController is assigned to a single MapView instance. To retrieve a MapController for a given
+ * MapView, call the {@link MapView#getController()} method.
  */
 public final class MapController implements android.view.View.OnKeyListener {
 	private final MapView mapView;
@@ -63,8 +63,8 @@ public final class MapController implements android.view.View.OnKeyListener {
 	 * Sets the zoom level of the MapView.
 	 * 
 	 * @param zoomLevel
-	 *            the new zoom level. This value will be limited by the maximum and minimum
-	 *            possible zoom level.
+	 *            the new zoom level. This value will be limited by the maximum and minimum possible
+	 *            zoom level.
 	 * @return the new zoom level.
 	 */
 	public int setZoom(int zoomLevel) {

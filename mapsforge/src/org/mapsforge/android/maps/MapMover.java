@@ -19,8 +19,8 @@ package org.mapsforge.android.maps;
 import android.os.SystemClock;
 
 /**
- * A MapMover moves the map horizontally and vertically at a constant speed. It runs in a
- * separate thread to avoid blocking the UI thread.
+ * A MapMover moves the map horizontally and vertically at a constant speed. It runs in a separate
+ * thread to avoid blocking the UI thread.
  */
 class MapMover extends Thread {
 	private static final int FRAME_LENGTH = 15;
