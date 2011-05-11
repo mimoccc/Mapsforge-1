@@ -122,8 +122,11 @@ public class MapView extends ViewGroup {
 			// round the event coordinates to integers
 			event.setLocation((int) event.getX(), (int) event.getY());
 
-			// let the ScaleGestureDetector inspect all events
-			this.scaleGestureDetector.onTouchEvent(event);
+			// workaround for a bug in the ScaleGestureDetector, see Android issue #12976
+			if (event.getAction() != MotionEvent.ACTION_MOVE || event.getPointerCount() > 1) {
+				// let the ScaleGestureDetector inspect the event
+				this.scaleGestureDetector.onTouchEvent(event);
+			}
 
 			// extract the action from the action code
 			this.action = event.getAction() & MotionEvent.ACTION_MASK;
