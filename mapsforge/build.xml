@@ -23,7 +23,7 @@ purpose.
 	<property file="../mapsforge-keystore.properties" />
 
 	<!-- List of files to be included in every distribution (JAR file) -->
-	<fileset dir="." id="info" includes="COPYING, NEWS" />
+	<fileset dir="." id="info" includes="COPYING, COPYING.LESSER, NEWS" />
 
 	<!-- List of all JAR files in the library folder -->
 	<path id="classpath">
