@@ -27,8 +27,8 @@
  * overridden.
  * <p>
  * This software is a part of the <a href="http://mapsforge.org/" target="_top">mapsforge</a>
- * project and distributed under the <a href="http://www.gnu.org/licenses/gpl.html"
- * target="_top">GPL3 license</a>. All map data (c) <a href="http://www.openstreetmap.org/"
+ * project and distributed under the <a href="http://www.gnu.org/licenses/lgpl.html"
+ * target="_top">LGPL3 license</a>. All map data (c) <a href="http://www.openstreetmap.org/"
  * target="_top">OpenStreetMap</a> contributors, <a
  * href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA license</a>.
  */
