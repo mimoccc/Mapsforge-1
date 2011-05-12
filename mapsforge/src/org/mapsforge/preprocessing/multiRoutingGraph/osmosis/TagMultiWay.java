@@ -21,7 +21,7 @@ import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
 /**
  * List of known highway tags (only roads for now).
  */
-public class TagMultiWay extends TagHighway{
+public class TagMultiWay extends TagHighway {
 
 	// roads
 	/** */
@@ -32,17 +32,27 @@ public class TagMultiWay extends TagHighway{
 	public static final String LIGHT_RAIL = "light_rail";
 	/** */
 	public static final byte LIGHT_RAIL_BYTE = 21;
+	/** */
 	public static final String NARROW_GAUGE = "narrow_gauge";
+	/** */
 	public static final byte NARROW_GAUGE_BYTE = 22;
+	/** */
 	public static final String TRAM = "tram";
+	/** */
 	public static final byte TRAM_BYTE = 23;
+	/** */
 	public static final String MONORAIL = "monorail";
+	/** */
 	public static final byte MONORAIL_BYTE = 24;
+	/** */
 	public static final String FUNICULAR = "funicular";
+	/** */
 	public static final byte FUNICULAR_BYTE = 25;
+	/** */
 	public static final String SUBWAY = "subway";
+	/** */
 	public static final byte SUBWAY_BYTE = 26;
-	
+
 	/**
 	 * simple constructor
 	 */
@@ -60,5 +70,5 @@ public class TagMultiWay extends TagHighway{
 			vk[kv.get(k)] = k;
 		}
 	}
-	
+
 }
