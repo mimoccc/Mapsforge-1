@@ -255,7 +255,7 @@ class TileMemoryCardCache {
 	 * Destroy the cache at the end of its lifetime.
 	 * 
 	 * @param persistence
-	 *            true if the cached images should be deleted, false otherwise.
+	 *            true if the cached images should be kept, false otherwise.
 	 */
 	synchronized void destroy(boolean persistence) {
 		if (persistence) {
