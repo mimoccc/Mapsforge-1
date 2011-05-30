@@ -289,11 +289,15 @@ purpose.
 				         includes="org/mapsforge/preprocessing/routingGraph/graphCreation/"/>
 				<fileset dir="${mapsforge.src}"
 				         includes="org/mapsforge/core/Rect.java,
+							org/mapsforge/core/Edge.java,
+							org/mapsforge/core/Vertex.java,
 							org/mapsforge/core/GeoCoordinate.java,
 							org/mapsforge/core/MercatorProjection.java,
 							org/mapsforge/core/WGS84.java" />
 				<fileset dir="${mapsforge.bin}"
 				         includes="org/mapsforge/core/Rect.class,
+							org/mapsforge/core/Edge.class,
+							org/mapsforge/core/Vertex.class,					
 							org/mapsforge/core/GeoCoordinate.class,
 							org/mapsforge/core/MercatorProjection.class,
 							org/mapsforge/core/WGS84.class" />
