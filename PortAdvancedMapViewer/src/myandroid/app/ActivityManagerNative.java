@@ -14,7 +14,6 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package myandroid.app;
-
 /*
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -304,7 +303,7 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
             if (b == null) {
                 return true;
             }
-            IIntentReceiver rec = IIntentReceiver.Stub.asInterface(b);
+            IIntentReceiver rec = IIntentReceiver.Stub.asInterface((android.os.IBinder) b);
             unregisterReceiver(rec);
             reply.writeNoException();
             return true;
@@ -320,7 +319,7 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
             String resolvedType = data.readString();
             b = data.readStrongBinder();
             IIntentReceiver resultTo =
-                b != null ? IIntentReceiver.Stub.asInterface(b) : null;
+                b != null ? IIntentReceiver.Stub.asInterface((android.os.IBinder) b) : null;
             int resultCode = data.readInt();
             String resultData = data.readString();
             Bundle resultExtras = data.readBundle();
