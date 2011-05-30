@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -31,16 +31,43 @@ package myandroid.util;
  * limitations under the License.
  */
 
+
+import myandroid.graphics.Paint;
+
 /**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
+ * TextPaint is an extension of Paint that leaves room for some extra
+ * data used during text measuring and drawing.
  */
-public interface Printer {
+public class TextPaint extends Paint {
+    public int bgColor;
+    public int baselineShift;
+    public int linkColor;
+    public int[] drawableState;
+    public float density = 1.0f;
+
+    public TextPaint() {
+        super();
+    }
+
+    public TextPaint(int flags) {
+        super(flags);
+    }
+
+    public TextPaint(Paint p) {
+        super(p);
+    }
+
     /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
+     * Copy the fields from tp into this TextPaint, including the
+     * fields inherited from Paint.
      */
-    void println(String x);
+    public void set(TextPaint tp) {
+        super.set(tp);
+
+        bgColor = tp.bgColor;
+        baselineShift = tp.baselineShift;
+        linkColor = tp.linkColor;
+        drawableState = tp.drawableState;
+        density = tp.density;
+    }
 }

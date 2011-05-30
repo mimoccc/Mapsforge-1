@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text;
 
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,15 +32,15 @@ package myandroid.util;
  */
 
 /**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
+ * This interface should be added to a span object that should not be copied
+ * into a new Spenned when performing a slice or copy operation on the original
+ * Spanned it was placed in.
  */
-public interface Printer {
+public interface NoCopySpan {
     /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
+     * Convenience equivalent for when you would just want a new Object() for
+     * a span but want it to be no-copy.  Use this instead.
      */
-    void println(String x);
+    public class Concrete implements NoCopySpan {
+    }
 }

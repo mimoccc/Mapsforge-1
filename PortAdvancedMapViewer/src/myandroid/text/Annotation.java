@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text;
 
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,16 +31,45 @@ package myandroid.util;
  * limitations under the License.
  */
 
+import myandroid.os.Parcel;
+
 /**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
+ * Annotations are simple key-value pairs that are preserved across
+ * TextView save/restore cycles and can be used to keep application-specific
+ * data that needs to be maintained for regions of text.
  */
-public interface Printer {
-    /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
-     */
-    void println(String x);
+public class Annotation implements ParcelableSpan {
+    private final String mKey;
+    private final String mValue;
+
+    public Annotation(String key, String value) {
+        mKey = key;
+        mValue = value;
+    }
+
+    public Annotation(Parcel src) {
+        mKey = src.readString();
+        mValue = src.readString();
+    }
+
+    public int getSpanTypeId() {
+        return TextUtils.ANNOTATION;
+    }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mKey);
+        dest.writeString(mValue);
+    }
+
+    public String getKey() {
+        return mKey;
+    }
+
+    public String getValue() {
+        return mValue;
+    }
 }

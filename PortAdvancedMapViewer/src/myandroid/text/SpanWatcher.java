@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -32,15 +32,26 @@ package myandroid.util;
  */
 
 /**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
+ * When an object of this type is attached to a Spannable, its methods
+ * will be called to notify it that other markup objects have been
+ * added, changed, or removed.
  */
-public interface Printer {
+public interface SpanWatcher extends NoCopySpan {
     /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
+     * This method is called to notify you that the specified object
+     * has been attached to the specified range of the text.
      */
-    void println(String x);
+    public void onSpanAdded(Spannable text, Object what, int start, int end);
+    /**
+     * This method is called to notify you that the specified object
+     * has been detached from the specified range of the text.
+     */
+    public void onSpanRemoved(Spannable text, Object what, int start, int end);
+    /**
+     * This method is called to notify you that the specified object
+     * has been relocated from the range <code>ostart&hellip;oend</code>
+     * to the new range <code>nstart&hellip;nend</code> of the text.
+     */
+    public void onSpanChanged(Spannable text, Object what, int ostart, int oend,
+                              int nstart, int nend);
 }

@@ -61,7 +61,7 @@ import myandroid.text.style.URLSpan;
 import myandroid.text.style.UnderlineSpan;
 import myandroid.util.Printer;
 
-import com.android.internal.util.ArrayUtils;
+import mycom.android.internal.util.ArrayUtils;
 
 import java.util.regex.Pattern;
 import java.util.Iterator;

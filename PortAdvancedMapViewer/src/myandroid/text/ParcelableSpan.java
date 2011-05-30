@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text;
 
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,16 +31,16 @@ package myandroid.util;
  * limitations under the License.
  */
 
+import myandroid.os.Parcelable;
+
 /**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
+ * A special kind of Parcelable for objects that will serve as text spans.
+ * This can only be used by code in the framework; it is not intended for
+ * applications to implement their own Parcelable spans.
  */
-public interface Printer {
+public interface ParcelableSpan extends Parcelable {
     /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
+     * Return a special type identifier for this span class.
      */
-    void println(String x);
+    public abstract int getSpanTypeId();
 }

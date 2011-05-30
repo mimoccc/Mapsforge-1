@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text.style;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -31,16 +31,8 @@ package myandroid.util;
  * limitations under the License.
  */
 
-/**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
- */
-public interface Printer {
-    /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
-     */
-    void println(String x);
+public interface WrapTogetherSpan
+extends ParagraphStyle
+{
+
 }

@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text.style;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -31,16 +31,46 @@ package myandroid.util;
  * limitations under the License.
  */
 
-/**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
- */
-public interface Printer {
-    /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
-     */
-    void println(String x);
+import myandroid.os.Parcel;
+import myandroid.text.ParcelableSpan;
+import myandroid.text.TextPaint;
+import myandroid.text.TextUtils;
+
+public class RelativeSizeSpan extends MetricAffectingSpan implements ParcelableSpan {
+
+        private final float mProportion;
+
+        public RelativeSizeSpan(float proportion) {
+                mProportion = proportion;
+        }
+
+    public RelativeSizeSpan(Parcel src) {
+        mProportion = src.readFloat();
+    }
+
+    public int getSpanTypeId() {
+        return TextUtils.RELATIVE_SIZE_SPAN;
+    }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeFloat(mProportion);
+    }
+
+        public float getSizeChange() {
+                return mProportion;
+        }
+
+        @Override
+        public void updateDrawState(TextPaint ds) {
+                ds.setTextSize(ds.getTextSize() * mProportion);
+        }
+
+        @Override
+        public void updateMeasureState(TextPaint ds) {
+                ds.setTextSize(ds.getTextSize() * mProportion);
+        }
 }

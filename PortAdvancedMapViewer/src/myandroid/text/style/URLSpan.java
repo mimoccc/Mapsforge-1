@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package myandroid.util;
+package myandroid.text.style;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -31,16 +31,49 @@ package myandroid.util;
  * limitations under the License.
  */
 
-/**
- * Simple interface for printing text, allowing redirection to various
- * targets.  Standard implementations are {@link android.util.LogPrinter},
- * {@link android.util.StringBuilderPrinter}, and
- * {@link android.util.PrintWriterPrinter}.
- */
-public interface Printer {
-    /**
-     * Write a line of text to the output.  There is no need to terminate
-     * the given string with a newline.
-     */
-    void println(String x);
+import myandroid.content.Context;
+import myandroid.content.Intent;
+import myandroid.net.Uri;
+import myandroid.os.Parcel;
+import myandroid.provider.Browser;
+import myandroid.text.ParcelableSpan;
+import myandroid.text.TextUtils;
+import myandroid.view.View;
+
+public class URLSpan extends ClickableSpan implements ParcelableSpan {
+
+    private final String mURL;
+
+    public URLSpan(String url) {
+        mURL = url;
+    }
+
+    public URLSpan(Parcel src) {
+        mURL = src.readString();
+    }
+
+    public int getSpanTypeId() {
+        return TextUtils.URL_SPAN;
+    }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mURL);
+    }
+
+    public String getURL() {
+        return mURL;
+    }
+
+    @Override
+    public void onClick(View widget) {
+        Uri uri = Uri.parse(getURL());
+        Context context = widget.getContext();
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());
+        context.startActivity(intent);
+    }
 }
