@@ -15,6 +15,8 @@
  */
 package mycom.android.internal;
 
+import myandroid.util.AttributeSet;
+
 public final class R {
     public static final class anim {
         public static final int gps_animation=0x7f040000;
@@ -26,6 +28,13 @@ public final class R {
         public static final int preferences_text_scale_values=0x7f060003;
     }
     public static final class attr {
+
+    	public static final int color=0x7f070040; //FAKE
+		public static final int state_window_focused=0x7f070010; //FAKE
+		public static final int state_pressed=0x7f070020; //FAKE
+		public static final int state_selected=0x7f070050; //FAKE
+		public static final int state_focused=0x7f070060; //FAKE
+		public static final int state_enabled=0x7f070070; //FAKE
     }
     public static final class drawable {
         public static final int btn_square_overlay_normal=0x7f020000;
@@ -143,9 +152,24 @@ public final class R {
         public static final int unit_symbol_kilometer=0x7f07003e;
         public static final int unit_symbol_meter=0x7f07003f;
         public static final int zoomlevel=0x7f070040;
-		public static int ellipsis=0x7f070040; //FAKE
+		public static final int ellipsis=0x7f070040; //FAKE
+
     }
     public static final class xml {
         public static final int preferences=0x7f050000;
+    }
+	public static final class styleable {
+		public static final int[] TextAppearance = null;//FAKE
+		public static final int TextAppearance_textColor = 0;//FAKE
+		public static final int TextAppearance_textColorLink = 0;//FAKE
+		public static final int TextAppearance_textSize = 0;//FAKE
+		public static final int TextAppearance_textStyle = 0;//FAKE
+		public static final int TextAppearance_typeface = 0;//FAKE
+		public static final int[] Theme = null;
+    }
+	public static final class style {
+
+		public static final AttributeSet Theme = null;
+		
     }
 }

@@ -74,17 +74,17 @@ public class TextAppearanceSpan extends MetricAffectingSpan implements Parcelabl
 
         TypedArray a =
             context.obtainStyledAttributes(appearance,
-                                           com.android.internal.R.styleable.TextAppearance);
+                                           mycom.android.internal.R.styleable.TextAppearance);
 
-        textColor = a.getColorStateList(com.android.internal.R.styleable.
+        textColor = a.getColorStateList(mycom.android.internal.R.styleable.
                                         TextAppearance_textColor);
-        mTextColorLink = a.getColorStateList(com.android.internal.R.styleable.
+        mTextColorLink = a.getColorStateList(mycom.android.internal.R.styleable.
                                         TextAppearance_textColorLink);
-        mTextSize = a.getDimensionPixelSize(com.android.internal.R.styleable.
+        mTextSize = a.getDimensionPixelSize(mycom.android.internal.R.styleable.
                                         TextAppearance_textSize, -1);
 
-        mStyle = a.getInt(com.android.internal.R.styleable.TextAppearance_textStyle, 0);
-        int tf = a.getInt(com.android.internal.R.styleable.TextAppearance_typeface, 0);
+        mStyle = a.getInt(mycom.android.internal.R.styleable.TextAppearance_textStyle, 0);
+        int tf = a.getInt(mycom.android.internal.R.styleable.TextAppearance_typeface, 0);
 
         switch (tf) {
             case 1:
@@ -107,8 +107,8 @@ public class TextAppearanceSpan extends MetricAffectingSpan implements Parcelabl
         a.recycle();
 
         if (colorList >= 0) {
-            a = context.obtainStyledAttributes(com.android.internal.R.style.Theme,
-                                            com.android.internal.R.styleable.Theme);
+            a = context.obtainStyledAttributes(mycom.android.internal.R.style.Theme,
+                                            mycom.android.internal.R.styleable.Theme);
 
             textColor = a.getColorStateList(colorList);
             a.recycle();

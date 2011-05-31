@@ -41,9 +41,9 @@ import myandroid.graphics.Path;
 import mycom.android.internal.util.ArrayUtils;
 
 import junit.framework.Assert;
-import android.text.style.*;
-import android.text.method.TextKeyListener;
-import android.view.KeyEvent;
+import myandroid.text.style.*;
+import myandroid.text.method.TextKeyListener;
+import myandroid.view.KeyEvent;
 
 /**
  * A base class that manages text layout in visual elements on
