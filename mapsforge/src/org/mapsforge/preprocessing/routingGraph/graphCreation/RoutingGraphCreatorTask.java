@@ -19,7 +19,7 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.procedure.TIntProcedure;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +28,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
-import org.mapsforge.preprocessing.routingGraph.graphCreation.XMLReader.StringPair;
 import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
@@ -78,9 +77,9 @@ class RoutingGraphCreatorTask implements Sink {
 	private SimpleObjectStore<Relation> relations;
 
 	// List for completely filled objects
-	private Collection<CompleteVertex> vertices;
-	private Collection<CompleteEdge> edges;
-	private Collection<CompleteRelation> completeRelations;
+	private HashMap<Integer, CompleteVertex> vertices;
+	private HashMap<Integer, CompleteEdge> edges;
+	private HashMap<Integer, CompleteRelation> completeRelations;
 	TLongIntHashMap usedNodes;
 
 	// the config file
@@ -200,7 +199,7 @@ class RoutingGraphCreatorTask implements Sink {
 		});
 
 		// WRITE : all nodes
-		vertices = new LinkedList<CompleteVertex>();
+		vertices = new HashMap<Integer, CompleteVertex>();
 		double[] latitudes = new double[usedNodes.size()];
 		double[] longitudes = new double[usedNodes.size()];
 
@@ -216,13 +215,14 @@ class RoutingGraphCreatorTask implements Sink {
 			if (idx < numVertices) {
 
 				// if it is a vertex (not a waypoint) write it to the graph
-				HashSet<StringPair> hs = new HashSet<XMLReader.StringPair>();
+				HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
 
 				// Check for tags
 				addPairsForTagToHashSet(node, hs);
 
 				// add new vertex
-				vertices.add(new CompleteVertex(((Long) node.getId()).intValue(), null,
+				int key = ((Long) node.getId()).intValue();
+				vertices.put(key, new CompleteVertex(key, null,
 						new GeoCoordinate(node.getLatitude(), node.getLongitude()), hs));
 				amountOfVerticesWritten++;
 			}
@@ -230,7 +230,7 @@ class RoutingGraphCreatorTask implements Sink {
 		iterNodes.release();
 
 		// WRITE : all edges
-		edges = new LinkedList<CompleteEdge>();
+		edges = new HashMap<Integer, CompleteEdge>();
 		ReleasableIterator<Way> iterWays = ways.iterate();
 		while (iterWays.hasNext()) {
 			Way way = iterWays.next();
@@ -241,14 +241,14 @@ class RoutingGraphCreatorTask implements Sink {
 		iterWays.release();
 
 		// WRITE : all relations
-		completeRelations = new LinkedList<CompleteRelation>();
+		completeRelations = new HashMap<Integer, CompleteRelation>();
 
 		ReleasableIterator<Relation> iterRelations = relations.iterate();
 		while (iterRelations.hasNext()) {
 			Relation rel = iterRelations.next();
 
 			// Process, create and add new relation
-			completeRelations.add(processRelationAndWrite(rel));
+			completeRelations.put(((Long) rel.getId()).intValue(), processRelationAndWrite(rel));
 			amountOfRelationsWritten++;
 		}
 		iterRelations.release();
@@ -355,13 +355,14 @@ class RoutingGraphCreatorTask implements Sink {
 				allwp[m] = new GeoCoordinate(lat[m], lon[m]);
 			}
 
-			HashSet<StringPair> hs = new HashSet<XMLReader.StringPair>();
+			HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
 
 			// check all tags
 			addPairsForTagToHashSet(way, hs);
 
 			// create the new edge
-			CompleteEdge ce = new CompleteEdge(((Long) way.getId()).intValue(),
+			int key = ((Long) way.getId()).intValue();
+			CompleteEdge ce = new CompleteEdge(key,
 					getVertexFromList(sourceId),
 					getVertexFromList(targetId),
 					null,
@@ -375,14 +376,14 @@ class RoutingGraphCreatorTask implements Sink {
 					0,
 					hs);
 
-			edges.add(ce);
+			edges.put(key, ce);
 			amountOfEdgesWritten++;
 
 		}
 	}
 
 	private CompleteRelation processRelationAndWrite(Relation rel) {
-		HashSet<StringPair> hs = new HashSet<XMLReader.StringPair>();
+		HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
 
 		RelationMember[] relMember = new RelationMember[rel.getMembers().size()];
 		int i = 0;
@@ -397,11 +398,7 @@ class RoutingGraphCreatorTask implements Sink {
 	}
 
 	private Vertex getVertexFromList(int id) {
-		for (Vertex v : vertices) {
-			if (v.getId() == id)
-				return v;
-		}
-		return null;
+		return vertices.get(id);
 	}
 
 	private boolean isOnWhiteList(Way way) {
@@ -419,40 +416,40 @@ class RoutingGraphCreatorTask implements Sink {
 		return false;
 	}
 
-	private void addPairsForTagToHashSet(Node node, HashSet<StringPair> hs) {
+	private void addPairsForTagToHashSet(Node node, HashSet<KeyValuePair> hs) {
 		for (Tag tag : node.getTags()) {
 
 			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
-				hs.add(new XMLReader().new StringPair(tag.getValue(), tag.getKey()));
+				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 
 			/*
-			 * for (StringPair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
+			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
 			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
 			 */
 		}
 	}
 
-	private void addPairsForTagToHashSet(Relation relation, HashSet<StringPair> hs) {
+	private void addPairsForTagToHashSet(Relation relation, HashSet<KeyValuePair> hs) {
 		for (Tag tag : relation.getTags()) {
 
 			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
-				hs.add(new XMLReader().new StringPair(tag.getValue(), tag.getKey()));
+				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 
 			/*
-			 * for (StringPair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
+			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
 			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
 			 */
 		}
 	}
 
-	private void addPairsForTagToHashSet(Way way, HashSet<StringPair> hs) {
+	private void addPairsForTagToHashSet(Way way, HashSet<KeyValuePair> hs) {
 		for (Tag tag : way.getTags()) {
 
 			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
-				hs.add(new XMLReader().new StringPair(tag.getValue(), tag.getKey()));
+				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 
 			/*
-			 * for (StringPair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
+			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
 			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
 			 */
 		}

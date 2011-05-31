@@ -19,7 +19,6 @@ import java.util.HashSet;
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
-import org.mapsforge.preprocessing.routingGraph.graphCreation.XMLReader.StringPair;
 
 /**
  * A vertex filled with all information needed
@@ -32,7 +31,7 @@ public class CompleteVertex implements Vertex {
 	int id;
 	Edge[] outboundEdges;
 	GeoCoordinate coordinate;
-	HashSet<StringPair> additionalTags;
+	HashSet<KeyValuePair> additionalTags;
 
 	/**
 	 * The constructor for the completeVertex
@@ -46,7 +45,8 @@ public class CompleteVertex implements Vertex {
 	 * @param hs
 	 *            the hashset for additional tags
 	 */
-	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinate coordinate, HashSet<StringPair> hs) {
+	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinate coordinate,
+			HashSet<KeyValuePair> hs) {
 		super();
 		this.id = id;
 		this.outboundEdges = outboundEdges;
@@ -74,7 +74,7 @@ public class CompleteVertex implements Vertex {
 	 * 
 	 * @return the HashSets with the given additional Key/Value pairs.
 	 */
-	public HashSet<StringPair> getAdditionalTags() {
+	public HashSet<KeyValuePair> getAdditionalTags() {
 		return additionalTags;
 	}
 

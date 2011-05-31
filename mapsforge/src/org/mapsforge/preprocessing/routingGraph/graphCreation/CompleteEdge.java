@@ -21,7 +21,6 @@ import java.util.Set;
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
-import org.mapsforge.preprocessing.routingGraph.graphCreation.XMLReader.StringPair;
 
 /**
  * An edge filled with maximal Data from OpenStreetMap.
@@ -42,7 +41,7 @@ public class CompleteEdge implements Edge {
 	String ref;
 	String destination;
 	int weight;
-	Set<StringPair> additionalTags;
+	Set<KeyValuePair> additionalTags;
 
 	/**
 	 * The Constructor to create a CompleteEdge-instance
@@ -78,7 +77,7 @@ public class CompleteEdge implements Edge {
 	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinate[] waypoints,
 			GeoCoordinate[] allWaypoints, String name, String type, boolean roundabout,
 			boolean isOneWay, String ref,
-			String destination, int weight, Set<StringPair> additionalTags) {
+			String destination, int weight, Set<KeyValuePair> additionalTags) {
 		super();
 		this.id = id;
 		this.source = source;
@@ -100,7 +99,7 @@ public class CompleteEdge implements Edge {
 	 * @param sp
 	 *            the new pair to be added
 	 */
-	public void addAdditionalTags(StringPair sp) {
+	public void addAdditionalTags(KeyValuePair sp) {
 		this.additionalTags.add(sp);
 	}
 
@@ -166,7 +165,7 @@ public class CompleteEdge implements Edge {
 	 * 
 	 * @return The set of restrictions for this way
 	 */
-	public Set<StringPair> getAdditionalTags() {
+	public Set<KeyValuePair> getAdditionalTags() {
 		return additionalTags;
 	}
 

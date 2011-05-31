@@ -18,8 +18,6 @@ package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
 import java.util.Set;
 
-import org.mapsforge.preprocessing.routingGraph.graphCreation.XMLReader.StringPair;
-
 /**
  * This class bundles given Key/Value-Pairs for OSM-Extraction.
  * 
@@ -28,9 +26,9 @@ import org.mapsforge.preprocessing.routingGraph.graphCreation.XMLReader.StringPa
  */
 public class ConfigObject {
 
-	Set<StringPair> wayTagsSet;
-	Set<StringPair> nodeTagsSet;
-	Set<StringPair> relationTagsSet;
+	Set<KeyValuePair> wayTagsSet;
+	Set<KeyValuePair> nodeTagsSet;
+	Set<KeyValuePair> relationTagsSet;
 
 	/**
 	 * Constructor for Creation
@@ -42,7 +40,7 @@ public class ConfigObject {
 	 * @param rt
 	 *            - The Set including all needed Key/Value-Pairs of OSM.relations
 	 */
-	public ConfigObject(Set<StringPair> wt, Set<StringPair> nt, Set<StringPair> rt) {
+	public ConfigObject(Set<KeyValuePair> wt, Set<KeyValuePair> nt, Set<KeyValuePair> rt) {
 		this.wayTagsSet = wt;
 		this.nodeTagsSet = nt;
 		this.relationTagsSet = rt;
@@ -59,13 +57,13 @@ public class ConfigObject {
 	 */
 	public boolean containsWayTag(String key, String value) {
 		/*
-		 * for (StringPair sp : wayTagsSet) // Tags with sp.value==null are not a criteria to chose
+		 * for (KeyValuePair sp : wayTagsSet) // Tags with sp.value==null are not a criteria to chose
 		 * wayTags // e.g. the tag name exists for many ways, that are not roads if (sp.value != null) {
 		 * if ((sp.key.equals(key)) && sp.value.equals(value)) return true;
 		 * 
 		 * return false; }
 		 */
-		return wayTagsSet.contains(new XMLReader().new StringPair(value, key));
+		return wayTagsSet.contains(new KeyValuePair(value, key));
 	}
 
 	/**
@@ -79,10 +77,10 @@ public class ConfigObject {
 	 */
 	public boolean containsRelationTag(String key, String value) {
 		/*
-		 * for (StringPair sp : relationTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
+		 * for (KeyValuePair sp : relationTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
 		 * sp.value.equals(value)) return true; return false;
 		 */
-		return relationTagsSet.contains(new XMLReader().new StringPair(value, key));
+		return relationTagsSet.contains(new KeyValuePair(value, key));
 	}
 
 	/**
@@ -96,10 +94,10 @@ public class ConfigObject {
 	 */
 	public boolean containsNodeTag(String key, String value) {
 		/*
-		 * for (StringPair sp : nodeTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
+		 * for (KeyValuePair sp : nodeTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
 		 * sp.value.equals(value)) return true; return false;
 		 */
-		return nodeTagsSet.contains(new XMLReader().new StringPair(value, key));
+		return nodeTagsSet.contains(new KeyValuePair(value, key));
 	}
 
 }

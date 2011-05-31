@@ -39,9 +39,9 @@ import org.xml.sax.SAXException;
  */
 public class XMLReader {
 
-	Set<StringPair> wayTagsSet;
-	Set<StringPair> nodeTagsSet;
-	Set<StringPair> relationTagsSet;
+	Set<KeyValuePair> wayTagsSet;
+	Set<KeyValuePair> nodeTagsSet;
+	Set<KeyValuePair> relationTagsSet;
 
 	int vehiclecount = 0;
 
@@ -61,9 +61,9 @@ public class XMLReader {
 	public ConfigObject parseXML(String file) throws ParserConfigurationException, SAXException,
 			IOException {
 		System.out.println("[RGC] XML-Parse started with File: " + file);
-		wayTagsSet = new HashSet<StringPair>();
-		nodeTagsSet = new HashSet<StringPair>();
-		relationTagsSet = new HashSet<StringPair>();
+		wayTagsSet = new HashSet<KeyValuePair>();
+		nodeTagsSet = new HashSet<KeyValuePair>();
+		relationTagsSet = new HashSet<KeyValuePair>();
 
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
@@ -86,7 +86,7 @@ public class XMLReader {
 				Node tmpnode2 = tmpnode1.getChildNodes().item(k);
 
 				if (tmpnode2.hasAttributes()) {
-					StringPair sp = getKeyValue(tmpnode2);
+					KeyValuePair sp = getKeyValue(tmpnode2);
 
 					// Add the found pairs to corresponding Sets
 					if (tmpnode1.getNodeName().equals("wayTags"))
@@ -240,7 +240,7 @@ public class XMLReader {
 		}
 	}
 
-	private StringPair getKeyValue(Node n) {
+	private KeyValuePair getKeyValue(Node n) {
 
 		// no attributes exist
 		if (!(n.hasAttributes()))
@@ -257,41 +257,7 @@ public class XMLReader {
 			if (tmpatt.getName().equals("k"))
 				key = tmpatt.getValue();
 		}
-		return new StringPair(val, key);
+		return new KeyValuePair(val, key);
 	}
 
-	class StringPair {
-
-		String value;
-		String key;
-
-		StringPair(String v, String k) {
-			value = v;
-			key = k;
-			// System.out.println("Key: " + k + " Value: " + v);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof StringPair) {
-				StringPair o = (StringPair) obj;
-
-				if (o.value == null)
-					return ((key.equals(o.key)) && (value == null));
-				if (value == null)
-					return ((key.equals(o.key)) && (o.value == null));
-
-				return ((value.equals(o.value)) && (key.equals(o.key)));
-			}
-			return false;
-		}
-
-		@Override
-		public int hashCode() {
-			if (value == null)
-				return key.hashCode();
-			return value.hashCode() + key.hashCode();
-		}
-
-	}
 }

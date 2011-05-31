@@ -14,33 +14,42 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
-import java.util.HashSet;
-
-import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
-
 /**
- * This class represents a relation with its members and give tags.
+ * This class represents a KeyValue-Pair
  * 
  * @author Michael Bartel
  * 
  */
-public class CompleteRelation {
+public class KeyValuePair {
+	String value;
+	String key;
 
-	RelationMember[] member;
-	HashSet<KeyValuePair> tags;
+	KeyValuePair(String v, String k) {
+		value = v;
+		key = k;
+		// System.out.println("Key: " + k + " Value: " + v);
+	}
 
-	/**
-	 * The Constructor to create an instance
-	 * 
-	 * @param member
-	 *            The members (e.g. ways nodes) of the relation
-	 * @param tags
-	 *            The tags that exist for this relation
-	 */
-	public CompleteRelation(RelationMember[] member, HashSet<KeyValuePair> tags) {
-		super();
-		this.member = member;
-		this.tags = tags;
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof KeyValuePair) {
+			KeyValuePair o = (KeyValuePair) obj;
+
+			if (o.value == null)
+				return ((key.equals(o.key)) && (value == null));
+			if (value == null)
+				return ((key.equals(o.key)) && (o.value == null));
+
+			return ((value.equals(o.value)) && (key.equals(o.key)));
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		if (value == null)
+			return key.hashCode();
+		return value.hashCode() + key.hashCode();
 	}
 
 }
