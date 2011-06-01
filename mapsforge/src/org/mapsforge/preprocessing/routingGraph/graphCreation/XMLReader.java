@@ -50,7 +50,7 @@ public class XMLReader {
 	 * 
 	 * @param file
 	 *            the config to define the parsing
-	 * @param delimiters
+	 * @param delimiter
 	 *            A String array that contains all needed vehicle types e.g. {"motorcar", "foot"} OR
 	 *            null if you wish to chose ALL vehicles defined in the config file
 	 * @return an Instance of ConfigObject which contains all necessary data
