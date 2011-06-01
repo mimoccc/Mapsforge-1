@@ -36,9 +36,10 @@ public class KeyValuePair {
 			KeyValuePair o = (KeyValuePair) obj;
 
 			if (o.value == null)
-				return ((key.equals(o.key)) && (value == null));
+				return ((key.equals(o.key)));
+
 			if (value == null)
-				return ((key.equals(o.key)) && (o.value == null));
+				return ((key.equals(o.key)));
 
 			return ((value.equals(o.value)) && (key.equals(o.key)));
 		}
@@ -50,6 +51,11 @@ public class KeyValuePair {
 		if (value == null)
 			return key.hashCode();
 		return value.hashCode() + key.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "Key: " + key + " Value: " + value;
 	}
 
 }

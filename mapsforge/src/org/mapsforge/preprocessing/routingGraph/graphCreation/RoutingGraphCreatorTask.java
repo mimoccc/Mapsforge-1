@@ -18,7 +18,9 @@ import gnu.trove.function.TIntFunction;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.procedure.TIntProcedure;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -62,8 +64,10 @@ class RoutingGraphCreatorTask implements Sink {
 	private int amountOfRelationsProcessed = 0;
 
 	private int amountOfEdgesWritten = 0;
+	private int amountOfEdgesOverwritten = 0;
 	private int amountOfVerticesWritten = 0;
 	private int amountOfRelationsWritten = 0;
+	private int amountOfRelationsOverwritten = 0;
 
 	int firststagenodes = 0;
 	int firststageways = 0;
@@ -80,13 +84,21 @@ class RoutingGraphCreatorTask implements Sink {
 	private HashMap<Integer, CompleteVertex> vertices;
 	private HashMap<Integer, CompleteEdge> edges;
 	private HashMap<Integer, CompleteRelation> completeRelations;
+
+	private final HashSet<String> remValues = new HashSet<String>(Arrays.asList(new String[] { "name",
+			"destination", "ref", "highway" }));
 	TLongIntHashMap usedNodes;
 
 	// the config file
 	ConfigObject configObject;
 
-	RoutingGraphCreatorTask(String xmlConfigPath) {
+	RoutingGraphCreatorTask(String xmlConfigPath, String neededVehicles) {
 		System.out.println("initializing routing-graph extraction");
+
+		String[] limiter = null;
+
+		if (neededVehicles != null)
+			limiter = neededVehicles.split(",");
 
 		this.usedNodes = new TLongIntHashMap();
 
@@ -103,7 +115,7 @@ class RoutingGraphCreatorTask implements Sink {
 				"relations", true);
 
 		try {
-			configObject = new XMLReader().parseXML(xmlConfigPath);
+			configObject = new XMLReader().parseXML(xmlConfigPath, limiter);
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		} catch (SAXException e) {
@@ -171,8 +183,6 @@ class RoutingGraphCreatorTask implements Sink {
 	@Override
 	public void complete() {
 
-		System.out.println("first stage nodes " + firststagenodes);
-		System.out.println("first stage ways " + firststageways);
 		// count number of vertices :
 		usedNodes.forEachValue(new TIntProcedure() {
 			@Override
@@ -248,7 +258,12 @@ class RoutingGraphCreatorTask implements Sink {
 			Relation rel = iterRelations.next();
 
 			// Process, create and add new relation
-			completeRelations.put(((Long) rel.getId()).intValue(), processRelationAndWrite(rel));
+			CompleteRelation cr = completeRelations.put(((Long) rel.getId()).intValue(),
+					processRelationAndWrite(rel));
+
+			if (cr != null)
+				amountOfRelationsOverwritten++;
+			cr = null;
 			amountOfRelationsWritten++;
 		}
 		iterRelations.release();
@@ -262,19 +277,50 @@ class RoutingGraphCreatorTask implements Sink {
 		// free ram
 		this.usedNodes = null;
 
-		ReleasableIterator<Relation> t = relations.iterate();
-		while (t.hasNext()) {
-			amountOfRelationsWritten++;
-			t.next();
-		}
-
 		// print summary
 		System.out.println("amountOfNodesProcessed = " + amountOfNodesProcessed);
 		System.out.println("amountOfWaysProcessed = " + amountOfWaysProcessed);
 		System.out.println("amountOfRelationsProcessed = " + amountOfRelationsProcessed);
 		System.out.println("amountOfVerticesWritten = " + amountOfVerticesWritten);
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten);
+		System.out.println("amountOfEdgesOverWritten = " + amountOfEdgesOverwritten);
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
+		System.out.println("amountOfRelationsOverWritten = " + amountOfRelationsOverwritten);
+
+		int countstreets = 0;
+		int countVertices = 0;
+		int countRelations = 0;
+		int countNames = 0;
+		int counthasHighwayTag = 0;
+		int hasOtherTags = 0;
+
+		SaveToDisc std = new SaveToDisc(new File("D:\\test.txt"));
+
+		for (CompleteEdge ce : edges.values()) {
+			countstreets++;
+
+			std.saveToFile(null, null, null, ce);
+
+			if (ce.name != null)
+				countNames++;
+			if (ce.type != null)
+				counthasHighwayTag++;
+			if (ce.additionalTags.size() != 0)
+				hasOtherTags++;
+
+		}
+		std.close();
+
+		countRelations = completeRelations.values().size();
+		countVertices = vertices.values().size();
+
+		System.out.println("relations written: " + countRelations);
+		System.out.println("vertices written: " + countVertices);
+		System.out.println("Edges written: " + countstreets);
+		System.out.println("has Name: " + countNames);
+		System.out.println("has HighwayTag: " + counthasHighwayTag);
+		System.out.println("has other tags: " + hasOtherTags);
+
 	}
 
 	/**
@@ -320,7 +366,7 @@ class RoutingGraphCreatorTask implements Sink {
 			}
 
 			// Check if oneway
-			if (isOneWay(way, configObject) == -1) {
+			if (isOneWay(way) == -1) {
 				sourceId = ((Long) way.getWayNodes().get(end).getNodeId()).intValue();
 				targetId = ((Long) way.getWayNodes().get(start).getNodeId()).intValue();
 				oneway = true;
@@ -329,20 +375,30 @@ class RoutingGraphCreatorTask implements Sink {
 			} else {
 				sourceId = ((Long) way.getWayNodes().get(start).getNodeId()).intValue();
 				targetId = ((Long) way.getWayNodes().get(end).getNodeId()).intValue();
-				oneway = isOneWay(way, configObject) == 1;
+				oneway = isOneWay(way) == 1;
 			}
 
 			// this is for motorways and primary roads
-			Tag wayName = getTag(way, "name", configObject);
+			Tag wayName = null;
+			if (configObject.containsWayTagKey("name"))
+				wayName = getTag(way, "name");
 
 			// this is for motorway links which lead onto a highway
-			Tag wayRef = getTag(way, "ref", configObject);
-
-			// type of the highway
-			Tag wayType = getTag(way, "highway", configObject);
+			Tag wayRef = null;
+			if (configObject.containsWayTagKey("ref"))
+				wayRef = getTag(way, "ref");
 
 			// this is for destination of a link
-			Tag wayDest = getTag(way, "destination", configObject);
+			Tag wayDest = null;
+			if (configObject.containsWayTagKey("destination"))
+				wayDest = getTag(way, "destination");
+
+			// type of the highway
+			Tag wayType = getTag(way, "highway");
+			if (wayType != null) {
+				if (!(configObject.containsWayTag(wayType.getKey(), wayType.getValue())))
+					wayType = null;
+			}
 
 			// Save tje coordinates of all waypoints
 			GeoCoordinate[] allwp = new GeoCoordinate[lon.length];
@@ -360,6 +416,7 @@ class RoutingGraphCreatorTask implements Sink {
 			// check all tags
 			addPairsForTagToHashSet(way, hs);
 
+			amountOfEdgesWritten++;
 			// create the new edge
 			int key = ((Long) way.getId()).intValue();
 			CompleteEdge ce = new CompleteEdge(key,
@@ -369,15 +426,25 @@ class RoutingGraphCreatorTask implements Sink {
 					allwp,
 					wayName != null ? wayName.getValue() : null,
 					wayType != null ? wayType.getValue() : null,
-					isRoundabout(way, configObject),
+					isRoundabout(way),
 					oneway,
 					wayRef != null ? wayRef.getValue() : null,
 					wayDest != null ? wayDest.getValue() : null,
 					0,
 					hs);
 
-			edges.put(key, ce);
-			amountOfEdgesWritten++;
+			CompleteEdge tmp = edges.put(amountOfEdgesWritten, ce);
+
+			if (tmp != null) {
+				amountOfEdgesOverwritten++;
+
+				/*
+				 * System.out.println("old id as int: " + tmp.id + tmp.name);
+				 * System.out.println("new id as int: " + key + wayName.getValue());
+				 * System.out.println("old id as LONG: " + way.getId()); System.exit(-1);
+				 */
+			}
+			tmp = null;
 
 		}
 	}
@@ -403,7 +470,9 @@ class RoutingGraphCreatorTask implements Sink {
 
 	private boolean isOnWhiteList(Way way) {
 		for (Tag tag : way.getTags()) {
-			if (this.configObject.containsWayTag(tag.getKey(), tag.getValue()))
+			if ((tag.getKey().equals("highway") && (this.configObject
+					.containsWayTag(tag.getKey(),
+							tag.getValue()))))
 				return true;
 		}
 		return false;
@@ -419,20 +488,16 @@ class RoutingGraphCreatorTask implements Sink {
 	private void addPairsForTagToHashSet(Node node, HashSet<KeyValuePair> hs) {
 		for (Tag tag : node.getTags()) {
 
-			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
+			if (configObject.containsNodeTag(tag.getKey(), tag.getValue()))
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 
-			/*
-			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
-			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
-			 */
 		}
 	}
 
 	private void addPairsForTagToHashSet(Relation relation, HashSet<KeyValuePair> hs) {
 		for (Tag tag : relation.getTags()) {
 
-			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
+			if (configObject.containsRelationTag(tag.getKey(), tag.getValue()))
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 
 			/*
@@ -445,23 +510,20 @@ class RoutingGraphCreatorTask implements Sink {
 	private void addPairsForTagToHashSet(Way way, HashSet<KeyValuePair> hs) {
 		for (Tag tag : way.getTags()) {
 
+			if (remValues.contains(tag.getKey()))
+				continue;
+
 			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
-
-			/*
-			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
-			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
-			 */
 		}
 	}
 
-	private static Tag getTag(Way way, String tagName, ConfigObject co) {
-		if (co.containsWayTag(tagName, ""))
-			for (Tag tag : way.getTags()) {
-				if (tag.getKey().equals(tagName)) {
-					return tag;
-				}
+	private static Tag getTag(Way way, String tagName) {
+		for (Tag tag : way.getTags()) {
+			if (tag.getKey().equals(tagName)) {
+				return tag;
 			}
+		}
 		return null;
 	}
 
@@ -473,8 +535,8 @@ class RoutingGraphCreatorTask implements Sink {
 		return tmp;
 	}
 
-	private static int isOneWay(Way way, ConfigObject co) {
-		Tag hwyTag = getTag(way, "highway", co);
+	private static int isOneWay(Way way) {
+		Tag hwyTag = getTag(way, "highway");
 		if (hwyTag != null
 				&& (hwyTag.getValue().equals(TagHighway.MOTORWAY)
 						|| hwyTag.getValue().equals(TagHighway.MOTORWAY_LINK)
@@ -482,7 +544,7 @@ class RoutingGraphCreatorTask implements Sink {
 						.equals(TagHighway.TRUNK_LINK))) {
 			return 1;
 		}
-		Tag onwyTag = getTag(way, "oneway", co);
+		Tag onwyTag = getTag(way, "oneway");
 		if (onwyTag == null) {
 			return 0;
 		} else if (onwyTag.getValue().equals("true")
@@ -501,8 +563,8 @@ class RoutingGraphCreatorTask implements Sink {
 		}
 	}
 
-	private static boolean isRoundabout(Way way, ConfigObject co) {
-		Tag t = getTag(way, "junction", co);
+	private static boolean isRoundabout(Way way) {
+		Tag t = getTag(way, "junction");
 		if (t == null) {
 			return false;
 

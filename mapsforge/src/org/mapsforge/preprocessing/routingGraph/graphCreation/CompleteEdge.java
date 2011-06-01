@@ -16,6 +16,7 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.mapsforge.core.Edge;
@@ -41,7 +42,7 @@ public class CompleteEdge implements Edge {
 	String ref;
 	String destination;
 	int weight;
-	Set<KeyValuePair> additionalTags;
+	HashSet<KeyValuePair> additionalTags;
 
 	/**
 	 * The Constructor to create a CompleteEdge-instance
@@ -77,7 +78,7 @@ public class CompleteEdge implements Edge {
 	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinate[] waypoints,
 			GeoCoordinate[] allWaypoints, String name, String type, boolean roundabout,
 			boolean isOneWay, String ref,
-			String destination, int weight, Set<KeyValuePair> additionalTags) {
+			String destination, int weight, HashSet<KeyValuePair> additionalTags) {
 		super();
 		this.id = id;
 		this.source = source;

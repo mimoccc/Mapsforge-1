@@ -50,6 +50,9 @@ public class XMLReader {
 	 * 
 	 * @param file
 	 *            the config to define the parsing
+	 * @param delimiters
+	 *            A String array that contains all needed vehicle types e.g. {"motorcar", "foot"} OR
+	 *            null if you wish to chose ALL vehicles defined in the config file
 	 * @return an Instance of ConfigObject which contains all necessary data
 	 * @throws ParserConfigurationException
 	 *             an exception to be thrown
@@ -58,9 +61,23 @@ public class XMLReader {
 	 * @throws IOException
 	 *             an exception to be thrown
 	 */
-	public ConfigObject parseXML(String file) throws ParserConfigurationException, SAXException,
+	public ConfigObject parseXML(String file, String[] delimiter) throws ParserConfigurationException,
+			SAXException,
 			IOException {
-		System.out.println("[RGC] XML-Parse started with File: " + file);
+
+		String s = "[RGC] XML-Parse started with File: " + file;
+
+		if (delimiter == null)
+			s += " - All vehicles will be used";
+
+		System.out.println(s);
+
+		if (delimiter != null) {
+			System.out.println("[RGC] Vehicles that will be used: ");
+			for (String y : delimiter)
+				System.out.println("   " + y);
+		}
+
 		wayTagsSet = new HashSet<KeyValuePair>();
 		nodeTagsSet = new HashSet<KeyValuePair>();
 		relationTagsSet = new HashSet<KeyValuePair>();
@@ -112,12 +129,20 @@ public class XMLReader {
 		for (int i = 0; i < vehicles.item(0).getChildNodes().getLength(); i++) {
 			Node tmpnode1 = vehicles.item(0).getChildNodes().item(i);
 			if (tmpnode1.getNodeName().equals("vehicle")) {
-				vehiclecount++;
 
 				// Traverse the children of vehicle: (name), (maxspeed), usableWayTags, restrictions,
 				// weightFactors
 				for (int k = 0; k < tmpnode1.getChildNodes().getLength(); k++) {
 					Node tmpnode2 = tmpnode1.getChildNodes().item(k);
+
+					if (tmpnode2.getNodeName().equals("name")) {
+						String currentType = tmpnode2.getChildNodes().item(0).getNodeValue();
+
+						if (!(this.isNeededType(delimiter, currentType)))
+							break;
+						vehiclecount++;
+
+					}
 
 					// Type usableWayTags
 					if (tmpnode2.getNodeName().equals("usableWayTags") && (tmpnode2.hasChildNodes())) {
@@ -159,10 +184,11 @@ public class XMLReader {
 									.println("[RCG] \"weightFactors\" needs to have children: stopNodeTags, speedreductions, noOSMTags");
 							break;
 						}
-
-						Node traversNode = tmpnode2.getChildNodes().item(1);
+						Node traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
+								"stopNodeTags");
 
 						if (traversNode.hasChildNodes())
+
 							// Traverse Children of Child(1) stopdeNodeTags: tags
 							for (int j = 0; j < traversNode.getChildNodes()
 									.getLength(); j++) {
@@ -171,41 +197,43 @@ public class XMLReader {
 									nodeTagsSet.add(getKeyValue(tmpnode3));
 							}
 
-						traversNode = tmpnode2.getChildNodes().item(3);
+						traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
+								"speedreductions");
+
 						if (traversNode.getChildNodes().getLength() < 6) {
 							System.out.println("[RCG] Error Parsing");
 							System.out
 									.println("[RCG] \"speedreductions\" needs to have children: wayTags, nodeTags, dynamicWayTags");
 							break;
 						}
+
 						// Traverse Children of Child(3,1) speedreductions wayTags: tags
-						for (int j = 0; j < traversNode.getChildNodes().item(1)
-								.getChildNodes()
-								.getLength(); j++) {
-							Node tmpnode3 = traversNode.getChildNodes().item(1)
-									.getChildNodes().item(j);
+						Node wayTagsNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"wayTags");
+						for (int j = 0; j < wayTagsNode.getChildNodes().getLength(); j++) {
+							Node tmpnode3 = wayTagsNode.getChildNodes().item(j);
 							if (tmpnode3.getNodeName().equals("tag"))
 								wayTagsSet.add(getKeyValue(tmpnode3));
 						}
 
+						Node nodeTagsNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"nodeTags");
 						// Traverse Children of Child(3,3) speedreductions nodeTags: tags
-						for (int j = 0; j < traversNode.getChildNodes().item(3)
-								.getChildNodes()
-								.getLength(); j++) {
-							Node tmpnode3 = traversNode.getChildNodes().item(3)
-									.getChildNodes().item(j);
+						for (int j = 0; j < nodeTagsNode.getChildNodes().getLength(); j++) {
+							Node tmpnode3 = nodeTagsNode.getChildNodes().item(j);
 							if (tmpnode3.getNodeName().equals("tag"))
 								nodeTagsSet.add(getKeyValue(tmpnode3));
 						}
 
+						Node dynWayTagsNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"dynamicWayTags");
 						// Traverse Children of Child(3,5) speedreductions dynamicWayTags: tags
-						for (int j = 0; j < traversNode.getChildNodes().item(5)
-								.getChildNodes()
-								.getLength(); j++) {
-							Node tmpnode3 = traversNode.getChildNodes().item(5)
-									.getChildNodes().item(j);
-							if (tmpnode3.getNodeName().equals("tag"))
-								nodeTagsSet.add(getKeyValue(tmpnode3));
+						for (int j = 0; j < dynWayTagsNode.getChildNodes().getLength(); j++) {
+							Node tmpnode3 = dynWayTagsNode.getChildNodes().item(j);
+
+							if (tmpnode3.getNodeName().equals("tag")) {
+								wayTagsSet.add(getKeyValue(tmpnode3));
+							}
 						}
 
 					}
@@ -229,8 +257,23 @@ public class XMLReader {
 	 *            - not needed
 	 */
 	public static void main(String[] args) {
+
 		try {
-			new XMLReader().parseXML("D:\\config_new.xml");
+			XMLReader x = new XMLReader();
+			x.parseXML("D:\\config_new.xml", new String[] { "motorcar", "bycicle" });
+			// x.parseXML("D:\\config_new.xml", null);
+			System.out.println("ways");
+			for (KeyValuePair kv : x.wayTagsSet)
+				System.out.println(kv);
+
+			System.out.println("nodes");
+			for (KeyValuePair kv : x.nodeTagsSet)
+				System.out.println(kv);
+
+			System.out.println("relations");
+			for (KeyValuePair kv : x.relationTagsSet)
+				System.out.println(kv);
+
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		} catch (SAXException e) {
@@ -238,6 +281,16 @@ public class XMLReader {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private boolean isNeededType(String[] neededTypes, String currentType) {
+		if (neededTypes == null)
+			return true;
+		for (String s : neededTypes) {
+			if (s.equals(currentType))
+				return true;
+		}
+		return false;
 	}
 
 	private KeyValuePair getKeyValue(Node n) {
@@ -258,6 +311,14 @@ public class XMLReader {
 				key = tmpatt.getValue();
 		}
 		return new KeyValuePair(val, key);
+	}
+
+	private Node getChildNodeByName(NodeList nl, String name) {
+		for (int i = 0; i < nl.getLength(); i++) {
+			if (nl.item(i).getNodeName().equals(name))
+				return nl.item(i);
+		}
+		return null;
 	}
 
 }

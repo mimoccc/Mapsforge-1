@@ -22,13 +22,15 @@ import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 class RoutingGraphCreatorFactory extends TaskManagerFactory {
 
 	private final static String PARAM_XML_CONFIG = "xml-config";
+	private final static String PARAM_NEEDED_VEHICLES = "needed-vehicles";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
-		String xmlConfigPath = getStringArgument(taskConfig, PARAM_XML_CONFIG);
+		String xmlConfigPath = getStringArgument(taskConfig, PARAM_XML_CONFIG, "config.xml");
+		String neededVehicles = getStringArgument(taskConfig, PARAM_NEEDED_VEHICLES, null);
 		return new SinkManager(
 					taskConfig.getId(),
-					new RoutingGraphCreatorTask(xmlConfigPath),
+					new RoutingGraphCreatorTask(xmlConfigPath, neededVehicles),
 					taskConfig.getPipeArgs());
 	}
 }

@@ -56,14 +56,19 @@ public class ConfigObject {
 	 * @return true, if the pair exists
 	 */
 	public boolean containsWayTag(String key, String value) {
-		/*
-		 * for (KeyValuePair sp : wayTagsSet) // Tags with sp.value==null are not a criteria to chose
-		 * wayTags // e.g. the tag name exists for many ways, that are not roads if (sp.value != null) {
-		 * if ((sp.key.equals(key)) && sp.value.equals(value)) return true;
-		 * 
-		 * return false; }
-		 */
-		return wayTagsSet.contains(new KeyValuePair(value, key));
+		return (wayTagsSet.contains(new KeyValuePair(value, key)) || wayTagsSet
+				.contains(new KeyValuePair(null, key)));
+	}
+
+	/**
+	 * Returns true if just the key exists
+	 * 
+	 * @param key
+	 *            the key to be checked
+	 * @return true if key was found
+	 */
+	public boolean containsWayTagKey(String key) {
+		return wayTagsSet.contains(new KeyValuePair(null, key));
 	}
 
 	/**
