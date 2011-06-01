@@ -95,9 +95,9 @@ MapPatterns
 MapSymbols
 -
 MapView
--
+-	ist für alle von Nutzer eingegebenen Event verantwortlich (zoomen, screen touch, usw)
 MapViewMode
--	
+-	Enumeration-Liste für MapView (CANVAS MODE --> NO INTERNET; MAPNIK, OSMA, OPEN --> NEED INTERNET)
 Projection
 -	Projektion von GeoPoint zu Point und Point zu GeoPoint
 MercatorProjection
