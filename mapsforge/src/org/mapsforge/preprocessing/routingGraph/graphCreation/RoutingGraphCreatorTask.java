@@ -275,6 +275,10 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
 		/*
+		 * ENTRY POINT FOR PROGRAMMER
+		 */
+
+		/*
 		 * FOR DEBUG USE ONLY int countstreets = 0; int countVertices = 0; int countRelations = 0; int
 		 * countNames = 0; int counthasHighwayTag = 0; int hasOtherTags = 0;
 		 * 
