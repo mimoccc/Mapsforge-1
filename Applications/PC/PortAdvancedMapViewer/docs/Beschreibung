@@ -1,0 +1,121 @@
+Overlay extends Thread
+-	Interface/Abstrakt-Klasse für alle Overlay-Klasse
+-	Ein Thread per Overlay
+-	Wird neu abgezeichnet, wenn onTap()- oder changeSize()-Events vorkommt
+OverlayWay
+-	Hat alle Parameter von einer Straße
+-	Eine Straße besteht aus mehrere Punkten, die sich miteinander verknüpfen sind
+-	Zeichnet eine Straße ab
+-	Wird zweimal abgezeichnet; 1. Abzeichen des Outlines und der Füllung
+WayOverlay extends Overlay
+-	Abstrakte Implementierung für Straße-Overlay
+-	Gebäude oder Feld kann eine Subklasse von WayOverlay sein
+ArrayWayOverlay
+-	Konkrete Implementierung von WayOverlay
+OverlayCircle
+-	Hat Parameter von einem Kreis
+-	Ein Kreis besteht aus einem Radius, der die Größe des Kreises bestimmt
+-	Wird zweimal abgezeichnet; 1. Abzeichen des Outlines und der Füllung
+CircleOverlay
+-	Abstrakte Implementierung für Kreis-Overlay
+-	Wird für Bezeichnung für GPS-Positionierung
+-	Kreis hat einen eindeutigen Radius
+ArrayCircleOverlay
+-	Konkrete Implementierung von CircleOverlay
+ItemizedOverlay
+-	Abstrakte Implementierung für Item-Overlay
+-	Item hat Snippet-Beschreibung
+OverlayItem
+-	Hat Parameter von einem Item
+-	Item hat einen eindeutigen Snippet
+ArrayItemizedOverlay 
+-	Konkrete Implementierung von ItemizedOverlay
+CanvasRenderer
+-	Enthält Methoden zum Abzeichnen der Straße, Knoten, Tile, Kachel
+Shape Container
+-	Container für ein Objekt mit dem Typ: Kreis, Image/Bitmap, PointText, ShapePaint, Straßenbeschreibung
+ShapeType
+-	Typ von ShapeContainer
+CircleContainer
+-	Container für Kreis --> Position x, y, ein Radius
+PointTextContainer
+-	Container für Point Text --> Position x, y, Beschreibung, Symbol, usw.
+ShapePaintContainer
+-	Container für ShapePaint
+SymbolContainer
+-	Container für ein Image --> Position x, y, Image, usw
+WayTextContainer
+-	Container für Wegebeschreibung --> Koordinate Text, Farbe
+CoastlineAlgorithm
+-	Klasse zum Berechnen Küstenlinien
+CoastlineWay
+-	Wege für Coastline Algorithm
+MapGenerator
+-	Abstrakte Klasse und erweitert Thread; bereitsstellen von Map-Images und Prozesse
+DatabaseMapGenerator
+-	Implementiert MapGanerator. Database für MapGenerator; enthält Paint information für alle Elemente; ANTI ALIAS
+TileDownloadMapGenerator
+-	Abstrakte Klasse und implementiert MapGenerator. Für Download.
+DependencyCache
+-	Doppelte Labels und Symbole in einem Tile löschen
+Deserializer
+-	Konvertieren arrays zu unsigned long Typ
+GeoPoint
+-	Geograpische Reihe und Länge  (in integer)
+ImmutablePoint
+-	Fixierte Paar von  Koordinaten / Koordinaten auf Karte
+IndexCacheEntryKey
+-	Generieren HashKey  für MapFileParameter
+LabelPlacement
+-
+LayerIds
+-	Liste aller Layer-IDs, die für Rendering verwendet sind.
+LineClipping
+-	Implementation von Cohen-Sutherland Algorithm
+Logger
+-	Log Erreignisse zu Konsole
+MapActivity
+-	
+MapController
+-
+MapDatabaseIndexCache
+-
+MapFileParameters
+-
+MapGeneratorJob
+-
+MapInfo
+-
+MapMover
+-
+MapnikTileDownload
+-	Download Tile von Mapnik Server
+MapPatterns
+-
+MapSymbols
+-
+MapView
+-
+MapViewMode
+-	
+Projection
+-	Projektion von GeoPoint zu Point und Point zu GeoPoint
+MercatorProjection
+-	Implementierung von Projektion
+OpenCycleMapTileDownload
+-	Download Tile von OpenCycleMap Server
+OsmarenderTileDownload
+-	Download Tile von Osmarenderer Server
+SutherlandHodgmanClipping
+-	Alogrithmus für Clipping
+TagIDsNodes
+-	Datenbank für Knoten-TagIDs
+TagIDsWays
+-	Datenbank für Straßen-TagIDs
+TileMemoryCardCache
+- 	Caching image file und Ersetzenalgorithmus ist LRU
+TileRAMCache
+- 	Caching Bitmap und Ersetzenalgorithmus ist LRU
+ZoomAnimator
+- 	Behandelt Zoom In und Zoom Out; Hat eigenes Thread
+
