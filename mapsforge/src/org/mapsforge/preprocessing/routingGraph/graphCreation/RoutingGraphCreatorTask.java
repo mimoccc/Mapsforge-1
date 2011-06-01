@@ -18,7 +18,6 @@ import gnu.trove.function.TIntFunction;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.procedure.TIntProcedure;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,13 +63,8 @@ class RoutingGraphCreatorTask implements Sink {
 	private int amountOfRelationsProcessed = 0;
 
 	private int amountOfEdgesWritten = 0;
-	private int amountOfEdgesOverwritten = 0;
 	private int amountOfVerticesWritten = 0;
 	private int amountOfRelationsWritten = 0;
-	private int amountOfRelationsOverwritten = 0;
-
-	int firststagenodes = 0;
-	int firststageways = 0;
 
 	// counter used to assign ids for vertices
 	int numVertices = 0;
@@ -135,7 +129,6 @@ class RoutingGraphCreatorTask implements Sink {
 				Node node = (Node) entity;
 				// add to store
 				nodes.add(node);
-				firststagenodes++;
 				amountOfNodesProcessed++;
 				break;
 			case Way:
@@ -167,7 +160,6 @@ class RoutingGraphCreatorTask implements Sink {
 					}
 					// add to store
 					ways.add(way);
-					firststageways++;
 				}
 				amountOfWaysProcessed++;
 				break;
@@ -258,12 +250,9 @@ class RoutingGraphCreatorTask implements Sink {
 			Relation rel = iterRelations.next();
 
 			// Process, create and add new relation
-			CompleteRelation cr = completeRelations.put(((Long) rel.getId()).intValue(),
+			completeRelations.put(((Long) rel.getId()).intValue(),
 					processRelationAndWrite(rel));
 
-			if (cr != null)
-				amountOfRelationsOverwritten++;
-			cr = null;
 			amountOfRelationsWritten++;
 		}
 		iterRelations.release();
@@ -283,43 +272,31 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfRelationsProcessed = " + amountOfRelationsProcessed);
 		System.out.println("amountOfVerticesWritten = " + amountOfVerticesWritten);
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten);
-		System.out.println("amountOfEdgesOverWritten = " + amountOfEdgesOverwritten);
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
-		System.out.println("amountOfRelationsOverWritten = " + amountOfRelationsOverwritten);
 
-		int countstreets = 0;
-		int countVertices = 0;
-		int countRelations = 0;
-		int countNames = 0;
-		int counthasHighwayTag = 0;
-		int hasOtherTags = 0;
-
-		SaveToDisc std = new SaveToDisc(new File("D:\\test.txt"));
-
-		for (CompleteEdge ce : edges.values()) {
-			countstreets++;
-
-			std.saveToFile(null, null, null, ce);
-
-			if (ce.name != null)
-				countNames++;
-			if (ce.type != null)
-				counthasHighwayTag++;
-			if (ce.additionalTags.size() != 0)
-				hasOtherTags++;
-
-		}
-		std.close();
-
-		countRelations = completeRelations.values().size();
-		countVertices = vertices.values().size();
-
-		System.out.println("relations written: " + countRelations);
-		System.out.println("vertices written: " + countVertices);
-		System.out.println("Edges written: " + countstreets);
-		System.out.println("has Name: " + countNames);
-		System.out.println("has HighwayTag: " + counthasHighwayTag);
-		System.out.println("has other tags: " + hasOtherTags);
+		/*
+		 * FOR DEBUG USE ONLY int countstreets = 0; int countVertices = 0; int countRelations = 0; int
+		 * countNames = 0; int counthasHighwayTag = 0; int hasOtherTags = 0;
+		 * 
+		 * SaveToDisc std = new SaveToDisc(new File("D:\\test.txt"));
+		 * 
+		 * for (CompleteEdge ce : edges.values()) { countstreets++;
+		 * 
+		 * //std.saveToFile(null, null, null, ce);
+		 * 
+		 * if (ce.name != null) countNames++; if (ce.type != null) counthasHighwayTag++; if
+		 * (ce.additionalTags.size() != 0) hasOtherTags++;
+		 * 
+		 * } std.close();
+		 * 
+		 * countRelations = completeRelations.values().size(); countVertices = vertices.values().size();
+		 * 
+		 * System.out.println("relations written: " + countRelations);
+		 * System.out.println("vertices written: " + countVertices);
+		 * System.out.println("Edges written: " + countstreets); System.out.println("has Name: " +
+		 * countNames); System.out.println("has HighwayTag: " + counthasHighwayTag);
+		 * System.out.println("has other tags: " + hasOtherTags);
+		 */
 
 	}
 
@@ -433,18 +410,7 @@ class RoutingGraphCreatorTask implements Sink {
 					0,
 					hs);
 
-			CompleteEdge tmp = edges.put(amountOfEdgesWritten, ce);
-
-			if (tmp != null) {
-				amountOfEdgesOverwritten++;
-
-				/*
-				 * System.out.println("old id as int: " + tmp.id + tmp.name);
-				 * System.out.println("new id as int: " + key + wayName.getValue());
-				 * System.out.println("old id as LONG: " + way.getId()); System.exit(-1);
-				 */
-			}
-			tmp = null;
+			edges.put(amountOfEdgesWritten, ce);
 
 		}
 	}
@@ -496,23 +462,15 @@ class RoutingGraphCreatorTask implements Sink {
 
 	private void addPairsForTagToHashSet(Relation relation, HashSet<KeyValuePair> hs) {
 		for (Tag tag : relation.getTags()) {
-
 			if (configObject.containsRelationTag(tag.getKey(), tag.getValue()))
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
-
-			/*
-			 * for (KeyValuePair sp : configObject.wayTagsSet) { if (tag.getKey().equals(sp.key)) { if
-			 * (sp.value == null) hs.add(sp); else if (tag.getValue().equals(sp.value)) hs.add(sp); } }
-			 */
 		}
 	}
 
 	private void addPairsForTagToHashSet(Way way, HashSet<KeyValuePair> hs) {
 		for (Tag tag : way.getTags()) {
-
 			if (remValues.contains(tag.getKey()))
 				continue;
-
 			if (configObject.containsWayTag(tag.getKey(), tag.getValue()))
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
 		}
@@ -567,7 +525,6 @@ class RoutingGraphCreatorTask implements Sink {
 		Tag t = getTag(way, "junction");
 		if (t == null) {
 			return false;
-
 		}
 		if (t.getValue().equals("roundabout")) {
 			return true;
