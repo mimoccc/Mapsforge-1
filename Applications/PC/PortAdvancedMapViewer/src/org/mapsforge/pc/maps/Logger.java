@@ -14,12 +14,16 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.util.Log;
+import java.util.logging.Level;
+
+//import android.util.Log;
 
 /**
  * Class used for logging text to the console.
  */
 final class Logger {
+	
+	private final static java.util.logging.Logger log = java.util.logging.Logger.getLogger(Logger.class.getName());
 	/**
 	 * Log a simple string message with debug level.
 	 * 
@@ -27,7 +31,9 @@ final class Logger {
 	 *            the log message to be printed.
 	 */
 	static void d(String str) {
-		Log.d("osm", Thread.currentThread().getName() + ": " + str);
+		//Log.d("osm", Thread.currentThread().getName() + ": " + str);
+		log.log(Level.INFO, Thread.currentThread().getName() + ": " + str);
+		System.out.println(Thread.currentThread().getName() + ": " + str);
 	}
 
 	/**
@@ -46,7 +52,10 @@ final class Logger {
 					.append(stack[i].getFileName()).append(":")
 					.append(stack[i].getLineNumber()).append(")");
 		}
-		Log.e("osm", stringBuilder.toString());
+		//Log.e("osm", stringBuilder.toString());
+		log.log(Level.FINER, stringBuilder.toString());
+		System.err.println(stringBuilder.toString());
+
 	}
 
 	/**
