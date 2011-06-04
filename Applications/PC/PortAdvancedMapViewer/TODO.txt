@@ -10,3 +10,6 @@ TODO Liste
 
 Hey Martinus, ich dachte mir, so eine TODO Liste macht vielleicht Sinn.
 Auﬂerdem kann man sich gegenseitig Nachrichten schreiben.
+
+4.6.2011
+- Logger
