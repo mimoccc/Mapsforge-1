@@ -18,10 +18,16 @@
         <string name="application_name">AdvancedMapViewer</string>
         <string name="cancel">Peruuta</string>
         <string name="error">Virhe</string>
+        <string name="error_last_location_unknown">Viimeinen sijainti ei ole tiedossa</string>
         <string name="file_invalid">Valittu tiedosto ei ole kelvollinen karttatiedosto.
                 Valitse toinen tiedosto.</string>
 		<string name="file_select">Valitse karttatiedosto.</string>
         <string name="follow_gps_disabled">Seuraava GPS signaali on mitätöity</string>
+        <string name="file_size_byte">tavu</string>
+		<string name="file_size_bytes">tavua</string>
+		<string name="file_size_kb">kB</string>
+		<string name="file_size_mb">MB</string>
+		<string name="file_size_gb">GB</string>
         <string name="go_to_position">Mene sijaintiin</string>
         <string name="gps_disabled">GPS vastaanotin on mitätöity</string>
         <string name="info_map_file_area">Alue</string>
@@ -31,7 +37,9 @@
 		<string name="info_map_file_debug_no">ei sisälletty</string>
 		<string name="info_map_file_debug_yes">sisälletty</string>
 		<string name="info_map_file_name">Tiedosto</string>
+		<string name="info_map_file_size">Tiedoston koko</string>
 		<string name="info_map_file_start">Aloitussijainti</string>
+        <string name="info_map_file_version">Versio</string>
         <string name="latitude">Leveyspiiri</string>
         <string name="longitude">Pituuspiiri</string>
         <string name="menu_info">Info</string>
@@ -41,9 +49,14 @@
         <string name="menu_position">Sijainti</string>
         <string name="menu_position_enter_coordinates">Anna koordinaatit</string>
         <string name="menu_position_gps_follow">Seuraa GPS signaalia</string>
+        <string name="menu_position_last_known">Viimeinen tunnettu sijainti</string>
         <string name="menu_position_map_file_center">Karttatiedoston keskipiste</string>
         <string name="menu_preferences">Suositukset</string>
-        <string name="menu_screenshot">Screenshot</string>
+        <string name="menu_render_theme">Render theme</string>
+		<string name="menu_render_theme_mapnik">Mapnik</string>
+		<string name="menu_render_theme_osmarender">Osmarender</string>
+		<string name="menu_render_theme_select_file">Valitse XML tiedosto ...</string>
+	    <string name="menu_screenshot">Screenshot</string>
 		<string name="menu_screenshot_jpeg">JPEG (häviöllinen)</string>
 		<string name="menu_screenshot_png">PNG (häviötön)</string>
         <string name="ok">OK</string>
