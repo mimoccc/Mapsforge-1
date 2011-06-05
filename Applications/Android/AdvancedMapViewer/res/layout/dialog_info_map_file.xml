@@ -9,8 +9,17 @@
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
 		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:text="@string/info_map_file_debug" android:textStyle="bold"
-			android:textColor="#FFF" />
+			android:text="@string/info_map_file_size" android:textStyle="bold" android:textColor="#FFF" />
+		<TextView android:id="@+id/infoMapFileViewSize" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:paddingBottom="10dip" />
+
+		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:text="@string/info_map_file_version" android:textStyle="bold" android:textColor="#FFF" />
+		<TextView android:id="@+id/infoMapFileViewVersion" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:paddingBottom="10dip" />
+
+		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:text="@string/info_map_file_debug" android:textStyle="bold" android:textColor="#FFF" />
 		<TextView android:id="@+id/infoMapFileViewDebug" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
@@ -25,14 +34,12 @@
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
 		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:text="@string/info_map_file_start" android:textStyle="bold"
-			android:textColor="#FFF" />
+			android:text="@string/info_map_file_start" android:textStyle="bold" android:textColor="#FFF" />
 		<TextView android:id="@+id/infoMapFileViewStart" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
 		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:text="@string/info_map_file_comment" android:textStyle="bold"
-			android:textColor="#FFF" />
+			android:text="@string/info_map_file_comment" android:textStyle="bold" android:textColor="#FFF" />
 		<TextView android:id="@+id/infoMapFileViewComment" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 	</LinearLayout>

@@ -6,8 +6,7 @@
 			<item android:id="@+id/menu_info_about" android:title="@string/menu_info_about" />
 		</menu>
 	</item>
-	<item android:id="@+id/menu_position" android:title="@string/menu_position"
-		android:icon="@drawable/ic_menu_mylocation">
+	<item android:id="@+id/menu_position" android:title="@string/menu_position" android:icon="@drawable/ic_menu_mylocation">
 		<menu>
 			<item android:id="@+id/menu_position_gps_follow" android:title="@string/menu_position_gps_follow" />
 			<item android:id="@+id/menu_position_enter_coordinates" android:title="@string/menu_position_enter_coordinates" />
@@ -23,6 +22,13 @@
 	</item>
 	<item android:id="@+id/menu_preferences" android:title="@string/menu_preferences"
 		android:icon="@drawable/ic_menu_preferences" />
-	<item android:id="@+id/menu_mapfile" android:title="@string/menu_mapfile"
-		android:icon="@drawable/ic_menu_archive" />
+	<item android:id="@+id/menu_render_theme" android:title="@string/menu_render_theme"
+		android:icon="@drawable/ic_menu_archive">
+		<menu>
+			<item android:id="@+id/menu_render_theme_mapnik" android:title="@string/menu_render_theme_mapnik" />
+			<item android:id="@+id/menu_render_theme_osmarender" android:title="@string/menu_render_theme_osmarender" />
+			<item android:id="@+id/menu_render_theme_select_file" android:title="@string/menu_render_theme_select_file" />
+		</menu>
+	</item>
+	<item android:id="@+id/menu_mapfile" android:title="@string/menu_mapfile" android:icon="@drawable/ic_menu_archive" />
 </menu>

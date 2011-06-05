@@ -16,9 +16,15 @@ package org.mapsforge.applications.android.advancedmapviewer;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.util.Date;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.mapsforge.android.maps.ArrayCircleOverlay;
 import org.mapsforge.android.maps.GeoPoint;
@@ -29,6 +35,9 @@ import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.MapViewMode;
 import org.mapsforge.android.maps.OverlayCircle;
 import org.mapsforge.android.maps.MapView.TextField;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -73,10 +82,85 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final int DIALOG_ENTER_COORDINATES = 0;
 	private static final int DIALOG_GPS_DISABLED = 1;
 	private static final int DIALOG_INFO_MAP_FILE = 2;
+
+	/**
+	 * Accepts all readable files with a ".map" extension.
+	 */
+	private static final FileFilter FILE_FILTER_EXTENSION_MAP = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			// accept only readable files
+			if (file.canRead()) {
+				if (file.isDirectory()) {
+					// accept all directories
+					return true;
+				} else if (file.isFile() && file.getName().endsWith(".map")) {
+					// accept all files with a ".map" extension
+					return true;
+				}
+			}
+			return false;
+		}
+	};
+
+	/**
+	 * Accepts all readable files with a ".xml" extension.
+	 */
+	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			// accept only readable files
+			if (file.canRead()) {
+				if (file.isDirectory()) {
+					// accept all directories
+					return true;
+				} else if (file.isFile() && file.getName().endsWith(".xml")) {
+					// accept all files with a ".xml" extension
+					return true;
+				}
+			}
+			return false;
+		}
+	};
+
+	/**
+	 * Accepts all valid map files.
+	 */
+	private static final FileFilter FILE_FILTER_VALID_MAP = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			// accept only valid map files
+			return MapDatabase.isValidMapFile(file.getAbsolutePath());
+		}
+	};
+
+	/**
+	 * Accepts all valid XML files.
+	 */
+	private static final FileFilter FILE_FILTER_VALID_XML = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			// accept only valid XML files
+			try {
+				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser()
+						.getXMLReader();
+				xmlReader.parse(new InputSource(new FileInputStream(file)));
+			} catch (ParserConfigurationException e) {
+				return false;
+			} catch (SAXException e) {
+				return false;
+			} catch (IOException e) {
+				return false;
+			}
+			return true;
+		}
+	};
+
 	private static final String SCREENSHOT_DIRECTORY = "Pictures";
 	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
 	private static final int SCREENSHOT_QUALITY = 90;
 	private static final int SELECT_MAP_FILE = 0;
+	private static final int SELECT_RENDER_THEME_FILE = 1;
 
 	/**
 	 * The default size of the memory card cache.
@@ -176,8 +260,23 @@ public class AdvancedMapViewer extends MapActivity {
 				startActivity(new Intent(this, EditPreferences.class));
 				return true;
 
+			case R.id.menu_render_theme:
+				return true;
+
+			case R.id.menu_render_theme_mapnik:
+				// this.mapView.setRenderTheme(InternalRenderTheme.MAPNIK);
+				return true;
+
+			case R.id.menu_render_theme_osmarender:
+				// this.mapView.setRenderTheme(InternalRenderTheme.OSMARENDER);
+				return true;
+
+			case R.id.menu_render_theme_select_file:
+				// startRenderThemePicker();
+				return true;
+
 			case R.id.menu_mapfile:
-				startFileBrowser();
+				startMapFilePicker();
 				return true;
 
 			default:
@@ -203,6 +302,12 @@ public class AdvancedMapViewer extends MapActivity {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(true);
+		}
+
+		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+			menu.findItem(R.id.menu_render_theme).setEnabled(false);
+		} else {
+			menu.findItem(R.id.menu_render_theme).setEnabled(true);
 		}
 
 		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
@@ -332,38 +437,54 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Sets all file filters and starts the FilePicker.
+	 * Formats the given file size as a human readable string, using SI prefixes.
+	 * 
+	 * @param fileSize
+	 *            the file size to be formatted.
+	 * @return a human readable file size.
+	 * @throws IllegalArgumentException
+	 *             if the given file size is negative.
 	 */
-	private void startFileBrowser() {
-		// set the FileDisplayFilter
-		FilePicker.setFileDisplayFilter(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				// accept only readable files
-				if (file.canRead()) {
-					if (file.isDirectory()) {
-						// accept all directories
-						return true;
-					} else if (file.isFile() && file.getName().endsWith(".map")) {
-						// accept all files with a ".map" extension
-						return true;
-					}
-				}
-				return false;
+	private String formatFileSize(long fileSize) {
+		if (fileSize < 0) {
+			throw new IllegalArgumentException("invalid file size: " + fileSize);
+		} else if (fileSize < 1000) { // less than 1 kB
+			if (fileSize == 1) {
+				// singular
+				return "1 " + getString(R.string.file_size_byte);
 			}
-		});
-
-		// set the FileSelectFilter
-		FilePicker.setFileSelectFilter(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				// accept only valid map files
-				return MapView.isValidMapFile(file.getAbsolutePath());
+			// plural, including zero
+			return fileSize + " " + getString(R.string.file_size_bytes);
+		} else {
+			DecimalFormat decimalFormat = new DecimalFormat("#.0 ");
+			if (fileSize < 1000000) { // less than 1 MB
+				return decimalFormat.format(fileSize / 1000d)
+						+ getString(R.string.file_size_kb);
+			} else if (fileSize < 1000000000) { // less than 1 GB
+				return decimalFormat.format(fileSize / 1000000d)
+						+ getString(R.string.file_size_mb);
 			}
-		});
+			return decimalFormat.format(fileSize / 1000000000d)
+					+ getString(R.string.file_size_gb);
+		}
+	}
 
-		// start the FilePicker
+	/**
+	 * Sets all file filters and starts the FilePicker to select a map file.
+	 */
+	private void startMapFilePicker() {
+		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_MAP);
+		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_MAP);
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
+	}
+
+	/**
+	 * Sets all file filters and starts the FilePicker to select an XML file.
+	 */
+	private void startRenderThemePicker() {
+		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
+		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_XML);
+		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
 	}
 
 	@Override
@@ -378,6 +499,16 @@ public class AdvancedMapViewer extends MapActivity {
 					&& !this.mapView.getMapViewMode().requiresInternetConnection()
 					&& !this.mapView.hasValidMapFile()) {
 				finish();
+			}
+		} else if (requestCode == SELECT_RENDER_THEME_FILE) {
+			if (resultCode == RESULT_OK) {
+				if (data != null && data.getStringExtra("selectedFile") != null) {
+					try {
+						this.mapView.setRenderTheme(data.getStringExtra("selectedFile"));
+					} catch (FileNotFoundException e) {
+						showToast(e.getLocalizedMessage());
+					}
+				}
 			}
 		}
 	}
@@ -532,13 +663,22 @@ public class AdvancedMapViewer extends MapActivity {
 				}
 			});
 		} else if (id == DIALOG_INFO_MAP_FILE) {
+			MapDatabase mapDatabase = this.mapView.getMapDatabase();
+
 			// map file name
 			TextView textView = (TextView) dialog.findViewById(R.id.infoMapFileViewName);
 			textView.setText(this.mapView.getMapFile());
 
-			// map file name
+			// map file size
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewSize);
+			textView.setText(formatFileSize(mapDatabase.getFileSize()));
+
+			// map file version
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewVersion);
+			textView.setText(String.valueOf(mapDatabase.getFileVersion()));
+
+			// map file debug
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewDebug);
-			MapDatabase mapDatabase = this.mapView.getMapDatabase();
 			if (mapDatabase.isDebugFile()) {
 				textView.setText(R.string.info_map_file_debug_yes);
 			} else {
@@ -568,12 +708,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file comment text
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewComment);
-			String commentText = mapDatabase.getCommentText();
-			if (commentText == null) {
-				textView.setText(null);
-			} else {
-				textView.setText(mapDatabase.getCommentText());
-			}
+			textView.setText(mapDatabase.getCommentText());
 		} else {
 			super.onPrepareDialog(id, dialog);
 		}
@@ -630,7 +765,7 @@ public class AdvancedMapViewer extends MapActivity {
 		// check if the file browser needs to be displayed
 		if (!this.mapView.getMapViewMode().requiresInternetConnection()
 				&& !this.mapView.hasValidMapFile()) {
-			startFileBrowser();
+			startMapFilePicker();
 		}
 	}
 

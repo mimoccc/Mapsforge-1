@@ -76,17 +76,15 @@ class FilePickerIconAdapter extends BaseAdapter {
 
 		if (index == 0 && this.hasParentFolder) {
 			// the parent directory of the current folder
-			this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_menu_back,
-					0, 0);
+			this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.back, 0, 0);
 			this.textView.setText("..");
 		} else {
 			this.currentFile = this.files[index];
 			if (this.currentFile.isDirectory()) {
-				this.textView.setCompoundDrawablesWithIntrinsicBounds(0,
-						R.drawable.ic_menu_archive, 0, 0);
+				this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.folder, 0,
+						0);
 			} else {
-				this.textView.setCompoundDrawablesWithIntrinsicBounds(0,
-						R.drawable.ic_menu_mapmode, 0, 0);
+				this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.file, 0, 0);
 			}
 			this.textView.setText(this.currentFile.getName());
 		}

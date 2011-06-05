@@ -20,6 +20,11 @@
 	<string name="error">Error</string>
 	<string name="file_invalid">The selected file is invalid. Please select another one.</string>
 	<string name="file_select">Please select a file.</string>
+	<string name="file_size_byte">byte</string>
+	<string name="file_size_bytes">bytes</string>
+	<string name="file_size_kb">kB</string>
+	<string name="file_size_mb">MB</string>
+	<string name="file_size_gb">GB</string>
 	<string name="follow_gps_disabled">Follow GPS signal has been disabled</string>
 	<string name="go_to_position">Go to position</string>
 	<string name="gps_disabled">The GPS receiver is disabled</string>
@@ -30,7 +35,9 @@
 	<string name="info_map_file_debug_no">not included</string>
 	<string name="info_map_file_debug_yes">included</string>
 	<string name="info_map_file_name">File</string>
+	<string name="info_map_file_size">File size</string>
 	<string name="info_map_file_start">Start position</string>
+	<string name="info_map_file_version">Version</string>
 	<string name="latitude">Latitude</string>
 	<string name="longitude">Longitude</string>
 	<string name="menu_info">Info</string>
@@ -42,6 +49,10 @@
 	<string name="menu_position_gps_follow">Follow GPS signal</string>
 	<string name="menu_position_map_file_center">Map file center</string>
 	<string name="menu_preferences">Preferences</string>
+	<string name="menu_render_theme">Render theme</string>
+	<string name="menu_render_theme_mapnik">Mapnik</string>
+	<string name="menu_render_theme_osmarender">Osmarender</string>
+	<string name="menu_render_theme_select_file">Select XML file ...</string>
 	<string name="menu_screenshot">Screenshot</string>
 	<string name="menu_screenshot_jpeg">JPEG (lossy)</string>
 	<string name="menu_screenshot_png">PNG (lossless)</string>
