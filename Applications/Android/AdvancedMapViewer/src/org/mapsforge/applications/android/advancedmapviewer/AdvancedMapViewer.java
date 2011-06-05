@@ -234,6 +234,10 @@ public class AdvancedMapViewer extends MapActivity {
 				}
 				return true;
 
+			case R.id.menu_position_last_known:
+				gotoLastKnownPosition();
+				return true;
+
 			case R.id.menu_position_enter_coordinates:
 				showDialog(DIALOG_ENTER_COORDINATES);
 				return true;
@@ -465,6 +469,31 @@ public class AdvancedMapViewer extends MapActivity {
 			}
 			return decimalFormat.format(fileSize / 1000000000d)
 					+ getString(R.string.file_size_gb);
+		}
+	}
+
+	/**
+	 * Centers the map to the last known position as reported by the most accurate location
+	 * provider. If the last location is unknown, a toast message is displayed instead.
+	 */
+	private void gotoLastKnownPosition() {
+		Location currentLocation;
+		Location bestLocation = null;
+		for (String provider : this.locationManager.getProviders(true)) {
+			currentLocation = this.locationManager.getLastKnownLocation(provider);
+			if (bestLocation == null
+					|| currentLocation.getAccuracy() < bestLocation.getAccuracy()) {
+				bestLocation = currentLocation;
+			}
+		}
+
+		// check if a location has been found
+		if (bestLocation != null) {
+			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation
+					.getLongitude());
+			this.mapController.setCenter(point);
+		} else {
+			showToast(getString(R.string.error_last_location_unknown));
 		}
 	}
 

@@ -18,6 +18,7 @@
 	<string name="application_name">AdvancedMapViewer</string>
 	<string name="cancel">Abbrechen</string>
 	<string name="error">Fehler</string>
+	<string name="error_last_location_unknown">Die letzte Position ist unbekannt</string>
 	<string name="file_invalid">Die gewählte Datei ist ungültig. Bitte wählen Sie eine andere.</string>
 	<string name="file_select">Bitte wählen Sie eine Datei.</string>
 	<string name="follow_gps_disabled">GPS-Signal folgen wurde deaktiviert</string>
@@ -47,6 +48,7 @@
 	<string name="menu_position">Position</string>
 	<string name="menu_position_enter_coordinates">Koordinaten eingeben</string>
 	<string name="menu_position_gps_follow">GPS-Signal folgen</string>
+	<string name="menu_position_last_known">Letzte bekannte Position</string>
 	<string name="menu_position_map_file_center">Zentrum der Kartendatei</string>
 	<string name="menu_preferences">Einstellungen</string>
 	<string name="menu_render_theme">Render-Theme</string>

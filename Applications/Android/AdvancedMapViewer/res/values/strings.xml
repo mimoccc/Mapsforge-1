@@ -18,6 +18,7 @@
 	<string name="application_name">AdvancedMapViewer</string>
 	<string name="cancel">Cancel</string>
 	<string name="error">Error</string>
+	<string name="error_last_location_unknown">The last location is unknown</string>
 	<string name="file_invalid">The selected file is invalid. Please select another one.</string>
 	<string name="file_select">Please select a file.</string>
 	<string name="file_size_byte">byte</string>
@@ -47,6 +48,7 @@
 	<string name="menu_position">Position</string>
 	<string name="menu_position_enter_coordinates">Enter coordinates</string>
 	<string name="menu_position_gps_follow">Follow GPS signal</string>
+	<string name="menu_position_last_known">Last known location</string>
 	<string name="menu_position_map_file_center">Map file center</string>
 	<string name="menu_preferences">Preferences</string>
 	<string name="menu_render_theme">Render theme</string>
