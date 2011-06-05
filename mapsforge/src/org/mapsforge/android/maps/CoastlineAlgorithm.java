@@ -55,15 +55,14 @@ class CoastlineAlgorithm {
 				return true;
 			} else if (!(obj instanceof EndPoints)) {
 				return false;
-			} else {
-				this.other = (EndPoints) obj;
-				if (!this.start.equals(this.other.start)) {
-					return false;
-				} else if (!this.end.equals(this.other.end)) {
-					return false;
-				}
-				return true;
 			}
+			this.other = (EndPoints) obj;
+			if (!this.start.equals(this.other.start)) {
+				return false;
+			} else if (!this.end.equals(this.other.end)) {
+				return false;
+			}
+			return true;
 		}
 
 		@Override

@@ -43,18 +43,17 @@ class IndexCacheEntryKey {
 			return true;
 		} else if (!(obj instanceof IndexCacheEntryKey)) {
 			return false;
-		} else {
-			this.other = (IndexCacheEntryKey) obj;
-			if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
-				return false;
-			} else if (this.mapFileParameters != null
-					&& !this.mapFileParameters.equals(this.other.mapFileParameters)) {
-				return false;
-			} else if (this.indexBlockNumber != this.other.indexBlockNumber) {
-				return false;
-			}
-			return true;
 		}
+		this.other = (IndexCacheEntryKey) obj;
+		if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
+			return false;
+		} else if (this.mapFileParameters != null
+				&& !this.mapFileParameters.equals(this.other.mapFileParameters)) {
+			return false;
+		} else if (this.indexBlockNumber != this.other.indexBlockNumber) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override

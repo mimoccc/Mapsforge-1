@@ -97,15 +97,14 @@ public class GeoPoint implements Comparable<GeoPoint> {
 			return true;
 		} else if (!(obj instanceof GeoPoint)) {
 			return false;
-		} else {
-			this.other = (GeoPoint) obj;
-			if (this.latitudeE6 != this.other.latitudeE6) {
-				return false;
-			} else if (this.longitudeE6 != this.other.longitudeE6) {
-				return false;
-			}
-			return true;
 		}
+		this.other = (GeoPoint) obj;
+		if (this.latitudeE6 != this.other.latitudeE6) {
+			return false;
+		} else if (this.longitudeE6 != this.other.longitudeE6) {
+			return false;
+		}
+		return true;
 	}
 
 	/**

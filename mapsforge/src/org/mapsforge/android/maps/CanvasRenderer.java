@@ -163,9 +163,6 @@ class CanvasRenderer extends DatabaseMapGenerator {
 								}
 							}
 							break;
-						default:
-							// all cases are covered, the default case should never occur
-							continue;
 					}
 					this.canvas.drawPath(this.path, this.shapePaintContainer.paint);
 				}

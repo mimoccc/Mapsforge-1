@@ -94,17 +94,16 @@ class Tile implements Serializable {
 			return true;
 		} else if (!(obj instanceof Tile)) {
 			return false;
-		} else {
-			this.other = (Tile) obj;
-			if (this.x != this.other.x) {
-				return false;
-			} else if (this.y != this.other.y) {
-				return false;
-			} else if (this.zoomLevel != this.other.zoomLevel) {
-				return false;
-			}
-			return true;
 		}
+		this.other = (Tile) obj;
+		if (this.x != this.other.x) {
+			return false;
+		} else if (this.y != this.other.y) {
+			return false;
+		} else if (this.zoomLevel != this.other.zoomLevel) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override

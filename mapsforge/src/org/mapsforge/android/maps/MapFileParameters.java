@@ -152,17 +152,16 @@ class MapFileParameters {
 			return true;
 		} else if (!(obj instanceof MapFileParameters)) {
 			return false;
-		} else {
-			this.other = (MapFileParameters) obj;
-			if (this.startAddress != this.other.startAddress) {
-				return false;
-			} else if (this.mapFileSize != this.other.mapFileSize) {
-				return false;
-			} else if (this.baseZoomLevel != this.other.baseZoomLevel) {
-				return false;
-			}
-			return true;
 		}
+		this.other = (MapFileParameters) obj;
+		if (this.startAddress != this.other.startAddress) {
+			return false;
+		} else if (this.mapFileSize != this.other.mapFileSize) {
+			return false;
+		} else if (this.baseZoomLevel != this.other.baseZoomLevel) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
