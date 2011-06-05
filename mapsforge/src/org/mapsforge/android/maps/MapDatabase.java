@@ -23,23 +23,27 @@ import java.util.HashMap;
 import android.graphics.Rect;
 
 /**
- * A database class for reading binary map files. Byte order is big-endian.
+ * A class for reading binary map files.
+ * <p>
+ * This class is not thread-safe. Each thread should use its own instance.
+ * 
+ * @see <a href="http://code.google.com/p/mapsforge/wiki/SpecificationBinaryMapFile">Specification</a>
  */
 public class MapDatabase {
+	/**
+	 * Maximum supported version of the map file format.
+	 */
+	public static final int BINARY_OSM_VERSION_MAX = 2;
+
+	/**
+	 * Minimal supported version of the map file format.
+	 */
+	public static final int BINARY_OSM_VERSION_MIN = 2;
+
 	/**
 	 * Magic byte at the beginning of a valid binary map file.
 	 */
 	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
-
-	/**
-	 * Maximum supported version of the file format.
-	 */
-	private static final int BINARY_OSM_VERSION_MAX = 2;
-
-	/**
-	 * Minimal supported version of the file format.
-	 */
-	private static final int BINARY_OSM_VERSION_MIN = 2;
 
 	/**
 	 * Bitmask to extract the block offset from an index entry.
@@ -201,6 +205,20 @@ public class MapDatabase {
 	 */
 	private static final int WAY_RELEVANT_TAGS_SHIFT = 5;
 
+	/**
+	 * Convenience method to check whether the given file is a valid map file.
+	 * 
+	 * @param file
+	 *            the path to the map file that should be tested.
+	 * @return true if the file is a valid map file, false otherwise.
+	 */
+	public static boolean isValidMapFile(String file) {
+		MapDatabase testDatabase = new MapDatabase();
+		boolean isValid = testDatabase.openFile(file);
+		testDatabase.closeFile();
+		return isValid;
+	}
+
 	private byte baseZoomLevel;
 	private int blockEntriesTableOffset;
 	private long blockNumber;
@@ -333,19 +351,58 @@ public class MapDatabase {
 	private byte zoomLevelMin;
 
 	/**
-	 * Empty default constructor with limited visibility.
+	 * Constructs a new MapDatabase instance for reading binary map files.
 	 */
-	MapDatabase() {
+	public MapDatabase() {
 		// do nothing
 	}
 
 	/**
-	 * Returns the comment text of the current map file.
+	 * Closes the map file. Has no effect if no map file is currently opened.
+	 */
+	public void closeFile() {
+		try {
+			if (this.databaseIndexCache != null) {
+				this.databaseIndexCache.destroy();
+				this.databaseIndexCache = null;
+			}
+
+			if (this.inputFile != null) {
+				this.inputFile.close();
+				this.inputFile = null;
+			}
+
+			this.readBuffer = null;
+		} catch (IOException e) {
+			Logger.e(e);
+		}
+	}
+
+	/**
+	 * Returns the comment text of the current map file (may be null).
 	 * 
-	 * @return the comment text of the current map file.
+	 * @return the comment text of the current map file (may be null).
 	 */
 	public String getCommentText() {
 		return this.commentText;
+	}
+
+	/**
+	 * Returns the size of the current map file, measured in bytes.
+	 * 
+	 * @return the size of the current map file, measured in bytes.
+	 */
+	public long getFileSize() {
+		return this.fileSize;
+	}
+
+	/**
+	 * Returns the file version number of the current map file.
+	 * 
+	 * @return the file version number of the current map file.
+	 */
+	public int getFileVersion() {
+		return this.fileVersionNumber;
 	}
 
 	/**
@@ -379,6 +436,15 @@ public class MapDatabase {
 	}
 
 	/**
+	 * Returns the name of the projection of the map file (may be null).
+	 * 
+	 * @return the name of the projection of the map file (may be null).
+	 */
+	public String getProjection() {
+		return this.projectionName;
+	}
+
+	/**
 	 * Returns the start position from the map file header (may be null).
 	 * 
 	 * @return the start position from the map file header (may be null).
@@ -397,6 +463,57 @@ public class MapDatabase {
 	 */
 	public boolean isDebugFile() {
 		return this.debugFile;
+	}
+
+	/**
+	 * Opens the given map file, reads its header data and validates them.
+	 * 
+	 * @param fileName
+	 *            the path to the map file.
+	 * @return true if the file could be opened and is a valid map file, false otherwise.
+	 * @throws IllegalArgumentException
+	 *             if the given fileName is null.
+	 */
+	public boolean openFile(String fileName) {
+		try {
+			// make sure to close any previous file first
+			closeFile();
+
+			// check for null parameter
+			if (fileName == null) {
+				throw new IllegalArgumentException("fileName must not be null");
+			}
+
+			// check if the file exists and is readable
+			this.file = new File(fileName);
+			if (!this.file.exists()) {
+				Logger.d("file does not exist: " + fileName);
+				return false;
+			} else if (!this.file.isFile()) {
+				Logger.d("not a file: " + fileName);
+				return false;
+			} else if (!this.file.canRead()) {
+				Logger.d("cannot read file: " + fileName);
+				return false;
+			}
+
+			// open the binary map file in read only mode
+			this.inputFile = new RandomAccessFile(this.file, "r");
+			this.fileSize = this.inputFile.length();
+
+			// read the header data from the file
+			if (!processFileHeader()) {
+				closeFile();
+				return false;
+			}
+
+			return true;
+		} catch (IOException e) {
+			Logger.e(e);
+			// make sure that the file is closed
+			closeFile();
+			return false;
+		}
 	}
 
 	/**
@@ -1233,25 +1350,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Closes the map file.
-	 */
-	void closeFile() {
-		try {
-			if (this.databaseIndexCache != null) {
-				this.databaseIndexCache.destroy();
-				this.databaseIndexCache = null;
-			}
-
-			if (this.inputFile != null) {
-				this.inputFile.close();
-				this.inputFile = null;
-			}
-		} catch (IOException e) {
-			Logger.e(e);
-		}
-	}
-
-	/**
 	 * Starts a database query with the given parameters.
 	 * 
 	 * @param tile
@@ -1530,15 +1628,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the name of the projection as it is encoded in the map file.
-	 * 
-	 * @return the projection name of the map file.
-	 */
-	String getProjection() {
-		return this.projectionName;
-	}
-
-	/**
 	 * Returns the mapping of way tags to IDs in the current map file.
 	 * 
 	 * @return a map containing the tags and their corresponding IDs.
@@ -1557,64 +1646,22 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Opens a map file and checks for valid header data.
-	 * 
-	 * @param fileName
-	 *            the path to the map file.
-	 * @return true if the file could be opened and is a valid map file, false otherwise.
+	 * Prepares and sets up the internal data structures and caches. Must be called once before the
+	 * first read query is executed.
 	 */
-	boolean openFile(String fileName) {
-		try {
-			// make sure to close any previous file first
-			closeFile();
-
-			// check for null parameter
-			if (fileName == null) {
-				return false;
-			}
-
-			// check if the file exists and is readable
-			this.file = new File(fileName);
-			if (!this.file.exists()) {
-				Logger.d("file does not exist: " + fileName);
-				return false;
-			} else if (!this.file.isFile()) {
-				Logger.d("not a file: " + fileName);
-				return false;
-			} else if (!this.file.canRead()) {
-				Logger.d("cannot read file: " + fileName);
-				return false;
-			}
-
-			// open the binary map file in read only mode
-			this.inputFile = new RandomAccessFile(this.file, "r");
-			this.fileSize = this.inputFile.length();
-
-			// read the header data from the file
-			if (!processFileHeader()) {
-				return false;
-			}
-
-			// create the DatabaseIndexCache
-			this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile,
+	void prepareExecution() {
+		// create the DatabaseIndexCache
+		this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile,
 					INDEX_CACHE_SIZE);
 
-			// create an array for the way nodes coordinates
-			this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
+		// create an array for the way nodes coordinates
+		this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
 
-			// create the tag arrays
-			this.defaultTagIds = new boolean[Math.max(this.maximumNodeTagId,
+		// create the tag arrays
+		this.defaultTagIds = new boolean[Math.max(this.maximumNodeTagId,
 					this.maximumWayTagId) + 1];
-			this.nodeTagIds = new boolean[this.maximumNodeTagId + 1];
-			this.wayTagIds = new boolean[this.maximumWayTagId + 1];
-
-			return true;
-		} catch (IOException e) {
-			Logger.e(e);
-			// make sure that the file is closed
-			closeFile();
-			return false;
-		}
+		this.nodeTagIds = new boolean[this.maximumNodeTagId + 1];
+		this.wayTagIds = new boolean[this.maximumWayTagId + 1];
 	}
 
 	/**

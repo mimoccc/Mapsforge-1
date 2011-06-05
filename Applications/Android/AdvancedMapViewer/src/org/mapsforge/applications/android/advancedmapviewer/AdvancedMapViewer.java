@@ -17,7 +17,6 @@ package org.mapsforge.applications.android.advancedmapviewer;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -503,11 +502,11 @@ public class AdvancedMapViewer extends MapActivity {
 		} else if (requestCode == SELECT_RENDER_THEME_FILE) {
 			if (resultCode == RESULT_OK) {
 				if (data != null && data.getStringExtra("selectedFile") != null) {
-					try {
-						this.mapView.setRenderTheme(data.getStringExtra("selectedFile"));
-					} catch (FileNotFoundException e) {
-						showToast(e.getLocalizedMessage());
-					}
+					// try {
+					// this.mapView.setRenderTheme(data.getStringExtra("selectedFile"));
+					// } catch (FileNotFoundException e) {
+					// showToast(e.getLocalizedMessage());
+					// }
 				}
 			}
 		}

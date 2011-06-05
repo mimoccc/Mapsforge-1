@@ -618,20 +618,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Checks whether a given file is a valid map file.
-	 * 
-	 * @param file
-	 *            the path to the map file that should be tested.
-	 * @return true if the file is a valid map file, false otherwise.
-	 */
-	public static boolean isValidMapFile(String file) {
-		MapDatabase testDatabase = new MapDatabase();
-		boolean isValid = testDatabase.openFile(file);
-		testDatabase.closeFile();
-		return isValid;
-	}
-
-	/**
 	 * Detects if the code is currently executed on the emulator from the Android SDK. This method can
 	 * be used for code branches to work around known bugs in the Android emulator.
 	 * 
@@ -1071,6 +1057,7 @@ public class MapView extends ViewGroup {
 
 		this.mapDatabase.closeFile();
 		if (this.mapDatabase.openFile(newMapFile)) {
+			this.mapDatabase.prepareExecution();
 			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 			clearMapView();
@@ -2439,6 +2426,7 @@ public class MapView extends ViewGroup {
 		}
 		if (newMapFile != null && this.mapDatabase != null
 				&& this.mapDatabase.openFile(newMapFile)) {
+			this.mapDatabase.prepareExecution();
 			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 		} else {
