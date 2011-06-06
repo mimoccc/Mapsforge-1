@@ -15,32 +15,32 @@
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
 import java.io.Serializable;
-import java.util.HashSet;
+
+import org.mapsforge.core.GeoCoordinate;
 
 /**
- * This class represents a relation with its members and give tags.
+ * Serializable Geocoordinate class
  * 
- * @author Michael Bartel
+ * @author rob
  * 
  */
-public class CompleteRelation implements Serializable {
+public class GeoCoordinateSerial extends GeoCoordinate implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	RelationMemberSerial[] member;
-	HashSet<KeyValuePair> tags;
+	GeoCoordinateSerial(double latitude, double longitude) throws IllegalArgumentException {
+		super(latitude, longitude);
+		// TODO Auto-generated constructor stub
+	}
 
-	/**
-	 * The Constructor to create an instance
-	 * 
-	 * @param member
-	 *            The members (e.g. ways nodes) of the relation
-	 * @param tags
-	 *            The tags that exist for this relation
-	 */
-	public CompleteRelation(RelationMemberSerial[] member, HashSet<KeyValuePair> tags) {
-		this.member = member;
-		this.tags = tags;
+	GeoCoordinateSerial(int latitudeE6, int longitudeE6) throws IllegalArgumentException {
+		super(latitudeE6, longitudeE6);
+		// TODO Auto-generated constructor stub
+	}
+
+	GeoCoordinateSerial(String wellKnownText) {
+		super(wellKnownText);
+		// TODO Auto-generated constructor stub
 	}
 
 }

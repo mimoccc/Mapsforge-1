@@ -93,22 +93,25 @@
 
 	<xsd:complexType name="weightFactorsType">
 		<xsd:sequence minOccurs="1" maxOccurs="1">
-			<xsd:element name="stopNodeTags" type="stopTagsType"
-				minOccurs="1" maxOccurs="1">
-				<xsd:annotation>
-					<xsd:documentation>Usually node tags which represent a stop.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:element>
-			<xsd:element name="speedreductions" type="speedreductionTagsType"
-				minOccurs="1" maxOccurs="1">
-			</xsd:element>
+            <xsd:element name="stopTags" type="allStopTagsType" minOccurs="1" maxOccurs="1">
+            	<xsd:annotation>
+            		<xsd:documentation>Element for tags which could imply a stop on a node or way</xsd:documentation>
+            	</xsd:annotation></xsd:element>
+            <xsd:element name="speedreductions"
+				type="speedreductionTagsType" minOccurs="1" maxOccurs="1">
+                <xsd:annotation>
+                	<xsd:documentation>All tags which could cause speed reductions.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
 			<xsd:element name="noOSMTags" type="tagsType" minOccurs="1"
 				maxOccurs="1">
 				<xsd:annotation>
-					<xsd:documentation>Other information to weight the routing graph.
-						The tags don't have to be the same tags as in OSM or don't have to
-						be out of the namespace of OSM!</xsd:documentation>
+					<xsd:documentation>
+						Other information to weight the routing graph.
+						The tags don't have to be the same tags as in
+						OSM or don't have to be out of the namespace of
+						OSM!
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
 		</xsd:sequence>
@@ -159,12 +162,10 @@
 				<xsd:annotation>
 					<xsd:documentation>
 						Put in the tags for a longer speed reductions,
-						e.g. surface types,
-						represented as a way. Needs
+						e.g. surface types, represented as a way. Needs
 						to have speed reduction mentioned as a
 						percentage value. (e.g. 30 is allowed, we'll go
-						down to 15 so the
-						percentage value should be 50)
+						down to 15 so the percentage value should be 50)
 						E.g. Put in the the suface tag as:
 						<!-- <tag k="surface" v="gravel" perc="5" /> -->
 					</xsd:documentation>
@@ -176,8 +177,7 @@
 					<xsd:documentation>
 						Put in few and far between reduction tags like
 						traffic calming elements. Need to have speed
-						reduction mentioned as
-						a percentage value. (e.g.
+						reduction mentioned as a percentage value. (e.g.
 						30 is allowed, we'll go down to 15 so the
 						percentage value should be 50)
 					</xsd:documentation>
@@ -186,8 +186,10 @@
 			<xsd:element name="dynamicWayTags" type="tagsType"
 				minOccurs="1" maxOccurs="1">
 				<xsd:annotation>
-					<xsd:documentation>This element is for dynamic valued way tags(no fixed
-						value 'v', only key 'k') like maxspeed or incline.
+					<xsd:documentation>
+						This element is for dynamic valued way tags(no
+						fixed value 'v', only key 'k') like maxspeed or
+						incline.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
@@ -235,7 +237,7 @@
 
 	<xsd:complexType name="restrictionsType">
 		<xsd:annotation>
-			<xsd:documentation>Restrictiocs can be tags in nodes or ways but can
+			<xsd:documentation>Restrictions can be tags in nodes or ways but can
 				also be relations.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:sequence>
@@ -305,6 +307,23 @@
 		<xsd:sequence>
 			<xsd:element name="tag" type="tagTypeWithPerc" minOccurs="0"
 				maxOccurs="unbounded"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="allStopTagsType">
+		<xsd:sequence>
+			<xsd:element name="stopNodeTags" type="stopTagsType"
+				minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						Node tags which represent a stop.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="stopWayTags" type="stopTagsType" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Way tags which represent a stop.</xsd:documentation>
+				</xsd:annotation></xsd:element>
 		</xsd:sequence>
 	</xsd:complexType>
 </xsd:schema>

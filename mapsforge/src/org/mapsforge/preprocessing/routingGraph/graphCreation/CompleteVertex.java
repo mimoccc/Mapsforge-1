@@ -14,10 +14,10 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
+import java.io.Serializable;
 import java.util.HashSet;
 
 import org.mapsforge.core.Edge;
-import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
 
 /**
@@ -26,11 +26,13 @@ import org.mapsforge.core.Vertex;
  * @author Michael Bartel
  * 
  */
-public class CompleteVertex implements Vertex {
+public class CompleteVertex implements Vertex, Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	int id;
 	Edge[] outboundEdges;
-	GeoCoordinate coordinate;
+	GeoCoordinateSerial coordinate;
 	HashSet<KeyValuePair> additionalTags;
 
 	/**
@@ -45,7 +47,7 @@ public class CompleteVertex implements Vertex {
 	 * @param hs
 	 *            the hashset for additional tags
 	 */
-	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinate coordinate,
+	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinateSerial coordinate,
 			HashSet<KeyValuePair> hs) {
 		super();
 		this.id = id;
@@ -65,7 +67,7 @@ public class CompleteVertex implements Vertex {
 	}
 
 	@Override
-	public GeoCoordinate getCoordinate() {
+	public GeoCoordinateSerial getCoordinate() {
 		return coordinate;
 	}
 

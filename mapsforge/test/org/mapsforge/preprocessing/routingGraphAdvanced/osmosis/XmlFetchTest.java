@@ -19,7 +19,17 @@ package org.mapsforge.preprocessing.routingGraphAdvanced.osmosis;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
 
-public class xmlFetchTest {
+/**
+ * 
+ * Test for getting infos out of xml
+ * 
+ * @author rob
+ * 
+ */
+public class XmlFetchTest {
+	/**
+	 * Test
+	 */
 	@Test
 	public void testXmlFatching() {
 		// toDo Path relativ machen
@@ -31,34 +41,34 @@ public class xmlFetchTest {
 
 		NodeList usableWays = ReadXMLFile.getUsableWaysbyVehicle("motorcar", PATH);
 		System.out.println(String.format("all usable Ways:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(usableWays));
+		System.out.println(ReadXMLFile.nodeListtoString(usableWays));
 
 		NodeList wayRestrictions = ReadXMLFile.getWayRestrictions("motorcar", PATH);
 		System.out.println(String.format("all way restrictions:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(wayRestrictions));
+		System.out.println(ReadXMLFile.nodeListtoString(wayRestrictions));
 
 		NodeList relationRestrictions = ReadXMLFile.getRelationRestrictions("motorcar", PATH);
 		System.out.println(String.format("all relation restrictions:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(relationRestrictions));
+		System.out.println(ReadXMLFile.nodeListtoString(relationRestrictions));
 
 		NodeList stopFactors = ReadXMLFile.getStopWeightFactors("motorcar", PATH);
 		System.out.println(String.format("all stop factors:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(stopFactors));
+		System.out.println(ReadXMLFile.nodeListtoString(stopFactors));
 
 		NodeList reductionWays = ReadXMLFile.getSpeedRedWayTags("motorcar", PATH);
 		System.out.println(String.format("all way speed reductions:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(reductionWays));
+		System.out.println(ReadXMLFile.nodeListtoString(reductionWays));
 
 		NodeList reductionNodes = ReadXMLFile.getSpeedRedNodeTags("motorcar", PATH);
 		System.out.println(String.format("all node speed reductions:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(reductionNodes));
+		System.out.println(ReadXMLFile.nodeListtoString(reductionNodes));
 
 		NodeList reductionDynamic = ReadXMLFile.getdynValueTags("motorcar", PATH);
 		System.out.println(String.format("all dynamic speed reductions:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(reductionDynamic));
+		System.out.println(ReadXMLFile.nodeListtoString(reductionDynamic));
 
 		NodeList noOSM = ReadXMLFile.getNoOSMTags("motorcar", PATH);
 		System.out.println(String.format("all noOSM:\n %s", "------------"));
-		System.out.println(ReadXMLFile.NodeListtoString(noOSM));
+		System.out.println(ReadXMLFile.nodeListtoString(noOSM));
 	}
 }

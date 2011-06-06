@@ -19,6 +19,7 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.procedure.TIntProcedure;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
 import org.mapsforge.preprocessing.routingGraph.osmosis.TagHighway;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -225,7 +225,7 @@ class RoutingGraphCreatorTask implements Sink {
 				// add new vertex
 				int key = ((Long) node.getId()).intValue();
 				vertices.put(key, new CompleteVertex(key, null,
-						new GeoCoordinate(node.getLatitude(), node.getLongitude()), hs));
+						new GeoCoordinateSerial(node.getLatitude(), node.getLongitude()), hs));
 				amountOfVerticesWritten++;
 			}
 		}
@@ -248,7 +248,6 @@ class RoutingGraphCreatorTask implements Sink {
 		ReleasableIterator<Relation> iterRelations = relations.iterate();
 		while (iterRelations.hasNext()) {
 			Relation rel = iterRelations.next();
-
 			// Process, create and add new relation
 			completeRelations.put(((Long) rel.getId()).intValue(),
 					processRelationAndWrite(rel));
@@ -271,13 +270,48 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfWaysProcessed = " + amountOfWaysProcessed);
 		System.out.println("amountOfRelationsProcessed = " + amountOfRelationsProcessed);
 		System.out.println("amountOfVerticesWritten = " + amountOfVerticesWritten);
-		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten);
+		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
 		/*
 		 * ENTRY POINT FOR PROGRAMMER
 		 */
 
+		/*
+		 * TEST for save and load files ArrayList<Object> saveList = new ArrayList<Object>();
+		 * saveList.add(edges); saveList.add(vertices); saveList.add(completeRelations);
+		 * 
+		 * System.out.println("Begin WRITE BINARY"); long start = System.currentTimeMillis();
+		 * 
+		 * new BinaryFileCreator().saveToBinary(
+		 * "/media/sda6/Uni/8.Semester/Ba-Arbeit/osmosis-0.39/bin/data.dat", saveList);
+		 * 
+		 * long end = System.currentTimeMillis();
+		 * 
+		 * System.out.println("time to save file: " + (end - start) / 1000);
+		 * System.out.println("End WRITE BINARY");
+		 * 
+		 * System.out.println("Begin READ BINARY: "); long start2 = System.currentTimeMillis();
+		 * ArrayList<Object> checkList = new BinaryFileCreator()
+		 * .readBinary("/media/sda6/Uni/8.Semester/Ba-Arbeit/osmosis-0.39/bin/data.dat");
+		 * System.out.println("End READ BINARY"); HashMap<Integer, CompleteEdge> edgesC =
+		 * (HashMap<Integer, CompleteEdge>) checkList.get(0); HashMap<Integer, CompleteVertex> verticesC
+		 * = (HashMap<Integer, CompleteVertex>) checkList .get(1); HashMap<Integer, CompleteRelation>
+		 * completeRelationsC = (HashMap<Integer, CompleteRelation>) checkList .get(2); long end2 =
+		 * System.currentTimeMillis(); System.out.println("time to load  file: " + (end2 - start2) /
+		 * 1000);
+		 * 
+		 * int count2 = 0; for (CompleteVertex cv : verticesC.values()) { Set<KeyValuePair> tags =
+		 * cv.additionalTags; for (KeyValuePair keyValuePair : tags) {
+		 * 
+		 * System.out.println(keyValuePair.key + " " + keyValuePair.value); count2++; }
+		 * 
+		 * }
+		 * 
+		 * if (vertices.size() == verticesC.size()) System.out.println("vert: true"); if (edges.size()
+		 * == edgesC.size()) System.out.println("edges: true"); if (completeRelations.size() ==
+		 * completeRelationsC.size()) System.out.println("edges: true");
+		 */
 		/*
 		 * FOR DEBUG USE ONLY int countstreets = 0; int countVertices = 0; int countRelations = 0; int
 		 * countNames = 0; int counthasHighwayTag = 0; int hasOtherTags = 0;
@@ -342,7 +376,7 @@ class RoutingGraphCreatorTask implements Sink {
 			boolean oneway;
 			double distanceMeters = 0d;
 			for (int k = 1; k < lon.length; k++) {
-				distanceMeters += GeoCoordinate.sphericalDistance(
+				distanceMeters += GeoCoordinateSerial.sphericalDistance(
 						lon[k - 1], lat[k - 1], lon[k], lat[k]);
 			}
 
@@ -382,14 +416,14 @@ class RoutingGraphCreatorTask implements Sink {
 			}
 
 			// Save tje coordinates of all waypoints
-			GeoCoordinate[] allwp = new GeoCoordinate[lon.length];
+			GeoCoordinateSerial[] allwp = new GeoCoordinateSerial[lon.length];
 			if (lat.length != lon.length) {
 				System.out.println("FATAL error lat.length!=lon.length ");
 				break;
 			}
 
 			for (int m = 0; m < allwp.length; m++) {
-				allwp[m] = new GeoCoordinate(lat[m], lon[m]);
+				allwp[m] = new GeoCoordinateSerial(lat[m], lon[m]);
 			}
 
 			HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
@@ -422,9 +456,16 @@ class RoutingGraphCreatorTask implements Sink {
 	private CompleteRelation processRelationAndWrite(Relation rel) {
 		HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
 
-		RelationMember[] relMember = new RelationMember[rel.getMembers().size()];
+		RelationMemberSerial[] relMember = new RelationMemberSerial[rel.getMembers().size()];
 		int i = 0;
+
+		// create serializable RelationmemberObjects
+		List<RelationMemberSerial> memberList = new ArrayList<RelationMemberSerial>();
 		for (RelationMember rm : rel.getMembers()) {
+			memberList.add(new RelationMemberSerial(rm.getMemberId(), rm.getMemberType(), rm
+					.getMemberRole()));
+		}
+		for (RelationMemberSerial rm : memberList) {
 			relMember[i] = rm;
 			i++;
 		}

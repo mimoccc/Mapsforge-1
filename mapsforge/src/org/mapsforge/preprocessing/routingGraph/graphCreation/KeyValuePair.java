@@ -14,13 +14,18 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
+import java.io.Serializable;
+
 /**
  * This class represents a KeyValue-Pair
  * 
  * @author Michael Bartel
  * 
  */
-public class KeyValuePair {
+public class KeyValuePair implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
 	String value;
 	String key;
 

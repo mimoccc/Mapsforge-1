@@ -248,7 +248,7 @@ public class ReadXMLFile {
 	 *            listWith nodes
 	 * @return String with all nodes in readable format
 	 */
-	public static String NodeListtoString(NodeList nList) {
+	public static String nodeListtoString(NodeList nList) {
 		String result = null;
 		for (int i = 0; i < nList.getLength(); i++) {
 			Node node = nList.item(i);
