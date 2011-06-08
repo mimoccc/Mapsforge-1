@@ -58,6 +58,8 @@ class RoutingGraphCreatorTask implements Sink {
 	private static final int NODE_TYPE_VERTEX = 2;
 	private static final int NODE_TYPE_WAYPOINT = 1;
 
+	private static final String PATH = null;
+
 	// amounting :
 	private int amountOfNodesProcessed = 0;
 	private int amountOfWaysProcessed = 0;
@@ -137,6 +139,9 @@ class RoutingGraphCreatorTask implements Sink {
 				Way way = (Way) entity;
 				if (isOnWhiteList(way) && way.getWayNodes().size() > 1) {
 					List<WayNode> waynodes = way.getWayNodes();
+					for (WayNode wayNode : waynodes) {
+						System.out.println(wayNode.getNodeId());
+					}
 
 					// set start node type to vertex
 					WayNode wayNode = waynodes.get(0);
@@ -275,7 +280,7 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
-		ProtobufSerializer.saveToFile("D:\\testPCB.pbf", vertices, edges, completeRelations);
+		ProtobufSerializer.saveToFile(PATH, vertices, edges, completeRelations);
 		System.out.println(vertices.values().size());
 		System.out.println(edges.values().size());
 		System.out.println(completeRelations.values().size());
@@ -293,7 +298,7 @@ class RoutingGraphCreatorTask implements Sink {
 		// for (CompleteRelation cr : completeRelations.values())
 		// System.out.println(cr);
 
-		ProtobufSerializer.loadFromFile("D:\\testPCB.pbf", vertices, edges, completeRelations);
+		ProtobufSerializer.loadFromFile(PATH, vertices, edges, completeRelations);
 
 		System.out.println(vertices.values().size());
 		System.out.println(edges.values().size());
