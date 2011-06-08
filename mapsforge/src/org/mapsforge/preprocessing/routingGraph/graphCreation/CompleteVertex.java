@@ -14,10 +14,10 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
-import java.io.Serializable;
 import java.util.HashSet;
 
 import org.mapsforge.core.Edge;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
 
 /**
@@ -26,13 +26,11 @@ import org.mapsforge.core.Vertex;
  * @author Michael Bartel
  * 
  */
-public class CompleteVertex implements Vertex, Serializable {
-
-	private static final long serialVersionUID = 1L;
+public class CompleteVertex implements Vertex {
 
 	int id;
 	Edge[] outboundEdges;
-	GeoCoordinateSerial coordinate;
+	GeoCoordinate coordinate;
 	HashSet<KeyValuePair> additionalTags;
 
 	/**
@@ -47,7 +45,7 @@ public class CompleteVertex implements Vertex, Serializable {
 	 * @param hs
 	 *            the hashset for additional tags
 	 */
-	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinateSerial coordinate,
+	public CompleteVertex(int id, Edge[] outboundEdges, GeoCoordinate coordinate,
 			HashSet<KeyValuePair> hs) {
 		super();
 		this.id = id;
@@ -67,7 +65,7 @@ public class CompleteVertex implements Vertex, Serializable {
 	}
 
 	@Override
-	public GeoCoordinateSerial getCoordinate() {
+	public GeoCoordinate getCoordinate() {
 		return coordinate;
 	}
 
@@ -78,6 +76,19 @@ public class CompleteVertex implements Vertex, Serializable {
 	 */
 	public HashSet<KeyValuePair> getAdditionalTags() {
 		return additionalTags;
+	}
+
+	@Override
+	public String toString() {
+		String s = "[Vertex " + this.id + "";
+		s += "(" + coordinate.getLatitude() + "," + coordinate.getLongitude() + ")";
+
+		s += " TAGS ";
+		for (KeyValuePair kv : this.additionalTags) {
+			s += kv.toString() + ", ";
+		}
+		s += " ]";
+		return s;
 	}
 
 }

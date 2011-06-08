@@ -14,8 +14,9 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
-import java.io.Serializable;
 import java.util.HashSet;
+
+import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 
 /**
  * This class represents a relation with its members and give tags.
@@ -23,11 +24,9 @@ import java.util.HashSet;
  * @author Michael Bartel
  * 
  */
-public class CompleteRelation implements Serializable {
+public class CompleteRelation {
 
-	private static final long serialVersionUID = 1L;
-
-	RelationMemberSerial[] member;
+	RelationMember[] member;
 	HashSet<KeyValuePair> tags;
 
 	/**
@@ -38,9 +37,24 @@ public class CompleteRelation implements Serializable {
 	 * @param tags
 	 *            The tags that exist for this relation
 	 */
-	public CompleteRelation(RelationMemberSerial[] member, HashSet<KeyValuePair> tags) {
+	public CompleteRelation(RelationMember[] member, HashSet<KeyValuePair> tags) {
 		this.member = member;
 		this.tags = tags;
+	}
+
+	@Override
+	public String toString() {
+		String s = "";
+		s += " Member ";
+		for (RelationMember rm : this.member) {
+			s += rm.toString() + ", ";
+		}
+
+		s += " TAGS ";
+		for (KeyValuePair kv : this.tags) {
+			s += kv.toString() + ", ";
+		}
+		return s;
 	}
 
 }

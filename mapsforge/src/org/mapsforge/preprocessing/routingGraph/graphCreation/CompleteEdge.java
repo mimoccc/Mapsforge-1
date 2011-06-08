@@ -16,11 +16,11 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.mapsforge.core.Edge;
+import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Vertex;
 
 /**
@@ -29,14 +29,12 @@ import org.mapsforge.core.Vertex;
  * @author Michael Bartel
  * 
  */
-public class CompleteEdge implements Edge, Serializable {
-
-	private static final long serialVersionUID = 1L;
+public class CompleteEdge implements Edge {
 
 	int id;
 	Vertex source;
 	Vertex target;
-	GeoCoordinateSerial[] allWaypoints;
+	GeoCoordinate[] allWaypoints;
 	String name;
 	String type;
 	boolean roundabout;
@@ -77,8 +75,8 @@ public class CompleteEdge implements Edge, Serializable {
 	 *            the additional Tags that exist for this way
 	 * 
 	 */
-	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinateSerial[] waypoints,
-			GeoCoordinateSerial[] allWaypoints, String name, String type, boolean roundabout,
+	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinate[] waypoints,
+			GeoCoordinate[] allWaypoints, String name, String type, boolean roundabout,
 			boolean isOneWay, String ref,
 			String destination, int weight, HashSet<KeyValuePair> additionalTags) {
 		super();
@@ -122,14 +120,14 @@ public class CompleteEdge implements Edge, Serializable {
 	}
 
 	@Override
-	public GeoCoordinateSerial[] getWaypoints() {
-		GeoCoordinateSerial[] wp = new GeoCoordinateSerial[allWaypoints.length - 2];
+	public GeoCoordinate[] getWaypoints() {
+		GeoCoordinate[] wp = new GeoCoordinate[allWaypoints.length - 2];
 		System.arraycopy(allWaypoints, 1, wp, 0, allWaypoints.length - 2);
 		return wp;
 	}
 
 	@Override
-	public GeoCoordinateSerial[] getAllWaypoints() {
+	public GeoCoordinate[] getAllWaypoints() {
 		return allWaypoints;
 	}
 
@@ -179,6 +177,23 @@ public class CompleteEdge implements Edge, Serializable {
 	 */
 	public boolean isOneWay() {
 		return isOneWay;
+	}
+
+	@Override
+	public String toString() {
+		String s = "[Way " + this.id;
+		s += " source-ID: " + this.source.getId();
+		s += " target-ID: " + this.target.getId();
+		s += " type: " + this.type;
+		s += " WAYPOINTS ";
+		for (GeoCoordinate geo : this.allWaypoints)
+			s += geo.getLatitude() + " " + geo.getLongitude() + ", ";
+		s += " TAGS ";
+		for (KeyValuePair kv : this.additionalTags) {
+			s += kv.toString() + ", ";
+		}
+		s += "]";
+		return s;
 	}
 
 }
