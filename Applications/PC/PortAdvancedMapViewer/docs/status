@@ -1,0 +1,43 @@
+Status
+- ArrayCircleOverlay	: UNNÖTIG
+- ArrayItemizedOverlay	: UNNÖTIG
+- ArrayWayOverlay		: UNNÖTIG
+- CanvasRenderer		: -
+- CircleContainer		: OK (braucht keine Android-Klasse)
+- CircleOVerlay			: UNNÖTIG
+- CoastlineAlgorithm	: OK (braucht keine Android-Klasse)
+- CoastlineWay			: OK (braucht keine Android-Klasse)
+- DatabaseMapGenerator	: -
+- DependencyCache		: -
+- Deserializer			: OK (braucht keine Android-Klasse)
+- GeoPoint				: OK (braucht keine Android-Klasse)
+- ImmutablePoint		: OK (braucht keine Android-Klasse)
+- IndexCacheEntryKey	: OK
+- ItemizedOverlay		: UNNÖTIG
+- LabelPlacement		: OK (MARTINUS)
+- LayerIds				: OK (braucht keine Android-Klasse)
+- LineClipping			: OK (braucht keine Android-Klasse)
+- Logger				: OK (MARTINUS)
+						  Log.d() --> System.out.println() & Log.e() --> System.err.println()
+- MapActivity			: -
+- MapController			: -
+- MapDatabase			: OK (MARTINUS)
+- MapFileParameters		: OK (MARTINUS)
+-
+- MapInfo				: OK (MARTINUS)
+- MapMover				: OK (MARTINUS)
+- Matrix				: OK (braucht keine Android-Klasse)
+- MercatorProjection	: OK (MARTINUS)
+- Projection			: OK (MARTINUS)
+- SutherlandHodgman		: OK (braucht keine Android-Klasse)
+- TagIDsNodes			: OK (braucht keine Android-Klasse)
+- TagIDsWays			: OK (braucht keine Android-Klasse)
+- Tile					: OK (MARTINUS)
+
+Core / Android
+- Color					: OK mit Bedingungen: Color ist nicht mehr int typ
+						  parseColor() --> gesperrt
+- Rect					: OK, aber Viele Sperre
+- Point					: OK (MARTINUS)
+- SparseArray			: OK (MARTINUS)
+- SystemClock			: OK (MARTINUS)
