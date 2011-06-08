@@ -51,6 +51,7 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 		this.defaultPaintFill = defaultPaintFill;
 		this.defaultPaintOutline = defaultPaintOutline;
 		this.path = new Path();
+		this.path.setFillType(Path.FillType.EVEN_ODD);
 	}
 
 	/**
