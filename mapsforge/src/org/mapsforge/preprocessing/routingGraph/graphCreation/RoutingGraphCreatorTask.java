@@ -139,9 +139,6 @@ class RoutingGraphCreatorTask implements Sink {
 				Way way = (Way) entity;
 				if (isOnWhiteList(way) && way.getWayNodes().size() > 1) {
 					List<WayNode> waynodes = way.getWayNodes();
-					for (WayNode wayNode : waynodes) {
-						System.out.println(wayNode.getNodeId());
-					}
 
 					// set start node type to vertex
 					WayNode wayNode = waynodes.get(0);
@@ -256,6 +253,7 @@ class RoutingGraphCreatorTask implements Sink {
 		while (iterRelations.hasNext()) {
 			Relation rel = iterRelations.next();
 			// Process, create and add new relation
+
 			completeRelations.put(((Long) rel.getId()).intValue(),
 					processRelationAndWrite(rel));
 
