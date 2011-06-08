@@ -15,6 +15,7 @@
 package org.mapsforge.pc.maps;
 
 import android.graphics.Point;
+//import org.mapsforge.core.Point;
 
 /**
  * A Projection translates between the pixel coordinate system on the screen and geographical points on

@@ -23,7 +23,7 @@ import java.util.logging.Level;
  */
 final class Logger {
 	
-	private final static java.util.logging.Logger log = java.util.logging.Logger.getLogger(Logger.class.getName());
+	//private final static java.util.logging.Logger log = java.util.logging.Logger.getLogger(Logger.class.getName());
 	/**
 	 * Log a simple string message with debug level.
 	 * 
@@ -32,7 +32,7 @@ final class Logger {
 	 */
 	static void d(String str) {
 		//Log.d("osm", Thread.currentThread().getName() + ": " + str);
-		log.log(Level.INFO, Thread.currentThread().getName() + ": " + str);
+		//log.log(Level.INFO, Thread.currentThread().getName() + ": " + str);
 		System.out.println(Thread.currentThread().getName() + ": " + str);
 	}
 
@@ -53,7 +53,7 @@ final class Logger {
 					.append(stack[i].getLineNumber()).append(")");
 		}
 		//Log.e("osm", stringBuilder.toString());
-		log.log(Level.FINER, stringBuilder.toString());
+		//log.log(Level.FINER, stringBuilder.toString());
 		System.err.println(stringBuilder.toString());
 
 	}

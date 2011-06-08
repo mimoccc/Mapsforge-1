@@ -20,7 +20,8 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
-import android.graphics.Rect;
+//import android.graphics.Rect;
+import org.mapsforge.core.Rect;
 
 /**
  * A database class for reading binary map files. Byte order is big-endian.

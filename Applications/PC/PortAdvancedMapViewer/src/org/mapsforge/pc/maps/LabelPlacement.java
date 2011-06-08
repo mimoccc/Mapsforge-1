@@ -19,7 +19,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 
-import android.graphics.Rect;
+//import android.graphics.Rect;
+import org.mapsforge.core.Rect;
 
 /**
  * This class place the labels form POIs, area labels and normal labels. The main target is avoiding
@@ -448,18 +449,21 @@ class LabelPlacement {
 
 		for (int i = 0; i < symbols.size(); i++) {
 			this.smb = symbols.get(i);
-			this.rect1 = new android.graphics.Rect((int) this.smb.x - dis, (int) this.smb.y
+			//this.rect1 = new android.graphics.Rect((int) this.smb.x - dis, (int) this.smb.y
+			this.rect1 = new Rect((int) this.smb.x - dis, (int) this.smb.y
 					- dis, (int) this.smb.x + this.smb.symbol.getWidth() + dis,
 					(int) this.smb.y + this.smb.symbol.getHeight() + dis);
 
 			for (int y = 0; y < refPos.length; y++) {
 				if (refPos[y] != null) {
 
-					this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+					//this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+					this.rect2 = new Rect((int) refPos[y].x,
 							(int) (refPos[y].y - refPos[y].height),
 							(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-					if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					//if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					if (Rect.intersects(this.rect2, this.rect1)) {
 						refPos[y] = null;
 					}
 				}
@@ -470,18 +474,21 @@ class LabelPlacement {
 
 		for (PointTextContainer areaLabel : areaLabels) {
 
-			this.rect1 = new android.graphics.Rect((int) areaLabel.x - dis, (int) areaLabel.y
+			//this.rect1 = new android.graphics.Rect((int) areaLabel.x - dis, (int) areaLabel.y
+			this.rect1 = new Rect((int) areaLabel.x - dis, (int) areaLabel.y
 					- areaLabel.boundary.height() - dis, (int) areaLabel.x
 					+ areaLabel.boundary.width() + dis, (int) areaLabel.y + dis);
 
 			for (int y = 0; y < refPos.length; y++) {
 				if (refPos[y] != null) {
 
-					this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+					//this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+					this.rect2 = new Rect((int) refPos[y].x,
 							(int) (refPos[y].y - refPos[y].height),
 							(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-					if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					//if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					if (Rect.intersects(this.rect2, this.rect1)) {
 						refPos[y] = null;
 					}
 				}
@@ -590,19 +597,22 @@ class LabelPlacement {
 
 		for (int x = 0; x < areaLabels.size(); x++) {
 			this.label = areaLabels.get(x);
-			this.rect1 = new android.graphics.Rect((int) this.label.x - dis, (int) this.label.y
+			//this.rect1 = new android.graphics.Rect((int) this.label.x - dis, (int) this.label.y
+			this.rect1 = new Rect((int) this.label.x - dis, (int) this.label.y
 					- dis, (int) (this.label.x + this.label.boundary.width()) + dis,
 					(int) (this.label.y + this.label.boundary.height() + dis));
 
 			for (int y = x + 1; y < areaLabels.size(); y++) {
 				if (y != x) {
 					this.label = areaLabels.get(y);
-					this.rect2 = new android.graphics.Rect((int) this.label.x,
+					//this.rect2 = new android.graphics.Rect((int) this.label.x,
+					this.rect2 = new Rect((int) this.label.x,
 							(int) this.label.y, (int) (this.label.x + this.label.boundary
 									.width()), (int) (this.label.y + this.label.boundary
 									.height()));
 
-					if (android.graphics.Rect.intersects(this.rect1, this.rect2)) {
+					//if (android.graphics.Rect.intersects(this.rect1, this.rect2)) {
+					if (Rect.intersects(this.rect1, this.rect2)) {
 						areaLabels.remove(y);
 
 						y--;
@@ -627,7 +637,8 @@ class LabelPlacement {
 		for (int x = 0; x < pTC.size(); x++) {
 			this.label = pTC.get(x);
 
-			this.rect1 = new android.graphics.Rect((int) this.label.x - dis,
+			//this.rect1 = new android.graphics.Rect((int) this.label.x - dis,
+			this.rect1 = new Rect((int) this.label.x - dis,
 					(int) (this.label.y - this.label.boundary.height()) - dis,
 					(int) (this.label.x + this.label.boundary.width() + dis),
 					(int) (this.label.y + dis));
@@ -635,11 +646,12 @@ class LabelPlacement {
 			for (int y = 0; y < symbols.size(); y++) {
 				this.smb = symbols.get(y);
 
-				this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+				//this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+				this.rect2 = new Rect((int) this.smb.x, (int) this.smb.y,
 						(int) (this.smb.x + this.smb.symbol.getWidth()),
 						(int) (this.smb.y + this.smb.symbol.getHeight()));
 
-				if (android.graphics.Rect.intersects(this.rect1, this.rect2)) {
+				if (Rect.intersects(this.rect1, this.rect2)) {
 					symbols.remove(y);
 					y--;
 				}
@@ -735,18 +747,21 @@ class LabelPlacement {
 
 		for (int x = 0; x < symbols.size(); x++) {
 			this.smb = symbols.get(x);
-			this.rect1 = new android.graphics.Rect((int) this.smb.x - dis, (int) this.smb.y
+			//this.rect1 = new android.graphics.Rect((int) this.smb.x - dis, (int) this.smb.y
+			this.rect1 = new Rect((int) this.smb.x - dis, (int) this.smb.y
 					- dis, (int) this.smb.x + this.smb.symbol.getWidth() + dis,
 					(int) this.smb.y + this.smb.symbol.getHeight() + dis);
 
 			for (int y = x + 1; y < symbols.size(); y++) {
 				if (y != x) {
 					this.smb = symbols.get(y);
-					this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+					//this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+					this.rect2 = new Rect((int) this.smb.x, (int) this.smb.y,
 							(int) this.smb.x + this.smb.symbol.getWidth(), (int) this.smb.y
 									+ this.smb.symbol.getHeight());
 
-					if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					//if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+					if (Rect.intersects(this.rect2, this.rect1)) {
 						symbols.remove(y);
 						y--;
 					}

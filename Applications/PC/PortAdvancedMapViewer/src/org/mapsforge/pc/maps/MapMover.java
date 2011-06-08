@@ -14,7 +14,8 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.os.SystemClock;
+//import android.os.SystemClock;
+import org.mapsforge.core.SystemClock;
 
 /**
  * A MapMover moves the map horizontally and vertically at a constant speed. It runs in a separate

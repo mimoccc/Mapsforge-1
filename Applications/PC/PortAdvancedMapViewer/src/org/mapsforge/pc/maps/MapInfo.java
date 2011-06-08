@@ -14,7 +14,8 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Rect;
+//import android.graphics.Rect;
+import org.mapsforge.core.Rect;
 
 /**
  * 
