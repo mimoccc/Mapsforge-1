@@ -34,8 +34,26 @@ import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 
-class ProtobufSerializer {
+/**
+ * This class can be used to save or load the data, necessary for a routing graph.
+ * 
+ * @author Michael Bartel
+ * 
+ */
+public class ProtobufSerializer {
 
+	/**
+	 * This methods loads data from a pbf-file.
+	 * 
+	 * @param path
+	 *            , where the file is located
+	 * @param vertices
+	 *            , all nodes will be written into that map
+	 * @param edges
+	 *            , all nodes will be written into that map
+	 * @param relations
+	 *            , all nodes will be written into that map
+	 */
 	public static void loadFromFile(String path, HashMap<Integer, CompleteVertex> vertices,
 			HashMap<Integer, CompleteEdge> edges,
 			HashMap<Integer, CompleteRelation> relations) {
@@ -43,10 +61,8 @@ class ProtobufSerializer {
 		try {
 			allGraphData = AllGraphDataPBF.parseFrom(new FileInputStream(path));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
@@ -61,6 +77,18 @@ class ProtobufSerializer {
 
 	}
 
+	/**
+	 * This method saves the lists to a protobuf file, using GraphCreatorProtos.java
+	 * 
+	 * @param path
+	 *            , where the file is located
+	 * @param vertices
+	 *            the vertices to be saved
+	 * @param edges
+	 *            the edges to be saved
+	 * @param relations
+	 *            the relations to be saved
+	 */
 	public static void saveToFile(String path,
 			HashMap<Integer, CompleteVertex> vertices,
 			HashMap<Integer, CompleteEdge> edges,
