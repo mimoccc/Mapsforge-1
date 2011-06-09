@@ -66,11 +66,6 @@ class ProtobufSerializer {
 			HashMap<Integer, CompleteEdge> edges,
 			HashMap<Integer, CompleteRelation> relations) {
 
-		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
-		String dateTime = sdf.format(new Date());
-
-		System.out.println(dateTime + " Start of object transform!!");
-
 		AllGraphDataPBF.Builder allGraphData = AllGraphDataPBF.newBuilder();
 
 		writeEdges(allGraphData, edges);
@@ -79,9 +74,6 @@ class ProtobufSerializer {
 
 		writeRelations(allGraphData, relations);
 
-		dateTime = sdf.format(new Date());
-		System.out.println(dateTime + " end of object transform");
-		System.out.println(dateTime + " start of write");
 		// Write the new address book back to disk.
 		FileOutputStream output;
 		try {
@@ -95,8 +87,7 @@ class ProtobufSerializer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		dateTime = sdf.format(new Date());
-		System.out.println(dateTime + " end of write");
+
 	}
 
 	private static void readEdges(AllGraphDataPBF allGraphData,

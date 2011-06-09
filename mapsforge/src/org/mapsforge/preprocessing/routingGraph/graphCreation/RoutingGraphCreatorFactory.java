@@ -23,14 +23,16 @@ class RoutingGraphCreatorFactory extends TaskManagerFactory {
 
 	private final static String PARAM_XML_CONFIG = "xml-config";
 	private final static String PARAM_NEEDED_VEHICLES = "needed-vehicles";
+	private final static String PARAM_OUTPUT = "output";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
 		String xmlConfigPath = getStringArgument(taskConfig, PARAM_XML_CONFIG, "config.xml");
 		String neededVehicles = getStringArgument(taskConfig, PARAM_NEEDED_VEHICLES, null);
+		String output = getStringArgument(taskConfig, PARAM_OUTPUT, "output.pbf");
 		return new SinkManager(
 					taskConfig.getId(),
-					new RoutingGraphCreatorTask(xmlConfigPath, neededVehicles),
+					new RoutingGraphCreatorTask(xmlConfigPath, neededVehicles, output),
 					taskConfig.getPipeArgs());
 	}
 }

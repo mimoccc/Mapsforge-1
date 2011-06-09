@@ -58,7 +58,7 @@ class RoutingGraphCreatorTask implements Sink {
 	private static final int NODE_TYPE_VERTEX = 2;
 	private static final int NODE_TYPE_WAYPOINT = 1;
 
-	private static final String PATH = null;
+	private String pbfPath = null;
 
 	// amounting :
 	private int amountOfNodesProcessed = 0;
@@ -89,10 +89,11 @@ class RoutingGraphCreatorTask implements Sink {
 	// the config file
 	ConfigObject configObject;
 
-	RoutingGraphCreatorTask(String xmlConfigPath, String neededVehicles) {
+	RoutingGraphCreatorTask(String xmlConfigPath, String neededVehicles, String outputPath) {
 
 		System.out.println("initializing routing-graph extraction");
 
+		pbfPath = outputPath;
 		String[] limiter = null;
 
 		if (neededVehicles != null)
@@ -278,46 +279,9 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
-		ProtobufSerializer.saveToFile(PATH, vertices, edges, completeRelations);
-		System.out.println(vertices.values().size());
-		System.out.println(edges.values().size());
-		System.out.println(completeRelations.values().size());
-
-		for (CompleteVertex cv : vertices.values()) {
-			if (cv.getId() == 20246228)
-				System.out.println(cv);
-		}
-
-		for (CompleteEdge cv : edges.values()) {
-			if (cv.getId() == 4067877)
-				System.out.println(cv);
-		}
-
-		// for (CompleteRelation cr : completeRelations.values())
-		// System.out.println(cr);
-
-		ProtobufSerializer.loadFromFile(PATH, vertices, edges, completeRelations);
-
-		System.out.println(vertices.values().size());
-		System.out.println(edges.values().size());
-		System.out.println(completeRelations.values().size());
-
-		for (CompleteVertex cv : vertices.values()) {
-			if (cv.getId() == 20246228)
-				System.out.println(cv);
-		}
-
-		for (CompleteEdge cv : edges.values()) {
-			if (cv.getId() == 4067877)
-				System.out.println(cv);
-		}
-
-		// for (CompleteRelation cr : completeRelations.values())
-		// System.out.println(cr);
-
-		/*
-		 * ENTRY POINT FOR PROGRAMMER
-		 */
+		int sum = vertices.values().size() + edges.values().size() + completeRelations.values().size();
+		System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
+		ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
 
 	}
 
