@@ -52,12 +52,12 @@ class ProtobufSerializer {
 		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
 		String dateTime = sdf.format(new Date());
 
-		System.out.println(dateTime + " Start of object READ!!");
+		System.out.println("[" + dateTime + "] Start of object(" + path + ") read!!");
 		readVertices(allGraphData, vertices);
 		readEdges(allGraphData, edges, vertices);
 		readRelations(allGraphData, relations);
 		dateTime = sdf.format(new Date());
-		System.out.println(dateTime + " End of object READ!!");
+		System.out.println("[" + dateTime + "] End of object read!!");
 
 	}
 
