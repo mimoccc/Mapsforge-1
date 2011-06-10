@@ -43,6 +43,7 @@ public class CompleteEdge implements Edge {
 	String destination;
 	int weight;
 	HashSet<KeyValuePair> additionalTags;
+	HashSet<CompleteNode> allUsedNodes;
 
 	/**
 	 * The Constructor to create a CompleteEdge-instance
@@ -78,7 +79,8 @@ public class CompleteEdge implements Edge {
 	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinate[] waypoints,
 			GeoCoordinate[] allWaypoints, String name, String type, boolean roundabout,
 			boolean isOneWay, String ref,
-			String destination, int weight, HashSet<KeyValuePair> additionalTags) {
+			String destination, int weight, HashSet<KeyValuePair> additionalTags,
+			HashSet<CompleteNode> allWayNodes) {
 		super();
 		this.id = id;
 		this.source = source;
@@ -92,6 +94,7 @@ public class CompleteEdge implements Edge {
 		this.destination = destination;
 		this.weight = weight;
 		this.additionalTags = additionalTags;
+		this.allUsedNodes = allWayNodes;
 	}
 
 	/**
@@ -171,6 +174,15 @@ public class CompleteEdge implements Edge {
 	}
 
 	/**
+	 * Returns the tagged and used nodes of a way
+	 * 
+	 * @return The set of nodes
+	 */
+	public HashSet<CompleteNode> getAllUsedNodes() {
+		return allUsedNodes;
+	}
+
+	/**
 	 * Returns true if the street is a oneway street
 	 * 
 	 * @return true if the street is a oneway street
@@ -192,8 +204,11 @@ public class CompleteEdge implements Edge {
 		for (KeyValuePair kv : this.additionalTags) {
 			s += kv.toString() + ", ";
 		}
+		s += " Nodes ";
+		for (CompleteNode node : this.allUsedNodes) {
+			s += node.toString() + ", ";
+		}
 		s += "]";
 		return s;
 	}
-
 }

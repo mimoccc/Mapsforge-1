@@ -82,6 +82,9 @@ class RoutingGraphCreatorTask implements Sink {
 	private HashMap<Integer, CompleteEdge> edges;
 	private HashMap<Integer, CompleteRelation> completeRelations;
 
+	// List with all needed Nodes (usually on ways)
+	HashMap<Integer, CompleteNode> neededNodes;
+
 	private final HashSet<String> remValues = new HashSet<String>(Arrays.asList(new String[] { "name",
 			"destination", "ref", "highway" }));
 	TLongIntHashMap usedNodes;
@@ -100,6 +103,8 @@ class RoutingGraphCreatorTask implements Sink {
 			limiter = neededVehicles.split(",");
 
 		this.usedNodes = new TLongIntHashMap();
+
+		this.neededNodes = new HashMap<Integer, CompleteNode>();
 
 		// initialize stores where nodes an ways are temporarily written to :
 		this.nodes = new SimpleObjectStore<Node>(new SingleClassObjectSerializationFactory(
@@ -132,6 +137,20 @@ class RoutingGraphCreatorTask implements Sink {
 				break;
 			case Node:
 				Node node = (Node) entity;
+
+				// check if node is important and put into hash table
+				if (isOnWhiteList(node)) {
+					HashSet<KeyValuePair> tags = new HashSet<KeyValuePair>();
+					addPairsForTagToHashSet(node, tags);
+
+					neededNodes.put(
+							((Long) node.getId()).intValue(),
+							new CompleteNode(((Long) node.getId()).intValue(), new GeoCoordinate(node
+									.getLatitude(), node
+									.getLongitude()), tags));
+
+				}
+
 				// add to store
 				nodes.add(node);
 				amountOfNodesProcessed++;
@@ -279,9 +298,26 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
-		int sum = vertices.values().size() + edges.values().size() + completeRelations.values().size();
-		System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
-		ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
+		// TEST ESave and read
+
+		// int sum = vertices.values().size() + edges.values().size() +
+		// completeRelations.values().size();
+		// System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
+		// ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
+		//
+		// HashMap<Integer, CompleteVertex> verticesC = new HashMap<Integer, CompleteVertex>();
+		// HashMap<Integer, CompleteEdge> edgesC = new HashMap<Integer, CompleteEdge>();
+		// HashMap<Integer, CompleteRelation> relationsC = new HashMap<Integer, CompleteRelation>();
+		// System.out.println("old Edges: ");
+		// for (CompleteEdge edge : edges.values()) {
+		// System.out.println(edge.toString());
+		// }
+		//
+		// ProtobufSerializer.loadFromFile(pbfPath, verticesC, edgesC, relationsC);
+		// System.out.println("loaded Edges: ");
+		// for (CompleteEdge edge : edgesC.values()) {
+		// System.out.println(edge.toString());
+		// }
 
 	}
 
@@ -362,7 +398,7 @@ class RoutingGraphCreatorTask implements Sink {
 					wayType = null;
 			}
 
-			// Save tje coordinates of all waypoints
+			// Save the coordinates of all waypoints
 			GeoCoordinate[] allwp = new GeoCoordinate[lon.length];
 			if (lat.length != lon.length) {
 				System.out.println("FATAL error lat.length!=lon.length ");
@@ -371,6 +407,17 @@ class RoutingGraphCreatorTask implements Sink {
 
 			for (int m = 0; m < allwp.length; m++) {
 				allwp[m] = new GeoCoordinate(lat[m], lon[m]);
+			}
+
+			// Save Waypoints as complete nodes
+			HashSet<CompleteNode> allWayNodes = new HashSet<CompleteNode>();
+			// go through all waypoints
+			for (int j = 0; j < way.getWayNodes().size(); j++) {
+				WayNode wayNode = way.getWayNodes().get(j);
+
+				if (neededNodes.containsKey(((Long) wayNode.getNodeId()).intValue())) {
+					allWayNodes.add(neededNodes.get(((Long) wayNode.getNodeId()).intValue()));
+				}
 			}
 
 			HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
@@ -393,7 +440,8 @@ class RoutingGraphCreatorTask implements Sink {
 					wayRef != null ? wayRef.getValue() : null,
 					wayDest != null ? wayDest.getValue() : null,
 					0,
-					hs);
+					hs,
+					allWayNodes);
 
 			edges.put(amountOfEdgesWritten, ce);
 
@@ -427,6 +475,9 @@ class RoutingGraphCreatorTask implements Sink {
 	}
 
 	private boolean isOnWhiteList(Way way) {
+
+		// TODO CHECK if correct or if flag necessary as below (I think it doesn't matter and was
+		// correct before)!!!
 		for (Tag tag : way.getTags()) {
 			if ((tag.getKey().equals("highway") && (this.configObject
 					.containsWayTag(tag.getKey(),
@@ -436,9 +487,20 @@ class RoutingGraphCreatorTask implements Sink {
 		return false;
 	}
 
+	private boolean isOnWhiteList(Node node) {
+
+		for (Tag tag : node.getTags()) {
+			if (this.configObject.containsNodeTag(tag.getKey(), tag.getValue()))
+				return true;
+		}
+		return false;
+	}
+
 	private boolean isOnWhiteList(Relation rel) {
+
 		for (Tag tag : rel.getTags()) {
-			return this.configObject.containsRelationTag(tag.getKey(), tag.getValue());
+			if (this.configObject.containsNodeTag(tag.getKey(), tag.getValue()))
+				return true;
 		}
 		return false;
 	}

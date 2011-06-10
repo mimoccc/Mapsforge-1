@@ -27,6 +27,12 @@ message RelationMemberPBF {
 	
 }
 
+message CompleteNodePBF {
+	required int32 id = 1;
+	optional GeoCoordinatePBF coordinate = 2;
+	repeated KeyValuePairPBF additionalTags = 3;
+}
+
 message CompleteEdgePBF {
 	required int32 id = 1;
 	optional int32 sourceID = 2;
@@ -40,6 +46,7 @@ message CompleteEdgePBF {
 	optional string destination = 10;
 	optional int32 weight = 11;
 	repeated KeyValuePairPBF additionalTags = 12;
+	repeated CompleteNodePBF allUsedNodes=13;
 }
 
 message CompleteVertexPBF {

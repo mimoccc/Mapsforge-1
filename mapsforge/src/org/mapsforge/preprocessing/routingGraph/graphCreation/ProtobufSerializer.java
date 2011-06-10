@@ -25,6 +25,7 @@ import java.util.HashSet;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.AllGraphDataPBF;
 import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.CompleteEdgePBF;
+import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.CompleteNodePBF;
 import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.CompleteRelationPBF;
 import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.CompleteVertexPBF;
 import org.mapsforge.preprocessing.routingGraph.graphCreation.GraphCreatorProtos.GeoCoordinatePBF;
@@ -102,7 +103,6 @@ public class ProtobufSerializer {
 
 		writeRelations(allGraphData, relations);
 
-		// Write the new address book back to disk.
 		FileOutputStream output;
 		try {
 			output = new FileOutputStream(path);
@@ -137,6 +137,21 @@ public class ProtobufSerializer {
 				GeoCoordinatePBF geo_pbf = ce_pbf.getAllWaypointsList().get(j);
 				allWP[j] = new GeoCoordinate(geo_pbf.getLatitude(), geo_pbf.getLongitude());
 			}
+			// read nodes
+			HashSet<CompleteNode> allUsedNodes = new HashSet<CompleteNode>();
+
+			for (CompleteNodePBF node_pbf : ce_pbf.getAllUsedNodesList()) {
+				GeoCoordinate coordinate = new GeoCoordinate(node_pbf.getCoordinate().getLatitude(),
+						node_pbf.getCoordinate().getLongitude());
+				HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
+
+				for (KeyValuePairPBF kv_pbf : node_pbf.getAdditionalTagsList()) {
+					hs.add(new KeyValuePair(kv_pbf.getValue(), kv_pbf.getKey()));
+				}
+
+				allUsedNodes.add(new CompleteNode(node_pbf.getId(), coordinate, hs));
+			}
+
 			CompleteEdge ce = new CompleteEdge(
 					ce_pbf.getId(),
 					vertices.get(ce_pbf.getSourceID()),
@@ -150,7 +165,8 @@ public class ProtobufSerializer {
 					ce_pbf.getRef(),
 					ce_pbf.getDestination(),
 					ce_pbf.getWeight(),
-					additionalTags);
+					additionalTags,
+					allUsedNodes);
 
 			edges.put(i, ce);
 			i++;
@@ -251,6 +267,26 @@ public class ProtobufSerializer {
 				geo_PBF.setLatitude(geo.getLatitude());
 				geo_PBF.setLongitude(geo.getLongitude());
 				ce_PBF.addAllWaypoints(geo_PBF);
+			}
+			// write nodes
+			for (CompleteNode node : ce.allUsedNodes) {
+				CompleteNodePBF.Builder node_PBF = CompleteNodePBF.newBuilder();
+				node_PBF.setId(node.id);
+
+				GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
+				geo_PBF.setLatitude(node.coordinate.getLatitude());
+				geo_PBF.setLongitude(node.coordinate.getLongitude());
+				node_PBF.setCoordinate(geo_PBF);
+
+				for (KeyValuePair kv : node.additionalTags) {
+					KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder();
+					kv_PBF.setKey(kv.key);
+					kv_PBF.setValue(kv.value);
+					node_PBF.addAdditionalTags(kv_PBF);
+				}
+
+				ce_PBF.addAllUsedNodes(node_PBF);
+
 			}
 			allGraphData.addAllEdges(ce_PBF);
 		}
