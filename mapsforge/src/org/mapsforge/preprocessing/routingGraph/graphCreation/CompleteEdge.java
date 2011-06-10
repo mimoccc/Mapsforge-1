@@ -74,13 +74,14 @@ public class CompleteEdge implements Edge {
 	 *            The weight for routing.
 	 * @param additionalTags
 	 *            the additional Tags that exist for this way
-	 * 
+	 * @param allUsedNodes
+	 *            All nodes with id, tag and coordinate.
 	 */
 	public CompleteEdge(int id, Vertex source, Vertex target, GeoCoordinate[] waypoints,
 			GeoCoordinate[] allWaypoints, String name, String type, boolean roundabout,
 			boolean isOneWay, String ref,
 			String destination, int weight, HashSet<KeyValuePair> additionalTags,
-			HashSet<CompleteNode> allWayNodes) {
+			HashSet<CompleteNode> allUsedNodes) {
 		super();
 		this.id = id;
 		this.source = source;
@@ -94,7 +95,7 @@ public class CompleteEdge implements Edge {
 		this.destination = destination;
 		this.weight = weight;
 		this.additionalTags = additionalTags;
-		this.allUsedNodes = allWayNodes;
+		this.allUsedNodes = allUsedNodes;
 	}
 
 	/**

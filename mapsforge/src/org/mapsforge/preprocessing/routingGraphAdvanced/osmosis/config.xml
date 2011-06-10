@@ -60,12 +60,8 @@
 					<tag k="restriction" v="no_straight_on" />
 					<tag k="restriction" v="only_left_turn" />
 					<tag k="restriction" v="only_right_turn" />
-
-					<tag k="restriction" v="only_straight_on" />
-					<member type="node" role="via" />
-					<member type="way" role="from" />
-					<member type="way" role="to" />
-
+					<!-- speed camera -->
+					<tag k="enforcement" v="maxspeed"/>
 				</relations>
 			</restrictions>
 			<weightFactors>
@@ -81,9 +77,7 @@
 						<tag k="crossing" v="unmarked" time="10" />
 						<tag k="crossing" v="island" time="10" />
 						<tag k="railway" v="level_crossing" time="120" />
-
 						<tag k="highway" v="give_way" time="15" />
-
 						<tag k="highway" v="mini_roundabout" time="10" />
 						<!-- predictable stops -->
 						<tag k="highway" v="stop" time="15" />

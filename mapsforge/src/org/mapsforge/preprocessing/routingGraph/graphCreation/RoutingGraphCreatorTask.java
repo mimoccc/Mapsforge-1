@@ -298,12 +298,12 @@ class RoutingGraphCreatorTask implements Sink {
 		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
 		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
 
-		// TEST ESave and read
+		// TEST Save and read
 
-		// int sum = vertices.values().size() + edges.values().size() +
-		// completeRelations.values().size();
-		// System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
-		// ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
+		int sum = vertices.values().size() + edges.values().size() +
+				completeRelations.values().size();
+		System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
+		ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
 		//
 		// HashMap<Integer, CompleteVertex> verticesC = new HashMap<Integer, CompleteVertex>();
 		// HashMap<Integer, CompleteEdge> edgesC = new HashMap<Integer, CompleteEdge>();
