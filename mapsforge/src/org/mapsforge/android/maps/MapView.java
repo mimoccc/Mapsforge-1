@@ -25,12 +25,12 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.Bitmap.CompressFormat;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -116,21 +116,6 @@ public class MapView extends ViewGroup {
 		}
 
 		@Override
-		protected boolean handleLongTap() {
-			// forward long tap to overlays
-			synchronized (MapView.this.overlays) {
-				this.tapPoint = getProjection().fromPixels(
-						(int) previousPositionX,
-						(int) previousPositionY);
-				for (Overlay overlay : MapView.this.overlays) {
-					overlay.onLongTap(tapPoint, MapView.this);
-				}
-			}
-
-			return true;
-		}
-
-		@Override
 		boolean handleTouchEvent(MotionEvent event) {
 			// round the event coordinates to integers
 			event.setLocation((int) event.getX(), (int) event.getY());
@@ -145,8 +130,7 @@ public class MapView extends ViewGroup {
 			this.action = event.getAction() & MotionEvent.ACTION_MASK;
 
 			if (this.action == MotionEvent.ACTION_DOWN) {
-				// start timer for detecting long taps
-				this.startLongTapTimer();
+				this.longPressDetector.pressStart();
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
 				this.mapMoved = false;
@@ -169,9 +153,8 @@ public class MapView extends ViewGroup {
 					if (Math.abs(this.moveX) > this.mapMoveDelta
 							|| Math.abs(this.moveY) > this.mapMoveDelta) {
 						// the map movement delta has been reached
+						this.longPressDetector.pressStop();
 						this.mapMoved = true;
-						// cancel long tap detection
-						this.stopLongTapTimer();
 					} else {
 						// do nothing
 						return true;
@@ -187,7 +170,7 @@ public class MapView extends ViewGroup {
 				handleTiles(true);
 				return true;
 			} else if (this.action == MotionEvent.ACTION_UP) {
-				this.stopLongTapTimer();
+				this.longPressDetector.pressStop();
 				this.pointerIndex = event.findPointerIndex(this.activePointerId);
 				this.activePointerId = INVALID_POINTER_ID;
 				hideZoomControlsDelayed();
@@ -233,13 +216,16 @@ public class MapView extends ViewGroup {
 				}
 				return true;
 			} else if (this.action == MotionEvent.ACTION_CANCEL) {
+				this.longPressDetector.pressStop();
 				hideZoomControlsDelayed();
 				this.activePointerId = INVALID_POINTER_ID;
 				return true;
 			} else if (this.action == MotionEvent.ACTION_POINTER_DOWN) {
+				this.longPressDetector.pressStop();
 				// save the time when the pointer has gone down
 				this.multiTouchDownTime = event.getEventTime();
 			} else if (this.action == MotionEvent.ACTION_POINTER_UP) {
+				this.longPressDetector.pressStop();
 				// extract the index of the pointer that left the touch sensor
 				this.pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
 				if (event.getPointerId(this.pointerIndex) == this.activePointerId) {
@@ -258,8 +244,6 @@ public class MapView extends ViewGroup {
 				// calculate the time difference since the pointer has gone down
 				this.multiTouchTime = event.getEventTime() - this.multiTouchDownTime;
 				if (this.multiTouchTime < this.doubleTapTimeout) {
-					// zooming --> no long tap detection needed anymore
-					this.stopLongTapTimer();
 					// multi-touch tap event, zoom out
 					this.previousEventTap = false;
 					zoom((byte) -1, 1);
@@ -327,6 +311,7 @@ public class MapView extends ViewGroup {
 			event.setLocation((int) event.getX(), (int) event.getY());
 
 			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				this.longPressDetector.pressStart();
 				// save the position of the event
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
@@ -342,6 +327,7 @@ public class MapView extends ViewGroup {
 					if (Math.abs(this.moveX) > this.mapMoveDelta
 							|| Math.abs(this.moveY) > this.mapMoveDelta) {
 						// the map movement delta has been reached
+						this.longPressDetector.pressStop();
 						this.mapMoved = true;
 					} else {
 						// do nothing
@@ -358,6 +344,7 @@ public class MapView extends ViewGroup {
 				handleTiles(true);
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				this.longPressDetector.pressStop();
 				hideZoomControlsDelayed();
 				if (this.mapMoved) {
 					this.previousEventTap = false;
@@ -398,6 +385,7 @@ public class MapView extends ViewGroup {
 				}
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+				this.longPressDetector.pressStop();
 				hideZoomControlsDelayed();
 				return true;
 			}
@@ -407,10 +395,93 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Abstract base class for the single-touch and multi-touch handler. Default visibility is required
-	 * to avoid a synthetic method.
+	 * Abstract base class for the single-touch and the multi-touch handler. Default visibility is
+	 * required to avoid a synthetic method.
 	 */
 	abstract class TouchEventHandler {
+		private class LongPressDetector extends Thread {
+			private static final String THREAD_NAME = "LongPressDetector";
+
+			private long pressStart;
+			private long timeElapsed;
+
+			LongPressDetector() {
+				// do nothing
+			}
+
+			@Override
+			public void run() {
+				setName(THREAD_NAME);
+
+				while (!isInterrupted()) {
+					synchronized (this) {
+						while (!isInterrupted() && this.pressStart == 0) {
+							try {
+								wait();
+							} catch (InterruptedException e) {
+								// restore the interrupted status
+								interrupt();
+							}
+						}
+					}
+
+					if (isInterrupted()) {
+						break;
+					}
+
+					synchronized (this) {
+						// calculate the elapsed time since the press has started
+						this.timeElapsed = SystemClock.uptimeMillis() - this.pressStart;
+						while (!isInterrupted() && this.pressStart > 0
+								&& this.timeElapsed < TouchEventHandler.this.longPressTimeout) {
+							try {
+								// wait for the remaining time of the whole timeout
+								wait(TouchEventHandler.this.longPressTimeout - this.timeElapsed);
+								this.timeElapsed = SystemClock.uptimeMillis() - this.pressStart;
+							} catch (InterruptedException e) {
+								// restore the interrupted status
+								interrupt();
+							}
+						}
+					}
+
+					if (isInterrupted()) {
+						break;
+					}
+
+					if (this.pressStart > 0) {
+						forwardLongPressEvent();
+						// stop even if a new long press event has already been started
+						pressStop();
+					}
+				}
+			}
+
+			/**
+			 * Informs the LongTapDetector that a potential long press event has started.
+			 */
+			protected void pressStart() {
+				if (this.pressStart == 0) {
+					this.pressStart = SystemClock.uptimeMillis();
+					synchronized (this) {
+						notify();
+					}
+				}
+			}
+
+			/**
+			 * Informs the LongTapDetector that no long press event is happening.
+			 */
+			protected void pressStop() {
+				if (this.pressStart > 0) {
+					this.pressStart = 0;
+					synchronized (this) {
+						notify();
+					}
+				}
+			}
+		}
+
 		/**
 		 * Absolute threshold value for a double-tap event.
 		 */
@@ -422,43 +493,19 @@ public class MapView extends ViewGroup {
 		final int doubleTapTimeout;
 
 		/**
-		 * Minimum time span in milliseconds for a long-tap event.
+		 * Thread for detecting long press events.
 		 */
-		final int longTapTimeout;
+		final LongPressDetector longPressDetector;
 
 		/**
-		 * Thread for counting down a certain time intervall for detecting long taps.
+		 * Stores the coordinates of a long press event.
 		 */
-		private LongTapThread longTapThread;
+		GeoPoint longPressPoint;
 
-		private class LongTapThread extends Thread {
-			/**
-			 * The handler which called the thread.
-			 */
-			private TouchEventHandler touchEventHandler_;
-
-			public LongTapThread(TouchEventHandler touchEventHandler) {
-				this.touchEventHandler_ = touchEventHandler;
-				this.setName("LongTapThread");
-			}
-
-			@Override
-			public void run() {
-				while (true) {
-					synchronized (this.touchEventHandler_) {
-						try {
-							// wait for tap event
-							touchEventHandler_.wait();
-							sleep(this.touchEventHandler_.longTapTimeout);
-							touchEventHandler_.handleLongTap();
-						} catch (InterruptedException e) {
-							// sleep has been interrupted --> no long tap
-							continue;
-						}
-					}
-				}
-			}
-		}
+		/**
+		 * Duration in milliseconds for a long press event.
+		 */
+		final int longPressTimeout;
 
 		/**
 		 * Flag to indicate if the map has been moved.
@@ -535,46 +582,37 @@ public class MapView extends ViewGroup {
 			this.mapMoveDelta = viewConfiguration.getScaledTouchSlop();
 			this.doubleTapDelta = viewConfiguration.getScaledDoubleTapSlop();
 			this.doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout();
-			this.longTapTimeout = ViewConfiguration.getLongPressTimeout();
-			this.longTapThread = new LongTapThread(this);
-
-			this.longTapThread.start();
+			this.longPressTimeout = ViewConfiguration.getLongPressTimeout();
+			this.longPressDetector = new LongPressDetector();
+			this.longPressDetector.start();
 		}
 
 		/**
-		 * Overwrite this method to handle motion events on the touch screen.
+		 * Forwards a long press event to all overlays until it has been handled.
+		 */
+		final void forwardLongPressEvent() {
+			this.longPressPoint = getProjection().fromPixels((int) previousPositionX,
+					(int) previousPositionY);
+			if (this.longPressPoint != null) {
+				synchronized (MapView.this.overlays) {
+					for (Overlay overlay : MapView.this.overlays) {
+						if (overlay.onLongPress(this.longPressPoint, MapView.this)) {
+							// the long press event has been handled
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		/**
+		 * Handles a motion event on the touch screen.
 		 * 
 		 * @param event
 		 *            the motion event.
 		 * @return true if the event was handled, false otherwise.
 		 */
 		abstract boolean handleTouchEvent(MotionEvent event);
-
-		/**
-		 * Overwrite this method to handle long tap events on the touch screen.
-		 * 
-		 * @return true if the event was handled, false otherwise.
-		 */
-		protected boolean handleLongTap() {
-			return false;
-		}
-
-		/**
-		 * Starts a timer which will call {@link #handleLongTap()} on its expiration.
-		 */
-		protected void startLongTapTimer() {
-			synchronized (this) {
-				this.notify();
-			}
-		}
-
-		/**
-		 * Resets the timer that counts down the long tap intervall. The timer has to be restarted by
-		 * {@link #startLongTapTimer()} manually.
-		 */
-		protected void stopLongTapTimer() {
-			longTapThread.interrupt();
-		}
 	}
 
 	/**
@@ -1951,6 +1989,12 @@ public class MapView extends ViewGroup {
 				Thread.currentThread().interrupt();
 			}
 			this.zoomAnimator = null;
+		}
+
+		// stop the LongTapDetector thread
+		if (this.touchEventHandler.longPressDetector != null) {
+			this.touchEventHandler.longPressDetector.interrupt();
+			this.touchEventHandler = null;
 		}
 
 		stopMapGeneratorThread();
