@@ -95,20 +95,24 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 				// make sure that the cached way node positions are valid
 				if (drawZoomLevel != this.overlayWay.cachedZoomLevel) {
 					for (int i = 0; i < this.overlayWay.cachedWayPositions.length; ++i) {
-						this.overlayWay.cachedWayPositions[i] = projection.toPoint(
-								this.overlayWay.wayNodes[i],
-								this.overlayWay.cachedWayPositions[i], drawZoomLevel);
+						for (int j = 0; j < this.overlayWay.cachedWayPositions[i].length; ++j) {
+							this.overlayWay.cachedWayPositions[i][j] = projection.toPoint(
+									this.overlayWay.wayNodes[i][j],
+									this.overlayWay.cachedWayPositions[i][j], drawZoomLevel);
+						}
 					}
 					this.overlayWay.cachedZoomLevel = drawZoomLevel;
 				}
 
 				// assemble the path
 				this.path.reset();
-				this.path.moveTo(this.overlayWay.cachedWayPositions[0].x - drawPosition.x,
-						this.overlayWay.cachedWayPositions[0].y - drawPosition.y);
-				for (int j = 1; j < this.overlayWay.cachedWayPositions.length; ++j) {
-					this.path.lineTo(this.overlayWay.cachedWayPositions[j].x - drawPosition.x,
-							this.overlayWay.cachedWayPositions[j].y - drawPosition.y);
+				for (int i = 0; i < this.overlayWay.cachedWayPositions.length; ++i) {
+					this.path.moveTo(this.overlayWay.cachedWayPositions[i][0].x - drawPosition.x,
+							this.overlayWay.cachedWayPositions[i][0].y - drawPosition.y);
+					for (int j = 1; j < this.overlayWay.cachedWayPositions[i].length; ++j) {
+						this.path.lineTo(this.overlayWay.cachedWayPositions[i][j].x - drawPosition.x,
+								this.overlayWay.cachedWayPositions[i][j].y - drawPosition.y);
+					}
 				}
 
 				// draw the path on the canvas

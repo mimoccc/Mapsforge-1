@@ -21,6 +21,10 @@ import android.graphics.Point;
  * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering parameters
  * like color, stroke width, pattern and transparency can be configured via two {@link Paint} objects.
  * Each way is drawn twice - once with each paint object - to allow for different outlines and fillings.
+ * <p>
+ * The way data is represented as a two-dimensional array in order to support multi-polygons. A
+ * multi-polygon consists of several polygons and can for example be used to draw a polygon with holes.
+ * Each array element on the first level stores on the second level the coordinates of one polygon.
  */
 public class OverlayWay {
 	/**
@@ -30,10 +34,15 @@ public class OverlayWay {
 	 *            the way nodes to check for null elements.
 	 * @return true if the way nodes contain at least one null element, false otherwise.
 	 */
-	private static boolean containsNullElements(GeoPoint[] wayNodes) {
+	private static boolean containsNullElements(GeoPoint[][] wayNodes) {
 		for (int i = wayNodes.length - 1; i >= 0; --i) {
 			if (wayNodes[i] == null) {
 				return true;
+			}
+			for (int j = wayNodes[i].length - 1; j >= 0; --j) {
+				if (wayNodes[i][j] == null) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -52,12 +61,12 @@ public class OverlayWay {
 	/**
 	 * Geographical coordinates of the way nodes.
 	 */
-	protected GeoPoint[] wayNodes;
+	protected GeoPoint[][] wayNodes;
 
 	/**
 	 * Cached way positions of the way nodes on the map.
 	 */
-	Point[] cachedWayPositions;
+	Point[][] cachedWayPositions;
 
 	/**
 	 * Zoom level of the cached way node positions.
@@ -73,7 +82,7 @@ public class OverlayWay {
 	 * Constructs a new OverlayWay.
 	 */
 	public OverlayWay() {
-		this.cachedWayPositions = new Point[0];
+		this.cachedWayPositions = new Point[0][0];
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}
 
@@ -84,9 +93,42 @@ public class OverlayWay {
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
+	 * @deprecated replaced by {@link #OverlayWay(GeoPoint[][])} in order to support multi-polygons.
 	 */
+	@Deprecated
 	public OverlayWay(GeoPoint[] wayNodes) {
-		this.cachedWayPositions = new Point[0];
+		this(new GeoPoint[][] { wayNodes });
+	}
+
+	/**
+	 * Constructs a new OverlayWay.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @param paintFill
+	 *            the paint which will be used to fill the way (may be null).
+	 * @param paintOutline
+	 *            the paint which will be used to draw the way outline (may be null).
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 * @deprecated replaced by {@link #OverlayWay(GeoPoint[][], Paint, Paint)} in order to support
+	 *             multi-polygons.
+	 */
+	@Deprecated
+	public OverlayWay(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
+		this(new GeoPoint[][] { wayNodes }, paintFill, paintOutline);
+	}
+
+	/**
+	 * Constructs a new OverlayWay.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 */
+	public OverlayWay(GeoPoint[][] wayNodes) {
+		this.cachedWayPositions = new Point[0][0];
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setWayData(wayNodes);
 	}
@@ -103,8 +145,8 @@ public class OverlayWay {
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
-	public OverlayWay(GeoPoint[] wayNodes, Paint paintFill, Paint paintOutline) {
-		this.cachedWayPositions = new Point[0];
+	public OverlayWay(GeoPoint[][] wayNodes, Paint paintFill, Paint paintOutline) {
+		this.cachedWayPositions = new Point[0][0];
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setWayData(wayNodes);
 		setPaint(paintFill, paintOutline);
@@ -121,7 +163,7 @@ public class OverlayWay {
 	 *             if the way nodes contain at least one null element.
 	 */
 	public OverlayWay(Paint paintFill, Paint paintOutline) {
-		this.cachedWayPositions = new Point[0];
+		this.cachedWayPositions = new Point[0][0];
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 		setPaint(paintFill, paintOutline);
 	}
@@ -131,7 +173,7 @@ public class OverlayWay {
 	 * 
 	 * @return the way nodes of this way.
 	 */
-	public synchronized GeoPoint[] getWayData() {
+	public synchronized GeoPoint[][] getWayData() {
 		return this.wayNodes;
 	}
 
@@ -160,8 +202,24 @@ public class OverlayWay {
 	 *            the geographical coordinates of the way nodes, must not contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
+	 * @deprecated replaced by {@link #setWayData(GeoPoint[][])} in order to support multi-polygons.
 	 */
+	@Deprecated
 	public synchronized void setWayData(GeoPoint[] wayNodes) {
+		setWayData(new GeoPoint[][] { wayNodes });
+	}
+
+	/**
+	 * Sets the way nodes of this way.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 */
+	public synchronized void setWayData(GeoPoint[][] wayNodes) {
 		// check for illegal null elements
 		if (wayNodes != null && containsNullElements(wayNodes)) {
 			throw new IllegalArgumentException("way nodes must not contain null elements");
@@ -169,9 +227,12 @@ public class OverlayWay {
 
 		this.wayNodes = wayNodes;
 		if (this.wayNodes == null) {
-			this.cachedWayPositions = new Point[0];
+			this.cachedWayPositions = new Point[0][0];
 		} else if (this.wayNodes.length != this.cachedWayPositions.length) {
-			this.cachedWayPositions = new Point[this.wayNodes.length];
+			this.cachedWayPositions = new Point[this.wayNodes.length][];
+			for (int i = this.wayNodes.length - 1; i >= 0; --i) {
+				this.cachedWayPositions[i] = new Point[this.wayNodes[i].length];
+			}
 		}
 		this.cachedZoomLevel = Byte.MIN_VALUE;
 	}

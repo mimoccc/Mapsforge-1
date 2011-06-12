@@ -101,9 +101,9 @@ public class OverlayMapViewer extends MapActivity {
 		// create the WayOverlay and add the ways
 		ArrayWayOverlay wayOverlay = new ArrayWayOverlay(wayDefaultPaintFill,
 				wayDefaultPaintOutline);
-		OverlayWay way1 = new OverlayWay(new GeoPoint[] { geoPoint1, geoPoint2 });
-		OverlayWay way2 = new OverlayWay(new GeoPoint[] { geoPoint1, geoPoint3, geoPoint4,
-				geoPoint1 }, wayPaint, null);
+		OverlayWay way1 = new OverlayWay(new GeoPoint[][] { { geoPoint1, geoPoint2 } });
+		OverlayWay way2 = new OverlayWay(new GeoPoint[][] { { geoPoint1, geoPoint3, geoPoint4,
+				geoPoint1 } }, wayPaint, null);
 		wayOverlay.addWay(way1);
 		wayOverlay.addWay(way2);
 
