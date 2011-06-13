@@ -57,17 +57,35 @@ Status
 - WayTextContainer		: -
 - ZoomAnimator			: OK (MARTINUS)
 
+ACHTUNG NATIVE KLASSE ZU IMPLEMENTIEREN
 Core / Android
+- SparseArray			: OK (MARTINUS)
 - ArrayUtils			: OK (MARTINUS)
 - AttributeSet			: OK (MARTINUS)
+
+Graphics
 - Bitmap				: Leer
+- BitmapFactory			: Leer
 - BitmapShader			: OK (MARTINUS)
-- Color					: OK mit Bedingungen: Color ist nicht mehr int typ
+- Canvas				: Leere Methode
+- Color					: NICHT OK : Color ist nicht mehr int typ
 						  parseColor() --> gesperrt
+- DashPathEffect		: OK (braucht keine Android-Klasse)
 - Matrix				: OK mit Bedingung: Ohne RectF						  
-- Rect					: OK, aber Viele Sperre
+- Paint					: NICHT OK : viele Auskommentar
+- Path					: OK mit Bedingungen: Ohne RectF
+- PathEffect			: OK
 - Point					: OK (MARTINUS)
+- Rect					: OK, aber Viele Sperre
 - Shader				: OK (MARTINUS)
-- SparseArray			: OK (MARTINUS)
-- SystemClock			: OK (MARTINUS)
 - Typeface				: OK mit Bedingung: Ohne AssetManager
+
+Graphics.Drawable
+- Drawable				: Leer
+- AnimationDrawable		: Leer
+
+OS
+- SystemClock			: OK (MARTINUS)
+
+Utils
+- AttributeSet			: OK (MARTINUS)
