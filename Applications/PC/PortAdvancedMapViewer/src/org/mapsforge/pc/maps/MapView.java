@@ -36,7 +36,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 //import android.os.SystemClock;
-import org.mapsforge.core.SystemClock;
+import org.mapsforge.core.os.SystemClock;
+
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;

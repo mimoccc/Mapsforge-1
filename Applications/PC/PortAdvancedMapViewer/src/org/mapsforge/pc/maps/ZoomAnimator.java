@@ -15,7 +15,7 @@
 package org.mapsforge.pc.maps;
 
 //import android.os.SystemClock;
-import org.mapsforge.core.SystemClock;
+import org.mapsforge.core.os.SystemClock;
 
 /**
  * A ZoomAnimator handles the zoom-in and zoom-out animations of the corresponding MapView. It runs in a

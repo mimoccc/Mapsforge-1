@@ -1,4 +1,4 @@
-package org.mapsforge.core;
+package org.mapsforge.core.os;
 
 public final class SystemClock {
     /**
