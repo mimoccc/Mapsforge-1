@@ -19,7 +19,9 @@ Status
 - LineClipping			: OK (braucht keine Android-Klasse)
 - Logger				: OK (MARTINUS)
 						  Log.d() --> System.out.println() & Log.e() --> System.err.println()
+- Activity				: -						  
 - MapActivity			: -
+- AdvancedMapViewer		: -
 - MapController			: -
 - MapDatabase			: OK (MARTINUS)
 - MapFileParameters		: OK (MARTINUS)
