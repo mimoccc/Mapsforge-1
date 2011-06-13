@@ -21,6 +21,7 @@ import android.graphics.Point;
  * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering parameters
  * like color, stroke width, pattern and transparency can be configured via two {@link Paint} objects.
  * Each way is drawn twice - once with each paint object - to allow for different outlines and fillings.
+ * The drawing quality can be improved by enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
  * <p>
  * The way data is represented as a two-dimensional array in order to support multi-polygons. A
  * multi-polygon consists of several polygons and can for example be used to draw a polygon with holes.

@@ -24,8 +24,8 @@ import android.graphics.drawable.Drawable;
 /**
  * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The class
  * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
- * the redrawing process it handles tap events from the user to check if an OverlayItem has been touched
- * and {@link #onTap(int)} must be executed.
+ * the redrawing process it handles long press and tap events and calls {@link #onLongPress(int)} and
+ * {@link #onTap(int)} respectively.
  * 
  * @param <Item>
  *            the type of items handled by this overlay.
@@ -88,75 +88,19 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	/**
-	 * Handles a tap event.
+	 * Checks whether an item has been long pressed.
+	 */
+	@Override
+	public boolean onLongPress(GeoPoint geoPoint, MapView mapView) {
+		return checkItemHit(geoPoint, mapView, EventType.LONG_PRESS);
+	}
+
+	/**
+	 * Checks whether an item has been tapped.
 	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
-		Projection projection = mapView.getProjection();
-		Point tapPosition = projection.toPixels(geoPoint, null);
-
-		// check if the translation to pixel coordinates has failed
-		if (tapPosition == null) {
-			return false;
-		}
-
-		Item tapOverlayItem;
-		Point tapItemPoint = new Point();
-		Rect tapMarkerBounds;
-		int tapLeft;
-		int tapRight;
-		int tapTop;
-		int tapBottom;
-
-		synchronized (this.visibleItems) {
-			// iterate over all visible items
-			for (Integer itemIndex : this.visibleItems) {
-				// get the current item
-				tapOverlayItem = createItem(itemIndex.intValue());
-				if (tapOverlayItem == null) {
-					continue;
-				}
-
-				synchronized (tapOverlayItem) {
-					// make sure that the current item has a position
-					if (tapOverlayItem.getPoint() == null) {
-						continue;
-					}
-
-					tapItemPoint = projection.toPixels(tapOverlayItem.getPoint(), tapItemPoint);
-					// check if the translation to pixel coordinates has failed
-					if (tapItemPoint == null) {
-						continue;
-					}
-
-					// select the correct marker for the item and get the position
-					if (tapOverlayItem.getMarker() == null) {
-						if (this.defaultMarker == null) {
-							// no marker to draw the item
-							continue;
-						}
-						tapMarkerBounds = this.defaultMarker.getBounds();
-					} else {
-						tapMarkerBounds = tapOverlayItem.getMarker().getBounds();
-					}
-
-					// calculate the bounding box of the marker
-					tapLeft = tapItemPoint.x + tapMarkerBounds.left;
-					tapRight = tapItemPoint.x + tapMarkerBounds.right;
-					tapTop = tapItemPoint.y + tapMarkerBounds.top;
-					tapBottom = tapItemPoint.y + tapMarkerBounds.bottom;
-
-					// check if the tap position is within the bounds of the marker
-					if (tapRight >= tapPosition.x && tapLeft <= tapPosition.x
-							&& tapBottom >= tapPosition.y && tapTop <= tapPosition.y) {
-						return onTap(itemIndex.intValue());
-					}
-				}
-			}
-		}
-
-		// no hit
-		return false;
+		return checkItemHit(geoPoint, mapView, EventType.TAP);
 	}
 
 	/**
@@ -165,6 +109,90 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	 * @return the numbers of items in this overlay.
 	 */
 	public abstract int size();
+
+	/**
+	 * Checks whether an item has been hit by an event and calls the appropriate handler.
+	 * 
+	 * @param geoPoint
+	 *            the point of the event.
+	 * @param mapView
+	 *            the {@link MapView} that triggered the event.
+	 * @param eventType
+	 *            the type of the event.
+	 * @return true if an item has been hit, false otherwise.
+	 */
+	protected boolean checkItemHit(GeoPoint geoPoint, MapView mapView, EventType eventType) {
+		Projection projection = mapView.getProjection();
+		Point eventPosition = projection.toPixels(geoPoint, null);
+
+		// check if the translation to pixel coordinates has failed
+		if (eventPosition == null) {
+			return false;
+		}
+
+		Item checkOverlayItem;
+		Point checkItemPoint = new Point();
+		Rect checkMarkerBounds;
+		int checkLeft;
+		int checkRight;
+		int checkTop;
+		int checkBottom;
+
+		synchronized (this.visibleItems) {
+			// iterate over all visible items
+			for (Integer itemIndex : this.visibleItems) {
+				// get the current item
+				checkOverlayItem = createItem(itemIndex.intValue());
+				if (checkOverlayItem == null) {
+					continue;
+				}
+
+				synchronized (checkOverlayItem) {
+					// make sure that the current item has a position
+					if (checkOverlayItem.getPoint() == null) {
+						continue;
+					}
+
+					checkItemPoint = projection.toPixels(checkOverlayItem.getPoint(), checkItemPoint);
+					// check if the translation to pixel coordinates has failed
+					if (checkItemPoint == null) {
+						continue;
+					}
+
+					// select the correct marker for the item and get the position
+					if (checkOverlayItem.getMarker() == null) {
+						if (this.defaultMarker == null) {
+							// no marker to draw the item
+							continue;
+						}
+						checkMarkerBounds = this.defaultMarker.getBounds();
+					} else {
+						checkMarkerBounds = checkOverlayItem.getMarker().getBounds();
+					}
+
+					// calculate the bounding box of the marker
+					checkLeft = checkItemPoint.x + checkMarkerBounds.left;
+					checkRight = checkItemPoint.x + checkMarkerBounds.right;
+					checkTop = checkItemPoint.y + checkMarkerBounds.top;
+					checkBottom = checkItemPoint.y + checkMarkerBounds.bottom;
+
+					// check if the event position is within the bounds of the marker
+					if (checkRight >= eventPosition.x && checkLeft <= eventPosition.x
+							&& checkBottom >= eventPosition.y && checkTop <= eventPosition.y) {
+						switch (eventType) {
+							case LONG_PRESS:
+								return onLongPress(itemIndex.intValue());
+							case TAP:
+								return onTap(itemIndex.intValue());
+						}
+					}
+				}
+			}
+		}
+
+		// no hit
+		return false;
+	}
 
 	/**
 	 * Creates an item in this overlay.
@@ -263,12 +291,25 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	/**
+	 * Handles a long press event.
+	 * <p>
+	 * The default implementation of this method does nothing and returns false.
+	 * 
+	 * @param index
+	 *            the index of the item that has been long pressed.
+	 * @return true if the event was handled, false otherwise.
+	 */
+	protected boolean onLongPress(int index) {
+		return false;
+	}
+
+	/**
 	 * Handles a tap event.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
 	 * @param index
-	 *            the position of the item.
+	 *            the index of the item that has been tapped.
 	 * @return true if the event was handled, false otherwise.
 	 */
 	protected boolean onTap(int index) {

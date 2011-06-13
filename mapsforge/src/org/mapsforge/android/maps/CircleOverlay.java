@@ -24,8 +24,8 @@ import android.graphics.Point;
 /**
  * CircleOverlay is an abstract base class to display {@link OverlayCircle OverlayCircles}. The class
  * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
- * the redrawing process it handles tap events from the user to check if an OverlayCircle has been
- * touched and {@link #onTap(int)} must be executed.
+ * the redrawing process it handles long press and tap events and calls {@link #onLongPress(int)} and
+ * {@link #onTap(int)} respectively.
  * <p>
  * The overlay may be used to indicate positions which have a known accuracy, such as GPS fixes. The
  * radius of the circles is specified in meters and will be automatically converted to pixels at each
@@ -51,7 +51,8 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	private ArrayList<Integer> visibleCirclesTemp;
 
 	/**
-	 * Constructs a new CircleOverlay.
+	 * Constructs a new CircleOverlay with the given default paints. The drawing quality can be improved
+	 * by enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
 	 * 
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the circles (may be null).
@@ -69,61 +70,19 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	}
 
 	/**
-	 * Handles a tap event.
+	 * Checks whether a circle has been long pressed.
+	 */
+	@Override
+	public boolean onLongPress(GeoPoint geoPoint, MapView mapView) {
+		return checkItemHit(geoPoint, mapView, EventType.LONG_PRESS);
+	}
+
+	/**
+	 * Checks whether a circle has been tapped.
 	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
-		Projection projection = mapView.getProjection();
-		Point tapPosition = projection.toPixels(geoPoint, null);
-
-		// check if the translation to pixel coordinates has failed
-		if (tapPosition == null) {
-			return false;
-		}
-
-		Circle tapOverlayCircle;
-		Point tapCirclePoint = new Point();
-		float diffX;
-		float diffY;
-		double distance;
-
-		synchronized (this.visibleCircles) {
-			// iterate over all visible circles
-			for (Integer circleIndex : this.visibleCircles) {
-				// get the current circle
-				tapOverlayCircle = createCircle(circleIndex.intValue());
-				if (tapOverlayCircle == null) {
-					continue;
-				}
-
-				synchronized (tapOverlayCircle) {
-					// make sure that the current circle has a center position and a radius
-					if (tapOverlayCircle.center == null || tapOverlayCircle.radius < 0) {
-						continue;
-					}
-
-					tapCirclePoint = projection.toPixels(tapOverlayCircle.center,
-							tapCirclePoint);
-					// check if the translation to pixel coordinates has failed
-					if (tapCirclePoint == null) {
-						continue;
-					}
-
-					// calculate the Euclidian distance between the circle and the tap position
-					diffX = tapCirclePoint.x - tapPosition.x;
-					diffY = tapCirclePoint.y - tapPosition.y;
-					distance = Math.sqrt(diffX * diffX + diffY * diffY);
-
-					// check if the tap position is within the circle radius
-					if (distance <= tapOverlayCircle.cachedRadius) {
-						return onTap(circleIndex.intValue());
-					}
-				}
-			}
-		}
-
-		// no hit
-		return false;
+		return checkItemHit(geoPoint, mapView, EventType.TAP);
 	}
 
 	/**
@@ -132,6 +91,76 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 * @return the numbers of circles in this overlay.
 	 */
 	public abstract int size();
+
+	/**
+	 * Checks whether a circle has been hit by an event and calls the appropriate handler.
+	 * 
+	 * @param geoPoint
+	 *            the point of the event.
+	 * @param mapView
+	 *            the {@link MapView} that triggered the event.
+	 * @param eventType
+	 *            the type of the event.
+	 * @return true if a circle has been hit, false otherwise.
+	 */
+	protected boolean checkItemHit(GeoPoint geoPoint, MapView mapView, EventType eventType) {
+		Projection projection = mapView.getProjection();
+		Point eventPosition = projection.toPixels(geoPoint, null);
+
+		// check if the translation to pixel coordinates has failed
+		if (eventPosition == null) {
+			return false;
+		}
+
+		Circle checkOverlayCircle;
+		Point checkCirclePoint = new Point();
+		float diffX;
+		float diffY;
+		double distance;
+
+		synchronized (this.visibleCircles) {
+			// iterate over all visible circles
+			for (Integer circleIndex : this.visibleCircles) {
+				// get the current circle
+				checkOverlayCircle = createCircle(circleIndex.intValue());
+				if (checkOverlayCircle == null) {
+					continue;
+				}
+
+				synchronized (checkOverlayCircle) {
+					// make sure that the current circle has a center position and a radius
+					if (checkOverlayCircle.center == null || checkOverlayCircle.radius < 0) {
+						continue;
+					}
+
+					checkCirclePoint = projection.toPixels(checkOverlayCircle.center,
+							checkCirclePoint);
+					// check if the translation to pixel coordinates has failed
+					if (checkCirclePoint == null) {
+						continue;
+					}
+
+					// calculate the Euclidian distance between the circle and the event position
+					diffX = checkCirclePoint.x - eventPosition.x;
+					diffY = checkCirclePoint.y - eventPosition.y;
+					distance = Math.sqrt(diffX * diffX + diffY * diffY);
+
+					// check if the event position is within the circle radius
+					if (distance <= checkOverlayCircle.cachedRadius) {
+						switch (eventType) {
+							case LONG_PRESS:
+								return onLongPress(circleIndex.intValue());
+							case TAP:
+								return onTap(circleIndex.intValue());
+						}
+					}
+				}
+			}
+		}
+
+		// no hit
+		return false;
+	}
 
 	/**
 	 * Creates a circle in this overlay.
@@ -236,12 +265,25 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	}
 
 	/**
+	 * Handles a long press event.
+	 * <p>
+	 * The default implementation of this method does nothing and returns false.
+	 * 
+	 * @param index
+	 *            the index of the circle that has been long pressed.
+	 * @return true if the event was handled, false otherwise.
+	 */
+	protected boolean onLongPress(int index) {
+		return false;
+	}
+
+	/**
 	 * Handles a tap event.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
 	 * @param index
-	 *            the position of the circle.
+	 *            the index of the circle that has been tapped.
 	 * @return true if the event was handled, false otherwise.
 	 */
 	protected boolean onTap(int index) {

@@ -174,7 +174,7 @@ public class MapView extends ViewGroup {
 				this.pointerIndex = event.findPointerIndex(this.activePointerId);
 				this.activePointerId = INVALID_POINTER_ID;
 				hideZoomControlsDelayed();
-				if (this.mapMoved) {
+				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
 					if (this.previousEventTap) {
@@ -210,7 +210,10 @@ public class MapView extends ViewGroup {
 							(int) event.getY(this.pointerIndex));
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
-							overlay.onTap(this.tapPoint, MapView.this);
+							if (overlay.onTap(this.tapPoint, MapView.this)) {
+								// the tap event has been handled
+								break;
+							}
 						}
 					}
 				}
@@ -346,7 +349,7 @@ public class MapView extends ViewGroup {
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				this.longPressDetector.pressStop();
 				hideZoomControlsDelayed();
-				if (this.mapMoved) {
+				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
 					if (this.previousEventTap) {
@@ -379,7 +382,10 @@ public class MapView extends ViewGroup {
 							(int) event.getY());
 					synchronized (MapView.this.overlays) {
 						for (Overlay overlay : MapView.this.overlays) {
-							overlay.onTap(this.tapPoint, MapView.this);
+							if (overlay.onTap(this.tapPoint, MapView.this)) {
+								// the tap event has been handled
+								break;
+							}
 						}
 					}
 				}
@@ -402,6 +408,7 @@ public class MapView extends ViewGroup {
 		private class LongPressDetector extends Thread {
 			private static final String THREAD_NAME = "LongPressDetector";
 
+			private boolean eventHandled;
 			private long pressStart;
 			private long timeElapsed;
 
@@ -450,7 +457,7 @@ public class MapView extends ViewGroup {
 					}
 
 					if (this.pressStart > 0) {
-						forwardLongPressEvent();
+						this.eventHandled = forwardLongPressEvent();
 						// stop even if a new long press event has already been started
 						pressStop();
 					}
@@ -458,10 +465,20 @@ public class MapView extends ViewGroup {
 			}
 
 			/**
+			 * Returns whether a long press event has been handled.
+			 * 
+			 * @return true if a long press event has been handled, false otherwise.
+			 */
+			protected boolean isEventHandled() {
+				return this.eventHandled;
+			}
+
+			/**
 			 * Informs the LongTapDetector that a potential long press event has started.
 			 */
 			protected void pressStart() {
 				if (this.pressStart == 0) {
+					this.eventHandled = false;
 					this.pressStart = SystemClock.uptimeMillis();
 					synchronized (this) {
 						notify();
@@ -589,8 +606,10 @@ public class MapView extends ViewGroup {
 
 		/**
 		 * Forwards a long press event to all overlays until it has been handled.
+		 * 
+		 * @return true if the long press event has been handled, false otherwise.
 		 */
-		final void forwardLongPressEvent() {
+		final boolean forwardLongPressEvent() {
 			this.longPressPoint = getProjection().fromPixels((int) previousPositionX,
 					(int) previousPositionY);
 			if (this.longPressPoint != null) {
@@ -598,11 +617,12 @@ public class MapView extends ViewGroup {
 					for (Overlay overlay : MapView.this.overlays) {
 						if (overlay.onLongPress(this.longPressPoint, MapView.this)) {
 							// the long press event has been handled
-							return;
+							return true;
 						}
 					}
 				}
 			}
+			return false;
 		}
 
 		/**
@@ -1302,9 +1322,6 @@ public class MapView extends ViewGroup {
 			case OKAY:
 				this.text_ok = value;
 				break;
-			default:
-				// all cases are covered, the default case should never occur
-				break;
 		}
 	}
 
@@ -1772,9 +1789,6 @@ public class MapView extends ViewGroup {
 			case OSMARENDER_TILE_DOWNLOAD:
 				this.mapGenerator = new OsmarenderTileDownload();
 				break;
-			default:
-				// all cases are covered, the default case should never occur
-				throw new RuntimeException("invalid mapViewMode: " + this.mapViewMode);
 		}
 
 		if (this.attachedToWindow) {

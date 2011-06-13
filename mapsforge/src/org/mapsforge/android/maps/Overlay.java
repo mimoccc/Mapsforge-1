@@ -30,6 +30,25 @@ import android.graphics.Point;
  * previously removed overlay to the list will therefore cause an {@link IllegalThreadStateException}.
  */
 public abstract class Overlay extends Thread {
+	/**
+	 * Enumeration of all types of events.
+	 */
+	protected enum EventType {
+		/**
+		 * A long press event.
+		 * 
+		 * @see Overlay#onLongPress(GeoPoint, MapView)
+		 */
+		LONG_PRESS,
+
+		/**
+		 * A tap event.
+		 * 
+		 * @see Overlay#onTap(GeoPoint, MapView)
+		 */
+		TAP;
+	}
+
 	private static final String THREAD_NAME = "Overlay";
 
 	/**
@@ -129,7 +148,9 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles a long press event.
+	 * Handles a long press event. A long press event is only triggered if the map was not moved. A
+	 * return value of true indicates that the long press event has been handled by this overlay and
+	 * stops its propagation to other overlays.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
@@ -144,7 +165,9 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles a tap event.
+	 * Handles a tap event. A tap event is only triggered if the map was not moved and no long press
+	 * event was handled within the same gesture. A return value of true indicates that the tap event
+	 * has been handled by this overlay and stops its propagation to other overlays.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 

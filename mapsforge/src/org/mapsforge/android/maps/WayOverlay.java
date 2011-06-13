@@ -40,7 +40,8 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	private final Path path;
 
 	/**
-	 * Constructs a new WayOverlay.
+	 * Constructs a new WayOverlay with the given default paints. The drawing quality can be improved by
+	 * enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
 	 * 
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the ways (may be null).
