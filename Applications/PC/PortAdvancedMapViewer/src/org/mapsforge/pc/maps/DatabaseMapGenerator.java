@@ -19,10 +19,13 @@ import java.util.ArrayList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
+//import org.mapsforge.core.graphics.DashPathEffect;
 import android.graphics.Paint;
+//import org.mapsforge.core.graphics.Paint;
 import android.graphics.Typeface;
+//import org.mapsforge.core.graphics.Typeface;
 import android.graphics.Paint.Align;
-
+//import org.mapsforge.core.graphics.Paint.Align;
 /**
  * A MapGenerator that reads map data from a database and renders them.
  */

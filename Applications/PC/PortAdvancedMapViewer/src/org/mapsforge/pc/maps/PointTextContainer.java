@@ -15,7 +15,9 @@
 package org.mapsforge.pc.maps;
 
 import android.graphics.Paint;
+//import org.mapsforge.core.graphics.Paint;
 import android.graphics.Rect;
+//import org.mapsforge.core.graphics.Rect;
 
 class PointTextContainer {
 	Rect boundary;
