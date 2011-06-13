@@ -24,22 +24,50 @@ Status
 - AdvancedMapViewer		: -
 - MapController			: -
 - MapDatabase			: OK (MARTINUS)
+- MapDatabaseIndexCache : -
 - MapFileParameters		: OK (MARTINUS)
--
+- MapGenerator			: -
 - MapInfo				: OK (MARTINUS)
+- MapnikTileDownload    : UNNÖTIG
 - MapMover				: OK (MARTINUS)
-- Matrix				: OK (braucht keine Android-Klasse)
+- MapPatterns			: -
+- MapSymbols			: -
+- MapView				: -
+- MapViewMode			: OK (braucht evtl. Anpassung)
 - MercatorProjection	: OK (MARTINUS)
+- OpenCycleMapTile ...	: UNNÖTIG
+- OsmarendererTile ...  : UNNÖTIG
+- Overlay				: UNNÖTIG
+- OverlayCircle			: UNNÖTIG
+- OverlayItem			: UNNÖTIG
+- OverlayWay			: UNNÖTIG
+- PointTextContainer	: -
 - Projection			: OK (MARTINUS)
+- ShapeContainer		: -
+- ShapePaintContainer	: -
+- ShapeType				: OK (braucht keine Android-Klasse)
 - SutherlandHodgman		: OK (braucht keine Android-Klasse)
 - TagIDsNodes			: OK (braucht keine Android-Klasse)
 - TagIDsWays			: OK (braucht keine Android-Klasse)
 - Tile					: OK (MARTINUS)
+- TileDownloadMapGen ...: -
+- TileRAMCache			: -
+- WayContainer			: -
+- WayOverlay			: UNNÖTIG
+- WayTextContainer		: -
+- ZoomAnimator			: OK (MARTINUS)
 
 Core / Android
+- ArrayUtils			: OK (MARTINUS)
+- AttributeSet			: OK (MARTINUS)
+- Bitmap				: Leer
+- BitmapShader			: OK (MARTINUS)
 - Color					: OK mit Bedingungen: Color ist nicht mehr int typ
 						  parseColor() --> gesperrt
+- Matrix				: OK mit Bedingung: Ohne RectF						  
 - Rect					: OK, aber Viele Sperre
 - Point					: OK (MARTINUS)
+- Shader				: OK (MARTINUS)
 - SparseArray			: OK (MARTINUS)
 - SystemClock			: OK (MARTINUS)
+- Typeface				: OK mit Bedingung: Ohne AssetManager
