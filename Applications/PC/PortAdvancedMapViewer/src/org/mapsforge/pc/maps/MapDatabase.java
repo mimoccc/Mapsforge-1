@@ -21,7 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 //import android.graphics.Rect;
-import org.mapsforge.core.Rect;
+import org.mapsforge.core.graphics.Rect;
 
 /**
  * A database class for reading binary map files. Byte order is big-endian.

@@ -39,7 +39,8 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 //import android.graphics.Rect;
-import org.mapsforge.core.Rect;
+import org.mapsforge.core.graphics.Rect;
+
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.AnimationDrawable;
 import android.location.Location;

@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 
 //import android.graphics.Rect;
-import org.mapsforge.core.Rect;
+import org.mapsforge.core.graphics.Rect;
 
 /**
  * This class place the labels form POIs, area labels and normal labels. The main target is avoiding

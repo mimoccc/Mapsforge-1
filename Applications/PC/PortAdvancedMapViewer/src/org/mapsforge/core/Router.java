@@ -74,7 +74,7 @@ public interface Router {
 	 *            the bounding rectangle.
 	 * @return all vertices within the specified range.
 	 */
-	public Iterator<? extends Vertex> getVerticesWithinBox(RectOriginal bbox);
+	public Iterator<? extends Vertex> getVerticesWithinBox(Rect bbox);
 
 	/**
 	 * Nearest Neighbor query for Edges.
@@ -93,6 +93,6 @@ public interface Router {
 	/**
 	 * @return Returns a minimal bounding rectangle enclosing all vertices and edges.
 	 */
-	public RectOriginal getBoundingBox();
+	public Rect getBoundingBox();
 
 }

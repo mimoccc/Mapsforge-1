@@ -1,6 +1,8 @@
-package org.mapsforge.core;
+package org.mapsforge.core.graphics;
 
 import java.util.HashMap;
+
+import org.mapsforge.core.MathUtils;
 
 public class Color {
 

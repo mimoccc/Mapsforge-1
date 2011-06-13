@@ -1,4 +1,4 @@
-package org.mapsforge.core;
+package org.mapsforge.core.graphics;
 
 public class Bitmap {
 

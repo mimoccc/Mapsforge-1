@@ -1,4 +1,4 @@
-package org.mapsforge.core;
+package org.mapsforge.core.graphics;
 
 /**
  * Point holds two integer coordinates

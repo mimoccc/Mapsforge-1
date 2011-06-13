@@ -19,7 +19,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 //import android.graphics.Rect;
-import org.mapsforge.core.Rect;
+import org.mapsforge.core.graphics.Rect;
 
 /**
  * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y

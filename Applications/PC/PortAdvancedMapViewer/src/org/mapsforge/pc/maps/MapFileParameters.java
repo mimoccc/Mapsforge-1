@@ -15,7 +15,7 @@
 package org.mapsforge.pc.maps;
 
 //import android.graphics.Rect;
-import org.mapsforge.core.Rect;
+import org.mapsforge.core.graphics.Rect;
 
 /**
  * Holds all parameters of a map file.

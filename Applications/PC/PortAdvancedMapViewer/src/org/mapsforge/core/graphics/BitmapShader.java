@@ -1,4 +1,6 @@
-package org.mapsforge.core;
+package org.mapsforge.core.graphics;
+
+import org.mapsforge.core.graphics.Shader.TileMode;
 
 /*
  * Copyright (C) 2007 The Android Open Source Project
