@@ -14,10 +14,14 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Point;
+//import android.graphics.Canvas;
+import org.mapsforge.core.graphics.Canvas;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
+//import android.graphics.Path;
+import org.mapsforge.core.graphics.Path;
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
 
 /**
  * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class defines

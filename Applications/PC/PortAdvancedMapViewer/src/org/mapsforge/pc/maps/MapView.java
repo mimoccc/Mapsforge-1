@@ -24,13 +24,20 @@ import java.util.Collections;
 import java.util.List;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Typeface;
-import android.graphics.Bitmap.CompressFormat;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.Canvas;
+import org.mapsforge.core.graphics.Canvas;
+//import android.graphics.Color;
+import org.mapsforge.core.graphics.Color;
+//mport android.graphics.Matrix;
+import org.mapsforge.core.graphics.Matrix;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
+//import android.graphics.Typeface;
+import org.mapsforge.core.graphics.Typeface;
+//import android.graphics.Bitmap.CompressFormat;
+import org.mapsforge.core.graphics.Bitmap.CompressFormat;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -1742,7 +1749,7 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	@Override
+	//@Override
 	protected final void onDraw(Canvas canvas) {
 		if (this.mapViewBitmap1 == null) {
 			return;

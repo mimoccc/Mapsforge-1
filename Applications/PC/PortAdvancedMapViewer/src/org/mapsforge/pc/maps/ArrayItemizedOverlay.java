@@ -22,7 +22,8 @@ import org.mapsforge.pc.maps.MapView.TextField;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+//import android.graphics.drawable.Drawable;
+import org.mapsforge.core.graphics.drawable.Drawable;
 
 /**
  * ArrayItemizedOverlay is a thread-safe implementation of the {@link ItemizedOverlay} class using an

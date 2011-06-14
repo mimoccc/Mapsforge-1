@@ -1,8 +1,6 @@
 package org.mapsforge.core.graphics;
-
-
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +16,9 @@ package org.mapsforge.core.graphics;
  */
 
 public class DashPathEffect extends PathEffect {
+
+    private final float[] mIntervals;
+    private final float mPhase;
 
     /**
      * The intervals array must contain an even number of entries (>=2), with
@@ -36,8 +37,16 @@ public class DashPathEffect extends PathEffect {
         if (intervals.length < 2) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        native_instance = nativeCreate(intervals, phase);
+
+        mIntervals = intervals;
+        mPhase = phase;
     }
 
-    private static native int nativeCreate(float intervals[], float phase);
+    public float[] getIntervals() {
+        return mIntervals;
+    }
+
+    public float getPhase() {
+        return mPhase;
+    }
 }

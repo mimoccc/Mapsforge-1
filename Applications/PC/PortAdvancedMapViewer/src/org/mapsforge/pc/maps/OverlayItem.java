@@ -14,9 +14,10 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Point;
-import android.graphics.drawable.Drawable;
-
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
+//import android.graphics.drawable.Drawable;
+import org.mapsforge.core.graphics.drawable.Drawable;
 /**
  * OverlayItem holds all parameters of a single element on an {@link ItemizedOverlay}, such as position,
  * marker, title and textual description.

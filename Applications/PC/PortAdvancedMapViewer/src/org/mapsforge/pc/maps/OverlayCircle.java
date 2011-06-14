@@ -14,8 +14,10 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Paint;
-import android.graphics.Point;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
 
 /**
  * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All rendering

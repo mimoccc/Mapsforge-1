@@ -22,8 +22,8 @@ import org.mapsforge.pc.maps.MapView.TextField;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
-import android.graphics.Paint;
-
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
 /**
  * ArrayCircleOverlay is a thread-safe implementation of the {@link CircleOverlay} class using an
  * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayCircle

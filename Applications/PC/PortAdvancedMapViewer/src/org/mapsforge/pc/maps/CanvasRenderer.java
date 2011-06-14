@@ -16,13 +16,20 @@ package org.mapsforge.pc.maps;
 
 import java.util.ArrayList;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Typeface;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.Canvas;
+import org.mapsforge.core.graphics.Canvas;
+//import android.graphics.Color;
+import org.mapsforge.core.graphics.Color;
+//import android.graphics.Matrix;
+import org.mapsforge.core.graphics.Matrix;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
+//import android.graphics.Path;
+import org.mapsforge.core.graphics.Path;
+//import android.graphics.Typeface;
+import org.mapsforge.core.graphics.Typeface;
 
 /**
  * A map renderer which uses a Canvas for drawing.

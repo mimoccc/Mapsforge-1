@@ -31,15 +31,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.mapsforge.core.graphics.Native_Paint.Align;
-import org.mapsforge.core.graphics.Native_Paint.Cap;
-import org.mapsforge.core.graphics.Native_Paint.Join;
-import org.mapsforge.core.graphics.Native_Paint.Style;
+import org.mapsforge.core.graphics.Paint.Align;
+import org.mapsforge.core.graphics.Paint.Cap;
+import org.mapsforge.core.graphics.Paint.Join;
+import org.mapsforge.core.graphics.Paint.Style;
+
+import android.graphics.Shader;
 
 /**
  * A paint implementation overridden by the LayoutLib bridge.
  */
-public class Paint {
+public class Paint  {
 
     private int mColor = 0xFFFFFFFF;
     private float mStrokeWidth = 1.f;
@@ -52,54 +54,6 @@ public class Paint {
     private Cap mCap = Cap.BUTT;
     private Join mJoin = Join.MITER;
     private int mFlags = 0;
-    
-    /*package*/ int     mNativePaint;
-    //private ColorFilter mColorFilter;
-    //private MaskFilter  mMaskFilter;
-    private PathEffect  mPathEffect;
-    //private Rasterizer  mRasterizer;
-    private Shader      mShader;
-    private Typeface    mTypeface;
-    //private Xfermode    mXfermode;
-
-    private boolean     mHasCompatScaling;
-    private float       mCompatScaling;
-    private float       mInvCompatScaling;
-
-    private static final Style[] sStyleArray = {
-        Style.FILL, Style.STROKE, Style.FILL_AND_STROKE
-    };
-    private static final Cap[] sCapArray = {
-        Cap.BUTT, Cap.ROUND, Cap.SQUARE
-    };
-    private static final Join[] sJoinArray = {
-        Join.MITER, Join.ROUND, Join.BEVEL
-    };
-    private static final Align[] sAlignArray = {
-        Align.LEFT, Align.CENTER, Align.RIGHT
-    };
-    
-    /** bit mask for the flag enabling antialiasing */
-    public static final int ANTI_ALIAS_FLAG     = 0x01;
-    /** bit mask for the flag enabling bitmap filtering */
-    public static final int FILTER_BITMAP_FLAG  = 0x02;
-    /** bit mask for the flag enabling dithering */
-    public static final int DITHER_FLAG         = 0x04;
-    /** bit mask for the flag enabling underline text */
-    public static final int UNDERLINE_TEXT_FLAG = 0x08;
-    /** bit mask for the flag enabling strike-thru text */
-    public static final int STRIKE_THRU_TEXT_FLAG = 0x10;
-    /** bit mask for the flag enabling fake-bold text */
-    public static final int FAKE_BOLD_TEXT_FLAG = 0x20;
-    /** bit mask for the flag enabling linear-text (no caching) */
-    public static final int LINEAR_TEXT_FLAG    = 0x40;
-    /** bit mask for the flag enabling subpixel-text */
-    public static final int SUBPIXEL_TEXT_FLAG  = 0x80;
-    /** bit mask for the flag enabling device kerning for text */
-    public static final int DEV_KERN_TEXT_FLAG  = 0x100;
-    
-    // we use this when we first create a paint
-    private static final int DEFAULT_PAINT_FLAGS = DEV_KERN_TEXT_FLAG;
 
     /**
      * Class associating a {@link Font} and it's {@link java.awt.FontMetrics}.
@@ -113,13 +67,70 @@ public class Paint {
     private final FontRenderContext mFontContext = new FontRenderContext(
             new AffineTransform(), true, true);
 
+    public static final int ANTI_ALIAS_FLAG       = 0;
+    public static final int FILTER_BITMAP_FLAG    = 0;
+    public static final int DITHER_FLAG           = 0;
+    public static final int UNDERLINE_TEXT_FLAG   = 0;
+    public static final int STRIKE_THRU_TEXT_FLAG = 0;
+    public static final int FAKE_BOLD_TEXT_FLAG   = 0;
+    public static final int LINEAR_TEXT_FLAG      = 0;
+    public static final int SUBPIXEL_TEXT_FLAG    = 0;
+    public static final int DEV_KERN_TEXT_FLAG    = 0;
+    
+    private static final int DEFAULT_PAINT_FLAGS = DEV_KERN_TEXT_FLAG;
 
-    /*public static class FontMetrics extends Paint.FontMetrics {
+
+    private Typeface mTypeface;
+
+    /**
+     * Class that describes the various metrics for a font at a given text size.
+     * Remember, Y values increase going down, so those values will be positive,
+     * and values that measure distances going up will be negative. This class
+     * is returned by getFontMetrics().
+     */
+    public static class FontMetrics {
+        /**
+         * The maximum distance above the baseline for the tallest glyph in
+         * the font at a given text size.
+         */
+        public float   top;
+        /**
+         * The recommended distance above the baseline for singled spaced text.
+         */
+        public float   ascent;
+        /**
+         * The recommended distance below the baseline for singled spaced text.
+         */
+        public float   descent;
+        /**
+         * The maximum distance below the baseline for the lowest glyph in
+         * the font at a given text size.
+         */
+        public float   bottom;
+        /**
+         * The recommended additional space to add between lines of text.
+         */
+        public float   leading;
     }
+    
+    /**
+     * Convenience method for callers that want to have FontMetrics values as
+     * integers.
+     */
+    public static class FontMetricsInt {
+        public int   top;
+        public int   ascent;
+        public int   descent;
+        public int   bottom;
+        public int   leading;
 
-    public static class FontMetricsInt extends Paint.FontMetricsInt {
-    }*/
-
+        // Override
+        public String toString() {
+            return "FontMetricsInt: top=" + top + " ascent=" + ascent + " descent=" + descent + " bottom=" + bottom +
+                    " leading=" + leading;
+        }
+    }
+    
     /**
      * The Style specifies if the primitive being drawn is filled,
      * stroked, or both (in the same color). The default is FILL.
@@ -269,7 +280,7 @@ public class Paint {
     }
 
     public void reset() {
-        super.reset();
+        //TODO
     }
 
     /**
@@ -315,7 +326,7 @@ public class Paint {
     }
 
     //----------------------------------------
-
+    /* UNSAFE */
     public void set(Paint src) {
         if (this != src) {
             mColor = src.mColor;
@@ -328,63 +339,53 @@ public class Paint {
 
             updateFontObject();
 
-            super.set(src);
+            setTypeface(src.mTypeface);
         }
     }
 
-    @Override
+    /*@Override
     public void setCompatibilityScaling(float factor) {
         super.setCompatibilityScaling(factor);
-    }
+    }*/
 
-    @Override
     public int getFlags() {
         return mFlags;
     }
 
-    @Override
     public void setFlags(int flags) {
         mFlags = flags;
     }
 
-    @Override
     public boolean isAntiAlias() {
-        return super.isAntiAlias();
+    	return (getFlags() & ANTI_ALIAS_FLAG) != 0;
     }
 
-    @Override
     public boolean isDither() {
-        return super.isDither();
+        return (getFlags() & DITHER_FLAG) != 0;
     }
 
-    @Override
     public boolean isLinearText() {
-        return super.isLinearText();
+        return (getFlags() & LINEAR_TEXT_FLAG) != 0;
     }
 
-    @Override
     public boolean isStrikeThruText() {
-        return super.isStrikeThruText();
+        return (getFlags() & STRIKE_THRU_TEXT_FLAG) != 0;
     }
 
-    @Override
     public boolean isUnderlineText() {
-        return super.isUnderlineText();
+        return (getFlags() & UNDERLINE_TEXT_FLAG) != 0;
     }
 
-    @Override
     public boolean isFakeBoldText() {
-        return super.isFakeBoldText();
+        return (getFlags() & FAKE_BOLD_TEXT_FLAG) != 0;
     }
 
-    @Override
     public boolean isSubpixelText() {
-        return super.isSubpixelText();
+        return (getFlags() & SUBPIXEL_TEXT_FLAG) != 0;
     }
 
-    @Override
     public boolean isFilterBitmap() {
-        return super.isFilterBitmap();
+        return (getFlags() & FILTER_BITMAP_FLAG) != 0;
     }
 
     /**
@@ -433,7 +434,7 @@ public class Paint {
     }
 
     /**
-     * Reimplemented to return Paint.FontMetrics instead of Paint.FontMetrics
+     * Reimplemented to return Paint.FontMetrics instead of _Original_Paint.FontMetrics
      */
     public FontMetrics getFontMetrics() {
         FontMetrics fm = new FontMetrics();
@@ -442,7 +443,7 @@ public class Paint {
     }
 
     /**
-     * Reimplemented to return Paint.FontMetricsInt instead of Paint.FontMetricsInt
+     * Reimplemented to return Paint.FontMetricsInt instead of _Original_Paint.FontMetricsInt
      */
     public FontMetricsInt getFontMetricsInt() {
         FontMetricsInt fm = new FontMetricsInt();
@@ -450,19 +451,6 @@ public class Paint {
         return fm;
     }
 
-
-
-    @Override
-    public float getFontMetrics(Paint.FontMetrics metrics) {
-        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
-    }
-
-    @Override
-    public int getFontMetricsInt(Paint.FontMetricsInt metrics) {
-        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
-    }
-
-    @Override
     public Typeface setTypeface(Typeface typeface) {
         if (typeface != null) {
             mTypeface = typeface;
@@ -475,32 +463,26 @@ public class Paint {
         return typeface;
     }
 
-    @Override
     public Typeface getTypeface() {
-        return super.getTypeface();
+        return mTypeface;
     }
 
-    @Override
     public int getColor() {
         return mColor;
     }
 
-    @Override
     public void setColor(int color) {
         mColor = color;
     }
 
-    @Override
     public void setARGB(int a, int r, int g, int b) {
-        super.setARGB(a, r, g, b);
+        setColor((a << 24) | (r << 16) | (g << 8) | b);
     }
 
-    @Override
     public void setAlpha(int alpha) {
         mColor = (alpha << 24) | (mColor & 0x00FFFFFF);
     }
 
-    @Override
     public int getAlpha() {
         return mColor >>> 24;
     }
@@ -514,15 +496,13 @@ public class Paint {
      * @param shader May be null. the new shader to be installed in the paint
      * @return       shader
      */
-    @Override
-    public Shader setShader(Shader shader) {
+    /*public Shader setShader(Shader shader) {
         return mShader = shader;
     }
 
-    @Override
     public Shader getShader() {
         return super.getShader();
-    }
+    }*/
 
     /**
      * Set or clear the paint's colorfilter, returning the parameter.
@@ -530,16 +510,14 @@ public class Paint {
      * @param filter May be null. The new filter to be installed in the paint
      * @return       filter
      */
-    @Override
-    public ColorFilter setColorFilter(ColorFilter filter) {
+    /*public ColorFilter setColorFilter(ColorFilter filter) {
         mColorFilter = filter;
         return filter;
     }
 
-    @Override
     public ColorFilter getColorFilter() {
         return super.getColorFilter();
-    }
+    }*/
 
     /**
      * Set or clear the xfermode object.
@@ -550,43 +528,36 @@ public class Paint {
      * @param xfermode May be null. The xfermode to be installed in the paint
      * @return         xfermode
      */
-    @Override
-    public Xfermode setXfermode(Xfermode xfermode) {
+    /*public Xfermode setXfermode(Xfermode xfermode) {
         return mXfermode = xfermode;
     }
 
-    @Override
     public Xfermode getXfermode() {
         return super.getXfermode();
     }
 
-    @Override
     public Rasterizer setRasterizer(Rasterizer rasterizer) {
         mRasterizer = rasterizer;
         return rasterizer;
     }
 
-    @Override
     public Rasterizer getRasterizer() {
         return super.getRasterizer();
-    }
+    }*/
 
-    @Override
     public void setShadowLayer(float radius, float dx, float dy, int color) {
         // TODO Auto-generated method stub
     }
 
-    @Override
     public void clearShadowLayer() {
-        super.clearShadowLayer();
+        setShadowLayer(0, 0, 0, 0);
     }
 
-    public void setTextAlign(Align align) {
+    /*public void setTextAlign(Align align) {
         mAlign = align;
     }
 
-    @Override
-    public void setTextAlign(android.graphics.Paint.Align align) {
+    public void setTextAlign(Align align) {
         throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
     }
 
@@ -598,77 +569,63 @@ public class Paint {
         mStyle = style;
     }
 
-    @Override
-    public void setStyle(android.graphics.Paint.Style style) {
+    public void setStyle(android.graphics._Original_Paint.Style style) {
         throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
     }
 
     public Style getStyle() {
         return mStyle;
-    }
+    }*/
 
-    @Override
     public void setDither(boolean dither) {
         mFlags |= dither ? DITHER_FLAG : ~DITHER_FLAG;
     }
 
-    @Override
     public void setAntiAlias(boolean aa) {
         mFlags |= aa ? ANTI_ALIAS_FLAG : ~ANTI_ALIAS_FLAG;
     }
 
-    @Override
     public void setFakeBoldText(boolean flag) {
         mFlags |= flag ? FAKE_BOLD_TEXT_FLAG : ~FAKE_BOLD_TEXT_FLAG;
     }
 
-    @Override
     public void setLinearText(boolean flag) {
         mFlags |= flag ? LINEAR_TEXT_FLAG : ~LINEAR_TEXT_FLAG;
     }
 
-    @Override
     public void setSubpixelText(boolean flag) {
         mFlags |= flag ? SUBPIXEL_TEXT_FLAG : ~SUBPIXEL_TEXT_FLAG;
     }
 
-    @Override
     public void setUnderlineText(boolean flag) {
         mFlags |= flag ? UNDERLINE_TEXT_FLAG : ~UNDERLINE_TEXT_FLAG;
     }
 
-    @Override
     public void setStrikeThruText(boolean flag) {
         mFlags |= flag ? STRIKE_THRU_TEXT_FLAG : ~STRIKE_THRU_TEXT_FLAG;
     }
 
-    @Override
     public void setFilterBitmap(boolean flag) {
         mFlags |= flag ? FILTER_BITMAP_FLAG : ~FILTER_BITMAP_FLAG;
     }
 
-    @Override
     public float getStrokeWidth() {
         return mStrokeWidth;
     }
 
-    @Override
     public void setStrokeWidth(float width) {
         mStrokeWidth = width;
     }
 
-    @Override
     public float getStrokeMiter() {
         return mStrokeMiter;
     }
 
-    @Override
     public void setStrokeMiter(float miter) {
         mStrokeMiter = miter;
     }
 
-    @Override
-    public void setStrokeCap(android.graphics.Paint.Cap cap) {
+    /*public void setStrokeCap(android.graphics._Original_Paint.Cap cap) {
         throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
     }
 
@@ -680,8 +637,7 @@ public class Paint {
         return mCap;
     }
 
-    @Override
-    public void setStrokeJoin(android.graphics.Paint.Join join) {
+    public void setStrokeJoin(android.graphics._Original_Paint.Join join) {
         throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
     }
 
@@ -691,14 +647,12 @@ public class Paint {
 
     public Join getStrokeJoin() {
         return mJoin;
-    }
+    }*/
 
-    @Override
-    public boolean getFillPath(Path src, Path dst) {
+    /*public boolean getFillPath(Path src, Path dst) {
         return super.getFillPath(src, dst);
     }
 
-    @Override
     public PathEffect setPathEffect(PathEffect effect) {
         mPathEffect = effect;
         return effect;
@@ -718,14 +672,13 @@ public class Paint {
     @Override
     public MaskFilter getMaskFilter() {
         return super.getMaskFilter();
-    }
+    }*/
 
     /**
      * Return the paint's text size.
      *
      * @return the paint's text size.
      */
-    @Override
     public float getTextSize() {
         return mTextSize;
     }
@@ -735,7 +688,6 @@ public class Paint {
      *
      * @param textSize set the paint's text size.
      */
-    @Override
     public void setTextSize(float textSize) {
         mTextSize = textSize;
 
@@ -748,7 +700,6 @@ public class Paint {
      *
      * @return the paint's scale factor in X for drawing/measuring text
      */
-    @Override
     public float getTextScaleX() {
         return mScaleX;
     }
@@ -760,7 +711,6 @@ public class Paint {
      *
      * @param scaleX set the paint's scale in X for drawing/measuring text.
      */
-    @Override
     public void setTextScaleX(float scaleX) {
         mScaleX = scaleX;
 
@@ -773,7 +723,6 @@ public class Paint {
      *
      * @return         the paint's skew factor in X for drawing text.
      */
-    @Override
     public float getTextSkewX() {
         return mSkewX;
     }
@@ -784,16 +733,13 @@ public class Paint {
      *
      * @param skewX set the paint's skew factor in X for drawing text.
      */
-    @Override
     public void setTextSkewX(float skewX) {
         mSkewX = skewX;
-
         updateFontObject();
     }
 
-    @Override
     public float getFontSpacing() {
-        return super.getFontSpacing();
+        return getFontMetrics(null);
     }
 
     /**
@@ -803,7 +749,6 @@ public class Paint {
      * @return the distance above (negative) the baseline (ascent) based on the
      *         current typeface and text size.
      */
-    @Override
     public float ascent() {
         if (mFonts.size() > 0) {
             java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
@@ -821,7 +766,6 @@ public class Paint {
      * @return the distance below (positive) the baseline (descent) based on
      *         the current typeface and text size.
      */
-    @Override
     public float descent() {
         if (mFonts.size() > 0) {
             java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
@@ -839,7 +783,6 @@ public class Paint {
      * @param count THe number of characters to measure, beginning with start
      * @return      The width of the text
      */
-    @Override
     public float measureText(char[] text, int index, int count) {
         // WARNING: the logic in this method is similar to Canvas.drawText.
         // Any change to this method should be reflected in Canvas.drawText
@@ -903,7 +846,6 @@ public class Paint {
      * @param end   1 beyond the index of the last character to measure
      * @return      The width of the text
      */
-    @Override
     public float measureText(String text, int start, int end) {
         return measureText(text.toCharArray(), start, end - start);
     }
@@ -914,17 +856,15 @@ public class Paint {
      * @param text  The text to measure
      * @return      The width of the text
      */
-    @Override
     public float measureText(String text) {
         return measureText(text.toCharArray(), 0, text.length());
     }
 
     /*
      * re-implement to call SpannableStringBuilder.measureText with a Paint object
-     * instead of an Paint
+     * instead of an _Original_Paint
      */
-    @Override
-    public float measureText(CharSequence text, int start, int end) {
+    /*public float measureText(CharSequence text, int start, int end) {
         if (text instanceof String) {
             return measureText((String)text, start, end);
         }
@@ -941,7 +881,7 @@ public class Paint {
         float result = measureText(buf, 0, end - start);
         TemporaryBuffer.recycle(buf);
         return result;
-    }
+    }*/
 
     /**
      * Measure the text, stopping early if the measured width exceeds maxWidth.
@@ -960,7 +900,6 @@ public class Paint {
      * @return The number of chars that were measured. Will always be <=
      *         abs(count).
      */
-    @Override
     public int breakText(char[] text, int index, int count,
                                 float maxWidth, float[] measuredWidth) {
         int inc = count > 0 ? 1 : -1;
@@ -1011,13 +950,12 @@ public class Paint {
      * @return The number of chars that were measured. Will always be <=
      *         abs(count).
      */
-    @Override
-    public int breakText(String text, boolean measureForwards,
+    /*public int breakText(String text, boolean measureForwards,
                                 float maxWidth, float[] measuredWidth) {
         return breakText(text,
-                0 /* start */, text.length() /* end */,
-                measureForwards, maxWidth, measuredWidth);
-    }
+                0 /* start *///, text.length() /* end */,
+    //            measureForwards, maxWidth, measuredWidth);
+    //}
 
     /**
      * Measure the text, stopping early if the measured width exceeds maxWidth.
@@ -1035,8 +973,7 @@ public class Paint {
      * @return The number of chars that were measured. Will always be <=
      *         abs(end - start).
      */
-    @Override
-    public int breakText(CharSequence text, int start, int end, boolean measureForwards,
+    /*public int breakText(CharSequence text, int start, int end, boolean measureForwards,
             float maxWidth, float[] measuredWidth) {
         char[] buf = new char[end - start];
         int result;
@@ -1050,7 +987,7 @@ public class Paint {
         }
 
         return result;
-    }
+    }*/
 
     /**
      * Return the advance widths for the characters in the string.
@@ -1062,7 +999,6 @@ public class Paint {
      *                 Must be at least a large as count.
      * @return         the actual number of widths returned.
      */
-    @Override
     public int getTextWidths(char[] text, int index, int count,
                              float[] widths) {
         if (mFonts.size() > 0) {
@@ -1107,7 +1043,6 @@ public class Paint {
      *               Must be at least a large as the text.
      * @return       the number of unichars in the specified text.
      */
-    @Override
     public int getTextWidths(String text, int start, int end, float[] widths) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
@@ -1121,10 +1056,9 @@ public class Paint {
 
     /*
      * re-implement to call SpannableStringBuilder.getTextWidths with a Paint object
-     * instead of an Paint
+     * instead of an _Original_Paint
      */
-    @Override
-    public int getTextWidths(CharSequence text, int start, int end, float[] widths) {
+    /*public int getTextWidths(CharSequence text, int start, int end, float[] widths) {
         if (text instanceof String) {
             return getTextWidths((String)text, start, end, widths);
         }
@@ -1140,12 +1074,22 @@ public class Paint {
         int result = getTextWidths(buf, 0, end - start, widths);
         TemporaryBuffer.recycle(buf);
         return result;
-    }
+    }*/
 
-    @Override
-    public int getTextWidths(String text, float[] widths) {
-        return super.getTextWidths(text, widths);
-    }
+    /*public int getTextWidths(String text, float[] widths) {
+    	if ((index | count) < 0 || index + count > text.length
+                || count > widths.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        if(mCurrentNativeTypeface != null) {
+                for(int i=index; i<index+count; i++) {
+                widths[i-index] = mCurrentNativeTypeface.charWidth(text[index]);
+                }
+        }
+
+        return count;
+    }*/
 
     /**
      * Return the path (outline) for the specified text.
@@ -1160,7 +1104,6 @@ public class Paint {
      * @param path     The path to receive the data describing the text. Must
      *                 be allocated by the caller.
      */
-    @Override
     public void getTextPath(char[] text, int index, int count,
                             float x, float y, Path path) {
 
@@ -1188,7 +1131,6 @@ public class Paint {
      * @param path  The path to receive the data describing the text. Must
      *              be allocated by the caller.
      */
-    @Override
     public void getTextPath(String text, int start, int end,
                             float x, float y, Path path) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
@@ -1208,7 +1150,6 @@ public class Paint {
      * @param bounds Returns the unioned bounds of all the text. Must be
      *               allocated by the caller.
      */
-    @Override
     public void getTextBounds(String text, int start, int end, Rect bounds) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
@@ -1230,7 +1171,6 @@ public class Paint {
      * @param bounds Returns the unioned bounds of all the text. Must be
      *               allocated by the caller.
      */
-    @Override
     public void getTextBounds(char[] text, int index, int count, Rect bounds) {
         // FIXME
         if (mFonts.size() > 0) {
@@ -1251,4 +1191,39 @@ public class Paint {
     public static void finalizer(int foo) {
         // pass
     }
+
+	public void setStrokeCap(Cap square) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setColor(java.awt.Color black) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setStyle(Style stroke) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setStrokeJoin(Join round) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setShader(Shader cemeteryShader) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setTextAlign(Align left) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setPathEffect(DashPathEffect dashPathEffect) {
+		// TODO Auto-generated method stub
+		
+	}
 }

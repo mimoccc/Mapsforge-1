@@ -14,12 +14,17 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Point;
-//import org.mapsforge.core.Point;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.Canvas;
+import org.mapsforge.core.graphics.Canvas;
+//import android.graphics.Color;
+import org.mapsforge.core.graphics.Color;
+//import android.graphics.Matrix;
+import org.mapsforge.core.graphics.Matrix;
+
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
 
 /**
  * Overlay is the abstract base class for all types of overlays. It handles the lifecycle of the overlay

@@ -17,7 +17,8 @@ package org.mapsforge.pc.maps;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import android.graphics.Paint;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
 
 /**
  * ArrayWayOverlay is a thread-safe implementation of the {@link WayOverlay} class using an

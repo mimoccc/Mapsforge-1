@@ -16,10 +16,14 @@ package org.mapsforge.pc.maps;
 
 import java.util.ArrayList;
 
-import android.graphics.Canvas;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
+//import android.graphics.Canvas;
+import org.mapsforge.core.graphics.Canvas;
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
+//import android.graphics.Rect;
+import org.mapsforge.core.graphics.Rect;
+//import android.graphics.drawable.Drawable;
+import org.mapsforge.core.graphics.drawable.Drawable;
 
 /**
  * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The class

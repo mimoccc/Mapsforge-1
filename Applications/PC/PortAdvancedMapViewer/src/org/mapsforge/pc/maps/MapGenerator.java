@@ -16,7 +16,8 @@ package org.mapsforge.pc.maps;
 
 import java.util.PriorityQueue;
 
-import android.graphics.Bitmap;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
 
 /**
  * A MapGenerator provides map images. This abstract base class handles all thread specific actions and

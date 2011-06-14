@@ -36,13 +36,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.Paint;
+//import android.graphics.Color;
+import org.mapsforge.core.graphics.Color;
+//import android.graphics.Paint;
+import org.mapsforge.core.graphics.Paint;
 //import android.graphics.Rect;
 import org.mapsforge.core.graphics.Rect;
 
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.drawable.AnimationDrawable;
+//import android.graphics.Bitmap.CompressFormat;
+import org.mapsforge.core.graphics.Bitmap.CompressFormat;
+//import android.graphics.drawable.AnimationDrawable;
+//import org.mapsforge.core.graphics.drawable.AnimationDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -315,8 +319,8 @@ public class AdvancedMapViewer extends MapActivity {
 							.setImageResource(R.drawable.stat_sys_gps_acquiring);
 				} else {
 					// must be TEMPORARILY_UNAVAILABLE
-					AdvancedMapViewer.this.gpsView.setImageResource(R.anim.gps_animation);
-					((AnimationDrawable) AdvancedMapViewer.this.gpsView.getDrawable()).start();
+					/*AdvancedMapViewer.this.gpsView.setImageResource(R.anim.gps_animation);
+					((AnimationDrawable) AdvancedMapViewer.this.gpsView.getDrawable()).start();*/
 				}
 			}
 		};

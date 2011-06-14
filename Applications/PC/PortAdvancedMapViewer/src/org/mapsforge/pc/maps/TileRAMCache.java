@@ -19,8 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import android.graphics.Bitmap;
-
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
 /**
  * A thread-safe cache for bitmap images with a fixed size and LRU policy.
  */

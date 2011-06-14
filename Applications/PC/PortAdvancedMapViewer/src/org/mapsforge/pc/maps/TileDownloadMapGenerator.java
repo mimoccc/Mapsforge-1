@@ -19,8 +19,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.BitmapFactory;
+import org.mapsforge.core.graphics.BitmapFactory;
 
 /**
  * A MapGenerator that downloads map tiles from a server. To build an implementation for a certain tile

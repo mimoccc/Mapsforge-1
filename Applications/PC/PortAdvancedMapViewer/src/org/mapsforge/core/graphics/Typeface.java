@@ -1,7 +1,6 @@
 package org.mapsforge.core.graphics;
-
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,34 +17,42 @@ package org.mapsforge.core.graphics;
 
 //import android.content.res.AssetManager;
 
-import java.io.File;
+import java.awt.Font;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.mapsforge.core.FontLoader;
 
 /**
- * The Typeface class specifies the typeface and intrinsic style of a font.
- * This is used in the paint, along with optionally Paint settings like
- * textSize, textSkewX, textScaleX to specify
- * how text appears when drawn (and measured).
+ * Re-implementation of Typeface over java.awt
  */
 public class Typeface {
+    private static final String DEFAULT_FAMILY = "sans-serif";
+    private static final int[] styleBuffer = new int[1];
 
     /** The default NORMAL typeface object */
-    public static final Typeface DEFAULT;
+    public static Typeface DEFAULT;
     /**
      * The default BOLD typeface object. Note: this may be not actually be
      * bold, depending on what fonts are installed. Call getStyle() to know
      * for sure.
      */
-    public static final Typeface DEFAULT_BOLD;
+    public static Typeface DEFAULT_BOLD;
     /** The NORMAL style of the default sans serif typeface. */
-    public static final Typeface SANS_SERIF;
+    public static Typeface SANS_SERIF;
     /** The NORMAL style of the default serif typeface. */
-    public static final Typeface SERIF;
+    public static Typeface SERIF;
     /** The NORMAL style of the default monospace typeface. */
-    public static final Typeface MONOSPACE;
+    public static Typeface MONOSPACE;
 
     private static Typeface[] sDefaults;
+    //private static FontLoader mFontLoader;
 
-    /* package */ int native_instance;
+    private final int mStyle;
+    private final List<Font> mFonts;
+    private final String mFamily;
+    private static FontLoader mFontLoader;
 
     // Style
     public static final int NORMAL = 0;
@@ -53,9 +60,17 @@ public class Typeface {
     public static final int ITALIC = 2;
     public static final int BOLD_ITALIC = 3;
 
+    /**
+     * Returns the underlying {@link Font} objects. The first item in the list is the real
+     * font. Any other items are fallback fonts for characters not found in the first one.
+     */
+    public List<Font> getFonts() {
+        return mFonts;
+    }
+
     /** Returns the typeface's intrinsic style attributes */
     public int getStyle() {
-        return nativeGetStyle(native_instance);
+        return mStyle;
     }
 
     /** Returns true if getStyle() has the BOLD bit set. */
@@ -80,7 +95,16 @@ public class Typeface {
      * @return The best matching typeface.
      */
     public static Typeface create(String familyName, int style) {
-        return new Typeface(nativeCreate(familyName, style));
+        styleBuffer[0] = style;
+        Font font = mFontLoader.getFont(familyName, styleBuffer);
+        if (font != null) {
+            ArrayList<Font> list = new ArrayList<Font>();
+            list.add(font);
+            list.addAll(mFontLoader.getFallBackFonts());
+            return new Typeface(familyName, styleBuffer[0], list);
+        }
+
+        return null;
     }
 
     /**
@@ -95,11 +119,16 @@ public class Typeface {
      * @return The best matching typeface.
      */
     public static Typeface create(Typeface family, int style) {
-        int ni = 0;
-        if (family != null) {
-            ni = family.native_instance;
+        styleBuffer[0] = style;
+        Font font = mFontLoader.getFont(family.mFamily, styleBuffer);
+        if (font != null) {
+            ArrayList<Font> list = new ArrayList<Font>();
+            list.add(font);
+            list.addAll(mFontLoader.getFallBackFonts());
+            return new Typeface(family.mFamily, styleBuffer[0], list);
         }
-        return new Typeface(nativeCreateFromTypeface(ni, style));
+
+        return null;
     }
 
     /**
@@ -118,73 +147,30 @@ public class Typeface {
      * @return The new typeface.
      */
     /*public static Typeface createFromAsset(AssetManager mgr, String path) {
-        return new Typeface(nativeCreateFromAsset(mgr, path));
+        return null;
+        //return new Typeface(nativeCreateFromAsset(mgr, path));
     }*/
 
-    /**
-     * Create a new typeface from the specified font file.
-     *
-     * @param path The path to the font data.
-     * @return The new typeface.
-     */
-    public static Typeface createFromFile(File path) {
-        return new Typeface(nativeCreateFromFile(path.getAbsolutePath()));
-    }
-
-    /**
-     * Create a new typeface from the specified font file.
-     *
-     * @param path The full path to the font data.
-     * @return The new typeface.
-     */
-    public static Typeface createFromFile(String path) {
-        return new Typeface(nativeCreateFromFile(path));
-    }
-
     // don't allow clients to call this directly
-    private Typeface(int ni) {
-        if (0 == ni) {
-            throw new RuntimeException("native typeface cannot be made");
-        }
-        native_instance = ni;
+    private Typeface(String family, int style, List<Font> fonts) {
+        mFamily = family;
+        mFonts = Collections.unmodifiableList(fonts);
+        mStyle = style;
     }
 
-    static {
-        DEFAULT         = create((String)null, 0);
-        DEFAULT_BOLD    = create((String)null, Typeface.BOLD);
-        SANS_SERIF      = create("sans-serif", 0);
-        SERIF           = create("serif", 0);
-        MONOSPACE       = create("monospace", 0);
+    public static void init(FontLoader fontLoader) {
+        mFontLoader = fontLoader;
 
+        DEFAULT = create(DEFAULT_FAMILY, NORMAL);
+        DEFAULT_BOLD = create(DEFAULT_FAMILY, BOLD);
+        SANS_SERIF = create("sans-serif", NORMAL);
+        SERIF = create("serif", NORMAL);
+        MONOSPACE = create("monospace", NORMAL);
         sDefaults = new Typeface[] {
-            DEFAULT,
-            DEFAULT_BOLD,
-            create((String)null, Typeface.ITALIC),
-            create((String)null, Typeface.BOLD_ITALIC),
+                DEFAULT,
+                DEFAULT_BOLD,
+                create(DEFAULT_FAMILY, ITALIC),
+                create(DEFAULT_FAMILY, BOLD_ITALIC),
         };
     }
-
-    protected void finalize() throws Throwable {
-        super.finalize();
-        nativeUnref(native_instance);
-    }
-
-    private static native int  nativeCreate(String familyName, int style);
-    private static native int  nativeCreateFromTypeface(int native_instance, int style);
-    private static native void nativeUnref(int native_instance);
-    private static native int  nativeGetStyle(int native_instance);
-    //private static native int  nativeCreateFromAsset(AssetManager mgr, String path);
-    private static native int nativeCreateFromFile(String path);
-
-    /**
-     * Set the global gamma coefficients for black and white text. This call is
-     * usually a no-op in shipping products, and only exists for testing during
-     * development.
-     *
-     * @param blackGamma gamma coefficient for black text
-     * @param whiteGamma gamma coefficient for white text
-     *
-     * @hide - this is just for calibrating devices, not for normal apps
-     */
-    public static native void setGammaForText(float blackGamma, float whiteGamma);
 }

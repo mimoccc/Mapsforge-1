@@ -14,8 +14,8 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Point;
-//import org.mapsforge.core.Point;
+//import android.graphics.Point;
+import org.mapsforge.core.graphics.Point;
 /**
  * A performance optimized implementation of the spherical Mercator projection.
  */

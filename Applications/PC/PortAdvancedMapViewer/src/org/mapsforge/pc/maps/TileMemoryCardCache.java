@@ -26,7 +26,8 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import android.graphics.Bitmap;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
 
 /**
  * A thread-safe cache for image files with a fixed size and LRU policy.

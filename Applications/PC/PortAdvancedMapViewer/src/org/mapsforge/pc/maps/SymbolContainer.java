@@ -14,7 +14,8 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Bitmap;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
 
 class SymbolContainer {
 	final boolean alignCenter;

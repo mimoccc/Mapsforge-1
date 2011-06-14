@@ -17,7 +17,7 @@ public class Color {
     public static final java.awt.Color YELLOW      = java.awt.Color.YELLOW;
     public static final java.awt.Color CYAN        = java.awt.Color.CYAN;
     public static final java.awt.Color MAGENTA     = java.awt.Color.MAGENTA;
-    //public static final java.awt.Color TRANSPARENT = java.awt.Color;
+    public static final java.awt.Color TRANSPARENT = java.awt.Color.PINK; //FAKE
 	
     /**
      * Return the alpha component of a color int. This is the same as saying
@@ -288,12 +288,12 @@ public class Color {
      * @param blue  blue component value [0..255]
      * @param hsv  3 element array which holds the resulting HSV components.
      */
-    public static void RGBToHSV(int red, int green, int blue, float hsv[]) {
+    /*public static void RGBToHSV(int red, int green, int blue, float hsv[]) {
         if (hsv.length < 3) {
             throw new RuntimeException("3 components required for hsv");
         }
         nativeRGBToHSV(red, green, blue, hsv);
-    }
+    }*/
 
     /**
      * Convert the argb color to its HSV components.
@@ -303,9 +303,9 @@ public class Color {
      * @param color the argb color to convert. The alpha component is ignored.
      * @param hsv  3 element array which holds the resulting HSV components.
      */
-    public static void colorToHSV(int color, float hsv[]) {
+    /*public static void colorToHSV(int color, float hsv[]) {
         RGBToHSV((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, hsv);
-    }
+    }*/
 
     /**
      * Convert HSV components to an ARGB color. Alpha set to 0xFF.
@@ -316,9 +316,9 @@ public class Color {
      * @param hsv  3 element array which holds the input HSV components.
      * @return the resulting argb color
     */
-    public static int HSVToColor(float hsv[]) {
+    /*public static int HSVToColor(float hsv[]) {
         return HSVToColor(0xFF, hsv);
-    }
+    }*/
 
     /**
      * Convert HSV components to an ARGB color. The alpha component is passed
@@ -331,15 +331,15 @@ public class Color {
      * @param hsv  3 element array which holds the input HSV components.
      * @return the resulting argb color
     */
-    public static int HSVToColor(int alpha, float hsv[]) {
+    /*public static int HSVToColor(int alpha, float hsv[]) {
         if (hsv.length < 3) {
             throw new RuntimeException("3 components required for hsv");
         }
         return nativeHSVToColor(alpha, hsv);
-    }
+    }*/
 
-    private static native void nativeRGBToHSV(int red, int greed, int blue, float hsv[]);
-    private static native int nativeHSVToColor(int alpha, float hsv[]);
+    //private static native void nativeRGBToHSV(int red, int greed, int blue, float hsv[]);
+    //private static native int nativeHSVToColor(int alpha, float hsv[]);
 
     private static final HashMap<String, java.awt.Color> sColorNameMap;
 

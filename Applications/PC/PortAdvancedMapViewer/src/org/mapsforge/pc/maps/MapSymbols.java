@@ -14,8 +14,10 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.BitmapFactory;
+import org.mapsforge.core.graphics.BitmapFactory;
 
 /**
  * This class holds all symbols that can be rendered on the map. All bitmaps are created when the

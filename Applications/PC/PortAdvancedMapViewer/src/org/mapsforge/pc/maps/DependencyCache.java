@@ -18,9 +18,12 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
-import android.graphics.Bitmap;
-import android.graphics.Paint;
-import android.graphics.Rect;
+//import Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import Paint;
+import org.mapsforge.core.graphics.Paint;
+//import Rect;
+import org.mapsforge.core.graphics.Rect;
 
 /**
  * This class process the methods for the Dependency Cache. It's connected with the LabelPlacement
@@ -686,7 +689,7 @@ class DependencyCache {
 
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			this.depLabel = this.currentDependencyOnTile.labels.get(i);
-			this.rect1 = new android.graphics.Rect((int) (this.depLabel.point.x),
+			this.rect1 = new Rect((int) (this.depLabel.point.x),
 					(int) (this.depLabel.point.y - this.depLabel.value.boundary.height()),
 					(int) (this.depLabel.point.x + this.depLabel.value.boundary.width()),
 					(int) (this.depLabel.point.y));
@@ -694,11 +697,11 @@ class DependencyCache {
 			for (int x = 0; x < areaLabels.size(); x++) {
 				pTC = areaLabels.get(x);
 
-				this.rect2 = new android.graphics.Rect((int) pTC.x, (int) pTC.y
+				this.rect2 = new Rect((int) pTC.x, (int) pTC.y
 						- pTC.boundary.height(), (int) pTC.x + pTC.boundary.width(),
 						(int) pTC.y);
 
-				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+				if (Rect.intersects(this.rect2, this.rect1)) {
 					areaLabels.remove(x);
 					x--;
 				}
@@ -712,18 +715,18 @@ class DependencyCache {
 
 		for (Dependency<DependencySymbol> depSmb : this.currentDependencyOnTile.symbols) {
 
-			this.rect1 = new android.graphics.Rect((int) depSmb.point.x, (int) depSmb.point.y,
+			this.rect1 = new Rect((int) depSmb.point.x, (int) depSmb.point.y,
 					(int) depSmb.point.x + depSmb.value.symbol.getWidth(), (int) depSmb.point.y
 							+ depSmb.value.symbol.getHeight());
 
 			for (int x = 0; x < areaLabels.size(); x++) {
 				label = areaLabels.get(x);
 
-				this.rect2 = new android.graphics.Rect((int) (label.x),
+				this.rect2 = new Rect((int) (label.x),
 						(int) (label.y - label.boundary.height()),
 						(int) (label.x + label.boundary.width()), (int) (label.y));
 
-				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+				if (Rect.intersects(this.rect2, this.rect1)) {
 					areaLabels.remove(x);
 					x--;
 				}
@@ -756,17 +759,17 @@ class DependencyCache {
 
 		for (int x = 0; x < this.currentDependencyOnTile.symbols.size(); x++) {
 			sym2 = this.currentDependencyOnTile.symbols.get(x);
-			this.rect1 = new android.graphics.Rect((int) sym2.point.x - dis, (int) sym2.point.y
+			this.rect1 = new Rect((int) sym2.point.x - dis, (int) sym2.point.y
 					- dis, (int) sym2.point.x + sym2.value.symbol.getWidth() + dis,
 					(int) sym2.point.y + sym2.value.symbol.getHeight() + dis);
 
 			for (int y = 0; y < symbols.size(); y++) {
 
 				sym = symbols.get(y);
-				this.rect2 = new android.graphics.Rect((int) sym.x, (int) sym.y, (int) sym.x
+				this.rect2 = new Rect((int) sym.x, (int) sym.y, (int) sym.x
 						+ sym.symbol.getWidth(), (int) sym.y + sym.symbol.getHeight());
 
-				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+				if (Rect.intersects(this.rect2, this.rect1)) {
 					symbols.remove(y);
 					y--;
 				}
@@ -777,7 +780,7 @@ class DependencyCache {
 	private void removeOverlappingSymbolsWithDependencyLabels(ArrayList<SymbolContainer> symbols) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			this.depLabel = this.currentDependencyOnTile.labels.get(i);
-			this.rect1 = new android.graphics.Rect((int) (this.depLabel.point.x),
+			this.rect1 = new Rect((int) (this.depLabel.point.x),
 					(int) (this.depLabel.point.y - this.depLabel.value.boundary.height()),
 					(int) (this.depLabel.point.x + this.depLabel.value.boundary.width()),
 					(int) (this.depLabel.point.y));
@@ -785,11 +788,11 @@ class DependencyCache {
 			for (int x = 0; x < symbols.size(); x++) {
 				this.smb = symbols.get(x);
 
-				this.rect2 = new android.graphics.Rect((int) this.smb.x, (int) this.smb.y,
+				this.rect2 = new Rect((int) this.smb.x, (int) this.smb.y,
 						(int) this.smb.x + this.smb.symbol.getWidth(), (int) this.smb.y
 								+ this.smb.symbol.getHeight());
 
-				if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+				if (Rect.intersects(this.rect2, this.rect1)) {
 					symbols.remove(x);
 					x--;
 				}
@@ -1131,7 +1134,7 @@ class DependencyCache {
 			if (this.currentDependencyOnTile.labels != null) {
 				for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 					this.depLabel = this.currentDependencyOnTile.labels.get(i);
-					this.rect1 = new android.graphics.Rect((int) this.depLabel.point.x - dis,
+					this.rect1 = new Rect((int) this.depLabel.point.x - dis,
 							(int) (this.depLabel.point.y - this.depLabel.value.boundary
 									.height())
 									- dis, (int) (this.depLabel.point.x
@@ -1140,11 +1143,11 @@ class DependencyCache {
 
 					for (int y = 0; y < refPos.length; y++) {
 						if (refPos[y] != null) {
-							this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+							this.rect2 = new Rect((int) refPos[y].x,
 									(int) (refPos[y].y - refPos[y].height),
 									(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-							if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+							if (Rect.intersects(this.rect2, this.rect1)) {
 								refPos[y] = null;
 							}
 						}
@@ -1154,18 +1157,18 @@ class DependencyCache {
 			if (this.currentDependencyOnTile.symbols != null) {
 				for (Dependency<DependencySymbol> symbols2 : this.currentDependencyOnTile.symbols) {
 
-					this.rect1 = new android.graphics.Rect((int) symbols2.point.x,
+					this.rect1 = new Rect((int) symbols2.point.x,
 							(int) (symbols2.point.y),
 							(int) (symbols2.point.x + symbols2.value.symbol.getWidth()),
 							(int) (symbols2.point.y + symbols2.value.symbol.getHeight()));
 
 					for (int y = 0; y < refPos.length; y++) {
 						if (refPos[y] != null) {
-							this.rect2 = new android.graphics.Rect((int) refPos[y].x,
+							this.rect2 = new Rect((int) refPos[y].x,
 									(int) (refPos[y].y - refPos[y].height),
 									(int) (refPos[y].x + refPos[y].width), (int) (refPos[y].y));
 
-							if (android.graphics.Rect.intersects(this.rect2, this.rect1)) {
+							if (Rect.intersects(this.rect2, this.rect1)) {
 								refPos[y] = null;
 							}
 						}
