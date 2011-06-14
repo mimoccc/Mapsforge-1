@@ -4,6 +4,9 @@ public final class SystemClock {
     /**
      * This class is uninstantiable.
      */
+	
+	private static long sBootTime = System.currentTimeMillis();
+	
     private SystemClock() {
         // This space intentionally left blank.
     }
@@ -46,7 +49,7 @@ public final class SystemClock {
      *
      * @return if the clock was successfully set to the specified time.
      */
-    native public static boolean setCurrentTimeMillis(long millis);
+    //native public static boolean setCurrentTimeMillis(long millis);
 
     /**
      * Returns milliseconds since boot, not counting time spent in deep sleep.
@@ -55,19 +58,21 @@ public final class SystemClock {
      *
      * @return milliseconds of non-sleep uptime since boot.
      */
-    native public static long uptimeMillis();
-
+    //native public static long uptimeMillis();
+    public static long uptimeMillis() {
+        return System.currentTimeMillis() - sBootTime;
+    }
     /**
      * Returns milliseconds since boot, including time spent in sleep.
      *
      * @return elapsed milliseconds since boot.
      */
-    native public static long elapsedRealtime();
+    //native public static long elapsedRealtime();
 
     /**
      * Returns milliseconds running in the current thread.
      *
      * @return elapsed milliseconds in the thread
      */
-    public static native long currentThreadTimeMillis();
+    //public static native long currentThreadTimeMillis();
 }
