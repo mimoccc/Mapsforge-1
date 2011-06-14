@@ -1,9 +1,7 @@
 package org.mapsforge.core.graphics;
 
-import org.mapsforge.core.graphics.Shader.TileMode;
-
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +16,12 @@ import org.mapsforge.core.graphics.Shader.TileMode;
  * limitations under the License.
  */
 
+import java.awt.Paint;
+
 public class BitmapShader extends Shader {
 
     // we hold on just for the GC, since our native counterpart is using it
-    private Bitmap mBitmap;
+    private final Bitmap mBitmap;
 
     /**
      * Call this to create a new shader that will draw with a bitmap.
@@ -32,11 +32,16 @@ public class BitmapShader extends Shader {
      */
     public BitmapShader(Bitmap bitmap, TileMode tileX, TileMode tileY) {
         mBitmap = bitmap;
-        native_instance = nativeCreate(bitmap.ni(),
-                                       tileX.nativeInt, tileY.nativeInt);
     }
 
-    private static native int nativeCreate(int native_bitmap,
-                                           int shaderTileModeX,
-                                           int shaderTileModeY);
+    //---------- Custom methods
+
+    public Bitmap getBitmap() {
+        return mBitmap;
+    }
+
+    @Override
+    Paint getJavaPaint() {
+        return null;
+    }
 }

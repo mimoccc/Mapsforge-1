@@ -1,7 +1,7 @@
 package org.mapsforge.core.graphics;
 
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,43 @@ package org.mapsforge.core.graphics;
  * limitations under the License.
  */
 
-/*import android.text.TextUtils;
-import android.text.SpannableString;
+/*import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.SpannedString;
-import android.text.GraphicsOperations;*/
+import android.text.TextUtils;*/
+
+import java.awt.BasicStroke;
+import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.mapsforge.core.graphics.Native_Paint.Align;
+import org.mapsforge.core.graphics.Native_Paint.Cap;
+import org.mapsforge.core.graphics.Native_Paint.Join;
+import org.mapsforge.core.graphics.Native_Paint.Style;
 
 /**
- * The Paint class holds the style and color information about how to draw
- * geometries, text and bitmaps.
+ * A paint implementation overridden by the LayoutLib bridge.
  */
 public class Paint {
 
+    private int mColor = 0xFFFFFFFF;
+    private float mStrokeWidth = 1.f;
+    private float mTextSize = 20;
+    private float mScaleX = 1;
+    private float mSkewX = 0;
+    private Align mAlign = Align.LEFT;
+    private Style mStyle = Style.FILL;
+    private float mStrokeMiter = 4.0f;
+    private Cap mCap = Cap.BUTT;
+    private Join mJoin = Join.MITER;
+    private int mFlags = 0;
+    
     /*package*/ int     mNativePaint;
     //private ColorFilter mColorFilter;
     //private MaskFilter  mMaskFilter;
@@ -52,7 +78,7 @@ public class Paint {
     private static final Align[] sAlignArray = {
         Align.LEFT, Align.CENTER, Align.RIGHT
     };
-
+    
     /** bit mask for the flag enabling antialiasing */
     public static final int ANTI_ALIAS_FLAG     = 0x01;
     /** bit mask for the flag enabling bitmap filtering */
@@ -71,9 +97,28 @@ public class Paint {
     public static final int SUBPIXEL_TEXT_FLAG  = 0x80;
     /** bit mask for the flag enabling device kerning for text */
     public static final int DEV_KERN_TEXT_FLAG  = 0x100;
-
+    
     // we use this when we first create a paint
     private static final int DEFAULT_PAINT_FLAGS = DEV_KERN_TEXT_FLAG;
+
+    /**
+     * Class associating a {@link Font} and it's {@link java.awt.FontMetrics}.
+     */
+    public static final class FontInfo {
+        Font mFont;
+        java.awt.FontMetrics mMetrics;
+    }
+
+    private List<FontInfo> mFonts;
+    private final FontRenderContext mFontContext = new FontRenderContext(
+            new AffineTransform(), true, true);
+
+
+    /*public static class FontMetrics extends Paint.FontMetrics {
+    }
+
+    public static class FontMetricsInt extends Paint.FontMetricsInt {
+    }*/
 
     /**
      * The Style specifies if the primitive being drawn is filled,
@@ -113,13 +158,13 @@ public class Paint {
          */
         BUTT    (0),
         /**
-         * The stroke projects out as a semicircle, with the center at the
-         * end of the path.
+         * The stroke projects out as a square, with the center at the end
+         * of the path.
          */
         ROUND   (1),
         /**
-         * The stroke projects out as a square, with the center at the end
-         * of the path.
+         * The stroke projects out as a semicircle, with the center at the
+         * end of the path.
          */
         SQUARE  (2);
 
@@ -127,6 +172,19 @@ public class Paint {
             this.nativeInt = nativeInt;
         }
         final int nativeInt;
+
+        /** custom for layoutlib */
+        public int getJavaCap() {
+            switch (this) {
+                case BUTT:
+                    return BasicStroke.CAP_BUTT;
+                case ROUND:
+                    return BasicStroke.CAP_ROUND;
+                default:
+                case SQUARE:
+                    return BasicStroke.CAP_SQUARE;
+            }
+        }
     }
 
     /**
@@ -151,6 +209,19 @@ public class Paint {
             this.nativeInt = nativeInt;
         }
         final int nativeInt;
+
+        /** custom for layoutlib */
+        public int getJavaJoin() {
+            switch (this) {
+                default:
+                case MITER:
+                    return BasicStroke.JOIN_MITER;
+                case ROUND:
+                    return BasicStroke.JOIN_ROUND;
+                case BEVEL:
+                    return BasicStroke.JOIN_BEVEL;
+            }
+        }
     }
 
     /**
@@ -177,748 +248,143 @@ public class Paint {
         final int nativeInt;
     }
 
-    /**
-     * Create a new paint with default settings.
-     */
     public Paint() {
         this(0);
     }
 
-    /**
-     * Create a new paint with the specified flags. Use setFlags() to change
-     * these after the paint is created.
-     *
-     * @param flags initial flag bits, as if they were passed via setFlags().
+    /*
+     * Do not remove or com.android.layoutlib.bridge.TestClassReplacement fails.
      */
+    @Override
+    public void finalize() { }
+
     public Paint(int flags) {
-        mNativePaint = native_init();
         setFlags(flags | DEFAULT_PAINT_FLAGS);
-        mCompatScaling = mInvCompatScaling = 1;
+        initFont();
     }
 
-    /**
-     * Create a new paint, initialized with the attributes in the specified
-     * paint parameter.
-     *
-     * @param paint Existing paint used to initialized the attributes of the
-     *              new paint.
-     */
     public Paint(Paint paint) {
-        mNativePaint = native_initWithPaint(paint.mNativePaint);
-        mHasCompatScaling = paint.mHasCompatScaling;
-        mCompatScaling = paint.mCompatScaling;
-        mInvCompatScaling = paint.mInvCompatScaling;
+        set(paint);
+        initFont();
     }
 
-    /** Restores the paint to its default settings. */
     public void reset() {
-        native_reset(mNativePaint);
-        setFlags(DEFAULT_PAINT_FLAGS);
-        mHasCompatScaling = false;
-        mCompatScaling = mInvCompatScaling = 1;
+        super.reset();
     }
 
     /**
-     * Copy the fields from src into this paint. This is equivalent to calling
-     * get() on all of the src fields, and calling the corresponding set()
-     * methods on this.
+     * Returns the list of {@link Font} objects. The first item is the main font, the rest
+     * are fall backs for characters not present in the main font.
      */
+    public List<FontInfo> getFonts() {
+        return mFonts;
+    }
+
+    private void initFont() {
+        mTypeface = Typeface.DEFAULT;
+        updateFontObject();
+    }
+
+    /**
+     * Update the {@link Font} object from the typeface, text size and scaling
+     */
+    @SuppressWarnings("deprecation")
+    private void updateFontObject() {
+        if (mTypeface != null) {
+            // Get the fonts from the TypeFace object.
+            List<Font> fonts = mTypeface.getFonts();
+
+            // create new font objects as well as FontMetrics, based on the current text size
+            // and skew info.
+            ArrayList<FontInfo> infoList = new ArrayList<FontInfo>(fonts.size());
+            for (Font font : fonts) {
+                FontInfo info = new FontInfo();
+                info.mFont = font.deriveFont(mTextSize);
+                if (mScaleX != 1.0 || mSkewX != 0) {
+                    // TODO: support skew
+                    info.mFont = info.mFont.deriveFont(new AffineTransform(
+                            mScaleX, mSkewX, 0, 0, 1, 0));
+                }
+                info.mMetrics = Toolkit.getDefaultToolkit().getFontMetrics(info.mFont);
+
+                infoList.add(info);
+            }
+
+            mFonts = Collections.unmodifiableList(infoList);
+        }
+    }
+
+    //----------------------------------------
+
     public void set(Paint src) {
         if (this != src) {
-            // copy over the native settings
-            native_set(mNativePaint, src.mNativePaint);
-            // copy over our java settings
-            //mColorFilter    = src.mColorFilter;
-            //mMaskFilter     = src.mMaskFilter;
-            mPathEffect     = src.mPathEffect;
-            //mRasterizer     = src.mRasterizer;
-            mShader         = src.mShader;
-            mTypeface       = src.mTypeface;
-            //mXfermode       = src.mXfermode;
-            mHasCompatScaling = src.mHasCompatScaling;
-            mCompatScaling    = src.mCompatScaling;
-            mInvCompatScaling = src.mInvCompatScaling;
+            mColor = src.mColor;
+            mTextSize = src.mTextSize;
+            mScaleX = src.mScaleX;
+            mSkewX = src.mSkewX;
+            mAlign = src.mAlign;
+            mStyle = src.mStyle;
+            mFlags = src.mFlags;
+
+            updateFontObject();
+
+            super.set(src);
         }
     }
 
-    /** @hide */
+    @Override
     public void setCompatibilityScaling(float factor) {
-        if (factor == 1.0) {
-            mHasCompatScaling = false;
-            mCompatScaling = mInvCompatScaling = 1.0f;
-        } else {
-            mHasCompatScaling = true;
-            mCompatScaling = factor;
-            mInvCompatScaling = 1.0f/factor;
-        }
+        super.setCompatibilityScaling(factor);
     }
 
-    /**
-     * Return the paint's flags. Use the Flag enum to test flag values.
-     *
-     * @return the paint's flags (see enums ending in _Flag for bit masks)
-     */
-    public native int getFlags();
-
-    /**
-     * Set the paint's flags. Use the Flag enum to specific flag values.
-     *
-     * @param flags The new flag bits for the paint
-     */
-    public native void setFlags(int flags);
-
-    /**
-     * Helper for getFlags(), returning true if ANTI_ALIAS_FLAG bit is set
-     * AntiAliasing smooths out the edges of what is being drawn, but is has
-     * no impact on the interior of the shape. See setDither() and
-     * setFilterBitmap() to affect how colors are treated.
-     *
-     * @return true if the antialias bit is set in the paint's flags.
-     */
-    public final boolean isAntiAlias() {
-        return (getFlags() & ANTI_ALIAS_FLAG) != 0;
+    @Override
+    public int getFlags() {
+        return mFlags;
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the ANTI_ALIAS_FLAG bit
-     * AntiAliasing smooths out the edges of what is being drawn, but is has
-     * no impact on the interior of the shape. See setDither() and
-     * setFilterBitmap() to affect how colors are treated.
-     *
-     * @param aa true to set the antialias bit in the flags, false to clear it
-     */
-    public native void setAntiAlias(boolean aa);
-
-    /**
-     * Helper for getFlags(), returning true if DITHER_FLAG bit is set
-     * Dithering affects how colors that are higher precision than the device
-     * are down-sampled. No dithering is generally faster, but higher precision
-     * colors are just truncated down (e.g. 8888 -> 565). Dithering tries to
-     * distribute the error inherent in this process, to reduce the visual
-     * artifacts.
-     *
-     * @return true if the dithering bit is set in the paint's flags.
-     */
-    public final boolean isDither() {
-        return (getFlags() & DITHER_FLAG) != 0;
+    @Override
+    public void setFlags(int flags) {
+        mFlags = flags;
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the DITHER_FLAG bit
-     * Dithering affects how colors that are higher precision than the device
-     * are down-sampled. No dithering is generally faster, but higher precision
-     * colors are just truncated down (e.g. 8888 -> 565). Dithering tries to
-     * distribute the error inherent in this process, to reduce the visual
-     * artifacts.
-     *
-     * @param dither true to set the dithering bit in flags, false to clear it
-     */
-    public native void setDither(boolean dither);
-
-    /**
-     * Helper for getFlags(), returning true if LINEAR_TEXT_FLAG bit is set
-     *
-     * @return true if the lineartext bit is set in the paint's flags
-     */
-    public final boolean isLinearText() {
-        return (getFlags() & LINEAR_TEXT_FLAG) != 0;
+    @Override
+    public boolean isAntiAlias() {
+        return super.isAntiAlias();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the LINEAR_TEXT_FLAG bit
-     *
-     * @param linearText true to set the linearText bit in the paint's flags,
-     *                   false to clear it.
-     */
-    public native void setLinearText(boolean linearText);
-
-    /**
-     * Helper for getFlags(), returning true if SUBPIXEL_TEXT_FLAG bit is set
-     *
-     * @return true if the subpixel bit is set in the paint's flags
-     */
-    public final boolean isSubpixelText() {
-        return (getFlags() & SUBPIXEL_TEXT_FLAG) != 0;
+    @Override
+    public boolean isDither() {
+        return super.isDither();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the SUBPIXEL_TEXT_FLAG bit
-     *
-     * @param subpixelText true to set the subpixelText bit in the paint's
-     *                     flags, false to clear it.
-     */
-    public native void setSubpixelText(boolean subpixelText);
-
-    /**
-     * Helper for getFlags(), returning true if UNDERLINE_TEXT_FLAG bit is set
-     *
-     * @return true if the underlineText bit is set in the paint's flags.
-     */
-    public final boolean isUnderlineText() {
-        return (getFlags() & UNDERLINE_TEXT_FLAG) != 0;
+    @Override
+    public boolean isLinearText() {
+        return super.isLinearText();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the UNDERLINE_TEXT_FLAG bit
-     *
-     * @param underlineText true to set the underlineText bit in the paint's
-     *                      flags, false to clear it.
-     */
-    public native void setUnderlineText(boolean underlineText);
-
-    /**
-     * Helper for getFlags(), returning true if STRIKE_THRU_TEXT_FLAG bit is set
-     *
-     * @return true if the strikeThruText bit is set in the paint's flags.
-     */
-    public final boolean isStrikeThruText() {
-        return (getFlags() & STRIKE_THRU_TEXT_FLAG) != 0;
+    @Override
+    public boolean isStrikeThruText() {
+        return super.isStrikeThruText();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the STRIKE_THRU_TEXT_FLAG bit
-     *
-     * @param strikeThruText true to set the strikeThruText bit in the paint's
-     *                       flags, false to clear it.
-     */
-    public native void setStrikeThruText(boolean strikeThruText);
-
-    /**
-     * Helper for getFlags(), returning true if FAKE_BOLD_TEXT_FLAG bit is set
-     *
-     * @return true if the fakeBoldText bit is set in the paint's flags.
-     */
-    public final boolean isFakeBoldText() {
-        return (getFlags() & FAKE_BOLD_TEXT_FLAG) != 0;
+    @Override
+    public boolean isUnderlineText() {
+        return super.isUnderlineText();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the STRIKE_THRU_TEXT_FLAG bit
-     *
-     * @param fakeBoldText true to set the fakeBoldText bit in the paint's
-     *                     flags, false to clear it.
-     */
-    public native void setFakeBoldText(boolean fakeBoldText);
-
-    /**
-     * Whether or not the bitmap filter is activated.
-     * Filtering affects the sampling of bitmaps when they are transformed.
-     * Filtering does not affect how the colors in the bitmap are converted into
-     * device pixels. That is dependent on dithering and xfermodes.
-     *
-     * @see #setFilterBitmap(boolean) setFilterBitmap()
-     */
-    public final boolean isFilterBitmap() {
-        return (getFlags() & FILTER_BITMAP_FLAG) != 0;
+    @Override
+    public boolean isFakeBoldText() {
+        return super.isFakeBoldText();
     }
 
-    /**
-     * Helper for setFlags(), setting or clearing the FILTER_BITMAP_FLAG bit.
-     * Filtering affects the sampling of bitmaps when they are transformed.
-     * Filtering does not affect how the colors in the bitmap are converted into
-     * device pixels. That is dependent on dithering and xfermodes.
-     *
-     * @param filter true to set the FILTER_BITMAP_FLAG bit in the paint's
-     *               flags, false to clear it.
-     */
-    public native void setFilterBitmap(boolean filter);
-
-    /**
-     * Return the paint's style, used for controlling how primitives'
-     * geometries are interpreted (except for drawBitmap, which always assumes
-     * FILL_STYLE).
-     *
-     * @return the paint's style setting (Fill, Stroke, StrokeAndFill)
-     */
-    public Style getStyle() {
-        return sStyleArray[native_getStyle(mNativePaint)];
+    @Override
+    public boolean isSubpixelText() {
+        return super.isSubpixelText();
     }
 
-    /**
-     * Set the paint's style, used for controlling how primitives'
-     * geometries are interpreted (except for drawBitmap, which always assumes
-     * Fill).
-     *
-     * @param style The new style to set in the paint
-     */
-    public void setStyle(Style style) {
-        native_setStyle(mNativePaint, style.nativeInt);
-    }
-
-    /**
-     * Return the paint's color. Note that the color is a 32bit value
-     * containing alpha as well as r,g,b. This 32bit value is not premultiplied,
-     * meaning that its alpha can be any value, regardless of the values of
-     * r,g,b. See the Color class for more details.
-     *
-     * @return the paint's color (and alpha).
-     */
-    public native int getColor();
-
-    /**
-     * Set the paint's color. Note that the color is an int containing alpha
-     * as well as r,g,b. This 32bit value is not premultiplied, meaning that
-     * its alpha can be any value, regardless of the values of r,g,b.
-     * See the Color class for more details.
-     *
-     * @param color The new color (including alpha) to set in the paint.
-     */
-    public native void setColor(int color);
-
-    /**
-     * Helper to getColor() that just returns the color's alpha value. This is
-     * the same as calling getColor() >>> 24. It always returns a value between
-     * 0 (completely transparent) and 255 (completely opaque).
-     *
-     * @return the alpha component of the paint's color.
-     */
-    public native int getAlpha();
-
-    /**
-     * Helper to setColor(), that only assigns the color's alpha value,
-     * leaving its r,g,b values unchanged. Results are undefined if the alpha
-     * value is outside of the range [0..255]
-     *
-     * @param a set the alpha component [0..255] of the paint's color.
-     */
-    public native void setAlpha(int a);
-
-    /**
-     * Helper to setColor(), that takes a,r,g,b and constructs the color int
-     *
-     * @param a The new alpha component (0..255) of the paint's color.
-     * @param r The new red component (0..255) of the paint's color.
-     * @param g The new green component (0..255) of the paint's color.
-     * @param b The new blue component (0..255) of the paint's color.
-     */
-    public void setARGB(int a, int r, int g, int b) {
-        setColor((a << 24) | (r << 16) | (g << 8) | b);
-    }
-
-    /**
-     * Return the width for stroking.
-     * <p />
-     * A value of 0 strokes in hairline mode.
-     * Hairlines always draws a single pixel independent of the canva's matrix.
-     *
-     * @return the paint's stroke width, used whenever the paint's style is
-     *         Stroke or StrokeAndFill.
-     */
-    public native float getStrokeWidth();
-
-    /**
-     * Set the width for stroking.
-     * Pass 0 to stroke in hairline mode.
-     * Hairlines always draws a single pixel independent of the canva's matrix.
-     *
-     * @param width set the paint's stroke width, used whenever the paint's
-     *              style is Stroke or StrokeAndFill.
-     */
-    public native void setStrokeWidth(float width);
-
-    /**
-     * Return the paint's stroke miter value. Used to control the behavior
-     * of miter joins when the joins angle is sharp.
-     *
-     * @return the paint's miter limit, used whenever the paint's style is
-     *         Stroke or StrokeAndFill.
-     */
-    public native float getStrokeMiter();
-
-    /**
-     * Set the paint's stroke miter value. This is used to control the behavior
-     * of miter joins when the joins angle is sharp. This value must be >= 0.
-     *
-     * @param miter set the miter limit on the paint, used whenever the paint's
-     *              style is Stroke or StrokeAndFill.
-     */
-    public native void setStrokeMiter(float miter);
-
-    /**
-     * Return the paint's Cap, controlling how the start and end of stroked
-     * lines and paths are treated.
-     *
-     * @return the line cap style for the paint, used whenever the paint's
-     *         style is Stroke or StrokeAndFill.
-     */
-    public Cap getStrokeCap() {
-        return sCapArray[native_getStrokeCap(mNativePaint)];
-    }
-
-    /**
-     * Set the paint's Cap.
-     *
-     * @param cap set the paint's line cap style, used whenever the paint's
-     *            style is Stroke or StrokeAndFill.
-     */
-    public void setStrokeCap(Cap cap) {
-        native_setStrokeCap(mNativePaint, cap.nativeInt);
-    }
-
-    /**
-     * Return the paint's stroke join type.
-     *
-     * @return the paint's Join.
-     */
-    public Join getStrokeJoin() {
-        return sJoinArray[native_getStrokeJoin(mNativePaint)];
-    }
-
-    /**
-     * Set the paint's Join.
-     *
-     * @param join set the paint's Join, used whenever the paint's style is
-     *             Stroke or StrokeAndFill.
-     */
-    public void setStrokeJoin(Join join) {
-        native_setStrokeJoin(mNativePaint, join.nativeInt);
-    }
-
-    /**
-     * Applies any/all effects (patheffect, stroking) to src, returning the
-     * result in dst. The result is that drawing src with this paint will be
-     * the same as drawing dst with a default paint (at least from the
-     * geometric perspective).
-     *
-     * @param src input path
-     * @param dst output path (may be the same as src)
-     * @return    true if the path should be filled, or false if it should be
-     *                 drawn with a hairline (width == 0)
-     */
-    public boolean getFillPath(Path src, Path dst) {
-        return native_getFillPath(mNativePaint, src.ni(), dst.ni());
-    }
-
-    /**
-     * Get the paint's shader object.
-     *
-     * @return the paint's shader (or null)
-     */
-    public Shader getShader() {
-        return mShader;
-    }
-
-    /**
-     * Set or clear the shader object.
-     * <p />
-     * Pass null to clear any previous shader.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param shader May be null. the new shader to be installed in the paint
-     * @return       shader
-     */
-    public Shader setShader(Shader shader) {
-        int shaderNative = 0;
-        if (shader != null)
-            shaderNative = shader.native_instance;
-        native_setShader(mNativePaint, shaderNative);
-        mShader = shader;
-        return shader;
-    }
-
-    /**
-     * Get the paint's colorfilter (maybe be null).
-     *
-     * @return the paint's colorfilter (maybe be null)
-     */
-    /*public ColorFilter getColorFilter() {
-        return mColorFilter;
-    }*/
-
-    /**
-     * Set or clear the paint's colorfilter, returning the parameter.
-     *
-     * @param filter May be null. The new filter to be installed in the paint
-     * @return       filter
-     */
-    /*public ColorFilter setColorFilter(ColorFilter filter) {
-        int filterNative = 0;
-        if (filter != null)
-            filterNative = filter.native_instance;
-        native_setColorFilter(mNativePaint, filterNative);
-        mColorFilter = filter;
-        return filter;
-    }*/
-
-    /**
-     * Get the paint's xfermode object.
-     *
-     * @return the paint's xfermode (or null)
-     */
-    /*public Xfermode getXfermode() {
-        return mXfermode;
-    }*/
-
-    /**
-     * Set or clear the xfermode object.
-     * <p />
-     * Pass null to clear any previous xfermode.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param xfermode May be null. The xfermode to be installed in the paint
-     * @return         xfermode
-     */
-    /*public Xfermode setXfermode(Xfermode xfermode) {
-        int xfermodeNative = 0;
-        if (xfermode != null)
-            xfermodeNative = xfermode.native_instance;
-        native_setXfermode(mNativePaint, xfermodeNative);
-        mXfermode = xfermode;
-        return xfermode;
-    }*/
-
-    /**
-     * Get the paint's patheffect object.
-     *
-     * @return the paint's patheffect (or null)
-     */
-    public PathEffect getPathEffect() {
-        return mPathEffect;
-    }
-
-    /**
-     * Set or clear the patheffect object.
-     * <p />
-     * Pass null to clear any previous patheffect.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param effect May be null. The patheffect to be installed in the paint
-     * @return       effect
-     */
-    public PathEffect setPathEffect(PathEffect effect) {
-        int effectNative = 0;
-        if (effect != null) {
-            effectNative = effect.native_instance;
-        }
-        native_setPathEffect(mNativePaint, effectNative);
-        mPathEffect = effect;
-        return effect;
-    }
-
-    /**
-     * Get the paint's maskfilter object.
-     *
-     * @return the paint's maskfilter (or null)
-     */
-    /*public MaskFilter getMaskFilter() {
-        return mMaskFilter;
-    }*/
-
-    /**
-     * Set or clear the maskfilter object.
-     * <p />
-     * Pass null to clear any previous maskfilter.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param maskfilter May be null. The maskfilter to be installed in the
-     *                   paint
-     * @return           maskfilter
-     */
-    /*public MaskFilter setMaskFilter(MaskFilter maskfilter) {
-        int maskfilterNative = 0;
-        if (maskfilter != null) {
-            maskfilterNative = maskfilter.native_instance;
-        }
-        native_setMaskFilter(mNativePaint, maskfilterNative);
-        mMaskFilter = maskfilter;
-        return maskfilter;
-    }*/
-
-    /**
-     * Get the paint's typeface object.
-     * <p />
-     * The typeface object identifies which font to use when drawing or
-     * measuring text.
-     *
-     * @return the paint's typeface (or null)
-     */
-    public Typeface getTypeface() {
-        return mTypeface;
-    }
-
-    /**
-     * Set or clear the typeface object.
-     * <p />
-     * Pass null to clear any previous typeface.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param typeface May be null. The typeface to be installed in the paint
-     * @return         typeface
-     */
-    public Typeface setTypeface(Typeface typeface) {
-        int typefaceNative = 0;
-        if (typeface != null) {
-            typefaceNative = typeface.native_instance;
-        }
-        native_setTypeface(mNativePaint, typefaceNative);
-        mTypeface = typeface;
-        return typeface;
-    }
-
-    /**
-     * Get the paint's rasterizer (or null).
-     * <p />
-     * The raster controls/modifies how paths/text are turned into alpha masks.
-     *
-     * @return         the paint's rasterizer (or null)
-     */
-    /*public Rasterizer getRasterizer() {
-        return mRasterizer;
-    }*/
-
-    /**
-     * Set or clear the rasterizer object.
-     * <p />
-     * Pass null to clear any previous rasterizer.
-     * As a convenience, the parameter passed is also returned.
-     *
-     * @param rasterizer May be null. The new rasterizer to be installed in
-     *                   the paint.
-     * @return           rasterizer
-     */
-    /*public Rasterizer setRasterizer(Rasterizer rasterizer) {
-        int rasterizerNative = 0;
-        if (rasterizer != null) {
-            rasterizerNative = rasterizer.native_instance;
-        }
-        native_setRasterizer(mNativePaint, rasterizerNative);
-        mRasterizer = rasterizer;
-        return rasterizer;
-    }*/
-
-    /**
-     * Temporary API to expose layer drawing. This draws a shadow layer below
-     * the main layer, with the specified offset and color, and blur radius.
-     * If radius is 0, then the shadow layer is removed.
-     */
-    public native void setShadowLayer(float radius, float dx, float dy,
-                                      int color);
-
-    /**
-     * Temporary API to clear the shadow layer.
-     */
-    public void clearShadowLayer() {
-        setShadowLayer(0, 0, 0, 0);
-    }
-
-    /**
-     * Return the paint's Align value for drawing text. This controls how the
-     * text is positioned relative to its origin. LEFT align means that all of
-     * the text will be drawn to the right of its origin (i.e. the origin
-     * specifieds the LEFT edge of the text) and so on.
-     *
-     * @return the paint's Align value for drawing text.
-     */
-    public Align getTextAlign() {
-        return sAlignArray[native_getTextAlign(mNativePaint)];
-    }
-
-    /**
-     * Set the paint's text alignment. This controls how the
-     * text is positioned relative to its origin. LEFT align means that all of
-     * the text will be drawn to the right of its origin (i.e. the origin
-     * specifieds the LEFT edge of the text) and so on.
-     *
-     * @param align set the paint's Align value for drawing text.
-     */
-    public void setTextAlign(Align align) {
-        native_setTextAlign(mNativePaint, align.nativeInt);
-    }
-
-    /**
-     * Return the paint's text size.
-     *
-     * @return the paint's text size.
-     */
-    public native float getTextSize();
-
-    /**
-     * Set the paint's text size. This value must be > 0
-     *
-     * @param textSize set the paint's text size.
-     */
-    public native void setTextSize(float textSize);
-
-    /**
-     * Return the paint's horizontal scale factor for text. The default value
-     * is 1.0.
-     *
-     * @return the paint's scale factor in X for drawing/measuring text
-     */
-    public native float getTextScaleX();
-
-    /**
-     * Set the paint's horizontal scale factor for text. The default value
-     * is 1.0. Values > 1.0 will stretch the text wider. Values < 1.0 will
-     * stretch the text narrower.
-     *
-     * @param scaleX set the paint's scale in X for drawing/measuring text.
-     */
-    public native void setTextScaleX(float scaleX);
-
-    /**
-     * Return the paint's horizontal skew factor for text. The default value
-     * is 0.
-     *
-     * @return         the paint's skew factor in X for drawing text.
-     */
-    public native float getTextSkewX();
-
-    /**
-     * Set the paint's horizontal skew factor for text. The default value
-     * is 0. For approximating oblique text, use values around -0.25.
-     *
-     * @param skewX set the paint's skew factor in X for drawing text.
-     */
-    public native void setTextSkewX(float skewX);
-
-    /**
-     * Return the distance above (negative) the baseline (ascent) based on the
-     * current typeface and text size.
-     *
-     * @return the distance above (negative) the baseline (ascent) based on the
-     *         current typeface and text size.
-     */
-    public native float ascent();
-
-    /**
-     * Return the distance below (positive) the baseline (descent) based on the
-     * current typeface and text size.
-     *
-     * @return the distance below (positive) the baseline (descent) based on
-     *         the current typeface and text size.
-     */
-    public native float descent();
-
-    /**
-     * Class that describes the various metrics for a font at a given text size.
-     * Remember, Y values increase going down, so those values will be positive,
-     * and values that measure distances going up will be negative. This class
-     * is returned by getFontMetrics().
-     */
-    public static class FontMetrics {
-        /**
-         * The maximum distance above the baseline for the tallest glyph in
-         * the font at a given text size.
-         */
-        public float   top;
-        /**
-         * The recommended distance above the baseline for singled spaced text.
-         */
-        public float   ascent;
-        /**
-         * The recommended distance below the baseline for singled spaced text.
-         */
-        public float   descent;
-        /**
-         * The maximum distance below the baseline for the lowest glyph in
-         * the font at a given text size.
-         */
-        public float   bottom;
-        /**
-         * The recommended additional space to add between lines of text.
-         */
-        public float   leading;
+    @Override
+    public boolean isFilterBitmap() {
+        return super.isFilterBitmap();
     }
 
     /**
@@ -930,11 +396,44 @@ public class Paint {
      *                the appropriate values given the paint's text attributes.
      * @return the font's recommended interline spacing.
      */
-    public native float getFontMetrics(FontMetrics metrics);
+    public float getFontMetrics(FontMetrics metrics) {
+        if (mFonts.size() > 0) {
+            java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
+            if (metrics != null) {
+                // Android expects negative ascent so we invert the value from Java.
+                metrics.top = - javaMetrics.getMaxAscent();
+                metrics.ascent = - javaMetrics.getAscent();
+                metrics.descent = javaMetrics.getDescent();
+                metrics.bottom = javaMetrics.getMaxDescent();
+                metrics.leading = javaMetrics.getLeading();
+            }
+
+            return javaMetrics.getHeight();
+        }
+
+        return 0;
+    }
+
+    public int getFontMetricsInt(FontMetricsInt metrics) {
+        if (mFonts.size() > 0) {
+            java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
+            if (metrics != null) {
+                // Android expects negative ascent so we invert the value from Java.
+                metrics.top = - javaMetrics.getMaxAscent();
+                metrics.ascent = - javaMetrics.getAscent();
+                metrics.descent = javaMetrics.getDescent();
+                metrics.bottom = javaMetrics.getMaxDescent();
+                metrics.leading = javaMetrics.getLeading();
+            }
+
+            return javaMetrics.getHeight();
+        }
+
+        return 0;
+    }
 
     /**
-     * Allocates a new FontMetrics object, and then calls getFontMetrics(fm)
-     * with it, returning the object.
+     * Reimplemented to return Paint.FontMetrics instead of Paint.FontMetrics
      */
     public FontMetrics getFontMetrics() {
         FontMetrics fm = new FontMetrics();
@@ -943,50 +442,393 @@ public class Paint {
     }
 
     /**
-     * Convenience method for callers that want to have FontMetrics values as
-     * integers.
+     * Reimplemented to return Paint.FontMetricsInt instead of Paint.FontMetricsInt
      */
-    public static class FontMetricsInt {
-        public int   top;
-        public int   ascent;
-        public int   descent;
-        public int   bottom;
-        public int   leading;
-
-        @Override public String toString() {
-            return "FontMetricsInt: top=" + top + " ascent=" + ascent +
-                    " descent=" + descent + " bottom=" + bottom +
-                    " leading=" + leading;
-        }
-    }
-
-    /**
-     * Return the font's interline spacing, given the Paint's settings for
-     * typeface, textSize, etc. If metrics is not null, return the fontmetric
-     * values in it. Note: all values have been converted to integers from
-     * floats, in such a way has to make the answers useful for both spacing
-     * and clipping. If you want more control over the rounding, call
-     * getFontMetrics().
-     *
-     * @return the font's interline spacing.
-     */
-    public native int getFontMetricsInt(FontMetricsInt fmi);
-
     public FontMetricsInt getFontMetricsInt() {
         FontMetricsInt fm = new FontMetricsInt();
         getFontMetricsInt(fm);
         return fm;
     }
 
+
+
+    @Override
+    public float getFontMetrics(Paint.FontMetrics metrics) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    @Override
+    public int getFontMetricsInt(Paint.FontMetricsInt metrics) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    @Override
+    public Typeface setTypeface(Typeface typeface) {
+        if (typeface != null) {
+            mTypeface = typeface;
+        } else {
+            mTypeface = Typeface.DEFAULT;
+        }
+
+        updateFontObject();
+
+        return typeface;
+    }
+
+    @Override
+    public Typeface getTypeface() {
+        return super.getTypeface();
+    }
+
+    @Override
+    public int getColor() {
+        return mColor;
+    }
+
+    @Override
+    public void setColor(int color) {
+        mColor = color;
+    }
+
+    @Override
+    public void setARGB(int a, int r, int g, int b) {
+        super.setARGB(a, r, g, b);
+    }
+
+    @Override
+    public void setAlpha(int alpha) {
+        mColor = (alpha << 24) | (mColor & 0x00FFFFFF);
+    }
+
+    @Override
+    public int getAlpha() {
+        return mColor >>> 24;
+    }
+
     /**
-     * Return the recommend line spacing based on the current typeface and
-     * text size.
+     * Set or clear the shader object.
+     * <p />
+     * Pass null to clear any previous shader.
+     * As a convenience, the parameter passed is also returned.
      *
-     * @return  recommend line spacing based on the current typeface and
-     *          text size.
+     * @param shader May be null. the new shader to be installed in the paint
+     * @return       shader
      */
+    @Override
+    public Shader setShader(Shader shader) {
+        return mShader = shader;
+    }
+
+    @Override
+    public Shader getShader() {
+        return super.getShader();
+    }
+
+    /**
+     * Set or clear the paint's colorfilter, returning the parameter.
+     *
+     * @param filter May be null. The new filter to be installed in the paint
+     * @return       filter
+     */
+    @Override
+    public ColorFilter setColorFilter(ColorFilter filter) {
+        mColorFilter = filter;
+        return filter;
+    }
+
+    @Override
+    public ColorFilter getColorFilter() {
+        return super.getColorFilter();
+    }
+
+    /**
+     * Set or clear the xfermode object.
+     * <p />
+     * Pass null to clear any previous xfermode.
+     * As a convenience, the parameter passed is also returned.
+     *
+     * @param xfermode May be null. The xfermode to be installed in the paint
+     * @return         xfermode
+     */
+    @Override
+    public Xfermode setXfermode(Xfermode xfermode) {
+        return mXfermode = xfermode;
+    }
+
+    @Override
+    public Xfermode getXfermode() {
+        return super.getXfermode();
+    }
+
+    @Override
+    public Rasterizer setRasterizer(Rasterizer rasterizer) {
+        mRasterizer = rasterizer;
+        return rasterizer;
+    }
+
+    @Override
+    public Rasterizer getRasterizer() {
+        return super.getRasterizer();
+    }
+
+    @Override
+    public void setShadowLayer(float radius, float dx, float dy, int color) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void clearShadowLayer() {
+        super.clearShadowLayer();
+    }
+
+    public void setTextAlign(Align align) {
+        mAlign = align;
+    }
+
+    @Override
+    public void setTextAlign(android.graphics.Paint.Align align) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    public Align getTextAlign() {
+        return mAlign;
+    }
+
+    public void setStyle(Style style) {
+        mStyle = style;
+    }
+
+    @Override
+    public void setStyle(android.graphics.Paint.Style style) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    public Style getStyle() {
+        return mStyle;
+    }
+
+    @Override
+    public void setDither(boolean dither) {
+        mFlags |= dither ? DITHER_FLAG : ~DITHER_FLAG;
+    }
+
+    @Override
+    public void setAntiAlias(boolean aa) {
+        mFlags |= aa ? ANTI_ALIAS_FLAG : ~ANTI_ALIAS_FLAG;
+    }
+
+    @Override
+    public void setFakeBoldText(boolean flag) {
+        mFlags |= flag ? FAKE_BOLD_TEXT_FLAG : ~FAKE_BOLD_TEXT_FLAG;
+    }
+
+    @Override
+    public void setLinearText(boolean flag) {
+        mFlags |= flag ? LINEAR_TEXT_FLAG : ~LINEAR_TEXT_FLAG;
+    }
+
+    @Override
+    public void setSubpixelText(boolean flag) {
+        mFlags |= flag ? SUBPIXEL_TEXT_FLAG : ~SUBPIXEL_TEXT_FLAG;
+    }
+
+    @Override
+    public void setUnderlineText(boolean flag) {
+        mFlags |= flag ? UNDERLINE_TEXT_FLAG : ~UNDERLINE_TEXT_FLAG;
+    }
+
+    @Override
+    public void setStrikeThruText(boolean flag) {
+        mFlags |= flag ? STRIKE_THRU_TEXT_FLAG : ~STRIKE_THRU_TEXT_FLAG;
+    }
+
+    @Override
+    public void setFilterBitmap(boolean flag) {
+        mFlags |= flag ? FILTER_BITMAP_FLAG : ~FILTER_BITMAP_FLAG;
+    }
+
+    @Override
+    public float getStrokeWidth() {
+        return mStrokeWidth;
+    }
+
+    @Override
+    public void setStrokeWidth(float width) {
+        mStrokeWidth = width;
+    }
+
+    @Override
+    public float getStrokeMiter() {
+        return mStrokeMiter;
+    }
+
+    @Override
+    public void setStrokeMiter(float miter) {
+        mStrokeMiter = miter;
+    }
+
+    @Override
+    public void setStrokeCap(android.graphics.Paint.Cap cap) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    public void setStrokeCap(Cap cap) {
+        mCap = cap;
+    }
+
+    public Cap getStrokeCap() {
+        return mCap;
+    }
+
+    @Override
+    public void setStrokeJoin(android.graphics.Paint.Join join) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }
+
+    public void setStrokeJoin(Join join) {
+        mJoin = join;
+    }
+
+    public Join getStrokeJoin() {
+        return mJoin;
+    }
+
+    @Override
+    public boolean getFillPath(Path src, Path dst) {
+        return super.getFillPath(src, dst);
+    }
+
+    @Override
+    public PathEffect setPathEffect(PathEffect effect) {
+        mPathEffect = effect;
+        return effect;
+    }
+
+    @Override
+    public PathEffect getPathEffect() {
+        return super.getPathEffect();
+    }
+
+    @Override
+    public MaskFilter setMaskFilter(MaskFilter maskfilter) {
+        mMaskFilter = maskfilter;
+        return maskfilter;
+    }
+
+    @Override
+    public MaskFilter getMaskFilter() {
+        return super.getMaskFilter();
+    }
+
+    /**
+     * Return the paint's text size.
+     *
+     * @return the paint's text size.
+     */
+    @Override
+    public float getTextSize() {
+        return mTextSize;
+    }
+
+    /**
+     * Set the paint's text size. This value must be > 0
+     *
+     * @param textSize set the paint's text size.
+     */
+    @Override
+    public void setTextSize(float textSize) {
+        mTextSize = textSize;
+
+        updateFontObject();
+    }
+
+    /**
+     * Return the paint's horizontal scale factor for text. The default value
+     * is 1.0.
+     *
+     * @return the paint's scale factor in X for drawing/measuring text
+     */
+    @Override
+    public float getTextScaleX() {
+        return mScaleX;
+    }
+
+    /**
+     * Set the paint's horizontal scale factor for text. The default value
+     * is 1.0. Values > 1.0 will stretch the text wider. Values < 1.0 will
+     * stretch the text narrower.
+     *
+     * @param scaleX set the paint's scale in X for drawing/measuring text.
+     */
+    @Override
+    public void setTextScaleX(float scaleX) {
+        mScaleX = scaleX;
+
+        updateFontObject();
+    }
+
+    /**
+     * Return the paint's horizontal skew factor for text. The default value
+     * is 0.
+     *
+     * @return         the paint's skew factor in X for drawing text.
+     */
+    @Override
+    public float getTextSkewX() {
+        return mSkewX;
+    }
+
+    /**
+     * Set the paint's horizontal skew factor for text. The default value
+     * is 0. For approximating oblique text, use values around -0.25.
+     *
+     * @param skewX set the paint's skew factor in X for drawing text.
+     */
+    @Override
+    public void setTextSkewX(float skewX) {
+        mSkewX = skewX;
+
+        updateFontObject();
+    }
+
+    @Override
     public float getFontSpacing() {
-        return getFontMetrics(null);
+        return super.getFontSpacing();
+    }
+
+    /**
+     * Return the distance above (negative) the baseline (ascent) based on the
+     * current typeface and text size.
+     *
+     * @return the distance above (negative) the baseline (ascent) based on the
+     *         current typeface and text size.
+     */
+    @Override
+    public float ascent() {
+        if (mFonts.size() > 0) {
+            java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
+            // Android expects negative ascent so we invert the value from Java.
+            return - javaMetrics.getAscent();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Return the distance below (positive) the baseline (descent) based on the
+     * current typeface and text size.
+     *
+     * @return the distance below (positive) the baseline (descent) based on
+     *         the current typeface and text size.
+     */
+    @Override
+    public float descent() {
+        if (mFonts.size() > 0) {
+            java.awt.FontMetrics javaMetrics = mFonts.get(0).mMetrics;
+            return javaMetrics.getDescent();
+        }
+
+        return 0;
     }
 
     /**
@@ -997,16 +839,61 @@ public class Paint {
      * @param count THe number of characters to measure, beginning with start
      * @return      The width of the text
      */
+    @Override
     public float measureText(char[] text, int index, int count) {
-        if (!mHasCompatScaling) return native_measureText(text, index, count);
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        float w = native_measureText(text, index, count);
-        setTextSize(oldSize);
-        return w*mInvCompatScaling;
-    }
+        // WARNING: the logic in this method is similar to Canvas.drawText.
+        // Any change to this method should be reflected in Canvas.drawText
+        if (mFonts.size() > 0) {
+            FontInfo mainFont = mFonts.get(0);
+            int i = index;
+            int lastIndex = index + count;
+            float total = 0f;
+            while (i < lastIndex) {
+                // always start with the main font.
+                int upTo = mainFont.mFont.canDisplayUpTo(text, i, lastIndex);
+                if (upTo == -1) {
+                    // shortcut to exit
+                    return total + mainFont.mMetrics.charsWidth(text, i, lastIndex - i);
+                } else if (upTo > 0) {
+                    total += mainFont.mMetrics.charsWidth(text, i, upTo - i);
+                    i = upTo;
+                    // don't call continue at this point. Since it is certain the main font
+                    // cannot display the font a index upTo (now ==i), we move on to the
+                    // fallback fonts directly.
+                }
 
-    private native float native_measureText(char[] text, int index, int count);
+                // no char supported, attempt to read the next char(s) with the
+                // fallback font. In this case we only test the first character
+                // and then go back to test with the main font.
+                // Special test for 2-char characters.
+                boolean foundFont = false;
+                for (int f = 1 ; f < mFonts.size() ; f++) {
+                    FontInfo fontInfo = mFonts.get(f);
+
+                    // need to check that the font can display the character. We test
+                    // differently if the char is a high surrogate.
+                    int charCount = Character.isHighSurrogate(text[i]) ? 2 : 1;
+                    upTo = fontInfo.mFont.canDisplayUpTo(text, i, i + charCount);
+                    if (upTo == -1) {
+                        total += fontInfo.mMetrics.charsWidth(text, i, charCount);
+                        i += charCount;
+                        foundFont = true;
+                        break;
+
+                    }
+                }
+
+                // in case no font can display the char, measure it with the main font.
+                if (foundFont == false) {
+                    int size = Character.isHighSurrogate(text[i]) ? 2 : 1;
+                    total += mainFont.mMetrics.charsWidth(text, i, size);
+                    i += size;
+                }
+            }
+        }
+
+        return 0;
+    }
 
     /**
      * Return the width of the text.
@@ -1016,16 +903,10 @@ public class Paint {
      * @param end   1 beyond the index of the last character to measure
      * @return      The width of the text
      */
+    @Override
     public float measureText(String text, int start, int end) {
-        if (!mHasCompatScaling) return native_measureText(text, start, end);
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        float w = native_measureText(text, start, end);
-        setTextSize(oldSize);
-        return w*mInvCompatScaling;
+        return measureText(text.toCharArray(), start, end - start);
     }
-
-    private native float native_measureText(String text, int start, int end);
 
     /**
      * Return the width of the text.
@@ -1033,26 +914,17 @@ public class Paint {
      * @param text  The text to measure
      * @return      The width of the text
      */
+    @Override
     public float measureText(String text) {
-        if (!mHasCompatScaling) return native_measureText(text);
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        float w = native_measureText(text);
-        setTextSize(oldSize);
-        return w*mInvCompatScaling;
+        return measureText(text.toCharArray(), 0, text.length());
     }
 
-    private native float native_measureText(String text);
-
-    /**
-     * Return the width of the text.
-     *
-     * @param text  The text to measure
-     * @param start The index of the first character to start measuring
-     * @param end   1 beyond the index of the last character to measure
-     * @return      The width of the text
+    /*
+     * re-implement to call SpannableStringBuilder.measureText with a Paint object
+     * instead of an Paint
      */
-    /*public float measureText(CharSequence text, int start, int end) {
+    @Override
+    public float measureText(CharSequence text, int start, int end) {
         if (text instanceof String) {
             return measureText((String)text, start, end);
         }
@@ -1060,8 +932,8 @@ public class Paint {
             text instanceof SpannableString) {
             return measureText(text.toString(), start, end);
         }
-        if (text instanceof GraphicsOperations) {
-            return ((GraphicsOperations)text).measureText(start, end, this);
+        if (text instanceof SpannableStringBuilder) {
+            return ((SpannableStringBuilder)text).measureText(start, end, this);
         }
 
         char[] buf = TemporaryBuffer.obtain(end - start);
@@ -1069,7 +941,7 @@ public class Paint {
         float result = measureText(buf, 0, end - start);
         TemporaryBuffer.recycle(buf);
         return result;
-    }*/
+    }
 
     /**
      * Measure the text, stopping early if the measured width exceeds maxWidth.
@@ -1088,22 +960,64 @@ public class Paint {
      * @return The number of chars that were measured. Will always be <=
      *         abs(count).
      */
+    @Override
     public int breakText(char[] text, int index, int count,
                                 float maxWidth, float[] measuredWidth) {
-        if (!mHasCompatScaling) {
-            return native_breakText(text, index, count, maxWidth, measuredWidth);
+        int inc = count > 0 ? 1 : -1;
+
+        int measureIndex = 0;
+        float measureAcc = 0;
+        for (int i = index ; i != index + count ; i += inc, measureIndex++) {
+            int start, end;
+            if (i < index) {
+                start = i;
+                end = index;
+            } else {
+                start = index;
+                end = i;
+            }
+
+            // measure from start to end
+            float res = measureText(text, start, end - start + 1);
+
+            if (measuredWidth != null) {
+                measuredWidth[measureIndex] = res;
+            }
+
+            measureAcc += res;
+            if (res > maxWidth) {
+                // we should not return this char index, but since it's 0-based and we need
+                // to return a count, we simply return measureIndex;
+                return measureIndex;
+            }
+
         }
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        int res = native_breakText(text, index, count, maxWidth*mCompatScaling,
-                measuredWidth);
-        setTextSize(oldSize);
-        if (measuredWidth != null) measuredWidth[0] *= mInvCompatScaling;
-        return res;
+
+        return measureIndex;
     }
 
-    private native int native_breakText(char[] text, int index, int count,
-                                        float maxWidth, float[] measuredWidth);
+    /**
+     * Measure the text, stopping early if the measured width exceeds maxWidth.
+     * Return the number of chars that were measured, and if measuredWidth is
+     * not null, return in it the actual width measured.
+     *
+     * @param text  The text to measure
+     * @param measureForwards If true, measure forwards, starting at index.
+     *                        Otherwise, measure backwards, starting with the
+     *                        last character in the string.
+     * @param maxWidth The maximum width to accumulate.
+     * @param measuredWidth Optional. If not null, returns the actual width
+     *                     measured.
+     * @return The number of chars that were measured. Will always be <=
+     *         abs(count).
+     */
+    @Override
+    public int breakText(String text, boolean measureForwards,
+                                float maxWidth, float[] measuredWidth) {
+        return breakText(text,
+                0 /* start */, text.length() /* end */,
+                measureForwards, maxWidth, measuredWidth);
+    }
 
     /**
      * Measure the text, stopping early if the measured width exceeds maxWidth.
@@ -1121,15 +1035,10 @@ public class Paint {
      * @return The number of chars that were measured. Will always be <=
      *         abs(end - start).
      */
-    /*public int breakText(CharSequence text, int start, int end,
-                         boolean measureForwards,
-                         float maxWidth, float[] measuredWidth) {
-        if (start == 0 && text instanceof String && end == text.length()) {
-            return breakText((String) text, measureForwards, maxWidth,
-                             measuredWidth);
-        }
-
-        char[] buf = TemporaryBuffer.obtain(end - start);
+    @Override
+    public int breakText(CharSequence text, int start, int end, boolean measureForwards,
+            float maxWidth, float[] measuredWidth) {
+        char[] buf = new char[end - start];
         int result;
 
         TextUtils.getChars(text, start, end, buf, 0);
@@ -1140,42 +1049,8 @@ public class Paint {
             result = breakText(buf, 0, -(end - start), maxWidth, measuredWidth);
         }
 
-        TemporaryBuffer.recycle(buf);
         return result;
-    }*/
-
-    /**
-     * Measure the text, stopping early if the measured width exceeds maxWidth.
-     * Return the number of chars that were measured, and if measuredWidth is
-     * not null, return in it the actual width measured.
-     *
-     * @param text  The text to measure
-     * @param measureForwards If true, measure forwards, starting with the
-     *                        first character in the string. Otherwise,
-     *                        measure backwards, starting with the
-     *                        last character in the string.
-     * @param maxWidth The maximum width to accumulate.
-     * @param measuredWidth Optional. If not null, returns the actual width
-     *                     measured.
-     * @return The number of chars that were measured. Will always be <=
-     *         abs(count).
-     */
-    public int breakText(String text, boolean measureForwards,
-                                float maxWidth, float[] measuredWidth) {
-        if (!mHasCompatScaling) {
-            return native_breakText(text, measureForwards, maxWidth, measuredWidth);
-        }
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        int res = native_breakText(text, measureForwards, maxWidth*mCompatScaling,
-                measuredWidth);
-        setTextSize(oldSize);
-        if (measuredWidth != null) measuredWidth[0] *= mInvCompatScaling;
-        return res;
     }
-
-    private native int native_breakText(String text, boolean measureForwards,
-                                        float maxWidth, float[] measuredWidth);
 
     /**
      * Return the advance widths for the characters in the string.
@@ -1187,56 +1062,40 @@ public class Paint {
      *                 Must be at least a large as count.
      * @return         the actual number of widths returned.
      */
+    @Override
     public int getTextWidths(char[] text, int index, int count,
                              float[] widths) {
-        if ((index | count) < 0 || index + count > text.length
-                || count > widths.length) {
-            throw new ArrayIndexOutOfBoundsException();
+        if (mFonts.size() > 0) {
+            if ((index | count) < 0 || index + count > text.length
+                    || count > widths.length) {
+                throw new ArrayIndexOutOfBoundsException();
+            }
+
+            // FIXME: handle multi-char characters.
+            // Need to figure out if the lengths of the width array takes into account
+            // multi-char characters.
+            for (int i = 0; i < count; i++) {
+                char c = text[i + index];
+                boolean found = false;
+                for (FontInfo info : mFonts) {
+                    if (info.mFont.canDisplay(c)) {
+                        widths[i] = info.mMetrics.charWidth(c);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found == false) {
+                    // we stop there.
+                    return i;
+                }
+            }
+
+            return count;
         }
 
-        if (!mHasCompatScaling) {
-            return native_getTextWidths(mNativePaint, text, index, count, widths);
-        }
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        int res = native_getTextWidths(mNativePaint, text, index, count, widths);
-        setTextSize(oldSize);
-        for (int i=0; i<res; i++) {
-            widths[i] *= mInvCompatScaling;
-        }
-        return res;
+        return 0;
     }
-
-    /**
-     * Return the advance widths for the characters in the string.
-     *
-     * @param text     The text to measure
-     * @param start    The index of the first char to to measure
-     * @param end      The end of the text slice to measure
-     * @param widths   array to receive the advance widths of the characters.
-     *                 Must be at least a large as (end - start).
-     * @return         the actual number of widths returned.
-     */
-    /*public int getTextWidths(CharSequence text, int start, int end,
-                             float[] widths) {
-        if (text instanceof String) {
-            return getTextWidths((String) text, start, end, widths);
-        }
-        if (text instanceof SpannedString ||
-            text instanceof SpannableString) {
-            return getTextWidths(text.toString(), start, end, widths);
-        }
-        if (text instanceof GraphicsOperations) {
-            return ((GraphicsOperations) text).getTextWidths(start, end,
-                                                                 widths, this);
-        }
-
-        char[] buf = TemporaryBuffer.obtain(end - start);
-        TextUtils.getChars(text, start, end, buf, 0);
-        int result = getTextWidths(buf, 0, end - start, widths);
-        TemporaryBuffer.recycle(buf);
-        return result;
-    }*/
 
     /**
      * Return the advance widths for the characters in the string.
@@ -1248,6 +1107,7 @@ public class Paint {
      *               Must be at least a large as the text.
      * @return       the number of unichars in the specified text.
      */
+    @Override
     public int getTextWidths(String text, int start, int end, float[] widths) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
@@ -1256,29 +1116,35 @@ public class Paint {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        if (!mHasCompatScaling) {
-            return native_getTextWidths(mNativePaint, text, start, end, widths);
-        }
-        final float oldSize = getTextSize();
-        setTextSize(oldSize*mCompatScaling);
-        int res = native_getTextWidths(mNativePaint, text, start, end, widths);
-        setTextSize(oldSize);
-        for (int i=0; i<res; i++) {
-            widths[i] *= mInvCompatScaling;
-        }
-        return res;
+        return getTextWidths(text.toCharArray(), start, end - start, widths);
     }
 
-    /**
-     * Return the advance widths for the characters in the string.
-     *
-     * @param text   The text to measure
-     * @param widths array to receive the advance widths of the characters.
-     *               Must be at least a large as the text.
-     * @return       the number of unichars in the specified text.
+    /*
+     * re-implement to call SpannableStringBuilder.getTextWidths with a Paint object
+     * instead of an Paint
      */
+    @Override
+    public int getTextWidths(CharSequence text, int start, int end, float[] widths) {
+        if (text instanceof String) {
+            return getTextWidths((String)text, start, end, widths);
+        }
+        if (text instanceof SpannedString || text instanceof SpannableString) {
+            return getTextWidths(text.toString(), start, end, widths);
+        }
+        if (text instanceof SpannableStringBuilder) {
+            return ((SpannableStringBuilder)text).getTextWidths(start, end, widths, this);
+        }
+
+        char[] buf = TemporaryBuffer.obtain(end - start);
+        TextUtils.getChars(text, start, end, buf, 0);
+        int result = getTextWidths(buf, 0, end - start, widths);
+        TemporaryBuffer.recycle(buf);
+        return result;
+    }
+
+    @Override
     public int getTextWidths(String text, float[] widths) {
-        return getTextWidths(text, 0, text.length(), widths);
+        return super.getTextWidths(text, widths);
     }
 
     /**
@@ -1294,12 +1160,19 @@ public class Paint {
      * @param path     The path to receive the data describing the text. Must
      *                 be allocated by the caller.
      */
+    @Override
     public void getTextPath(char[] text, int index, int count,
                             float x, float y, Path path) {
+
+        // TODO this is the ORIGINAL implementation. REPLACE AS NEEDED OR REMOVE
+
         if ((index | count) < 0 || index + count > text.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        native_getTextPath(mNativePaint, text, index, count, x, y, path.ni());
+
+        // TODO native_getTextPath(mNativePaint, text, index, count, x, y, path.ni());
+
+        throw new UnsupportedOperationException("IMPLEMENT AS NEEDED");
     }
 
     /**
@@ -1315,12 +1188,14 @@ public class Paint {
      * @param path  The path to receive the data describing the text. Must
      *              be allocated by the caller.
      */
+    @Override
     public void getTextPath(String text, int start, int end,
                             float x, float y, Path path) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
         }
-        native_getTextPath(mNativePaint, text, start, end, x, y, path.ni());
+
+        getTextPath(text.toCharArray(), start, end - start, x, y, path);
     }
 
     /**
@@ -1333,6 +1208,7 @@ public class Paint {
      * @param bounds Returns the unioned bounds of all the text. Must be
      *               allocated by the caller.
      */
+    @Override
     public void getTextBounds(String text, int start, int end, Rect bounds) {
         if ((start | end | (end - start) | (text.length() - end)) < 0) {
             throw new IndexOutOfBoundsException();
@@ -1340,7 +1216,8 @@ public class Paint {
         if (bounds == null) {
             throw new NullPointerException("need bounds Rect");
         }
-        nativeGetStringBounds(mNativePaint, text, start, end, bounds);
+
+        getTextBounds(text.toCharArray(), start, end - start, bounds);
     }
 
     /**
@@ -1353,64 +1230,25 @@ public class Paint {
      * @param bounds Returns the unioned bounds of all the text. Must be
      *               allocated by the caller.
      */
+    @Override
     public void getTextBounds(char[] text, int index, int count, Rect bounds) {
-        if ((index | count) < 0 || index + count > text.length) {
-            throw new ArrayIndexOutOfBoundsException();
+        // FIXME
+        if (mFonts.size() > 0) {
+            if ((index | count) < 0 || index + count > text.length) {
+                throw new ArrayIndexOutOfBoundsException();
+            }
+            if (bounds == null) {
+                throw new NullPointerException("need bounds Rect");
+            }
+
+            FontInfo mainInfo = mFonts.get(0);
+
+            Rectangle2D rect = mainInfo.mFont.getStringBounds(text, index, index + count, mFontContext);
+            bounds.set(0, 0, (int)rect.getWidth(), (int)rect.getHeight());
         }
-        if (bounds == null) {
-            throw new NullPointerException("need bounds Rect");
-        }
-        nativeGetCharArrayBounds(mNativePaint, text, index, count, bounds);
     }
 
-    protected void finalize() throws Throwable {
-        finalizer(mNativePaint);
+    public static void finalizer(int foo) {
+        // pass
     }
-
-    private static native int native_init();
-    private static native int native_initWithPaint(int paint);
-    private static native void native_reset(int native_object);
-    private static native void native_set(int native_dst, int native_src);
-    private static native int native_getStyle(int native_object);
-    private static native void native_setStyle(int native_object, int style);
-    private static native int native_getStrokeCap(int native_object);
-    private static native void native_setStrokeCap(int native_object, int cap);
-    private static native int native_getStrokeJoin(int native_object);
-    private static native void native_setStrokeJoin(int native_object,
-                                                    int join);
-    private static native boolean native_getFillPath(int native_object,
-                                                     int src, int dst);
-    private static native int native_setShader(int native_object, int shader);
-    private static native int native_setColorFilter(int native_object,
-                                                    int filter);
-    private static native int native_setXfermode(int native_object,
-                                                 int xfermode);
-    private static native int native_setPathEffect(int native_object,
-                                                   int effect);
-    private static native int native_setMaskFilter(int native_object,
-                                                   int maskfilter);
-    private static native int native_setTypeface(int native_object,
-                                                 int typeface);
-    private static native int native_setRasterizer(int native_object,
-                                                   int rasterizer);
-
-    private static native int native_getTextAlign(int native_object);
-    private static native void native_setTextAlign(int native_object,
-                                                   int align);
-
-    private static native float native_getFontMetrics(int native_paint,
-                                                      FontMetrics metrics);
-    private static native int native_getTextWidths(int native_object,
-                            char[] text, int index, int count, float[] widths);
-    private static native int native_getTextWidths(int native_object,
-                            String text, int start, int end, float[] widths);
-    private static native void native_getTextPath(int native_object,
-                char[] text, int index, int count, float x, float y, int path);
-    private static native void native_getTextPath(int native_object,
-                String text, int start, int end, float x, float y, int path);
-    private static native void nativeGetStringBounds(int nativePaint,
-                                String text, int start, int end, Rect bounds);
-    private static native void nativeGetCharArrayBounds(int nativePaint,
-                                char[] text, int index, int count, Rect bounds);
-    private static native void finalizer(int nativePaint);
 }

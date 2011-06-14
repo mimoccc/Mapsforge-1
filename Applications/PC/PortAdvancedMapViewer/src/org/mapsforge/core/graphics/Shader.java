@@ -1,8 +1,6 @@
 package org.mapsforge.core.graphics;
-
-
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +21,9 @@ package org.mapsforge.core.graphics;
  * paint.setShader(shader). After that any object (other than a bitmap) that is
  * drawn with that paint will get its color(s) from the shader.
  */
-public class Shader {
+public abstract class Shader {
 
-    // this is set by subclasses, but don't make it public
-    /* package */ int native_instance;
+    private final Matrix mMatrix = new Matrix();
 
     public enum TileMode {
         /**
@@ -56,7 +53,11 @@ public class Shader {
      * @return true if the shader has a non-identity local matrix
      */
     public boolean getLocalMatrix(Matrix localM) {
-        return nativeGetLocalMatrix(native_instance, localM.native_instance);
+        if (localM != null) {
+            localM.set(mMatrix);
+        }
+
+        return !mMatrix.isIdentity();
     }
 
     /**
@@ -65,17 +66,15 @@ public class Shader {
      * @param localM The shader's new local matrix, or null to specify identity
      */
     public void setLocalMatrix(Matrix localM) {
-        nativeSetLocalMatrix(native_instance,
-                             localM != null ? localM.native_instance : 0);
+        if (localM != null) {
+            mMatrix.set(localM);
+        } else {
+            mMatrix.reset();
+        }
     }
 
-    protected void finalize() throws Throwable {
-        nativeDestructor(native_instance);
-    }
-
-    private static native void nativeDestructor(int native_shader);
-    private static native boolean nativeGetLocalMatrix(int native_shader,
-                                                       int matrix_instance);
-    private static native void nativeSetLocalMatrix(int native_shader,
-                                                    int matrix_instance);
+    /**
+     * Returns a java.awt.Paint object matching this shader.
+     */
+    abstract java.awt.Paint getJavaPaint();
 }

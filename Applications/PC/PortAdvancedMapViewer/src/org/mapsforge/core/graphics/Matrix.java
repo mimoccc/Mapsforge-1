@@ -1,7 +1,7 @@
 package org.mapsforge.core.graphics;
 
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,22 @@ package org.mapsforge.core.graphics;
  * limitations under the License.
  */
 
-import java.io.PrintWriter;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 
 
 /**
- * The Matrix class holds a 3x3 matrix for transforming coordinates.
- * Matrix does not have a constructor, so it must be explicitly initialized
- * using either reset() - to construct an identity matrix, or one of the set..()
- * functions (e.g. setTranslate, setRotate, etc.).
+ * A matrix implementation overridden by the LayoutLib bridge.
  */
-public class Matrix {
+public class Matrix  {
 
-    public static final int MSCALE_X = 0;   //!< use with getValues/setValues
-    public static final int MSKEW_X  = 1;   //!< use with getValues/setValues
-    public static final int MTRANS_X = 2;   //!< use with getValues/setValues
-    public static final int MSKEW_Y  = 3;   //!< use with getValues/setValues
-    public static final int MSCALE_Y = 4;   //!< use with getValues/setValues
-    public static final int MTRANS_Y = 5;   //!< use with getValues/setValues
-    public static final int MPERSP_0 = 6;   //!< use with getValues/setValues
-    public static final int MPERSP_1 = 7;   //!< use with getValues/setValues
-    public static final int MPERSP_2 = 8;   //!< use with getValues/setValues
-
-    /* package */ int native_instance;
+    float mValues[] = new float[9];
 
     /**
      * Create an identity matrix
      */
     public Matrix() {
-        native_instance = native_create(0);
+        reset();
     }
 
     /**
@@ -51,15 +39,77 @@ public class Matrix {
      * @param src The matrix to copy into this matrix
      */
     public Matrix(Matrix src) {
-        native_instance = native_create(src != null ? src.native_instance : 0);
+        set(src);
     }
+
+    /**
+     * Creates a Matrix object from the float array. The array becomes the internal storage
+     * of the object.
+     * @param data
+     */
+    private Matrix(float[] data) {
+        assert data.length != 9;
+        mValues = data;
+    }
+
+    //---------- Custom Methods
+
+    /**
+     * Adds the given transformation to the current Matrix
+     * <p/>This in effect does this = this*matrix
+     * @param matrix
+     */
+    private void addTransform(float[] matrix) {
+        float[] tmp = new float[9];
+
+        // first row
+        tmp[0] = matrix[0] * mValues[0] + matrix[1] * mValues[3] + matrix[2] * mValues[6];
+        tmp[1] = matrix[0] * mValues[1] + matrix[1] * mValues[4] + matrix[2] * mValues[7];
+        tmp[2] = matrix[0] * mValues[2] + matrix[1] * mValues[5] + matrix[2] * mValues[8];
+
+        // 2nd row
+        tmp[3] = matrix[3] * mValues[0] + matrix[4] * mValues[3] + matrix[5] * mValues[6];
+        tmp[4] = matrix[3] * mValues[1] + matrix[4] * mValues[4] + matrix[5] * mValues[7];
+        tmp[5] = matrix[3] * mValues[2] + matrix[4] * mValues[5] + matrix[5] * mValues[8];
+
+        // 3rd row
+        tmp[6] = matrix[6] * mValues[0] + matrix[7] * mValues[3] + matrix[8] * mValues[6];
+        tmp[7] = matrix[6] * mValues[1] + matrix[7] * mValues[4] + matrix[8] * mValues[7];
+        tmp[8] = matrix[6] * mValues[2] + matrix[7] * mValues[5] + matrix[8] * mValues[8];
+
+        // copy the result over to mValues
+        mValues = tmp;
+    }
+
+    public AffineTransform getTransform() {
+        // the AffineTransform constructor takes the value in a different order
+        // for a matrix [ 0 1 2 ]
+        //              [ 3 4 5 ]
+        // the order is 0, 3, 1, 4, 2, 5...
+        return new AffineTransform(mValues[0], mValues[3], mValues[1],
+                mValues[4], mValues[2], mValues[5]);
+    }
+
+    public boolean hasPerspective() {
+        return (mValues[6] != 0 || mValues[7] != 0 || mValues[8] != 1);
+    }
+
+    //----------
 
     /**
      * Returns true if the matrix is identity.
      * This maybe faster than testing if (getType() == 0)
      */
     public boolean isIdentity() {
-        return native_isIdentity(native_instance);
+        for (int i = 0, k = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++, k++) {
+                if (mValues[k] != ((i==j) ? 1 : 0)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -68,7 +118,7 @@ public class Matrix {
      * degrees.
      */
     public boolean rectStaysRect() {
-        return native_rectStaysRect(native_instance);
+        return (computeTypeMask() & kRectStaysRect_Mask) != 0;
     }
 
     /**
@@ -79,26 +129,47 @@ public class Matrix {
         if (src == null) {
             reset();
         } else {
-            native_set(native_instance, src.native_instance);
+            System.arraycopy(src.mValues, 0, mValues, 0, mValues.length);
         }
     }
 
-    /** Returns true iff obj is a Matrix and its values equal our values.
+    /** Returns true if obj is a Matrix and its values equal our values.
     */
     public boolean equals(Object obj) {
-        return obj != null &&
-               obj instanceof Matrix &&
-               native_equals(native_instance, ((Matrix)obj).native_instance);
+        if (obj != null && obj instanceof Matrix) {
+            Matrix matrix = (Matrix)obj;
+            for (int i = 0 ; i < 9 ; i++) {
+                if (mValues[i] != matrix.mValues[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /** Set the matrix to identity */
     public void reset() {
-        native_reset(native_instance);
+        for (int i = 0, k = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++, k++) {
+                mValues[k] = ((i==j) ? 1 : 0);
+            }
+        }
     }
 
     /** Set the matrix to translate by (dx, dy). */
     public void setTranslate(float dx, float dy) {
-        native_setTranslate(native_instance, dx, dy);
+        mValues[0] = 1;
+        mValues[1] = 0;
+        mValues[2] = dx;
+        mValues[3] = 0;
+        mValues[4] = 1;
+        mValues[5] = dy;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
     }
 
     /**
@@ -107,12 +178,36 @@ public class Matrix {
      * specified transformation.
      */
     public void setScale(float sx, float sy, float px, float py) {
-        native_setScale(native_instance, sx, sy, px, py);
+        // TODO: do it in one pass
+
+        // translate so that the pivot is in 0,0
+        mValues[0] = 1;
+        mValues[1] = 0;
+        mValues[2] = -px;
+        mValues[3] = 0;
+        mValues[4] = 1;
+        mValues[5] = -py;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
+
+        // scale
+        addTransform(new float[] { sx, 0, 0, 0, sy, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
     }
 
     /** Set the matrix to scale by sx and sy. */
     public void setScale(float sx, float sy) {
-        native_setScale(native_instance, sx, sy);
+        mValues[0] = sx;
+        mValues[1] = 0;
+        mValues[2] = 0;
+        mValues[3] = 0;
+        mValues[4] = sy;
+        mValues[5] = 0;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
     }
 
     /**
@@ -121,14 +216,45 @@ public class Matrix {
      * unchanged by the specified transformation.
      */
     public void setRotate(float degrees, float px, float py) {
-        native_setRotate(native_instance, degrees, px, py);
+        // TODO: do it in one pass
+
+        // translate so that the pivot is in 0,0
+        mValues[0] = 1;
+        mValues[1] = 0;
+        mValues[2] = -px;
+        mValues[3] = 0;
+        mValues[4] = 1;
+        mValues[5] = -py;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
+
+        // scale
+        double rad = Math.toRadians(degrees);
+        float cos = (float)Math.cos(rad);
+        float sin = (float)Math.sin(rad);
+        addTransform(new float[] { cos, -sin, 0, sin, cos, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
     }
 
     /**
      * Set the matrix to rotate about (0,0) by the specified number of degrees.
      */
     public void setRotate(float degrees) {
-        native_setRotate(native_instance, degrees);
+        double rad = Math.toRadians(degrees);
+        float cos = (float)Math.cos(rad);
+        float sin = (float)Math.sin(rad);
+
+        mValues[0] = cos;
+        mValues[1] = -sin;
+        mValues[2] = 0;
+        mValues[3] = sin;
+        mValues[4] = cos;
+        mValues[5] = 0;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
     }
 
     /**
@@ -137,12 +263,36 @@ public class Matrix {
      * remain unchanged by the specified transformation.
      */
     public void setSinCos(float sinValue, float cosValue, float px, float py) {
-        native_setSinCos(native_instance, sinValue, cosValue, px, py);
+        // TODO: do it in one pass
+
+        // translate so that the pivot is in 0,0
+        mValues[0] = 1;
+        mValues[1] = 0;
+        mValues[2] = -px;
+        mValues[3] = 0;
+        mValues[4] = 1;
+        mValues[5] = -py;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
+
+        // scale
+        addTransform(new float[] { cosValue, -sinValue, 0, sinValue, cosValue, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
     }
 
     /** Set the matrix to rotate by the specified sine and cosine values. */
     public void setSinCos(float sinValue, float cosValue) {
-        native_setSinCos(native_instance, sinValue, cosValue);
+        mValues[0] = cosValue;
+        mValues[1] = -sinValue;
+        mValues[2] = 0;
+        mValues[3] = sinValue;
+        mValues[4] = cosValue;
+        mValues[5] = 0;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
     }
 
     /**
@@ -151,12 +301,36 @@ public class Matrix {
      * specified transformation.
      */
     public void setSkew(float kx, float ky, float px, float py) {
-        native_setSkew(native_instance, kx, ky, px, py);
+        // TODO: do it in one pass
+
+        // translate so that the pivot is in 0,0
+        mValues[0] = 1;
+        mValues[1] = 0;
+        mValues[2] = -px;
+        mValues[3] = 0;
+        mValues[4] = 1;
+        mValues[5] = -py;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
+
+        // scale
+        addTransform(new float[] { 1, kx, 0, ky, 1, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
     }
 
     /** Set the matrix to skew by sx and sy. */
     public void setSkew(float kx, float ky) {
-        native_setSkew(native_instance, kx, ky);
+        mValues[0] = 1;
+        mValues[1] = kx;
+        mValues[2] = -0;
+        mValues[3] = ky;
+        mValues[4] = 1;
+        mValues[5] = 0;
+        mValues[6] = 0;
+        mValues[7] = 0;
+        mValues[8] = 1;
     }
 
     /**
@@ -165,8 +339,17 @@ public class Matrix {
      * matrices may also be the target matrix. this = a * b
      */
     public boolean setConcat(Matrix a, Matrix b) {
-        return native_setConcat(native_instance, a.native_instance,
-                                b.native_instance);
+        if (a == this) {
+            preConcat(b);
+        } else if (b == this) {
+            postConcat(b);
+        } else {
+            Matrix tmp = new Matrix(b);
+            tmp.addTransform(a.mValues);
+            set(tmp);
+        }
+
+        return true;
     }
 
     /**
@@ -174,7 +357,12 @@ public class Matrix {
      * M' = M * T(dx, dy)
      */
     public boolean preTranslate(float dx, float dy) {
-        return native_preTranslate(native_instance, dx, dy);
+        // create a matrix that will be multiply by this
+        Matrix m = new Matrix(new float[] { 1, 0, dx, 0, 1, dy, 0, 0, 1 });
+        m.addTransform(this.mValues);
+
+        System.arraycopy(m.mValues, 0, mValues, 0, 9);
+        return true;
     }
 
     /**
@@ -182,7 +370,12 @@ public class Matrix {
      * M' = M * S(sx, sy, px, py)
      */
     public boolean preScale(float sx, float sy, float px, float py) {
-        return native_preScale(native_instance, sx, sy, px, py);
+        Matrix m = new Matrix();
+        m.setScale(sx, sy, px, py);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -190,7 +383,12 @@ public class Matrix {
      * M' = M * S(sx, sy)
      */
     public boolean preScale(float sx, float sy) {
-        return native_preScale(native_instance, sx, sy);
+        Matrix m = new Matrix();
+        m.setScale(sx, sy);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -198,7 +396,12 @@ public class Matrix {
      * M' = M * R(degrees, px, py)
      */
     public boolean preRotate(float degrees, float px, float py) {
-        return native_preRotate(native_instance, degrees, px, py);
+        Matrix m = new Matrix();
+        m.setRotate(degrees, px, py);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -206,7 +409,12 @@ public class Matrix {
      * M' = M * R(degrees)
      */
     public boolean preRotate(float degrees) {
-        return native_preRotate(native_instance, degrees);
+        Matrix m = new Matrix();
+        m.setRotate(degrees);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -214,7 +422,12 @@ public class Matrix {
      * M' = M * K(kx, ky, px, py)
      */
     public boolean preSkew(float kx, float ky, float px, float py) {
-        return native_preSkew(native_instance, kx, ky, px, py);
+        Matrix m = new Matrix();
+        m.setSkew(kx, ky, px, py);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -222,7 +435,12 @@ public class Matrix {
      * M' = M * K(kx, ky)
      */
     public boolean preSkew(float kx, float ky) {
-        return native_preSkew(native_instance, kx, ky);
+        Matrix m = new Matrix();
+        m.setSkew(kx, ky);
+        m.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -230,7 +448,11 @@ public class Matrix {
      * M' = M * other
      */
     public boolean preConcat(Matrix other) {
-        return native_preConcat(native_instance, other.native_instance);
+        Matrix m = new Matrix(other);
+        other.addTransform(mValues);
+        set(m);
+
+        return true;
     }
 
     /**
@@ -238,55 +460,97 @@ public class Matrix {
      * M' = T(dx, dy) * M
      */
     public boolean postTranslate(float dx, float dy) {
-        return native_postTranslate(native_instance, dx, dy);
+        addTransform(new float[] { 1, 0, dx, 0, 1, dy, 0, 0, 1 });
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified scale.
      * M' = S(sx, sy, px, py) * M
      */
+    
     public boolean postScale(float sx, float sy, float px, float py) {
-        return native_postScale(native_instance, sx, sy, px, py);
+        // TODO: do it in one pass
+        // translate so that the pivot is in 0,0
+        addTransform(new float[] { 1, 0, -px, 0, 1, py, 0, 0, 1 });
+        // scale
+        addTransform(new float[] { sx, 0, 0, 0, sy, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
+
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified scale.
      * M' = S(sx, sy) * M
      */
+    
     public boolean postScale(float sx, float sy) {
-        return native_postScale(native_instance, sx, sy);
+        addTransform(new float[] { sx, 0, 0, 0, sy, 0, 0, 0, 1 });
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified rotation.
      * M' = R(degrees, px, py) * M
      */
+    
     public boolean postRotate(float degrees, float px, float py) {
-        return native_postRotate(native_instance, degrees, px, py);
+        // TODO: do it in one pass
+        // translate so that the pivot is in 0,0
+        addTransform(new float[] { 1, 0, -px, 0, 1, py, 0, 0, 1 });
+        // scale
+        double rad = Math.toRadians(degrees);
+        float cos = (float)Math.cos(rad);
+        float sin = (float)Math.sin(rad);
+        addTransform(new float[] { cos, -sin, 0, sin, cos, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
+
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified rotation.
      * M' = R(degrees) * M
      */
+    
     public boolean postRotate(float degrees) {
-        return native_postRotate(native_instance, degrees);
+        double rad = Math.toRadians(degrees);
+        float cos = (float)Math.cos(rad);
+        float sin = (float)Math.sin(rad);
+        addTransform(new float[] { cos, -sin, 0, sin, cos, 0, 0, 0, 1 });
+
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified skew.
      * M' = K(kx, ky, px, py) * M
      */
+    
     public boolean postSkew(float kx, float ky, float px, float py) {
-        return native_postSkew(native_instance, kx, ky, px, py);
+        // TODO: do it in one pass
+        // translate so that the pivot is in 0,0
+        addTransform(new float[] { 1, 0, -px, 0, 1, py, 0, 0, 1 });
+        // scale
+        addTransform(new float[] { 1, kx, 0, ky, 1, 0, 0, 0, 1 });
+        // translate back the pivot
+        addTransform(new float[] { 1, 0, px, 0, 1, py, 0, 0, 1 });
+
+        return true;
     }
 
     /**
      * Postconcats the matrix with the specified skew.
      * M' = K(kx, ky) * M
      */
+    
     public boolean postSkew(float kx, float ky) {
-        return native_postSkew(native_instance, kx, ky);
+        addTransform(new float[] { 1, kx, 0, ky, 1, 0, 0, 0, 1 });
+
+        return true;
     }
 
     /**
@@ -294,7 +558,9 @@ public class Matrix {
      * M' = other * M
      */
     public boolean postConcat(Matrix other) {
-        return native_postConcat(native_instance, other.native_instance);
+        addTransform(other.mValues);
+
+        return true;
     }
 
     /** Controlls how the src rect should align into the dst rect for
@@ -336,7 +602,7 @@ public class Matrix {
 
     /**
      * Set the matrix to the scale and translate values that map the source
-     * rectangle to the destination rectangle, returning true if the the result
+     * rectangle to the destination rectangle, returning true if the result
      * can be represented.
      *
      * @param src the source rectangle to map from.
@@ -348,21 +614,68 @@ public class Matrix {
         if (dst == null || src == null) {
             throw new NullPointerException();
         }
-        return native_setRectToRect(native_instance, src, dst, stf.nativeInt);
+
+        if (src.isEmpty()) {
+            reset();
+            return false;
+        }
+
+        if (dst.isEmpty()) {
+            mValues[0] = mValues[1] = mValues[2] = mValues[3] = mValues[4] = mValues[5]
+               = mValues[6] = mValues[7] = 0;
+            mValues[8] = 1;
+        } else {
+            float    tx, sx = dst.width() / src.width();
+            float    ty, sy = dst.height() / src.height();
+            boolean  xLarger = false;
+
+            if (stf != ScaleToFit.FILL) {
+                if (sx > sy) {
+                    xLarger = true;
+                    sx = sy;
+                } else {
+                    sy = sx;
+                }
+            }
+
+            tx = dst.left - src.left * sx;
+            ty = dst.top - src.top * sy;
+            if (stf == ScaleToFit.CENTER || stf == ScaleToFit.END) {
+                float diff;
+
+                if (xLarger) {
+                    diff = dst.width() - src.width() * sy;
+                } else {
+                    diff = dst.height() - src.height() * sy;
+                }
+
+                if (stf == ScaleToFit.CENTER) {
+                    diff = diff / 2;
+                }
+
+                if (xLarger) {
+                    tx += diff;
+                } else {
+                    ty += diff;
+                }
+            }
+
+            mValues[0] = sx;
+            mValues[4] = sy;
+            mValues[2] = tx;
+            mValues[5] = ty;
+            mValues[1]  = mValues[3] = mValues[6] = mValues[7] = 0;
+
+        }
+        // shared cleanup
+        mValues[8] = 1;
+        return true;
     }*/
 
-    // private helper to perform range checks on arrays of "points"
-    private static void checkPointArrays(float[] src, int srcIndex,
-                                         float[] dst, int dstIndex,
-                                         int pointCount) {
-        // check for too-small and too-big indices
-        int srcStop = srcIndex + (pointCount << 1);
-        int dstStop = dstIndex + (pointCount << 1);
-        if ((pointCount | srcIndex | dstIndex | srcStop | dstStop) < 0 ||
-                srcStop > src.length || dstStop > dst.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-    }
+    /*
+    public boolean setRectToRect(RectF src, RectF dst, MatrixOriginal.ScaleToFit stf) {
+        throw new UnsupportedOperationException("CALL TO PARENT FORBIDDEN");
+    }*/
 
     /**
      * Set the matrix such that the specified src points would map to the
@@ -376,6 +689,7 @@ public class Matrix {
      * @param pointCount The number of pairs/points to be used. Must be [0..4]
      * @return true if the matrix was set to the specified transformation
      */
+    
     public boolean setPolyToPoly(float[] src, int srcIndex,
                                  float[] dst, int dstIndex,
                                  int pointCount) {
@@ -383,8 +697,7 @@ public class Matrix {
             throw new IllegalArgumentException();
         }
         checkPointArrays(src, srcIndex, dst, dstIndex, pointCount);
-        return native_setPolyToPoly(native_instance, src, srcIndex,
-                                    dst, dstIndex, pointCount);
+        throw new UnsupportedOperationException("STUB NEEDED");
     }
 
     /**
@@ -393,7 +706,37 @@ public class Matrix {
      * inverted, ignore inverse and return false.
      */
     public boolean invert(Matrix inverse) {
-        return native_invert(native_instance, inverse.native_instance);
+        if (inverse == null) {
+            return false;
+        }
+
+        try {
+            AffineTransform affineTransform = getTransform();
+            AffineTransform inverseTransform = affineTransform.createInverse();
+            inverse.mValues[0] = (float)inverseTransform.getScaleX();
+            inverse.mValues[1] = (float)inverseTransform.getShearX();
+            inverse.mValues[2] = (float)inverseTransform.getTranslateX();
+            inverse.mValues[3] = (float)inverseTransform.getScaleX();
+            inverse.mValues[4] = (float)inverseTransform.getShearY();
+            inverse.mValues[5] = (float)inverseTransform.getTranslateY();
+
+            return true;
+        } catch (NoninvertibleTransformException e) {
+            return false;
+        }
+    }
+
+    
+    protected static void checkPointArrays(float[] src, int srcIndex,
+            float[] dst, int dstIndex,
+            int pointCount) {
+    	// check for too-small and too-big indices
+    	int srcStop = srcIndex + (pointCount << 1);
+    	int dstStop = dstIndex + (pointCount << 1);
+    	if ((pointCount | srcIndex | dstIndex | srcStop | dstStop) < 0 ||
+    			srcStop > src.length || dstStop > dst.length) {
+    		throw new ArrayIndexOutOfBoundsException();
+    	}
     }
 
     /**
@@ -407,11 +750,23 @@ public class Matrix {
      * @param srcIndex The index of the first [x,y] pair of src floats
      * @param pointCount The number of points (x,y pairs) to transform
      */
+    
     public void mapPoints(float[] dst, int dstIndex, float[] src, int srcIndex,
                           int pointCount) {
         checkPointArrays(src, srcIndex, dst, dstIndex, pointCount);
-        native_mapPoints(native_instance, dst, dstIndex, src, srcIndex,
-                         pointCount, true);
+
+        for (int i = 0 ; i < pointCount ; i++) {
+            // just in case we are doing in place, we better put this in temp vars
+            float x = mValues[0] * src[i + srcIndex] +
+                      mValues[1] * src[i + srcIndex + 1] +
+                      mValues[2];
+            float y = mValues[3] * src[i + srcIndex] +
+                      mValues[4] * src[i + srcIndex + 1] +
+                      mValues[5];
+
+            dst[i + dstIndex]     = x;
+            dst[i + dstIndex + 1] = y;
+        }
     }
 
     /**
@@ -425,11 +780,11 @@ public class Matrix {
      * @param srcIndex The index of the first [x,y] pair of src floats
      * @param vectorCount The number of vectors (x,y pairs) to transform
      */
+    
     public void mapVectors(float[] dst, int dstIndex, float[] src, int srcIndex,
                           int vectorCount) {
         checkPointArrays(src, srcIndex, dst, dstIndex, vectorCount);
-        native_mapPoints(native_instance, dst, dstIndex, src, srcIndex,
-                         vectorCount, false);
+        throw new UnsupportedOperationException("STUB NEEDED");
     }
 
     /**
@@ -440,6 +795,7 @@ public class Matrix {
      * @param dst   The array of dst points (x,y pairs)
      * @param src   The array of src points (x,y pairs)
      */
+    
     public void mapPoints(float[] dst, float[] src) {
         if (dst.length != src.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -455,6 +811,7 @@ public class Matrix {
      * @param dst   The array of dst vectors (x,y pairs)
      * @param src   The array of src vectors (x,y pairs)
      */
+    
     public void mapVectors(float[] dst, float[] src) {
         if (dst.length != src.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -468,6 +825,7 @@ public class Matrix {
      *
      * @param pts The array [x0, y0, x1, y1, ...] of points to transform.
      */
+    
     public void mapPoints(float[] pts) {
         mapPoints(pts, 0, pts, 0, pts.length >> 1);
     }
@@ -477,6 +835,7 @@ public class Matrix {
      * vectors back into the array.
      * @param vecs The array [x0, y0, x1, y1, ...] of vectors to transform.
      */
+    
     public void mapVectors(float[] vecs) {
         mapVectors(vecs, 0, vecs, 0, vecs.length >> 1);
     }
@@ -490,11 +849,31 @@ public class Matrix {
      * @param src The original rectangle to be transformed.
      * @return the result of calling rectStaysRect()
      */
-    /*public boolean mapRect(RectF dst, RectF src) {
+    /*
+    public boolean mapRect(RectF dst, RectF src) {
         if (dst == null || src == null) {
             throw new NullPointerException();
         }
-        return native_mapRect(native_instance, dst, src);
+
+        // array with 4 corners
+        float[] corners = new float[] {
+                src.left, src.top,
+                src.right, src.top,
+                src.right, src.bottom,
+                src.left, src.bottom,
+        };
+
+        // apply the transform to them.
+        mapPoints(corners);
+
+        // now put the result in the rect. We take the min/max of Xs and min/max of Ys
+        dst.left = Math.min(Math.min(corners[0], corners[2]), Math.min(corners[4], corners[6]));
+        dst.right = Math.max(Math.max(corners[0], corners[2]), Math.max(corners[4], corners[6]));
+
+        dst.top = Math.min(Math.min(corners[1], corners[3]), Math.min(corners[5], corners[7]));
+        dst.bottom = Math.max(Math.max(corners[1], corners[3]), Math.max(corners[5], corners[7]));
+
+        return rectStaysRect();
     }*/
 
     /**
@@ -505,7 +884,8 @@ public class Matrix {
      * @param rect The rectangle to transform.
      * @return the result of calling rectStaysRect()
      */
-    /*public boolean mapRect(RectF rect) {
+    /*
+    public boolean mapRect(RectF rect) {
         return mapRect(rect, rect);
     }*/
 
@@ -514,17 +894,19 @@ public class Matrix {
      * this matrix. NOTE: in perspective this value assumes the circle
      * has its center at the origin.
      */
+    
     public float mapRadius(float radius) {
-        return native_mapRadius(native_instance, radius);
+        throw new UnsupportedOperationException("STUB NEEDED");
     }
 
     /** Copy 9 values from the matrix into the array.
     */
+    
     public void getValues(float[] values) {
         if (values.length < 9) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        native_getValues(native_instance, values);
+        System.arraycopy(mValues, 0, values, 0, mValues.length);
     }
 
     /** Copy 9 values from the array into the matrix.
@@ -533,141 +915,85 @@ public class Matrix {
         a subsequent call to getValues() will not yield exactly
         the same values.
     */
+    
     public void setValues(float[] values) {
         if (values.length < 9) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        native_setValues(native_instance, values);
+        System.arraycopy(values, 0, mValues, 0, mValues.length);
     }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder(64);
-        sb.append("Matrix{");
-        toShortString(sb);
-        sb.append('}');
-        return sb.toString();
+    @SuppressWarnings("unused")
+    private final static int kIdentity_Mask      = 0;
+    private final static int kTranslate_Mask     = 0x01;  //!< set if the matrix has translation
+    private final static int kScale_Mask         = 0x02;  //!< set if the matrix has X or Y scale
+    private final static int kAffine_Mask        = 0x04;  //!< set if the matrix skews or rotates
+    private final static int kPerspective_Mask   = 0x08;  //!< set if the matrix is in perspective
+    private final static int kRectStaysRect_Mask = 0x10;
+    @SuppressWarnings("unused")
+    private final static int kUnknown_Mask       = 0x80;
 
+    @SuppressWarnings("unused")
+    private final static int kAllMasks           = kTranslate_Mask |
+                                                     kScale_Mask |
+                                                     kAffine_Mask |
+                                                     kPerspective_Mask |
+                                                     kRectStaysRect_Mask;
+
+    // these guys align with the masks, so we can compute a mask from a variable 0/1
+    @SuppressWarnings("unused")
+    private final static int kTranslate_Shift = 0;
+    @SuppressWarnings("unused")
+    private final static int kScale_Shift = 1;
+    @SuppressWarnings("unused")
+    private final static int kAffine_Shift = 2;
+    @SuppressWarnings("unused")
+    private final static int kPerspective_Shift = 3;
+    private final static int kRectStaysRect_Shift = 4;
+
+    private int computeTypeMask() {
+        int mask = 0;
+
+        if (mValues[6] != 0. || mValues[7] != 0. || mValues[8] != 1.) {
+            mask |= kPerspective_Mask;
+        }
+
+        if (mValues[2] != 0. || mValues[5] != 0.) {
+            mask |= kTranslate_Mask;
+        }
+
+        float m00 = mValues[0];
+        float m01 = mValues[1];
+        float m10 = mValues[3];
+        float m11 = mValues[4];
+
+        if (m01 != 0. || m10 != 0.) {
+            mask |= kAffine_Mask;
+        }
+
+        if (m00 != 1. || m11 != 1.) {
+            mask |= kScale_Mask;
+        }
+
+        if ((mask & kPerspective_Mask) == 0) {
+            // map non-zero to 1
+            int im00 = m00 != 0 ? 1 : 0;
+            int im01 = m01 != 0 ? 1 : 0;
+            int im10 = m10 != 0 ? 1 : 0;
+            int im11 = m11 != 0 ? 1 : 0;
+
+            // record if the (p)rimary and (s)econdary diagonals are all 0 or
+            // all non-zero (answer is 0 or 1)
+            int dp0 = (im00 | im11) ^ 1;  // true if both are 0
+            int dp1 = im00 & im11;        // true if both are 1
+            int ds0 = (im01 | im10) ^ 1;  // true if both are 0
+            int ds1 = im01 & im10;        // true if both are 1
+
+            // return 1 if primary is 1 and secondary is 0 or
+            // primary is 0 and secondary is 1
+            mask |= ((dp0 & ds1) | (dp1 & ds0)) << kRectStaysRect_Shift;
+        }
+
+        return mask;
     }
-
-    public String toShortString() {
-        StringBuilder sb = new StringBuilder(64);
-        toShortString(sb);
-        return sb.toString();
-    }
-
-    /**
-     * @hide
-     */
-    public void toShortString(StringBuilder sb) {
-        float[] values = new float[9];
-        getValues(values);
-        sb.append('[');
-        sb.append(values[0]); sb.append(", "); sb.append(values[1]); sb.append(", ");
-        sb.append(values[2]); sb.append("][");
-        sb.append(values[3]); sb.append(", "); sb.append(values[4]); sb.append(", ");
-        sb.append(values[5]); sb.append("][");
-        sb.append(values[6]); sb.append(", "); sb.append(values[7]); sb.append(", ");
-        sb.append(values[8]); sb.append(']');
-    }
-
-    /**
-     * Print short string, to optimize dumping.
-     * @hide
-     */
-    public void printShortString(PrintWriter pw) {
-        float[] values = new float[9];
-        getValues(values);
-        pw.print('[');
-        pw.print(values[0]); pw.print(", "); pw.print(values[1]); pw.print(", ");
-                pw.print(values[2]); pw.print("][");
-        pw.print(values[3]); pw.print(", "); pw.print(values[4]); pw.print(", ");
-                pw.print(values[5]); pw.print("][");
-        pw.print(values[6]); pw.print(", "); pw.print(values[7]); pw.print(", ");
-                pw.print(values[8]); pw.print(']');
-
-    }
-
-    protected void finalize() throws Throwable {
-        finalizer(native_instance);
-    }
-
-    /*package*/ final int ni() {
-        return native_instance;
-    }
-
-    private static native int native_create(int native_src_or_zero);
-    private static native boolean native_isIdentity(int native_object);
-    private static native boolean native_rectStaysRect(int native_object);
-    private static native void native_reset(int native_object);
-    private static native void native_set(int native_object, int other);
-    private static native void native_setTranslate(int native_object,
-                                                   float dx, float dy);
-    private static native void native_setScale(int native_object,
-                                        float sx, float sy, float px, float py);
-    private static native void native_setScale(int native_object,
-                                               float sx, float sy);
-    private static native void native_setRotate(int native_object,
-                                            float degrees, float px, float py);
-    private static native void native_setRotate(int native_object,
-                                                float degrees);
-    private static native void native_setSinCos(int native_object,
-                            float sinValue, float cosValue, float px, float py);
-    private static native void native_setSinCos(int native_object,
-                                                float sinValue, float cosValue);
-    private static native void native_setSkew(int native_object,
-                                        float kx, float ky, float px, float py);
-    private static native void native_setSkew(int native_object,
-                                              float kx, float ky);
-    private static native boolean native_setConcat(int native_object,
-                                                   int a, int b);
-    private static native boolean native_preTranslate(int native_object,
-                                                      float dx, float dy);
-    private static native boolean native_preScale(int native_object,
-                                        float sx, float sy, float px, float py);
-    private static native boolean native_preScale(int native_object,
-                                                  float sx, float sy);
-    private static native boolean native_preRotate(int native_object,
-                                            float degrees, float px, float py);
-    private static native boolean native_preRotate(int native_object,
-                                                   float degrees);
-    private static native boolean native_preSkew(int native_object,
-                                        float kx, float ky, float px, float py);
-    private static native boolean native_preSkew(int native_object,
-                                                 float kx, float ky);
-    private static native boolean native_preConcat(int native_object,
-                                                   int other_matrix);
-    private static native boolean native_postTranslate(int native_object,
-                                                       float dx, float dy);
-    private static native boolean native_postScale(int native_object,
-                                        float sx, float sy, float px, float py);
-    private static native boolean native_postScale(int native_object,
-                                                   float sx, float sy);
-    private static native boolean native_postRotate(int native_object,
-                                            float degrees, float px, float py);
-    private static native boolean native_postRotate(int native_object,
-                                                    float degrees);
-    private static native boolean native_postSkew(int native_object,
-                                        float kx, float ky, float px, float py);
-    private static native boolean native_postSkew(int native_object,
-                                                  float kx, float ky);
-    private static native boolean native_postConcat(int native_object,
-                                                    int other_matrix);
-    //private static native boolean native_setRectToRect(int native_object,
-    //                                            RectF src, RectF dst, int stf);
-    private static native boolean native_setPolyToPoly(int native_object,
-        float[] src, int srcIndex, float[] dst, int dstIndex, int pointCount);
-    private static native boolean native_invert(int native_object, int inverse);
-    private static native void native_mapPoints(int native_object,
-                        float[] dst, int dstIndex, float[] src, int srcIndex,
-                        int ptCount, boolean isPts);
-    //private static native boolean native_mapRect(int native_object,
-    //                                             RectF dst, RectF src);
-    private static native float native_mapRadius(int native_object,
-                                                 float radius);
-    private static native void native_getValues(int native_object,
-                                                float[] values);
-    private static native void native_setValues(int native_object,
-                                                float[] values);
-    private static native boolean native_equals(int native_a, int native_b);
-    private static native void finalizer(int native_instance);
 }
