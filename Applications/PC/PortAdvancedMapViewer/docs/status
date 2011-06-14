@@ -1,22 +1,23 @@
 Status
-- ArrayCircleOverlay	: UNNÖTIG
-- ArrayItemizedOverlay	: UNNÖTIG
-- ArrayWayOverlay		: UNNÖTIG
+- AdvancedMapViewer		: AnimationDrawable is temporary removed
+- ArrayCircleOverlay	: It won't be ported
+- ArrayItemizedOverlay	: It won't be ported
+- ArrayWayOverlay		: It won't be ported
 - CanvasRenderer		: -
-- CircleContainer		: OK (braucht keine Android-Klasse)
-- CircleOVerlay			: UNNÖTIG
-- CoastlineAlgorithm	: OK (braucht keine Android-Klasse)
-- CoastlineWay			: OK (braucht keine Android-Klasse)
+- CircleContainer		: OK (There is no dependency with Android-Class)
+- CircleOVerlay			: It won't be ported
+- CoastlineAlgorithm	: OK (There is no dependency with Android-Class)
+- CoastlineWay			: OK (There is no dependency with Android-Class)
 - DatabaseMapGenerator	: -
-- DependencyCache		: -
-- Deserializer			: OK (braucht keine Android-Klasse)
-- GeoPoint				: OK (braucht keine Android-Klasse)
-- ImmutablePoint		: OK (braucht keine Android-Klasse)
+- DependencyCache		: OK (new android...Rect --> Rect)
+- Deserializer			: OK (There is no dependency with Android-Class)
+- GeoPoint				: OK (There is no dependency with Android-Class)
+- ImmutablePoint		: OK (There is no dependency with Android-Class)
 - IndexCacheEntryKey	: OK
-- ItemizedOverlay		: UNNÖTIG
+- ItemizedOverlay		: It won't be ported
 - LabelPlacement		: OK (MARTINUS)
-- LayerIds				: OK (braucht keine Android-Klasse)
-- LineClipping			: OK (braucht keine Android-Klasse)
+- LayerIds				: OK (There is no dependency with Android-Class)
+- LineClipping			: OK (There is no dependency with Android-Class)
 - Logger				: OK (MARTINUS)
 						  Log.d() --> System.out.println() & Log.e() --> System.err.println()
 - Activity				: -						  
@@ -30,68 +31,69 @@ Status
 - MapFileParameters		: OK (MARTINUS)
 - MapGenerator			: -
 - MapInfo				: OK (MARTINUS)
-- MapnikTileDownload    : UNNÖTIG
+- MapnikTileDownload    : It won't be ported
 - MapMover				: OK (MARTINUS)
 - MapPatterns			: -
 - MapSymbols			: -
-- MapView				: -
-- MapViewMode			: OK (braucht evtl. Anpassung)
+- MapView				: OK (@Override onDraw(canvas) is removed temporary)
+- MapViewMode			: -
 - MercatorProjection	: OK (MARTINUS)
-- OpenCycleMapTile ...	: UNNÖTIG
-- OsmarendererTile ...  : UNNÖTIG
-- Overlay				: UNNÖTIG
-- OverlayCircle			: UNNÖTIG
-- OverlayItem			: UNNÖTIG
-- OverlayWay			: UNNÖTIG
+- OpenCycleMapTile ...	: It won't be ported
+- OsmarendererTile ...  : It won't be ported
+- Overlay				: It won't be ported
+- OverlayCircle			: It won't be ported
+- OverlayItem			: It won't be ported
+- OverlayWay			: It won't be ported
 - PointTextContainer	: -
 - Projection			: OK (MARTINUS)
 - ShapeContainer		: -
 - ShapePaintContainer	: -
-- ShapeType				: OK (braucht keine Android-Klasse)
-- SutherlandHodgman		: OK (braucht keine Android-Klasse)
-- TagIDsNodes			: OK (braucht keine Android-Klasse)
-- TagIDsWays			: OK (braucht keine Android-Klasse)
+- ShapeType				: OK (There is no dependency with Android-Class)
+- SutherlandHodgman		: OK (There is no dependency with Android-Class)
+- TagIDsNodes			: OK (There is no dependency with Android-Class)
+- TagIDsWays			: OK (There is no dependency with Android-Class)
 - Tile					: OK (MARTINUS)
 - TileDownloadMapGen ...: -
 - TileRAMCache			: -
 - WayContainer			: -
-- WayOverlay			: UNNÖTIG
+- WayOverlay			: It won't be ported
 - WayTextContainer		: -
 - ZoomAnimator			: OK (MARTINUS)
 
-- MoveSpeedPreference	: UNNÖTIG
-- SeekBarPreference		: UNNÖTIG
+- MoveSpeedPreference	: It won't be ported
+- SeekBarPreference		: It won't be ported
 
 
-ACHTUNG NATIVE KLASSE ZU IMPLEMENTIEREN
+NATIVE METHODE IS NOT IMPLEMENTED
 Core / Android
 - SparseArray			: OK (MARTINUS)
 - ArrayUtils			: OK (MARTINUS)
 - AttributeSet			: OK (MARTINUS)
 
 Graphics
-- Bitmap				: Leer
-- BitmapFactory			: Leer
+- Bitmap				: Some Methods are not implemented //TODO recycle(), copyPixelsToBuffer(), copyPixelsFromBuffer()
+- BitmapFactory			: Dummy Class //TODO
 - BitmapShader			: OK (MARTINUS)
-- Canvas				: Leere Methode
-- Color					: NICHT OK : Color ist nicht mehr int typ
-						  parseColor() --> gesperrt
-- DashPathEffect		: OK (braucht keine Android-Klasse)
-- Matrix				: OK mit Bedingung: Ohne RectF						  
-- Paint					: NICHT OK : viele Auskommentar
-- Path					: OK mit Bedingungen: Ohne RectF
+- Canvas				: -
+- Color					: NOT OK : Color is no more int type
+						  parseColor() --> not implemented
+						  transparent --> pink
+- DashPathEffect		: OK (There is no dependency with Android-Class)
+- Matrix				: OK without RectF					  
+- Paint					: Some Methods are not implemented
+- Path					: Some Methods are not implemented
 - PathEffect			: OK
 - Point					: OK (MARTINUS)
-- Rect					: OK, aber Viele Sperre
+- Rect					: Some Methods are not implemented
 - Shader				: OK (MARTINUS)
-- Typeface				: OK mit Bedingung: Ohne AssetManager
+- Typeface				: OK without AssetManager
 
 Graphics.Drawable
-- Drawable				: Leer
-- AnimationDrawable		: Leer
+- Drawable				: Dummy Class //TODO
+- AnimationDrawable		: Dummy Class //TODO
 
 OS
-- SystemClock			: OK (MARTINUS) //benötigte NATIVE beseitigt
+- SystemClock			: OK (MARTINUS) //NATIVE IS IMPLEMENTED
 
 Utils
 - AttributeSet			: OK (MARTINUS)
