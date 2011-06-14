@@ -22,6 +22,8 @@ Status
 - Activity				: -						  
 - MapActivity			: -
 - AdvancedMapViewer		: -
+- InfoView				: -
+- FilePicker			: - 
 - MapController			: -
 - MapDatabase			: OK (MARTINUS)
 - MapDatabaseIndexCache : -
@@ -56,6 +58,10 @@ Status
 - WayOverlay			: UNNÖTIG
 - WayTextContainer		: -
 - ZoomAnimator			: OK (MARTINUS)
+
+- MoveSpeedPreference	: UNNÖTIG
+- SeekBarPreference		: UNNÖTIG
+
 
 ACHTUNG NATIVE KLASSE ZU IMPLEMENTIEREN
 Core / Android
