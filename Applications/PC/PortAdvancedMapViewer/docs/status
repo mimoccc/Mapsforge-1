@@ -85,7 +85,7 @@ Graphics.Drawable
 - AnimationDrawable		: Leer
 
 OS
-- SystemClock			: OK (MARTINUS)
+- SystemClock			: OK (MARTINUS) //benötigte NATIVE beseitigt
 
 Utils
 - AttributeSet			: OK (MARTINUS)
