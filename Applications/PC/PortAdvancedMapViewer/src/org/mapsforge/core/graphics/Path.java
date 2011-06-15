@@ -16,11 +16,8 @@ package org.mapsforge.core.graphics;
  */
 
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Rectangle2D;
 
 /**
  * The Path class encapsulates compound (multiple contour) geometric paths
@@ -72,9 +69,9 @@ public class Path {
      * Rewinds the path: clears any lines and curves from the path but
      * keeps the internal data structure for faster reuse.
      */
+    /*Not tested*/
     public void rewind() {
-        // FIXME
-        throw new UnsupportedOperationException();
+        mPath.reset();
     }
 
     /** Replace the contents of this with the contents of src.
@@ -157,47 +154,6 @@ public class Path {
      */
     public boolean isEmpty() {
         return mPath.getCurrentPoint() == null;
-    }
-
-    /**
-     * Returns true if the path specifies a rectangle. If so, and if rect is
-     * not null, set rect to the bounds of the path. If the path does not
-     * specify a rectangle, return false and ignore rect.
-     *
-     * @param rect If not null, returns the bounds of the path if it specifies
-     *             a rectangle
-     * @return     true if the path specifies a rectangle
-     */
-    /*public boolean isRect(RectF rect) {
-        // FIXME
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-     * Compute the bounds of the path, and write the answer into bounds. If the
-     * path contains 0 or 1 points, the bounds is set to (0,0,0,0)
-     *
-     * @param bounds Returns the computed bounds of the path
-     * @param exact If true, return the exact (but slower) bounds, else return
-     *              just the bounds of all control points
-     */
-    /*public void computeBounds(RectF bounds, boolean exact) {
-        Rectangle2D rect = mPath.getBounds2D();
-        bounds.left = (float)rect.getMinX();
-        bounds.right = (float)rect.getMaxX();
-        bounds.top = (float)rect.getMinY();
-        bounds.bottom = (float)rect.getMaxY();
-    }*/
-
-    /**
-     * Hint to the path to prepare for adding more points. This can allow the
-     * path to more efficiently allocate its storage.
-     *
-     * @param extraPtCount The number of extra points that may be added to this
-     *                     path
-     */
-    public void incReserve(int extraPtCount) {
-        // pass
     }
 
     /**
@@ -333,39 +289,6 @@ public class Path {
     }
 
     /**
-     * Append the specified arc to the path as a new contour. If the start of
-     * the path is different from the path's current last point, then an
-     * automatic lineTo() is added to connect the current contour to the
-     * start of the arc. However, if the path is empty, then we call moveTo()
-     * with the first point of the arc. The sweep angle is tread mod 360.
-     *
-     * @param oval        The bounds of oval defining shape and size of the arc
-     * @param startAngle  Starting angle (in degrees) where the arc begins
-     * @param sweepAngle  Sweep angle (in degrees) measured clockwise, treated
-     *                    mod 360.
-     * @param forceMoveTo If true, always begin a new contour with the arc
-     */
-    /*public void arcTo(RectF oval, float startAngle, float sweepAngle,
-                      boolean forceMoveTo) {
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-     * Append the specified arc to the path as a new contour. If the start of
-     * the path is different from the path's current last point, then an
-     * automatic lineTo() is added to connect the current contour to the
-     * start of the arc. However, if the path is empty, then we call moveTo()
-     * with the first point of the arc.
-     *
-     * @param oval        The bounds of oval defining shape and size of the arc
-     * @param startAngle  Starting angle (in degrees) where the arc begins
-     * @param sweepAngle  Sweep angle (in degrees) measured clockwise
-     */
-    /*public void arcTo(RectF oval, float startAngle, float sweepAngle) {
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
      * Close the current contour. If the current point is not equal to the
      * first point of the contour, a line segment is automatically added.
      */
@@ -388,20 +311,6 @@ public class Path {
         }
         final int nativeInt;
     }
-
-    /**
-     * Add a closed rectangle contour to the path
-     *
-     * @param rect The rectangle to add as a closed contour to the path
-     * @param dir  The direction to wind the rectangle's contour
-     */
-    /*public void addRect(RectF rect, Direction dir) {
-        if (rect == null) {
-            throw new NullPointerException("need rect parameter");
-        }
-
-        addRect(rect.left, rect.top, rect.right, rect.bottom, dir);
-    }*/
 
     /**
      * Add a closed rectangle contour to the path
@@ -433,23 +342,6 @@ public class Path {
     }
 
     /**
-     * Add a closed oval contour to the path
-     *
-     * @param oval The bounds of the oval to add as a closed contour to the path
-     * @param dir  The direction to wind the oval's contour
-     */
-    /*public void addOval(RectF oval, Direction dir) {
-        if (oval == null) {
-            throw new NullPointerException("need oval parameter");
-        }
-
-        // FIXME Need to support direction
-        Ellipse2D ovalShape = new Ellipse2D.Float(oval.left, oval.top, oval.width(), oval.height());
-
-        mPath.append(ovalShape, false /* connect );
-    }*/
-
-    /**
      * Add a closed circle contour to the path
      *
      * @param x   The x-coordinate of the center of a circle to add to the path
@@ -457,154 +349,8 @@ public class Path {
      * @param radius The radius of a circle to add to the path
      * @param dir    The direction to wind the circle's contour
      */
+    /* Not Tested */
     public void addCircle(float x, float y, float radius, Direction dir) {
-        // FIXME
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Add the specified arc to the path as a new contour.
-     *
-     * @param oval The bounds of oval defining the shape and size of the arc
-     * @param startAngle Starting angle (in degrees) where the arc begins
-     * @param sweepAngle Sweep angle (in degrees) measured clockwise
-     */
-    /*public void addArc(RectF oval, float startAngle, float sweepAngle) {
-        if (oval == null) {
-            throw new NullPointerException("need oval parameter");
-        }
-        // FIXME
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-        * Add a closed round-rectangle contour to the path
-     *
-     * @param rect The bounds of a round-rectangle to add to the path
-     * @param rx   The x-radius of the rounded corners on the round-rectangle
-     * @param ry   The y-radius of the rounded corners on the round-rectangle
-     * @param dir  The direction to wind the round-rectangle's contour
-     */
-    /*public void addRoundRect(RectF rect, float rx, float ry, Direction dir) {
-        if (rect == null) {
-            throw new NullPointerException("need rect parameter");
-        }
-        // FIXME
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-     * Add a closed round-rectangle contour to the path. Each corner receives
-     * two radius values [X, Y]. The corners are ordered top-left, top-right,
-     * bottom-right, bottom-left
-     *
-     * @param rect The bounds of a round-rectangle to add to the path
-     * @param radii Array of 8 values, 4 pairs of [X,Y] radii
-     * @param dir  The direction to wind the round-rectangle's contour
-     */
-   /* public void addRoundRect(RectF rect, float[] radii, Direction dir) {
-        if (rect == null) {
-            throw new NullPointerException("need rect parameter");
-        }
-        if (radii.length < 8) {
-            throw new ArrayIndexOutOfBoundsException("radii[] needs 8 values");
-        }
-        // FIXME
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-     * Add a copy of src to the path, offset by (dx,dy)
-     *
-     * @param src The path to add as a new contour
-     * @param dx  The amount to translate the path in X as it is added
-     */
-    public void addPath(Path src, float dx, float dy) {
-        PathIterator iterator = src.mPath.getPathIterator(new AffineTransform(0, 0, dx, 0, 0, dy));
-        mPath.append(iterator, false /* connect */);
-    }
-
-    /**
-     * Add a copy of src to the path
-     *
-     * @param src The path that is appended to the current path
-     */
-    public void addPath(Path src) {
-        addPath(src, 0, 0);
-    }
-
-    /**
-     * Add a copy of src to the path, transformed by matrix
-     *
-     * @param src The path to add as a new contour
-     */
-    public void addPath(Path src, Matrix matrix) {
-        // FIXME
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Offset the path by (dx,dy), returning true on success
-     *
-     * @param dx  The amount in the X direction to offset the entire path
-     * @param dy  The amount in the Y direction to offset the entire path
-     * @param dst The translated path is written here. If this is null, then
-     *            the original path is modified.
-     */
-    public void offset(float dx, float dy, Path dst) {
-        GeneralPath newPath = new GeneralPath();
-
-        PathIterator iterator = mPath.getPathIterator(new AffineTransform(0, 0, dx, 0, 0, dy));
-
-        newPath.append(iterator, false /* connect */);
-
-        if (dst != null) {
-            dst.mPath = newPath;
-        } else {
-            mPath = newPath;
-        }
-    }
-
-    /**
-     * Offset the path by (dx,dy), returning true on success
-     *
-     * @param dx The amount in the X direction to offset the entire path
-     * @param dy The amount in the Y direction to offset the entire path
-     */
-    public void offset(float dx, float dy) {
-        offset(dx, dy, null /* dst */);
-    }
-
-    /**
-     * Sets the last point of the path.
-     *
-     * @param dx The new X coordinate for the last point
-     * @param dy The new Y coordinate for the last point
-     */
-    public void setLastPoint(float dx, float dy) {
-        mLastX = dx;
-        mLastY = dy;
-    }
-
-    /**
-     * Transform the points in this path by matrix, and write the answer
-     * into dst. If dst is null, then the the original path is modified.
-     *
-     * @param matrix The matrix to apply to the path
-     * @param dst    The transformed path is written here. If dst is null,
-     *               then the the original path is modified
-     */
-    public void transform(Matrix matrix, Path dst) {
-        // FIXME
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Transform the points in this path by matrix.
-     *
-     * @param matrix The matrix to apply to the path
-     */
-    public void transform(Matrix matrix) {
-        transform(matrix, null /* dst */);
+    	mPath.append(new Ellipse2D.Float(x - radius, y - radius, radius * 2, radius * 2), false);
     }
 }

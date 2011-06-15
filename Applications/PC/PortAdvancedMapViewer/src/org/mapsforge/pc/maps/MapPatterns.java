@@ -14,12 +14,16 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Shader;
-import android.graphics.Shader.TileMode;
-
+//import android.graphics.Bitmap;
+import org.mapsforge.core.graphics.Bitmap;
+//import android.graphics.BitmapFactory;
+import org.mapsforge.core.graphics.BitmapFactory;
+//import android.graphics.BitmapShader;
+import org.mapsforge.core.graphics.BitmapShader;
+//import android.graphics.Shader;
+import org.mapsforge.core.graphics.Shader;
+//import android.graphics.Shader.TileMode;
+import org.mapsforge.core.graphics.Shader.TileMode;
 /**
  * This class holds all patterns that can be rendered on the map. All bitmaps are created when the
  * MapPatterns constructor is called and are recycled when the recycle() method is called.

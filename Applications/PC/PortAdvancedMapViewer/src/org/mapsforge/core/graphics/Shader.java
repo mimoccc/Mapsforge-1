@@ -25,6 +25,8 @@ public abstract class Shader {
 
     private final Matrix mMatrix = new Matrix();
 
+    int native_instance;
+    
     public enum TileMode {
         /**
          * replicate the edge color if the shader draws outside of its

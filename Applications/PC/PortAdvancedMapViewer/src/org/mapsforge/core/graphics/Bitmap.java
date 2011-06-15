@@ -17,41 +17,13 @@ package org.mapsforge.core.graphics;
  */
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
 import java.nio.ByteBuffer;
 
-import javax.imageio.ImageIO;
 
-import org.mapsforge.core.graphics.Bitmap.CompressFormat;
 
 public final class Bitmap {
-
-    private BufferedImage mImage;
-
-
-    public Bitmap(File input) throws IOException {
-        //super(1, true, null, -1);
-
-        mImage = ImageIO.read(input);
-    }
-
-    public Bitmap(InputStream is) throws IOException {
-        //super(1, true, null, -1);
-
-        mImage = ImageIO.read(is);
-    }
-
-    Bitmap(BufferedImage image) {
-        //super(1, true, null, -1);
-        mImage = image;
-    }
-
-    public BufferedImage getImage() {
-        return mImage;
-    }
 
     public enum CompressFormat {
         JPEG    (0),
@@ -83,206 +55,34 @@ public final class Bitmap {
         };
     }
 
-    public int getWidth() {
-        return mImage.getWidth();
+    public static final int DENSITY_NONE = 0;
+
+    // Note:  mNativeBitmap is used by FaceDetector_jni.cpp
+    // Don't change/rename without updating FaceDetector_jni.cpp
+    private final int mNativeBitmap;
+
+    private final boolean mIsMutable;
+    private byte[] mNinePatchChunk;   // may be null
+    private int mWidth = -1;
+    private int mHeight = -1;
+    private boolean mRecycled;
+    
+    private Bitmap(int nativeBitmap, boolean isMutable, byte[] ninePatchChunk,
+            int density) {
+        if (nativeBitmap == 0) {
+            throw new RuntimeException("internal error: native bitmap is 0");
+        }
+
+        // we delete this in our finalizer
+        mNativeBitmap = nativeBitmap;
+        mIsMutable = isMutable;
+        mNinePatchChunk = ninePatchChunk;
+        //TODO
+        /*if (density >= 0) {
+            mDensity = density;
+        }*/
     }
-
-    public int getHeight() {
-        return mImage.getHeight();
-    }
-
-    /**
-     * Returns an immutable bitmap from the source bitmap. The new bitmap may
-     * be the same object as source, or a copy may have been made.
-     */
-    public static Bitmap createBitmap(Bitmap src) {
-    	//return createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), null, false);
-        return createBitmap(src, 0, 0, src.getWidth(), src.getHeight());
-    }
-
-    /**
-     * Returns an immutable bitmap from the specified subset of the source
-     * bitmap. The new bitmap may be the same object as source, or a copy may
-     * have been made.
-     *
-     * @param source   The bitmap we are subsetting
-     * @param x        The x coordinate of the first pixel in source
-     * @param y        The y coordinate of the first pixel in source
-     * @param width    The number of pixels in each row
-     * @param height   The number of rows
-     */
-    public static Bitmap createBitmap(Bitmap source, int x, int y,
-                                      int width, int height) {
-        return new Bitmap(source.mImage.getSubimage(x, y, width, height));
-    }
-
-    /**
-     * Returns an immutable bitmap from subset of the source bitmap,
-     * transformed by the optional matrix.
-     *
-     * @param source   The bitmap we are subsetting
-     * @param x        The x coordinate of the first pixel in source
-     * @param y        The y coordinate of the first pixel in source
-     * @param width    The number of pixels in each row
-     * @param height   The number of rows
-     * @param m        Option matrix to be applied to the pixels
-     * @param filter   true if the source should be filtered.
-     *                   Only applies if the matrix contains more than just
-     *                   translation.
-     * @return A bitmap that represents the specified subset of source
-     * @throws IllegalArgumentException if the x, y, width, height values are
-     *         outside of the dimensions of the source bitmap.
-     */
-    /*public static Bitmap createBitmap(Bitmap source, int x, int y, int width,
-                                      int height, Matrix m, boolean filter) {
-        checkXYSign(x, y);
-        checkWidthHeight(width, height);
-        if (x + width > source.getWidth()) {
-            throw new IllegalArgumentException(
-                    "x + width must be <= bitmap.width()");
-        }
-        if (y + height > source.getHeight()) {
-            throw new IllegalArgumentException(
-                    "y + height must be <= bitmap.height()");
-        }
-
-        // check if we can just return our argument unchanged
-        if (!source.isMutable() && x == 0 && y == 0
-                && width == source.getWidth() && height == source.getHeight()
-                && (m == null || m.isIdentity())) {
-            return source;
-        }
-
-        if (m == null || m.isIdentity()) {
-            return new Bitmap(source.mImage.getSubimage(x, y, width, height));
-        }
-
-        int neww = width;
-        int newh = height;
-        Paint paint;
-
-        Rect srcR = new Rect(x, y, x + width, y + height);
-        RectF dstR = new RectF(0, 0, width, height);
-
-        /*  the dst should have alpha if the src does, or if our matrix
-            doesn't preserve rectness
-        
-        boolean hasAlpha = source.hasAlpha() || !m.rectStaysRect();
-        RectF deviceR = new RectF();
-        m.mapRect(deviceR, dstR);
-        neww = Math.round(deviceR.width());
-        newh = Math.round(deviceR.height());
-
-        Canvas canvas = new Canvas(neww, newh);
-
-        canvas.translate(-deviceR.left, -deviceR.top);
-        canvas.concat(m);
-        paint = new Paint();
-        paint.setFilterBitmap(filter);
-        if (!m.rectStaysRect()) {
-            paint.setAntiAlias(true);
-        }
-
-        canvas.drawBitmap(source, srcR, dstR, paint);
-
-        return new Bitmap(canvas.getImage());
-    }
-
-    /**
-     * Returns a mutable bitmap with the specified width and height.
-     *
-     * @param width    The width of the bitmap
-     * @param height   The height of the bitmap
-     * @param config   The bitmap config to create.
-     * @throws IllegalArgumentException if the width or height are <= 0
-     */
-    public static Bitmap createBitmap(int width, int height, Config config) {
-        return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
-    }
-
-    /**
-     * Returns a immutable bitmap with the specified width and height, with each
-     * pixel value set to the corresponding value in the colors array.
-     *
-     * @param colors   Array of {@link Color} used to initialize the pixels.
-     * @param offset   Number of values to skip before the first color in the
-     *                 array of colors.
-     * @param stride   Number of colors in the array between rows (must be >=
-     *                 width or <= -width).
-     * @param width    The width of the bitmap
-     * @param height   The height of the bitmap
-     * @param config   The bitmap config to create. If the config does not
-     *                 support per-pixel alpha (e.g. RGB_565), then the alpha
-     *                 bytes in the colors[] will be ignored (assumed to be FF)
-     * @throws IllegalArgumentException if the width or height are <= 0, or if
-     *         the color array's length is less than the number of pixels.
-     */
-    /*public static Bitmap createBitmap(int colors[], int offset, int stride,
-                                      int width, int height, Config config) {
-        checkWidthHeight(width, height);
-        if (Math.abs(stride) < width) {
-            throw new IllegalArgumentException("abs(stride) must be >= width");
-        }
-        int lastScanline = offset + (height - 1) * stride;
-        int length = colors.length;
-        if (offset < 0 || (offset + width > length)
-            || lastScanline < 0
-            || (lastScanline + width > length)) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        // TODO: create an immutable bitmap...
-        throw new UnsupportedOperationException();
-    }*/
-
-    /**
-     * Returns a immutable bitmap with the specified width and height, with each
-     * pixel value set to the corresponding value in the colors array.
-     *
-     * @param colors   Array of {@link Color} used to initialize the pixels.
-     *                 This array must be at least as large as width * height.
-     * @param width    The width of the bitmap
-     * @param height   The height of the bitmap
-     * @param config   The bitmap config to create. If the config does not
-     *                 support per-pixel alpha (e.g. RGB_565), then the alpha
-     *                 bytes in the colors[] will be ignored (assumed to be FF)
-     * @throws IllegalArgumentException if the width or height are <= 0, or if
-     *         the color array's length is less than the number of pixels.
-     */
-    /*public static Bitmap createBitmap(int colors[], int width, int height,
-                                      Config config) {
-        return createBitmap(colors, 0, width, width, height, config);
-    }*/
-
-    /*public static Bitmap createScaledBitmap(Bitmap src, int dstWidth,
-            int dstHeight, boolean filter) {
-        Matrix m;
-        synchronized (Bitmap.class) {
-            // small pool of just 1 matrix
-            m = sScaleMatrix;
-            sScaleMatrix = null;
-        }
-
-        if (m == null) {
-            m = new Matrix();
-        }
-
-        final int width = src.getWidth();
-        final int height = src.getHeight();
-        final float sx = dstWidth  / (float)width;
-        final float sy = dstHeight / (float)height;
-        m.setScale(sx, sy);
-        Bitmap b = Bitmap.createBitmap(src, 0, 0, width, height, m, filter);
-
-        synchronized (Bitmap.class) {
-            // do we need to check for null? why not just assign everytime?
-            if (sScaleMatrix == null) {
-                sScaleMatrix = m;
-            }
-        }
-
-        return b;
-    }*/
+    
 
     /**
      * Free up the memory associated with this bitmap's pixels, and mark the
@@ -294,10 +94,14 @@ public final class Bitmap {
      * there are no more references to this bitmap.
      */
     public void recycle() {
-        //TODO Auto-generated method stub
+    	if (!mRecycled) {
+            //TODO nativeRecycle(mNativeBitmap);
+            mNinePatchChunk = null;
+            mRecycled = true;
+        }
     }
 
-	public void copyPixelsToBuffer(ByteBuffer bitmapBuffer) {
+	public void copyPixelsToBuffer(ByteBuffer d) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -333,5 +137,29 @@ public final class Bitmap {
 	public void eraseColor(int mapViewBackground) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public static Bitmap createBitmap(int width, int height, Config argb8888) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getHeight() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	final int ni() {
+        return mNativeBitmap;
+    }
+
+	public int getWidth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public BufferedImage getImage() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

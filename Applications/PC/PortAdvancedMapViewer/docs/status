@@ -66,27 +66,25 @@ Status
 
 NATIVE METHODE IS NOT IMPLEMENTED
 Core / Android
-- SparseArray			: OK (MARTINUS)
-- ArrayUtils			: OK (MARTINUS)
-- AttributeSet			: OK (MARTINUS)
+- SparseArray			: OK
+- ArrayUtils			: OK
+- AttributeSet			: OK
 
 Graphics
-- Bitmap				: Some Methods are not implemented //TODO recycle(), copyPixelsToBuffer(), copyPixelsFromBuffer()
+- Bitmap				: Not Ok
 - BitmapFactory			: Dummy Class //TODO
-- BitmapShader			: OK (MARTINUS)
-- Canvas				: -
-- Color					: NOT OK : Color is no more int type
-						  parseColor() --> not implemented
-						  transparent --> pink
-- DashPathEffect		: OK (There is no dependency with Android-Class)
-- Matrix				: OK without RectF					  
-- Paint					: Some Methods are not implemented
-- Path					: Some Methods are not implemented
-- PathEffect			: OK
-- Point					: OK (MARTINUS)
-- Rect					: Some Methods are not implemented
-- Shader				: OK (MARTINUS)
-- Typeface				: OK without AssetManager
+- BitmapShader			: Not OK Constructor must be implemented
+- Canvas				: Not OK (drawTextOnPath must be implemented and ILayoutLog mLogger is removed --> 2 methods must be tested)
+- Color					: OK
+- DashPathEffect		: OK
+- Matrix				: OK			  
+- Paint					: OK (Two methods are unsafe, must be tested)
+- Path					: OK (Dummy function is now implemented but not tested)
+- PathEffect			: OK (only extension from DashPathEffect; no methods must be implemented)
+- Point					: OK
+- Rect					: OK 
+- Shader				: OK 
+- Typeface				: OK
 
 Graphics.Drawable
 - Drawable				: Dummy Class //TODO

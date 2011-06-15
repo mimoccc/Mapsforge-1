@@ -53,8 +53,8 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
+//import android.os.PowerManager;
+//import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -111,10 +111,10 @@ public class AdvancedMapViewer extends MapActivity {
 	private LocationListener locationListener;
 	private LocationManager locationManager;
 	private MapViewMode mapViewMode;
-	private PowerManager powerManager;
+	//TODO private PowerManager powerManager;
 	private SharedPreferences preferences;
 	private Toast toast;
-	private WakeLock wakeLock;
+	//TODO private WakeLock wakeLock;
 	ImageView gpsView;
 	MapController mapController;
 	MapView mapView;
@@ -401,8 +401,8 @@ public class AdvancedMapViewer extends MapActivity {
 
 		// get the pointers to different system services
 		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		this.wakeLock = this.powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
+		//TODO this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		//TODO this.wakeLock = this.powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
 
 		// set up the paint objects for the location overlay
 		this.circleOverlayFill = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -492,13 +492,14 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 	}
 
+	//TODO
 	@Override
 	protected void onPause() {
 		super.onPause();
 		// release the wake lock if necessary
-		if (this.wakeLock.isHeld()) {
-			this.wakeLock.release();
-		}
+		//if (this.wakeLock.isHeld()) {
+		//	this.wakeLock.release();
+		//}
 	}
 
 	@Override
@@ -614,11 +615,12 @@ public class AdvancedMapViewer extends MapActivity {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		}
-		if (this.preferences.getBoolean("wakeLock", false)) {
-			if (!this.wakeLock.isHeld()) {
-				this.wakeLock.acquire();
-			}
-		}
+		//TODO
+		//if (this.preferences.getBoolean("wakeLock", false)) {
+		//	if (!this.wakeLock.isHeld()) {
+		//		this.wakeLock.acquire();
+		//	}
+		//}
 		this.mapView.setMemoryCardCachePersistence(this.preferences.getBoolean(
 				"cachePersistence", false));
 		this.mapView.setMemoryCardCacheSize(Math.min(this.preferences.getInt("cacheSize",

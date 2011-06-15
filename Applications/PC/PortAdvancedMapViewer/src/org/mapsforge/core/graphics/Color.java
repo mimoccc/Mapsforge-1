@@ -1,25 +1,26 @@
 package org.mapsforge.core.graphics;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 import org.mapsforge.core.MathUtils;
 
 public class Color {
 
-	public static final java.awt.Color BLACK       = java.awt.Color.BLACK;
-    public static final java.awt.Color DKGRAY      = java.awt.Color.DARK_GRAY;
-    public static final java.awt.Color GRAY        = java.awt.Color.GRAY;
-    public static final java.awt.Color LTGRAY      = java.awt.Color.LIGHT_GRAY;
-    public static final java.awt.Color WHITE       = java.awt.Color.WHITE;
-    public static final java.awt.Color RED         = java.awt.Color.RED;
-    public static final java.awt.Color GREEN       = java.awt.Color.GREEN;
-    public static final java.awt.Color BLUE        = java.awt.Color.BLUE;
-    public static final java.awt.Color YELLOW      = java.awt.Color.YELLOW;
-    public static final java.awt.Color CYAN        = java.awt.Color.CYAN;
-    public static final java.awt.Color MAGENTA     = java.awt.Color.MAGENTA;
-    public static final java.awt.Color TRANSPARENT = java.awt.Color.PINK; //FAKE
-	
-    /**
+	public static final int BLACK       = 0xFF000000;
+    public static final int DKGRAY      = 0xFF444444;
+    public static final int GRAY        = 0xFF888888;
+    public static final int LTGRAY      = 0xFFCCCCCC;
+    public static final int WHITE       = 0xFFFFFFFF;
+    public static final int RED         = 0xFFFF0000;
+    public static final int GREEN       = 0xFF00FF00;
+    public static final int BLUE        = 0xFF0000FF;
+    public static final int YELLOW      = 0xFFFFFF00;
+    public static final int CYAN        = 0xFF00FFFF;
+    public static final int MAGENTA     = 0xFFFF00FF;
+    public static final int TRANSPARENT = 0;
+
+	/**
      * Return the alpha component of a color int. This is the same as saying
      * color >>> 24
      */
@@ -175,7 +176,7 @@ public class Color {
      * 'red', 'blue', 'green', 'black', 'white', 'gray', 'cyan', 'magenta',
      * 'yellow', 'lightgray', 'darkgray'
      */
-    /*
+    
      public static int parseColor(String colorString) {
         if (colorString.charAt(0) == '#') {
             // Use a long to avoid rollovers on #ffXXXXXX
@@ -195,7 +196,7 @@ public class Color {
         }
         throw new IllegalArgumentException("Unknown color");
     }
-     */
+     
 
     /**
      * Convert HSB components to an ARGB color. Alpha set to 0xFF.
@@ -278,73 +279,10 @@ public class Color {
                 (((int) (green * 255.0f)) << 8) | ((int) (blue * 255.0f));
     }
 
-    /**
-     * Convert RGB components to HSV.
-     *     hsv[0] is Hue [0 .. 360)
-     *     hsv[1] is Saturation [0...1]
-     *     hsv[2] is Value [0...1]
-     * @param red  red component value [0..255]
-     * @param green  green component value [0..255]
-     * @param blue  blue component value [0..255]
-     * @param hsv  3 element array which holds the resulting HSV components.
-     */
-    /*public static void RGBToHSV(int red, int green, int blue, float hsv[]) {
-        if (hsv.length < 3) {
-            throw new RuntimeException("3 components required for hsv");
-        }
-        nativeRGBToHSV(red, green, blue, hsv);
-    }*/
-
-    /**
-     * Convert the argb color to its HSV components.
-     *     hsv[0] is Hue [0 .. 360)
-     *     hsv[1] is Saturation [0...1]
-     *     hsv[2] is Value [0...1]
-     * @param color the argb color to convert. The alpha component is ignored.
-     * @param hsv  3 element array which holds the resulting HSV components.
-     */
-    /*public static void colorToHSV(int color, float hsv[]) {
-        RGBToHSV((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, hsv);
-    }*/
-
-    /**
-     * Convert HSV components to an ARGB color. Alpha set to 0xFF.
-     *     hsv[0] is Hue [0 .. 360)
-     *     hsv[1] is Saturation [0...1]
-     *     hsv[2] is Value [0...1]
-     * If hsv values are out of range, they are pinned.
-     * @param hsv  3 element array which holds the input HSV components.
-     * @return the resulting argb color
-    */
-    /*public static int HSVToColor(float hsv[]) {
-        return HSVToColor(0xFF, hsv);
-    }*/
-
-    /**
-     * Convert HSV components to an ARGB color. The alpha component is passed
-     * through unchanged.
-     *     hsv[0] is Hue [0 .. 360)
-     *     hsv[1] is Saturation [0...1]
-     *     hsv[2] is Value [0...1]
-     * If hsv values are out of range, they are pinned.
-     * @param alpha the alpha component of the returned argb color.
-     * @param hsv  3 element array which holds the input HSV components.
-     * @return the resulting argb color
-    */
-    /*public static int HSVToColor(int alpha, float hsv[]) {
-        if (hsv.length < 3) {
-            throw new RuntimeException("3 components required for hsv");
-        }
-        return nativeHSVToColor(alpha, hsv);
-    }*/
-
-    //private static native void nativeRGBToHSV(int red, int greed, int blue, float hsv[]);
-    //private static native int nativeHSVToColor(int alpha, float hsv[]);
-
-    private static final HashMap<String, java.awt.Color> sColorNameMap;
+    private static final HashMap<String, Integer> sColorNameMap;
 
     static {
-        sColorNameMap = new HashMap<String, java.awt.Color>();
+        sColorNameMap = new HashMap<String, Integer>();
         sColorNameMap.put("black", BLACK);
         sColorNameMap.put("darkgray", DKGRAY);
         sColorNameMap.put("gray", GRAY);

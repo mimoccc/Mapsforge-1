@@ -21,10 +21,8 @@ package org.mapsforge.core.graphics;
 //import android.util.DisplayMetrics;
 //import android.util.TypedValue;
 
-import java.io.BufferedInputStream;
 import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.IOException;
+
 import java.io.InputStream;
 
 /**
@@ -406,115 +404,6 @@ public class BitmapFactory {
     public static Bitmap decodeByteArray(byte[] data, int offset, int length) {
         return decodeByteArray(data, offset, length, null);
     }
-
-    /**
-     * Decode an input stream into a bitmap. If the input stream is null, or
-     * cannot be used to decode a bitmap, the function returns null.
-     * The stream's position will be where ever it was after the encoded data
-     * was read.
-     *
-     * @param is The input stream that holds the raw data to be decoded into a
-     *           bitmap.
-     * @param outPadding If not null, return the padding rect for the bitmap if
-     *                   it exists, otherwise set padding to [-1,-1,-1,-1]. If
-     *                   no bitmap is returned (null) then padding is
-     *                   unchanged.
-     * @param opts null-ok; Options that control downsampling and whether the
-     *             image should be completely decoded, or just is size returned.
-     * @return The decoded bitmap, or null if the image data could not be
-     *         decoded, or, if opts is non-null, if opts requested only the
-     *         size be returned (in opts.outWidth and opts.outHeight)
-     */
-    /*public static Bitmap decodeStream(InputStream is, Rect outPadding, Options opts) {
-        // we don't throw in this case, thus allowing the caller to only check
-        // the cache, and not force the image to be decoded.
-        if (is == null) {
-            return null;
-        }
-
-        // we need mark/reset to work properly
-
-        if (!is.markSupported()) {
-            is = new BufferedInputStream(is, 16 * 1024);
-        }
-
-        // so we can call reset() if a given codec gives up after reading up to
-        // this many bytes. FIXME: need to find out from the codecs what this
-        // value should be.
-        is.mark(1024);
-
-        Bitmap  bm;
-
-        if (is instanceof AssetManager.AssetInputStream) {
-            // FIXME: log this.
-            return null;
-        } else {
-            // pass some temp storage down to the native code. 1024 is made up,
-            // but should be large enough to avoid too many small calls back
-            // into is.read(...) This number is not related to the value passed
-            // to mark(...) above.
-            try {
-                bm = new Bitmap(is);
-            } catch (IOException e) {
-                return null;
-            }
-        }
-
-        return finishDecode(bm, outPadding, opts);
-    }*/
-
-    /*private static Bitmap finishDecode(Bitmap bm, Rect outPadding, Options opts) {
-        if (bm == null || opts == null) {
-            return bm;
-        }
-
-        final int density = opts.inDensity;
-        if (density == 0) {
-            return bm;
-        }
-
-        bm.setDensity(density);
-        final int targetDensity = opts.inTargetDensity;
-        if (targetDensity == 0 || density == targetDensity
-                || density == opts.inScreenDensity) {
-            return bm;
-        }
-
-        byte[] np = bm.getNinePatchChunk();
-        final boolean isNinePatch = false; //np != null && NinePatch.isNinePatchChunk(np);
-        if (opts.inScaled || isNinePatch) {
-            float scale = targetDensity / (float)density;
-            // TODO: This is very inefficient and should be done in native by Skia
-            final Bitmap oldBitmap = bm;
-            bm = Bitmap.createScaledBitmap(oldBitmap, (int) (bm.getWidth() * scale + 0.5f),
-                    (int) (bm.getHeight() * scale + 0.5f), true);
-            oldBitmap.recycle();
-
-            if (isNinePatch) {
-                //np = nativeScaleNinePatch(np, scale, outPadding);
-                bm.setNinePatchChunk(np);
-            }
-            bm.setDensity(targetDensity);
-        }
-
-        return bm;
-    }*/
-
-    /**
-     * Decode an input stream into a bitmap. If the input stream is null, or
-     * cannot be used to decode a bitmap, the function returns null.
-     * The stream's position will be where ever it was after the encoded data
-     * was read.
-     *
-     * @param is The input stream that holds the raw data to be decoded into a
-     *           bitmap.
-     * @return The decoded bitmap, or null if the image data could not be
-     *         decoded, or, if opts is non-null, if opts requested only the
-     *         size be returned (in opts.outWidth and opts.outHeight)
-     */
-    /*public static Bitmap decodeStream(InputStream is) {
-        return decodeStream(is, null, null);
-    }*/
 
     /**
      * Decode a bitmap from the file descriptor. If the bitmap cannot be decoded

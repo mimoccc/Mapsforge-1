@@ -533,51 +533,6 @@ public final class Rect //implements Parcelable
     }
 
     /**
-     * Gesperrt
-     * Write this rectangle to the specified parcel. To restore a rectangle from
-     * a parcel, use readFromParcel()
-     * @param out The parcel to write the rectangle's coordinates into
-     */
-    /*public void writeToParcel(Parcel out, int flags) {
-        out.writeInt(left);
-        out.writeInt(top);
-        out.writeInt(right);
-        out.writeInt(bottom);
-    }*/
-
-    /*public static final Parcelable.Creator<Rect> CREATOR = new Parcelable.Creator<Rect>() {
-        /**
-         * Return a new rectangle from the data in the specified parcel.
-         */
-        /*public Rect createFromParcel(Parcel in) {
-            Rect r = new Rect();
-            r.readFromParcel(in);
-            return r;
-        }
-
-        /**
-         * Return an array of rectangles of the specified size.
-         */
-        /*public Rect[] newArray(int size) {
-            return new Rect[size];
-        }
-    };*/
-
-    /**
-     * Gesperrt
-     * Set the rectangle's coordinates from the data stored in the specified
-     * parcel. To write a rectangle to a parcel, call writeToParcel().
-     *
-     * @param in The parcel to read the rectangle's coordinates from
-     */
-    /*public void readFromParcel(Parcel in) {
-        left = in.readInt();
-        top = in.readInt();
-        right = in.readInt();
-        bottom = in.readInt();
-    }*/
-
-    /**
      * Scales up the rect by the given scale.
      * @hide
      */

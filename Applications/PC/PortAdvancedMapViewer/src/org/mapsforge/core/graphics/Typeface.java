@@ -140,16 +140,6 @@ public class Typeface {
         return sDefaults[style];
     }
 
-    /**
-     * Create a new typeface from the specified font data.
-     * @param mgr The application's asset manager
-     * @param path  The file name of the font data in the assets directory
-     * @return The new typeface.
-     */
-    /*public static Typeface createFromAsset(AssetManager mgr, String path) {
-        return null;
-        //return new Typeface(nativeCreateFromAsset(mgr, path));
-    }*/
 
     // don't allow clients to call this directly
     private Typeface(String family, int style, List<Font> fonts) {

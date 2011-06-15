@@ -1,7 +1,7 @@
 package org.mapsforge.core.graphics;
 
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,52 @@ package org.mapsforge.core.graphics;
  * limitations under the License.
  */
 
-import java.awt.Paint;
-
+//import android.graphics.Shader.TileMode;
+import org.mapsforge.core.graphics.Shader.TileMode;
+/**
+ * Delegate implementing the native methods of android.graphics.BitmapShader
+ *
+ * Through the layoutlib_create tool, the original native methods of BitmapShader have been
+ * replaced by calls to methods of the same name in this delegate class.
+ *
+ * This class behaves like the original native implementation, but in Java, keeping previously
+ * native data into its own objects and mapping them to int that are sent back and forth between
+ * it and the original BitmapShader class.
+ *
+ * Because this extends {@link Shader_Delegate}, there's no need to use a {@link DelegateManager},
+ * as all the Shader classes will be added to the manager owned by {@link Shader_Delegate}.
+ *
+ * @see Shader_Delegate
+ *
+ */
 public class BitmapShader extends Shader {
 
-    // we hold on just for the GC, since our native counterpart is using it
+    private java.awt.Paint mJavaPaint;
     private final Bitmap mBitmap;
 
-    /**
-     * Call this to create a new shader that will draw with a bitmap.
-     *
-     * @param bitmap            The bitmap to use inside the shader
-     * @param tileX             The tiling mode for x to draw the bitmap in.
-     * @param tileY             The tiling mode for y to draw the bitmap in.
-     */
-    public BitmapShader(Bitmap bitmap, TileMode tileX, TileMode tileY) {
-        mBitmap = bitmap;
+
+	public BitmapShader(Bitmap mBitmap, TileMode tileX, TileMode tileY) {
+		this.mBitmap = mBitmap;
+//TODO
+//		native_instance = nativeCreate(mBitmap.ni(),
+//                tileX.nativeInt, tileY.nativeInt);
+	}
+
+//	private static int nativeCreate(int native_bitmap, int shaderTileModeX, int shaderTileModeY) {
+//		
+//		return -1;
+//	}
+	
+	public Bitmap getBitmap() {
+		return mBitmap;
+	}
+	
+	@Override
+    public java.awt.Paint getJavaPaint() {
+        return mJavaPaint;
     }
-
-    //---------- Custom methods
-
-    public Bitmap getBitmap() {
-        return mBitmap;
-    }
-
-    @Override
-    Paint getJavaPaint() {
-        return null;
+     
+    public int getTransparency() {
+    	return java.awt.Paint.TRANSLUCENT;
     }
 }
