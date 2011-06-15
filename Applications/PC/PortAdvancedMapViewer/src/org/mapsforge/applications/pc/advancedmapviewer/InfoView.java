@@ -15,22 +15,27 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
 import android.app.Activity;
-import android.os.Bundle;
+//import org.mapsforge.core.app.Activity;
+//import android.os.Bundle;
+//import org.mapsforge.core.os.Bundle;
 import android.preference.PreferenceManager;
+//import org.mapsforge.core.preference.PreferenceManager;
 import android.view.WindowManager;
-import android.webkit.WebView;
+//import org.mapsforge.core.view.WindowManager;
+//import android.webkit.WebView;
+//import org.mapsforge.core.webkit.WebView;
 
 /**
  * Simple activity to display the info web page from the assets folder.
  */
 public class InfoView extends Activity {
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		WebView webView = new WebView(this);
-		webView.loadUrl("file:///android_asset/info.xml");
-		setContentView(webView);
-	}
+	//TODO @Override
+	//protected void onCreate(Bundle savedInstanceState) {
+		//super.onCreate(savedInstanceState);
+		//WebView webView = new WebView(this);
+		//webView.loadUrl("file:///android_asset/info.xml");
+		//setContentView(webView);
+	//}
 
 	@Override
 	protected void onResume() {

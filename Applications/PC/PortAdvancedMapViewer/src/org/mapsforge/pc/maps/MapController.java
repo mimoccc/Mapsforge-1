@@ -15,7 +15,9 @@
 package org.mapsforge.pc.maps;
 
 import android.view.KeyEvent;
+//import org.mapsforge.core.view.KeyEvent;
 import android.view.View;
+//import org.mapsforge.core.view.View;
 
 /**
  * A MapController is used to programmatically modify the position and zoom level of a map. Each

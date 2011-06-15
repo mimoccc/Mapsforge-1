@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import android.content.Context;
+//import org.mapsforge.core.content.Context;
 //import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
 //import android.graphics.Canvas;
@@ -39,20 +40,32 @@ import org.mapsforge.core.graphics.Typeface;
 //import android.graphics.Bitmap.CompressFormat;
 import org.mapsforge.core.graphics.Bitmap.CompressFormat;
 import android.os.Build;
+//import org.mapsforge.core.os.Build;
 import android.os.Environment;
+//import org.mapsforge.core.os.Environment;
 import android.os.Handler;
+//import org.mapsforge.core.os.Handler;
 import android.os.Message;
+//import org.mapsforge.core.os.Message;
 //import android.os.SystemClock;
 import org.mapsforge.core.os.SystemClock;
 
 import android.util.AttributeSet;
+//import org.mapsforge.core.utils.AttributeSet;
 import android.view.KeyEvent;
+//import org.mapsforge.core.view.KeyEvent;
 import android.view.MotionEvent;
+//import org.mapsforge.core.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+//import org.mapsforge.core.view.ScaleGestureDetector;
 import android.view.View;
+//import org.mapsforge.core.view.View;
 import android.view.ViewConfiguration;
+//import org.mapsforge.core.view.ViewConfiguration;
 import android.view.ViewGroup;
+//import org.mapsforge.core.view.ViewGroup;
 import android.widget.ZoomControls;
+//import org.mapsforge.core.widget.ZoomControls;
 
 /**
  * A MapView shows a map on the display of the device. It handles all user input and touch gestures to

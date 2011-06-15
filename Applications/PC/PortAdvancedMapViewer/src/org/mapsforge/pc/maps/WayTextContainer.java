@@ -16,6 +16,7 @@ package org.mapsforge.pc.maps;
 
 //import android.graphics.Paint;
 import org.mapsforge.core.graphics.Paint;
+
 class WayTextContainer {
 	final float[] coordinates;
 	final Paint paint;

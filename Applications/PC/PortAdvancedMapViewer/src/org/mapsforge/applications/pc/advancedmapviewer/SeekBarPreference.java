@@ -14,19 +14,41 @@
  */
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+/* CONTENT */
 import android.content.Context;
+//import org.mapsforge.core.content.Context;
 import android.content.DialogInterface;
+//import org.mapsforge.core.content.DialogInterface;
 import android.content.SharedPreferences;
+//import org.mapsforge.core.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+//import org.mapsforge.core.content.SharedPreferences.Editor;
+
+/* PREFERENCE */
 import android.preference.DialogPreference;
+//import org.mapsforge.core.preference.DialogPreference;
 import android.preference.PreferenceManager;
+//import org.mapsforge.core.preference.PreferenceManager;
+
+/* UTIL */
 import android.util.AttributeSet;
-import android.view.Gravity;
+//import org.mapsforge.core.utils.AttributeSet;
+
+/* VIEW */
+//import android.view.Gravity;
+//import org.mapsforge.core.view.Gravity;
 import android.view.View;
+//import org.mapsforge.core.view.View;
+
+/* WIDGET */
 import android.widget.LinearLayout;
+//import org.mapsforge.core.widget.LinearLayout;
 import android.widget.SeekBar;
+//import org.mapsforge.core.widget.SeekBar;
 import android.widget.TextView;
+//import org.mapsforge.core.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+//import org.mapsforge.core.SeekBar.OnSeekBarChangeListener;
 
 /**
  * This abstract class provides all code for a seek bar preference. Deriving classes only need
@@ -141,7 +163,7 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 		this.currentValueTextView = new TextView(getContext());
 		this.currentValueTextView.setText(getCurrentValueText(this.preferenceSeekBar
 				.getProgress()));
-		this.currentValueTextView.setGravity(Gravity.CENTER_HORIZONTAL);
+		//TODO this.currentValueTextView.setGravity(Gravity.CENTER_HORIZONTAL);
 		// add the current value text view to the layout
 		this.linearLayout.addView(this.currentValueTextView);
 

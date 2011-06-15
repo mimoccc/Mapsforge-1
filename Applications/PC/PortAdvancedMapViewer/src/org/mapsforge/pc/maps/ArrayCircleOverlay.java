@@ -20,8 +20,11 @@ import java.util.Collection;
 import org.mapsforge.pc.maps.MapView.TextField;
 
 import android.app.AlertDialog;
+//import org.mapsforge.core.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+//import org.mapsforge.core.AlertDialog.Builder;
 import android.content.Context;
+//import org.mapsforge.core.content.Context;
 //import android.graphics.Paint;
 import org.mapsforge.core.graphics.Paint;
 /**

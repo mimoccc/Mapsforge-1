@@ -15,9 +15,13 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
 import android.os.Bundle;
+//import org.mapsforge.core.os.Bundle;
 import android.preference.PreferenceActivity;
+//import org.mapsforge.core.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+//import org.mapsforge.core.preference.PreferenceManager;
 import android.view.WindowManager;
+//import org.mapsforge.core.view.WindowManager;
 
 /**
  * Activity to edit the application preferences.

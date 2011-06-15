@@ -17,11 +17,17 @@ package org.mapsforge.applications.pc.advancedmapviewer;
 import java.io.File;
 
 import android.content.Context;
-import android.view.Gravity;
+//import org.mapsforge.core.content.Context;
+//import android.view.Gravity;
+//import org.mapsforge.core.view.Gravity;
 import android.view.View;
+//import org.mapsforge.core.view.View;
 import android.view.ViewGroup;
+//import org.mapsforge.core.view.ViewGroup;
 import android.widget.BaseAdapter;
+//import org.mapsforge.core.widget.BaseAdapter;
 import android.widget.TextView;
+//import org.mapsforge.core.widget.TextView;
 
 /**
  * An adapter for the FilePicker GridView.
@@ -70,7 +76,7 @@ class FilePickerIconAdapter extends BaseAdapter {
 			// create a new view object
 			this.textView = new TextView(this.context);
 			this.textView.setLines(2);
-			this.textView.setGravity(Gravity.CENTER_HORIZONTAL);
+			//TODO this.textView.setGravity(Gravity.CENTER_HORIZONTAL);
 			this.textView.setPadding(5, 10, 5, 10);
 		}
 

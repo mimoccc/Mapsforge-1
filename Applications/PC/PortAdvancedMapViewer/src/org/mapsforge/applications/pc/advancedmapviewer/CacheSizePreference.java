@@ -17,7 +17,9 @@ package org.mapsforge.applications.pc.advancedmapviewer;
 import org.mapsforge.pc.maps.MapView;
 
 import android.content.Context;
+//import org.mapsforge.core.content.Context;
 import android.util.AttributeSet;
+//import org.mapsforge.core.utils.AttributeSet;
 
 /**
  * Preferences class for adjusting the cache size.

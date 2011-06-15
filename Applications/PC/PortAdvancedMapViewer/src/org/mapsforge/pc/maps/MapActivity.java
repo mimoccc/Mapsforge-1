@@ -17,8 +17,11 @@ package org.mapsforge.pc.maps;
 import java.util.ArrayList;
 
 import android.app.Activity;
+//import org.mapsforge.core.app.Activity;
 import android.content.SharedPreferences;
+//import org.mapsforge.core.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+//import org.mapsforge.core.content.SharedPreferences.Editor;
 
 /**
  * MapActivity is the abstract base class which must be extended in order to use a {@link MapView}.

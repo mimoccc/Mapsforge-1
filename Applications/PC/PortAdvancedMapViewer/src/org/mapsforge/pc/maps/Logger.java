@@ -14,8 +14,6 @@
  */
 package org.mapsforge.pc.maps;
 
-import java.util.logging.Level;
-
 //import android.util.Log;
 
 /**

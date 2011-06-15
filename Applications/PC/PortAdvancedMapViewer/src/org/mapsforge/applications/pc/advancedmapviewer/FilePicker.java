@@ -19,18 +19,41 @@ import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.Comparator;
 
+/* APP */
 import android.app.Activity;
+//import org.mapsforge.core.app.Activity;
 import android.app.AlertDialog;
+//import org.mapsforge.core.app.AlertDialog;
 import android.app.Dialog;
+//import org.mapsforge.core.app.Dialog;
+
+/* CONTENT */
 import android.content.Intent;
+//import org.mapsforge.core.content.Intent;
 import android.content.SharedPreferences;
+//import org.mapsforge.core.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+//import org.mapsforge.core.content.SharedPreferences.Editor;
+
+/* OS */
 import android.os.Bundle;
+//import org.mapsforge.core.os.Bundle;
+
+/* PREFERENCE */
 import android.preference.PreferenceManager;
+//import org.mapsforge.core.;
+
+/* VIEW */
 import android.view.View;
+//import org.mapsforge.core.view.View;
 import android.view.WindowManager;
+//import org.mapsforge.core.view.WindowMAnager;
+
+/* WIDGET */
 import android.widget.AdapterView;
+//import org.mapsforge.core.widget.AdapterView;
 import android.widget.GridView;
+//import org.mapsforge.core.widget.GridView;
 
 /**
  * A FilePicker displays the contents of directories. The user can navigate within the file
