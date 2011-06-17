@@ -307,13 +307,13 @@ public class AdvancedMapViewer extends MapActivity {
 
 	private void configureMapView() {
 		// configure the MapView and activate the zoomLevel buttons
-		this.mapView.setClickable(true);
-		this.mapView.setBuiltInZoomControls(true);
-		this.mapView.setFocusable(true);
+		this.mapView.setClickable(true);			//TODO Not necessary --> always True?
+		this.mapView.setBuiltInZoomControls(true);	//TODO Not necessary --> always True?
+		this.mapView.setFocusable(true);			//TODO Not necessary --> always True?
 
 		// set the localized text fields
-		this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));
-		this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));
+		this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));	//TODO R?
+		this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));			//TODO R?
 
 		// get the map controller for this MapView
 		this.mapController = this.mapView.getController();
@@ -431,14 +431,14 @@ public class AdvancedMapViewer extends MapActivity {
 		super.onCreate(savedInstanceState);
 
 		// set up the layout views
-		setContentView(R.layout.activity_advanced_map_viewer);
-		this.mapView = (MapView) findViewById(R.id.mapView);
-		this.gpsView = (ImageView) findViewById(R.id.gpsView);
+		setContentView(R.layout.activity_advanced_map_viewer);	//TODO learning
+		this.mapView = (MapView) findViewById(R.id.mapView);	//TODO learning
+		this.gpsView = (ImageView) findViewById(R.id.gpsView);	//TODO removed
 
 		configureMapView();
 
 		// get the pointers to different system services
-		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);	//TODO removed
 		//TODO this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		//TODO this.wakeLock = this.powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
 

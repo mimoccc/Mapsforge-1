@@ -37,7 +37,7 @@ import org.mapsforge.core.os.Handler;
 import org.mapsforge.core.ComponentName;
 import org.mapsforge.core.Looper;
 //import android.util.AttributeSet;
-import org.mapsforge.core.utils.AttributeSet;
+import org.mapsforge.core.util.AttributeSet;
 
 import java.io.File;
 import java.io.FileInputStream;

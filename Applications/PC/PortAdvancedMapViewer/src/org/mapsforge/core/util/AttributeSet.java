@@ -1,4 +1,4 @@
-package org.mapsforge.core.utils;
+package org.mapsforge.core.util;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project
