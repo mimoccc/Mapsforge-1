@@ -185,16 +185,30 @@ public class XMLReader {
 							break;
 						}
 						Node traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
-								"stopNodeTags");
+								"stopTags");
 
-						if (traversNode.hasChildNodes())
+						Node stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"stopNodeTags");
+						if (stopTagChildNode.hasChildNodes())
 
 							// Traverse Children of Child(1) stopdeNodeTags: tags
-							for (int j = 0; j < traversNode.getChildNodes()
+							for (int j = 0; j < stopTagChildNode.getChildNodes()
 									.getLength(); j++) {
-								Node tmpnode3 = traversNode.getChildNodes().item(j);
+								Node tmpnode3 = stopTagChildNode.getChildNodes().item(j);
 								if (tmpnode3.getNodeName().equals("tag"))
 									nodeTagsSet.add(getKeyValue(tmpnode3));
+							}
+
+						stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"stopWayTags");
+						if (stopTagChildNode.hasChildNodes())
+
+							// Traverse Children of Child(2) stopWayTags: tags
+							for (int j = 0; j < stopTagChildNode.getChildNodes()
+									.getLength(); j++) {
+								Node tmpnode3 = stopTagChildNode.getChildNodes().item(j);
+								if (tmpnode3.getNodeName().equals("tag"))
+									wayTagsSet.add(getKeyValue(tmpnode3));
 							}
 
 						traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
@@ -260,8 +274,8 @@ public class XMLReader {
 
 		try {
 			XMLReader x = new XMLReader();
-			x.parseXML("D:\\config_new.xml", new String[] { "motorcar", "bycicle" });
-			// x.parseXML("D:\\config_new.xml", null);
+			// x.parseXML("D:\\config_new.xml", new String[] { "motorcar", "bycicle" });
+			x.parseXML("D:\\config.xml", null);
 			System.out.println("ways");
 			for (KeyValuePair kv : x.wayTagsSet)
 				System.out.println(kv);
