@@ -18,9 +18,9 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 //import org.mapsforge.core.app.Activity;
-import android.content.SharedPreferences;
+//import android.content.SharedPreferences;
 //import org.mapsforge.core.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
+//import android.content.SharedPreferences.Editor;
 //import org.mapsforge.core.content.SharedPreferences.Editor;
 
 /**
@@ -40,7 +40,7 @@ public abstract class MapActivity extends Activity {
 	/**
 	 * Name of the file where the map position and other settings are stored.
 	 */
-	private static final String PREFERENCES_FILE = "MapActivity";
+	//private static final String PREFERENCES_FILE = "MapActivity";
 
 	/**
 	 * Counter to store the last ID given to a MapView.
@@ -70,8 +70,9 @@ public abstract class MapActivity extends Activity {
 		super.onDestroy();
 		destroyMapViews();
 	}
-
-	@Override
+	
+	//TODO removed
+	/*@Override
 	protected void onPause() {
 		super.onPause();
 		Editor editor = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
@@ -97,15 +98,15 @@ public abstract class MapActivity extends Activity {
 		if (isFinishing()) {
 			destroyMapViews();
 		}
-	}
+	}*/
 
-	@Override
+	/*@Override
 	protected void onResume() {
 		super.onResume();
 		for (MapView currentMapView : this.mapViews) {
 			currentMapView.onResume();
 		}
-	}
+	}*/
 
 	/**
 	 * Returns a unique MapView ID on each call.
@@ -125,7 +126,8 @@ public abstract class MapActivity extends Activity {
 	final void registerMapView(MapView mapView) {
 		if (this.mapViews != null) {
 			this.mapViews.add(mapView);
-
+			//TODO removed?
+			/*
 			SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
 			// restore the position
 			if (preferences.contains("latitude") && preferences.contains("longitude")
@@ -142,7 +144,7 @@ public abstract class MapActivity extends Activity {
 						defaultStartPoint.getLatitudeE6()), preferences.getInt("longitude",
 						defaultStartPoint.getLongitudeE6())), (byte) preferences.getInt(
 						"zoomLevel", mapView.getDefaultZoomLevel()));
-			}
+			}*/
 		}
 	}
 

@@ -1,10 +1,14 @@
 package org.mapsforge.core.view;
 
+import javax.swing.JTextArea;
+
 //TODO Drawable.Callback 
 //TODO AccessibilityEventSource
-public class View implements KeyEvent.Callback {
+public class View extends JTextArea implements KeyEvent.Callback {
 
-    boolean clickable;
+	private static final long serialVersionUID = -4159533482111214072L;
+
+	boolean clickable;
     boolean focusable;
 	
 	protected int mID;

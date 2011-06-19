@@ -18,7 +18,7 @@ import java.io.File;
 
 import android.content.Context;
 //import org.mapsforge.core.content.Context;
-//import android.view.Gravity;
+import android.view.Gravity;
 //import org.mapsforge.core.view.Gravity;
 import android.view.View;
 //import org.mapsforge.core.view.View;
@@ -76,7 +76,7 @@ class FilePickerIconAdapter extends BaseAdapter {
 			// create a new view object
 			this.textView = new TextView(this.context);
 			this.textView.setLines(2);
-			//TODO this.textView.setGravity(Gravity.CENTER_HORIZONTAL);
+			this.textView.setGravity(Gravity.CENTER_HORIZONTAL);
 			this.textView.setPadding(5, 10, 5, 10);
 		}
 

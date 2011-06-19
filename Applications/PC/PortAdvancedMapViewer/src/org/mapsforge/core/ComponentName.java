@@ -15,7 +15,8 @@ public class ComponentName {
      * actual class name will be retrieved.
      */
     public ComponentName(Context pkg, Class<?> cls) {
-        mPackage = pkg.getPackageName();
+        //mPackage = pkg.getPackageName();
+    	mPackage = null;
         mClass = cls.getName();
     }
     

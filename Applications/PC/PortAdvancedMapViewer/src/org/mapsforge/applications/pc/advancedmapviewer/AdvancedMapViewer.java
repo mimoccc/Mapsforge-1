@@ -157,7 +157,8 @@ public class AdvancedMapViewer extends MapActivity {
 	MapController mapController;
 	MapView mapView;
 	OverlayCircle overlayCircle;
-
+	
+	/* Will be removed or replaced with mouse event handler */
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		// insert code here to handle touch events on the screen
@@ -229,6 +230,7 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 	}
 
+	/* Will be removed or replaced with mouse event handler */
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
@@ -312,8 +314,10 @@ public class AdvancedMapViewer extends MapActivity {
 		this.mapView.setFocusable(true);			//TODO Not necessary --> always True?
 
 		// set the localized text fields
-		this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));	//TODO R?
-		this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));			//TODO R?
+		//this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));	//TODO
+		this.mapView.setText(TextField.KILOMETER, "km");
+		//this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));			//TODO
+		this.mapView.setText(TextField.METER, "m");
 
 		// get the map controller for this MapView
 		this.mapController = this.mapView.getController();
@@ -462,7 +466,8 @@ public class AdvancedMapViewer extends MapActivity {
 			}
 		}
 	}
-
+	
+	/*Enter Location */
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -530,15 +535,15 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 	}
 
-	//TODO
-	@Override
+	//TODO removed?
+	/*@Override
 	protected void onPause() {
 		super.onPause();
 		// release the wake lock if necessary
 		//if (this.wakeLock.isHeld()) {
 		//	this.wakeLock.release();
 		//}
-	}
+	}*/
 
 	@Override
 	protected void onPrepareDialog(int id, final Dialog dialog) {
@@ -624,7 +629,8 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 	}
 
-	@Override
+	//TODO removed?
+	/*@Override
 	protected void onResume() {
 		super.onResume();
 
@@ -678,7 +684,7 @@ public class AdvancedMapViewer extends MapActivity {
 				&& !this.mapView.hasValidMapFile()) {
 			startFileBrowser();
 		}
-	}
+	}*/
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
@@ -725,5 +731,10 @@ public class AdvancedMapViewer extends MapActivity {
 			this.toast.setText(text);
 		}
 		this.toast.show();
+	}
+	
+	public static void main(String[] args) {
+		//AdvancedMapViewer ap = new AdvancedMapViewer();
+		//ap.onCreate(null);
 	}
 }
