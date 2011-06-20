@@ -562,7 +562,8 @@ public class MapView extends ViewGroup {
 	/**
 	 * Default background color of the MapView.
 	 */
-	private static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
+	//private static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
+	private static final Color MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
 
 	/**
 	 * Message code for the handler to hide the zoom controls.
@@ -1438,6 +1439,7 @@ public class MapView extends ViewGroup {
 		if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.FROYO) {
 			this.touchEventHandler = new SingleTouchHandler();
 		} else {
+			//TODO
 			this.touchEventHandler = new MultiTouchHandler();
 		}
 
@@ -1451,7 +1453,7 @@ public class MapView extends ViewGroup {
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
 		this.textScale = DEFAULT_TEXT_SCALE;
 
-		setBackgroundColor(MAP_VIEW_BACKGROUND);
+		//TODO VIEW setBackgroundColor(MAP_VIEW_BACKGROUND);
 		setWillNotDraw(false);
 		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
 

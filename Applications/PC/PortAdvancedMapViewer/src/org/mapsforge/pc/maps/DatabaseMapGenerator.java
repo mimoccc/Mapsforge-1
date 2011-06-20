@@ -261,8 +261,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final byte TEXT_SCALE_SMALL = 12;
 	private static final byte TEXT_SCALE_SMALLER = 11;
 	private static final byte TEXT_SCALE_TINY = 10;
-
-	private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
+	
+	//TODO private static final int TILE_BACKGROUND = Color.rgb(248, 248, 248);
+	private static final Color TILE_BACKGROUND = Color.rgb(248, 248, 248);
 	private static final byte ZOOM_MAX = 21;
 
 	/**
