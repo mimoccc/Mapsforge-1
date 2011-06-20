@@ -27,8 +27,10 @@ import org.mapsforge.core.FontLoader;
 /**
  * Re-implementation of Typeface over java.awt
  */
-public class Typeface {
-    private static final String DEFAULT_FAMILY = "sans-serif";
+public class Typeface extends Font {
+
+	private static final long serialVersionUID = -6330183324992171615L;
+	private static final String DEFAULT_FAMILY = "sans-serif";
     private static final int[] styleBuffer = new int[1];
 
     /** The default NORMAL typeface object */
@@ -56,9 +58,9 @@ public class Typeface {
 
     // Style
     public static final int NORMAL = 0;
-    public static final int BOLD = 1;
-    public static final int ITALIC = 2;
-    public static final int BOLD_ITALIC = 3;
+    public static final int BOLD = Font.BOLD;
+    public static final int ITALIC = Font.ITALIC;
+    public static final int BOLD_ITALIC = BOLD + ITALIC;
 
     /**
      * Returns the underlying {@link Font} objects. The first item in the list is the real
@@ -143,7 +145,8 @@ public class Typeface {
 
     // don't allow clients to call this directly
     private Typeface(String family, int style, List<Font> fonts) {
-        mFamily = family;
+        super(family, style, fonts.size());
+    	mFamily = family;
         mFonts = Collections.unmodifiableList(fonts);
         mStyle = style;
     }

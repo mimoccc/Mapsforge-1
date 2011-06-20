@@ -1,24 +1,35 @@
 package org.mapsforge.core.graphics;
 
 import java.util.HashMap;
-import java.util.Locale;
 
 import org.mapsforge.core.MathUtils;
 
-public class Color {
+public class Color extends java.awt.Color {
 
-	public static final int BLACK       = 0xFF000000;
-    public static final int DKGRAY      = 0xFF444444;
-    public static final int GRAY        = 0xFF888888;
-    public static final int LTGRAY      = 0xFFCCCCCC;
-    public static final int WHITE       = 0xFFFFFFFF;
-    public static final int RED         = 0xFFFF0000;
-    public static final int GREEN       = 0xFF00FF00;
-    public static final int BLUE        = 0xFF0000FF;
-    public static final int YELLOW      = 0xFFFFFF00;
-    public static final int CYAN        = 0xFF00FFFF;
-    public static final int MAGENTA     = 0xFFFF00FF;
-    public static final int TRANSPARENT = 0;
+	private static final long serialVersionUID = 4489419131193097797L;
+
+	
+	public Color(int arg0) {
+		super(arg0);
+	}
+
+	//TODO unsafe
+	public Color(Color color) {
+		super(color.getAlpha());
+	}
+
+	public static final Color BLACK       = (Color) java.awt.Color.BLACK;
+    public static final Color DKGRAY      = (Color) java.awt.Color.DARK_GRAY;
+    public static final Color GRAY        = (Color) java.awt.Color.GRAY;
+    public static final Color LTGRAY      = (Color) java.awt.Color.LIGHT_GRAY;
+    public static final Color WHITE       = (Color) java.awt.Color.WHITE;
+    public static final Color RED         = (Color) java.awt.Color.RED;
+    public static final Color GREEN       = (Color) java.awt.Color.GREEN;
+    public static final Color BLUE        = (Color) java.awt.Color.BLUE;
+    public static final Color YELLOW      = (Color) java.awt.Color.YELLOW;
+    public static final Color CYAN        = (Color) java.awt.Color.CYAN;
+    public static final Color MAGENTA     = (Color) java.awt.Color.MAGENTA;
+    public static final int TRANSPARENT   = java.awt.Color.TRANSLUCENT;
 
 	/**
      * Return the alpha component of a color int. This is the same as saying
@@ -62,8 +73,8 @@ public class Color {
      * @param green Green component [0..255] of the color
      * @param blue  Blue component [0..255] of the color
      */
-    public static int rgb(int red, int green, int blue) {
-        return (0xFF << 24) | (red << 16) | (green << 8) | blue;
+    public static Color rgb(int red, int green, int blue) {
+        return (Color) new java.awt.Color(red, green, blue);
     }
 
     /**
@@ -76,8 +87,8 @@ public class Color {
      * @param green Green component [0..255] of the color
      * @param blue  Blue component [0..255] of the color
      */
-    public static int argb(int alpha, int red, int green, int blue) {
-        return (alpha << 24) | (red << 16) | (green << 8) | blue;
+    public static Color argb(int alpha, int red, int green, int blue) {
+        return (Color) new java.awt.Color(red, green, blue, alpha);
     }
 
     /**
@@ -176,26 +187,6 @@ public class Color {
      * 'red', 'blue', 'green', 'black', 'white', 'gray', 'cyan', 'magenta',
      * 'yellow', 'lightgray', 'darkgray'
      */
-    
-     public static int parseColor(String colorString) {
-        if (colorString.charAt(0) == '#') {
-            // Use a long to avoid rollovers on #ffXXXXXX
-            long color = Long.parseLong(colorString.substring(1), 16);
-            if (colorString.length() == 7) {
-                // Set the alpha value
-                color |= 0x00000000ff000000;
-            } else if (colorString.length() != 9) {
-                throw new IllegalArgumentException("Unknown color");
-            }
-            return (int)color;
-        } else {
-            Integer color = sColorNameMap.get(colorString.toLowerCase(Locale.US));
-            if (color != null) {
-                return color;
-            }
-        }
-        throw new IllegalArgumentException("Unknown color");
-    }
      
 
     /**
@@ -279,10 +270,10 @@ public class Color {
                 (((int) (green * 255.0f)) << 8) | ((int) (blue * 255.0f));
     }
 
-    private static final HashMap<String, Integer> sColorNameMap;
+    private static final HashMap<String, Color> sColorNameMap;
 
     static {
-        sColorNameMap = new HashMap<String, Integer>();
+        sColorNameMap = new HashMap<String, Color>();
         sColorNameMap.put("black", BLACK);
         sColorNameMap.put("darkgray", DKGRAY);
         sColorNameMap.put("gray", GRAY);

@@ -23,6 +23,7 @@ import android.text.TextUtils;*/
 
 import java.awt.BasicStroke;
 import java.awt.Font;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
@@ -31,13 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.mapsforge.core.Xfermode;
 //import android.graphics.Shader;
 import org.mapsforge.core.graphics.Shader;
 /**
  * A paint implementation overridden by the LayoutLib bridge.
  */
-public class Paint  {
+public class Paint {
 
     /**
      * Class associating a {@link Font} and it's {@link java.awt.FontMetrics}.
@@ -47,15 +47,10 @@ public class Paint  {
         java.awt.FontMetrics mMetrics;
     }
 
-    public static final int ANTI_ALIAS_FLAG       = 0;
-    public static final int FILTER_BITMAP_FLAG    = 0;
-    public static final int DITHER_FLAG           = 0;
-    public static final int UNDERLINE_TEXT_FLAG   = 0;
-    public static final int STRIKE_THRU_TEXT_FLAG = 0;
-    public static final int FAKE_BOLD_TEXT_FLAG   = 0;
-    public static final int LINEAR_TEXT_FLAG      = 0;
-    public static final int SUBPIXEL_TEXT_FLAG    = 0;
-    public static final int DEV_KERN_TEXT_FLAG    = 0;
+    public static final Integer ANTI_ALIAS_FLAG       = 0x01;
+    public static final Integer FILTER_BITMAP_FLAG    = 0x02; //TODO Unsafe
+    public static final Integer DITHER_FLAG   		  = 0x03;
+    public static final Integer DEV_KERN_TEXT_FLAG    = 0x04;
     
     private static final int DEFAULT_PAINT_FLAGS = DEV_KERN_TEXT_FLAG;
 
@@ -238,8 +233,7 @@ public class Paint  {
     }
 
     /* GLOBAL VARIABLE */
-    private int alpha = 255;
-    private int color = 0xFFFFFFFF;
+    private Color color = null;
     private PathEffect pathEffect;
     private Shader strokeShader;
     private Cap strokeCap = Cap.BUTT;
@@ -251,7 +245,6 @@ public class Paint  {
     private float mScaleX = 1;
     private float mSkewX = 0;
     private int mFlags = 0;
-    private Xfermode mXfermode;
     private float textSize;
     private Typeface typeface;
     
@@ -278,7 +271,6 @@ public class Paint  {
             align = src.align;
             style = src.style;
             strokeShader = src.strokeShader;
-            mXfermode = src.mXfermode;
             pathEffect = src.pathEffect;
             
             updateFontObject();
@@ -288,20 +280,13 @@ public class Paint  {
 	}
 	
 	/* GETTER AND SETTER */
-	
-	public void setAlpha(int i) {
-		alpha = (i << 24) | (alpha & 0x00FFFFFF);
-	}
-	
-	public int getAlpha() {
-		return color >>> 24;
-	}
 
-	public void setColor(int color) {
+
+	public void setColor(Color color) {
 		this.color = color;
 	}
     
-	public int getColor() {
+	public Color getColor() {
 		return color;
 	}
 	
@@ -425,13 +410,6 @@ public class Paint  {
         return typeface;	
 	}
 	
-	public void setXfermode(Xfermode xfermode) {
-        this.mXfermode = xfermode;
-    }
-
-	public Xfermode getXfermode() {
-		return this.mXfermode;
-	}
 
 	/* OTHER */
 
@@ -522,6 +500,15 @@ public class Paint  {
 
 	public boolean isFilterBitmap() {		
 		return (getFlags() & FILTER_BITMAP_FLAG) != 0;
+	}
+
+	public int getAlpha() {
+		return color.getAlpha();
+	}
+
+	//TODO unsafe
+	public void setAlpha(int i) {
+		color = new Color(i);		
 	}
 
 }

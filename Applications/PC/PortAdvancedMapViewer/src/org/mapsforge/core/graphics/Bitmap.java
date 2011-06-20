@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 
 
 
-public final class Bitmap {
+public final class Bitmap extends BufferedImage {
 
     public enum CompressFormat {
         JPEG    (0),
@@ -69,6 +69,7 @@ public final class Bitmap {
     
     private Bitmap(int nativeBitmap, boolean isMutable, byte[] ninePatchChunk,
             int density) {
+    	super(0,0,0);
         if (nativeBitmap == 0) {
             throw new RuntimeException("internal error: native bitmap is 0");
         }
