@@ -1,0 +1,378 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F67B31CB1395743500CCF124 /* OSMLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = F67B31C91395743500CCF124 /* OSMLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F67B31CC1395743500CCF124 /* OSMLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = F67B31CA1395743500CCF124 /* OSMLayer.m */; };
+		F67B31D11395755000CCF124 /* KMMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = F67B31D01395755000CCF124 /* KMMapView.m */; };
+		F6963B1F1390232600695981 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6963B1E1390232600695981 /* Cocoa.framework */; };
+		F6963B291390232600695981 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F6963B271390232600695981 /* InfoPlist.strings */; };
+		F6963B621390252100695981 /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = F6963B601390252000695981 /* AUTHORS */; };
+		F6963B631390252100695981 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = F6963B611390252000695981 /* COPYING */; };
+		F6963B7213902D2300695981 /* KonocoMapKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F6963B7113902D2300695981 /* KonocoMapKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6963B7813902EB800695981 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6963B7713902EB800695981 /* CoreLocation.framework */; };
+		F6AAEA9813990E9B0093C803 /* KMAnnotationView.h in Headers */ = {isa = PBXBuildFile; fileRef = F6AAEA9613990E9B0093C803 /* KMAnnotationView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6AAEA9913990E9B0093C803 /* KMAnnotationView.m in Sources */ = {isa = PBXBuildFile; fileRef = F6AAEA9713990E9B0093C803 /* KMAnnotationView.m */; };
+		F6AAEA9B13990F340093C803 /* KMAnnotation.h in Headers */ = {isa = PBXBuildFile; fileRef = F6AAEA9A13990F340093C803 /* KMAnnotation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6AAEA9E13990F7C0093C803 /* KMPointAnnotation.h in Headers */ = {isa = PBXBuildFile; fileRef = F6AAEA9C13990F7B0093C803 /* KMPointAnnotation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6AAEA9F13990F7C0093C803 /* KMPointAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = F6AAEA9D13990F7B0093C803 /* KMPointAnnotation.m */; };
+		F6DD987C1391031700C57623 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DD987B1391031700C57623 /* QuartzCore.framework */; };
+		F6DD9885139104B500C57623 /* KMMapView.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD987F139104B500C57623 /* KMMapView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6DD9887139104B500C57623 /* KMMapViewDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD9881139104B500C57623 /* KMMapViewDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6DD9888139104B500C57623 /* KMTileIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD9882139104B500C57623 /* KMTileIndex.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6DD9889139104B500C57623 /* KMTileIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = F6DD9883139104B500C57623 /* KMTileIndex.m */; };
+		F6DD988B139105BF00C57623 /* KMCoordinateRegion.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD988A139105BF00C57623 /* KMCoordinateRegion.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6DD988D1391098A00C57623 /* KMMapLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD988C1391098A00C57623 /* KMMapLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6DD9898139118BC00C57623 /* KMTiledRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = F6DD9896139118BB00C57623 /* KMTiledRenderer.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		F6DD9899139118BC00C57623 /* KMTiledRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = F6DD9897139118BB00C57623 /* KMTiledRenderer.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F67B31C91395743500CCF124 /* OSMLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSMLayer.h; sourceTree = "<group>"; };
+		F67B31CA1395743500CCF124 /* OSMLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OSMLayer.m; sourceTree = "<group>"; };
+		F67B31D01395755000CCF124 /* KMMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KMMapView.m; sourceTree = "<group>"; };
+		F67FFD031393F065007734DE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		F6963B1B1390232600695981 /* KonocoMapKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = KonocoMapKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6963B1E1390232600695981 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		F6963B261390232600695981 /* KonocoMapKit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "KonocoMapKit-Info.plist"; sourceTree = "<group>"; };
+		F6963B281390232600695981 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F6963B2A1390232600695981 /* KonocoMapKit-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "KonocoMapKit-Prefix.pch"; sourceTree = "<group>"; };
+		F6963B601390252000695981 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		F6963B611390252000695981 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+		F6963B7113902D2300695981 /* KonocoMapKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KonocoMapKit.h; sourceTree = "<group>"; };
+		F6963B7713902EB800695981 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		F6AAEA9613990E9B0093C803 /* KMAnnotationView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMAnnotationView.h; sourceTree = "<group>"; };
+		F6AAEA9713990E9B0093C803 /* KMAnnotationView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KMAnnotationView.m; sourceTree = "<group>"; };
+		F6AAEA9A13990F340093C803 /* KMAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMAnnotation.h; sourceTree = "<group>"; };
+		F6AAEA9C13990F7B0093C803 /* KMPointAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMPointAnnotation.h; sourceTree = "<group>"; };
+		F6AAEA9D13990F7B0093C803 /* KMPointAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KMPointAnnotation.m; sourceTree = "<group>"; };
+		F6DD987B1391031700C57623 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		F6DD987F139104B500C57623 /* KMMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMMapView.h; sourceTree = "<group>"; };
+		F6DD9881139104B500C57623 /* KMMapViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMMapViewDelegate.h; sourceTree = "<group>"; };
+		F6DD9882139104B500C57623 /* KMTileIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMTileIndex.h; sourceTree = "<group>"; };
+		F6DD9883139104B500C57623 /* KMTileIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KMTileIndex.m; sourceTree = "<group>"; };
+		F6DD988A139105BF00C57623 /* KMCoordinateRegion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMCoordinateRegion.h; sourceTree = "<group>"; };
+		F6DD988C1391098A00C57623 /* KMMapLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMMapLayer.h; sourceTree = "<group>"; };
+		F6DD9896139118BB00C57623 /* KMTiledRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KMTiledRenderer.h; sourceTree = "<group>"; };
+		F6DD9897139118BB00C57623 /* KMTiledRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KMTiledRenderer.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F6963B171390232600695981 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6DD987C1391031700C57623 /* QuartzCore.framework in Frameworks */,
+				F6963B7813902EB800695981 /* CoreLocation.framework in Frameworks */,
+				F6963B1F1390232600695981 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A14E68FC13AB1CD600BD5D55 /* OSMTest */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = OSMTest;
+			sourceTree = "<group>";
+		};
+		F67B31C8139573AE00CCF124 /* Layer */ = {
+			isa = PBXGroup;
+			children = (
+				A14E68FC13AB1CD600BD5D55 /* OSMTest */,
+				F67B31CD1395743C00CCF124 /* OSM */,
+			);
+			path = Layer;
+			sourceTree = "<group>";
+		};
+		F67B31CD1395743C00CCF124 /* OSM */ = {
+			isa = PBXGroup;
+			children = (
+				F67B31C91395743500CCF124 /* OSMLayer.h */,
+				F67B31CA1395743500CCF124 /* OSMLayer.m */,
+			);
+			path = OSM;
+			sourceTree = "<group>";
+		};
+		F67B31CF139574AF00CCF124 /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				F6DD9896139118BB00C57623 /* KMTiledRenderer.h */,
+				F6DD9897139118BB00C57623 /* KMTiledRenderer.m */,
+			);
+			path = Internal;
+			sourceTree = "<group>";
+		};
+		F6963B0F1390232600695981 = {
+			isa = PBXGroup;
+			children = (
+				F6963B601390252000695981 /* AUTHORS */,
+				F6963B611390252000695981 /* COPYING */,
+				F6963B241390232600695981 /* KonocoMapKit */,
+				F6963B1D1390232600695981 /* Frameworks */,
+				F6963B1C1390232600695981 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F6963B1C1390232600695981 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B1B1390232600695981 /* KonocoMapKit.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F6963B1D1390232600695981 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B1E1390232600695981 /* Cocoa.framework */,
+				F6963B7713902EB800695981 /* CoreLocation.framework */,
+				F6DD987B1391031700C57623 /* QuartzCore.framework */,
+				F67FFD031393F065007734DE /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F6963B241390232600695981 /* KonocoMapKit */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B7113902D2300695981 /* KonocoMapKit.h */,
+				F6DD988A139105BF00C57623 /* KMCoordinateRegion.h */,
+				F6AAEA9A13990F340093C803 /* KMAnnotation.h */,
+				F6DD988C1391098A00C57623 /* KMMapLayer.h */,
+				F6DD9882139104B500C57623 /* KMTileIndex.h */,
+				F6DD9883139104B500C57623 /* KMTileIndex.m */,
+				F6DD9881139104B500C57623 /* KMMapViewDelegate.h */,
+				F6DD987F139104B500C57623 /* KMMapView.h */,
+				F67B31D01395755000CCF124 /* KMMapView.m */,
+				F6AAEA9613990E9B0093C803 /* KMAnnotationView.h */,
+				F6AAEA9713990E9B0093C803 /* KMAnnotationView.m */,
+				F6AAEA9C13990F7B0093C803 /* KMPointAnnotation.h */,
+				F6AAEA9D13990F7B0093C803 /* KMPointAnnotation.m */,
+				F67B31C8139573AE00CCF124 /* Layer */,
+				F67B31CF139574AF00CCF124 /* Internal */,
+				F6963B251390232600695981 /* Supporting Files */,
+			);
+			path = KonocoMapKit;
+			sourceTree = "<group>";
+		};
+		F6963B251390232600695981 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B261390232600695981 /* KonocoMapKit-Info.plist */,
+				F6963B271390232600695981 /* InfoPlist.strings */,
+				F6963B2A1390232600695981 /* KonocoMapKit-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		F6963B181390232600695981 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6963B7213902D2300695981 /* KonocoMapKit.h in Headers */,
+				F6DD9885139104B500C57623 /* KMMapView.h in Headers */,
+				F6DD9887139104B500C57623 /* KMMapViewDelegate.h in Headers */,
+				F6DD9888139104B500C57623 /* KMTileIndex.h in Headers */,
+				F6DD988B139105BF00C57623 /* KMCoordinateRegion.h in Headers */,
+				F6DD988D1391098A00C57623 /* KMMapLayer.h in Headers */,
+				F67B31CB1395743500CCF124 /* OSMLayer.h in Headers */,
+				F6DD9898139118BC00C57623 /* KMTiledRenderer.h in Headers */,
+				F6AAEA9813990E9B0093C803 /* KMAnnotationView.h in Headers */,
+				F6AAEA9B13990F340093C803 /* KMAnnotation.h in Headers */,
+				F6AAEA9E13990F7C0093C803 /* KMPointAnnotation.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		F6963B1A1390232600695981 /* KonocoMapKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F6963B2D1390232600695981 /* Build configuration list for PBXNativeTarget "KonocoMapKit" */;
+			buildPhases = (
+				F6963B161390232600695981 /* Sources */,
+				F6963B171390232600695981 /* Frameworks */,
+				F6963B181390232600695981 /* Headers */,
+				F6963B191390232600695981 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KonocoMapKit;
+			productName = KonocoMapKit;
+			productReference = F6963B1B1390232600695981 /* KonocoMapKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F6963B111390232600695981 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				ORGANIZATIONNAME = Konoco;
+			};
+			buildConfigurationList = F6963B141390232600695981 /* Build configuration list for PBXProject "KonocoMapKit" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = F6963B0F1390232600695981;
+			productRefGroup = F6963B1C1390232600695981 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F6963B1A1390232600695981 /* KonocoMapKit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F6963B191390232600695981 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6963B291390232600695981 /* InfoPlist.strings in Resources */,
+				F6963B621390252100695981 /* AUTHORS in Resources */,
+				F6963B631390252100695981 /* COPYING in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F6963B161390232600695981 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6DD9889139104B500C57623 /* KMTileIndex.m in Sources */,
+				F6DD9899139118BC00C57623 /* KMTiledRenderer.m in Sources */,
+				F67B31CC1395743500CCF124 /* OSMLayer.m in Sources */,
+				F67B31D11395755000CCF124 /* KMMapView.m in Sources */,
+				F6AAEA9913990E9B0093C803 /* KMAnnotationView.m in Sources */,
+				F6AAEA9F13990F7C0093C803 /* KMPointAnnotation.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		F6963B271390232600695981 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F6963B281390232600695981 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		F6963B2B1390232600695981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F6963B2C1390232600695981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F6963B2E1390232600695981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KonocoMapKit/KonocoMapKit-Prefix.pch";
+				INFOPLIST_FILE = "KonocoMapKit/KonocoMapKit-Info.plist";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		F6963B2F1390232600695981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KonocoMapKit/KonocoMapKit-Prefix.pch";
+				INFOPLIST_FILE = "KonocoMapKit/KonocoMapKit-Info.plist";
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F6963B141390232600695981 /* Build configuration list for PBXProject "KonocoMapKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F6963B2B1390232600695981 /* Debug */,
+				F6963B2C1390232600695981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F6963B2D1390232600695981 /* Build configuration list for PBXNativeTarget "KonocoMapKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F6963B2E1390232600695981 /* Debug */,
+				F6963B2F1390232600695981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F6963B111390232600695981 /* Project object */;
+}

@@ -1,0 +1,9 @@
+To build the demo application clone the project and init/update the submodule.
+
+>>> git clone https://github.com/Konoco/KonocoMap.git
+>>> cd KonocoMap/
+>>> KonocoMap/ git submodule init
+>>> KonocoMap/ git submodule update
+>>> KonocoMap/ open KonocoMap.xcworkspace
+
+Have fun!

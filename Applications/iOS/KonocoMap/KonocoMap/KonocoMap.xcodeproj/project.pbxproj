@@ -1,0 +1,304 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F67B31DD1395834800CCF124 /* KonocoMapKit.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = F6963B6F13902C1000695981 /* KonocoMapKit.framework */; };
+		F6963B401390237500695981 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6963B3F1390237500695981 /* Cocoa.framework */; };
+		F6963B4A1390237500695981 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F6963B481390237500695981 /* InfoPlist.strings */; };
+		F6963B4D1390237500695981 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F6963B4C1390237500695981 /* main.m */; };
+		F6963B531390237500695981 /* KonocoMapAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F6963B521390237500695981 /* KonocoMapAppDelegate.m */; };
+		F6963B561390237600695981 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F6963B541390237600695981 /* MainMenu.xib */; };
+		F6963B6D139026BC00695981 /* KonocoMapWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F6963B6A139026BC00695981 /* KonocoMapWindow.xib */; };
+		F6963B6E139026BC00695981 /* KonocoMapWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = F6963B6C139026BC00695981 /* KonocoMapWindowController.m */; };
+		F6963B7013902C1000695981 /* KonocoMapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6963B6F13902C1000695981 /* KonocoMapKit.framework */; };
+		F6DD989B13923E4E00C57623 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DD989A13923E4E00C57623 /* CoreLocation.framework */; };
+		F6E1F158139D6FD900D2C33D /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = F6E1F156139D6FD900D2C33D /* AUTHORS */; };
+		F6E1F159139D6FD900D2C33D /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = F6E1F157139D6FD900D2C33D /* COPYING */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F67B31DC1395833000CCF124 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				F67B31DD1395834800CCF124 /* KonocoMapKit.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F6963B3B1390237500695981 /* KonocoMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KonocoMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6963B3F1390237500695981 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		F6963B471390237500695981 /* KonocoMap-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "KonocoMap-Info.plist"; sourceTree = "<group>"; };
+		F6963B491390237500695981 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F6963B4B1390237500695981 /* KonocoMap-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "KonocoMap-Prefix.pch"; sourceTree = "<group>"; };
+		F6963B4C1390237500695981 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		F6963B511390237500695981 /* KonocoMapAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KonocoMapAppDelegate.h; sourceTree = "<group>"; };
+		F6963B521390237500695981 /* KonocoMapAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KonocoMapAppDelegate.m; sourceTree = "<group>"; };
+		F6963B551390237600695981 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		F6963B6A139026BC00695981 /* KonocoMapWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = KonocoMapWindow.xib; sourceTree = "<group>"; };
+		F6963B6B139026BC00695981 /* KonocoMapWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KonocoMapWindowController.h; sourceTree = "<group>"; };
+		F6963B6C139026BC00695981 /* KonocoMapWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KonocoMapWindowController.m; sourceTree = "<group>"; };
+		F6963B6F13902C1000695981 /* KonocoMapKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = KonocoMapKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6DD989A13923E4E00C57623 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		F6E1F156139D6FD900D2C33D /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		F6E1F157139D6FD900D2C33D /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F6963B381390237500695981 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6DD989B13923E4E00C57623 /* CoreLocation.framework in Frameworks */,
+				F6963B7013902C1000695981 /* KonocoMapKit.framework in Frameworks */,
+				F6963B401390237500695981 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F6963B301390237500695981 = {
+			isa = PBXGroup;
+			children = (
+				F6E1F156139D6FD900D2C33D /* AUTHORS */,
+				F6E1F157139D6FD900D2C33D /* COPYING */,
+				F6963B451390237500695981 /* KonocoMap */,
+				F6963B3E1390237500695981 /* Frameworks */,
+				F6963B3C1390237500695981 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F6963B3C1390237500695981 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B3B1390237500695981 /* KonocoMap.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F6963B3E1390237500695981 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F6DD989A13923E4E00C57623 /* CoreLocation.framework */,
+				F6963B3F1390237500695981 /* Cocoa.framework */,
+				F6963B6F13902C1000695981 /* KonocoMapKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F6963B451390237500695981 /* KonocoMap */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B511390237500695981 /* KonocoMapAppDelegate.h */,
+				F6963B521390237500695981 /* KonocoMapAppDelegate.m */,
+				F6963B6B139026BC00695981 /* KonocoMapWindowController.h */,
+				F6963B6C139026BC00695981 /* KonocoMapWindowController.m */,
+				F6963B541390237600695981 /* MainMenu.xib */,
+				F6963B6A139026BC00695981 /* KonocoMapWindow.xib */,
+				F6963B461390237500695981 /* Supporting Files */,
+			);
+			path = KonocoMap;
+			sourceTree = "<group>";
+		};
+		F6963B461390237500695981 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				F6963B471390237500695981 /* KonocoMap-Info.plist */,
+				F6963B481390237500695981 /* InfoPlist.strings */,
+				F6963B4B1390237500695981 /* KonocoMap-Prefix.pch */,
+				F6963B4C1390237500695981 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F6963B3A1390237500695981 /* KonocoMap */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F6963B591390237600695981 /* Build configuration list for PBXNativeTarget "KonocoMap" */;
+			buildPhases = (
+				F6963B371390237500695981 /* Sources */,
+				F6963B381390237500695981 /* Frameworks */,
+				F6963B391390237500695981 /* Resources */,
+				F67B31DC1395833000CCF124 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KonocoMap;
+			productName = KonocoMap;
+			productReference = F6963B3B1390237500695981 /* KonocoMap.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F6963B321390237500695981 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				ORGANIZATIONNAME = Konoco;
+			};
+			buildConfigurationList = F6963B351390237500695981 /* Build configuration list for PBXProject "KonocoMap" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = F6963B301390237500695981;
+			productRefGroup = F6963B3C1390237500695981 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F6963B3A1390237500695981 /* KonocoMap */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F6963B391390237500695981 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6963B4A1390237500695981 /* InfoPlist.strings in Resources */,
+				F6963B561390237600695981 /* MainMenu.xib in Resources */,
+				F6963B6D139026BC00695981 /* KonocoMapWindow.xib in Resources */,
+				F6E1F158139D6FD900D2C33D /* AUTHORS in Resources */,
+				F6E1F159139D6FD900D2C33D /* COPYING in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F6963B371390237500695981 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6963B4D1390237500695981 /* main.m in Sources */,
+				F6963B531390237500695981 /* KonocoMapAppDelegate.m in Sources */,
+				F6963B6E139026BC00695981 /* KonocoMapWindowController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		F6963B481390237500695981 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F6963B491390237500695981 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		F6963B541390237600695981 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F6963B551390237600695981 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		F6963B571390237600695981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F6963B581390237600695981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		F6963B5A1390237600695981 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KonocoMap/KonocoMap-Prefix.pch";
+				INFOPLIST_FILE = "KonocoMap/KonocoMap-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		F6963B5B1390237600695981 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KonocoMap/KonocoMap-Prefix.pch";
+				INFOPLIST_FILE = "KonocoMap/KonocoMap-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F6963B351390237500695981 /* Build configuration list for PBXProject "KonocoMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F6963B571390237600695981 /* Debug */,
+				F6963B581390237600695981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F6963B591390237600695981 /* Build configuration list for PBXNativeTarget "KonocoMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F6963B5A1390237600695981 /* Debug */,
+				F6963B5B1390237600695981 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F6963B321390237500695981 /* Project object */;
+}
