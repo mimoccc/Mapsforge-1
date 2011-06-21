@@ -19,7 +19,7 @@ import org.mapsforge.core.graphics.Bitmap;
 //import android.graphics.Canvas;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
-import org.mapsforge.core.graphics.Color;
+import java.awt.Color;
 //import android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 
@@ -219,7 +219,8 @@ public abstract class Overlay extends Thread {
 		this.mapViewProjection = this.internalMapView.getProjection();
 
 		// clear the second bitmap and make the canvas use it
-		this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
+		//this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
+		this.overlayBitmap2.eraseColor(Color.TRANSLUCENT);
 		this.overlayCanvas.setBitmap(this.overlayBitmap2);
 
 		// save the zoom level and map position before drawing

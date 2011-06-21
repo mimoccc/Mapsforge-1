@@ -50,7 +50,8 @@ public class Point {
         return this.x == x && this.y == y;
     }
 
-    @Override public boolean equals(Object o) {
+    @Override 
+    public boolean equals(Object o) {
         if (o instanceof Point) {
             Point p = (Point) o;
             return this.x == p.x && this.y == p.y;
@@ -58,11 +59,13 @@ public class Point {
         return false;
     }
 
-    @Override public int hashCode() {
+    @Override 
+    public int hashCode() {
         return x * 32713 + y;
     }
 
-    @Override public String toString() {
+    @Override 
+    public String toString() {
         return "Point(" + x + ", " + y+ ")";
     }
 }

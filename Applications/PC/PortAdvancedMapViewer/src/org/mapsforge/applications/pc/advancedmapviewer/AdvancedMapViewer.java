@@ -48,7 +48,7 @@ import android.content.SharedPreferences;
 
 /* GRAPHICS */
 //import android.graphics.Color;
-import org.mapsforge.core.graphics.Color;
+import java.awt.Color;
 //import android.graphics.Paint;
 import org.mapsforge.core.graphics.Paint;
 //import android.graphics.Rect;

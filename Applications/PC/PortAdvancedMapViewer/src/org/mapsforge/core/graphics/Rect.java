@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * the rectangle's width and height. Note: most methods do not check to see that
  * the coordinates are sorted correctly (i.e. left <= right and top <= bottom).
  */
-public final class Rect extends Rectangle {
+public final class Rect {
 
 	private static final long serialVersionUID = 8842216702904284962L;
 	public int left;
@@ -42,7 +42,6 @@ public final class Rect extends Rectangle {
      * @param bottom The Y coordinate of the bottom of the rectangle
      */
     public Rect(int left, int top, int right, int bottom) {
-    	super(left, top, right-left, bottom-top);
         this.left = left;
         this.top = top;
         this.right = right;
@@ -57,7 +56,6 @@ public final class Rect extends Rectangle {
      *          rectangle.
      */
     public Rect(Rect r) {
-    	super(r.left, r.top, r.right-r.left, r.bottom-r.top);
         left = r.left;
         top = r.top;
         right = r.right;

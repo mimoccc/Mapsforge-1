@@ -22,8 +22,8 @@ import android.text.SpannedString;
 import android.text.TextUtils;*/
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Font;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
@@ -48,7 +48,7 @@ public class Paint {
     }
 
     public static final Integer ANTI_ALIAS_FLAG       = 0x01;
-    public static final Integer FILTER_BITMAP_FLAG    = 0x02; //TODO Unsafe
+    public static final Integer FILTER_BITMAP_FLAG    = 0x02; //TODO
     public static final Integer DITHER_FLAG   		  = 0x03;
     public static final Integer DEV_KERN_TEXT_FLAG    = 0x04;
     
@@ -282,7 +282,7 @@ public class Paint {
 	/* GETTER AND SETTER */
 
 
-	public void setColor(Color color) {
+	public void setColor(java.awt.Color color) {
 		this.color = color;
 	}
     
@@ -506,9 +506,8 @@ public class Paint {
 		return color.getAlpha();
 	}
 
-	//TODO unsafe
 	public void setAlpha(int i) {
-		color = new Color(i);		
+		color = new Color(color.getRed(), color.getGreen(), color.getBlue(), i);		
 	}
 
 }

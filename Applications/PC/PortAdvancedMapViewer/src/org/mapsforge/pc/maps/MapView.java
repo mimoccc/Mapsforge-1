@@ -30,7 +30,7 @@ import org.mapsforge.core.graphics.Bitmap;
 //import android.graphics.Canvas;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
-import org.mapsforge.core.graphics.Color;
+import java.awt.Color;
 //mport android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 //import android.graphics.Paint;
@@ -563,7 +563,7 @@ public class MapView extends ViewGroup {
 	 * Default background color of the MapView.
 	 */
 	//private static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
-	private static final Color MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
+	private static final Color MAP_VIEW_BACKGROUND = new Color(238, 238, 238);
 
 	/**
 	 * Message code for the handler to hide the zoom controls.
@@ -1371,7 +1371,8 @@ public class MapView extends ViewGroup {
 		}
 
 		// fill the bitmap with transparent color
-		this.mapScaleBitmap.eraseColor(Color.TRANSPARENT);
+		//this.mapScaleBitmap.eraseColor(Color.TRANSPARENT);
+		this.mapScaleBitmap.eraseColor(Color.TRANSLUCENT);
 
 		// draw the map scale
 		this.mapScaleCanvas

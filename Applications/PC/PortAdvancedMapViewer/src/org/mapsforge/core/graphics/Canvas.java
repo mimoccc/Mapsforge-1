@@ -2,6 +2,7 @@ package org.mapsforge.core.graphics;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -14,7 +15,7 @@ import org.mapsforge.core.graphics.Paint.Align;
 import org.mapsforge.core.graphics.Paint.FontInfo;
 import org.mapsforge.core.graphics.Paint.Style;
 
-public class Canvas extends java.awt.Canvas {
+public class Canvas {
 
 	BufferedImage mBufferedImage;
 	Stack<Graphics2D> graphics = new Stack<Graphics2D>();
@@ -22,13 +23,9 @@ public class Canvas extends java.awt.Canvas {
 	private static final long serialVersionUID = 5085355825188623626L;
 
 	
-    public Canvas() {
-    	super();
-    }
-
+    public Canvas() {}
 
 	public Canvas(Bitmap bitmap) {
-		super();
 		mBufferedImage = bitmap.getImage();
 		graphics.push(mBufferedImage.createGraphics());
 	}
@@ -39,7 +36,7 @@ public class Canvas extends java.awt.Canvas {
 		g = (Graphics2D) g.create();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		g.setColor(new Color(paint.getColor()));
+		g.setColor(new Color(paint.getColor().getRGB()));
 		int alpha = paint.getAlpha();
 		float falpha = alpha / 255.f;
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, falpha));
@@ -197,7 +194,6 @@ public class Canvas extends java.awt.Canvas {
         g.dispose();
     }
 
-
 	public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
 		BufferedImage image = bitmap.getImage();
 
@@ -251,7 +247,7 @@ public class Canvas extends java.awt.Canvas {
         g = (Graphics2D)g.create();
 
         // configure it
-        g.setColor(new Color(paint.getColor()));
+        g.setColor(new Color(paint.getColor().getRGB()));
         int alpha = paint.getAlpha();
         float falpha = alpha / 255.f;
 
@@ -276,35 +272,25 @@ public class Canvas extends java.awt.Canvas {
             }
         }
 
-        //Xfermode xfermode = paint.getXfermode();
-        //if (xfermode instanceof PorterDuffXfermode) {
-           // PorterDuff.Mode mode = ((PorterDuffXfermode)xfermode).getMode();
-
-            //setModeInGraphics(mode, g, falpha);
-        //} else {
-            /*if (mLogger != null && xfermode != null) {
-                mLogger.warning(String.format(
-                        "Xfermode '%1$s' is not supported in the Layout Editor.",
-                        xfermode.getClass().getCanonicalName()));
-            }*/
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, falpha));
-        //}
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, falpha));
 
         Shader shader = paint.getShader();
         if (shader != null) {
             java.awt.Paint shaderPaint = shader.getJavaPaint();
             if (shaderPaint != null) {
                 g.setPaint(shaderPaint);
-            } else {
-                /*if (mLogger != null) {
-                    mLogger.warning(String.format(
-                            "Shader '%1$s' is not supported in the Layout Editor.",
-                            shader.getClass().getCanonicalName()));
-                }*/
             }
         }
 
         return g;
     }
+
+	public int getWidth() {
+		return mBufferedImage.getWidth();
+	}
+
+	public int getHeight() {
+		return mBufferedImage.getHeight();
+	}
 	
 }

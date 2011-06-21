@@ -19,11 +19,14 @@ package org.mapsforge.core.graphics;
 import java.awt.image.BufferedImage;
 import java.io.FileOutputStream;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 
 
-public final class Bitmap extends BufferedImage {
+public final class Bitmap {
 
     public enum CompressFormat {
         JPEG    (0),
@@ -46,7 +49,7 @@ public final class Bitmap extends BufferedImage {
         }
         final int nativeInt;
 
-        /* package */ static Config nativeToConfig(int ni) {
+        static Config nativeToConfig(int ni) {
             return sConfigs[ni];
         }
 
@@ -61,31 +64,15 @@ public final class Bitmap extends BufferedImage {
     // Don't change/rename without updating FaceDetector_jni.cpp
     private final int mNativeBitmap;
 
-    private final boolean mIsMutable;
-    private byte[] mNinePatchChunk;   // may be null
-    private int mWidth = -1;
-    private int mHeight = -1;
     private boolean mRecycled;
+    private BufferedImage mImage;
     
-    private Bitmap(int nativeBitmap, boolean isMutable, byte[] ninePatchChunk,
-            int density) {
-    	super(0,0,0);
-        if (nativeBitmap == 0) {
-            throw new RuntimeException("internal error: native bitmap is 0");
-        }
+	public Bitmap(BufferedImage image) {
+		mNativeBitmap = 1;
+        mImage = image;
+	}
 
-        // we delete this in our finalizer
-        mNativeBitmap = nativeBitmap;
-        mIsMutable = isMutable;
-        mNinePatchChunk = ninePatchChunk;
-        //TODO
-        /*if (density >= 0) {
-            mDensity = density;
-        }*/
-    }
-    
-
-    /**
+	/**
      * Free up the memory associated with this bitmap's pixels, and mark the
      * bitmap as "dead", meaning it will throw an exception if getPixels() or
      * setPixels() is called, and will draw nothing. This operation cannot be
@@ -96,19 +83,17 @@ public final class Bitmap extends BufferedImage {
      */
     public void recycle() {
     	if (!mRecycled) {
-            //TODO nativeRecycle(mNativeBitmap);
-            mNinePatchChunk = null;
+    		mImage.flush();
             mRecycled = true;
         }
     }
 
 	public void copyPixelsToBuffer(ByteBuffer d) {
-		// TODO Auto-generated method stub
 		
 	}
 
-	public void copyPixelsFromBuffer(ByteBuffer bitmapBuffer) {
-		// TODO Auto-generated method stub
+	public void copyPixelsFromBuffer(Buffer src) {
+		
 		
 	}
 
@@ -125,7 +110,6 @@ public final class Bitmap extends BufferedImage {
 	}
 
 	public void eraseColor(java.awt.Color transparent) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -141,13 +125,11 @@ public final class Bitmap extends BufferedImage {
 	}
 
 	public static Bitmap createBitmap(int width, int height, Config argb8888) {
-		// TODO Auto-generated method stub
-		return null;
+        return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
 	}
 
 	public int getHeight() {
-		// TODO Auto-generated method stub
-		return 0;
+		return mImage.getHeight();
 	}
 	
 	final int ni() {
@@ -155,12 +137,10 @@ public final class Bitmap extends BufferedImage {
     }
 
 	public int getWidth() {
-		// TODO Auto-generated method stub
-		return 0;
+		return mImage.getWidth();
 	}
 
 	public BufferedImage getImage() {
-		// TODO Auto-generated method stub
-		return null;
+        return mImage;
 	}
 }

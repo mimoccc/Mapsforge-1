@@ -21,7 +21,7 @@ import org.mapsforge.core.graphics.Bitmap;
 //import android.graphics.Canvas;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
-import org.mapsforge.core.graphics.Color;
+import java.awt.Color;
 //import android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 //import android.graphics.Paint;

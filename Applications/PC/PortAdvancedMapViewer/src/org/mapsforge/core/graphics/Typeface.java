@@ -27,7 +27,7 @@ import org.mapsforge.core.FontLoader;
 /**
  * Re-implementation of Typeface over java.awt
  */
-public class Typeface extends Font {
+public class Typeface {
 
 	private static final long serialVersionUID = -6330183324992171615L;
 	private static final String DEFAULT_FAMILY = "sans-serif";
@@ -145,7 +145,6 @@ public class Typeface extends Font {
 
     // don't allow clients to call this directly
     private Typeface(String family, int style, List<Font> fonts) {
-        super(family, style, fonts.size());
     	mFamily = family;
         mFonts = Collections.unmodifiableList(fonts);
         mStyle = style;
