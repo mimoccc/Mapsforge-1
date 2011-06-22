@@ -1,34 +1,14 @@
 package org.mapsforge.core.graphics;
 
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
+import javax.imageio.ImageIO;
 
-
-
-public final class Bitmap {
-
-    public enum CompressFormat {
+public class Bitmap {
+	public enum CompressFormat {
         JPEG    (0),
         PNG     (1);
 
@@ -88,59 +68,94 @@ public final class Bitmap {
         }
     }
 
-	public void copyPixelsToBuffer(ByteBuffer d) {
-		
+    /**
+     * Returns in pixels[] a copy of the data in the bitmap.
+     */
+	public void getPixels(int[] pixels, int offset, int stride, int x, int y, int width, int height) {
+		mImage.getRGB(x, y, width, height, pixels, offset, stride);
 	}
 
-	public void copyPixelsFromBuffer(Buffer src) {
-		
-		
+	/**
+	 * Replace pixels in the bitmap with the colors in the array.
+	 */
+	public void setPixels(int[] pixels, int offset, int stride, int x, int y, int width, int height) {
+		mImage.setRGB(x, y, width, height, pixels, offset, stride);
 	}
 
-	public void getPixels(int[] pixelColors, int i, short tileSize, int j,
-			int k, short tileSize2, short tileSize3) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setPixels(int[] pixelColors, int i, short tileSize, int j,
-			int k, short tileSize2, short tileSize3) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void eraseColor(java.awt.Color transparent) {
-		
-	}
-
-	public boolean compress(CompressFormat format, int quality,
-			FileOutputStream outputStream) {
-		// TODO Auto-generated method stub
+	//TODO NO Quality
+	/**
+	 * Write a compressed version of the bitmap to the specified outputstream. 
+	 * If this returns true, the bitmap can be reconstructed by passing a corresponding inputstream to BitmapFactory.decodeStream(). 
+	 * Note: not all Formats support all bitmap configs directly, so it is possible that the returned bitmap from BitmapFactory could be in a different bitdepth, 
+	 * and/or may have lost per-pixel alpha (e.g. JPEG only supports opaque pixels).
+	 */
+	public boolean compress(CompressFormat format, int quality, FileOutputStream outputStream) throws IOException {
+		if(format.equals(CompressFormat.JPEG)) {
+			ImageIO.write(mImage, "jpeg", outputStream);
+		}
+		else {
+			ImageIO.write(mImage, "png", outputStream);
+		}
 		return false;
 	}
 
-	public void eraseColor(int mapViewBackground) {
-		// TODO Auto-generated method stub
-		
+	/**
+	 * Returns a mutable bitmap with the specified width and height. Its initial density is as per getDensity().
+	 */
+	public static Bitmap createBitmap(int width, int height, Config config) {
+		if(config.equals(Config.ALPHA_8))
+			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY));
+		else if(config.equals(Config.ARGB_4444))
+			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR));
+		else if(config.equals(Config.ARGB_8888))
+			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
+		else
+			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB));
+
 	}
 
-	public static Bitmap createBitmap(int width, int height, Config argb8888) {
-        return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
-	}
-
-	public int getHeight() {
-		return mImage.getHeight();
-	}
-	
 	final int ni() {
         return mNativeBitmap;
     }
+	
+	/**
+	 * Returns the bitmap's height
+	 */
+	public int getHeight() {
+		return mImage.getHeight();
+	}
 
+	/**
+	 * Returns the bitmap's width
+	 */
 	public int getWidth() {
 		return mImage.getWidth();
 	}
-
+	
 	public BufferedImage getImage() {
         return mImage;
+	}
+
+	/**
+	 * Fills the bitmap's pixels with the specified Color.
+	 */
+	public void eraseColor(int c) {
+		for(int x = 0; x < getWidth();x++) {
+			for(int y = 0; y < getHeight();y++) {
+				mImage.setRGB(x, y, c);
+			}
+		}
+	}
+	
+	/**
+	 * Fills the bitmap's pixels with the specified Color.
+	 */
+	public void eraseColor(Color c) {
+		int cRGB =c.getRGB();
+		for(int x = 0; x < getWidth();x++) {
+			for(int y = 0; y < getHeight();y++) {
+				mImage.setRGB(x, y, cRGB);
+			}
+		}		
 	}
 }

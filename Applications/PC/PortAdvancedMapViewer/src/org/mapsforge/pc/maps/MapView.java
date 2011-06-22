@@ -31,6 +31,9 @@ import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 //mport android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 //import android.graphics.Paint;
@@ -2079,7 +2082,9 @@ public class MapView extends ViewGroup {
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
-							this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+						
+							this.tileBitmap = new Bitmap((BufferedImage) Toolkit.getDefaultToolkit().createImage(this.tileBuffer.array()));
 							putTileOnBitmap(this.currentJob, this.tileBitmap);
 							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
 						} else {

@@ -26,6 +26,8 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 //import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
 
@@ -312,10 +314,12 @@ class TileMemoryCardCache {
 		if (this.capacity > 0) {
 			// write the image to a temporary file
 			try {
-				bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-				this.bitmapBuffer.rewind();
+				//bitmap.copyPixelsToBuffer(this.bitmapBuffer);
+				//this.bitmapBuffer.rewind();
 				this.outputFile = new File(this.tempDir, ++this.cacheId
 						+ IMAGE_FILE_NAME_EXTENSION);
+				//TODO changed
+				ImageIO.write(bitmap.getImage(), "tile", this.outputFile);
 				// check for an existing file with that name
 				while (this.outputFile.exists()) {
 					// increment the cache ID to avoid overwriting the existing file

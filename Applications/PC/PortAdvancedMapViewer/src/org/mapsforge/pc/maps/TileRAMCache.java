@@ -14,10 +14,15 @@
  */
 package org.mapsforge.pc.maps;
 
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 //import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
@@ -128,12 +133,26 @@ class TileRAMCache {
 	 */
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
+			/*TODO UNSAFE 
 			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 			this.bitmapBuffer.rewind();
 			this.tempBitmap = this.bitmapPool.removeFirst();
 			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
+			}*/
+			PipedOutputStream outStream = new PipedOutputStream();
+			try {
+				ImageIO.write(bitmap.getImage(), "tile", outStream);
+				PipedInputStream inStream = new PipedInputStream(outStream);
+				this.tempBitmap = this.bitmapPool.removeFirst();
+				this.tempBitmap = new Bitmap(ImageIO.read(inStream));
+				synchronized(this) {
+					this.map.put(mapGeneratorJob, this.tempBitmap);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
