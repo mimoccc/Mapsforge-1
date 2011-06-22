@@ -4,12 +4,13 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.Stack;
 
 import org.mapsforge.core.graphics.Paint.Align;
 import org.mapsforge.core.graphics.Paint.FontInfo;
@@ -18,7 +19,6 @@ import org.mapsforge.core.graphics.Paint.Style;
 public class Canvas {
 
 	BufferedImage mBufferedImage;
-	Stack<Graphics2D> graphics = new Stack<Graphics2D>();
 	
 	private static final long serialVersionUID = 5085355825188623626L;
 
@@ -27,13 +27,11 @@ public class Canvas {
 
 	public Canvas(Bitmap bitmap) {
 		mBufferedImage = bitmap.getImage();
-		graphics.push(mBufferedImage.createGraphics());
 	}
 
 
 	public void drawText(String text, float x, float y, Paint paint) {
-		Graphics2D g = getGraphics2D();
-		g = (Graphics2D) g.create();
+		Graphics2D g = mBufferedImage.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		g.setColor(new Color(paint.getColor().getRGB()));
@@ -96,12 +94,11 @@ public class Canvas {
      * @see android.graphics.Canvas#drawBitmap(android.graphics.Bitmap, android.graphics.Matrix, android.graphics.Paint)
      */
     public void drawBitmap(Bitmap bitmap, Matrix matrix, Paint paint) {
-        boolean needsRestore = false;
         if (matrix.isIdentity() == false) {
             // create a new graphics and apply the matrix to it
-            save(); // this creates a new Graphics2D, and stores it for children call to use
-            needsRestore = true;
-            Graphics2D g = getGraphics2D(); // get the newly create Graphics2D
+            //save(); // this creates a new Graphics2D, and stores it for children call to use
+            //needsRestore = true;
+            Graphics2D g = mBufferedImage.createGraphics(); // get the newly create Graphics2D
 
             // get the Graphics2D current matrix
             AffineTransform currentTx = g.getTransform();
@@ -118,41 +115,44 @@ public class Canvas {
         // draw the bitmap
         drawBitmap(bitmap, 0, 0, paint);
 
-        if (needsRestore) {
+        //if (needsRestore) {
             // remove the new graphics
-            restore();
-        }
+            //restore();
+        //}
     }
 
-	public void drawTextOnPath(String text, Path path, int i, int j, Paint paint) {
-		// TODO Auto-generated method stub		
-	}
-	
-	/* (non-Javadoc)
-     * @see android.graphics.Canvas#save()
-     */
-    public int save() {
-        // get the current save count
-        int count = graphics.size();
-
-        // create a new graphics and add it to the stack
-        Graphics2D g = (Graphics2D)getGraphics2D().create();
-        graphics.push(g);
-        
-        // return the old save count
-        return count;
-    }
-    
     /* (non-Javadoc)
-     * @see android.graphics.Canvas#restore()
+     * @see android.graphics.Canvas#drawTextOnPath(text, path, int, int, android.graphics.Paint)
      */
-    public void restore() {
-        graphics.pop();
-    }
+	public void drawTextOnPath(String text, Path path, int i, int j, Paint paint) {
+		Graphics2D g = mBufferedImage.createGraphics();
+		Style style = paint.getStyle();
 
+		//TODO TextStroke t = new TextStroke(text, new Font("Serif", Font.PLAIN, 10));
+		//Dummy Font
+		TextStroke t = new TextStroke(text, new Font("Serif", Font.PLAIN, 8));
+		GeneralPath generalPath = (GeneralPath) t.createStrokedShape(path.getAwtShape());
+		
+		Path newPath = new Path(generalPath);
+		// draw
+        if (style == Style.FILL || style == Style.FILL_AND_STROKE) {
+            g.fill(newPath.getAwtShape());
+        }
 
+        if (style == Style.STROKE || style == Style.FILL_AND_STROKE) {
+            g.draw(newPath.getAwtShape());
+        }
+
+        // dispose Graphics2D object
+        g.dispose();
+	}
+
+	/* (non-Javadoc)
+     * @see android.graphics.Canvas#drawLines(float[], android.graphics.Paint)
+     */
 	public void drawLines(float[] pts, Paint paint) {
-		Graphics2D g = getCustomGraphics(paint);
+		Graphics2D g = mBufferedImage.createGraphics();
+
 		for(int i = 0; i < pts.length; i += 4) {
 			g.drawLine((int) pts[i + 0], (int) pts[i + 0 + 1], (int) pts[i + 0 + 2], (int) pts[i + 0 + 3]);
 		}
@@ -193,11 +193,14 @@ public class Canvas {
         // dispose Graphics2D object
         g.dispose();
     }
-
+    
+    /* (non-Javadoc)
+     * @see android.graphics.Canvas#drawBitmap(float, float, float, float, android.graphics.Paint)
+     */
 	public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
 		BufferedImage image = bitmap.getImage();
 
-        Graphics2D g = getGraphics2D();
+        Graphics2D g = mBufferedImage.createGraphics();
 
         Composite c = null;
 
@@ -230,11 +233,6 @@ public class Canvas {
 
 	public void setBitmap(Bitmap bitmap) {
 		mBufferedImage = bitmap.getImage();
-		graphics.push(mBufferedImage.createGraphics());
-	}
-	
-	public Graphics2D getGraphics2D() {
-		return graphics.peek();
 	}
     
 	/**
@@ -243,7 +241,7 @@ public class Canvas {
      */
     private Graphics2D getCustomGraphics(Paint paint) {
         // make new one
-        Graphics2D g = getGraphics2D();
+        Graphics2D g = mBufferedImage.createGraphics();
         g = (Graphics2D)g.create();
 
         // configure it

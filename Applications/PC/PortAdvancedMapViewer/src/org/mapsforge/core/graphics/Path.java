@@ -47,6 +47,10 @@ public class Path {
      */
     public Path() {
     }
+    
+    public Path(GeneralPath mPath) {
+    	this.mPath = mPath;
+    }
 
     /**
      * Create a new path, copying the contents from the src path.

@@ -17,7 +17,6 @@ package org.mapsforge.core.graphics;
  */
 
 //import android.graphics.Shader.TileMode;
-import org.mapsforge.core.graphics.Shader.TileMode;
 /**
  * Delegate implementing the native methods of android.graphics.BitmapShader
  *
@@ -39,18 +38,11 @@ public class BitmapShader extends Shader {
     private java.awt.Paint mJavaPaint;
     private final Bitmap mBitmap;
 
-
 	public BitmapShader(Bitmap mBitmap, TileMode tileX, TileMode tileY) {
 		this.mBitmap = mBitmap;
-//TODO
-//		native_instance = nativeCreate(mBitmap.ni(),
-//                tileX.nativeInt, tileY.nativeInt);
+		//TODO only repeat methode is used
 	}
 
-//	private static int nativeCreate(int native_bitmap, int shaderTileModeX, int shaderTileModeY) {
-//		
-//		return -1;
-//	}
 	
 	public Bitmap getBitmap() {
 		return mBitmap;
