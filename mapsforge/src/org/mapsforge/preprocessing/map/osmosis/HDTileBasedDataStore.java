@@ -199,6 +199,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				tags = new TShortHashSet();
 			}
 			tags.addAll(MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags));
+			countWayTags(tags.toArray());
 			multipolygonTags.put(outerWayID, tags);
 		}
 

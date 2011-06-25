@@ -160,7 +160,7 @@
 		<osm-tag key="natural" value="land" zoom-appear="12" />
 		<osm-tag key="natural" value="marsh" zoom-appear="14" />
 		<osm-tag key="natural" value="scrub" zoom-appear="12" />
-		<osm-tag key="natural" value="water" zoom-appear="12" />
+		<osm-tag key="natural" value="water" zoom-appear="9" />
 		<osm-tag key="natural" value="wetland" zoom-appear="14" />
 		<osm-tag key="natural" value="wood" zoom-appear="12" />
 

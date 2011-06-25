@@ -122,6 +122,14 @@ abstract class BaseTileBasedDataStore implements TileBasedDataStore {
 		}
 	}
 
+	protected void countWayTags(short[] tags) {
+		if (tags == null)
+			return;
+		for (short tag : tags) {
+			histogramWayTags.adjustOrPutValue(tag, 1, 1);
+		}
+	}
+
 	private int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {
 		long tileCoordinateLeft = MercatorProjection.longitudeToTileX(
 				GeoCoordinate.intToDouble(boundingbox.getMinLongitudeE6()),

@@ -227,7 +227,9 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		}
 
 		// add relation tags to outer way
-		outerWay.addTags(MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags));
+		short[] additionalTags = MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags);
+		outerWay.addTags(additionalTags);
+		countWayTags(additionalTags);
 
 		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
 				.hasNext();) {
