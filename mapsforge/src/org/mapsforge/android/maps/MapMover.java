@@ -79,7 +79,7 @@ class MapMover extends Thread {
 				}
 			}
 
-			this.mapView.handleTiles(false);
+			this.mapView.handleTiles();
 			synchronized (this) {
 				try {
 					wait(FRAME_LENGTH);

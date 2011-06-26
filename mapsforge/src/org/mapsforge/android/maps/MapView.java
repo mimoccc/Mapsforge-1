@@ -167,7 +167,7 @@ public class MapView extends ViewGroup {
 
 				matrixPostTranslate(this.moveX, this.moveY);
 				moveMap(this.moveX, this.moveY);
-				handleTiles(true);
+				handleTiles();
 				return true;
 			} else if (this.action == MotionEvent.ACTION_UP) {
 				this.longPressDetector.pressStop();
@@ -277,7 +277,7 @@ public class MapView extends ViewGroup {
 			this.scaleFactor = detector.getScaleFactor();
 			this.scaleFactorApplied *= this.scaleFactor;
 			matrixPostScale(this.scaleFactor, this.scaleFactor, this.focusX, this.focusY);
-			invalidate();
+			invalidateOnUiThread();
 			return true;
 		}
 
@@ -344,7 +344,7 @@ public class MapView extends ViewGroup {
 
 				matrixPostTranslate(this.moveX, this.moveY);
 				moveMap(this.moveX, this.moveY);
-				handleTiles(true);
+				handleTiles();
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				this.longPressDetector.pressStop();
@@ -1131,7 +1131,7 @@ public class MapView extends ViewGroup {
 
 			matrixPostTranslate(this.mapMoveX, this.mapMoveY);
 			moveMap(this.mapMoveX, this.mapMoveY);
-			handleTiles(true);
+			handleTiles();
 			return true;
 		}
 		// the event was not handled
@@ -1158,13 +1158,7 @@ public class MapView extends ViewGroup {
 	 */
 	public void setFpsCounter(boolean showFpsCounter) {
 		this.showFpsCounter = showFpsCounter;
-		// invalidate the MapView
-		getMapActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				invalidate();
-			}
-		});
+		invalidateOnUiThread();
 	}
 
 	/**
@@ -1210,16 +1204,11 @@ public class MapView extends ViewGroup {
 			this.mapFile = newMapFile;
 			clearMapView();
 			setCenter(getDefaultStartPoint());
-			handleTiles(true);
+			handleTiles();
 		} else {
 			this.mapFile = null;
 			clearMapView();
-			getMapActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					invalidate();
-				}
-			});
+			invalidateOnUiThread();
 		}
 	}
 
@@ -1236,7 +1225,7 @@ public class MapView extends ViewGroup {
 			this.mapViewMode = newMapViewMode;
 			startMapGeneratorThread();
 			clearMapView();
-			handleTiles(true);
+			handleTiles();
 		}
 	}
 
@@ -1294,13 +1283,7 @@ public class MapView extends ViewGroup {
 		if (showScaleBar) {
 			renderScaleBar();
 		}
-		// invalidate the MapView
-		getMapActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				invalidate();
-			}
-		});
+		invalidateOnUiThread();
 	}
 
 	/**
@@ -1335,7 +1318,7 @@ public class MapView extends ViewGroup {
 		this.textScale = textScale;
 		this.mapGenerator.clearJobs();
 		clearMapView();
-		handleTiles(true);
+		handleTiles();
 	}
 
 	/**
@@ -1350,7 +1333,7 @@ public class MapView extends ViewGroup {
 		this.drawTileCoordinates = drawTileCoordinates;
 		this.mapGenerator.clearJobs();
 		clearMapView();
-		handleTiles(true);
+		handleTiles();
 	}
 
 	/**
@@ -1365,7 +1348,7 @@ public class MapView extends ViewGroup {
 		this.drawTileFrames = drawTileFrames;
 		this.mapGenerator.clearJobs();
 		clearMapView();
-		handleTiles(true);
+		handleTiles();
 	}
 
 	/**
@@ -1380,7 +1363,7 @@ public class MapView extends ViewGroup {
 		this.highlightWaterTiles = highlightWaterTiles;
 		this.mapGenerator.clearJobs();
 		clearMapView();
-		handleTiles(true);
+		handleTiles();
 	}
 
 	/**
@@ -1621,28 +1604,18 @@ public class MapView extends ViewGroup {
 
 			@Override
 			public void clear() {
-				super.clear();
 				for (int i = size() - 1; i >= 0; --i) {
 					get(i).interrupt();
 				}
-				getMapActivity().runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						invalidate();
-					}
-				});
+				super.clear();
+				invalidateOnUiThread();
 			}
 
 			@Override
 			public Overlay remove(int index) {
 				Overlay removedElement = super.remove(index);
 				removedElement.interrupt();
-				getMapActivity().runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						invalidate();
-					}
-				});
+				invalidateOnUiThread();
 				return removedElement;
 			}
 
@@ -1652,12 +1625,7 @@ public class MapView extends ViewGroup {
 				if (object instanceof Overlay) {
 					((Overlay) object).interrupt();
 				}
-				getMapActivity().runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						invalidate();
-					}
-				});
+				invalidateOnUiThread();
 				return listChanged;
 			}
 
@@ -1669,12 +1637,7 @@ public class MapView extends ViewGroup {
 						((Overlay) object).interrupt();
 					}
 				}
-				getMapActivity().runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						invalidate();
-					}
-				});
+				invalidateOnUiThread();
 				return listChanged;
 			}
 
@@ -1686,12 +1649,7 @@ public class MapView extends ViewGroup {
 				overlay.setupOverlay(MapView.this);
 				Overlay previousElement = super.set(index, overlay);
 				previousElement.interrupt();
-				getMapActivity().runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						invalidate();
-					}
-				});
+				invalidateOnUiThread();
 				return previousElement;
 			}
 		});
@@ -1950,7 +1908,7 @@ public class MapView extends ViewGroup {
 			// create the canvas
 			this.mapViewBitmap1.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas = new Canvas(this.mapViewBitmap1);
-			handleTiles(true);
+			handleTiles();
 
 			// set up the overlays
 			synchronized (this.overlays) {
@@ -1971,14 +1929,9 @@ public class MapView extends ViewGroup {
 			this.mapActivity = null;
 		}
 
-		// stop the overlay threads
+		// stop all overlay threads
 		if (this.overlays != null) {
-			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.interrupt();
-				}
-			}
-			this.overlays = null;
+			this.overlays.clear();
 		}
 
 		// stop the MapMover thread
@@ -2002,7 +1955,6 @@ public class MapView extends ViewGroup {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
 			}
-			this.zoomAnimator = null;
 		}
 
 		// stop the LongTapDetector thread
@@ -2139,11 +2091,8 @@ public class MapView extends ViewGroup {
 
 	/**
 	 * Calculates all necessary tiles and adds jobs accordingly.
-	 * 
-	 * @param calledByUiThread
-	 *            true if called from the UI thread, false otherwise.
 	 */
-	void handleTiles(boolean calledByUiThread) {
+	void handleTiles() {
 		if (this.getWidth() == 0) {
 			return;
 		}
@@ -2208,12 +2157,7 @@ public class MapView extends ViewGroup {
 			renderScaleBar();
 		}
 
-		// invalidate the MapView
-		if (calledByUiThread) {
-			invalidate();
-		} else {
-			postInvalidate();
-		}
+		invalidateOnUiThread();
 
 		// notify the MapGenerator to process the job list
 		this.mapGenerator.requestSchedule(true);
@@ -2259,6 +2203,20 @@ public class MapView extends ViewGroup {
 	 */
 	void hideZoomZontrols() {
 		this.zoomControls.hide();
+	}
+
+	/**
+	 * Executes a {@link #invalidate()} call on the UI thread.
+	 */
+	void invalidateOnUiThread() {
+		if (getMapActivity() != null) {
+			getMapActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					invalidate();
+				}
+			});
+		}
 	}
 
 	/**
@@ -2527,7 +2485,7 @@ public class MapView extends ViewGroup {
 			this.zoomControls
 					.setIsZoomInEnabled(this.zoomLevel < getMaximumPossibleZoomLevel());
 			this.zoomControls.setIsZoomOutEnabled(this.zoomLevel > this.zoomLevelMin);
-			handleTiles(true);
+			handleTiles();
 		}
 	}
 

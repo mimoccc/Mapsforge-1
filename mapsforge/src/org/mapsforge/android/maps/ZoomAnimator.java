@@ -83,7 +83,7 @@ class ZoomAnimator extends Thread {
 			// check if the animation time is over
 			if (this.timeElapsed >= this.duration) {
 				this.executeAnimation = false;
-				this.mapView.handleTiles(false);
+				this.mapView.handleTiles();
 			} else {
 				this.mapView.postInvalidate();
 				synchronized (this) {
