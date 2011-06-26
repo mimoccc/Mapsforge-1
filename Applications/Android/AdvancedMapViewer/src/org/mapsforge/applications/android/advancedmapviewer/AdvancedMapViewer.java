@@ -16,27 +16,23 @@ package org.mapsforge.applications.android.advancedmapviewer;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Date;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-
 import org.mapsforge.android.maps.ArrayCircleOverlay;
+import org.mapsforge.android.maps.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.GeoPoint;
+import org.mapsforge.android.maps.ItemizedOverlay;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapDatabase;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.MapViewMode;
 import org.mapsforge.android.maps.OverlayCircle;
+import org.mapsforge.android.maps.OverlayItem;
 import org.mapsforge.android.maps.MapView.TextField;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -48,11 +44,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Bitmap.CompressFormat;
-import android.graphics.drawable.AnimationDrawable;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.PowerManager;
@@ -66,10 +61,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 /**
  * A map application which uses the features from the mapsforge library. The map can be centered
@@ -78,9 +73,63 @@ import android.widget.Toast;
  * of the map may be taken in different image formats.
  */
 public class AdvancedMapViewer extends MapActivity {
+	private class MyLocationListener implements LocationListener {
+		private boolean centerAtFirstFix;
+
+		/**
+		 * Empty constructor with default visibility to avoid a synthetic method.
+		 */
+		MyLocationListener() {
+			// do nothing
+		}
+
+		@Override
+		public void onLocationChanged(Location location) {
+			if (!isShowMyLocationEnabled()) {
+				return;
+			}
+
+			GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
+			AdvancedMapViewer.this.overlayCircle.setCircleData(point, location.getAccuracy());
+			AdvancedMapViewer.this.overlayItem.setPoint(point);
+			AdvancedMapViewer.this.circleOverlay.requestRedraw();
+			AdvancedMapViewer.this.itemizedOverlay.requestRedraw();
+			if (this.centerAtFirstFix || isSnapToLocationEnabled()) {
+				this.centerAtFirstFix = false;
+				AdvancedMapViewer.this.mapController.setCenter(point);
+			}
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			showDialog(DIALOG_LOCATION_PROVIDER_DISABLED);
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			// do nothing
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			// do nothing
+		}
+
+		boolean isCenterAtFirstFix() {
+			return this.centerAtFirstFix;
+		}
+
+		void setCenterAtFirstFix(boolean centerAtFirstFix) {
+			this.centerAtFirstFix = centerAtFirstFix;
+		}
+	}
+
+	private static final String BUNDLE_CENTER_AT_FIRST_FIX = "centerAtFirstFix";
+	private static final String BUNDLE_SHOW_MY_LOCATION = "showMyLocation";
+	private static final String BUNDLE_SNAP_TO_LOCATION = "snapToLocation";
 	private static final int DIALOG_ENTER_COORDINATES = 0;
-	private static final int DIALOG_GPS_DISABLED = 1;
-	private static final int DIALOG_INFO_MAP_FILE = 2;
+	private static final int DIALOG_INFO_MAP_FILE = 1;
+	private static final int DIALOG_LOCATION_PROVIDER_DISABLED = 2;
 
 	/**
 	 * Accepts all readable files with a ".map" extension.
@@ -103,26 +152,6 @@ public class AdvancedMapViewer extends MapActivity {
 	};
 
 	/**
-	 * Accepts all readable files with a ".xml" extension.
-	 */
-	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			// accept only readable files
-			if (file.canRead()) {
-				if (file.isDirectory()) {
-					// accept all directories
-					return true;
-				} else if (file.isFile() && file.getName().endsWith(".xml")) {
-					// accept all files with a ".xml" extension
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-
-	/**
 	 * Accepts all valid map files.
 	 */
 	private static final FileFilter FILE_FILTER_VALID_MAP = new FileFilter() {
@@ -133,33 +162,10 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 	};
 
-	/**
-	 * Accepts all valid XML files.
-	 */
-	private static final FileFilter FILE_FILTER_VALID_XML = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			// accept only valid XML files
-			try {
-				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser()
-						.getXMLReader();
-				xmlReader.parse(new InputSource(new FileInputStream(file)));
-			} catch (ParserConfigurationException e) {
-				return false;
-			} catch (SAXException e) {
-				return false;
-			} catch (IOException e) {
-				return false;
-			}
-			return true;
-		}
-	};
-
 	private static final String SCREENSHOT_DIRECTORY = "Pictures";
 	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
 	private static final int SCREENSHOT_QUALITY = 90;
 	private static final int SELECT_MAP_FILE = 0;
-	private static final int SELECT_RENDER_THEME_FILE = 1;
 
 	/**
 	 * The default size of the memory card cache.
@@ -180,22 +186,25 @@ public class AdvancedMapViewer extends MapActivity {
 	 * The maximum move speed of the map.
 	 */
 	static final int MOVE_SPEED_MAX = 30;
-
-	private ArrayCircleOverlay circleOverlay;
 	private Paint circleOverlayFill;
 	private Paint circleOverlayOutline;
-	private boolean followGpsEnabled;
-	private LocationListener locationListener;
 	private LocationManager locationManager;
 	private MapViewMode mapViewMode;
+	private MyLocationListener myLocationListener;
 	private PowerManager powerManager;
 	private SharedPreferences preferences;
+	private boolean showMyLocation;
+	private boolean snapToLocation;
+	private ToggleButton snapToLocationView;
 	private Toast toast;
 	private WakeLock wakeLock;
-	ImageView gpsView;
+	ArrayCircleOverlay circleOverlay;
+	ArrayItemizedOverlay itemizedOverlay;
 	MapController mapController;
 	MapView mapView;
 	OverlayCircle overlayCircle;
+
+	OverlayItem overlayItem;
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -226,12 +235,12 @@ public class AdvancedMapViewer extends MapActivity {
 			case R.id.menu_position:
 				return true;
 
-			case R.id.menu_position_gps_follow:
-				if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-					enableFollowGPS();
-				} else {
-					showDialog(DIALOG_GPS_DISABLED);
-				}
+			case R.id.menu_position_my_location_enable:
+				enableShowMyLocation(true);
+				return true;
+
+			case R.id.menu_position_my_location_disable:
+				disableShowMyLocation();
 				return true;
 
 			case R.id.menu_position_last_known:
@@ -244,7 +253,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			case R.id.menu_position_map_center:
 				// disable GPS follow mode if it is enabled
-				disableFollowGPS(true);
+				disableSnapToLocation(true);
 				this.mapController.setCenter(this.mapView.getMapDatabase().getMapCenter());
 				return true;
 
@@ -261,21 +270,6 @@ public class AdvancedMapViewer extends MapActivity {
 
 			case R.id.menu_preferences:
 				startActivity(new Intent(this, EditPreferences.class));
-				return true;
-
-			case R.id.menu_render_theme:
-				return true;
-
-			case R.id.menu_render_theme_mapnik:
-				// this.mapView.setRenderTheme(InternalRenderTheme.MAPNIK);
-				return true;
-
-			case R.id.menu_render_theme_osmarender:
-				// this.mapView.setRenderTheme(InternalRenderTheme.OSMARENDER);
-				return true;
-
-			case R.id.menu_render_theme_select_file:
-				// startRenderThemePicker();
 				return true;
 
 			case R.id.menu_mapfile:
@@ -295,22 +289,22 @@ public class AdvancedMapViewer extends MapActivity {
 			menu.findItem(R.id.menu_info_map_file).setEnabled(true);
 		}
 
-		if (this.locationManager == null || this.followGpsEnabled) {
-			menu.findItem(R.id.menu_position_gps_follow).setEnabled(false);
+		if (isShowMyLocationEnabled()) {
+			menu.findItem(R.id.menu_position_my_location_enable).setVisible(false);
+			menu.findItem(R.id.menu_position_my_location_enable).setEnabled(false);
+			menu.findItem(R.id.menu_position_my_location_disable).setVisible(true);
+			menu.findItem(R.id.menu_position_my_location_disable).setEnabled(true);
 		} else {
-			menu.findItem(R.id.menu_position_gps_follow).setEnabled(true);
+			menu.findItem(R.id.menu_position_my_location_enable).setVisible(true);
+			menu.findItem(R.id.menu_position_my_location_enable).setEnabled(true);
+			menu.findItem(R.id.menu_position_my_location_disable).setVisible(false);
+			menu.findItem(R.id.menu_position_my_location_disable).setEnabled(false);
 		}
 
 		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(true);
-		}
-
-		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
-			menu.findItem(R.id.menu_render_theme).setEnabled(false);
-		} else {
-			menu.findItem(R.id.menu_render_theme).setEnabled(true);
 		}
 
 		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
@@ -383,60 +377,42 @@ public class AdvancedMapViewer extends MapActivity {
 		this.mapController = this.mapView.getController();
 	}
 
-	private void enableFollowGPS() {
-		this.circleOverlay = new ArrayCircleOverlay(this.circleOverlayFill,
-				this.circleOverlayOutline, this);
-		this.overlayCircle = new OverlayCircle();
-		this.circleOverlay.addCircle(this.overlayCircle);
-		this.mapView.getOverlays().add(this.circleOverlay);
-
-		this.followGpsEnabled = true;
-		this.locationListener = new LocationListener() {
-			@Override
-			public void onLocationChanged(Location location) {
-				GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
-				AdvancedMapViewer.this.mapController.setCenter(point);
-				AdvancedMapViewer.this.gpsView.setImageResource(R.drawable.stat_sys_gps_on);
-				AdvancedMapViewer.this.overlayCircle.setCircleData(point, location
-						.getAccuracy());
+	/**
+	 * Enables the "show my location" mode.
+	 * 
+	 * @param centerAtFirstFix
+	 *            defines whether the map should be centered to the first fix.
+	 */
+	private void enableShowMyLocation(boolean centerAtFirstFix) {
+		if (!this.showMyLocation) {
+			Criteria criteria = new Criteria();
+			criteria.setAccuracy(Criteria.ACCURACY_HIGH);
+			String bestProvider = this.locationManager.getBestProvider(criteria, true);
+			if (bestProvider == null) {
+				showDialog(DIALOG_LOCATION_PROVIDER_DISABLED);
+				return;
 			}
 
-			@Override
-			public void onProviderDisabled(String provider) {
-				disableFollowGPS(false);
-				showDialog(DIALOG_GPS_DISABLED);
-			}
+			this.showMyLocation = true;
 
-			@Override
-			public void onProviderEnabled(String provider) {
-				// do nothing
-			}
+			this.circleOverlay = new ArrayCircleOverlay(this.circleOverlayFill,
+					this.circleOverlayOutline, this);
+			this.overlayCircle = new OverlayCircle();
+			this.circleOverlay.addCircle(this.overlayCircle);
+			this.mapView.getOverlays().add(this.circleOverlay);
 
-			@Override
-			public void onStatusChanged(String provider, int status, Bundle extras) {
-				if (status == LocationProvider.AVAILABLE) {
-					AdvancedMapViewer.this.gpsView.setImageResource(R.drawable.stat_sys_gps_on);
-				} else if (status == LocationProvider.OUT_OF_SERVICE) {
-					AdvancedMapViewer.this.gpsView
-							.setImageResource(R.drawable.stat_sys_gps_acquiring);
-				} else {
-					// must be TEMPORARILY_UNAVAILABLE
-					AdvancedMapViewer.this.gpsView.setImageResource(R.anim.gps_animation);
-					((AnimationDrawable) AdvancedMapViewer.this.gpsView.getDrawable()).start();
-				}
-			}
-		};
+			this.itemizedOverlay = new ArrayItemizedOverlay(null, this);
+			this.overlayItem = new OverlayItem();
+			this.overlayItem.setMarker(ItemizedOverlay.boundCenter(getResources().getDrawable(
+					R.drawable.my_location)));
+			this.itemizedOverlay.addItem(this.overlayItem);
+			this.mapView.getOverlays().add(this.itemizedOverlay);
 
-		this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0,
-				this.locationListener);
-		this.gpsView.setImageResource(R.drawable.stat_sys_gps_acquiring);
-		this.gpsView.setVisibility(View.VISIBLE);
-		this.gpsView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				disableFollowGPS(true);
-			}
-		});
+			this.myLocationListener.setCenterAtFirstFix(centerAtFirstFix);
+			this.locationManager.requestLocationUpdates(bestProvider, 1000, 0,
+					this.myLocationListener);
+			this.snapToLocationView.setVisibility(View.VISIBLE);
+		}
 	}
 
 	/**
@@ -506,20 +482,11 @@ public class AdvancedMapViewer extends MapActivity {
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
 	}
 
-	/**
-	 * Sets all file filters and starts the FilePicker to select an XML file.
-	 */
-	private void startRenderThemePicker() {
-		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
-		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_XML);
-		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
-	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == SELECT_MAP_FILE) {
 			if (resultCode == RESULT_OK) {
-				disableFollowGPS(true);
+				disableSnapToLocation(true);
 				if (data != null && data.getStringExtra("selectedFile") != null) {
 					this.mapView.setMapFile(data.getStringExtra("selectedFile"));
 				}
@@ -527,16 +494,6 @@ public class AdvancedMapViewer extends MapActivity {
 					&& !this.mapView.getMapViewMode().requiresInternetConnection()
 					&& !this.mapView.hasValidMapFile()) {
 				finish();
-			}
-		} else if (requestCode == SELECT_RENDER_THEME_FILE) {
-			if (resultCode == RESULT_OK) {
-				if (data != null && data.getStringExtra("selectedFile") != null) {
-					// try {
-					// this.mapView.setRenderTheme(data.getStringExtra("selectedFile"));
-					// } catch (FileNotFoundException e) {
-					// showToast(e.getLocalizedMessage());
-					// }
-				}
 			}
 		}
 	}
@@ -548,12 +505,24 @@ public class AdvancedMapViewer extends MapActivity {
 		// set up the layout views
 		setContentView(R.layout.activity_advanced_map_viewer);
 		this.mapView = (MapView) findViewById(R.id.mapView);
-		this.gpsView = (ImageView) findViewById(R.id.gpsView);
+
+		this.snapToLocationView = (ToggleButton) findViewById(R.id.snapToLocationView);
+		this.snapToLocationView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (isSnapToLocationEnabled()) {
+					disableSnapToLocation(true);
+				} else {
+					enableSnapToLocation(true);
+				}
+			}
+		});
 
 		configureMapView();
 
 		// get the pointers to different system services
 		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		this.myLocationListener = new MyLocationListener();
 		this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		this.wakeLock = this.powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
 
@@ -561,19 +530,19 @@ public class AdvancedMapViewer extends MapActivity {
 		this.circleOverlayFill = new Paint(Paint.ANTI_ALIAS_FLAG);
 		this.circleOverlayFill.setStyle(Paint.Style.FILL);
 		this.circleOverlayFill.setColor(Color.BLUE);
-		this.circleOverlayFill.setAlpha(64);
+		this.circleOverlayFill.setAlpha(48);
 
 		this.circleOverlayOutline = new Paint(Paint.ANTI_ALIAS_FLAG);
 		this.circleOverlayOutline.setStyle(Paint.Style.STROKE);
 		this.circleOverlayOutline.setColor(Color.BLUE);
 		this.circleOverlayOutline.setAlpha(128);
-		this.circleOverlayOutline.setStrokeWidth(3);
+		this.circleOverlayOutline.setStrokeWidth(2);
 
-		if (savedInstanceState != null && savedInstanceState.getBoolean("locationListener")) {
-			if (this.locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-				enableFollowGPS();
-			} else {
-				showDialog(DIALOG_GPS_DISABLED);
+		if (savedInstanceState != null
+				&& savedInstanceState.getBoolean(BUNDLE_SHOW_MY_LOCATION)) {
+			enableShowMyLocation(savedInstanceState.getBoolean(BUNDLE_CENTER_AT_FIRST_FIX));
+			if (savedInstanceState.getBoolean(BUNDLE_SNAP_TO_LOCATION)) {
+				enableSnapToLocation(false);
 			}
 		}
 	}
@@ -592,7 +561,7 @@ public class AdvancedMapViewer extends MapActivity {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// disable GPS follow mode if it is enabled
-							disableFollowGPS(true);
+							disableSnapToLocation(true);
 
 							// set the map center and zoom level
 							AdvancedMapViewer.this.mapController.setCenter(new GeoPoint(Double
@@ -606,10 +575,10 @@ public class AdvancedMapViewer extends MapActivity {
 					});
 			builder.setNegativeButton(R.string.cancel, null);
 			return builder.create();
-		} else if (id == DIALOG_GPS_DISABLED) {
+		} else if (id == DIALOG_LOCATION_PROVIDER_DISABLED) {
 			builder.setIcon(android.R.drawable.ic_menu_info_details);
 			builder.setTitle(R.string.error);
-			builder.setMessage(R.string.gps_disabled);
+			builder.setMessage(R.string.no_location_provider_available);
 			builder.setPositiveButton(R.string.ok, null);
 			return builder.create();
 		} else if (id == DIALOG_INFO_MAP_FILE) {
@@ -626,31 +595,17 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-
-		// remove the toast messageText if visible
-		if (this.toast != null) {
-			this.toast.cancel();
-			this.toast = null;
-		}
-
-		// switch off location updates
-		if (this.locationManager != null) {
-			if (this.locationListener != null) {
-				this.locationManager.removeUpdates(this.locationListener);
-				this.locationListener = null;
-			}
-			this.locationManager = null;
-		}
-	}
-
-	@Override
 	protected void onPause() {
 		super.onPause();
 		// release the wake lock if necessary
 		if (this.wakeLock.isHeld()) {
 			this.wakeLock.release();
+		}
+
+		// remove the toast message if visible
+		if (this.toast != null) {
+			this.toast.cancel();
+			this.toast = null;
 		}
 	}
 
@@ -800,31 +755,83 @@ public class AdvancedMapViewer extends MapActivity {
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putBoolean("locationListener", this.locationListener != null);
+		outState.putBoolean(BUNDLE_SHOW_MY_LOCATION, isShowMyLocationEnabled());
+		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener
+				.isCenterAtFirstFix());
+		outState.putBoolean(BUNDLE_SNAP_TO_LOCATION, this.snapToLocation);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		disableShowMyLocation();
 	}
 
 	/**
-	 * Disables the "Follow GPS mode" and removes the GPS icon.
-	 * 
-	 * @param showToastMessage
-	 *            if a toast message should be displayed or not.
+	 * Disables the "show my location" mode.
 	 */
-	void disableFollowGPS(boolean showToastMessage) {
-		if (this.circleOverlay != null) {
-			this.mapView.getOverlays().remove(this.circleOverlay);
-			this.circleOverlay = null;
-		}
-		if (this.followGpsEnabled) {
-			if (this.locationListener != null) {
-				this.locationManager.removeUpdates(this.locationListener);
-				this.locationListener = null;
+	void disableShowMyLocation() {
+		if (this.showMyLocation) {
+			this.showMyLocation = false;
+			disableSnapToLocation(false);
+			this.locationManager.removeUpdates(this.myLocationListener);
+			if (this.circleOverlay != null) {
+				this.mapView.getOverlays().remove(this.circleOverlay);
+				this.mapView.getOverlays().remove(this.itemizedOverlay);
+				this.circleOverlay = null;
+				this.itemizedOverlay = null;
 			}
-			this.gpsView.setVisibility(View.GONE);
-			if (showToastMessage) {
-				showToast(getString(R.string.follow_gps_disabled));
-			}
-			this.followGpsEnabled = false;
+			this.snapToLocationView.setVisibility(View.GONE);
 		}
+	}
+
+	/**
+	 * Disables the "snap to location" mode.
+	 * 
+	 * @param showToast
+	 *            defines whether a toast message is displayed or not.
+	 */
+	void disableSnapToLocation(boolean showToast) {
+		if (this.snapToLocation) {
+			this.snapToLocation = false;
+			this.snapToLocationView.setChecked(false);
+			if (showToast) {
+				showToast(getString(R.string.snap_to_location_disabled));
+			}
+		}
+	}
+
+	/**
+	 * Enables the "snap to location" mode.
+	 * 
+	 * @param showToast
+	 *            defines whether a toast message is displayed or not.
+	 */
+	void enableSnapToLocation(boolean showToast) {
+		if (!this.snapToLocation) {
+			this.snapToLocation = true;
+			if (showToast) {
+				showToast(getString(R.string.snap_to_location_enabled));
+			}
+		}
+	}
+
+	/**
+	 * Returns the status of the "show my location" mode.
+	 * 
+	 * @return true if the "show my location" mode is enabled, false otherwise.
+	 */
+	boolean isShowMyLocationEnabled() {
+		return this.showMyLocation;
+	}
+
+	/**
+	 * Returns the status of the "snap to location" mode.
+	 * 
+	 * @return true if the "snap to location" mode is enabled, false otherwise.
+	 */
+	boolean isSnapToLocationEnabled() {
+		return this.snapToLocation;
 	}
 
 	/**
