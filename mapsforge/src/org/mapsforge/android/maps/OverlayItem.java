@@ -53,10 +53,17 @@ public class OverlayItem {
 	byte cachedZoomLevel;
 
 	/**
+	 * Constructs a new OverlayItem.
+	 */
+	public OverlayItem() {
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+	}
+
+	/**
 	 * Constructs a new OverlayItem which will be drawn with the default marker of the overlay.
 	 * 
 	 * @param point
-	 *            the geographical position of the item.
+	 *            the geographical position of the item (may be null).
 	 * @param title
 	 *            the title of the item (may be null).
 	 * @param snippet
@@ -77,7 +84,7 @@ public class OverlayItem {
 	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.
 	 * 
 	 * @param point
-	 *            the geographical position of the item.
+	 *            the geographical position of the item (may be null).
 	 * @param title
 	 *            the title of the item (may be null).
 	 * @param snippet
@@ -105,7 +112,7 @@ public class OverlayItem {
 	/**
 	 * Returns the position of this item.
 	 * 
-	 * @return the position of this item.
+	 * @return the position of this item (may be null).
 	 */
 	public synchronized GeoPoint getPoint() {
 		return this.point;
@@ -151,7 +158,7 @@ public class OverlayItem {
 	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
 	 * 
 	 * @param point
-	 *            the geographical position of the item.
+	 *            the geographical position of the item (may be null).
 	 */
 	public synchronized void setPoint(GeoPoint point) {
 		this.point = point;
