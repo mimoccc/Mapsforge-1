@@ -102,7 +102,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 		@Override
 		public void onProviderDisabled(String provider) {
-			showDialog(DIALOG_LOCATION_PROVIDER_DISABLED);
+			// do nothing
 		}
 
 		@Override
