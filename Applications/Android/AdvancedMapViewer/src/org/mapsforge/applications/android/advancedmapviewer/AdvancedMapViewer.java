@@ -29,10 +29,10 @@ import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapDatabase;
 import org.mapsforge.android.maps.MapView;
+import org.mapsforge.android.maps.MapView.TextField;
 import org.mapsforge.android.maps.MapViewMode;
 import org.mapsforge.android.maps.OverlayCircle;
 import org.mapsforge.android.maps.OverlayItem;
-import org.mapsforge.android.maps.MapView.TextField;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,10 +40,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Bitmap.CompressFormat;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -58,8 +58,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -386,7 +386,7 @@ public class AdvancedMapViewer extends MapActivity {
 	private void enableShowMyLocation(boolean centerAtFirstFix) {
 		if (!this.showMyLocation) {
 			Criteria criteria = new Criteria();
-			criteria.setAccuracy(Criteria.ACCURACY_HIGH);
+			criteria.setAccuracy(Criteria.ACCURACY_FINE);
 			String bestProvider = this.locationManager.getBestProvider(criteria, true);
 			if (bestProvider == null) {
 				showDialog(DIALOG_LOCATION_PROVIDER_DISABLED);
@@ -465,8 +465,8 @@ public class AdvancedMapViewer extends MapActivity {
 
 		// check if a location has been found
 		if (bestLocation != null) {
-			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation
-					.getLongitude());
+			GeoPoint point = new GeoPoint(bestLocation.getLatitude(),
+					bestLocation.getLongitude());
 			this.mapController.setCenter(point);
 		} else {
 			showToast(getString(R.string.error_last_location_unknown));
@@ -733,10 +733,13 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 		this.mapView.setMemoryCardCachePersistence(this.preferences.getBoolean(
 				"cachePersistence", false));
-		this.mapView.setMemoryCardCacheSize(Math.min(this.preferences.getInt("cacheSize",
-				MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
-		this.mapView.setMoveSpeed(Math.min(this.preferences.getInt("moveSpeed",
-				MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f);
+		this.mapView.setMemoryCardCacheSize(Math.min(
+				this.preferences.getInt("cacheSize", MEMORY_CARD_CACHE_SIZE_DEFAULT),
+				MEMORY_CARD_CACHE_SIZE_MAX));
+		this.mapView
+				.setMoveSpeed(Math.min(
+						this.preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT),
+						MOVE_SPEED_MAX) / 10f);
 
 		// set the debug settings
 		this.mapView.setFpsCounter(this.preferences.getBoolean("showFpsCounter", false));
@@ -756,8 +759,8 @@ public class AdvancedMapViewer extends MapActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putBoolean(BUNDLE_SHOW_MY_LOCATION, isShowMyLocationEnabled());
-		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener
-				.isCenterAtFirstFix());
+		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX,
+				this.myLocationListener.isCenterAtFirstFix());
 		outState.putBoolean(BUNDLE_SNAP_TO_LOCATION, this.snapToLocation);
 	}
 
