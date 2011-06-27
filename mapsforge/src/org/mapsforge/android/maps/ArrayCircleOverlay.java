@@ -17,10 +17,6 @@ package org.mapsforge.android.maps;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.mapsforge.android.maps.MapView.TextField;
-
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.graphics.Paint;
 
@@ -28,15 +24,11 @@ import android.graphics.Paint;
  * ArrayCircleOverlay is a thread-safe implementation of the {@link CircleOverlay} class using an
  * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayCircle
  * OverlayCircles} without individual paints can be defined via the constructor.
- * <p>
- * The ArrayCircleOverlay handles tap events on CircleOverlays by displaying their title in an
- * {@link AlertDialog}. To change this behavior, override the {@link #onTap(int)} method.
  */
 public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayCircleOverlay";
 
-	private final Context context;
 	private final ArrayList<OverlayCircle> overlayCircles;
 
 	/**
@@ -51,7 +43,6 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	 */
 	public ArrayCircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline, Context context) {
 		super(defaultPaintFill, defaultPaintOutline);
-		this.context = context;
 		this.overlayCircles = new ArrayList<OverlayCircle>(ARRAY_LIST_INITIAL_CAPACITY);
 	}
 
@@ -123,24 +114,6 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 				return null;
 			}
 			return this.overlayCircles.get(i);
-		}
-	}
-
-	/**
-	 * Handles a tap event.
-	 */
-	@Override
-	protected boolean onTap(int index) {
-		synchronized (this.overlayCircles) {
-			OverlayCircle circle = this.overlayCircles.get(index);
-			if (circle != null && circle.getTitle() != null) {
-				Builder builder = new AlertDialog.Builder(this.context);
-				builder.setIcon(android.R.drawable.ic_menu_info_details);
-				builder.setTitle(circle.getTitle());
-				builder.setPositiveButton(this.internalMapView.getText(TextField.OKAY), null);
-				builder.show();
-			}
-			return true;
 		}
 	}
 }

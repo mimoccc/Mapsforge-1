@@ -29,10 +29,10 @@ import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapDatabase;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.MapView.TextField;
 import org.mapsforge.android.maps.MapViewMode;
 import org.mapsforge.android.maps.OverlayCircle;
 import org.mapsforge.android.maps.OverlayItem;
+import org.mapsforge.android.maps.MapView.TextField;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,10 +40,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Bitmap.CompressFormat;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -58,8 +58,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -67,10 +67,10 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 /**
- * A map application which uses the features from the mapsforge library. The map can be centered
- * to the current GPS coordinate. A simple file browser for selecting the map file is also
- * included. Some preferences can be adjusted via the EditPreferences activity and screenshots
- * of the map may be taken in different image formats.
+ * A map application which uses the features from the mapsforge map library. The map can be
+ * centered to the current location. A simple file browser for selecting the map file is also
+ * included. Some preferences can be adjusted via the {@link EditPreferences} activity and
+ * screenshots of the map may be taken in different image formats.
  */
 public class AdvancedMapViewer extends MapActivity {
 	private class MyLocationListener implements LocationListener {
@@ -465,8 +465,8 @@ public class AdvancedMapViewer extends MapActivity {
 
 		// check if a location has been found
 		if (bestLocation != null) {
-			GeoPoint point = new GeoPoint(bestLocation.getLatitude(),
-					bestLocation.getLongitude());
+			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation
+					.getLongitude());
 			this.mapController.setCenter(point);
 		} else {
 			showToast(getString(R.string.error_last_location_unknown));
@@ -733,13 +733,10 @@ public class AdvancedMapViewer extends MapActivity {
 		}
 		this.mapView.setMemoryCardCachePersistence(this.preferences.getBoolean(
 				"cachePersistence", false));
-		this.mapView.setMemoryCardCacheSize(Math.min(
-				this.preferences.getInt("cacheSize", MEMORY_CARD_CACHE_SIZE_DEFAULT),
-				MEMORY_CARD_CACHE_SIZE_MAX));
-		this.mapView
-				.setMoveSpeed(Math.min(
-						this.preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT),
-						MOVE_SPEED_MAX) / 10f);
+		this.mapView.setMemoryCardCacheSize(Math.min(this.preferences.getInt("cacheSize",
+				MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
+		this.mapView.setMoveSpeed(Math.min(this.preferences.getInt("moveSpeed",
+				MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f);
 
 		// set the debug settings
 		this.mapView.setFpsCounter(this.preferences.getBoolean("showFpsCounter", false));
@@ -759,8 +756,8 @@ public class AdvancedMapViewer extends MapActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putBoolean(BUNDLE_SHOW_MY_LOCATION, isShowMyLocationEnabled());
-		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX,
-				this.myLocationListener.isCenterAtFirstFix());
+		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener
+				.isCenterAtFirstFix());
 		outState.putBoolean(BUNDLE_SNAP_TO_LOCATION, this.snapToLocation);
 	}
 

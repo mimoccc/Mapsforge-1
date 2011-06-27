@@ -25,6 +25,9 @@ import org.mapsforge.android.maps.OverlayCircle;
 import org.mapsforge.android.maps.OverlayItem;
 import org.mapsforge.android.maps.OverlayWay;
 
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
@@ -35,6 +38,40 @@ import android.os.Bundle;
  * An application which demonstrates how to use different types of overlays.
  */
 public class OverlayMapViewer extends MapActivity {
+	private class MyItemizedOverlay extends ArrayItemizedOverlay {
+		private final Context context;
+
+		/**
+		 * Constructs a new MyItemizedOverlay.
+		 * 
+		 * @param defaultMarker
+		 *            the default marker (may be null).
+		 * @param context
+		 *            the reference to the application context.
+		 */
+		MyItemizedOverlay(Drawable defaultMarker, Context context) {
+			super(defaultMarker, context);
+			this.context = context;
+		}
+
+		/**
+		 * Handles a tap event on the given item.
+		 */
+		@Override
+		protected boolean onTap(int index) {
+			OverlayItem item = createItem(index);
+			if (item != null) {
+				Builder builder = new AlertDialog.Builder(this.context);
+				builder.setIcon(android.R.drawable.ic_menu_info_details);
+				builder.setTitle(item.getTitle());
+				builder.setMessage(item.getSnippet());
+				builder.setPositiveButton("OK", null);
+				builder.show();
+			}
+			return true;
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -71,7 +108,7 @@ public class OverlayMapViewer extends MapActivity {
 		// create the CircleOverlay and add the circles
 		ArrayCircleOverlay circleOverlay = new ArrayCircleOverlay(circleDefaultPaintFill,
 				circleDefaultPaintOutline, this);
-		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200, "Berlin Central Station");
+		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200, null);
 		OverlayCircle circle2 = new OverlayCircle(geoPoint4, 150, circlePaint, null, null);
 		circleOverlay.addCircle(circle1);
 		circleOverlay.addCircle(circle2);
@@ -114,7 +151,7 @@ public class OverlayMapViewer extends MapActivity {
 		Drawable itemMarker = getResources().getDrawable(R.drawable.marker_green);
 
 		// create the ItemizedOverlay and add the items
-		ArrayItemizedOverlay itemizedOverlay = new ArrayItemizedOverlay(itemDefaultMarker, this);
+		ArrayItemizedOverlay itemizedOverlay = new MyItemizedOverlay(itemDefaultMarker, this);
 		OverlayItem item1 = new OverlayItem(geoPoint1, "Berlin Victory Column",
 				"The Victory Column is a monument in Berlin, Germany.");
 		OverlayItem item2 = new OverlayItem(geoPoint2, "Brandenburg Gate",

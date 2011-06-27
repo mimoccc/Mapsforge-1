@@ -88,12 +88,7 @@ public class MapView extends ViewGroup {
 		/**
 		 * Unit symbol meter.
 		 */
-		METER,
-
-		/**
-		 * OK text message.
-		 */
-		OKAY;
+		METER;
 	}
 
 	/**
@@ -656,11 +651,6 @@ public class MapView extends ViewGroup {
 	private static final String DEFAULT_TEXT_METER = " m";
 
 	/**
-	 * Default value for the OK text field.
-	 */
-	private static final String DEFAULT_TEXT_OK = "OK";
-
-	/**
 	 * Default text scale for the map rendering.
 	 */
 	private static final float DEFAULT_TEXT_SCALE = 1;
@@ -694,6 +684,7 @@ public class MapView extends ViewGroup {
 	 * Message code for the handler to hide the zoom controls.
 	 */
 	private static final int MSG_ZOOM_CONTROLS_HIDE = 0;
+
 	private static final Paint PAINT_SCALE_BAR = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -703,7 +694,6 @@ public class MapView extends ViewGroup {
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
-
 	private static final short SCALE_BAR_WIDTH = 130;
 
 	/**
@@ -834,7 +824,6 @@ public class MapView extends ViewGroup {
 	private boolean showZoomControls;
 	private String text_kilometer;
 	private String text_meter;
-	private String text_ok;
 	private float textScale;
 	private Bitmap tileBitmap;
 	private ByteBuffer tileBuffer;
@@ -1302,9 +1291,6 @@ public class MapView extends ViewGroup {
 			case METER:
 				this.text_meter = value;
 				break;
-			case OKAY:
-				this.text_ok = value;
-				break;
 		}
 	}
 
@@ -1506,7 +1492,6 @@ public class MapView extends ViewGroup {
 		// set the default text fields for the map scale
 		setText(TextField.KILOMETER, DEFAULT_TEXT_KILOMETER);
 		setText(TextField.METER, DEFAULT_TEXT_METER);
-		setText(TextField.OKAY, DEFAULT_TEXT_OK);
 
 		// set up the paints to draw the map scale
 		PAINT_SCALE_BAR.setStrokeWidth(2);
@@ -2056,8 +2041,6 @@ public class MapView extends ViewGroup {
 				return this.text_kilometer;
 			case METER:
 				return this.text_meter;
-			case OKAY:
-				return this.text_ok;
 			default:
 				// all cases are covered, the default case should never occur
 				return null;
