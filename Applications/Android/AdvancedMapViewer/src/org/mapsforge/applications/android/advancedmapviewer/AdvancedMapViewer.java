@@ -795,6 +795,7 @@ public class AdvancedMapViewer extends MapActivity {
 		if (this.snapToLocation) {
 			this.snapToLocation = false;
 			this.snapToLocationView.setChecked(false);
+			this.mapView.setClickable(true);
 			if (showToast) {
 				showToast(getString(R.string.snap_to_location_disabled));
 			}
@@ -810,6 +811,7 @@ public class AdvancedMapViewer extends MapActivity {
 	void enableSnapToLocation(boolean showToast) {
 		if (!this.snapToLocation) {
 			this.snapToLocation = true;
+			this.mapView.setClickable(false);
 			if (showToast) {
 				showToast(getString(R.string.snap_to_location_enabled));
 			}

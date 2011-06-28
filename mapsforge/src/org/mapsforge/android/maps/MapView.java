@@ -110,6 +110,11 @@ public class MapView extends ViewGroup {
 		}
 
 		@Override
+		int getAction(MotionEvent event) {
+			return event.getAction() & MotionEvent.ACTION_MASK;
+		}
+
+		@Override
 		boolean handleTouchEvent(MotionEvent event) {
 			// round the event coordinates to integers
 			event.setLocation((int) event.getX(), (int) event.getY());
@@ -121,14 +126,13 @@ public class MapView extends ViewGroup {
 			}
 
 			// extract the action from the action code
-			this.action = event.getAction() & MotionEvent.ACTION_MASK;
+			this.action = getAction(event);
 
 			if (this.action == MotionEvent.ACTION_DOWN) {
 				this.longPressDetector.pressStart();
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
 				this.mapMoved = false;
-				showZoomControls();
 				// save the ID of the pointer
 				this.activePointerId = event.getPointerId(0);
 				return true;
@@ -167,7 +171,6 @@ public class MapView extends ViewGroup {
 				this.longPressDetector.pressStop();
 				this.pointerIndex = event.findPointerIndex(this.activePointerId);
 				this.activePointerId = INVALID_POINTER_ID;
-				hideZoomControlsDelayed();
 				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
@@ -214,7 +217,6 @@ public class MapView extends ViewGroup {
 				return true;
 			} else if (this.action == MotionEvent.ACTION_CANCEL) {
 				this.longPressDetector.pressStop();
-				hideZoomControlsDelayed();
 				this.activePointerId = INVALID_POINTER_ID;
 				return true;
 			} else if (this.action == MotionEvent.ACTION_POINTER_DOWN) {
@@ -303,6 +305,11 @@ public class MapView extends ViewGroup {
 		}
 
 		@Override
+		int getAction(MotionEvent event) {
+			return event.getAction();
+		}
+
+		@Override
 		boolean handleTouchEvent(MotionEvent event) {
 			// round the event coordinates to integers
 			event.setLocation((int) event.getX(), (int) event.getY());
@@ -313,7 +320,6 @@ public class MapView extends ViewGroup {
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
 				this.mapMoved = false;
-				showZoomControls();
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 				// calculate the distance between previous and current position
@@ -342,7 +348,6 @@ public class MapView extends ViewGroup {
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				this.longPressDetector.pressStop();
-				hideZoomControlsDelayed();
 				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
@@ -386,7 +391,6 @@ public class MapView extends ViewGroup {
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_CANCEL) {
 				this.longPressDetector.pressStop();
-				hideZoomControlsDelayed();
 				return true;
 			}
 			// the event was not handled
@@ -618,6 +622,15 @@ public class MapView extends ViewGroup {
 			}
 			return false;
 		}
+
+		/**
+		 * Returns the action from the given event.
+		 * 
+		 * @param event
+		 *            the event to extract the action from.
+		 * @return the event, see {@link MotionEvent} for details.
+		 */
+		abstract int getAction(MotionEvent event);
 
 		/**
 		 * Handles a motion event on the touch screen.
@@ -1071,6 +1084,9 @@ public class MapView extends ViewGroup {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (!isClickable()) {
+			return false;
+		}
 		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
 			this.mapMover.moveLeft();
 			return true;
@@ -1089,6 +1105,9 @@ public class MapView extends ViewGroup {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		if (!isClickable()) {
+			return false;
+		}
 		if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
 			this.mapMover.stopHorizontalMove();
 			return true;
@@ -1101,8 +1120,23 @@ public class MapView extends ViewGroup {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+		// show and hide the zoom controls
+		switch (this.touchEventHandler.getAction(event)) {
+			case MotionEvent.ACTION_DOWN:
+				showZoomControls();
+				break;
+			case MotionEvent.ACTION_CANCEL:
+				hideZoomControlsDelayed();
+				break;
+			case MotionEvent.ACTION_UP:
+				hideZoomControlsDelayed();
+				break;
+			default:
+				// do nothing
+				break;
+		}
 		if (!isClickable()) {
-			return false;
+			return true;
 		}
 		return this.touchEventHandler.handleTouchEvent(event);
 	}
@@ -1421,6 +1455,20 @@ public class MapView extends ViewGroup {
 		return zoom;
 	}
 
+	/**
+	 * Displays the zoom controls for a short time.
+	 */
+	private void hideZoomControlsDelayed() {
+		if (this.showZoomControls) {
+			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
+			if (this.zoomControls.getVisibility() != VISIBLE) {
+				this.zoomControls.show();
+			}
+			this.zoomControlsHideHandler.sendEmptyMessageDelayed(MSG_ZOOM_CONTROLS_HIDE,
+					ZOOM_CONTROLS_TIMEOUT);
+		}
+	}
+
 	private void renderScaleBar() {
 		synchronized (this) {
 			// check if recalculating and drawing of the map scale is necessary
@@ -1710,6 +1758,18 @@ public class MapView extends ViewGroup {
 
 		addView(this.zoomControls, new ViewGroup.LayoutParams(
 				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+	}
+
+	/**
+	 * Displays the zoom controls permanently.
+	 */
+	private void showZoomControls() {
+		if (this.showZoomControls) {
+			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
+			if (this.zoomControls.getVisibility() != VISIBLE) {
+				this.zoomControls.show();
+			}
+		}
 	}
 
 	/**
@@ -2166,20 +2226,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Displays the zoom controls for a short time.
-	 */
-	void hideZoomControlsDelayed() {
-		if (this.showZoomControls) {
-			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
-			if (this.zoomControls.getVisibility() != VISIBLE) {
-				this.zoomControls.show();
-			}
-			this.zoomControlsHideHandler.sendEmptyMessageDelayed(MSG_ZOOM_CONTROLS_HIDE,
-					ZOOM_CONTROLS_TIMEOUT);
-		}
-	}
-
-	/**
 	 * Hides the zoom controls immediately.
 	 */
 	void hideZoomZontrols() {
@@ -2518,18 +2564,6 @@ public class MapView extends ViewGroup {
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;
-		}
-	}
-
-	/**
-	 * Displays the zoom controls permanently.
-	 */
-	void showZoomControls() {
-		if (this.showZoomControls) {
-			this.zoomControlsHideHandler.removeMessages(MSG_ZOOM_CONTROLS_HIDE);
-			if (this.zoomControls.getVisibility() != VISIBLE) {
-				this.zoomControls.show();
-			}
 		}
 	}
 
