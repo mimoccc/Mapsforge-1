@@ -1931,7 +1931,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$atm != null
-				&& nodeTagIds[this.tagIDsNodes.amenity$atm.intValue()]) {
+				&& nodeTagIds[this.tagIDsNodes.amenity$atm.intValue()]
+				&& this.currentTile.zoomLevel >= 17) {
 			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
 					this.mapSymbols.atm);
 			if (nodeName != null) {
