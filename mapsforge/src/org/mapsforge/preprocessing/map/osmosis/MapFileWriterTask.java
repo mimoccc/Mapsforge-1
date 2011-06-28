@@ -51,7 +51,7 @@ public class MapFileWriterTask implements Sink {
 	private static final Logger LOGGER = Logger.getLogger(MapFileWriterTask.class
 			.getName());
 
-	private static final String VERSION = "0.2.3";
+	private static final String VERSION = "0.2.4";
 
 	private TileBasedDataStore tileBasedGeoObjectStore;
 	static OSMTagMapping TAG_MAPPING;
