@@ -14,7 +14,6 @@
  */
 package org.mapsforge.android.maps;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -673,7 +672,7 @@ public class MapView extends ViewGroup {
 	/**
 	 * Path to the caching folder on the external storage.
 	 */
-	private static final String EXTERNAL_STORAGE_DIRECTORY = File.separatorChar + "mapsforge";
+	private static final String EXTERNAL_STORAGE_DIRECTORY = "/Android/data/org.mapsforge.android.maps/cache/";
 
 	/**
 	 * Default background color of the MapView.
@@ -1650,8 +1649,7 @@ public class MapView extends ViewGroup {
 		// create the image file cache with a unique directory
 		this.tileMemoryCardCache = new TileMemoryCardCache(Environment
 				.getExternalStorageDirectory().getAbsolutePath()
-				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
-				this.tileMemoryCardCacheSize);
+				+ EXTERNAL_STORAGE_DIRECTORY + this.mapViewId, this.tileMemoryCardCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
