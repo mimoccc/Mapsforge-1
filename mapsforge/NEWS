@@ -1,3 +1,13 @@
+Version 0.2.4 (2011-06-28)
+--------------------------
++ AdvancedMapViewer now supports all location providers.
++ Snap to position can be toggled if current position is shown.
++ Improvements in Overlay API: Support for multi-polygons,
+  long press events are now handled
++ Added metadata API for map files
++ Many other minor improvements and bugfixes.
+
+
 Version 0.2.3 (2011-05-12)
 --------------------------
 + License change from GPL3 to LGPL3.
