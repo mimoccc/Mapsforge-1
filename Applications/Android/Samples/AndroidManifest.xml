@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.mapsforge.applications.android.samples"
-	android:versionCode="5" android:versionName="0.2.3" android:installLocation="auto">
+	android:versionCode="6" android:versionName="0.2.4" android:installLocation="auto">
 	<application android:label="Samples">
 		<activity android:name=".Samples" android:label="Samples">
 			<intent-filter>
