@@ -127,6 +127,7 @@ class RoutingGraphCreatorTask implements Sink {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	@Override
@@ -393,6 +394,10 @@ class RoutingGraphCreatorTask implements Sink {
 
 			// type of the highway
 			Tag wayType = getTag(way, "highway");
+
+			if (wayType == null)
+				wayType = getTag(way, "railway");
+
 			if (wayType != null) {
 				if (!(configObject.containsWayTag(wayType.getKey(), wayType.getValue())))
 					wayType = null;
@@ -480,8 +485,13 @@ class RoutingGraphCreatorTask implements Sink {
 		// correct before)!!!
 		for (Tag tag : way.getTags()) {
 			if ((tag.getKey().equals("highway") && (this.configObject
-					.containsWayTag(tag.getKey(),
-							tag.getValue()))))
+						.containsWayTag(tag.getKey(),
+								tag.getValue()))))
+				return true;
+
+			if ((tag.getKey().equals("railway") && (this.configObject
+						.containsWayTag(tag.getKey(),
+								tag.getValue()))))
 				return true;
 		}
 		return false;
