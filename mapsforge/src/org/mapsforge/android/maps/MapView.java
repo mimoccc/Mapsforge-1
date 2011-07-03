@@ -2018,7 +2018,6 @@ public class MapView extends ViewGroup {
 				// restore the interrupted status
 				Thread.currentThread().interrupt();
 			}
-			this.mapMover = null;
 		}
 
 		// stop the ZoomAnimator thread
