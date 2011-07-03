@@ -595,6 +595,12 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		disableShowMyLocation();
+	}
+
+	@Override
 	protected void onPause() {
 		super.onPause();
 		// release the wake lock if necessary
@@ -759,12 +765,6 @@ public class AdvancedMapViewer extends MapActivity {
 		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener
 				.isCenterAtFirstFix());
 		outState.putBoolean(BUNDLE_SNAP_TO_LOCATION, this.snapToLocation);
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-		disableShowMyLocation();
 	}
 
 	/**
