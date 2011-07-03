@@ -29,6 +29,8 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -42,6 +44,7 @@ import org.jdesktop.swingx.JXMapKit.DefaultProviders;
 import org.jdesktop.swingx.JXMapViewer;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.jdesktop.swingx.painter.Painter;
+import org.mapsforge.android.mobileHighwayHierarchies.HHRouter;
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Router;
@@ -348,6 +351,16 @@ public class RouteViewer {
 				}
 			}
 			_g.dispose();
+		}
+	}
+
+	public static void main(String[] args) {
+		try {
+			Router router = new HHRouter(new File("data/binary/berlin.mobileHH"), 1024 * 1024 * 100);
+			RouteViewer rv = new RouteViewer(router);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

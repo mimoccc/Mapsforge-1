@@ -27,9 +27,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +43,6 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.mapsforge.android.mobileHighwayHierarchies.HHRouter;
 import org.mapsforge.core.Edge;
 import org.mapsforge.core.GeoCoordinate;
 import org.mapsforge.core.Rect;
@@ -660,11 +656,21 @@ public class RendererV2 {
 
 					@Override
 					public void mouseReleased(MouseEvent e) {
+
 						if (e.isPopupTrigger()) {
 							show(e.getComponent(), e.getX(), e.getY());
 							position = e.getPoint();
 						}
 					}
+
+					@Override
+					public void mousePressed(MouseEvent e) {
+						if (e.isPopupTrigger()) {
+							show(e.getComponent(), e.getX(), e.getY());
+							position = e.getPoint();
+						}
+					}
+
 				};
 				add(getRouterMenu());
 				add(getMapMenu());
@@ -742,21 +748,5 @@ public class RendererV2 {
 				return menu;
 			}
 		}
-	}
-
-	/**
-	 * 
-	 * @param agrs
-	 *            bla
-	 * @throws FileNotFoundException
-	 *             bli
-	 * @throws IOException
-	 *             blub
-	 */
-	public static void main(String[] agrs) throws FileNotFoundException, IOException {
-		Router router = new HHRouter(new File(
-				"data/binary/berlin.mobileHH"), 1024 * 1024);
-		RendererV2 r = new RendererV2(800, 600, router, Color.white, Color.BLACK);
-		r.setZoomLevel(5);
 	}
 }
