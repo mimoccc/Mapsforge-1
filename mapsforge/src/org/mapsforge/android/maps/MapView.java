@@ -936,6 +936,38 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns the current latitude span in microdegrees (degrees * 10^6).
+	 * 
+	 * @return the current latitude span from the top to the bottom of the map.
+	 * @throws IllegalStateException
+	 *             if the MapView dimensions are not valid (width and height > 0).
+	 */
+	public int getLatitudeSpan() {
+		if (getWidth() > 0 && getWidth() > 0) {
+			GeoPoint top = this.projection.fromPixels(0, 0);
+			GeoPoint bottom = this.projection.fromPixels(0, this.getHeight());
+			return Math.abs(top.getLatitudeE6() - bottom.getLatitudeE6());
+		}
+		throw new IllegalStateException("the MapView has no valid dimensions");
+	}
+
+	/**
+	 * Returns the current longitude span in microdegrees (degrees * 10^6).
+	 * 
+	 * @return the current longitude span from the left to the right of the map.
+	 * @throws IllegalStateException
+	 *             if the MapView dimensions are not valid (width and height > 0).
+	 */
+	public int getLongitudeSpan() {
+		if (getWidth() > 0 && getWidth() > 0) {
+			GeoPoint left = this.projection.fromPixels(0, 0);
+			GeoPoint right = this.projection.fromPixels(getWidth(), 0);
+			return Math.abs(left.getLongitudeE6() - right.getLongitudeE6());
+		}
+		throw new IllegalStateException("the MapView has no valid dimensions");
+	}
+
+	/**
 	 * Returns the current center of the map as a GeoPoint.
 	 * 
 	 * @return the current center of the map.

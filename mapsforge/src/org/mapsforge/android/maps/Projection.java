@@ -23,15 +23,14 @@ import android.graphics.Point;
  */
 public interface Projection {
 	/**
-	 * Translates the given screen coordinates to a GeoPoint. If the corresponding MapView has no valid
-	 * dimensions (width and height > 0), null is returned.
+	 * Translates the given screen coordinates to a {@link GeoPoint}. If the corresponding MapView has
+	 * no valid dimensions (width and height > 0), null is returned.
 	 * 
 	 * @param x
 	 *            the pixel x coordinate on the screen.
 	 * @param y
 	 *            the pixel y coordinate on the screen.
-	 * @return a new GeoPoint which is relative to the top-left of the MapView or null, if the
-	 *         corresponding MapView has no valid dimensions (width and height > 0).
+	 * @return a new {@link GeoPoint} or null, if the corresponding MapView has no valid dimensions.
 	 */
 	GeoPoint fromPixels(int x, int y);
 
@@ -58,8 +57,8 @@ public interface Projection {
 	float metersToPixels(float meters, byte zoom);
 
 	/**
-	 * Translates the given GeoPoint to relative pixel coordinates on the screen. If the corresponding
-	 * MapView has no valid dimensions (width and height > 0), null is returned.
+	 * Translates the given {@link GeoPoint} to relative pixel coordinates on the screen. If the
+	 * corresponding MapView has no valid dimensions (width and height > 0), null is returned.
 	 * 
 	 * @param in
 	 *            the geographical point to convert.
@@ -67,12 +66,12 @@ public interface Projection {
 	 *            an already existing object to use for the output. If this parameter is null, a new
 	 *            Point object will be created and returned.
 	 * @return a Point which is relative to the top-left of the MapView or null, if the corresponding
-	 *         MapView has no valid dimensions (width and height > 0).
+	 *         MapView has no valid dimensions.
 	 */
 	Point toPixels(GeoPoint in, Point out);
 
 	/**
-	 * Translates the given GeoPoint to absolute pixel coordinates on the world map.
+	 * Translates the given {@link GeoPoint} to absolute pixel coordinates on the world map.
 	 * 
 	 * @param in
 	 *            the geographical point to convert.
