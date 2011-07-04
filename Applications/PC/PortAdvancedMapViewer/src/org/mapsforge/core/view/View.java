@@ -1,16 +1,24 @@
 package org.mapsforge.core.view;
 
-import javax.swing.JTextArea;
+import javax.swing.JLabel;
 
 //TODO Drawable.Callback 
 //TODO AccessibilityEventSource
-public class View extends JTextArea implements KeyEvent.Callback {
+public class View extends JLabel implements KeyEvent.Callback {
 
 	private static final long serialVersionUID = -4159533482111214072L;
 
 	boolean clickable;
     boolean focusable;
 	
+    public View(String context) {
+    	super(context);
+    }
+    
+	public View() {
+		super();
+	}
+
 	protected int mID;
 	/**
      * Look for a child view with the given id.  If this view has the given

@@ -6,17 +6,25 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
 
+import org.mapsforge.pc.maps.MapView;
+import org.mapsforge.applications.pc.advancedmapviewer.FilePicker;
 import org.mapsforge.core.graphics.Canvas;
 
 public class AdvancedMapViewerPC extends JFrame implements WindowListener, ActionListener {
 
+	JFrame jFrame;
 	private Canvas canvas;
 	private JMenuBar menuBar;
 	private JMenu menuMap, menuPreferences, menuInfo;
@@ -28,6 +36,8 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		this.addWindowListener(this);
 		this.setTitle("Advanced Map Viewer");
 		
+		// JFrame
+		this.jFrame = this;
 		// Menubar
 		menuBar = new JMenuBar();
 		this.setJMenuBar(menuBar);
@@ -92,7 +102,10 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		String cmd = e.getActionCommand(); 
+		String cmd = e.getActionCommand();
+		if (cmd.equals("Load Map")) {
+			startFileBrowser();
+		}
 		if (cmd.equals("Exit")) {
 			close();
 		}
@@ -114,7 +127,57 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		System.exit(0);
 	}
 
+	/** File Browser */
+	private void startFileBrowser() {
+		// set the FileDisplayFilter
+		FilePickerPC.setFileDisplayFilter(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				// accept only readable files
+				if (file.canRead()) {
+					if (file.isDirectory()) {
+						// accept all directories
+						return true;
+					} else if (file.isFile() && file.getName().endsWith(".map")) {
+						// accept all files with a ".map" extension
+						return true;
+					}
+				}
+				return false;
+			}
 
+			@Override
+			public String getDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+
+		// set the FileSelectFilter
+		FilePickerPC.setFileSelectFilter(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				// accept only valid map files
+				return MapView.isValidMapFile(file.getAbsolutePath());
+			}
+
+			@Override
+			public String getDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+
+		//TODO start the FilePicker
+		SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+            //Turn off metal's use of bold fonts
+            UIManager.put("swing.boldMetal", Boolean.FALSE); 
+    		FilePickerPC.createFileChooser(jFrame);
+        }
+    });
+		//startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
+	}
 	
 
 }
