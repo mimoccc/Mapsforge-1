@@ -62,12 +62,19 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		if (cmd.equals("Map File")) {
 			startFileBrowser();
 		}
-		else if (cmd.equals("About this software")) {
+		else if(cmd.equals("Preferences..")) {
+			startPreferences();
+		}
+		else if (cmd.equals("Exit")) {
 			close();
+
+		}
+		else if (cmd.equals("About this software")) {
+
 		}
 		
 	}
-	
+
 	/** WindowListener */
 	@Override public void windowActivated(WindowEvent e) {}
 	@Override public void windowClosed(WindowEvent e) {	close();	}
@@ -135,5 +142,9 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		//startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
 	}
 	
-
+	/** Preferences */
+	private void startPreferences() {
+		// TODO Auto-generated method stub
+		
+	}
 }

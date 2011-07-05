@@ -16,6 +16,8 @@ package org.mapsforge.applications.pc.advancedmapviewer;
 
 import java.io.File;
 
+import org.mapsforge.applications.android.advancedmapviewer.R;
+
 import android.content.Context;
 //import org.mapsforge.core.content.Context;
 import android.view.Gravity;

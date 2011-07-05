@@ -52,6 +52,7 @@ import java.awt.Color;
 //import android.graphics.Paint;
 import org.mapsforge.core.graphics.Paint;
 //import android.graphics.Rect;
+import org.mapsforge.applications.android.advancedmapviewer.R;
 import org.mapsforge.core.graphics.Rect;
 //import android.graphics.Bitmap.CompressFormat;
 import org.mapsforge.core.graphics.Bitmap.CompressFormat;

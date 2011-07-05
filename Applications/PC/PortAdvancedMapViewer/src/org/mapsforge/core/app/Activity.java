@@ -10,6 +10,11 @@ import org.mapsforge.core.view.MenuItem;
 import org.mapsforge.core.view.Window;
 import org.mapsforge.core.content.Context;
 import org.mapsforge.core.content.Intent;
+import org.mapsforge.core.graphics.Canvas;
+
+import org.mapsforge.core.graphics.Paint;
+
+//import android.graphics.Paint;
 
 public class Activity extends Context {
 	
@@ -18,7 +23,7 @@ public class Activity extends Context {
 	boolean mFinished = false;
 	MenuInflater inflater = null;
 	Thread mUiThread = Thread.currentThread();
-    private final Handler mHandler = new Handler();
+    //private final Handler mHandler = new Handler();
 
 	Activity mParent;
 	
@@ -224,7 +229,7 @@ public class Activity extends Context {
      */
     public final void runOnUiThread(Runnable action) {
         if (Thread.currentThread() != 	mUiThread) {
-            mHandler.post(action);
+            //mHandler.post(action);
         } else {
             action.run();
         }
@@ -325,6 +330,9 @@ public class Activity extends Context {
 	public static void main(String[] args) {
 		Activity a = new Activity();
 		a.onCreate(null);
+		Canvas c = new Canvas();
+		
+		c.drawText("test", 10, 10, new Paint(Paint.ANTI_ALIAS_FLAG));
 	}
 
 

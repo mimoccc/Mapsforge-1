@@ -14,6 +14,7 @@
  */
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import org.mapsforge.applications.android.advancedmapviewer.R;
 import org.mapsforge.pc.maps.MapView;
 
 import android.content.Context;

@@ -14,6 +14,8 @@
  */
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import org.mapsforge.applications.android.advancedmapviewer.R;
+
 import android.os.Bundle;
 //import org.mapsforge.core.os.Bundle;
 import android.preference.PreferenceActivity;
