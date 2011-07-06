@@ -29,6 +29,27 @@ import android.graphics.Point;
  */
 public class OverlayWay {
 	/**
+	 * Checks whether the given arrays have the same lengths on each dimension.
+	 * 
+	 * @param array1
+	 *            the first array to check.
+	 * @param array2
+	 *            the second array to check.
+	 * @return true if the arrays have the same length on each dimension, false otherwise.
+	 */
+	private static boolean arrayLengthsEqual(Object[][] array1, Object[][] array2) {
+		if (array1.length != array2.length) {
+			return false;
+		}
+		for (int i = array1.length - 1; i >= 0; --i) {
+			if (array1[i].length != array2[i].length) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * Checks the given way nodes for null elements.
 	 * 
 	 * @param wayNodes
@@ -229,7 +250,7 @@ public class OverlayWay {
 		this.wayNodes = wayNodes;
 		if (this.wayNodes == null) {
 			this.cachedWayPositions = new Point[0][0];
-		} else if (this.wayNodes.length != this.cachedWayPositions.length) {
+		} else if (!arrayLengthsEqual(this.wayNodes, this.cachedWayPositions)) {
 			this.cachedWayPositions = new Point[this.wayNodes.length][];
 			for (int i = this.wayNodes.length - 1; i >= 0; --i) {
 				this.cachedWayPositions[i] = new Point[this.wayNodes[i].length];
