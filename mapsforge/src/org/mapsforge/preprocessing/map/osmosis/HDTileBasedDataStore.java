@@ -132,7 +132,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 		TDNode tdNode = TDNode.fromNode(node);
 		if (tdNode.isPOI()) {
-			byte minZoomLevel = tdNode.getMinimumZoomLevel();
+			byte minZoomLevel = tdNode.getZoomAppear();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
 				// is poi seen in a zoom interval?

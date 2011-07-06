@@ -134,7 +134,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		TDNode tdNode = TDNode.fromNode(node);
 		nodes.put(tdNode.getId(), tdNode);
 		if (tdNode.isPOI()) {
-			byte minZoomLevel = tdNode.getMinimumZoomLevel();
+			byte minZoomLevel = tdNode.getZoomAppear();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 
 				// is poi seen in a zoom interval?

@@ -16,11 +16,16 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import gnu.trove.map.hash.TShortIntHashMap;
 import gnu.trove.procedure.TShortIntProcedure;
+import gnu.trove.set.hash.TShortHashSet;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -34,7 +39,9 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -51,6 +58,9 @@ final class OSMTagMapping {
 
 	private LinkedHashMap<Short, OSMTag> idToPoiTag = new LinkedHashMap<Short, OSMTag>();
 	private LinkedHashMap<Short, OSMTag> idToWayTag = new LinkedHashMap<Short, OSMTag>();
+
+	private LinkedHashMap<Short, Set<OSMTag>> poiZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
+	private LinkedHashMap<Short, Set<OSMTag>> wayZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
 
 	private LinkedHashMap<Short, Short> optimizedPoiIds = new LinkedHashMap<Short, Short>();
 	private LinkedHashMap<Short, Short> optimizedWayIds = new LinkedHashMap<Short, Short>();
@@ -85,6 +95,9 @@ final class OSMTagMapping {
 			XPathExpression xe = xpath.compile(XPATH_EXPRESSION_DEFAULT_ZOOM);
 			defaultZoomAppear = Byte.parseByte((String) xe.evaluate(document,
 					XPathConstants.STRING));
+
+			final HashMap<Short, Set<String>> tmpPoiZoomOverrides = new HashMap<Short, Set<String>>();
+			final HashMap<Short, Set<String>> tmpWayZoomOverrides = new HashMap<Short, Set<String>>();
 
 			// ---- Get list of poi nodes ----
 			xe = xpath.compile(XPATH_EXPRESSION_POIS);
@@ -127,6 +140,24 @@ final class OSMTagMapping {
 
 				// also fill optimization mapping with identity
 				optimizedPoiIds.put(poiID, poiID);
+
+				// check if this tag overrides the zoom level spec of another tag
+				NodeList zoomOverrideNodes = pois.item(i).getChildNodes();
+				for (int j = 0; j < zoomOverrideNodes.getLength(); j++) {
+					Node overriddenNode = zoomOverrideNodes.item(j);
+					if (overriddenNode instanceof Element) {
+						String keyOverridden = overriddenNode.getAttributes().getNamedItem("key")
+								.getTextContent();
+						String valueOverridden = overriddenNode.getAttributes().getNamedItem("value")
+								.getTextContent();
+						Set<String> s = tmpPoiZoomOverrides.get(poiID);
+						if (s == null) {
+							s = new HashSet<String>();
+							tmpPoiZoomOverrides.put(poiID, s);
+						}
+						s.add(OSMTag.tagKey(keyOverridden, valueOverridden));
+					}
+				}
 
 				poiID++;
 			}
@@ -173,7 +204,48 @@ final class OSMTagMapping {
 				// also fill optimization mapping with identity
 				optimizedWayIds.put(wayID, wayID);
 
+				// check if this tag overrides the zoom level spec of another tag
+				NodeList zoomOverrideNodes = ways.item(i).getChildNodes();
+				for (int j = 0; j < zoomOverrideNodes.getLength(); j++) {
+					Node overriddenNode = zoomOverrideNodes.item(j);
+					if (overriddenNode instanceof Element) {
+						String keyOverridden = overriddenNode.getAttributes().getNamedItem("key")
+								.getTextContent();
+						String valueOverridden = overriddenNode.getAttributes().getNamedItem("value")
+								.getTextContent();
+						Set<String> s = tmpWayZoomOverrides.get(wayID);
+						if (s == null) {
+							s = new HashSet<String>();
+							tmpWayZoomOverrides.put(wayID, s);
+						}
+						s.add(OSMTag.tagKey(keyOverridden, valueOverridden));
+					}
+				}
+
 				wayID++;
+			}
+
+			// copy temporary values from zoom-override data sets
+			for (Entry<Short, Set<String>> entry : tmpPoiZoomOverrides.entrySet()) {
+				Set<OSMTag> overriddenTags = new HashSet<OSMTag>();
+				for (String tagString : entry.getValue()) {
+					OSMTag tag = this.stringToPoiTag.get(tagString);
+					if (tag != null)
+						overriddenTags.add(tag);
+				}
+				if (!overriddenTags.isEmpty())
+					this.poiZoomOverrides.put(entry.getKey(), overriddenTags);
+			}
+
+			for (Entry<Short, Set<String>> entry : tmpWayZoomOverrides.entrySet()) {
+				Set<OSMTag> overriddenTags = new HashSet<OSMTag>();
+				for (String tagString : entry.getValue()) {
+					OSMTag tag = this.stringToWayTag.get(tagString);
+					if (tag != null)
+						overriddenTags.add(tag);
+				}
+				if (!overriddenTags.isEmpty())
+					this.wayZoomOverrides.put(entry.getKey(), overriddenTags);
 			}
 
 			// ---- Error handling ----
@@ -193,13 +265,76 @@ final class OSMTagMapping {
 		}
 	}
 
-	// Map<String, OSMTag> poiMapping() {
-	// return stringToPoiTag;
-	// }
-	//
-	// Map<String, OSMTag> wayMapping() {
-	// return stringToWayTag;
-	// }
+	byte getZoomAppearPOI(short[] tagSet) {
+		if (tagSet == null || tagSet.length == 0)
+			return Byte.MAX_VALUE;
+
+		TShortHashSet tmp = new TShortHashSet(tagSet);
+
+		if (!poiZoomOverrides.isEmpty()) {
+			for (short s : tagSet) {
+				Set<OSMTag> overriddenTags = poiZoomOverrides.get(s);
+				if (overriddenTags != null) {
+					for (OSMTag osmTag : overriddenTags) {
+						tmp.remove(osmTag.getId());
+					}
+				}
+			}
+
+			if (tmp.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				for (short s : tagSet) {
+					sb.append(idToPoiTag.get(s).tagKey() + "; ");
+				}
+				LOGGER.severe("ERROR: You have a cycle in your zoom-override definitions. Look for these tags: "
+						+ sb.toString());
+			}
+		}
+
+		byte zoomAppear = Byte.MAX_VALUE;
+		for (short s : tmp.toArray()) {
+			OSMTag tag = idToPoiTag.get(s);
+			if (tag.isRenderable())
+				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
+		}
+
+		return zoomAppear;
+	}
+
+	byte getZoomAppearWay(short[] tagSet) {
+		if (tagSet == null || tagSet.length == 0)
+			return Byte.MAX_VALUE;
+
+		TShortHashSet tmp = new TShortHashSet(tagSet);
+
+		if (!wayZoomOverrides.isEmpty()) {
+			for (short s : tagSet) {
+				Set<OSMTag> overriddenTags = wayZoomOverrides.get(s);
+				if (overriddenTags != null) {
+					for (OSMTag osmTag : overriddenTags) {
+						tmp.remove(osmTag.getId());
+					}
+				}
+			}
+
+			if (tmp.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				for (short s : tagSet) {
+					sb.append(idToWayTag.get(s).tagKey() + "; ");
+				}
+				LOGGER.severe("ERROR: You have a cycle in your zoom-override definitions. Look for these tags: "
+						+ sb.toString());
+			}
+		}
+		byte zoomAppear = Byte.MAX_VALUE;
+		for (short s : tmp.toArray()) {
+			OSMTag tag = idToWayTag.get(s);
+			if (tag.isRenderable())
+				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
+		}
+
+		return zoomAppear;
+	}
 
 	OSMTag getWayTag(String key, String value) {
 		return stringToWayTag.get(OSMTag.tagKey(key, value));

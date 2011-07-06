@@ -20,6 +20,11 @@
     			interpreted as renderable=true.
     		</documentation>
     	</annotation>
+    	<sequence>
+    		<element name="zoom-override" type="tns:simple-tag"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    	</sequence>
     	<attribute name="key" use="required">
     		<annotation>
     			<documentation>
@@ -82,37 +87,59 @@
     			</documentation>
     		</annotation>
     	</attribute>
-    	<attribute name="equivalent-values" type="string" use="optional">
+    	<attribute name="equivalent-values" type="string"
+    		use="optional">
     		<annotation>
-    			<documentation>The usage of some tags such as "oneway" is quite inconsistent in the OSM dataset. Expressions such as "oneway=yes", "oneway=1" or oneway="true" are semantically equivalent.
-This attribute allows to associate these equivalent values to the single canonical value defined in the "value-attribute".</documentation>
-    		</annotation></attribute>
+    			<documentation>
+    				The usage of some tags such as "oneway" is quite
+    				inconsistent in the OSM dataset. Expressions such as
+    				"oneway=yes", "oneway=1" or oneway="true" are
+    				semantically equivalent. This attribute allows to
+    				associate these equivalent values to the single
+    				canonical value defined in the "value-attribute".
+    			</documentation>
+    		</annotation>
+    	</attribute>
     </complexType>
 
     <complexType name="tag-group">
-        <annotation>
-        	<documentation>A tag-group groups an arbitrary number of osm-tags. It takes the optional boolean attribute 'enabled' which allows to
-specify whether the group of osm-tags is used in the map file generation process. Effectively, the attribute sets a default
-value for the 'enable' attribute of the osm-tags grouped under this tag-group. However, this default value maybe overridden
-by the 'enable' attribute in a specific osm-tag. A missing 'enable' attribute is interpreted as enabled=true.
-</documentation>
-        </annotation>
-        <sequence>
+    	<annotation>
+    		<documentation>
+    			A tag-group groups an arbitrary number of osm-tags. It
+    			takes the optional boolean attribute 'enabled' which
+    			allows to specify whether the group of osm-tags is used
+    			in the map file generation process. Effectively, the
+    			attribute sets a default value for the 'enable'
+    			attribute of the osm-tags grouped under this tag-group.
+    			However, this default value maybe overridden by the
+    			'enable' attribute in a specific osm-tag. A missing
+    			'enable' attribute is interpreted as enabled=true.
+    		</documentation>
+    	</annotation>
+    	<sequence>
     		<element name="osm-tag" type="tns:osm-tag"
-    			maxOccurs="unbounded" minOccurs="0">
-                <annotation>
-                	<documentation>The osm-tag represents an OpenStreetMap tag and may refer to either a POI tag or a way tag.</documentation>
-                </annotation>
+    			maxOccurs="unbounded" minOccurs="1">
+    			<annotation>
+    				<documentation>
+    					The osm-tag represents an OpenStreetMap tag and
+    					may refer to either a POI tag or a way tag.
+    				</documentation>
+    			</annotation>
     		</element>
     	</sequence>
-    	<attribute name="enabled" type="boolean" use="optional" default="false">
+    	<attribute name="enabled" type="boolean" use="optional"
+    		default="false">
     		<annotation>
-    			<documentation>Activates or deactivates all the tags in this group in the map generation process.
-It can be overidden by the 'enabled' attribute in an osm-tag.
-Omitting the attribute is equivalent to setting enabled=true.</documentation>
-    		</annotation></attribute>
+    			<documentation>
+    				Activates or deactivates all the tags in this group
+    				in the map generation process. It can be overidden
+    				by the 'enabled' attribute in an osm-tag. Omitting
+    				the attribute is equivalent to setting enabled=true.
+    			</documentation>
+    		</annotation>
+    	</attribute>
     </complexType>
-    
+
 
 
 
@@ -120,15 +147,19 @@ Omitting the attribute is equivalent to setting enabled=true.</documentation>
     	<sequence>
     		<element name="pois" type="tns:tag-group"
     			maxOccurs="unbounded" minOccurs="0">
-                <annotation>
-                	<documentation>A group of osm-tags referring to POIs.</documentation>
-                </annotation>
+    			<annotation>
+    				<documentation>
+    					A group of osm-tags referring to POIs.
+    				</documentation>
+    			</annotation>
     		</element>
     		<element name="ways" type="tns:tag-group"
     			maxOccurs="unbounded" minOccurs="0">
-                <annotation>
-                	<documentation>A group of osm-tags referring to ways.</documentation>
-                </annotation>
+    			<annotation>
+    				<documentation>
+    					A group of osm-tags referring to ways.
+    				</documentation>
+    			</annotation>
     		</element>
     	</sequence>
     	<attribute name="default-zoom-appear" use="required">
@@ -164,4 +195,23 @@ A tag-mapping takes as required attributes a default-zoom-appear value and a pro
 The default-zoom-appear attribute specifies which zoom-appear value is attributed to osm-tags which are missing the zoom-appear attribute.
 The profile attribute is an arbitrary name that is attached to the comment field in the map file.</documentation>
     	</annotation></element>
+
+    <complexType name="simple-tag">
+    	<attribute name="key" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<minLength value="1"></minLength>
+    				<maxLength value="100"></maxLength>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="value" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<minLength value="1"></minLength>
+    				<maxLength value="100"></maxLength>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
 </schema>

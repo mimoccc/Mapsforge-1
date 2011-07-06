@@ -61,7 +61,7 @@ class TileData {
 			byte maxValidZoomlevel) {
 		HashMap<Byte, List<TDNode>> poisByZoomlevel = new HashMap<Byte, List<TDNode>>();
 		for (TDNode poi : pois) {
-			byte zoomlevel = poi.getMinimumZoomLevel();
+			byte zoomlevel = poi.getZoomAppear();
 			if (zoomlevel > maxValidZoomlevel)
 				continue;
 			if (zoomlevel < minValidZoomlevel)
@@ -97,8 +97,8 @@ class TileData {
 	static class TDNode {
 
 		private static final int MAX_ELEVATION = 9000;
-		private static final byte ZOOM_HOUSENUMBER = (byte) 17;
-		private static final byte ZOOM_NAME = (byte) 16;
+		private static final byte ZOOM_HOUSENUMBER = (byte) 18;
+		// private static final byte ZOOM_NAME = (byte) 16;
 
 		private final long id;
 		private final int latitude;
@@ -182,25 +182,16 @@ class TileData {
 		}
 
 		boolean isPOI() {
-			return houseNumber != null || elevation != 0 || name != null || tags.length > 0;
+			return houseNumber != null || elevation != 0 || tags.length > 0;
 		}
 
-		byte getMinimumZoomLevel() {
-			byte min = Byte.MAX_VALUE;
-			if (houseNumber != null)
-				min = (byte) Math.min(min, ZOOM_HOUSENUMBER);
-			if (name != null)
-				min = (byte) Math.min(min, ZOOM_NAME);
-			if (tags == null)
-				return min;
-			OSMTag tag;
-			for (short tagID : tags) {
-				tag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tagID);
-				if (tag.isRenderable())
-					min = (byte) Math.min(min, tag.getZoomAppear());
+		byte getZoomAppear() {
+			if (tags == null || tags.length == 0) {
+				if (houseNumber != null)
+					return ZOOM_HOUSENUMBER;
+				return Byte.MAX_VALUE;
 			}
-
-			return min;
+			return MapFileWriterTask.TAG_MAPPING.getZoomAppearPOI(tags);
 		}
 
 		short[] getTags() {
@@ -401,19 +392,7 @@ class TileData {
 		}
 
 		byte getMinimumZoomLevel() {
-			byte min = Byte.MAX_VALUE;
-			if (tags == null)
-				return min;
-
-			OSMTag tag = null;
-			for (short tagID : tags) {
-				tag = MapFileWriterTask.TAG_MAPPING.getWayTag(tagID);
-				if (tag.isRenderable())
-					min = (byte) Math.min(min, tag.getZoomAppear());
-
-			}
-
-			return min;
+			return MapFileWriterTask.TAG_MAPPING.getZoomAppearWay(tags);
 		}
 
 		long getId() {
