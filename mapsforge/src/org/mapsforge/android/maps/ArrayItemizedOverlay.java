@@ -36,12 +36,28 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * 
 	 * @param defaultMarker
 	 *            the default marker (may be null). This marker is aligned to the center of its bottom
-	 *            line to allow for conical symbols such as a pin or a needle.
+	 *            line to allow for a conical symbol such as a pin or a needle.
 	 * @param context
 	 *            the reference to the application context.
 	 */
 	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
-		super(defaultMarker == null ? null : boundCenterBottom(defaultMarker));
+		this(defaultMarker, context, true);
+	}
+
+	/**
+	 * Constructs a new ArrayItemizedOverlay.
+	 * 
+	 * @param defaultMarker
+	 *            the default marker (may be null).
+	 * @param context
+	 *            the reference to the application context.
+	 * @param alignMarker
+	 *            whether the default marker should be aligned or not. If true, the marker is aligned to
+	 *            the center of its bottom line to allow for a conical symbol such as a pin or a needle.
+	 */
+	public ArrayItemizedOverlay(Drawable defaultMarker, Context context, boolean alignMarker) {
+		super(defaultMarker != null && alignMarker ? ItemizedOverlay.boundCenterBottom(defaultMarker)
+				: defaultMarker);
 		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);
 	}
 
