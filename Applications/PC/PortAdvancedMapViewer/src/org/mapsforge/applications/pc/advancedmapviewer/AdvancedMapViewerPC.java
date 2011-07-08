@@ -1,30 +1,31 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
 import org.mapsforge.pc.maps.MapView;
-import org.mapsforge.applications.pc.advancedmapviewer.FilePicker;
 import org.mapsforge.core.graphics.Canvas;
 
 public class AdvancedMapViewerPC extends JFrame implements WindowListener, ActionListener {
 
 	JFrame jFrame;
+	protected Properties properties;
 	private Canvas canvas;
 	private MenuBar menuBar;
 	
@@ -37,8 +38,17 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		
 		// JFrame
 		this.jFrame = this;
+		
+		//Properties
+		try{
+			this.properties = new Properties();
+			this.properties.load(new FileReader("res/values/strings.properties"));
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this, "Could not read strings.properties!");
+		}
+		
 		// Menubar
-		menuBar = new MenuBar(this);
+		this.menuBar = new MenuBar(this);
 		this.setJMenuBar(menuBar);
 
 //		canvas = new Canvas();
@@ -144,7 +154,13 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 	
 	/** Preferences */
 	private void startPreferences() {
-		// TODO Auto-generated method stub
 		
+	}
+	
+	/** Returns the properties from the mainFrame. 
+	 * @return the properties 
+	 */
+	public Properties getProperties() {
+		return properties;
 	}
 }
