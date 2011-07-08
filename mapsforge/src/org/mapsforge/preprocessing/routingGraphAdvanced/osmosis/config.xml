@@ -20,18 +20,18 @@
 			<maxspeed>130</maxspeed>
 			<!-- all allowed ways (key - value) -->
 			<usableWayTags>
-				<tag k="highway" v="motorway" speed="130" />
+				<tag k="highway" v="motorway" speed="100" />
 				<tag k="highway" v="motorway_link" speed="80" />
-				<tag k="highway" v="trunk" speed="120" />
-				<tag k="highway" v="trunk_link" speed="80" />
-				<tag k="highway" v="primary" speed="130" />
-				<tag k="highway" v="primary_link" speed="80" />
-				<tag k="highway" v="secondary" speed="100" />
-				<tag k="highway" v="secondary_link" speed="80" />
-				<tag k="highway" v="tertiary" speed="50" />
-				<tag k="highway" v="unclassified" speed="50" />
-				<tag k="highway" v="road" speed="50" />
-				<tag k="highway" v="residential" speed="50" />
+				<tag k="highway" v="trunk" speed="90" />
+				<tag k="highway" v="trunk_link" speed="70" />
+				<tag k="highway" v="primary" speed="50" />
+				<tag k="highway" v="primary_link" speed="35" />
+				<tag k="highway" v="secondary" speed="40" />
+				<tag k="highway" v="secondary_link" speed="30" />
+				<tag k="highway" v="tertiary" speed="35" />
+				<tag k="highway" v="unclassified" speed="35" />
+				<tag k="highway" v="road" speed="35" />
+				<tag k="highway" v="residential" speed="25" />
 				<tag k="highway" v="living_street" speed="10" />
 				<tag k="highway" v="track" speed="50" />
 			</usableWayTags>
@@ -156,7 +156,6 @@
 					<tag k="bicycle" v="no" />
 				</wayTags>
 				<relations>
-
 				</relations>
 			</restrictions>
 			<weightFactors>
