@@ -40,6 +40,7 @@ class FilePickerIconAdapter extends BaseAdapter {
 	 *            the context of this adapter, through which new Views are created.
 	 */
 	FilePickerIconAdapter(Context context) {
+		super();
 		this.context = context;
 	}
 
@@ -102,7 +103,7 @@ class FilePickerIconAdapter extends BaseAdapter {
 	 *            true if the file array has a parent folder at index 0, false otherwise.
 	 */
 	void setFiles(File[] files, boolean newHasParentFolder) {
-		this.files = files;
+		this.files = files.clone();
 		this.hasParentFolder = newHasParentFolder;
 	}
 }

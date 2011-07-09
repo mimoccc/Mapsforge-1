@@ -36,8 +36,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 abstract class SeekBarPreference extends DialogPreference implements OnSeekBarChangeListener {
 	private TextView currentValueTextView;
 	private Editor editor;
-	private LinearLayout linearLayout;
-	private TextView messageTextView;
 	private SeekBar preferenceSeekBar;
 
 	/**
@@ -80,16 +78,14 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 
 	@Override
 	public void onClick(DialogInterface dialog, int which) {
-		// check if the "OK" button was pressed
-		if (which == DialogInterface.BUTTON_POSITIVE) {
-			// check if the value of the seek bar differs from the initial value
-			if (this.seekBarCurrentValue != this.preferenceSeekBar.getProgress()) {
-				// get the value of the seek bar and save it in the preferences
-				this.seekBarCurrentValue = this.preferenceSeekBar.getProgress();
-				this.editor = this.preferencesDefault.edit();
-				this.editor.putInt(this.getKey(), this.seekBarCurrentValue);
-				this.editor.commit();
-			}
+		// check if the "OK" button was pressed and the seek bar value has changed
+		if (which == DialogInterface.BUTTON_POSITIVE
+				&& this.seekBarCurrentValue != this.preferenceSeekBar.getProgress()) {
+			// get the value of the seek bar and save it in the preferences
+			this.seekBarCurrentValue = this.preferenceSeekBar.getProgress();
+			this.editor = this.preferencesDefault.edit();
+			this.editor.putInt(this.getKey(), this.seekBarCurrentValue);
+			this.editor.commit();
 		}
 	}
 
@@ -113,18 +109,18 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 	@Override
 	protected View onCreateDialogView() {
 		// create a layout for the optional text messageText and the seek bar
-		this.linearLayout = new LinearLayout(getContext());
-		this.linearLayout.setOrientation(LinearLayout.VERTICAL);
-		this.linearLayout.setPadding(20, 10, 20, 10);
+		LinearLayout linearLayout = new LinearLayout(getContext());
+		linearLayout.setOrientation(LinearLayout.VERTICAL);
+		linearLayout.setPadding(20, 10, 20, 10);
 
 		// check if a text message should appear above the seek bar
 		if (this.messageText != null) {
 			// create a text view for the text messageText
-			this.messageTextView = new TextView(getContext());
-			this.messageTextView.setText(this.messageText);
-			this.messageTextView.setPadding(0, 0, 0, 20);
+			TextView messageTextView = new TextView(getContext());
+			messageTextView.setText(this.messageText);
+			messageTextView.setPadding(0, 0, 0, 20);
 			// add the text message view to the layout
-			this.linearLayout.addView(this.messageTextView);
+			linearLayout.addView(messageTextView);
 		}
 
 		// create the seek bar and set the maximum and current value
@@ -135,7 +131,7 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 		this.preferenceSeekBar.setKeyProgressIncrement(this.increment);
 		this.preferenceSeekBar.setPadding(0, 0, 0, 10);
 		// add the seek bar to the layout
-		this.linearLayout.addView(this.preferenceSeekBar);
+		linearLayout.addView(this.preferenceSeekBar);
 
 		// create the text view for the current value below the seek bar
 		this.currentValueTextView = new TextView(getContext());
@@ -143,9 +139,9 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 				.getProgress()));
 		this.currentValueTextView.setGravity(Gravity.CENTER_HORIZONTAL);
 		// add the current value text view to the layout
-		this.linearLayout.addView(this.currentValueTextView);
+		linearLayout.addView(this.currentValueTextView);
 
-		return this.linearLayout;
+		return linearLayout;
 	}
 
 	/**

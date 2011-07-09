@@ -112,17 +112,15 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	private FilePickerIconAdapter filePickerIconAdapter;
 	private File[] files;
 	private File[] filesWithParentFolder;
-	private GridView gridView;
-	private File selectedFile;
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		this.selectedFile = this.files[(int) id];
-		if (this.selectedFile.isDirectory()) {
-			this.currentDirectory = this.selectedFile;
+		File selectedFile = this.files[(int) id];
+		if (selectedFile.isDirectory()) {
+			this.currentDirectory = selectedFile;
 			browseToCurrentDirectory();
-		} else if (fileSelectFilter == null || fileSelectFilter.accept(this.selectedFile)) {
-			setResult(RESULT_OK, new Intent().putExtra("selectedFile", this.selectedFile
+		} else if (fileSelectFilter == null || fileSelectFilter.accept(selectedFile)) {
+			setResult(RESULT_OK, new Intent().putExtra("selectedFile", selectedFile
 					.getAbsolutePath()));
 			finish();
 		} else {
@@ -169,9 +167,9 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 		setContentView(R.layout.activity_file_picker);
 
 		this.filePickerIconAdapter = new FilePickerIconAdapter(this);
-		this.gridView = (GridView) findViewById(R.id.filePickerView);
-		this.gridView.setOnItemClickListener(this);
-		this.gridView.setAdapter(this.filePickerIconAdapter);
+		GridView gridView = (GridView) findViewById(R.id.filePickerView);
+		gridView.setOnItemClickListener(this);
+		gridView.setAdapter(this.filePickerIconAdapter);
 
 		if (savedInstanceState == null) {
 			// first start of this instance

@@ -170,12 +170,12 @@ public class AdvancedMapViewer extends MapActivity {
 	/**
 	 * The default size of the memory card cache.
 	 */
-	static final short MEMORY_CARD_CACHE_SIZE_DEFAULT = 250;
+	static final int MEMORY_CARD_CACHE_SIZE_DEFAULT = 250;
 
 	/**
 	 * The maximum size of the memory card cache.
 	 */
-	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
+	static final int MEMORY_CARD_CACHE_SIZE_MAX = 500;
 
 	/**
 	 * The default move speed of the map.
@@ -191,8 +191,6 @@ public class AdvancedMapViewer extends MapActivity {
 	private LocationManager locationManager;
 	private MapViewMode mapViewMode;
 	private MyLocationListener myLocationListener;
-	private PowerManager powerManager;
-	private SharedPreferences preferences;
 	private boolean showMyLocation;
 	private boolean snapToLocation;
 	private ToggleButton snapToLocationView;
@@ -203,14 +201,7 @@ public class AdvancedMapViewer extends MapActivity {
 	MapController mapController;
 	MapView mapView;
 	OverlayCircle overlayCircle;
-
 	OverlayItem overlayItem;
-
-	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev) {
-		// insert code here to handle touch events on the screen
-		return super.dispatchTouchEvent(ev);
-	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -509,7 +500,7 @@ public class AdvancedMapViewer extends MapActivity {
 		this.snapToLocationView = (ToggleButton) findViewById(R.id.snapToLocationView);
 		this.snapToLocationView.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v) {
+			public void onClick(View view) {
 				if (isSnapToLocationEnabled()) {
 					disableSnapToLocation(true);
 				} else {
@@ -523,8 +514,8 @@ public class AdvancedMapViewer extends MapActivity {
 		// get the pointers to different system services
 		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		this.myLocationListener = new MyLocationListener();
-		this.powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		this.wakeLock = this.powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
+		PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		this.wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
 
 		// set up the paint objects for the location overlay
 		this.circleOverlayFill = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -708,48 +699,45 @@ public class AdvancedMapViewer extends MapActivity {
 		super.onResume();
 
 		// Read the default shared preferences
-		this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// set the map settings
-		this.mapView.setScaleBar(this.preferences.getBoolean("showScaleBar", false));
-		if (this.preferences.contains("mapViewMode")) {
-			this.mapViewMode = Enum.valueOf(MapViewMode.class, this.preferences.getString(
+		this.mapView.setScaleBar(preferences.getBoolean("showScaleBar", false));
+		if (preferences.contains("mapViewMode")) {
+			this.mapViewMode = Enum.valueOf(MapViewMode.class, preferences.getString(
 					"mapViewMode", MapView.getDefaultMapViewMode().name()));
 			this.mapView.setMapViewMode(this.mapViewMode);
 		}
 		try {
-			this.mapView.setTextScale(Float.parseFloat(this.preferences.getString("textScale",
-					"1")));
+			this.mapView
+					.setTextScale(Float.parseFloat(preferences.getString("textScale", "1")));
 		} catch (NumberFormatException e) {
 			this.mapView.setTextScale(1);
 		}
 
 		// set the general settings
-		if (this.preferences.getBoolean("fullscreen", false)) {
+		if (preferences.getBoolean("fullscreen", false)) {
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		} else {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		}
-		if (this.preferences.getBoolean("wakeLock", false)) {
-			if (!this.wakeLock.isHeld()) {
-				this.wakeLock.acquire();
-			}
+		if (preferences.getBoolean("wakeLock", false) && !this.wakeLock.isHeld()) {
+			this.wakeLock.acquire();
 		}
-		this.mapView.setMemoryCardCachePersistence(this.preferences.getBoolean(
-				"cachePersistence", false));
-		this.mapView.setMemoryCardCacheSize(Math.min(this.preferences.getInt("cacheSize",
+		this.mapView.setMemoryCardCachePersistence(preferences.getBoolean("cachePersistence",
+				false));
+		this.mapView.setMemoryCardCacheSize(Math.min(preferences.getInt("cacheSize",
 				MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
-		this.mapView.setMoveSpeed(Math.min(this.preferences.getInt("moveSpeed",
-				MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f);
+		this.mapView.setMoveSpeed(Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT),
+				MOVE_SPEED_MAX) / 10f);
 
 		// set the debug settings
-		this.mapView.setFpsCounter(this.preferences.getBoolean("showFpsCounter", false));
-		this.mapView.setTileFrames(this.preferences.getBoolean("showTileFrames", false));
-		this.mapView.setTileCoordinates(this.preferences.getBoolean("showTileCoordinates",
-				false));
-		this.mapView.setWaterTiles(this.preferences.getBoolean("showWaterTiles", false));
+		this.mapView.setFpsCounter(preferences.getBoolean("showFpsCounter", false));
+		this.mapView.setTileFrames(preferences.getBoolean("showTileFrames", false));
+		this.mapView.setTileCoordinates(preferences.getBoolean("showTileCoordinates", false));
+		this.mapView.setWaterTiles(preferences.getBoolean("showWaterTiles", false));
 
 		// check if the file browser needs to be displayed
 		if (!this.mapView.getMapViewMode().requiresInternetConnection()
