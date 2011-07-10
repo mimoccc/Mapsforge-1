@@ -95,6 +95,7 @@ public class MapView extends ViewGroup {
 	 */
 	private class MultiTouchHandler extends TouchEventHandler {
 		private static final int INVALID_POINTER_ID = -1;
+
 		private int action;
 		private int activePointerId;
 		private long multiTouchDownTime;
@@ -399,10 +400,9 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Abstract base class for the single-touch and the multi-touch handler. Default visibility is
-	 * required to avoid a synthetic method.
+	 * Abstract base class for the single-touch and the multi-touch handler.
 	 */
-	abstract class TouchEventHandler {
+	private abstract class TouchEventHandler {
 		private class LongPressDetector extends Thread {
 			private static final String THREAD_NAME = "LongPressDetector";
 
@@ -809,7 +809,6 @@ public class MapView extends ViewGroup {
 	private byte mapScalePreviousZoomLevel;
 	private Bitmap mapViewBitmap1;
 	private Bitmap mapViewBitmap2;
-	private Bitmap mapViewBitmapSwap;
 	private Canvas mapViewCanvas;
 	private final int mapViewId;
 	private MapViewMode mapViewMode;
@@ -2027,7 +2026,6 @@ public class MapView extends ViewGroup {
 		// stop the LongTapDetector thread
 		if (this.touchEventHandler.longPressDetector != null) {
 			this.touchEventHandler.longPressDetector.interrupt();
-			this.touchEventHandler = null;
 		}
 
 		stopMapGeneratorThread();
@@ -2052,9 +2050,6 @@ public class MapView extends ViewGroup {
 			this.mapScaleBitmap.recycle();
 			this.mapScaleBitmap = null;
 		}
-
-		// set the pointer to null to avoid memory leaks
-		this.mapViewBitmapSwap = null;
 
 		// free the tileBitmap memory
 		if (this.tileBitmap != null) {
@@ -2408,9 +2403,9 @@ public class MapView extends ViewGroup {
 			}
 
 			// swap the two MapView bitmaps
-			this.mapViewBitmapSwap = this.mapViewBitmap1;
+			Bitmap mapViewBitmapSwap = this.mapViewBitmap1;
 			this.mapViewBitmap1 = this.mapViewBitmap2;
-			this.mapViewBitmap2 = this.mapViewBitmapSwap;
+			this.mapViewBitmap2 = mapViewBitmapSwap;
 		}
 
 		// draw the tile bitmap at the correct position

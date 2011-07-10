@@ -31,8 +31,7 @@ import android.content.SharedPreferences.Editor;
  * independently from the others.
  * <p>
  * When the MapActivity is shut down, the current center position, zoom level and map file of the
- * MapView are saved in a preferences file and restored automatically during the setup process of a
- * MapView.
+ * MapView are saved in a preferences file and restored automatically during the startup process.
  */
 public abstract class MapActivity extends Activity {
 	/**
@@ -90,10 +89,6 @@ public abstract class MapActivity extends Activity {
 				editor.putInt("zoomLevel", currentMapView.getZoomLevel());
 			}
 			editor.commit();
-		}
-
-		if (isFinishing()) {
-			destroyMapViews();
 		}
 	}
 
