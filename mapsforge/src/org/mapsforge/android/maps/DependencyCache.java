@@ -17,6 +17,8 @@ package org.mapsforge.android.maps;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import android.graphics.Bitmap;
 import android.graphics.Paint;
@@ -50,8 +52,8 @@ class DependencyCache {
 	 */
 	private static class DependencyOnTile {
 		boolean drawn;
-		ArrayList<Dependency<DependencyText>> labels;
-		ArrayList<Dependency<DependencySymbol>> symbols;
+		List<Dependency<DependencyText>> labels;
+		List<Dependency<DependencySymbol>> symbols;
 
 		/**
 		 * Initialize label, symbol and drawn.
@@ -89,7 +91,7 @@ class DependencyCache {
 	 * The class holds the data for a symbol with dependencies on other tiles.
 	 */
 	private static class DependencySymbol {
-		private LinkedList<Tile> tiles;
+		private final List<Tile> tiles;
 		int depCounter;
 		Bitmap symbol;
 
@@ -128,7 +130,7 @@ class DependencyCache {
 		final Paint paintBack;
 		final Paint paintFront;
 		final String text;
-		LinkedList<Tile> tiles;
+		List<Tile> tiles;
 
 		/**
 		 * Creates a text dependency in the dependency cache.
@@ -165,7 +167,7 @@ class DependencyCache {
 	/**
 	 * Hash table, that connects the Tiles with their entries in the dependency cache.
 	 */
-	final Hashtable<Tile, DependencyOnTile> dependencyTable;
+	final Map<Tile, DependencyOnTile> dependencyTable;
 	Dependency<DependencyText> depLabel;
 	Rect rect1;
 	Rect rect2;
@@ -173,13 +175,13 @@ class DependencyCache {
 	DependencyOnTile tmp;
 
 	/**
-	 * Constructor for this class, that creates a Hashtable for the dependencies.
+	 * Constructor for this class, that creates a hashtable for the dependencies.
 	 */
 	DependencyCache() {
 		this.dependencyTable = new Hashtable<Tile, DependencyOnTile>(60);
 	}
 
-	private void addLabelsFromDependencyOnTile(ArrayList<PointTextContainer> labels) {
+	private void addLabelsFromDependencyOnTile(List<PointTextContainer> labels) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			this.depLabel = this.currentDependencyOnTile.labels.get(i);
 			if (this.depLabel.value.paintBack != null) {
@@ -195,7 +197,7 @@ class DependencyCache {
 		}
 	}
 
-	private void addSymbolsFromDependencyOnTile(ArrayList<SymbolContainer> symbols) {
+	private void addSymbolsFromDependencyOnTile(List<SymbolContainer> symbols) {
 		for (Dependency<DependencySymbol> depSmb : this.currentDependencyOnTile.symbols) {
 			symbols
 					.add(new SymbolContainer(depSmb.value.symbol, depSmb.point.x,
@@ -212,7 +214,7 @@ class DependencyCache {
 	 * @param pTC
 	 *            list of the labels
 	 */
-	private void fillDependencyLabels(ArrayList<PointTextContainer> pTC) {
+	private void fillDependencyLabels(List<PointTextContainer> pTC) {
 		Tile left = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile right = new Tile(this.currentTile.x + 1, this.currentTile.y,
@@ -504,8 +506,8 @@ class DependencyCache {
 		}
 	}
 
-	private void fillDependencyOnTile2(ArrayList<PointTextContainer> labels,
-			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels) {
+	private void fillDependencyOnTile2(List<PointTextContainer> labels, List<SymbolContainer> symbols,
+			List<PointTextContainer> areaLabels) {
 		Tile left = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile right = new Tile(this.currentTile.x + 1, this.currentTile.y,
@@ -680,8 +682,7 @@ class DependencyCache {
 		return false;
 	}
 
-	private void removeOverlappingAreaLabelsWithDependencyLabels(
-			ArrayList<PointTextContainer> areaLabels) {
+	private void removeOverlappingAreaLabelsWithDependencyLabels(List<PointTextContainer> areaLabels) {
 		PointTextContainer pTC;
 
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
@@ -706,8 +707,7 @@ class DependencyCache {
 		}
 	}
 
-	private void removeOverlappingAreaLabelsWithDependencySymbols(
-			ArrayList<PointTextContainer> areaLabels) {
+	private void removeOverlappingAreaLabelsWithDependencySymbols(List<PointTextContainer> areaLabels) {
 		PointTextContainer label;
 
 		for (Dependency<DependencySymbol> depSmb : this.currentDependencyOnTile.symbols) {
@@ -731,8 +731,7 @@ class DependencyCache {
 		}
 	}
 
-	private void removeOverlappingLabelsWithDependencyLabels(
-			ArrayList<PointTextContainer> labels) {
+	private void removeOverlappingLabelsWithDependencyLabels(List<PointTextContainer> labels) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			for (int x = 0; x < labels.size(); x++) {
 				if ((labels.get(x).text
@@ -749,8 +748,7 @@ class DependencyCache {
 		}
 	}
 
-	private void removeOverlappingSymbolsWithDepencySymbols(ArrayList<SymbolContainer> symbols,
-			int dis) {
+	private void removeOverlappingSymbolsWithDepencySymbols(List<SymbolContainer> symbols, int dis) {
 		SymbolContainer sym;
 		Dependency<DependencySymbol> sym2;
 
@@ -774,7 +772,7 @@ class DependencyCache {
 		}
 	}
 
-	private void removeOverlappingSymbolsWithDependencyLabels(ArrayList<SymbolContainer> symbols) {
+	private void removeOverlappingSymbolsWithDependencyLabels(List<SymbolContainer> symbols) {
 		for (int i = 0; i < this.currentDependencyOnTile.labels.size(); i++) {
 			this.depLabel = this.currentDependencyOnTile.labels.get(i);
 			this.rect1 = new android.graphics.Rect((int) (this.depLabel.point.x),
@@ -807,11 +805,11 @@ class DependencyCache {
 	 * @param areaLabels
 	 *            current areaLabels, that will be displayed.
 	 */
-	void fillDependencyOnTile(ArrayList<PointTextContainer> labels,
-			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels) {
+	void fillDependencyOnTile(List<PointTextContainer> labels, List<SymbolContainer> symbols,
+			List<PointTextContainer> areaLabels) {
 		this.currentDependencyOnTile.drawn = true;
 
-		if ((labels.size() > 0) || (symbols.size() > 0) || (areaLabels.size() > 0)) {
+		if ((!labels.isEmpty()) || (!symbols.isEmpty()) || (!areaLabels.isEmpty())) {
 			fillDependencyOnTile2(labels, symbols, areaLabels);
 		}
 
@@ -880,75 +878,59 @@ class DependencyCache {
 		// up
 		tile = new Tile(tileToDelete.x, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 
 		// down
 		tile = new Tile(tileToDelete.x, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// left
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// right
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// leftup
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// leftdown
 		tile = new Tile(tileToDelete.x - 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// rightup
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y - 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 		// rightdown
 		tile = new Tile(tileToDelete.x + 1, tileToDelete.y + 1, tileToDelete.zoomLevel);
 		cache = this.dependencyTable.get(tile);
-		if (cache != null) {
-			if (isDependencyEmpty(cache)) {
-				this.dependencyTable.remove(tile);
-				return;
-			}
+		if (cache != null && isDependencyEmpty(cache)) {
+			this.dependencyTable.remove(tile);
+			return;
 		}
 	}
 
@@ -959,7 +941,7 @@ class DependencyCache {
 	 * @param areaLabels
 	 *            current area Labels, that will be displayed
 	 */
-	void removeAreaLabelsInAlreadyDrawnAreas(ArrayList<PointTextContainer> areaLabels) {
+	void removeAreaLabelsInAlreadyDrawnAreas(List<PointTextContainer> areaLabels) {
 		Tile lefttmp = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile righttmp = new Tile(this.currentTile.x + 1, this.currentTile.y,
@@ -991,34 +973,26 @@ class DependencyCache {
 		for (int i = 0; i < areaLabels.size(); i++) {
 			label = areaLabels.get(i);
 
-			if (up) {
-				if (label.y - label.boundary.height() < 0.0f) {
-					areaLabels.remove(i);
-					i--;
-					continue;
-				}
+			if (up && label.y - label.boundary.height() < 0.0f) {
+				areaLabels.remove(i);
+				i--;
+				continue;
 			}
 
-			if (down) {
-				if (label.y > Tile.TILE_SIZE) {
-					areaLabels.remove(i);
-					i--;
-					continue;
-				}
+			if (down && label.y > Tile.TILE_SIZE) {
+				areaLabels.remove(i);
+				i--;
+				continue;
 			}
-			if (left) {
-				if (label.x < 0.0f) {
-					areaLabels.remove(i);
-					i--;
-					continue;
-				}
+			if (left && label.x < 0.0f) {
+				areaLabels.remove(i);
+				i--;
+				continue;
 			}
-			if (right) {
-				if (label.x + label.boundary.width() > Tile.TILE_SIZE) {
-					areaLabels.remove(i);
-					i--;
-					continue;
-				}
+			if (right && label.x + label.boundary.width() > Tile.TILE_SIZE) {
+				areaLabels.remove(i);
+				i--;
+				continue;
 			}
 		}
 	}
@@ -1033,21 +1007,19 @@ class DependencyCache {
 	 * @param symbols
 	 *            symbols from the current tile
 	 */
-	void removeOverlappingObjectsWithDependencyOnTile(ArrayList<PointTextContainer> labels,
-			ArrayList<PointTextContainer> areaLabels, ArrayList<SymbolContainer> symbols) {
-		if (this.currentDependencyOnTile.labels != null) {
-			if (this.currentDependencyOnTile.labels.size() != 0) {
-				removeOverlappingLabelsWithDependencyLabels(labels);
-				removeOverlappingSymbolsWithDependencyLabels(symbols);
-				removeOverlappingAreaLabelsWithDependencyLabels(areaLabels);
-			}
+	void removeOverlappingObjectsWithDependencyOnTile(List<PointTextContainer> labels,
+			List<PointTextContainer> areaLabels, List<SymbolContainer> symbols) {
+		if (this.currentDependencyOnTile.labels != null
+				&& this.currentDependencyOnTile.labels.size() != 0) {
+			removeOverlappingLabelsWithDependencyLabels(labels);
+			removeOverlappingSymbolsWithDependencyLabels(symbols);
+			removeOverlappingAreaLabelsWithDependencyLabels(areaLabels);
 		}
 
-		if (this.currentDependencyOnTile.symbols != null) {
-			if (this.currentDependencyOnTile.symbols.size() != 0) {
-				removeOverlappingSymbolsWithDepencySymbols(symbols, 2);
-				removeOverlappingAreaLabelsWithDependencySymbols(areaLabels);
-			}
+		if (this.currentDependencyOnTile.symbols != null
+				&& this.currentDependencyOnTile.symbols.size() != 0) {
+			removeOverlappingSymbolsWithDepencySymbols(symbols, 2);
+			removeOverlappingAreaLabelsWithDependencySymbols(areaLabels);
 		}
 	}
 
@@ -1095,32 +1067,23 @@ class DependencyCache {
 				continue;
 			}
 
-			if (up) {
-				if (ref.y - ref.height < 0) {
-					refPos[i] = null;
-					continue;
-				}
+			if (up && ref.y - ref.height < 0) {
+				refPos[i] = null;
+				continue;
 			}
 
-			if (down) {
-				if (ref.y >= Tile.TILE_SIZE) {
-					refPos[i] = null;
-					continue;
-				}
+			if (down && ref.y >= Tile.TILE_SIZE) {
+				refPos[i] = null;
+				continue;
 			}
 
-			if (left) {
-				if (ref.x < 0) {
-					refPos[i] = null;
-					continue;
-				}
+			if (left && ref.x < 0) {
+				refPos[i] = null;
+				continue;
 			}
 
-			if (right) {
-				if (ref.x + ref.width > Tile.TILE_SIZE) {
-					refPos[i] = null;
-					continue;
-				}
+			if (right && ref.x + ref.width > Tile.TILE_SIZE) {
+				refPos[i] = null;
 			}
 		}
 
@@ -1175,7 +1138,7 @@ class DependencyCache {
 		}
 	}
 
-	void removeSymbolsFromDrawnAreas(ArrayList<SymbolContainer> symbols) {
+	void removeSymbolsFromDrawnAreas(List<SymbolContainer> symbols) {
 		Tile lefttmp = new Tile(this.currentTile.x - 1, this.currentTile.y,
 				this.currentTile.zoomLevel);
 		Tile righttmp = new Tile(this.currentTile.x + 1, this.currentTile.y,
@@ -1207,34 +1170,26 @@ class DependencyCache {
 		for (int i = 0; i < symbols.size(); i++) {
 			ref = symbols.get(i);
 
-			if (up) {
-				if (ref.y < 0) {
-					symbols.remove(i);
-					i--;
-					continue;
-				}
+			if (up && ref.y < 0) {
+				symbols.remove(i);
+				i--;
+				continue;
 			}
 
-			if (down) {
-				if (ref.y + ref.symbol.getHeight() > Tile.TILE_SIZE) {
-					symbols.remove(i);
-					i--;
-					continue;
-				}
+			if (down && ref.y + ref.symbol.getHeight() > Tile.TILE_SIZE) {
+				symbols.remove(i);
+				i--;
+				continue;
 			}
-			if (left) {
-				if (ref.x < 0) {
-					symbols.remove(i);
-					i--;
-					continue;
-				}
+			if (left && ref.x < 0) {
+				symbols.remove(i);
+				i--;
+				continue;
 			}
-			if (right) {
-				if (ref.x + ref.symbol.getWidth() > Tile.TILE_SIZE) {
-					symbols.remove(i);
-					i--;
-					continue;
-				}
+			if (right && ref.x + ref.symbol.getWidth() > Tile.TILE_SIZE) {
+				symbols.remove(i);
+				i--;
+				continue;
 			}
 		}
 	}

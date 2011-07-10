@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps;
 
-import java.util.HashMap;
+import java.util.Map;
 
 class TagIDsWays {
 	Integer admin_level$10;
@@ -157,7 +157,7 @@ class TagIDsWays {
 	Integer wood$deciduous;
 	Integer wood$mixed;
 
-	void update(HashMap<String, Integer> wayTags) {
+	void update(Map<String, Integer> wayTags) {
 		this.admin_level$10 = wayTags.get("admin_level=10");
 		this.admin_level$2 = wayTags.get("admin_level=2");
 		this.admin_level$4 = wayTags.get("admin_level=4");

@@ -15,6 +15,7 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
@@ -65,14 +66,10 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	private Drawable itemMarker;
 	private final Point itemPosition;
 	private int left;
-	private Rect markerBounds;
-	private int numberOfItems;
-	private Item overlayItem;
 	private int right;
 	private int top;
-	private ArrayList<Integer> visibleItems;
-	private ArrayList<Integer> visibleItemsRedraw;
-	private ArrayList<Integer> visibleItemsTemp;
+	private List<Integer> visibleItems;
+	private List<Integer> visibleItemsRedraw;
 
 	/**
 	 * Constructs a new ItemizedOverlay.
@@ -81,6 +78,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	 *            the default marker (may be null).
 	 */
 	public ItemizedOverlay(Drawable defaultMarker) {
+		super();
 		this.defaultMarker = defaultMarker;
 		this.itemPosition = new Point();
 		this.visibleItems = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
@@ -209,55 +207,57 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 		// erase the list of visible items
 		this.visibleItemsRedraw.clear();
 
-		this.numberOfItems = size();
-		for (int itemIndex = 0; itemIndex < this.numberOfItems; ++itemIndex) {
+		int numberOfItems = size();
+		Item overlayItem;
+		Rect markerBounds;
+		for (int itemIndex = 0; itemIndex < numberOfItems; ++itemIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
 				return;
 			}
 
 			// get the current item
-			this.overlayItem = createItem(itemIndex);
-			if (this.overlayItem == null) {
+			overlayItem = createItem(itemIndex);
+			if (overlayItem == null) {
 				continue;
 			}
 
-			synchronized (this.overlayItem) {
+			synchronized (overlayItem) {
 				// make sure that the current item has a position
-				if (this.overlayItem.getPoint() == null) {
+				if (overlayItem.getPoint() == null) {
 					continue;
 				}
 
 				// make sure that the cached item position is valid
-				if (drawZoomLevel != this.overlayItem.cachedZoomLevel) {
-					this.overlayItem.cachedMapPosition = projection.toPoint(this.overlayItem
-							.getPoint(), this.overlayItem.cachedMapPosition, drawZoomLevel);
-					this.overlayItem.cachedZoomLevel = drawZoomLevel;
+				if (drawZoomLevel != overlayItem.cachedZoomLevel) {
+					overlayItem.cachedMapPosition = projection.toPoint(overlayItem
+							.getPoint(), overlayItem.cachedMapPosition, drawZoomLevel);
+					overlayItem.cachedZoomLevel = drawZoomLevel;
 				}
 
 				// calculate the relative item position on the canvas
-				this.itemPosition.x = this.overlayItem.cachedMapPosition.x - drawPosition.x;
-				this.itemPosition.y = this.overlayItem.cachedMapPosition.y - drawPosition.y;
+				this.itemPosition.x = overlayItem.cachedMapPosition.x - drawPosition.x;
+				this.itemPosition.y = overlayItem.cachedMapPosition.y - drawPosition.y;
 
 				// get the correct marker for the item
-				if (this.overlayItem.getMarker() == null) {
+				if (overlayItem.getMarker() == null) {
 					if (this.defaultMarker == null) {
 						// no marker to draw the item
 						continue;
 					}
 					this.itemMarker = this.defaultMarker;
 				} else {
-					this.itemMarker = this.overlayItem.getMarker();
+					this.itemMarker = overlayItem.getMarker();
 				}
 
 				// get the position of the marker
-				this.markerBounds = this.itemMarker.copyBounds();
+				markerBounds = this.itemMarker.copyBounds();
 
 				// calculate the bounding box of the marker
-				this.left = this.itemPosition.x + this.markerBounds.left;
-				this.right = this.itemPosition.x + this.markerBounds.right;
-				this.top = this.itemPosition.y + this.markerBounds.top;
-				this.bottom = this.itemPosition.y + this.markerBounds.bottom;
+				this.left = this.itemPosition.x + markerBounds.left;
+				this.right = this.itemPosition.x + markerBounds.right;
+				this.top = this.itemPosition.y + markerBounds.top;
+				this.bottom = this.itemPosition.y + markerBounds.bottom;
 
 				// check if the bounding box of the marker intersects with the canvas
 				if (this.right >= 0 && this.left <= canvas.getWidth() && this.bottom >= 0
@@ -269,7 +269,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 					this.itemMarker.draw(canvas);
 
 					// restore the position of the marker
-					this.itemMarker.setBounds(this.markerBounds);
+					this.itemMarker.setBounds(markerBounds);
 
 					// add the current item index to the list of visible items
 					this.visibleItemsRedraw.add(Integer.valueOf(itemIndex));
@@ -279,9 +279,9 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 		// swap the two visible item lists
 		synchronized (this.visibleItems) {
-			this.visibleItemsTemp = this.visibleItems;
+			List<Integer> visibleItemsTemp = this.visibleItems;
 			this.visibleItems = this.visibleItemsRedraw;
-			this.visibleItemsRedraw = this.visibleItemsTemp;
+			this.visibleItemsRedraw = visibleItemsTemp;
 		}
 	}
 

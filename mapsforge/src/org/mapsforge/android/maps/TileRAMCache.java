@@ -17,6 +17,7 @@ package org.mapsforge.android.maps;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import android.graphics.Bitmap;
@@ -32,13 +33,13 @@ class TileRAMCache {
 
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
-	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
+	private Map<MapGeneratorJob, Bitmap> map;
 	private Bitmap tempBitmap;
 
 	/**
 	 * List of all Bitmaps which are used for object pooling.
 	 */
-	final LinkedList<Bitmap> bitmapPool;
+	final List<Bitmap> bitmapPool;
 
 	/**
 	 * Constructs an image bitmap cache with a fixes size and LRU policy.
@@ -63,7 +64,7 @@ class TileRAMCache {
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
-	private LinkedHashMap<MapGeneratorJob, Bitmap> createMap(final int initialCapacity) {
+	private Map<MapGeneratorJob, Bitmap> createMap(final int initialCapacity) {
 		return new LinkedHashMap<MapGeneratorJob, Bitmap>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
@@ -72,7 +73,7 @@ class TileRAMCache {
 			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
-					TileRAMCache.this.bitmapPool.addLast(eldest.getValue());
+					TileRAMCache.this.bitmapPool.add(eldest.getValue());
 				}
 				return false;
 			}
@@ -94,16 +95,18 @@ class TileRAMCache {
 	/**
 	 * Destroy the cache at the end of its lifetime.
 	 */
-	synchronized void destroy() {
-		if (this.map != null) {
-			for (Bitmap bitmap : this.map.values()) {
-				bitmap.recycle();
+	void destroy() {
+		synchronized (this) {
+			if (this.map != null) {
+				for (Bitmap bitmap : this.map.values()) {
+					bitmap.recycle();
+				}
+				for (Bitmap bitmap : this.bitmapPool) {
+					bitmap.recycle();
+				}
+				this.map.clear();
+				this.map = null;
 			}
-			for (Bitmap bitmap : this.bitmapPool) {
-				bitmap.recycle();
-			}
-			this.map.clear();
-			this.map = null;
 		}
 	}
 
@@ -130,7 +133,7 @@ class TileRAMCache {
 		if (this.capacity > 0) {
 			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
 			this.bitmapBuffer.rewind();
-			this.tempBitmap = this.bitmapPool.removeFirst();
+			this.tempBitmap = this.bitmapPool.remove(0);
 			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);

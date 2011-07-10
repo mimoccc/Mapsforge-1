@@ -50,7 +50,7 @@ public class OverlayMapViewer extends MapActivity {
 		 *            the reference to the application context.
 		 */
 		MyItemizedOverlay(Drawable defaultMarker, Context context) {
-			super(defaultMarker, context);
+			super(defaultMarker);
 			this.context = context;
 		}
 
@@ -107,7 +107,7 @@ public class OverlayMapViewer extends MapActivity {
 
 		// create the CircleOverlay and add the circles
 		ArrayCircleOverlay circleOverlay = new ArrayCircleOverlay(circleDefaultPaintFill,
-				circleDefaultPaintOutline, this);
+				circleDefaultPaintOutline);
 		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200, null);
 		OverlayCircle circle2 = new OverlayCircle(geoPoint4, 150, circlePaint, null, null);
 		circleOverlay.addCircle(circle1);

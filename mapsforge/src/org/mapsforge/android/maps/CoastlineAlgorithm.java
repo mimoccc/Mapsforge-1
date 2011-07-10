@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -32,7 +35,6 @@ class CoastlineAlgorithm {
 	private static class EndPoints {
 		private final ImmutablePoint end;
 		private final int hashCode;
-		private EndPoints other;
 		private final ImmutablePoint start;
 
 		/**
@@ -56,10 +58,10 @@ class CoastlineAlgorithm {
 			} else if (!(obj instanceof EndPoints)) {
 				return false;
 			}
-			this.other = (EndPoints) obj;
-			if (!this.start.equals(this.other.start)) {
+			EndPoints other = (EndPoints) obj;
+			if (!this.start.equals(other.start)) {
 				return false;
-			} else if (!this.end.equals(this.other.end)) {
+			} else if (!this.end.equals(other.end)) {
 				return false;
 			}
 			return true;
@@ -76,10 +78,9 @@ class CoastlineAlgorithm {
 		 * @return the hash value of this object.
 		 */
 		private int calculateHashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((this.start == null) ? 0 : this.start.hashCode());
-			result = prime * result + ((this.end == null) ? 0 : this.end.hashCode());
+			int result = 7;
+			result = 31 * result + ((this.start == null) ? 0 : this.start.hashCode());
+			result = 31 * result + ((this.end == null) ? 0 : this.end.hashCode());
 			return result;
 		}
 	}
@@ -138,22 +139,22 @@ class CoastlineAlgorithm {
 		void onWaterTile();
 	}
 
-	private final ArrayList<HelperPoint> additionalCoastlinePoints;
+	private final List<HelperPoint> additionalCoastlinePoints;
 	private CoastlineWay coastlineEnd;
 	private int coastlineEndLength;
 	private ImmutablePoint coastlineEndPoint;
-	private final TreeMap<ImmutablePoint, float[]> coastlineEnds;
-	private final ArrayList<float[]> coastlineSegments;
+	private final Map<ImmutablePoint, float[]> coastlineEnds;
+	private final List<float[]> coastlineSegments;
 	private CoastlineWay coastlineStart;
 	private int coastlineStartLength;
 	private ImmutablePoint coastlineStartPoint;
-	private final TreeMap<ImmutablePoint, float[]> coastlineStarts;
+	private final Map<ImmutablePoint, float[]> coastlineStarts;
 	private final Comparator<CoastlineWay> coastlineWayComparator;
-	private final ArrayList<CoastlineWay> coastlineWays;
+	private final List<CoastlineWay> coastlineWays;
 	private float[] coordinates;
 	private int currentSide;
 	private EndPoints endPoints;
-	private final HashSet<EndPoints> handledCoastlineSegments;
+	private final Set<EndPoints> handledCoastlineSegments;
 	private final HelperPoint[] helperPoints;
 	private boolean invalidCoastline;
 	private boolean islandSituation;

@@ -16,6 +16,7 @@ package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import android.graphics.Paint;
 
@@ -28,7 +29,7 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayWayOverlay";
 
-	private final ArrayList<OverlayWay> overlayWays;
+	private final List<OverlayWay> overlayWays;
 
 	/**
 	 * Constructs a new ArrayWayOverlay.

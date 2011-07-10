@@ -15,6 +15,7 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -47,7 +48,7 @@ public abstract class MapActivity extends Activity {
 	/**
 	 * Internal list which contains references to all running MapView objects.
 	 */
-	private ArrayList<MapView> mapViews = new ArrayList<MapView>(2);
+	private List<MapView> mapViews = new ArrayList<MapView>(2);
 
 	private void destroyMapViews() {
 		if (this.mapViews != null) {

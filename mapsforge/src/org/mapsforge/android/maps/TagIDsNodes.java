@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps;
 
-import java.util.HashMap;
+import java.util.Map;
 
 class TagIDsNodes {
 	Integer aeroway$aerodrome;
@@ -77,7 +77,7 @@ class TagIDsNodes {
 	Integer tourism$museum;
 	Integer tourism$viewpoint;
 
-	void update(HashMap<String, Integer> nodeTags) {
+	void update(Map<String, Integer> nodeTags) {
 		this.aeroway$aerodrome = nodeTags.get("aeroway=aerodrome");
 		this.aeroway$helipad = nodeTags.get("aeroway=helipad");
 

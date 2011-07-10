@@ -47,7 +47,7 @@ class TileMemoryCardCache {
 	 */
 	private static final String SERIALIZATION_FILE_NAME = "cache.ser";
 
-	private static LinkedHashMap<MapGeneratorJob, File> createMap(final int initialCapacity) {
+	private static Map<MapGeneratorJob, File> createMap(final int initialCapacity) {
 		return new LinkedHashMap<MapGeneratorJob, File>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
@@ -69,10 +69,7 @@ class TileMemoryCardCache {
 	private final ByteBuffer bitmapBuffer;
 	private long cacheId;
 	private int capacity;
-	private FileInputStream fileInputStream;
-	private FileOutputStream fileOutputStream;
-	private File inputFile;
-	private LinkedHashMap<MapGeneratorJob, File> map;
+	private Map<MapGeneratorJob, File> map;
 	private File outputFile;
 	private final File tempDir;
 
@@ -147,10 +144,8 @@ class TileMemoryCardCache {
 			}
 
 			// delete the cache directory
-			if (this.tempDir != null) {
-				if (!this.tempDir.delete()) {
-					this.tempDir.deleteOnExit();
-				}
+			if (this.tempDir != null && !this.tempDir.delete()) {
+				this.tempDir.deleteOnExit();
 			}
 		}
 	}
@@ -177,7 +172,7 @@ class TileMemoryCardCache {
 			ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 
 			// restore the serialized cache map (the compiler warning cannot be fixed)
-			this.map = (LinkedHashMap<MapGeneratorJob, File>) objectInputStream.readObject();
+			this.map = (Map<MapGeneratorJob, File>) objectInputStream.readObject();
 
 			// close the input streams
 			objectInputStream.close();
@@ -190,10 +185,10 @@ class TileMemoryCardCache {
 
 			return true;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return false;
 		} catch (ClassNotFoundException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return false;
 		}
 	}
@@ -208,12 +203,9 @@ class TileMemoryCardCache {
 			// check if the serialization file exists and is readable
 			File file = new File(this.tempDir, SERIALIZATION_FILE_NAME);
 
-			// check for an existing file
-			if (file.exists()) {
-				// try to delete the existing file
-				if (!file.delete()) {
-					return false;
-				}
+			// try to delete the serialization file if it exists
+			if (file.exists() && !file.delete()) {
+				return false;
 			}
 
 			// check if the cache map exists
@@ -234,7 +226,7 @@ class TileMemoryCardCache {
 
 			return true;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return false;
 		}
 	}
@@ -279,15 +271,16 @@ class TileMemoryCardCache {
 	 */
 	boolean get(MapGeneratorJob mapGeneratorJob, ByteBuffer buffer) {
 		try {
+			File inputFile;
 			synchronized (this) {
-				this.inputFile = this.map.get(mapGeneratorJob);
+				inputFile = this.map.get(mapGeneratorJob);
 			}
-			this.fileInputStream = new FileInputStream(this.inputFile);
-			if (this.fileInputStream.read(buffer.array()) == buffer.array().length) {
+			FileInputStream fileInputStream = new FileInputStream(inputFile);
+			if (fileInputStream.read(buffer.array()) == buffer.array().length) {
 				// the complete bitmap has been read successfully
 				buffer.rewind();
 			}
-			this.fileInputStream.close();
+			fileInputStream.close();
 			return true;
 		} catch (FileNotFoundException e) {
 			synchronized (this) {
@@ -295,7 +288,7 @@ class TileMemoryCardCache {
 			}
 			return false;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return false;
 		}
 	}
@@ -321,15 +314,14 @@ class TileMemoryCardCache {
 					this.outputFile = new File(this.tempDir, ++this.cacheId
 							+ IMAGE_FILE_NAME_EXTENSION);
 				}
-				this.fileOutputStream = new FileOutputStream(this.outputFile, false);
-				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
-						.array().length);
-				this.fileOutputStream.close();
+				FileOutputStream fileOutputStream = new FileOutputStream(this.outputFile, false);
+				fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer.array().length);
+				fileOutputStream.close();
 				synchronized (this) {
 					this.map.put(mapGeneratorJob, this.outputFile);
 				}
 			} catch (IOException e) {
-				Logger.e(e);
+				Logger.exception(e);
 			}
 		}
 	}
@@ -343,7 +335,7 @@ class TileMemoryCardCache {
 	synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
 		// create a new map with the new capacity
-		LinkedHashMap<MapGeneratorJob, File> newMap = createMap(this.capacity);
+		Map<MapGeneratorJob, File> newMap = createMap(this.capacity);
 
 		// put all entries from the old map in the new one.
 		for (Map.Entry<MapGeneratorJob, File> entry : this.map.entrySet()) {

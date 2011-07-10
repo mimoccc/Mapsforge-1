@@ -18,6 +18,7 @@ class WayContainer extends ShapeContainer {
 	final float[][] coordinates;
 
 	WayContainer(float[][] coordinates) {
+		super();
 		this.coordinates = coordinates;
 	}
 

@@ -411,7 +411,7 @@ public class MapView extends ViewGroup {
 			private long timeElapsed;
 
 			LongPressDetector() {
-				// do nothing
+				super();
 			}
 
 			@Override
@@ -702,11 +702,11 @@ public class MapView extends ViewGroup {
 	private static final Paint PAINT_SCALE_BAR_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT_WHITE_STROKE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
-	private static final short SCALE_BAR_HEIGHT = 35;
+	private static final int SCALE_BAR_HEIGHT = 35;
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000,
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
-	private static final short SCALE_BAR_WIDTH = 130;
+	private static final int SCALE_BAR_WIDTH = 130;
 
 	/**
 	 * Capacity of the RAM cache.
@@ -791,7 +791,7 @@ public class MapView extends ViewGroup {
 	private boolean drawTileFrames;
 	private int fps;
 	private Paint fpsPaint;
-	private short frame_counter;
+	private int frameCounter;
 	private boolean highlightWaterTiles;
 	private double latitude;
 	private double longitude;
@@ -803,10 +803,8 @@ public class MapView extends ViewGroup {
 	private MapMover mapMover;
 	private float mapMoveX;
 	private float mapMoveY;
-	private int mapScale;
 	private Bitmap mapScaleBitmap;
 	private Canvas mapScaleCanvas;
-	private float mapScaleLength;
 	private double mapScalePreviousLatitude;
 	private byte mapScalePreviousZoomLevel;
 	private Bitmap mapViewBitmap1;
@@ -825,7 +823,6 @@ public class MapView extends ViewGroup {
 	private float matrixScaleFactor;
 	private float matrixTranslateX;
 	private float matrixTranslateY;
-	private double meterPerPixel;
 	private float moveSpeedFactor;
 	private int numberOfTiles;
 	private boolean persistence;
@@ -834,8 +831,8 @@ public class MapView extends ViewGroup {
 	private boolean showFpsCounter;
 	private boolean showScaleBar;
 	private boolean showZoomControls;
-	private String text_kilometer;
-	private String text_meter;
+	private String textKilometer;
+	private String textMeter;
 	private float textScale;
 	private Bitmap tileBitmap;
 	private ByteBuffer tileBuffer;
@@ -893,13 +890,8 @@ public class MapView extends ViewGroup {
 			// no mode specified, use the default mode
 			this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
 		} else {
-			try {
-				// try to use the specified mode
-				this.mapViewMode = MapViewMode.valueOf(modeValue);
-			} catch (IllegalArgumentException e) {
-				// an invalid mode was specified, throw an exception
-				throw new IllegalArgumentException(e);
-			}
+			// use the specified mode
+			this.mapViewMode = MapViewMode.valueOf(modeValue);
 		}
 		this.mapViewId = this.mapActivity.getMapViewId();
 		setupMapView();
@@ -1351,10 +1343,10 @@ public class MapView extends ViewGroup {
 	public void setText(TextField textField, String value) {
 		switch (textField) {
 			case KILOMETER:
-				this.text_kilometer = value;
+				this.textKilometer = value;
 				break;
 			case METER:
-				this.text_meter = value;
+				this.textMeter = value;
 				break;
 		}
 	}
@@ -1502,6 +1494,7 @@ public class MapView extends ViewGroup {
 	}
 
 	private void renderScaleBar() {
+		double meterPerPixel;
 		synchronized (this) {
 			// check if recalculating and drawing of the map scale is necessary
 			if (this.zoomLevel == this.mapScalePreviousZoomLevel
@@ -1515,14 +1508,16 @@ public class MapView extends ViewGroup {
 			this.mapScalePreviousLatitude = this.latitude;
 
 			// calculate an even value for the map scale
-			this.meterPerPixel = MercatorProjection.calculateGroundResolution(this.latitude,
+			meterPerPixel = MercatorProjection.calculateGroundResolution(this.latitude,
 					this.zoomLevel);
 		}
 
+		float mapScaleLength = 0;
+		int mapScale = 0;
 		for (int i = 0; i < SCALE_BAR_VALUES.length; ++i) {
-			this.mapScale = SCALE_BAR_VALUES[i];
-			this.mapScaleLength = this.mapScale / (float) this.meterPerPixel;
-			if (this.mapScaleLength < (SCALE_BAR_WIDTH - 10)) {
+			mapScale = SCALE_BAR_VALUES[i];
+			mapScaleLength = mapScale / (float) meterPerPixel;
+			if (mapScaleLength < (SCALE_BAR_WIDTH - 10)) {
 				break;
 			}
 		}
@@ -1531,26 +1526,24 @@ public class MapView extends ViewGroup {
 		this.mapScaleBitmap.eraseColor(Color.TRANSPARENT);
 
 		// draw the map scale
-		this.mapScaleCanvas
-				.drawLine(7, 20, this.mapScaleLength + 3, 20, PAINT_SCALE_BAR_STROKE);
+		this.mapScaleCanvas.drawLine(7, 20, mapScaleLength + 3, 20, PAINT_SCALE_BAR_STROKE);
 		this.mapScaleCanvas.drawLine(5, 10, 5, 30, PAINT_SCALE_BAR_STROKE);
-		this.mapScaleCanvas.drawLine(this.mapScaleLength + 5, 10, this.mapScaleLength + 5, 30,
+		this.mapScaleCanvas.drawLine(mapScaleLength + 5, 10, mapScaleLength + 5, 30,
 				PAINT_SCALE_BAR_STROKE);
-		this.mapScaleCanvas.drawLine(7, 20, this.mapScaleLength + 3, 20, PAINT_SCALE_BAR);
+		this.mapScaleCanvas.drawLine(7, 20, mapScaleLength + 3, 20, PAINT_SCALE_BAR);
 		this.mapScaleCanvas.drawLine(5, 10, 5, 30, PAINT_SCALE_BAR);
-		this.mapScaleCanvas.drawLine(this.mapScaleLength + 5, 10, this.mapScaleLength + 5, 30,
-				PAINT_SCALE_BAR);
+		this.mapScaleCanvas.drawLine(mapScaleLength + 5, 10, mapScaleLength + 5, 30, PAINT_SCALE_BAR);
 
 		// draw the scale text
-		if (this.mapScale < 1000) {
-			this.mapScaleCanvas.drawText(this.mapScale + getText(TextField.METER), 10, 15,
+		if (mapScale < 1000) {
+			this.mapScaleCanvas.drawText(mapScale + getText(TextField.METER), 10, 15,
 					PAINT_SCALE_BAR_TEXT_WHITE_STROKE);
-			this.mapScaleCanvas.drawText(this.mapScale + getText(TextField.METER), 10, 15,
+			this.mapScaleCanvas.drawText(mapScale + getText(TextField.METER), 10, 15,
 					PAINT_SCALE_BAR_TEXT);
 		} else {
-			this.mapScaleCanvas.drawText((this.mapScale / 1000) + getText(TextField.KILOMETER),
+			this.mapScaleCanvas.drawText((mapScale / 1000) + getText(TextField.KILOMETER),
 					10, 15, PAINT_SCALE_BAR_TEXT_WHITE_STROKE);
-			this.mapScaleCanvas.drawText((this.mapScale / 1000) + getText(TextField.KILOMETER),
+			this.mapScaleCanvas.drawText((mapScale / 1000) + getText(TextField.KILOMETER),
 					10, 15, PAINT_SCALE_BAR_TEXT);
 		}
 	}
@@ -1928,12 +1921,12 @@ public class MapView extends ViewGroup {
 		if (this.showFpsCounter) {
 			this.currentTime = SystemClock.uptimeMillis();
 			if (this.currentTime - this.previousTime > 1000) {
-				this.fps = (int) ((this.frame_counter * 1000) / (this.currentTime - this.previousTime));
+				this.fps = (int) ((this.frameCounter * 1000) / (this.currentTime - this.previousTime));
 				this.previousTime = this.currentTime;
-				this.frame_counter = 0;
+				this.frameCounter = 0;
 			}
 			canvas.drawText(String.valueOf(this.fps), 20, 30, this.fpsPaint);
-			++this.frame_counter;
+			++this.frameCounter;
 		}
 	}
 
@@ -2127,9 +2120,9 @@ public class MapView extends ViewGroup {
 	String getText(TextField textField) {
 		switch (textField) {
 			case KILOMETER:
-				return this.text_kilometer;
+				return this.textKilometer;
 			case METER:
-				return this.text_meter;
+				return this.textMeter;
 			default:
 				// all cases are covered, the default case should never occur
 				return null;

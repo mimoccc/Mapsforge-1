@@ -87,11 +87,6 @@ public abstract class Overlay extends Thread {
 	private Bitmap overlayBitmap2;
 
 	/**
-	 * A temporary reference to swap the two overlay bitmaps.
-	 */
-	private Bitmap overlayBitmapSwap;
-
-	/**
 	 * Canvas that is used in the overlay for drawing.
 	 */
 	private Canvas overlayCanvas;
@@ -117,21 +112,6 @@ public abstract class Overlay extends Thread {
 	private boolean redraw;
 
 	/**
-	 * Stores the zoom level after drawing is finished.
-	 */
-	private byte zoomLevelAfterDraw;
-
-	/**
-	 * Stores the zoom level before drawing starts.
-	 */
-	private byte zoomLevelBeforeDraw;
-
-	/**
-	 * Used to calculate the zoom level difference.
-	 */
-	private byte zoomLevelDiff;
-
-	/**
 	 * Reference to the MapView instance.
 	 */
 	protected MapView internalMapView;
@@ -140,6 +120,7 @@ public abstract class Overlay extends Thread {
 	 * Default constructor which must be called by all subclasses.
 	 */
 	protected Overlay() {
+		super();
 		this.overlayCanvas = new Canvas();
 		this.matrix = new Matrix();
 		this.point = new Point();
@@ -182,7 +163,7 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Requests a redraw of the overlay.
+	 * Requests a redraw of this overlay.
 	 */
 	public final void requestRedraw() {
 		synchronized (this) {
@@ -255,10 +236,11 @@ public abstract class Overlay extends Thread {
 		this.overlayCanvas.setBitmap(this.overlayBitmap2);
 
 		// save the zoom level and map position before drawing
+		byte zoomLevelBeforeDraw;
 		synchronized (this.internalMapView) {
-			this.zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
+			zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
 			this.positionBeforeDraw = this.mapViewProjection.toPoint(this.internalMapView
-					.getMapCenter(), this.positionBeforeDraw, this.zoomLevelBeforeDraw);
+					.getMapCenter(), this.positionBeforeDraw, zoomLevelBeforeDraw);
 		}
 
 		// calculate the top-left point of the visible rectangle
@@ -271,8 +253,7 @@ public abstract class Overlay extends Thread {
 		}
 
 		// call the draw implementation of the subclass
-		drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection,
-				this.zoomLevelBeforeDraw);
+		drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection, zoomLevelBeforeDraw);
 
 		if (isInterrupted() || sizeHasChanged()) {
 			// stop working
@@ -280,10 +261,11 @@ public abstract class Overlay extends Thread {
 		}
 
 		// save the zoom level and map position after drawing
+		byte zoomLevelAfterDraw;
 		synchronized (this.internalMapView) {
-			this.zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
+			zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
 			this.positionAfterDraw = this.mapViewProjection.toPoint(this.internalMapView
-					.getMapCenter(), this.positionAfterDraw, this.zoomLevelBeforeDraw);
+					.getMapCenter(), this.positionAfterDraw, zoomLevelBeforeDraw);
 		}
 
 		if (this.internalMapView.getZoomAnimator().isExecuting()) {
@@ -297,17 +279,17 @@ public abstract class Overlay extends Thread {
 			this.matrix.postTranslate(this.positionBeforeDraw.x - this.positionAfterDraw.x,
 					this.positionBeforeDraw.y - this.positionAfterDraw.y);
 
-			this.zoomLevelDiff = (byte) (this.zoomLevelAfterDraw - this.zoomLevelBeforeDraw);
-			if (this.zoomLevelDiff > 0) {
+			byte zoomLevelDiff = (byte) (zoomLevelAfterDraw - zoomLevelBeforeDraw);
+			if (zoomLevelDiff > 0) {
 				// zoom level has increased
-				this.matrixScaleFactor = 1 << this.zoomLevelDiff;
+				this.matrixScaleFactor = 1 << zoomLevelDiff;
 				this.matrix
 						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
 								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
 										.getHeight() >> 1);
-			} else if (this.zoomLevelDiff < 0) {
+			} else if (zoomLevelDiff < 0) {
 				// zoom level has decreased
-				this.matrixScaleFactor = 1.0f / (1 << -this.zoomLevelDiff);
+				this.matrixScaleFactor = 1.0f / (1 << -zoomLevelDiff);
 				this.matrix
 						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
 								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
@@ -315,9 +297,9 @@ public abstract class Overlay extends Thread {
 			}
 
 			// swap the two overlay bitmaps
-			this.overlayBitmapSwap = this.overlayBitmap1;
+			Bitmap overlayBitmapSwap = this.overlayBitmap1;
 			this.overlayBitmap1 = this.overlayBitmap2;
-			this.overlayBitmap2 = this.overlayBitmapSwap;
+			this.overlayBitmap2 = overlayBitmapSwap;
 		}
 
 		if (isInterrupted() || sizeHasChanged()) {

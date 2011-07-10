@@ -15,6 +15,7 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -31,14 +32,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private static final byte AREA_NAME_BLACK = 0;
 	private static final byte AREA_NAME_BLUE = 1;
 	private static final byte AREA_NAME_RED = 2;
-	private static final short BITMAP_AMENITY = 0x04;
-	private static final short BITMAP_BUILDING = 0x20;
-	private static final short BITMAP_HIGHWAY = 0x80;
-	private static final short BITMAP_LANDUSE = 0x10;
-	private static final short BITMAP_LEISURE = 0x08;
-	private static final short BITMAP_NATURAL = 0x02;
-	private static final short BITMAP_RAILWAY = 0x40;
-	private static final short BITMAP_WATERWAY = 0x01;
+	private static final int BITMAP_AMENITY = 0x04;
+	private static final int BITMAP_BUILDING = 0x20;
+	private static final int BITMAP_HIGHWAY = 0x80;
+	private static final int BITMAP_LANDUSE = 0x10;
+	private static final int BITMAP_LEISURE = 0x08;
+	private static final int BITMAP_NATURAL = 0x02;
+	private static final int BITMAP_RAILWAY = 0x40;
+	private static final int BITMAP_WATERWAY = 0x01;
 	private static final byte DEFAULT_LAYER = 5;
 	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
@@ -273,7 +274,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		return new WayContainer(wayCoordinates);
 	}
 
-	private ArrayList<PointTextContainer> areaLabels;
+	private List<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
 	private float bboxLatitude1;
 	private float bboxLatitude2;
@@ -291,15 +292,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private float diffX;
 	private float diffY;
 	private int innerWayLength;
-	private ArrayList<ArrayList<ShapePaintContainer>> innerWayList;
+	private List<List<ShapePaintContainer>> innerWayList;
 	private LabelPlacement labelPlacement;
 	private float lastTileTextScale;
 	private byte lastTileZoomLevel;
-	private ArrayList<ArrayList<ShapePaintContainer>> layer;
+	private List<List<ShapePaintContainer>> layer;
 	private MapPatterns mapPatterns;
 	private MapSymbols mapSymbols;
-	private ArrayList<PointTextContainer> nodes;
-	private ArrayList<SymbolContainer> pointSymbols;
+	private List<PointTextContainer> nodes;
+	private List<SymbolContainer> pointSymbols;
 	private float previousX;
 	private float previousY;
 	private byte remainingTags;
@@ -310,22 +311,23 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private int skipPixels;
 	private float symbolAngle;
 	private SymbolContainer symbolContainer;
-	private TagIDsNodes tagIDsNodes;
-	private TagIDsWays tagIDsWays;
+	private final TagIDsNodes tagIDsNodes;
+	private final TagIDsWays tagIDsWays;
 	private Bitmap tileBitmap;
 	private Tile tileForCoastlineAlgorithm;
 	private float[][] waterTileCoordinates;
 	private float[] wayNamePath;
 	private boolean wayNameRendered;
-	private ArrayList<WayTextContainer> wayNames;
+	private List<WayTextContainer> wayNames;
 	private float wayNameWidth;
-	private ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> ways;
-	private ArrayList<SymbolContainer> waySymbols;
+	private List<List<List<ShapePaintContainer>>> ways;
+	private List<SymbolContainer> waySymbols;
 
 	/**
 	 * Default constructor that must be called by subclasses.
 	 */
 	DatabaseMapGenerator() {
+		super();
 		this.tagIDsNodes = new TagIDsNodes();
 		this.tagIDsWays = new TagIDsWays();
 	}
@@ -449,7 +451,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.previousY = this.coordinates[0][1];
 
 		// find way segments long enough to draw the way name on them
-		for (short i = 2; i < this.coordinates[0].length; i += 2) {
+		for (int i = 2; i < this.coordinates[0].length; i += 2) {
 			// get the current way point coordinates
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
@@ -564,7 +566,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.previousY = this.coordinates[0][1];
 
 		// draw the symbol on each way segment
-		for (short i = 2; i < this.coordinates[0].length; i += 2) {
+		for (int i = 2; i < this.coordinates[0].length; i += 2) {
 			// get the current way point coordinates
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
@@ -649,7 +651,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.previousX = this.coordinates[0][0];
 		this.previousY = this.coordinates[0][1];
 		this.segmentLengthInPixel = 0;
-		for (short i = 2; i < this.coordinates[0].length; i += 2) {
+		for (int i = 2; i < this.coordinates[0].length; i += 2) {
 			this.currentX = this.coordinates[0][i];
 			this.currentY = this.coordinates[0][i + 1];
 			this.diffX = this.currentX - this.previousX;
@@ -1644,7 +1646,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param drawNodes
 	 *            the nodes to be rendered.
 	 */
-	abstract void drawNodes(ArrayList<PointTextContainer> drawNodes);
+	abstract void drawNodes(List<PointTextContainer> drawNodes);
 
 	/**
 	 * This method is called when the map symbols should be rendered.
@@ -1652,7 +1654,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param drawSymbols
 	 *            the symbols to be rendered.
 	 */
-	abstract void drawSymbols(ArrayList<SymbolContainer> drawSymbols);
+	abstract void drawSymbols(List<SymbolContainer> drawSymbols);
 
 	/**
 	 * This method is called when the tile coordinates should be rendered.
@@ -1673,7 +1675,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param drawWayNames
 	 *            the way names to be rendered.
 	 */
-	abstract void drawWayNames(ArrayList<WayTextContainer> drawWayNames);
+	abstract void drawWayNames(List<WayTextContainer> drawWayNames);
 
 	/**
 	 * This method is called when the ways should be rendered.
@@ -1685,7 +1687,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param levelsPerLayer
 	 *            the amount of levels per layer.
 	 */
-	abstract void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
+	abstract void drawWays(List<List<List<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer);
 
 	@Override
@@ -2336,7 +2338,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.coordinates = new float[1 + innerWays.length][];
 		}
 		this.coordinates[0] = new float[wayNodesSequenceLength];
-		for (short i = 0; i < wayNodesSequenceLength; i += 2) {
+		for (int i = 0; i < wayNodesSequenceLength; i += 2) {
 			this.coordinates[0][i] = scaleLongitude(wayNodesSequence[i]);
 			this.coordinates[0][i + 1] = scaleLatitude(wayNodesSequence[i + 1]);
 		}
@@ -2347,7 +2349,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.innerWayLength = innerWay.length;
 				this.coordinates[j] = new float[this.innerWayLength];
 
-				for (short i = 0; i < this.innerWayLength; i += 2) {
+				for (int i = 0; i < this.innerWayLength; i += 2) {
 					this.coordinates[j][i] = scaleLongitude(innerWay[i]);
 					this.coordinates[j][i + 1] = scaleLatitude(innerWay[i + 1]);
 				}
@@ -3853,9 +3855,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		initializePaints();
 
 		// set up all data structures for the map objects
-		this.ways = new ArrayList<ArrayList<ArrayList<ShapePaintContainer>>>(LAYERS);
+		this.ways = new ArrayList<List<List<ShapePaintContainer>>>(LAYERS);
 		for (byte i = LAYERS - 1; i >= 0; --i) {
-			this.innerWayList = new ArrayList<ArrayList<ShapePaintContainer>>(LayerIds.LEVELS_PER_LAYER);
+			this.innerWayList = new ArrayList<List<ShapePaintContainer>>(LayerIds.LEVELS_PER_LAYER);
 			for (byte j = LayerIds.LEVELS_PER_LAYER - 1; j >= 0; --j) {
 				this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
 			}

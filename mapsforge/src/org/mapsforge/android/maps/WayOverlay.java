@@ -35,8 +35,6 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 
 	private final Paint defaultPaintFill;
 	private final Paint defaultPaintOutline;
-	private int numberOfWays;
-	private Way overlayWay;
 	private final Path path;
 
 	/**
@@ -49,6 +47,7 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	 *            the default paint which will be used to draw the way outlines (may be null).
 	 */
 	public WayOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
+		super();
 		this.defaultPaintFill = defaultPaintFill;
 		this.defaultPaintOutline = defaultPaintOutline;
 		this.path = new Path();
@@ -74,56 +73,57 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	@Override
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
 			byte drawZoomLevel) {
-		this.numberOfWays = size();
-		for (int wayIndex = 0; wayIndex < this.numberOfWays; ++wayIndex) {
+		int numberOfWays = size();
+		Way overlayWay;
+		for (int wayIndex = 0; wayIndex < numberOfWays; ++wayIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
 				return;
 			}
 
 			// get the current way
-			this.overlayWay = createWay(wayIndex);
-			if (this.overlayWay == null) {
+			overlayWay = createWay(wayIndex);
+			if (overlayWay == null) {
 				continue;
 			}
 
-			synchronized (this.overlayWay) {
+			synchronized (overlayWay) {
 				// make sure that the current way has way nodes
-				if (this.overlayWay.wayNodes == null || this.overlayWay.wayNodes.length == 0) {
+				if (overlayWay.wayNodes == null || overlayWay.wayNodes.length == 0) {
 					continue;
 				}
 
 				// make sure that the cached way node positions are valid
-				if (drawZoomLevel != this.overlayWay.cachedZoomLevel) {
-					for (int i = 0; i < this.overlayWay.cachedWayPositions.length; ++i) {
-						for (int j = 0; j < this.overlayWay.cachedWayPositions[i].length; ++j) {
-							this.overlayWay.cachedWayPositions[i][j] = projection.toPoint(
-									this.overlayWay.wayNodes[i][j],
-									this.overlayWay.cachedWayPositions[i][j], drawZoomLevel);
+				if (drawZoomLevel != overlayWay.cachedZoomLevel) {
+					for (int i = 0; i < overlayWay.cachedWayPositions.length; ++i) {
+						for (int j = 0; j < overlayWay.cachedWayPositions[i].length; ++j) {
+							overlayWay.cachedWayPositions[i][j] = projection.toPoint(
+									overlayWay.wayNodes[i][j], overlayWay.cachedWayPositions[i][j],
+									drawZoomLevel);
 						}
 					}
-					this.overlayWay.cachedZoomLevel = drawZoomLevel;
+					overlayWay.cachedZoomLevel = drawZoomLevel;
 				}
 
 				// assemble the path
 				this.path.reset();
-				for (int i = 0; i < this.overlayWay.cachedWayPositions.length; ++i) {
-					this.path.moveTo(this.overlayWay.cachedWayPositions[i][0].x - drawPosition.x,
-							this.overlayWay.cachedWayPositions[i][0].y - drawPosition.y);
-					for (int j = 1; j < this.overlayWay.cachedWayPositions[i].length; ++j) {
-						this.path.lineTo(this.overlayWay.cachedWayPositions[i][j].x - drawPosition.x,
-								this.overlayWay.cachedWayPositions[i][j].y - drawPosition.y);
+				for (int i = 0; i < overlayWay.cachedWayPositions.length; ++i) {
+					this.path.moveTo(overlayWay.cachedWayPositions[i][0].x - drawPosition.x,
+							overlayWay.cachedWayPositions[i][0].y - drawPosition.y);
+					for (int j = 1; j < overlayWay.cachedWayPositions[i].length; ++j) {
+						this.path.lineTo(overlayWay.cachedWayPositions[i][j].x - drawPosition.x,
+								overlayWay.cachedWayPositions[i][j].y - drawPosition.y);
 					}
 				}
 
 				// draw the path on the canvas
-				if (this.overlayWay.hasPaint) {
+				if (overlayWay.hasPaint) {
 					// use the paints from the current way
-					if (this.overlayWay.paintOutline != null) {
-						canvas.drawPath(this.path, this.overlayWay.paintOutline);
+					if (overlayWay.paintOutline != null) {
+						canvas.drawPath(this.path, overlayWay.paintOutline);
 					}
-					if (this.overlayWay.paintFill != null) {
-						canvas.drawPath(this.path, this.overlayWay.paintFill);
+					if (overlayWay.paintFill != null) {
+						canvas.drawPath(this.path, overlayWay.paintFill);
 					}
 				} else {
 					// use the default paint objects

@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -37,25 +37,20 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private int arrayListIndex;
 	private Paint bitmapFilterPaint;
 	private Canvas canvas;
-	private CircleContainer circleContainer;
-	private WayContainer complexWayContainer;
 	private float[][] coordinates;
-	private byte currentLayer;
-	private byte currentLevel;
 	private Path path;
 	private WayTextContainer pathTextContainer;
 	private PointTextContainer pointTextContainer;
 	private ShapePaintContainer shapePaintContainer;
-	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
+	private List<List<ShapePaintContainer>> shapePaintContainers;
 	private StringBuilder stringBuilder;
-	private SymbolContainer symbolContainer;
 	private Matrix symbolMatrix;
 	private float[] textCoordinates;
 	private float[] tileFrame;
-	private ArrayList<ShapePaintContainer> wayList;
+	private List<ShapePaintContainer> wayList;
 
 	@Override
-	void drawNodes(ArrayList<PointTextContainer> drawNodes) {
+	void drawNodes(List<PointTextContainer> drawNodes) {
 		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 			this.pointTextContainer = drawNodes.get(this.arrayListIndex);
 			if (this.pointTextContainer.paintBack != null) {
@@ -68,23 +63,23 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawSymbols(ArrayList<SymbolContainer> drawSymbols) {
+	void drawSymbols(List<SymbolContainer> drawSymbols) {
+		SymbolContainer symbolContainer;
 		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.symbolContainer = drawSymbols.get(this.arrayListIndex);
+			symbolContainer = drawSymbols.get(this.arrayListIndex);
 			// use the matrix for rotation and translation of the symbol
-			if (this.symbolContainer.alignCenter) {
-				this.symbolMatrix.setRotate(this.symbolContainer.rotation,
-						this.symbolContainer.symbol.getWidth() >> 1,
-						this.symbolContainer.symbol.getHeight() >> 1);
-				this.symbolMatrix.postTranslate(this.symbolContainer.x
-						- (this.symbolContainer.symbol.getWidth() >> 1), this.symbolContainer.y
-						- (this.symbolContainer.symbol.getHeight() >> 1));
+			if (symbolContainer.alignCenter) {
+				this.symbolMatrix
+						.setRotate(symbolContainer.rotation, symbolContainer.symbol.getWidth() >> 1,
+								symbolContainer.symbol.getHeight() >> 1);
+				this.symbolMatrix.postTranslate(symbolContainer.x
+						- (symbolContainer.symbol.getWidth() >> 1), symbolContainer.y
+						- (symbolContainer.symbol.getHeight() >> 1));
 			} else {
-				this.symbolMatrix.setRotate(this.symbolContainer.rotation);
-				this.symbolMatrix.postTranslate(this.symbolContainer.x, this.symbolContainer.y);
+				this.symbolMatrix.setRotate(symbolContainer.rotation);
+				this.symbolMatrix.postTranslate(symbolContainer.x, symbolContainer.y);
 			}
-			this.canvas.drawBitmap(this.symbolContainer.symbol, this.symbolMatrix,
-						this.bitmapFilterPaint);
+			this.canvas.drawBitmap(symbolContainer.symbol, this.symbolMatrix, this.bitmapFilterPaint);
 		}
 	}
 
@@ -118,7 +113,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWayNames(ArrayList<WayTextContainer> drawWayNames) {
+	void drawWayNames(List<WayTextContainer> drawWayNames) {
 		for (this.arrayListIndex = drawWayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 			this.pathTextContainer = drawWayNames.get(this.arrayListIndex);
 			this.path.rewind();
@@ -133,24 +128,26 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWays(ArrayList<ArrayList<ArrayList<ShapePaintContainer>>> drawWays, byte layers,
+	void drawWays(List<List<List<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer) {
-		for (this.currentLayer = 0; this.currentLayer < layers; ++this.currentLayer) {
-			this.shapePaintContainers = drawWays.get(this.currentLayer);
-			for (this.currentLevel = 0; this.currentLevel < levelsPerLayer; ++this.currentLevel) {
-				this.wayList = this.shapePaintContainers.get(this.currentLevel);
+		CircleContainer circleContainer;
+		WayContainer complexWayContainer;
+		for (byte currentLayer = 0; currentLayer < layers; ++currentLayer) {
+			this.shapePaintContainers = drawWays.get(currentLayer);
+			for (byte currentLevel = 0; currentLevel < levelsPerLayer; ++currentLevel) {
+				this.wayList = this.shapePaintContainers.get(currentLevel);
 				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
 					this.path.rewind();
 					switch (this.shapePaintContainer.shapeContainer.getShapeType()) {
 						case CIRCLE:
-							this.circleContainer = (CircleContainer) this.shapePaintContainer.shapeContainer;
-							this.path.addCircle(this.circleContainer.x, this.circleContainer.y,
-									this.circleContainer.radius, Path.Direction.CCW);
+							circleContainer = (CircleContainer) this.shapePaintContainer.shapeContainer;
+							this.path.addCircle(circleContainer.x, circleContainer.y,
+									circleContainer.radius, Path.Direction.CCW);
 							break;
 						case WAY:
-							this.complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
-							this.coordinates = this.complexWayContainer.coordinates;
+							complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
+							this.coordinates = complexWayContainer.coordinates;
 							for (int j = 0; j < this.coordinates.length; ++j) {
 								// make sure that the coordinates sequence is not empty
 								if (this.coordinates[j].length > 2) {

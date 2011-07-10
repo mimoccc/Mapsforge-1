@@ -42,7 +42,7 @@ abstract class MapGenerator extends Thread {
 	 * Abstract default constructor that must be called by subclasses.
 	 */
 	MapGenerator() {
-		// set up the two job queues
+		super();
 		this.jobQueue1 = new PriorityQueue<MapGeneratorJob>(64);
 		this.jobQueue2 = new PriorityQueue<MapGeneratorJob>(64);
 	}

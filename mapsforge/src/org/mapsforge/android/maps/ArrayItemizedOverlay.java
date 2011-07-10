@@ -16,8 +16,8 @@ package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -29,7 +29,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayItemizedOverlay";
 
-	private final ArrayList<OverlayItem> overlayItems;
+	private final List<OverlayItem> overlayItems;
 
 	/**
 	 * Constructs a new ArrayItemizedOverlay.
@@ -37,11 +37,9 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * @param defaultMarker
 	 *            the default marker (may be null). This marker is aligned to the center of its bottom
 	 *            line to allow for a conical symbol such as a pin or a needle.
-	 * @param context
-	 *            the reference to the application context.
 	 */
-	public ArrayItemizedOverlay(Drawable defaultMarker, Context context) {
-		this(defaultMarker, context, true);
+	public ArrayItemizedOverlay(Drawable defaultMarker) {
+		this(defaultMarker, true);
 	}
 
 	/**
@@ -49,13 +47,11 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	 * 
 	 * @param defaultMarker
 	 *            the default marker (may be null).
-	 * @param context
-	 *            the reference to the application context.
 	 * @param alignMarker
 	 *            whether the default marker should be aligned or not. If true, the marker is aligned to
 	 *            the center of its bottom line to allow for a conical symbol such as a pin or a needle.
 	 */
-	public ArrayItemizedOverlay(Drawable defaultMarker, Context context, boolean alignMarker) {
+	public ArrayItemizedOverlay(Drawable defaultMarker, boolean alignMarker) {
 		super(defaultMarker != null && alignMarker ? ItemizedOverlay.boundCenterBottom(defaultMarker)
 				: defaultMarker);
 		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);

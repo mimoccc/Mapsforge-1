@@ -32,14 +32,9 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 	}
 
 	/**
-	 * Stores the hash value of this GeoPoint.
+	 * Stores the hash value of this object.
 	 */
 	private final int hashCode;
-
-	/**
-	 * Used to compare this point with others in the {@link #equals(Object)} method.
-	 */
-	private ImmutablePoint other;
 
 	/**
 	 * X coordinate of this point.
@@ -86,10 +81,10 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 		} else if (!(obj instanceof ImmutablePoint)) {
 			return false;
 		}
-		this.other = (ImmutablePoint) obj;
-		if (this.x != this.other.x) {
+		ImmutablePoint other = (ImmutablePoint) obj;
+		if (this.x != other.x) {
 			return false;
-		} else if (this.y != this.other.y) {
+		} else if (this.y != other.y) {
 			return false;
 		}
 		return true;
@@ -111,10 +106,9 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Float.floatToIntBits(this.x);
-		result = prime * result + Float.floatToIntBits(this.y);
+		int result = 7;
+		result = 31 * result + Float.floatToIntBits(this.x);
+		result = 31 * result + Float.floatToIntBits(this.y);
 		return result;
 	}
 }

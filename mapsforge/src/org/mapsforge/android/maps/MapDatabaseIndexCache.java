@@ -49,7 +49,7 @@ class MapDatabaseIndexCache {
 	private long indexBlockNumber;
 	private IndexCacheEntryKey indexCacheEntryKey;
 	private RandomAccessFile inputFile;
-	private LinkedHashMap<IndexCacheEntryKey, byte[]> map;
+	private Map<IndexCacheEntryKey, byte[]> map;
 
 	/**
 	 * Constructs an database index cache with a fixes size and LRU policy.
@@ -69,7 +69,7 @@ class MapDatabaseIndexCache {
 		this.map = createMap(capacity);
 	}
 
-	private LinkedHashMap<IndexCacheEntryKey, byte[]> createMap(final int initialCapacity) {
+	private Map<IndexCacheEntryKey, byte[]> createMap(final int initialCapacity) {
 		return new LinkedHashMap<IndexCacheEntryKey, byte[]>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
@@ -126,7 +126,7 @@ class MapDatabaseIndexCache {
 				this.inputFile.seek(mapFileParameters.indexStartAddress + this.indexBlockNumber
 						* SIZE_OF_INDEX_BLOCK);
 				if (this.inputFile.read(this.indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
-					Logger.d("reading the current index block has failed");
+					Logger.debug("reading the current index block has failed");
 					return -1;
 				}
 
@@ -140,7 +140,7 @@ class MapDatabaseIndexCache {
 			// return the real index entry
 			return Deserializer.getFiveBytesLong(this.indexBlock, this.addressInIndexBlock);
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return -1;
 		}
 	}

@@ -387,12 +387,12 @@ public class AdvancedMapViewer extends MapActivity {
 			this.showMyLocation = true;
 
 			this.circleOverlay = new ArrayCircleOverlay(this.circleOverlayFill,
-					this.circleOverlayOutline, this);
+					this.circleOverlayOutline);
 			this.overlayCircle = new OverlayCircle();
 			this.circleOverlay.addCircle(this.overlayCircle);
 			this.mapView.getOverlays().add(this.circleOverlay);
 
-			this.itemizedOverlay = new ArrayItemizedOverlay(null, this);
+			this.itemizedOverlay = new ArrayItemizedOverlay(null);
 			this.overlayItem = new OverlayItem();
 			this.overlayItem.setMarker(ItemizedOverlay.boundCenter(getResources().getDrawable(
 					R.drawable.my_location)));

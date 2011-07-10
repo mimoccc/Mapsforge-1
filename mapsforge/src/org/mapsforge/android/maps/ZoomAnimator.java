@@ -25,17 +25,12 @@ class ZoomAnimator extends Thread {
 	private static final int FRAME_LENGTH = 15;
 	private static final String THREAD_NAME = "ZoomAnimator";
 
-	private float currentZoom;
 	private int duration;
 	private boolean executeAnimation;
 	private MapView mapView;
 	private float pivotX;
 	private float pivotY;
-	private float scaleFactor;
 	private float scaleFactorApplied;
-	private long timeCurrent;
-	private long timeElapsed;
-	private float timeElapsedPercent;
 	private long timeStart;
 	private float zoomDifference;
 	private float zoomEnd;
@@ -45,12 +40,18 @@ class ZoomAnimator extends Thread {
 	 * Constructs a new ZoomAnimator with the default duration.
 	 */
 	ZoomAnimator() {
+		super();
 		setDuration(DEFAULT_DURATION);
 	}
 
 	@Override
 	public void run() {
 		setName(THREAD_NAME);
+
+		long timeElapsed;
+		float timeElapsedPercent;
+		float currentZoom;
+		float scaleFactor;
 
 		while (!isInterrupted()) {
 			synchronized (this) {
@@ -69,19 +70,17 @@ class ZoomAnimator extends Thread {
 			}
 
 			// calculate the elapsed time
-			this.timeCurrent = SystemClock.uptimeMillis();
-			this.timeElapsed = this.timeCurrent - this.timeStart;
-			this.timeElapsedPercent = Math.min(1, this.timeElapsed / (float) this.duration);
+			timeElapsed = SystemClock.uptimeMillis() - this.timeStart;
+			timeElapsedPercent = Math.min(1, timeElapsed / (float) this.duration);
 
 			// calculate the zoom and scale values at the current moment
-			this.currentZoom = this.zoomStart + this.timeElapsedPercent * this.zoomDifference;
-			this.scaleFactor = this.currentZoom / this.scaleFactorApplied;
-			this.scaleFactorApplied *= this.scaleFactor;
-			this.mapView.matrixPostScale(this.scaleFactor, this.scaleFactor, this.pivotX,
-					this.pivotY);
+			currentZoom = this.zoomStart + timeElapsedPercent * this.zoomDifference;
+			scaleFactor = currentZoom / this.scaleFactorApplied;
+			this.scaleFactorApplied *= scaleFactor;
+			this.mapView.matrixPostScale(scaleFactor, scaleFactor, this.pivotX, this.pivotY);
 
 			// check if the animation time is over
-			if (this.timeElapsed >= this.duration) {
+			if (timeElapsed >= this.duration) {
 				this.executeAnimation = false;
 				this.mapView.handleTiles();
 			} else {
@@ -102,15 +101,6 @@ class ZoomAnimator extends Thread {
 	}
 
 	/**
-	 * Returns the status of the ZoomAnimator.
-	 * 
-	 * @return true if the ZoomAnimator is working, false otherwise.
-	 */
-	boolean isExecuting() {
-		return this.executeAnimation;
-	}
-
-	/**
 	 * Sets the duration of the animation in milliseconds.
 	 * 
 	 * @param duration
@@ -118,11 +108,20 @@ class ZoomAnimator extends Thread {
 	 * @throws IllegalArgumentException
 	 *             if the duration is negative.
 	 */
-	void setDuration(int duration) {
+	private void setDuration(int duration) {
 		if (duration < 0) {
 			throw new IllegalArgumentException();
 		}
 		this.duration = duration;
+	}
+
+	/**
+	 * Returns the status of the ZoomAnimator.
+	 * 
+	 * @return true if the ZoomAnimator is working, false otherwise.
+	 */
+	boolean isExecuting() {
+		return this.executeAnimation;
 	}
 
 	/**

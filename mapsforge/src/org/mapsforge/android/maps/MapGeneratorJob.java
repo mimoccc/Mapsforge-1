@@ -25,8 +25,10 @@ import java.io.Serializable;
 class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Stores the hash value of this object.
+	 */
 	private transient int hashCode;
-	private transient MapGeneratorJob other;
 
 	/**
 	 * Flag if the tile coordinates should be drawn on the image for debugging.
@@ -109,27 +111,26 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 			return true;
 		} else if (!(obj instanceof MapGeneratorJob)) {
 			return false;
-		} else {
-			this.other = (MapGeneratorJob) obj;
-			if (!this.tile.equals(this.other.tile)) {
-				return false;
-			} else if (this.mapViewMode != this.other.mapViewMode) {
-				return false;
-			} else if (this.mapFile == null && this.other.mapFile != null) {
-				return false;
-			} else if (this.mapFile != null && !this.mapFile.equals(this.other.mapFile)) {
-				return false;
-			} else if (this.textScale != this.other.textScale) {
-				return false;
-			} else if (this.drawTileFrames != this.other.drawTileFrames) {
-				return false;
-			} else if (this.drawTileCoordinates != this.other.drawTileCoordinates) {
-				return false;
-			} else if (this.highlightWater != this.other.highlightWater) {
-				return false;
-			}
-			return true;
 		}
+		MapGeneratorJob other = (MapGeneratorJob) obj;
+		if (!this.tile.equals(other.tile)) {
+			return false;
+		} else if (this.mapViewMode != other.mapViewMode) {
+			return false;
+		} else if (this.mapFile == null && other.mapFile != null) {
+			return false;
+		} else if (this.mapFile != null && !this.mapFile.equals(other.mapFile)) {
+			return false;
+		} else if (this.textScale != other.textScale) {
+			return false;
+		} else if (this.drawTileFrames != other.drawTileFrames) {
+			return false;
+		} else if (this.drawTileCoordinates != other.drawTileCoordinates) {
+			return false;
+		} else if (this.highlightWater != other.highlightWater) {
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -143,16 +144,14 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((this.tile == null) ? 0 : this.tile.hashCode());
-		result = prime * result
-				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
-		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
-		result = prime * result + Float.floatToIntBits(this.textScale);
-		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
-		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
-		result = prime * result + (this.highlightWater ? 1231 : 1237);
+		int result = 7;
+		result = 31 * result + ((this.tile == null) ? 0 : this.tile.hashCode());
+		result = 31 * result + ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
+		result = 31 * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = 31 * result + Float.floatToIntBits(this.textScale);
+		result = 31 * result + (this.drawTileFrames ? 1231 : 1237);
+		result = 31 * result + (this.drawTileCoordinates ? 1231 : 1237);
+		result = 31 * result + (this.highlightWater ? 1231 : 1237);
 		return result;
 	}
 

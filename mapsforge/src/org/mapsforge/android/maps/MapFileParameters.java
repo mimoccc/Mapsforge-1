@@ -25,8 +25,10 @@ class MapFileParameters {
 	 */
 	private static final double COORDINATES_DIVISOR = 1000000.0;
 
+	/**
+	 * Stores the hash value of this object.
+	 */
 	private final int hashCode;
-	private MapFileParameters other;
 
 	/**
 	 * Base zoom level of the map file, which equals to one block.
@@ -153,12 +155,12 @@ class MapFileParameters {
 		} else if (!(obj instanceof MapFileParameters)) {
 			return false;
 		}
-		this.other = (MapFileParameters) obj;
-		if (this.startAddress != this.other.startAddress) {
+		MapFileParameters other = (MapFileParameters) obj;
+		if (this.startAddress != other.startAddress) {
 			return false;
-		} else if (this.mapFileSize != this.other.mapFileSize) {
+		} else if (this.mapFileSize != other.mapFileSize) {
 			return false;
-		} else if (this.baseZoomLevel != this.other.baseZoomLevel) {
+		} else if (this.baseZoomLevel != other.baseZoomLevel) {
 			return false;
 		}
 		return true;
@@ -175,11 +177,10 @@ class MapFileParameters {
 	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (this.startAddress ^ (this.startAddress >>> 32));
-		result = prime * result + (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
-		result = prime * result + this.baseZoomLevel;
+		int result = 7;
+		result = 31 * result + (int) (this.startAddress ^ (this.startAddress >>> 32));
+		result = 31 * result + (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
+		result = 31 * result + this.baseZoomLevel;
 		return result;
 	}
 }

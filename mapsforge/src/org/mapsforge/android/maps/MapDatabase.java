@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Map;
 
 import android.graphics.Rect;
 
@@ -238,7 +239,7 @@ public class MapDatabase {
 	private MapDatabaseIndexCache databaseIndexCache;
 	private boolean debugFile;
 	private boolean[] defaultTagIds;
-	private short elementCounter;
+	private int elementCounter;
 	private File file;
 	private long fileSize;
 	private int fileVersionNumber;
@@ -279,15 +280,15 @@ public class MapDatabase {
 	private String nodeName;
 	private byte nodeNumberOfTags;
 	private String nodeSignature;
-	private short nodesOnZoomLevel;
+	private int nodesOnZoomLevel;
 	private byte nodeSpecialByte;
 	private String nodeTag;
 	private int nodeTagId;
 	private boolean[] nodeTagIds;
-	private HashMap<String, Integer> nodeTags;
+	private Map<String, Integer> nodeTags;
 	private byte numberOfMapFiles;
-	private short numberOfNodeTags;
-	private short numberOfWayTags;
+	private int numberOfNodeTags;
+	private int numberOfWayTags;
 	private long parentTileX;
 	private long parentTileY;
 	private String projectionName;
@@ -309,7 +310,7 @@ public class MapDatabase {
 	private int tempInt;
 	private int tileLatitude;
 	private int tileLongitude;
-	private short tilePixelSize;
+	private int tilePixelSize;
 	private long toBaseTileX;
 	private long toBaseTileY;
 	private long toBlockX;
@@ -337,15 +338,15 @@ public class MapDatabase {
 	private String wayRef;
 	private String waySignature;
 	private int waySize;
-	private short waysOnZoomLevel;
+	private int waysOnZoomLevel;
 	private byte waySpecialByte1;
 	private byte waySpecialByte2;
 	private String wayTag;
 	private byte wayTagBitmap;
 	private int wayTagId;
 	private boolean[] wayTagIds;
-	private HashMap<String, Integer> wayTags;
-	private short wayTileBitmask;
+	private Map<String, Integer> wayTags;
+	private int wayTileBitmask;
 	private int zoomLevelDifference;
 	private byte zoomLevelMax;
 	private byte zoomLevelMin;
@@ -374,7 +375,7 @@ public class MapDatabase {
 
 			this.readBuffer = null;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 		}
 	}
 
@@ -487,13 +488,13 @@ public class MapDatabase {
 			// check if the file exists and is readable
 			this.file = new File(fileName);
 			if (!this.file.exists()) {
-				Logger.d("file does not exist: " + fileName);
+				Logger.debug("file does not exist: " + fileName);
 				return false;
 			} else if (!this.file.isFile()) {
-				Logger.d("not a file: " + fileName);
+				Logger.debug("not a file: " + fileName);
 				return false;
 			} else if (!this.file.canRead()) {
-				Logger.d("cannot read file: " + fileName);
+				Logger.debug("cannot read file: " + fileName);
 				return false;
 			}
 
@@ -509,7 +510,7 @@ public class MapDatabase {
 
 			return true;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			// make sure that the file is closed
 			closeFile();
 			return false;
@@ -532,7 +533,7 @@ public class MapDatabase {
 					SIGNATURE_LENGTH_BLOCK, "UTF-8");
 			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
 			if (!this.blockSignature.startsWith("###TileStart")) {
-				Logger.d("invalid block signature: " + this.blockSignature);
+				Logger.debug("invalid block signature: " + this.blockSignature);
 				return;
 			}
 		}
@@ -552,9 +553,9 @@ public class MapDatabase {
 		// get the offset to the first stored way in the block
 		this.firstWayOffset = readVariableByteEncodedUnsignedInt() + this.bufferPosition;
 		if (this.firstWayOffset > this.readBuffer.length) {
-			Logger.d("invalid first way offset: " + this.firstWayOffset);
+			Logger.debug("invalid first way offset: " + this.firstWayOffset);
 			if (this.debugFile) {
-				Logger.d("block signature: " + this.blockSignature);
+				Logger.debug("block signature: " + this.blockSignature);
 			}
 			return;
 		}
@@ -567,8 +568,8 @@ public class MapDatabase {
 						SIGNATURE_LENGTH_NODE, "UTF-8");
 				this.bufferPosition += SIGNATURE_LENGTH_NODE;
 				if (!this.nodeSignature.startsWith("***POIStart")) {
-					Logger.d("invalid node signature: " + this.nodeSignature);
-					Logger.d("block signature: " + this.blockSignature);
+					Logger.debug("invalid node signature: " + this.nodeSignature);
+					Logger.debug("block signature: " + this.blockSignature);
 					return;
 				}
 			}
@@ -593,10 +594,10 @@ public class MapDatabase {
 			for (this.tempByte = this.nodeNumberOfTags; this.tempByte != 0; --this.tempByte) {
 				this.nodeTagId = readVariableByteEncodedUnsignedInt();
 				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
-					Logger.d("invalid node tag ID: " + this.nodeTagId);
+					Logger.debug("invalid node tag ID: " + this.nodeTagId);
 					if (this.debugFile) {
-						Logger.d("node signature: " + this.nodeSignature);
-						Logger.d("block signature: " + this.blockSignature);
+						Logger.debug("node signature: " + this.nodeSignature);
+						Logger.debug("block signature: " + this.blockSignature);
 					}
 					return;
 				}
@@ -644,10 +645,10 @@ public class MapDatabase {
 
 		// finished reading nodes, check if the current buffer position is valid
 		if (this.bufferPosition > this.firstWayOffset) {
-			Logger.d("invalid buffer position: " + this.bufferPosition + " - "
+			Logger.debug("invalid buffer position: " + this.bufferPosition + " - "
 					+ this.firstWayOffset);
 			if (this.debugFile) {
-				Logger.d("block signature: " + this.blockSignature);
+				Logger.debug("block signature: " + this.blockSignature);
 			}
 			return;
 		}
@@ -663,8 +664,8 @@ public class MapDatabase {
 						SIGNATURE_LENGTH_WAY, "UTF-8");
 				this.bufferPosition += SIGNATURE_LENGTH_WAY;
 				if (!this.waySignature.startsWith("---WayStart")) {
-					Logger.d("invalid way signature: " + this.waySignature);
-					Logger.d("block signature: " + this.blockSignature);
+					Logger.debug("invalid way signature: " + this.waySignature);
+					Logger.debug("block signature: " + this.blockSignature);
 					return;
 				}
 			}
@@ -709,10 +710,10 @@ public class MapDatabase {
 			for (this.tempByte = this.wayNumberOfTags; this.tempByte != 0; --this.tempByte) {
 				this.wayTagId = readVariableByteEncodedUnsignedInt();
 				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
-					Logger.d("invalid way tag ID: " + this.wayTagId);
+					Logger.debug("invalid way tag ID: " + this.wayTagId);
 					if (this.debugFile) {
-						Logger.d("way signature: " + this.waySignature);
-						Logger.d("block signature: " + this.blockSignature);
+						Logger.debug("way signature: " + this.waySignature);
+						Logger.debug("block signature: " + this.blockSignature);
 					}
 					return;
 				}
@@ -723,10 +724,10 @@ public class MapDatabase {
 			this.wayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-				Logger.d("invalid number of way nodes: " + this.wayNumberOfWayNodes);
+				Logger.debug("invalid number of way nodes: " + this.wayNumberOfWayNodes);
 				if (this.debugFile) {
-					Logger.d("way signature: " + this.waySignature);
-					Logger.d("block signature: " + this.blockSignature);
+					Logger.debug("way signature: " + this.waySignature);
+					Logger.debug("block signature: " + this.blockSignature);
 				}
 				return;
 			}
@@ -824,11 +825,11 @@ public class MapDatabase {
 						this.innerWayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
 						if (this.innerWayNumberOfWayNodes < 1
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-							Logger.d("invalid inner way number of way nodes: "
+							Logger.debug("invalid inner way number of way nodes: "
 									+ this.innerWayNumberOfWayNodes);
 							if (this.debugFile) {
-								Logger.d("way signature: " + this.waySignature);
-								Logger.d("block signature: " + this.blockSignature);
+								Logger.debug("way signature: " + this.waySignature);
+								Logger.debug("block signature: " + this.blockSignature);
 							}
 							return;
 						}
@@ -868,10 +869,10 @@ public class MapDatabase {
 						this.wayInnerWays[this.innerWayNumber] = this.innerWay;
 					}
 				} else {
-					Logger.d("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
+					Logger.debug("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
 					if (this.debugFile) {
-						Logger.d("way signature: " + this.waySignature);
-						Logger.d("block signature: " + this.blockSignature);
+						Logger.debug("way signature: " + this.waySignature);
+						Logger.debug("block signature: " + this.blockSignature);
 					}
 					return;
 				}
@@ -898,7 +899,7 @@ public class MapDatabase {
 	private boolean processFileHeader() throws IOException {
 		// read the the magic byte and the file header size into the buffer
 		if (!readFromMapFile(BINARY_OSM_MAGIC_BYTE.length() + 4)) {
-			Logger.d("reading magic byte has failed");
+			Logger.debug("reading magic byte has failed");
 			return false;
 		}
 
@@ -907,7 +908,7 @@ public class MapDatabase {
 				.length(), "UTF-8");
 		this.bufferPosition += BINARY_OSM_MAGIC_BYTE.length();
 		if (!this.magicByte.equals(BINARY_OSM_MAGIC_BYTE)) {
-			Logger.d("invalid magic byte: " + this.magicByte);
+			Logger.debug("invalid magic byte: " + this.magicByte);
 			return false;
 		}
 
@@ -915,13 +916,13 @@ public class MapDatabase {
 		this.remainingHeaderSize = readInt();
 		if (this.remainingHeaderSize < REMAINING_HEADER_SIZE_MIN
 				|| this.remainingHeaderSize > REMAINING_HEADER_SIZE_MAX) {
-			Logger.d("invalid remaining header size: " + this.remainingHeaderSize);
+			Logger.debug("invalid remaining header size: " + this.remainingHeaderSize);
 			return false;
 		}
 
 		// read the header data into the buffer
 		if (!readFromMapFile(this.remainingHeaderSize)) {
-			Logger.d("reading header data has failed: " + this.remainingHeaderSize);
+			Logger.debug("reading header data has failed: " + this.remainingHeaderSize);
 			return false;
 		}
 
@@ -929,7 +930,7 @@ public class MapDatabase {
 		this.fileVersionNumber = readInt();
 		if (this.fileVersionNumber < BINARY_OSM_VERSION_MIN
 				|| this.fileVersionNumber > BINARY_OSM_VERSION_MAX) {
-			Logger.d("unsupported file format version: " + this.fileVersionNumber);
+			Logger.debug("unsupported file format version: " + this.fileVersionNumber);
 			return false;
 		}
 
@@ -943,7 +944,7 @@ public class MapDatabase {
 		// get and check the number of contained map files
 		this.numberOfMapFiles = readByte();
 		if (this.numberOfMapFiles < 1) {
-			Logger.d("invalid number of contained map files: " + this.numberOfMapFiles);
+			Logger.debug("invalid number of contained map files: " + this.numberOfMapFiles);
 			return false;
 		}
 
@@ -953,35 +954,35 @@ public class MapDatabase {
 		// get and check the tile pixel size (2 bytes)
 		this.tilePixelSize = readShort();
 		if (this.tilePixelSize < 1) {
-			Logger.d("invalid tile pixel size: " + this.tilePixelSize);
+			Logger.debug("invalid tile pixel size: " + this.tilePixelSize);
 			return false;
 		}
 
 		// get and check the the top boundary (4 bytes)
 		this.boundaryTop = readInt();
 		if (this.boundaryTop > 90000000) {
-			Logger.d("invalid top boundary: " + this.boundaryTop);
+			Logger.debug("invalid top boundary: " + this.boundaryTop);
 			return false;
 		}
 
 		// get and check the left boundary (4 bytes)
 		this.boundaryLeft = readInt();
 		if (this.boundaryLeft < -180000000) {
-			Logger.d("invalid left boundary: " + this.boundaryLeft);
+			Logger.debug("invalid left boundary: " + this.boundaryLeft);
 			return false;
 		}
 
 		// get and check the bottom boundary (4 bytes)
 		this.boundaryBottom = readInt();
 		if (this.boundaryBottom < -90000000) {
-			Logger.d("invalid bottom boundary: " + this.boundaryBottom);
+			Logger.debug("invalid bottom boundary: " + this.boundaryBottom);
 			return false;
 		}
 
 		// get and check the right boundary (4 bytes)
 		this.boundaryRight = readInt();
 		if (this.boundaryRight > 180000000) {
-			Logger.d("invalid right boundary: " + this.boundaryRight);
+			Logger.debug("invalid right boundary: " + this.boundaryRight);
 			return false;
 		}
 
@@ -994,7 +995,7 @@ public class MapDatabase {
 			// get and check the start position latitude (4 byte)
 			this.startPositionLatitude = readInt();
 			if (this.startPositionLatitude < -90000000 || this.startPositionLatitude > 90000000) {
-				Logger.d("invalid start position latitude: " + this.startPositionLatitude);
+				Logger.debug("invalid start position latitude: " + this.startPositionLatitude);
 				return false;
 			}
 
@@ -1002,7 +1003,7 @@ public class MapDatabase {
 			this.startPositionLongitude = readInt();
 			if (this.startPositionLongitude < -180000000
 					|| this.startPositionLongitude > 180000000) {
-				Logger.d("invalid start position longitude: " + this.startPositionLongitude);
+				Logger.debug("invalid start position longitude: " + this.startPositionLongitude);
 				return false;
 			}
 		}
@@ -1010,17 +1011,14 @@ public class MapDatabase {
 		// get and check the the map date (8 bytes)
 		this.mapDate = readLong();
 		if (this.mapDate < 0) {
-			Logger.d("invalid map date: " + this.mapDate);
+			Logger.debug("invalid map date: " + this.mapDate);
 			return false;
 		}
 
 		// get and check the number of node tags (2 bytes)
 		this.numberOfNodeTags = readShort();
 		if (this.numberOfNodeTags < 0) {
-			Logger.d("invalid number of node tags: " + this.numberOfNodeTags);
-			return false;
-		} else if (this.numberOfNodeTags > Short.MAX_VALUE) {
-			Logger.d("invalid number of node tags: " + this.numberOfNodeTags);
+			Logger.debug("invalid number of node tags: " + this.numberOfNodeTags);
 			return false;
 		}
 
@@ -1040,14 +1038,14 @@ public class MapDatabase {
 			// get and check the node tag ID (2 bytes)
 			this.nodeTagId = readShort();
 			if (this.nodeTagId < 0 || this.nodeTagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.d("invalid node tag ID: " + this.nodeTagId);
+				Logger.debug("invalid node tag ID: " + this.nodeTagId);
 				return false;
 			}
 
 			// check for an existing mapping of this node tag
 			if (this.nodeTags.containsKey(this.nodeTag)) {
-				Logger.d("duplicate node tag mapping: " + this.nodeTag);
-				Logger.d("IDs: " + this.nodeTags.get(this.nodeTag) + " " + this.nodeTagId);
+				Logger.debug("duplicate node tag mapping: " + this.nodeTag);
+				Logger.debug("IDs: " + this.nodeTags.get(this.nodeTag) + " " + this.nodeTagId);
 				return false;
 			}
 
@@ -1063,7 +1061,7 @@ public class MapDatabase {
 		// get and check the number of way tags (2 bytes)
 		this.numberOfWayTags = readShort();
 		if (this.numberOfWayTags < 0) {
-			Logger.d("invalid number of way tags: " + this.numberOfWayTags);
+			Logger.debug("invalid number of way tags: " + this.numberOfWayTags);
 			return false;
 		}
 
@@ -1083,14 +1081,14 @@ public class MapDatabase {
 			// get and check the way tag ID (2 bytes)
 			this.wayTagId = readShort();
 			if (this.wayTagId < 0 || this.wayTagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.d("invalid way tag ID: " + this.wayTagId);
+				Logger.debug("invalid way tag ID: " + this.wayTagId);
 				return false;
 			}
 
 			// check for an existing mapping of this way tag
 			if (this.wayTags.containsKey(this.wayTag)) {
-				Logger.d("duplicate way tag mapping: " + this.wayTag);
-				Logger.d("IDs: " + this.wayTags.get(this.wayTag) + " " + this.wayTagId);
+				Logger.debug("duplicate way tag mapping: " + this.wayTag);
+				Logger.debug("IDs: " + this.wayTags.get(this.wayTag) + " " + this.wayTagId);
 				return false;
 			}
 
@@ -1116,27 +1114,27 @@ public class MapDatabase {
 			// get and check the base zoom level
 			this.baseZoomLevel = readByte();
 			if (this.baseZoomLevel < 0 || this.baseZoomLevel > 21) {
-				Logger.d("invalid base zooom level: " + this.baseZoomLevel);
+				Logger.debug("invalid base zooom level: " + this.baseZoomLevel);
 				return false;
 			}
 
 			// get and check the minimum zoom level
 			this.zoomLevelMin = readByte();
 			if (this.zoomLevelMin < 0 || this.zoomLevelMin > 21) {
-				Logger.d("invalid minimum zoom level: " + this.zoomLevelMin);
+				Logger.debug("invalid minimum zoom level: " + this.zoomLevelMin);
 				return false;
 			}
 
 			// get and check the maximum zoom level
 			this.zoomLevelMax = readByte();
 			if (this.zoomLevelMax < 0 || this.zoomLevelMax > 21) {
-				Logger.d("invalid maximum zoom level: " + this.zoomLevelMax);
+				Logger.debug("invalid maximum zoom level: " + this.zoomLevelMax);
 				return false;
 			}
 
 			// check for valid zoom level range
 			if (this.zoomLevelMin > this.zoomLevelMax) {
-				Logger.d("invalid zoom level range: " + this.zoomLevelMin + " - "
+				Logger.debug("invalid zoom level range: " + this.zoomLevelMin + " - "
 						+ this.zoomLevelMax);
 				return false;
 			}
@@ -1144,7 +1142,7 @@ public class MapDatabase {
 			// get and check the start address of the map file (5 bytes)
 			this.startAddress = readFiveBytesLong();
 			if (this.startAddress < 1 || this.startAddress >= this.fileSize) {
-				Logger.d("invalid start address: " + this.startAddress);
+				Logger.debug("invalid start address: " + this.startAddress);
 				return false;
 			}
 
@@ -1159,7 +1157,7 @@ public class MapDatabase {
 			// get and check the size of the map file (5 bytes)
 			this.mapFileSize = readFiveBytesLong();
 			if (this.mapFileSize < 1) {
-				Logger.d("invalid map file size: " + this.mapFileSize);
+				Logger.debug("invalid map file size: " + this.mapFileSize);
 				return false;
 			}
 
@@ -1295,7 +1293,7 @@ public class MapDatabase {
 			}
 			return null;
 		}
-		Logger.d("invalid string length: " + this.stringLength);
+		Logger.debug("invalid string length: " + this.stringLength);
 		return null;
 	}
 
@@ -1376,7 +1374,7 @@ public class MapDatabase {
 			// get and check the map file for the query zoom level
 			this.mapFileParameters = this.mapFilesLookupTable[this.queryZoomLevel];
 			if (this.mapFileParameters == null) {
-				Logger.d("no map file for zoom level: " + tile.zoomLevel);
+				Logger.debug("no map file for zoom level: " + tile.zoomLevel);
 				return;
 			}
 
@@ -1545,8 +1543,8 @@ public class MapDatabase {
 							& BITMASK_INDEX_OFFSET;
 					if (this.currentBlockPointer < 1
 							|| this.currentBlockPointer > this.mapFileParameters.mapFileSize) {
-						Logger.d("invalid current block pointer: " + this.currentBlockPointer);
-						Logger.d("mapFileSize: " + this.mapFileParameters.mapFileSize);
+						Logger.debug("invalid current block pointer: " + this.currentBlockPointer);
+						Logger.debug("mapFileSize: " + this.mapFileParameters.mapFileSize);
 						return;
 					}
 
@@ -1561,8 +1559,8 @@ public class MapDatabase {
 								& BITMASK_INDEX_OFFSET;
 						if (this.nextBlockPointer < 1
 								|| this.nextBlockPointer > this.mapFileParameters.mapFileSize) {
-							Logger.d("invalid next block pointer: " + this.nextBlockPointer);
-							Logger.d("mapFileSize: " + this.mapFileParameters.mapFileSize);
+							Logger.debug("invalid next block pointer: " + this.nextBlockPointer);
+							Logger.debug("mapFileSize: " + this.mapFileParameters.mapFileSize);
 							return;
 						}
 					}
@@ -1570,17 +1568,17 @@ public class MapDatabase {
 					// calculate the size of the current block
 					this.currentBlockSize = (int) (this.nextBlockPointer - this.currentBlockPointer);
 					if (this.currentBlockSize < 0) {
-						Logger.d("invalid current block size: " + this.currentBlockSize);
+						Logger.debug("invalid current block size: " + this.currentBlockSize);
 						return;
 					} else if (this.currentBlockSize == 0) {
 						// the current block is empty, continue with the next block
 						continue;
 					} else if (this.currentBlockSize > MAXIMUM_BLOCK_SIZE) {
 						// the current block is too large, continue with the next block
-						Logger.d("current block size too large: " + this.currentBlockSize);
+						Logger.debug("current block size too large: " + this.currentBlockSize);
 						continue;
 					} else if (this.currentBlockPointer + this.currentBlockSize > this.fileSize) {
-						Logger.d("invalid current block size: " + this.currentBlockSize);
+						Logger.debug("invalid current block size: " + this.currentBlockSize);
 						return;
 					}
 
@@ -1591,7 +1589,7 @@ public class MapDatabase {
 					// read the current block into the buffer
 					if (!readFromMapFile(this.currentBlockSize)) {
 						// skip the current block
-						Logger.d("reading current block has failed: " + this.currentBlockSize);
+						Logger.debug("reading current block has failed: " + this.currentBlockSize);
 						return;
 					}
 
@@ -1614,7 +1612,7 @@ public class MapDatabase {
 				databaseMapGenerator.renderWaterBackground();
 			}
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 		}
 	}
 
@@ -1623,7 +1621,7 @@ public class MapDatabase {
 	 * 
 	 * @return a map containing the tags and their corresponding IDs.
 	 */
-	HashMap<String, Integer> getNodeTags() {
+	Map<String, Integer> getNodeTags() {
 		return this.nodeTags;
 	}
 
@@ -1632,7 +1630,7 @@ public class MapDatabase {
 	 * 
 	 * @return a map containing the tags and their corresponding IDs.
 	 */
-	HashMap<String, Integer> getWayTags() {
+	Map<String, Integer> getWayTags() {
 		return this.wayTags;
 	}
 

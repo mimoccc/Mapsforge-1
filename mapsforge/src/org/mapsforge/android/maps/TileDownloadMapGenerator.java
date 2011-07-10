@@ -28,15 +28,15 @@ import android.graphics.BitmapFactory;
  */
 abstract class TileDownloadMapGenerator extends MapGenerator {
 	private Bitmap decodedBitmap;
-	private InputStream inputStream;
 	private int[] pixelColors;
-	private StringBuilder stringBuilder;
+	private final StringBuilder stringBuilder;
 	private Bitmap tileBitmap;
 
 	/**
 	 * Default constructor that must be called by subclasses.
 	 */
 	TileDownloadMapGenerator() {
+		super();
 		this.stringBuilder = new StringBuilder(128);
 	}
 
@@ -54,9 +54,9 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 		try {
 			getTilePath(mapGeneratorJob.tile, this.stringBuilder);
 			// read the data from the tile URL
-			this.inputStream = new URL(this.stringBuilder.toString()).openStream();
-			this.decodedBitmap = BitmapFactory.decodeStream(this.inputStream);
-			this.inputStream.close();
+			InputStream inputStream = new URL(this.stringBuilder.toString()).openStream();
+			this.decodedBitmap = BitmapFactory.decodeStream(inputStream);
+			inputStream.close();
 
 			// check if the input stream could be decoded into a bitmap
 			if (this.decodedBitmap == null) {
@@ -75,10 +75,10 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 			}
 			return true;
 		} catch (UnknownHostException e) {
-			Logger.d(e.getMessage());
+			Logger.debug(e.getMessage());
 			return false;
 		} catch (IOException e) {
-			Logger.e(e);
+			Logger.exception(e);
 			return false;
 		}
 	}

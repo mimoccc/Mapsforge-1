@@ -17,6 +17,7 @@ package org.mapsforge.android.maps;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.PriorityQueue;
 
 import android.graphics.Rect;
@@ -50,9 +51,9 @@ class LabelPlacement {
 
 	private static final boolean DEFAULT = false;
 
+	private static final int PLACEMENT_MODEL = 1;
 	private int labelDistanceToLabel = 2;
 	private int labelDistanceToSymbol = 2;
-	private int placementOption = 1;
 	// You can choose between 2 Position and 4 Position
 	// placement Model 0 - 2-Position 1 - 4 Position
 	// distance adjustments
@@ -76,7 +77,7 @@ class LabelPlacement {
 	 * @param labels
 	 *            labels to center
 	 */
-	private void centerLabels(ArrayList<PointTextContainer> labels) {
+	private void centerLabels(List<PointTextContainer> labels) {
 		for (int i = 0; i < labels.size(); i++) {
 			this.label = labels.get(i);
 			this.label.x = this.label.x - this.label.boundary.width() / 2;
@@ -89,7 +90,7 @@ class LabelPlacement {
 	 * @param labels
 	 *            Labels to center
 	 */
-	private void centerLabels2(ArrayList<PointTextContainer> labels) {
+	private void centerLabels2(List<PointTextContainer> labels) {
 		for (int i = 0; i < labels.size(); i++) {
 			this.label = labels.get(i);
 			this.label.x = this.label.x - this.label.boundary.width() / 2;
@@ -99,23 +100,23 @@ class LabelPlacement {
 		}
 	}
 
-	private void preprocessAreaLabels(ArrayList<PointTextContainer> areaLabels) {
+	private void preprocessAreaLabels(List<PointTextContainer> areaLabels) {
 		centerLabels(areaLabels);
 
 		removeOutOfTileAreaLabels(areaLabels);
 
 		removeOverlappingAreaLabels(areaLabels);
 
-		if (areaLabels.size() != 0) {
+		if (!areaLabels.isEmpty()) {
 			this.dependencyCache.removeAreaLabelsInAlreadyDrawnAreas(areaLabels);
 		}
 	}
 
-	private void preprocessLabels(ArrayList<PointTextContainer> labels) {
+	private void preprocessLabels(List<PointTextContainer> labels) {
 		removeOutOfTileLabels(labels);
 	}
 
-	private void preprocessSymbols(ArrayList<SymbolContainer> symbols) {
+	private void preprocessSymbols(List<SymbolContainer> symbols) {
 		removeOutOfTileSymbols(symbols);
 		removeOverlappingSymbols(symbols);
 		this.dependencyCache.removeSymbolsFromDrawnAreas(symbols);
@@ -137,10 +138,9 @@ class LabelPlacement {
 	 * @return list of labels without overlaps with symbols and other labels by the four fixed position
 	 *         greedy strategy
 	 */
-	private ArrayList<PointTextContainer> processFourPointGreedy(
-			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
-			ArrayList<PointTextContainer> areaLabels) {
-		ArrayList<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
+	private List<PointTextContainer> processFourPointGreedy(List<PointTextContainer> labels,
+			List<SymbolContainer> symbols, List<PointTextContainer> areaLabels) {
+		List<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
 
 		// Array for the generated reference positions around the points of interests
 		ReferencePosition[] refPos = new ReferencePosition[(labels.size()) * 4];
@@ -295,10 +295,9 @@ class LabelPlacement {
 	 * @return list of labels without overlaps with symbols and other labels by the two fixed position
 	 *         greedy strategy
 	 */
-	private ArrayList<PointTextContainer> processTwoPointGreedy(
-			ArrayList<PointTextContainer> labels, ArrayList<SymbolContainer> symbols,
-			ArrayList<PointTextContainer> areaLabels) {
-		ArrayList<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
+	private List<PointTextContainer> processTwoPointGreedy(List<PointTextContainer> labels,
+			List<SymbolContainer> symbols, List<PointTextContainer> areaLabels) {
+		List<PointTextContainer> resolutionSet = new ArrayList<PointTextContainer>();
 		// Array for the generated reference positions around the points of interests
 		ReferencePosition[] refPos = new ReferencePosition[labels.size() * 2];
 
@@ -420,8 +419,8 @@ class LabelPlacement {
 		return resolutionSet;
 	}
 
-	private void removeEmptySymbolReferences(ArrayList<PointTextContainer> nodes,
-			ArrayList<SymbolContainer> symbols) {
+	private void removeEmptySymbolReferences(List<PointTextContainer> nodes,
+			List<SymbolContainer> symbols) {
 		for (int i = 0; i < nodes.size(); i++) {
 			this.label = nodes.get(i);
 			if (!symbols.contains(this.label.symbol)) {
@@ -443,7 +442,7 @@ class LabelPlacement {
 	 *            actual list of the area labels
 	 */
 	private void removeNonValidateReferencePosition(ReferencePosition[] refPos,
-			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels) {
+			List<SymbolContainer> symbols, List<PointTextContainer> areaLabels) {
 		int dis = this.labelDistanceToSymbol;
 
 		for (int i = 0; i < symbols.size(); i++) {
@@ -497,7 +496,7 @@ class LabelPlacement {
 	 * @param areaLabels
 	 *            area Labels from the actual tile
 	 */
-	private void removeOutOfTileAreaLabels(ArrayList<PointTextContainer> areaLabels) {
+	private void removeOutOfTileAreaLabels(List<PointTextContainer> areaLabels) {
 		for (int i = 0; i < areaLabels.size(); i++) {
 			this.label = areaLabels.get(i);
 
@@ -527,7 +526,7 @@ class LabelPlacement {
 	 * @param labels
 	 *            Labels from the actual tile
 	 */
-	private void removeOutOfTileLabels(ArrayList<PointTextContainer> labels) {
+	private void removeOutOfTileLabels(List<PointTextContainer> labels) {
 		for (int i = 0; i < labels.size();) {
 			this.label = labels.get(i);
 
@@ -556,7 +555,7 @@ class LabelPlacement {
 	 * @param symbols
 	 *            Symbols from the actual tile
 	 */
-	private void removeOutOfTileSymbols(ArrayList<SymbolContainer> symbols) {
+	private void removeOutOfTileSymbols(List<SymbolContainer> symbols) {
 		for (int i = 0; i < symbols.size();) {
 			this.smb = symbols.get(i);
 
@@ -585,7 +584,7 @@ class LabelPlacement {
 	 * @param areaLabels
 	 *            area labels from the actual tile
 	 */
-	private void removeOverlappingAreaLabels(ArrayList<PointTextContainer> areaLabels) {
+	private void removeOverlappingAreaLabels(List<PointTextContainer> areaLabels) {
 		int dis = this.labelDistanceToLabel;
 
 		for (int x = 0; x < areaLabels.size(); x++) {
@@ -620,8 +619,8 @@ class LabelPlacement {
 	 * @param pTC
 	 *            list of labels
 	 */
-	private void removeOverlappingSymbolsWithAreaLabels(ArrayList<SymbolContainer> symbols,
-			ArrayList<PointTextContainer> pTC) {
+	private void removeOverlappingSymbolsWithAreaLabels(List<SymbolContainer> symbols,
+			List<PointTextContainer> pTC) {
 		int dis = this.labelDistanceToSymbol;
 
 		for (int x = 0; x < pTC.size(); x++) {
@@ -656,7 +655,7 @@ class LabelPlacement {
 	}
 
 	int getPlacementOption() {
-		return this.placementOption;
+		return PLACEMENT_MODEL;
 	}
 
 	int getStartDistanceToSymbols() {
@@ -682,10 +681,9 @@ class LabelPlacement {
 	 *            current tile with the x,y- coordinates and the zoom level.
 	 * @return the processed list of labels.
 	 */
-	ArrayList<PointTextContainer> placeLabels(ArrayList<PointTextContainer> labels,
-			ArrayList<SymbolContainer> symbols, ArrayList<PointTextContainer> areaLabels,
-			Tile cT) {
-		ArrayList<PointTextContainer> returnLabels = labels;
+	List<PointTextContainer> placeLabels(List<PointTextContainer> labels,
+			List<SymbolContainer> symbols, List<PointTextContainer> areaLabels, Tile cT) {
+		List<PointTextContainer> returnLabels = labels;
 		if (!DEFAULT) {
 			this.dependencyCache.generateTileAndDependencyOnTile(cT);
 
@@ -702,8 +700,8 @@ class LabelPlacement {
 			this.dependencyCache.removeOverlappingObjectsWithDependencyOnTile(returnLabels,
 					areaLabels, symbols);
 
-			if (returnLabels.size() != 0) {
-				switch (this.placementOption) {
+			if (!returnLabels.isEmpty()) {
+				switch (PLACEMENT_MODEL) {
 					case 0:
 						returnLabels = processTwoPointGreedy(returnLabels, symbols, areaLabels);
 						break;
@@ -730,7 +728,7 @@ class LabelPlacement {
 	 * @param symbols
 	 *            symbols from the actual tile
 	 */
-	void removeOverlappingSymbols(ArrayList<SymbolContainer> symbols) {
+	void removeOverlappingSymbols(List<SymbolContainer> symbols) {
 		int dis = this.symbolDistanceToSymbol;
 
 		for (int x = 0; x < symbols.size(); x++) {

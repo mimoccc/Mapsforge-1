@@ -20,33 +20,41 @@ import android.util.Log;
  * Class used for logging text to the console.
  */
 final class Logger {
+	private static final String LOG_TAG = "osm";
+
 	/**
-	 * Log a simple string message with debug level.
+	 * Logs the given string message with debug level.
 	 * 
-	 * @param str
-	 *            the log message to be printed.
+	 * @param message
+	 *            the message which should be logged.
 	 */
-	static void d(String str) {
-		Log.d("osm", Thread.currentThread().getName() + ": " + str);
+	static void debug(String message) {
+		Log.d(LOG_TAG, Thread.currentThread().getName() + ": " + message);
 	}
 
 	/**
-	 * Log an exception message and its complete stack trace.
+	 * Logs the given exception, including its stack trace.
 	 * 
-	 * @param e
-	 *            the exception which should be printed.
+	 * @param exception
+	 *            the exception which should be logged.
 	 */
-	static void e(Exception e) {
+	static void exception(Exception exception) {
 		StringBuilder stringBuilder = new StringBuilder(512);
-		stringBuilder.append("Exception in thread \"" + Thread.currentThread().getName()
-				+ "\" " + e.toString());
-		StackTraceElement[] stack = e.getStackTrace();
+		stringBuilder.append("Exception in thread \"");
+		stringBuilder.append(Thread.currentThread().getName());
+		stringBuilder.append("\" ");
+		stringBuilder.append(exception.toString());
+		StackTraceElement[] stack = exception.getStackTrace();
 		for (int i = 0; i < stack.length; ++i) {
-			stringBuilder.append("\n\tat ").append(stack[i].getMethodName()).append("(")
-					.append(stack[i].getFileName()).append(":")
-					.append(stack[i].getLineNumber()).append(")");
+			stringBuilder.append("\n\tat ");
+			stringBuilder.append(stack[i].getMethodName());
+			stringBuilder.append('(');
+			stringBuilder.append(stack[i].getFileName());
+			stringBuilder.append(':');
+			stringBuilder.append(stack[i].getLineNumber());
+			stringBuilder.append(')');
 		}
-		Log.e("osm", stringBuilder.toString());
+		Log.e(LOG_TAG, stringBuilder.toString());
 	}
 
 	/**

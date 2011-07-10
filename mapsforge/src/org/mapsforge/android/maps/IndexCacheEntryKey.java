@@ -21,7 +21,6 @@ class IndexCacheEntryKey {
 	private final int hashCode;
 	private final long indexBlockNumber;
 	private final MapFileParameters mapFileParameters;
-	private IndexCacheEntryKey other;
 
 	/**
 	 * Creates an immutable key to be stored in a map.
@@ -44,13 +43,13 @@ class IndexCacheEntryKey {
 		} else if (!(obj instanceof IndexCacheEntryKey)) {
 			return false;
 		}
-		this.other = (IndexCacheEntryKey) obj;
-		if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
+		IndexCacheEntryKey other = (IndexCacheEntryKey) obj;
+		if (this.mapFileParameters == null && other.mapFileParameters != null) {
 			return false;
 		} else if (this.mapFileParameters != null
-				&& !this.mapFileParameters.equals(this.other.mapFileParameters)) {
+				&& !this.mapFileParameters.equals(other.mapFileParameters)) {
 			return false;
-		} else if (this.indexBlockNumber != this.other.indexBlockNumber) {
+		} else if (this.indexBlockNumber != other.indexBlockNumber) {
 			return false;
 		}
 		return true;
@@ -67,12 +66,10 @@ class IndexCacheEntryKey {
 	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
+		int result = 7;
+		result = 31 * result
 				+ ((this.mapFileParameters == null) ? 0 : this.mapFileParameters.hashCode());
-		result = prime * result
-				+ (int) (this.indexBlockNumber ^ (this.indexBlockNumber >>> 32));
+		result = 31 * result + (int) (this.indexBlockNumber ^ (this.indexBlockNumber >>> 32));
 		return result;
 	}
 }

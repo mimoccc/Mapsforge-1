@@ -15,6 +15,7 @@
 package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -39,16 +40,12 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	private static final String THREAD_NAME = "CircleOverlay";
 
 	private final Point circlePosition;
-	private float circleRadius;
 	private final Paint defaultPaintFill;
 	private final Paint defaultPaintOutline;
-	private boolean hasDefaultPaint;
-	private int numberOfCircles;
-	private Circle overlayCircle;
+	private final boolean hasDefaultPaint;
 	private final Path path;
-	private ArrayList<Integer> visibleCircles;
-	private ArrayList<Integer> visibleCirclesRedraw;
-	private ArrayList<Integer> visibleCirclesTemp;
+	private List<Integer> visibleCircles;
+	private List<Integer> visibleCirclesRedraw;
 
 	/**
 	 * Constructs a new CircleOverlay with the given default paints. The drawing quality can be improved
@@ -60,6 +57,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 *            the default paint which will be used to draw the circle outlines (may be null).
 	 */
 	public CircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
+		super();
 		this.defaultPaintFill = defaultPaintFill;
 		this.defaultPaintOutline = defaultPaintOutline;
 		this.hasDefaultPaint = defaultPaintFill != null || defaultPaintOutline != null;
@@ -177,60 +175,62 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 		// erase the list of visible circles
 		this.visibleCirclesRedraw.clear();
 
-		this.numberOfCircles = size();
-		for (int circleIndex = 0; circleIndex < this.numberOfCircles; ++circleIndex) {
+		int numberOfCircles = size();
+		Circle overlayCircle;
+		float circleRadius;
+		for (int circleIndex = 0; circleIndex < numberOfCircles; ++circleIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
 				return;
 			}
 
 			// get the current circle
-			this.overlayCircle = createCircle(circleIndex);
-			if (this.overlayCircle == null) {
+			overlayCircle = createCircle(circleIndex);
+			if (overlayCircle == null) {
 				continue;
 			}
 
-			synchronized (this.overlayCircle) {
+			synchronized (overlayCircle) {
 				// make sure that the current circle has a center position and a radius
-				if (this.overlayCircle.center == null || this.overlayCircle.radius < 0) {
+				if (overlayCircle.center == null || overlayCircle.radius < 0) {
 					continue;
 				}
 
 				// make sure that the cached center position is valid
-				if (drawZoomLevel != this.overlayCircle.cachedZoomLevel) {
-					this.overlayCircle.cachedCenterPosition = projection.toPoint(
-							this.overlayCircle.center, this.overlayCircle.cachedCenterPosition,
+				if (drawZoomLevel != overlayCircle.cachedZoomLevel) {
+					overlayCircle.cachedCenterPosition = projection.toPoint(
+							overlayCircle.center, overlayCircle.cachedCenterPosition,
 							drawZoomLevel);
-					this.overlayCircle.cachedZoomLevel = drawZoomLevel;
-					this.overlayCircle.cachedRadius = projection.metersToPixels(
-							this.overlayCircle.radius, drawZoomLevel);
+					overlayCircle.cachedZoomLevel = drawZoomLevel;
+					overlayCircle.cachedRadius = projection.metersToPixels(
+							overlayCircle.radius, drawZoomLevel);
 				}
 
 				// calculate the relative circle position on the canvas
-				this.circlePosition.x = this.overlayCircle.cachedCenterPosition.x
+				this.circlePosition.x = overlayCircle.cachedCenterPosition.x
 						- drawPosition.x;
-				this.circlePosition.y = this.overlayCircle.cachedCenterPosition.y
+				this.circlePosition.y = overlayCircle.cachedCenterPosition.y
 						- drawPosition.y;
-				this.circleRadius = this.overlayCircle.cachedRadius;
+				circleRadius = overlayCircle.cachedRadius;
 
 				// check if the bounding box of the circle intersects with the canvas
-				if ((this.circlePosition.x + this.circleRadius) >= 0
-						&& (this.circlePosition.x - this.circleRadius) <= canvas.getWidth()
-						&& (this.circlePosition.y + this.circleRadius) >= 0
-						&& (this.circlePosition.y - this.circleRadius) <= canvas.getHeight()) {
+				if ((this.circlePosition.x + circleRadius) >= 0
+						&& (this.circlePosition.x - circleRadius) <= canvas.getWidth()
+						&& (this.circlePosition.y + circleRadius) >= 0
+						&& (this.circlePosition.y - circleRadius) <= canvas.getHeight()) {
 					// assemble the path
 					this.path.reset();
-					this.path.addCircle(this.circlePosition.x, this.circlePosition.y,
-							this.circleRadius, Path.Direction.CCW);
+					this.path.addCircle(this.circlePosition.x, this.circlePosition.y, circleRadius,
+							Path.Direction.CCW);
 
 					// draw the path on the canvas
-					if (this.overlayCircle.hasPaint) {
+					if (overlayCircle.hasPaint) {
 						// use the paints from the current circle
-						if (this.overlayCircle.paintOutline != null) {
-							canvas.drawPath(this.path, this.overlayCircle.paintOutline);
+						if (overlayCircle.paintOutline != null) {
+							canvas.drawPath(this.path, overlayCircle.paintOutline);
 						}
-						if (this.overlayCircle.paintFill != null) {
-							canvas.drawPath(this.path, this.overlayCircle.paintFill);
+						if (overlayCircle.paintFill != null) {
+							canvas.drawPath(this.path, overlayCircle.paintFill);
 						}
 
 						// add the current circle index to the list of visible circles
@@ -253,9 +253,9 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 
 		// swap the two visible circle lists
 		synchronized (this.visibleCircles) {
-			this.visibleCirclesTemp = this.visibleCircles;
+			List<Integer> visibleCirclesTemp = this.visibleCircles;
 			this.visibleCircles = this.visibleCirclesRedraw;
-			this.visibleCirclesRedraw = this.visibleCirclesTemp;
+			this.visibleCirclesRedraw = visibleCirclesTemp;
 		}
 	}
 

@@ -16,8 +16,8 @@ package org.mapsforge.android.maps;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-import android.content.Context;
 import android.graphics.Paint;
 
 /**
@@ -29,7 +29,7 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayCircleOverlay";
 
-	private final ArrayList<OverlayCircle> overlayCircles;
+	private final List<OverlayCircle> overlayCircles;
 
 	/**
 	 * Constructs a new ArrayCircleOverlay.
@@ -38,10 +38,8 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	 *            the default paint which will be used to fill the circles (may be null).
 	 * @param defaultPaintOutline
 	 *            the default paint which will be used to draw the circle outlines (may be null).
-	 * @param context
-	 *            the reference to the application context.
 	 */
-	public ArrayCircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline, Context context) {
+	public ArrayCircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		super(defaultPaintFill, defaultPaintOutline);
 		this.overlayCircles = new ArrayList<OverlayCircle>(ARRAY_LIST_INITIAL_CAPACITY);
 	}

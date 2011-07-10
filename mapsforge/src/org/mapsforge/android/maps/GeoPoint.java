@@ -25,7 +25,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	private static final int CONVERSION_FACTOR = 1000000;
 
 	/**
-	 * Stores the hash value of this GeoPoint.
+	 * Stores the hash value of this object.
 	 */
 	private final int hashCode;
 
@@ -38,11 +38,6 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	 * Stores the longitude value in microdegrees.
 	 */
 	private final int longitudeE6;
-
-	/**
-	 * Used to compare this GeoPoint with others in the {@link #equals(Object)} method.
-	 */
-	private GeoPoint other;
 
 	/**
 	 * Constructs a new GeoPoint with the given latitude and longitude, measured in degrees.
@@ -98,10 +93,10 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		} else if (!(obj instanceof GeoPoint)) {
 			return false;
 		}
-		this.other = (GeoPoint) obj;
-		if (this.latitudeE6 != this.other.latitudeE6) {
+		GeoPoint other = (GeoPoint) obj;
+		if (this.latitudeE6 != other.latitudeE6) {
 			return false;
-		} else if (this.longitudeE6 != this.other.longitudeE6) {
+		} else if (this.longitudeE6 != other.longitudeE6) {
 			return false;
 		}
 		return true;

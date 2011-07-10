@@ -36,15 +36,17 @@ class Tile implements Serializable {
 	/**
 	 * Width and height of a map tile in pixel.
 	 */
-	static final short TILE_SIZE = 256;
+	static final int TILE_SIZE = 256;
 
 	/**
 	 * Size of a single map tile in bytes.
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
 
+	/**
+	 * Stores the hash value of this object.
+	 */
 	private transient int hashCode;
-	private transient Tile other;
 
 	/**
 	 * Pixel X coordinate of the upper left corner of this tile on the world map.
@@ -95,12 +97,12 @@ class Tile implements Serializable {
 		} else if (!(obj instanceof Tile)) {
 			return false;
 		}
-		this.other = (Tile) obj;
-		if (this.x != this.other.x) {
+		Tile other = (Tile) obj;
+		if (this.x != other.x) {
 			return false;
-		} else if (this.y != this.other.y) {
+		} else if (this.y != other.y) {
 			return false;
-		} else if (this.zoomLevel != this.other.zoomLevel) {
+		} else if (this.zoomLevel != other.zoomLevel) {
 			return false;
 		}
 		return true;
@@ -122,11 +124,10 @@ class Tile implements Serializable {
 	 * @return the hash value of this object.
 	 */
 	private int calculateHashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (this.x ^ (this.x >>> 32));
-		result = prime * result + (int) (this.y ^ (this.y >>> 32));
-		result = prime * result + this.zoomLevel;
+		int result = 7;
+		result = 31 * result + (int) (this.x ^ (this.x >>> 32));
+		result = 31 * result + (int) (this.y ^ (this.y >>> 32));
+		result = 31 * result + this.zoomLevel;
 		return result;
 	}
 

@@ -30,13 +30,14 @@ class MapMover extends Thread {
 	private float moveY;
 	private boolean pause;
 	private boolean ready;
-	private long timeCurrent;
-	private long timeElapsed;
 	private long timePrevious;
 
 	@Override
 	public void run() {
 		setName(THREAD_NAME);
+
+		long timeCurrent;
+		long timeElapsed;
 
 		while (!isInterrupted()) {
 			synchronized (this) {
@@ -57,22 +58,22 @@ class MapMover extends Thread {
 			}
 
 			// calculate the time difference to previous call
-			this.timeCurrent = SystemClock.uptimeMillis();
-			this.timeElapsed = this.timeCurrent - this.timePrevious;
-			this.timePrevious = this.timeCurrent;
+			timeCurrent = SystemClock.uptimeMillis();
+			timeElapsed = timeCurrent - this.timePrevious;
+			this.timePrevious = timeCurrent;
 
 			// add the movement to the transformation matrices
-			this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX, this.timeElapsed
+			this.mapView.matrixPostTranslate(timeElapsed * this.moveX, timeElapsed
 					* this.moveY);
 			synchronized (this.mapView.overlays) {
 				for (Overlay overlay : this.mapView.overlays) {
-					overlay.matrixPostTranslate(this.timeElapsed * this.moveX, this.timeElapsed
+					overlay.matrixPostTranslate(timeElapsed * this.moveX, timeElapsed
 							* this.moveY);
 				}
 			}
 
 			// move the map and the overlays
-			this.mapView.moveMap(this.timeElapsed * this.moveX, this.timeElapsed * this.moveY);
+			this.mapView.moveMap(timeElapsed * this.moveX, timeElapsed * this.moveY);
 			synchronized (this.mapView.overlays) {
 				for (Overlay overlay : this.mapView.overlays) {
 					overlay.requestRedraw();
