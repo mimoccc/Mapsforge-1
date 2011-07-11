@@ -13,7 +13,9 @@ import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -22,7 +24,7 @@ import javax.swing.filechooser.FileFilter;
 import org.mapsforge.pc.maps.MapView;
 import org.mapsforge.core.graphics.Canvas;
 
-public class AdvancedMapViewerPC extends JFrame implements WindowListener, ActionListener {
+public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
 	JFrame jFrame;
 	protected Properties properties;
@@ -51,8 +53,8 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		this.menuBar = new MenuBar(this);
 		this.setJMenuBar(menuBar);
 
-//		canvas = new Canvas();
-		this.add(new java.awt.Canvas());
+
+//		this.add(new Canvas());
 	}
 	
 	
@@ -66,25 +68,6 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 		mainFrame.setVisible(true);
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		String cmd = e.getActionCommand();
-		if (cmd.equals("Map File")) {
-			startFileBrowser();
-		}
-		else if(cmd.equals("Preferences..")) {
-			startPreferences();
-		}
-		else if (cmd.equals("Exit")) {
-			close();
-
-		}
-		else if (cmd.equals("About this software")) {
-
-		}
-		
-	}
-
 	/** WindowListener */
 	@Override public void windowActivated(WindowEvent e) {}
 	@Override public void windowClosed(WindowEvent e) {	close();	}
@@ -95,13 +78,13 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 	@Override public void windowOpened(WindowEvent e) {}
 
 	/** Cleaning up before exit */
-	private void close() {
+	protected void close() {
 		//TODO: Cleaning up
 		System.exit(0);
 	}
 
 	/** File Browser */
-	private void startFileBrowser() {
+	protected void startFileBrowser() {
 		// set the FileDisplayFilter
 		FilePickerPC.setFileDisplayFilter(new FileFilter() {
 			@Override
@@ -153,8 +136,12 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Actio
 	}
 	
 	/** Preferences */
-	private void startPreferences() {
-		
+	protected void startPreferences() {
+		JInternalFrame preferencesPane = new JInternalFrame(properties.getProperty("menu_preferences"), true, true, true, false);
+		EditPreferencesPC editPanel = new EditPreferencesPC();
+		preferencesPane.add(editPanel);
+		preferencesPane.setVisible(true);
+		this.add(preferencesPane);
 	}
 	
 	/** Returns the properties from the mainFrame. 

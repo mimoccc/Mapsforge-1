@@ -1,5 +1,7 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.Properties;
@@ -11,7 +13,7 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
-public class MenuBar extends JMenuBar{
+public class MenuBar extends JMenuBar implements ActionListener {
 
 	private Properties properties;
 	private AdvancedMapViewerPC parentFrame;
@@ -128,19 +130,72 @@ public class MenuBar extends JMenuBar{
 		menuMapFile.add(itemMapFile);
 		
 		//Listener
-		itemMapFile.addActionListener(parentFrame);
-		itemMapinfo.addActionListener(parentFrame);
-		itemAbout.addActionListener(parentFrame);
-		itemFollowGPS.addActionListener(parentFrame);
-		itemEnterCoordiantes.addActionListener(parentFrame);
-		itemMapFileCenter.addActionListener(parentFrame);
-		itemJPEG.addActionListener(parentFrame);
-		itemPNG.addActionListener(parentFrame);
-		itemPreferences.addActionListener(parentFrame);
-		itemMapnik.addActionListener(parentFrame);
-		itemOsmarenderer.addActionListener(parentFrame);
-		itemSelectXMLFile.addActionListener(parentFrame);
-		itemMapFile.addActionListener(parentFrame);
+		itemMapFile.addActionListener(this);
+		itemMapinfo.addActionListener(this);
+		itemAbout.addActionListener(this);
+		itemFollowGPS.addActionListener(this);
+		itemEnterCoordiantes.addActionListener(this);
+		itemMapFileCenter.addActionListener(this);
+		itemJPEG.addActionListener(this);
+		itemPNG.addActionListener(this);
+		itemPreferences.addActionListener(this);
+		itemMapnik.addActionListener(this);
+		itemOsmarenderer.addActionListener(this);
+		itemSelectXMLFile.addActionListener(this);
+		itemMapFile.addActionListener(this);
+		
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		if (cmd.equals(properties.getProperty("menu_info_map_file"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_info_about"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_position_follow_gps_signal"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_position_last_known"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_position_enter_coordinates"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_position_map_file_center"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_screenshot_jpeg"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_screenshot_png"))) {
+			//TODO: 
+		}
+		else if(cmd.equals(properties.getProperty("menu_preferences"))) {
+			parentFrame.startPreferences();
+		}
+		else if (cmd.equals(properties.getProperty("menu_render_theme_mapnik"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_render_theme_osmarender"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_render_theme_select_file"))) {
+			//TODO: 
+		}
+		else if (cmd.equals(properties.getProperty("menu_mapfile"))) {
+			parentFrame.startFileBrowser();
+		}
+		else if (cmd.equals("Exit")) {
+			parentFrame.close();
+
+		}
+		else if (cmd.equals("About this software")) {
+
+		}
 		
 	}
 	
