@@ -490,7 +490,6 @@ class RoutingGraphCreatorTask implements Sink {
 			if ((tag.getKey().equals("railway") && (this.configObject
 						.containsWayTag(tag.getKey(),
 								tag.getValue())))) {
-				System.out.println(tag.getKey() + "   " + tag.getValue());
 				return true;
 			}
 		}
