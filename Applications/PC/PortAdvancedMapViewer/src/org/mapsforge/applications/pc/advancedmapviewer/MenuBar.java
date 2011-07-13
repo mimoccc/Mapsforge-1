@@ -15,11 +15,12 @@ import javax.swing.SwingConstants;
 
 public class MenuBar extends JMenuBar implements ActionListener {
 
-	private Properties properties;
+	private Properties propertiesStrings, propertiesSettings;
 	private AdvancedMapViewerPC parentFrame;
 	private JMenu menuInfo, menuPosition, menuScreenshot;
-	private JMenu menuPreferences, menuRenderTheme, menuMapFile;
-	private JMenuItem itemMapFile, itemPreferences;
+	private JMenu menuRenderTheme, menuMapFile;
+	private PreferencesMenu menuPreferences;
+	private JMenuItem itemMapFile;
 	private JMenuItem itemAbout, itemMapinfo;
 	private JMenuItem itemFollowGPS, itemLastKnown, itemEnterCoordiantes, itemMapFileCenter;
 	private JMenuItem itemJPEG, itemPNG;
@@ -34,35 +35,38 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		parentFrame = p;
 		
 		/** Properties */
-		properties = new Properties(parentFrame.getProperties());
+		propertiesStrings = parentFrame.getPropertiesStrings();
+		propertiesSettings = parentFrame.getPropertiesSettings();
 		
 		//Menus
-		menuInfo = new JMenu(properties.getProperty("menu_info"));
+		menuInfo = new JMenu(propertiesStrings.getProperty("menu_info"));
 		menuInfo.setIcon(new ImageIcon("res/drawable/ic_menu_info_details.png"));
 		menuInfo.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuInfo.setVerticalTextPosition(SwingConstants.BOTTOM);
 		menuInfo.setMnemonic('i');
-		menuPosition = new JMenu(properties.getProperty("menu_position"));
+		menuPosition = new JMenu(propertiesStrings.getProperty("menu_position"));
 		menuPosition.setIcon(new ImageIcon("res/drawable/ic_menu_mylocation.png"));
 		menuPosition.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuPosition.setVerticalTextPosition(SwingConstants.BOTTOM);
 		menuPosition.setMnemonic('p');
-		menuScreenshot = new JMenu(properties.getProperty("menu_screenshot"));
+		menuScreenshot = new JMenu(propertiesStrings.getProperty("menu_screenshot"));
 		menuScreenshot.setIcon(new ImageIcon("res/drawable/ic_menu_camera.png"));
 		menuScreenshot.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuScreenshot.setVerticalTextPosition(SwingConstants.BOTTOM);
 		menuScreenshot.setMnemonic('s');
-		menuPreferences = new JMenu(properties.getProperty("menu_preferences"));
+		
+		menuPreferences = new PreferencesMenu(parentFrame, propertiesStrings.getProperty("menu_preferences"));
 		menuPreferences.setIcon(new ImageIcon("res/drawable/ic_menu_preferences.png"));
 		menuPreferences.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuPreferences.setVerticalTextPosition(SwingConstants.BOTTOM);
 		menuPreferences.setMnemonic('p');
-		menuRenderTheme = new JMenu(properties.getProperty("menu_render_theme"));
+		
+		menuRenderTheme = new JMenu(propertiesStrings.getProperty("menu_render_theme"));
 		menuRenderTheme.setIcon(new ImageIcon("res/drawable/folder.png"));
 		menuRenderTheme.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuRenderTheme.setVerticalTextPosition(SwingConstants.BOTTOM);
 		menuRenderTheme.setMnemonic('r');
-		menuMapFile = new JMenu(properties.getProperty("menu_mapfile"));
+		menuMapFile = new JMenu(propertiesStrings.getProperty("menu_mapfile"));
 		menuMapFile.setIcon(new ImageIcon("res/drawable/folder.png"));
 		menuMapFile.setHorizontalTextPosition(SwingConstants.CENTER);
 		menuMapFile.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -77,37 +81,34 @@ public class MenuBar extends JMenuBar implements ActionListener {
 
 
 		//Menuitems
-		itemMapinfo = new JMenuItem(properties.getProperty("menu_info_map_file"),'m');
+		itemMapinfo = new JMenuItem(propertiesStrings.getProperty("menu_info_map_file"),'m');
 		itemMapinfo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1,0));
-		itemAbout = new JMenuItem(properties.getProperty("menu_info_about"),'a');
+		itemAbout = new JMenuItem(propertiesStrings.getProperty("menu_info_about"),'a');
 		itemAbout.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2,0));
 		
-		itemFollowGPS = new JMenuItem(properties.getProperty("menu_position_follow_gps_signal"),'f');
+		itemFollowGPS = new JMenuItem(propertiesStrings.getProperty("menu_position_follow_gps_signal"),'f');
 		itemFollowGPS.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3,0));
 		itemFollowGPS.setEnabled(false);
-		itemLastKnown = new JMenuItem(properties.getProperty("menu_position_last_known"),'l');
+		itemLastKnown = new JMenuItem(propertiesStrings.getProperty("menu_position_last_known"),'l');
 		itemLastKnown.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.ALT_DOWN_MASK));
-		itemEnterCoordiantes = new JMenuItem(properties.getProperty("menu_position_enter_coordinates"),'e');
+		itemEnterCoordiantes = new JMenuItem(propertiesStrings.getProperty("menu_position_enter_coordinates"),'e');
 		itemEnterCoordiantes.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0));
-		itemMapFileCenter = new JMenuItem(properties.getProperty("menu_position_map_file_center"),'c');
+		itemMapFileCenter = new JMenuItem(propertiesStrings.getProperty("menu_position_map_file_center"),'c');
 		itemMapFileCenter.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
 		
-		itemJPEG = new JMenuItem(properties.getProperty("menu_screenshot_jpeg"),'j');
+		itemJPEG = new JMenuItem(propertiesStrings.getProperty("menu_screenshot_jpeg"),'j');
 		itemJPEG.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F6,0));
-		itemPNG = new JMenuItem(properties.getProperty("menu_screenshot_png"),'p');
+		itemPNG = new JMenuItem(propertiesStrings.getProperty("menu_screenshot_png"),'p');
 		itemPNG.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7,0));
 		
-		itemPreferences = new JMenuItem(properties.getProperty("menu_preferences"),'p');
-		itemPreferences.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8,0));
-		
-		itemMapnik = new JMenuItem(properties.getProperty("menu_render_theme_mapnik"),'m');
+		itemMapnik = new JMenuItem(propertiesStrings.getProperty("menu_render_theme_mapnik"),'m');
 		itemMapnik.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9,0));
-		itemOsmarenderer = new JMenuItem(properties.getProperty("menu_render_theme_osmarender"),'o');
+		itemOsmarenderer = new JMenuItem(propertiesStrings.getProperty("menu_render_theme_osmarender"),'o');
 		itemOsmarenderer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F10,0));
-		itemSelectXMLFile = new JMenuItem(properties.getProperty("menu_render_theme_select_file"),'x');
+		itemSelectXMLFile = new JMenuItem(propertiesStrings.getProperty("menu_render_theme_select_file"),'x');
 		itemSelectXMLFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F11,0));
 		
-		itemMapFile = new JMenuItem(properties.getProperty("menu_mapfile"),'f');
+		itemMapFile = new JMenuItem(propertiesStrings.getProperty("menu_mapfile_select_file"),'f');
 		itemMapFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F12,0));		
 
 		menuInfo.add(itemMapinfo);
@@ -120,8 +121,6 @@ public class MenuBar extends JMenuBar implements ActionListener {
 
 		menuScreenshot.add(itemJPEG);
 		menuScreenshot.add(itemPNG);
-		
-		menuPreferences.add(itemPreferences);
 		
 		menuRenderTheme.add(itemMapnik);
 		menuRenderTheme.add(itemOsmarenderer);
@@ -138,7 +137,6 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		itemMapFileCenter.addActionListener(this);
 		itemJPEG.addActionListener(this);
 		itemPNG.addActionListener(this);
-		itemPreferences.addActionListener(this);
 		itemMapnik.addActionListener(this);
 		itemOsmarenderer.addActionListener(this);
 		itemSelectXMLFile.addActionListener(this);
@@ -150,43 +148,42 @@ public class MenuBar extends JMenuBar implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
 		
-		if (cmd.equals(properties.getProperty("menu_info_map_file"))) {
+		if (cmd.equals(propertiesStrings.getProperty("menu_info_map_file"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_info_about"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_info_about"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_position_follow_gps_signal"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_position_follow_gps_signal"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_position_last_known"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_position_last_known"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_position_enter_coordinates"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_position_enter_coordinates"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_position_map_file_center"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_position_map_file_center"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_screenshot_jpeg"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_screenshot_jpeg"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_screenshot_png"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_screenshot_png"))) {
 			//TODO: 
 		}
-		else if(cmd.equals(properties.getProperty("menu_preferences"))) {
-			parentFrame.startPreferences();
-		}
-		else if (cmd.equals(properties.getProperty("menu_render_theme_mapnik"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_render_theme_mapnik"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_render_theme_osmarender"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_render_theme_osmarender"))) {
 			//TODO: 
 		}
-		else if (cmd.equals(properties.getProperty("menu_render_theme_select_file"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_render_theme_select_file"))) {
 			//TODO: 
+			parentFrame.startFileBrowser();
 		}
-		else if (cmd.equals(properties.getProperty("menu_mapfile"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_mapfile"))) {
+			//TODO:
 			parentFrame.startFileBrowser();
 		}
 		else if (cmd.equals("Exit")) {
