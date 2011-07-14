@@ -13,8 +13,20 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
+import org.mapsforge.pc.maps.MapController;
 import org.mapsforge.pc.maps.MapView;
+import org.mapsforge.pc.maps.MapViewMode;
+import org.mapsforge.applications.android.advancedmapviewer.R;
 import org.mapsforge.core.graphics.Canvas;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.location.LocationManager;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
+import android.view.WindowManager;
+import android.widget.ImageView;
 
 public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
@@ -156,4 +168,67 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		return propertiesSettings;
 	}
 	
+	
+	/** MapView Configuration
+	 *  onCreate --> onResume
+	 */
+	MapView mapView;
+	MapController mapController;
+	MapViewMode mapViewMode;
+	
+	public void onCreate() {
+		// set up the layout views
+		this.mapView = null;
+
+		configureMapView();
+
+		// get the pointers to different system services
+		//<- Removed: Android Specific ->
+
+		// set up the paint objects for the location overlay
+		//<- Removed: GPS Specific ->
+
+		onResume();
+	}
+	
+	public void onResume() {
+		// Read the default shared preferences
+		//this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+		// set the map settings
+		this.mapView.setScaleBar(false);
+		this.mapViewMode = Enum.valueOf(MapViewMode.class, org.mapsforge.pc.maps.MapViewMode.CANVAS_RENDERER.name());
+		this.mapView.setMapViewMode(this.mapViewMode);
+		this.mapView.setTextScale(Float.parseFloat("1"));
+
+
+		// set the general settings
+		//<- Removed: Android Specific ->
+
+		// set the debug settings
+		this.mapView.setFpsCounter(false);
+		this.mapView.setTileFrames(false);
+		this.mapView.setTileCoordinates(false);
+		this.mapView.setWaterTiles(false);
+
+		// check if the file browser needs to be displayed
+		if (!this.mapView.getMapViewMode().requiresInternetConnection()
+				&& !this.mapView.hasValidMapFile()) {
+			startFileBrowser();
+		}
+	}
+	
+	private void configureMapView() {
+		// configure the MapView and activate the zoomLevel buttons
+		this.mapView.setClickable(true);
+		this.mapView.setBuiltInZoomControls(true);
+		this.mapView.setFocusable(true);
+
+		// set the localized text fields
+		//this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));
+		//this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));
+
+		// get the map controller for this MapView
+		this.mapController = this.mapView.getController();
+	}
 }
