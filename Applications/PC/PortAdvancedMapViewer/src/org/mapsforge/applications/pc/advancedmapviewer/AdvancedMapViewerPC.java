@@ -70,7 +70,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		this.add(filePicker = new FilePickerPC());
 
 		//Configure
-		//this.onCreate();
+		this.onCreate(height, width);
 //		this.add(new Canvas());
 	}
 	
@@ -112,7 +112,12 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	}
 	
 	public void startActivityForResult(String file) {
-		mapView.setMapFile(file);
+		if(mapView != null) {
+			mapView.setMapFile(file);
+		}
+		else {
+			System.out.println("Error");
+		}
 	}
 	
 	/** Returns the strings properties from the mainFrame. 
@@ -137,9 +142,9 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	MapController mapController;
 	MapViewMode mapViewMode;
 	
-	public void onCreate() {
+	public void onCreate(int height, int width) {
 		// set up the layout views
-		this.mapView = new MapView();
+		this.mapView = new MapView(height, width);
 
 		configureMapView();
 

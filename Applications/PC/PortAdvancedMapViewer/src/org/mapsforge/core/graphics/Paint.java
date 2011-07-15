@@ -30,6 +30,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 //import android.graphics.Shader;
@@ -233,7 +234,7 @@ public class Paint {
     }
 
     /* GLOBAL VARIABLE */
-    private Color color = null;
+    private Color color = Color.BLACK;
     private PathEffect pathEffect;
     private Shader strokeShader;
     private Cap strokeCap = Cap.BUTT;
@@ -249,7 +250,7 @@ public class Paint {
     private Typeface typeface;
     private Font font;
     
-    private List<FontInfo> mFonts;
+    private List<FontInfo> mFonts = new LinkedList<FontInfo>();
     private final FontRenderContext mFontContext = new FontRenderContext(new AffineTransform(), true, true);
     
     /* CONSTRUCTOR */

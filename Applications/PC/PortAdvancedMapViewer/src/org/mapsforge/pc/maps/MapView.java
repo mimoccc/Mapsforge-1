@@ -320,6 +320,8 @@ public class MapView {
 	private byte zoomLevel;
 	private byte zoomLevelMax;
 	private byte zoomLevelMin;
+	private int height;
+	private int width;
 
 	/**
 	 * Thread-safe overlay list. It is necessary to manually synchronize on this list when iterating
@@ -335,11 +337,14 @@ public class MapView {
 	 * @throws IllegalArgumentException
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
-	public MapView() {
+	public MapView(int height, int width) {
 		//MAP ACTIVITY:this.mapActivity = (MapActivity) context;
 		
+		this.height = height;
+		this.width = width;
+		
 		this.mapViewMode = DEFAULT_MAP_VIEW_MODE;
-		this.mapViewId = 1;//this.mapActivity.getMapViewId();
+		this.mapViewId = 1;//TODO this.mapActivity.getMapViewId();
 		setupMapView();
 	}
 
@@ -553,7 +558,6 @@ public class MapView {
 	 */
 	public void setMapFile(String newMapFile) {
 		if (this.mapViewMode.requiresInternetConnection()) {
-			System.out.println("DRIN");
 			throw new UnsupportedOperationException();
 		}
 		if (newMapFile == null) {
@@ -958,10 +962,8 @@ public class MapView {
 		this.tileRAMCache = new TileRAMCache(TILE_RAM_CACHE_SIZE);
 
 		// create the image file cache with a unique directory
-		/*this.tileMemoryCardCache = new TileMemoryCardCache(Environment
-				.getExternalStorageDirectory().getAbsolutePath()
-				+ EXTERNAL_STORAGE_DIRECTORY + File.separatorChar + this.mapViewId,
-				this.tileMemoryCardCacheSize);*/
+		this.tileMemoryCardCache = new TileMemoryCardCache("res" + File.separatorChar + "cache" + File.separatorChar + this.mapViewId,
+				this.tileMemoryCardCacheSize);
 
 		// create the MapController for this MapView
 		this.mapController = new MapController(this);
@@ -972,7 +974,7 @@ public class MapView {
 		startMapGeneratorThread();
 
 		// set the default position and zoom level of the map
-		/*GeoPoint defaultStartPoint = this.mapGenerator.getDefaultStartPoint();
+		GeoPoint defaultStartPoint = this.mapGenerator.getDefaultStartPoint();
 		this.latitude = defaultStartPoint.getLatitude();
 		this.longitude = defaultStartPoint.getLongitude();
 		this.zoomLevel = this.mapGenerator.getDefaultZoomLevel();
@@ -990,7 +992,7 @@ public class MapView {
 		this.zoomAnimator.start();
 
 		// register the MapView in the MapActivity
-		this.mapActivity.registerMapView(this);*/
+		//this.mapActivity.registerMapView(this);
 	}
 
 
@@ -1354,11 +1356,11 @@ public class MapView {
 			return;
 		}
 
-		synchronized (this.overlays) {
+		/*synchronized (this.overlays) {
 			for (Overlay overlay : this.overlays) {
 				overlay.requestRedraw();
 			}
-		}
+		}*/
 
 		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
 			return;
@@ -1780,12 +1782,12 @@ public class MapView {
 	
 	private int getHeight() {
 		// TODO Auto-generated method stub
-		return 0;
+		return height;
 	}
 
 	private int getWidth() {
 		// TODO Auto-generated method stub
-		return 0;
+		return width;
 	}
 	
 	private void setWillNotDraw(boolean b) {
