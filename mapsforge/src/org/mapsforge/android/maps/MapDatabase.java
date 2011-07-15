@@ -550,8 +550,18 @@ public class MapDatabase {
 		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
 				- this.blockEntriesTableOffset - 4;
 
-		// get the offset to the first stored way in the block
-		this.firstWayOffset = readVariableByteEncodedUnsignedInt() + this.bufferPosition;
+		// get the relative offset to the first stored way in the block
+		this.firstWayOffset = readVariableByteEncodedUnsignedInt();
+		if (this.firstWayOffset < 0) {
+			Logger.debug("invalid first way offset: " + this.firstWayOffset);
+			if (this.debugFile) {
+				Logger.debug("block signature: " + this.blockSignature);
+			}
+			return;
+		}
+
+		// add the current buffer position to the relative first way offset
+		this.firstWayOffset += this.bufferPosition;
 		if (this.firstWayOffset > this.readBuffer.length) {
 			Logger.debug("invalid first way offset: " + this.firstWayOffset);
 			if (this.debugFile) {
@@ -672,6 +682,13 @@ public class MapDatabase {
 
 			// get the size of the way (VBE-U)
 			this.waySize = readVariableByteEncodedUnsignedInt();
+			if (this.waySize < 0) {
+				Logger.debug("invalid way size: " + this.waySize);
+				if (this.debugFile) {
+					Logger.debug("block signature: " + this.blockSignature);
+				}
+				return;
+			}
 
 			if (this.useTileBitmask) {
 				// get the way tile bitmask (2 bytes)
@@ -1301,7 +1318,7 @@ public class MapDatabase {
 	 * Converts a variable amount of bytes from the read buffer to a signed int.
 	 * <p>
 	 * The first bit is for continuation info, the other six (last byte) or seven (all other bytes) bits
-	 * for data. The second bit in the last byte indicates the sign of the number.
+	 * are for data. The second bit in the last byte indicates the sign of the number.
 	 * 
 	 * @return the int value.
 	 */
@@ -1328,23 +1345,28 @@ public class MapDatabase {
 	/**
 	 * Converts a variable amount of bytes from the read buffer to an unsigned int.
 	 * <p>
-	 * The first bit is for continuation info, the other seven bits for data.
+	 * The first bit is for continuation info, the other seven bits are for data.
 	 * 
-	 * @return the int value.
+	 * @return the int value or -1 in case of an error.
 	 */
 	private int readVariableByteEncodedUnsignedInt() {
-		this.variableByteDecode = 0;
-		this.variableByteShift = 0;
+		try {
+			this.variableByteDecode = 0;
+			this.variableByteShift = 0;
 
-		// check if the continuation bit is set
-		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-			this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
-			this.variableByteShift += 7;
+			// check if the continuation bit is set
+			while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
+				this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
+				this.variableByteShift += 7;
+			}
+
+			// read the seven data bits from the last byte
+			return this.variableByteDecode
+					| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			Logger.exception(e);
+			return -1;
 		}
-
-		// read the seven data bits from the last byte
-		return this.variableByteDecode
-				| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
 	}
 
 	/**
