@@ -86,7 +86,7 @@ class ZoomAnimator extends Thread {
 				this.executeAnimation = false;
 				this.mapView.handleTiles(false);
 			} else {
-				this.mapView.postInvalidate();
+				//this.mapView.postInvalidate();
 				synchronized (this) {
 					try {
 						wait(FRAME_LENGTH);

@@ -11,13 +11,17 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.mapsforge.pc.maps.MapView;
+
 public class FilePickerPC extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = -6634123407876979284L;
 
-	static Comparator<File> fileComparator = getDefaultFileComparator();
-	static FileFilter fileDisplayFilter;
-	static FileFilter fileSelectFilter;
+	Comparator<File> fileComparator = getDefaultFileComparator();
+	FileFilter fileDisplayFilter;
+	FileFilter fileSelectFilter;
+	
+	String openedFile = new String();
 
 	/**
 	 * Sets the file comparator which is used to order the contents of all directories before
@@ -26,8 +30,8 @@ public class FilePickerPC extends JPanel implements ActionListener {
 	 * @param fileComparator
 	 *            the file comparator (may be null).
 	 */
-	public static void setFileComparator(Comparator<File> fileComparator) {
-		FilePickerPC.fileComparator = fileComparator;
+	public void setFileComparator(Comparator<File> fileComparator) {
+		this.fileComparator = fileComparator;
 	}
 
 	/**
@@ -37,8 +41,8 @@ public class FilePickerPC extends JPanel implements ActionListener {
 	 * @param fileDisplayFilter
 	 *            the file display filter (may be null).
 	 */
-	public static void setFileDisplayFilter(FileFilter fileDisplayFilter) {
-		FilePickerPC.fileDisplayFilter = fileDisplayFilter;
+	public void setFileDisplayFilter(FileFilter fileDisplayFilter) {
+		this.fileDisplayFilter = fileDisplayFilter;
 	}
 
 	/**
@@ -48,8 +52,8 @@ public class FilePickerPC extends JPanel implements ActionListener {
 	 * @param fileSelectFilter
 	 *            the file selection filter (may be null).
 	 */
-	public static void setFileSelectFilter(FileFilter fileSelectFilter) {
-		FilePickerPC.fileSelectFilter = fileSelectFilter;
+	public void setFileSelectFilter(FileFilter fileSelectFilter) {
+		this.fileSelectFilter = fileSelectFilter;
 	}
 
 	/**
@@ -57,7 +61,7 @@ public class FilePickerPC extends JPanel implements ActionListener {
 	 * 
 	 * @return the default file comparator.
 	 */
-	private static Comparator<File> getDefaultFileComparator() {
+	private Comparator<File> getDefaultFileComparator() {
 		// order all files by type and alphabetically by name
 		return new Comparator<File>() {
 			@Override
@@ -73,49 +77,109 @@ public class FilePickerPC extends JPanel implements ActionListener {
 		};
 	}
 	
-	static JFileChooser filePicker;
-	static JFrame frame;
+	JFileChooser fileChooser;
 
 	public FilePickerPC() {
 		super(new BorderLayout());
-		filePicker = new JFileChooser(".");
-		filePicker.addChoosableFileFilter(FilePickerPC.fileDisplayFilter);
-		int returnVal = filePicker.showOpenDialog(this);
+		fileChooser = new JFileChooser(".");
+		
+		
+
+		//TODO start the FilePicker
+
+		/*SwingUtilities.invokeLater(new Runnable() {
+			/**
+			 * Create FileChooser
+			 * @param frame
+			 
+			public void createFileChooser(JFrame frame) {
+				frame.add(this);
+
+		        //Display the window.
+		        //frame.pack();
+		        frame.setVisible(true);
+			}
+			
+			public void run() {
+	            //Turn off metal's use of bold fonts
+	            UIManager.put("swing.boldMetal", Boolean.FALSE); 
+	            this.createFileChooser(frame);
+	        }
+		});
+		
+		fileChooser.addChoosableFileFilter(this.fileDisplayFilter);
+		int returnVal = fileChooser.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = filePicker.getSelectedFile();
+            File file = fileChooser.getSelectedFile();
             //This is where a real application would open the file.
             System.out.println("Opening: " + file.getName() + ".");
-            //TODO
+            if(file.getName().endsWith(".map")) {
+            	openedFile = file.getName();
+            }
         } else {
         	System.out.println("Open command cancelled by user.");
-        }
+        }*/
 	}
+	
+	public void configure() {
+		// set the FileDisplayFilter
+		this.setFileDisplayFilter(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				// accept only readable files
+				if (file.canRead()) {
+					if (file.isDirectory()) {
+						// accept all directories
+						return true;
+					} else if (file.isFile() && file.getName().endsWith(".map")) {
+						// accept all files with a ".map" extension
+						return true;
+					}
+				}
+				return false;
+			}
 
-	/**
-	 * Create FileChooser
-	 * @param frame
-	 */
-	public static void createFileChooser(JFrame frame) {
-		FilePickerPC.frame = frame;
-		frame.add(new FilePickerPC());
+			@Override
+			public String getDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
 
-        //Display the window.
-        //frame.pack();
-        frame.setVisible(true);
+		// set the FileSelectFilter
+		this.setFileSelectFilter(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				// accept only valid map files
+				return MapView.isValidMapFile(file.getAbsolutePath());
+			}
+
+			@Override
+			public String getDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+	}
+	
+	public String openMap() {
+		int returnVal = fileChooser.showOpenDialog(FilePickerPC.this);
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            //This is where a real application would open the file.
+            System.out.println("Opening: " + file.getName() + ".");
+            //TODO PATH
+            return file.getName();
+        } else {
+        	System.out.println("Open command cancelled by user.");
+        	return "bremen-0.2.2.map";
+        }
 	}
 	
 	@Override
 	//TODO
 	public void actionPerformed(ActionEvent event) {
-		int returnVal = filePicker.showOpenDialog(FilePickerPC.this);
-
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = filePicker.getSelectedFile();
-            //This is where a real application would open the file.
-            System.out.println("Opening: " + file.getName() + ".");
-            //TODO
-        } else {
-        	System.out.println("Open command cancelled by user.");
-        }
+		
 	}
 }

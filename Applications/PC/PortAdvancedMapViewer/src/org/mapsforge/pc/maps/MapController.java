@@ -41,10 +41,10 @@ public final class MapController implements android.view.View.OnKeyListener {
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 		if (event.getAction() == KeyEvent.ACTION_DOWN) {
 			// forward the event to the MapView
-			return this.mapView.onKeyDown(keyCode, event);
+			//return this.mapView.onKeyDown(keyCode, event);
 		} else if (event.getAction() == KeyEvent.ACTION_UP) {
 			// forward the event to the MapView
-			return this.mapView.onKeyUp(keyCode, event);
+			//return this.mapView.onKeyUp(keyCode, event);
 		}
 		return false;
 	}

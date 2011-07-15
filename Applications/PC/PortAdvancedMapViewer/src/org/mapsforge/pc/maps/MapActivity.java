@@ -16,7 +16,6 @@ package org.mapsforge.pc.maps;
 
 import java.util.ArrayList;
 
-import android.app.Activity;
 //import org.mapsforge.core.app.Activity;
 //import android.content.SharedPreferences;
 //import org.mapsforge.core.content.SharedPreferences;
@@ -36,7 +35,7 @@ import android.app.Activity;
  * MapView are saved in a preferences file and restored automatically during the setup process of a
  * MapView.
  */
-public abstract class MapActivity extends Activity {
+public abstract class MapActivity extends Thread {
 	/**
 	 * Name of the file where the map position and other settings are stored.
 	 */
@@ -65,9 +64,7 @@ public abstract class MapActivity extends Activity {
 		}
 	}
 
-	@Override
 	protected void onDestroy() {
-		super.onDestroy();
 		destroyMapViews();
 	}
 	
@@ -159,4 +156,8 @@ public abstract class MapActivity extends Activity {
 			this.mapViews.remove(mapView);
 		}
 	}
+	
+	public final void runOnUiThread(Runnable action) {
+		action.run();
+    }
 }

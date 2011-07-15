@@ -16,24 +16,21 @@ import javax.swing.filechooser.FileFilter;
 import org.mapsforge.pc.maps.MapController;
 import org.mapsforge.pc.maps.MapView;
 import org.mapsforge.pc.maps.MapViewMode;
-import org.mapsforge.applications.android.advancedmapviewer.R;
 import org.mapsforge.core.graphics.Canvas;
 
-import android.content.Context;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.location.LocationManager;
-import android.os.PowerManager;
-import android.preference.PreferenceManager;
-import android.view.WindowManager;
-import android.widget.ImageView;
+
 
 public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4127875987929158484L;
 	JFrame jFrame;
 	protected Properties propertiesStrings, propertiesSettings;
 	private Canvas canvas;
 	private MenuBar menuBar;
+	private FilePickerPC filePicker;
 	
 	
 	/** Constructor */
@@ -68,8 +65,12 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		// Menubar
 		this.menuBar = new MenuBar(this);
 		this.setJMenuBar(menuBar);
+		
+		//FilePicker
+		this.add(filePicker = new FilePickerPC());
 
-
+		//Configure
+		//this.onCreate();
 //		this.add(new Canvas());
 	}
 	
@@ -104,54 +105,14 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
 	/** File Browser */
 	protected void startFileBrowser() {
-		// set the FileDisplayFilter
-		FilePickerPC.setFileDisplayFilter(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				// accept only readable files
-				if (file.canRead()) {
-					if (file.isDirectory()) {
-						// accept all directories
-						return true;
-					} else if (file.isFile() && file.getName().endsWith(".map")) {
-						// accept all files with a ".map" extension
-						return true;
-					}
-				}
-				return false;
-			}
-
-			@Override
-			public String getDescription() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
-
-		// set the FileSelectFilter
-		FilePickerPC.setFileSelectFilter(new FileFilter() {
-			@Override
-			public boolean accept(File file) {
-				// accept only valid map files
-				return MapView.isValidMapFile(file.getAbsolutePath());
-			}
-
-			@Override
-			public String getDescription() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
-
-		//TODO start the FilePicker
-		SwingUtilities.invokeLater(new Runnable() {
-        public void run() {
-            //Turn off metal's use of bold fonts
-            UIManager.put("swing.boldMetal", Boolean.FALSE); 
-    		FilePickerPC.createFileChooser(jFrame);
-        }
-    });
-		//startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
+		filePicker.configure();
+		String file = filePicker.openMap();
+		
+		startActivityForResult(file);
+	}
+	
+	public void startActivityForResult(String file) {
+		mapView.setMapFile(file);
 	}
 	
 	/** Returns the strings properties from the mainFrame. 
@@ -178,7 +139,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	
 	public void onCreate() {
 		// set up the layout views
-		this.mapView = null;
+		this.mapView = new MapView();
 
 		configureMapView();
 
@@ -212,17 +173,18 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		this.mapView.setWaterTiles(false);
 
 		// check if the file browser needs to be displayed
-		if (!this.mapView.getMapViewMode().requiresInternetConnection()
-				&& !this.mapView.hasValidMapFile()) {
-			startFileBrowser();
-		}
+		//if (!this.mapView.getMapViewMode().requiresInternetConnection()
+		//		&& !this.mapView.hasValidMapFile()) {
+			//startFileBrowser();
+		//}
+		
 	}
 	
 	private void configureMapView() {
-		// configure the MapView and activate the zoomLevel buttons
-		this.mapView.setClickable(true);
-		this.mapView.setBuiltInZoomControls(true);
-		this.mapView.setFocusable(true);
+		//TODO configure the MapView and activate the zoomLevel buttons
+		//this.mapView.setClickable(true);
+		//this.mapView.setBuiltInZoomControls(true);
+		//this.mapView.setFocusable(true);
 
 		// set the localized text fields
 		//this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));

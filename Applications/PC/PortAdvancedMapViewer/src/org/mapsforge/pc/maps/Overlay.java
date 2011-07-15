@@ -295,7 +295,7 @@ public abstract class Overlay extends Thread {
 		}
 
 		// request the MapView to redraw
-		this.internalMapView.postInvalidate();
+		//this.internalMapView.postInvalidate();
 	}
 
 	/**
@@ -338,7 +338,7 @@ public abstract class Overlay extends Thread {
 		}
 
 		// check if the new dimensions are positive
-		if (this.internalMapView.getWidth() > 0 && this.internalMapView.getHeight() > 0) {
+		/*if (this.internalMapView.getWidth() > 0 && this.internalMapView.getHeight() > 0) {
 			// create the two overlay bitmaps with the correct dimensions
 			this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
 					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
@@ -348,7 +348,7 @@ public abstract class Overlay extends Thread {
 			this.hasValidDimensions = true;
 		} else {
 			this.hasValidDimensions = false;
-		}
+		}*/
 	}
 
 	/**

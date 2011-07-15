@@ -40,9 +40,9 @@ public class CacheSizePreference extends SeekBarPreference {
 		this.messageText = getContext().getString(R.string.preferences_cache_size_desc);
 
 		// define the current and maximum value of the seek bar
-		this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
-				AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_DEFAULT);
-		this.max = AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_MAX;
+		//this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
+		//		AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_DEFAULT);
+		//this.max = AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_MAX;
 	}
 
 	@Override

@@ -40,9 +40,9 @@ public class MoveSpeedPreference extends SeekBarPreference {
 		this.messageText = getContext().getString(R.string.preferences_move_speed_desc);
 
 		// define the current and maximum value of the seek bar
-		this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
-				AdvancedMapViewer.MOVE_SPEED_DEFAULT);
-		this.max = AdvancedMapViewer.MOVE_SPEED_MAX;
+		//this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
+		//		AdvancedMapViewer.MOVE_SPEED_DEFAULT);
+		//this.max = AdvancedMapViewer.MOVE_SPEED_MAX;
 	}
 
 	@Override

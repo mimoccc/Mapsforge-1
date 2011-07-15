@@ -129,7 +129,6 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		menuMapFile.add(itemMapFile);
 		
 		//Listener
-		itemMapFile.addActionListener(this);
 		itemMapinfo.addActionListener(this);
 		itemAbout.addActionListener(this);
 		itemFollowGPS.addActionListener(this);
@@ -180,9 +179,9 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		}
 		else if (cmd.equals(propertiesStrings.getProperty("menu_render_theme_select_file"))) {
 			//TODO: 
-			parentFrame.startFileBrowser();
+			//parentFrame.startFileBrowser();
 		}
-		else if (cmd.equals(propertiesStrings.getProperty("menu_mapfile"))) {
+		else if (cmd.equals(propertiesStrings.getProperty("menu_mapfile_select_file"))) {
 			//TODO:
 			parentFrame.startFileBrowser();
 		}

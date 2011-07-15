@@ -247,6 +247,7 @@ public class Paint {
     private int mFlags = 0;
     private float textSize;
     private Typeface typeface;
+    private Font font;
     
     private List<FontInfo> mFonts;
     private final FontRenderContext mFontContext = new FontRenderContext(new AffineTransform(), true, true);
@@ -410,7 +411,12 @@ public class Paint {
         return typeface;	
 	}
 	
-
+	public Font setFont(Font font) {
+		this.font = font;
+		
+		return this.font;
+	}
+	
 	/* OTHER */
 
 	@SuppressWarnings("deprecation")
@@ -509,5 +515,4 @@ public class Paint {
 	public void setAlpha(int i) {
 		color = new Color(color.getRed(), color.getGreen(), color.getBlue(), i);		
 	}
-
 }

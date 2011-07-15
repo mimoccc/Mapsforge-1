@@ -149,6 +149,20 @@ public class Typeface {
         mFonts = Collections.unmodifiableList(fonts);
         mStyle = style;
     }
+    
+    public static void init() {
+        DEFAULT = create(DEFAULT_FAMILY, NORMAL);
+        DEFAULT_BOLD = create(DEFAULT_FAMILY, BOLD);
+        SANS_SERIF = create("sans-serif", NORMAL);
+        SERIF = create("serif", NORMAL);
+        MONOSPACE = create("monospace", NORMAL);
+        sDefaults = new Typeface[] {
+                DEFAULT,
+                DEFAULT_BOLD,
+                create(DEFAULT_FAMILY, ITALIC),
+                create(DEFAULT_FAMILY, BOLD_ITALIC),
+        };
+    }
 
     public static void init(FontLoader fontLoader) {
         mFontLoader = fontLoader;

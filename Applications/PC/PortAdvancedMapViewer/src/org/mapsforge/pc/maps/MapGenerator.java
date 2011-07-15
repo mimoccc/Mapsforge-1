@@ -98,7 +98,7 @@ abstract class MapGenerator extends Thread {
 						// copy the tile to the MapView
 						this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
 								this.currentTileBitmap);
-						this.mapView.postInvalidate();
+						//TODO this.mapView.postInvalidate();
 					}
 
 					// put the tile image in the cache
