@@ -136,6 +136,7 @@ class TagIDsWays {
 	Integer piste$type$nordic;
 	Integer place$locality;
 	Integer railway$light_rail;
+	Integer railway$narrow_gauge;
 	Integer railway$rail;
 	Integer railway$station;
 	Integer railway$subway;
@@ -297,6 +298,7 @@ class TagIDsWays {
 		this.place$locality = wayTags.get("place=locality");
 
 		this.railway$light_rail = wayTags.get("railway=light_rail");
+		this.railway$narrow_gauge = wayTags.get("railway=narrow_gauge");
 		this.railway$rail = wayTags.get("railway=rail");
 		this.railway$station = wayTags.get("railway=station");
 		this.railway$subway = wayTags.get("railway=subway");

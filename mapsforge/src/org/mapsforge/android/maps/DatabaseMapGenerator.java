@@ -3207,8 +3207,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_TRAM1));
 				this.layer.get(LayerIds.RAILWAY$TRAM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_TRAM2));
-			} else if (this.tagIDsWays.railway$light_rail != null
-					&& wayTagIds[this.tagIDsWays.railway$light_rail.intValue()]) {
+			} else if ((this.tagIDsWays.railway$light_rail != null && wayTagIds[this.tagIDsWays.railway$light_rail
+					.intValue()])
+					|| (this.tagIDsWays.railway$narrow_gauge != null && wayTagIds[this.tagIDsWays.railway$narrow_gauge
+							.intValue()])) {
 				/* railway=light_rail */
 				this.layer.get(LayerIds.RAILWAY$LIGHT_RAIL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_LIGHT_RAIL1));

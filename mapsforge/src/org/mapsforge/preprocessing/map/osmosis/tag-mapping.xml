@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tag-mapping xmlns="http://mapsforge.org/tag-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://mapsforge.org/tag-mapping tag-mapping.xsd" default-zoom-appear="16"
-	profile-name="default-profile">
+	xsi:schemaLocation="http://mapsforge.org/tag-mapping tag-mapping.xsd" default-zoom-appear="16" profile-name="default-profile">
 
 	<!-- ************* POIS *************** -->
 
@@ -11,7 +10,7 @@
 		<osm-tag key="highway" value="mini_roundabout" zoom-appear="17" />
 		<osm-tag key="highway" value="traffic_signals" zoom-appear="18" />
 		<osm-tag key="highway" value="turning_circle" zoom-appear="17" />
-	</pois>	
+	</pois>
 
 	<!-- PUBLIC AMENITIES -->
 	<pois>
@@ -62,10 +61,10 @@
 		<osm-tag key="railway" value="tram_stop" zoom-appear="17" />
 
 		<osm-tag key="station" value="light_rail" zoom-appear="15">
-			<zoom-override key="railway" value="station"/>
+			<zoom-override key="railway" value="station" />
 		</osm-tag>
 		<osm-tag key="station" value="subway" zoom-appear="15">
-			<zoom-override key="railway" value="station"/>
+			<zoom-override key="railway" value="station" />
 		</osm-tag>
 	</pois>
 
@@ -243,6 +242,7 @@
 	<ways>
 		<osm-tag key="route" value="ferry" zoom-appear="12" />
 		<osm-tag key="railway" value="light_rail" zoom-appear="12" />
+		<osm-tag key="railway" value="narrow_gauge" zoom-appear="14" />
 		<osm-tag key="railway" value="rail" zoom-appear="10" />
 		<osm-tag key="railway" value="station" zoom-appear="14" />
 		<osm-tag key="railway" value="subway" zoom-appear="15" />
