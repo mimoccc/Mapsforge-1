@@ -225,7 +225,6 @@ public class MapDatabase {
 		return isValid;
 	}
 
-	private byte baseZoomLevel;
 	private int blockEntriesTableOffset;
 	private String blockSignature;
 	private int bufferPosition;
@@ -243,7 +242,6 @@ public class MapDatabase {
 	private byte globalMaximumZoomLevel;
 	private byte globalMinimumZoomLevel;
 	private boolean headerStartPosition;
-	private long indexStartAddress;
 	private int[] innerWay;
 	private int innerWayNodesSequenceLength;
 	private int innerWayNumber;
@@ -252,7 +250,6 @@ public class MapDatabase {
 	private Rect mapBoundary;
 	private long mapDate;
 	private MapFileParameters mapFileParameters;
-	private long mapFileSize;
 	private MapFileParameters[] mapFilesLookupTable;
 	private int maximumNodeTagId;
 	private int maximumWayTagId;
@@ -284,7 +281,6 @@ public class MapDatabase {
 	private int queryTileBitmask;
 	private int queryZoomLevel;
 	private byte[] readBuffer;
-	private long startAddress;
 	private int startPositionLatitude;
 	private int startPositionLongitude;
 	private boolean stopCurrentQuery;
@@ -1108,9 +1104,9 @@ public class MapDatabase {
 		// get and check the information for each contained map file
 		for (this.tempByte = 0; this.tempByte < numberOfMapFiles; ++this.tempByte) {
 			// get and check the base zoom level
-			this.baseZoomLevel = readByte();
-			if (this.baseZoomLevel < 0 || this.baseZoomLevel > 21) {
-				Logger.debug("invalid base zooom level: " + this.baseZoomLevel);
+			byte baseZoomLevel = readByte();
+			if (baseZoomLevel < 0 || baseZoomLevel > 21) {
+				Logger.debug("invalid base zooom level: " + baseZoomLevel);
 				return false;
 			}
 
@@ -1135,31 +1131,28 @@ public class MapDatabase {
 			}
 
 			// get and check the start address of the map file (5 bytes)
-			this.startAddress = readFiveBytesLong();
-			if (this.startAddress < 1 || this.startAddress >= this.fileSize) {
-				Logger.debug("invalid start address: " + this.startAddress);
+			long startAddress = readFiveBytesLong();
+			if (startAddress < 1 || startAddress >= this.fileSize) {
+				Logger.debug("invalid start address: " + startAddress);
 				return false;
 			}
 
+			long indexStartAddress = startAddress;
 			if (this.debugFile) {
 				// the map file has an index signature before the index
-				this.indexStartAddress = this.startAddress + SIGNATURE_LENGTH_INDEX;
-			} else {
-				// the map file begins directly with the index
-				this.indexStartAddress = this.startAddress;
+				indexStartAddress += SIGNATURE_LENGTH_INDEX;
 			}
 
 			// get and check the size of the map file (5 bytes)
-			this.mapFileSize = readFiveBytesLong();
-			if (this.mapFileSize < 1) {
-				Logger.debug("invalid map file size: " + this.mapFileSize);
+			long mapFileSize = readFiveBytesLong();
+			if (mapFileSize < 1) {
+				Logger.debug("invalid map file size: " + mapFileSize);
 				return false;
 			}
 
 			// add the current map file to the map files list
-			mapFilesList[this.tempByte] = new MapFileParameters(this.startAddress,
-					this.indexStartAddress, this.mapFileSize, this.baseZoomLevel, zoomLevelMin,
-					zoomLevelMax, this.mapBoundary);
+			mapFilesList[this.tempByte] = new MapFileParameters(startAddress, indexStartAddress,
+					mapFileSize, baseZoomLevel, zoomLevelMin, zoomLevelMax, this.mapBoundary);
 
 			// update the global minimum and maximum zoom level information
 			if (zoomLevelMin < this.globalMinimumZoomLevel) {
