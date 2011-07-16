@@ -191,12 +191,12 @@ public class OverlayWay {
 	}
 
 	/**
-	 * Returns the way nodes of this way.
+	 * Returns a copy of the way nodes of this way.
 	 * 
-	 * @return the way nodes of this way.
+	 * @return a copy of the way nodes of this way.
 	 */
 	public synchronized GeoPoint[][] getWayData() {
-		return this.wayNodes;
+		return this.wayNodes.clone();
 	}
 
 	/**
@@ -243,11 +243,14 @@ public class OverlayWay {
 	 */
 	public synchronized void setWayData(GeoPoint[][] wayNodes) {
 		// check for illegal null elements
-		if (wayNodes != null && containsNullElements(wayNodes)) {
+		if (wayNodes == null) {
+			this.wayNodes = null;
+		} else if (containsNullElements(wayNodes)) {
 			throw new IllegalArgumentException("way nodes must not contain null elements");
+		} else {
+			this.wayNodes = wayNodes.clone();
 		}
 
-		this.wayNodes = wayNodes;
 		if (this.wayNodes == null) {
 			this.cachedWayPositions = new Point[0][0];
 		} else if (!arrayLengthsEqual(this.wayNodes, this.cachedWayPositions)) {

@@ -25,8 +25,7 @@ import android.graphics.Bitmap;
 abstract class MapGenerator extends Thread {
 	private static final GeoPoint DEFAULT_START_POINT = new GeoPoint(51.33, 10.45);
 	private static final byte DEFAULT_ZOOM_LEVEL = 5;
-	private MapGeneratorJob currentMapGeneratorJob;
-	private Bitmap currentTileBitmap;
+
 	private PriorityQueue<MapGeneratorJob> jobQueue1;
 	private PriorityQueue<MapGeneratorJob> jobQueue2;
 	private MapView mapView;
@@ -51,10 +50,11 @@ abstract class MapGenerator extends Thread {
 	public final void run() {
 		setName(getThreadName());
 		// create the currentTileBitmap for the tile content
-		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
+		Bitmap currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 				Bitmap.Config.RGB_565);
-		setupMapGenerator(this.currentTileBitmap);
+		setupMapGenerator(currentTileBitmap);
 
+		MapGeneratorJob currentMapGeneratorJob;
 		while (!isInterrupted()) {
 			prepareMapGeneration();
 
@@ -81,28 +81,26 @@ abstract class MapGenerator extends Thread {
 					schedule();
 					this.scheduleNeeded = false;
 				}
-				this.currentMapGeneratorJob = this.jobQueue1.poll();
+				currentMapGeneratorJob = this.jobQueue1.poll();
 			}
 
 			// check if the current job can be skipped or must be processed
-			if (!this.tileRAMCache.containsKey(this.currentMapGeneratorJob)
-					&& !this.tileMemoryCardCache.containsKey(this.currentMapGeneratorJob)) {
+			if (!this.tileRAMCache.containsKey(currentMapGeneratorJob)
+					&& !this.tileMemoryCardCache.containsKey(currentMapGeneratorJob)) {
 				// check if the tile was generated successfully
-				if (executeJob(this.currentMapGeneratorJob)) {
+				if (executeJob(currentMapGeneratorJob)) {
 					if (isInterrupted()) {
 						break;
 					}
 
 					if (this.mapView != null) {
 						// copy the tile to the MapView
-						this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
-								this.currentTileBitmap);
+						this.mapView.putTileOnBitmap(currentMapGeneratorJob, currentTileBitmap);
 						this.mapView.postInvalidate();
 					}
 
 					// put the tile image in the cache
-					this.tileMemoryCardCache.put(this.currentMapGeneratorJob,
-							this.currentTileBitmap);
+					this.tileMemoryCardCache.put(currentMapGeneratorJob, currentTileBitmap);
 				}
 			}
 
@@ -116,9 +114,9 @@ abstract class MapGenerator extends Thread {
 		cleanup();
 
 		// free the currentTileBitmap memory
-		if (this.currentTileBitmap != null) {
-			this.currentTileBitmap.recycle();
-			this.currentTileBitmap = null;
+		if (currentTileBitmap != null) {
+			currentTileBitmap.recycle();
+			currentTileBitmap = null;
 		}
 
 		// set some fields to null to avoid memory leaks

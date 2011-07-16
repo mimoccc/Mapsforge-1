@@ -276,15 +276,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private List<PointTextContainer> areaLabels;
 	private float[] areaNamePositions;
-	private float bboxLatitude1;
-	private float bboxLatitude2;
-	private float bboxLongitude1;
-	private float bboxLongitude2;
 	private CoastlineAlgorithm coastlineAlgorithm;
 	private float[][] coordinates;
 	private MapGeneratorJob currentJob;
-	private float currentNodeX;
-	private float currentNodeY;
 	private Tile currentTile;
 	private float currentX;
 	private float currentY;
@@ -303,13 +297,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private List<SymbolContainer> pointSymbols;
 	private float previousX;
 	private float previousY;
-	private byte remainingTags;
 	private double segmentLengthInPixel;
-	private float segmentLengthRemaining;
-	private float segmentSkipPercentage;
 	private ShapeContainer shapeContainer;
 	private int skipPixels;
-	private float symbolAngle;
 	private SymbolContainer symbolContainer;
 	private final TagIDsNodes tagIDsNodes;
 	private final TagIDsWays tagIDsWays;
@@ -317,9 +307,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private Tile tileForCoastlineAlgorithm;
 	private float[][] waterTileCoordinates;
 	private float[] wayNamePath;
-	private boolean wayNameRendered;
 	private List<WayTextContainer> wayNames;
-	private float wayNameWidth;
 	private List<List<List<ShapePaintContainer>>> ways;
 	private List<SymbolContainer> waySymbols;
 
@@ -440,10 +428,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	private void addWayName(String wayName, Paint outline) {
 		// calculate the way name length plus some margin of safety
-		this.wayNameWidth = PAINT_NAME_BLACK_TINY_CENTER.measureText(wayName) + 20;
+		float wayNameWidth = PAINT_NAME_BLACK_TINY_CENTER.measureText(wayName) + 20;
 
 		// flag if the current way name has been rendered at least once
-		this.wayNameRendered = false;
+		boolean wayNameRendered = false;
 		this.skipPixels = 0;
 
 		// get the first way point coordinates
@@ -463,7 +451,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 			if (this.skipPixels > 0) {
 				this.skipPixels -= this.segmentLengthInPixel;
-			} else if (this.segmentLengthInPixel > this.wayNameWidth) {
+			} else if (this.segmentLengthInPixel > wayNameWidth) {
 				this.wayNamePath = new float[4];
 				// check to prevent inverted way names
 				if (this.previousX <= this.currentX) {
@@ -487,7 +475,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					this.wayNames.add(new WayTextContainer(this.wayNamePath, wayName, paintOutline));
 				}
 
-				this.wayNameRendered = true;
+				wayNameRendered = true;
 
 				// set the minimum amount of pixels to skip before repeating the way name
 				this.skipPixels = 500;
@@ -499,7 +487,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 
 		// if no segment is long enough, check if the name can be drawn on the whole way
-		if (!this.wayNameRendered && getWayLengthInPixel() > this.wayNameWidth) {
+		if (!wayNameRendered && getWayLengthInPixel() > wayNameWidth) {
 			// check to prevent inverted way names
 			if (this.coordinates[0][0] > this.coordinates[0][this.coordinates[0].length - 2]) {
 				// reverse the way coordinates
@@ -566,6 +554,9 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.previousY = this.coordinates[0][1];
 
 		// draw the symbol on each way segment
+		float segmentLengthRemaining;
+		float segmentSkipPercentage;
+		float symbolAngle;
 		for (int i = 2; i < this.coordinates[0].length; i += 2) {
 			// get the current way point coordinates
 			this.currentX = this.coordinates[0][i];
@@ -575,20 +566,20 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.diffX = this.currentX - this.previousX;
 			this.diffY = this.currentY - this.previousY;
 			this.segmentLengthInPixel = Math.sqrt(this.diffX * this.diffX + this.diffY * this.diffY);
-			this.segmentLengthRemaining = (float) this.segmentLengthInPixel;
+			segmentLengthRemaining = (float) this.segmentLengthInPixel;
 
-			while (this.segmentLengthRemaining - this.skipPixels > segmentSafetyDistance) {
+			while (segmentLengthRemaining - this.skipPixels > segmentSafetyDistance) {
 				// calculate the percentage of the current segment to skip
-				this.segmentSkipPercentage = this.skipPixels / this.segmentLengthRemaining;
+				segmentSkipPercentage = this.skipPixels / segmentLengthRemaining;
 
 				// move the previous point forward towards the current point
-				this.previousX += this.diffX * this.segmentSkipPercentage;
-				this.previousY += this.diffY * this.segmentSkipPercentage;
-				this.symbolAngle = (float) Math.toDegrees(Math.atan2(this.currentY - this.previousY,
+				this.previousX += this.diffX * segmentSkipPercentage;
+				this.previousY += this.diffY * segmentSkipPercentage;
+				symbolAngle = (float) Math.toDegrees(Math.atan2(this.currentY - this.previousY,
 						this.currentX - this.previousX));
 
 				this.waySymbols.add(new SymbolContainer(symbolBitmap, this.previousX, this.previousY,
-						alignCenter, this.symbolAngle));
+						alignCenter, symbolAngle));
 
 				// check if the symbol should only be rendered once
 				if (!repeatSymbol) {
@@ -600,13 +591,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.diffY = this.currentY - this.previousY;
 
 				// recalculate the remaining length of the current segment
-				this.segmentLengthRemaining -= this.skipPixels;
+				segmentLengthRemaining -= this.skipPixels;
 
 				// set the amount of pixels to skip before repeating the symbol
 				this.skipPixels = distanceBetweenSymbols;
 			}
 
-			this.skipPixels -= this.segmentLengthRemaining;
+			this.skipPixels -= segmentLengthRemaining;
 			if (this.skipPixels < segmentSafetyDistance) {
 				this.skipPixels = segmentSafetyDistance;
 			}
@@ -619,26 +610,25 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private float[] calculateCenterOfBoundingBox() {
 		// calculate the minimal bounding box
-		this.bboxLongitude1 = this.coordinates[0][0];
-		this.bboxLongitude2 = this.coordinates[0][0];
-		this.bboxLatitude1 = this.coordinates[0][1];
-		this.bboxLatitude2 = this.coordinates[0][1];
+		float bboxLongitude1 = this.coordinates[0][0];
+		float bboxLongitude2 = this.coordinates[0][0];
+		float bboxLatitude1 = this.coordinates[0][1];
+		float bboxLatitude2 = this.coordinates[0][1];
 		for (int i = 2; i < this.coordinates[0].length; i += 2) {
-			if (this.coordinates[0][i] < this.bboxLongitude1) {
-				this.bboxLongitude1 = this.coordinates[0][i];
-			} else if (this.coordinates[0][i] > this.bboxLongitude2) {
-				this.bboxLongitude2 = this.coordinates[0][i];
+			if (this.coordinates[0][i] < bboxLongitude1) {
+				bboxLongitude1 = this.coordinates[0][i];
+			} else if (this.coordinates[0][i] > bboxLongitude2) {
+				bboxLongitude2 = this.coordinates[0][i];
 			}
-			if (this.coordinates[0][i + 1] > this.bboxLatitude1) {
-				this.bboxLatitude1 = this.coordinates[0][i + 1];
-			} else if (this.coordinates[0][i + 1] < this.bboxLatitude2) {
-				this.bboxLatitude2 = this.coordinates[0][i + 1];
+			if (this.coordinates[0][i + 1] > bboxLatitude1) {
+				bboxLatitude1 = this.coordinates[0][i + 1];
+			} else if (this.coordinates[0][i + 1] < bboxLatitude2) {
+				bboxLatitude2 = this.coordinates[0][i + 1];
 			}
 		}
 
 		// return center coordinates
-		return new float[] { (this.bboxLongitude1 + this.bboxLongitude2) / 2,
-				(this.bboxLatitude1 + this.bboxLatitude2) / 2 };
+		return new float[] { (bboxLongitude1 + bboxLongitude2) / 2, (bboxLatitude1 + bboxLatitude2) / 2 };
 	}
 
 	/**
@@ -1831,8 +1821,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	final void renderPointOfInterest(byte nodeLayer, int latitude, int longitude, String nodeName,
 			String houseNumber, String nodeElevation, boolean[] nodeTagIds) {
-		this.currentNodeX = scaleLongitude(longitude);
-		this.currentNodeY = scaleLatitude(latitude);
+		float nodeX = scaleLongitude(longitude);
+		float nodeY = scaleLatitude(latitude);
 
 		// check for a valid layer value
 		if (nodeLayer < 0) {
@@ -1845,7 +1835,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		/* houseNumber */
 		if (houseNumber != null && this.currentTile.zoomLevel >= 17) {
-			this.nodes.add(new PointTextContainer(houseNumber, this.currentNodeX, this.currentNodeY,
+			this.nodes.add(new PointTextContainer(houseNumber, nodeX, nodeY,
 					PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 		}
 
@@ -1853,218 +1843,218 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (this.tagIDsNodes.aeroway$aerodrome != null
 				&& nodeTagIds[this.tagIDsNodes.aeroway$aerodrome.intValue()]
 				&& this.currentTile.zoomLevel <= 14) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.airport);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.airport);
 		} else if (this.tagIDsNodes.aeroway$helipad != null
 				&& nodeTagIds[this.tagIDsNodes.aeroway$helipad.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.helipad);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.helipad);
 		}
 
 		/* amenity */
 		else if (this.tagIDsNodes.amenity$pub != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$pub.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.pub);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_RED_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cinema != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$cinema.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.cinema);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$theatre != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$theatre.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.theatre);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fire_station != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$fire_station.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.firebrigade);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$shelter != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$shelter.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.shelter);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$school != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$school.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.school);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$university != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$university.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.university);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$place_of_worship != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$place_of_worship.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.church);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$atm != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$atm.intValue()]
 				&& this.currentTile.zoomLevel >= 17) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.atm);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$library != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$library.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.library);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fast_food != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$fast_food.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.fastfood);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$parking != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$parking.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.parking);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$hospital != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$hospital.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.hospital);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$restaurant != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$restaurant.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.restaurant);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bank != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$bank.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.bank);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$cafe != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$cafe.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.cafe);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$fuel != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$fuel.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.petrolStation);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$bus_station != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$bus_station.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.bus_sta);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.amenity$post_box != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$post_box.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postbox);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.postbox);
 		} else if (this.tagIDsNodes.amenity$post_office != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$post_office.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.postoffice);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.postoffice);
 		} else if (this.tagIDsNodes.amenity$pharmacy != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$pharmacy.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.pharmacy);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.pharmacy);
 		} else if (this.tagIDsNodes.amenity$fountain != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$fountain.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.fountain);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.fountain);
 		} else if (this.tagIDsNodes.amenity$recycling != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$recycling.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.recycling);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.recycling);
 		} else if (this.tagIDsNodes.amenity$telephone != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$telephone.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.telephone);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.telephone);
 		} else if (this.tagIDsNodes.amenity$toilets != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$toilets.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.toilets);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.toilets);
 		} else if (this.tagIDsNodes.amenity$bicycle_rental != null
 				&& nodeTagIds[this.tagIDsNodes.amenity$bicycle_rental.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bicycle_rental);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.bicycle_rental);
 		}
 
 		/* barrier */
 		else if (this.tagIDsNodes.barrier$bollard != null
 				&& nodeTagIds[this.tagIDsNodes.barrier$bollard.intValue()]) {
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
-					new ShapePaintContainer(new CircleContainer(this.currentNodeX, this.currentNodeY,
+					new ShapePaintContainer(new CircleContainer(nodeX, nodeY,
 							1.5f), PAINT_BARRIER_BOLLARD));
 		}
 
 		/* highway */
 		else if (this.tagIDsNodes.highway$bus_stop != null
 				&& nodeTagIds[this.tagIDsNodes.highway$bus_stop.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.bus);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.bus);
 		} else if (this.tagIDsNodes.highway$traffic_signals != null
 				&& nodeTagIds[this.tagIDsNodes.highway$traffic_signals.intValue()]
 				&& this.currentTile.zoomLevel >= 17) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.traffic_signal);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.traffic_signal);
 		}
 
 		/* historic */
@@ -2072,64 +2062,64 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				.intValue()])
 				|| (this.tagIDsNodes.historic$monument != null && nodeTagIds[this.tagIDsNodes.historic$monument
 						.intValue()])) {
-			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 3);
+			this.shapeContainer = new CircleContainer(nodeX, nodeY, 3);
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_INNER));
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_HISTORIC_CIRCLE_OUTER));
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-						this.currentNodeY - 8, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeName, nodeX,
+						nodeY - 8, PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
 		/* leisure */
 		else if (this.tagIDsNodes.leisure$playground != null
 				&& nodeTagIds[this.tagIDsNodes.leisure$playground.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.playground);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.playground);
 		}
 
 		/* man_made */
 		else if (this.tagIDsNodes.man_made$windmill != null
 				&& nodeTagIds[this.tagIDsNodes.man_made$windmill.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.windmill);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.windmill);
 		}
 
 		/* natural */
 		else if (this.tagIDsNodes.natural$cave_entrance != null
 				&& nodeTagIds[this.tagIDsNodes.natural$cave_entrance.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.cave_entrance);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_SMALL, PAINT_NAME_WHITE_STROKE_SMALL));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.natural$peak != null
 				&& nodeTagIds[this.tagIDsNodes.natural$peak.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.peak);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_SMALL, PAINT_NAME_WHITE_STROKE_SMALL));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
-				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-						this.currentNodeY + 18, PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeElevation, nodeX,
+						nodeY + 18, PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.natural$volcano != null
 				&& nodeTagIds[this.tagIDsNodes.natural$volcano.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.vulcan);
 			if (nodeName != null && this.currentTile.zoomLevel >= 14) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_SMALLER));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 			if (nodeElevation != null && this.currentTile.zoomLevel >= 17) {
-				this.nodes.add(new PointTextContainer(nodeElevation, this.currentNodeX,
-						this.currentNodeY + 18, PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
+				this.nodes.add(new PointTextContainer(nodeElevation, nodeX,
+						nodeY + 18, PAINT_NAME_BLACK_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		}
 
@@ -2137,19 +2127,19 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		else if (this.tagIDsNodes.place$city != null
 				&& nodeTagIds[this.tagIDsNodes.place$city.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 14) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_HUGE, PAINT_NAME_WHITE_STROKE_HUGE));
 			}
 		} else if (this.tagIDsNodes.place$country != null
 				&& nodeTagIds[this.tagIDsNodes.place$country.intValue()]) {
 			if (nodeName != null && this.currentTile.zoomLevel <= 6) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_HUGE, PAINT_NAME_WHITE_STROKE_HUGE));
 			}
 		} else if (this.tagIDsNodes.place$island != null
 				&& nodeTagIds[this.tagIDsNodes.place$island.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_LARGER, PAINT_NAME_WHITE_STROKE_LARGER));
 			}
 		} else if ((this.tagIDsNodes.place$suburb != null && nodeTagIds[this.tagIDsNodes.place$suburb
@@ -2159,7 +2149,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				|| (this.tagIDsNodes.place$village != null && nodeTagIds[this.tagIDsNodes.place$village
 						.intValue()])) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLACK_LARGE, PAINT_NAME_WHITE_STROKE_LARGE));
 			}
 		}
@@ -2168,7 +2158,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		else if (this.tagIDsNodes.railway$level_crossing != null
 				&& nodeTagIds[this.tagIDsNodes.railway$level_crossing.intValue()]) {
 			/* crossing */
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.railway_crossing);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.railway_crossing);
 		} else if (this.tagIDsNodes.railway$station != null
 				&& nodeTagIds[this.tagIDsNodes.railway$station.intValue()]) {
 			/* station */
@@ -2176,25 +2166,25 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					.intValue()])
 					|| (this.tagIDsNodes.station$subway != null && nodeTagIds[this.tagIDsNodes.station$subway
 							.intValue()])) {
-				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 4);
+				this.shapeContainer = new CircleContainer(nodeX, nodeY, 4);
 				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
 				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
-					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 10, PAINT_NAME_RED_SMALLER,
+					this.nodes.add(new PointTextContainer(nodeName, nodeX,
+							nodeY - 10, PAINT_NAME_RED_SMALLER,
 							PAINT_NAME_WHITE_STROKE_SMALLER));
 				}
 			} else {
-				this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 6);
+				this.shapeContainer = new CircleContainer(nodeX, nodeY, 6);
 				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
 				this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 				if (nodeName != null) {
-					this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX,
-							this.currentNodeY - 15, PAINT_NAME_RED_NORMAL,
+					this.nodes.add(new PointTextContainer(nodeName, nodeX,
+							nodeY - 15, PAINT_NAME_RED_NORMAL,
 							PAINT_NAME_WHITE_STROKE_NORMAL));
 				}
 			}
@@ -2203,15 +2193,15 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				|| (this.tagIDsNodes.railway$tram_stop != null && nodeTagIds[this.tagIDsNodes.railway$tram_stop
 						.intValue()])) {
 			/* halt or tram_stop */
-			this.shapeContainer = new CircleContainer(this.currentNodeX, this.currentNodeY, 4);
+			this.shapeContainer = new CircleContainer(nodeX, nodeY, 4);
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_INNER));
 			this.layer.get(LayerIds.POI_CIRCLE_SYMBOL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_CIRCLE_OUTER));
 			if (nodeName != null) {
 				this.nodes
-						.add(new PointTextContainer(nodeName, this.currentNodeX,
-								this.currentNodeY - 10, PAINT_NAME_RED_SMALLER,
+						.add(new PointTextContainer(nodeName, nodeX,
+								nodeY - 10, PAINT_NAME_RED_SMALLER,
 								PAINT_NAME_WHITE_STROKE_SMALLER));
 			}
 		}
@@ -2219,25 +2209,25 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* shop */
 		else if (this.tagIDsNodes.shop$bakery != null
 				&& nodeTagIds[this.tagIDsNodes.shop$bakery.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.bakery);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.shop$organic != null
 				&& nodeTagIds[this.tagIDsNodes.shop$organic.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.shop$supermarket != null
 				&& nodeTagIds[this.tagIDsNodes.shop$supermarket.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.supermarket);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
@@ -2246,40 +2236,40 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		/* tourism */
 		else if (this.tagIDsNodes.tourism$information != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$information.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.information);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.information);
 		} else if (this.tagIDsNodes.tourism$museum != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$museum.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.tourism$hostel != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$hostel.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.hostel);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$hotel != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$hotel.intValue()]) {
-			this.symbolContainer = addPOISymbol(this.currentNodeX, this.currentNodeY,
+			this.symbolContainer = addPOISymbol(nodeX, nodeY,
 					this.mapSymbols.hotel);
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_BLUE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 				this.nodes.get(this.nodes.size() - 1).symbol = this.symbolContainer;
 			}
 		} else if (this.tagIDsNodes.tourism$attraction != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$attraction.intValue()]) {
 			if (nodeName != null) {
-				this.nodes.add(new PointTextContainer(nodeName, this.currentNodeX, this.currentNodeY,
+				this.nodes.add(new PointTextContainer(nodeName, nodeX, nodeY,
 						PAINT_NAME_PURPLE_TINY, PAINT_NAME_WHITE_STROKE_TINY));
 			}
 		} else if (this.tagIDsNodes.tourism$viewpoint != null
 				&& nodeTagIds[this.tagIDsNodes.tourism$viewpoint.intValue()]) {
-			addPOISymbol(this.currentNodeX, this.currentNodeY, this.mapSymbols.viewpoint);
+			addPOISymbol(nodeX, nodeY, this.mapSymbols.viewpoint);
 		}
 
 		/* unknown node */
@@ -2331,7 +2321,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	final void renderWay(byte wayLayer, byte wayNumberOfRealTags, String wayName, String wayRef,
 			int[] wayLabelPosition, boolean[] wayTagIds, byte wayTagBitmap, int wayNodesSequenceLength,
 			int[] wayNodesSequence, int[][] innerWays) {
-		this.remainingTags = wayNumberOfRealTags;
+		byte remainingTags = wayNumberOfRealTags;
 		if (innerWays == null) {
 			this.coordinates = new float[1][];
 		} else {
@@ -3145,7 +3135,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					}
 				}
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3180,7 +3170,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.BUILDING$YES).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_BUILDING_YES_FILL));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3237,7 +3227,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.RAILWAY$STATION).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_RAILWAY_STATION_FILL));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3342,7 +3332,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LANDUSE$RETAIL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_LANDUSE_RETAIL_FILL));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3389,7 +3379,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.LEISURE$STADIUM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_LEISURE_STADIUM_OUTLINE));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3438,7 +3428,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					addAreaSymbol(this.mapSymbols.fountain, (byte) 16);
 				}
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3486,7 +3476,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.NATURAL$GLACIER).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_NATURAL_GLACIER_OUTLINE));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3496,7 +3486,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				&& wayTagIds[this.tagIDsWays.man_made$pier.intValue()]) {
 			this.layer.get(LayerIds.MAN_MADE$PIER).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MAN_MADE_PIER));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3522,7 +3512,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.WATERWAY$STREAM).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_WATERWAY_STREAM));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3536,7 +3526,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				this.layer.get(LayerIds.BARRIER$WALL).add(
 						new ShapePaintContainer(this.shapeContainer, PAINT_BARRIER_WALL));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3575,7 +3565,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 						new ShapePaintContainer(this.shapeContainer,
 								PAINT_BOUNDARY_ADMINISTRATIVE_ADMIN_LEVEL_10));
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.boundary$national_park != null
@@ -3591,7 +3581,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SHOOTING_FILL));
 			this.layer.get(LayerIds.SPORT$SHOOTING).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SHOOTING_OUTLINE));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.sport$swimming != null
@@ -3601,7 +3591,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.layer.get(LayerIds.SPORT$SWIMMING).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_SWIMMING_OUTLINE));
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.sport$tennis != null
@@ -3610,7 +3600,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_TENNIS_FILL));
 			this.layer.get(LayerIds.SPORT$TENNIS).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_SPORT_TENNIS_OUTLINE));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3622,14 +3612,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_AERODROME_OUTLINE));
 			this.layer.get(LayerIds.AEROWAY$AERODROME).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_AERODROME_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$apron != null
 				&& wayTagIds[this.tagIDsWays.aeroway$apron.intValue()]) {
 			this.layer.get(LayerIds.AEROWAY$APRON).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_APRON_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$runway != null
@@ -3638,7 +3628,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_RUNWAY1));
 			this.layer.get(LayerIds.AEROWAY$RUNWAY2).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_RUNWAY2));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$taxiway != null
@@ -3647,7 +3637,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_TAXIWAY1));
 			this.layer.get(LayerIds.AEROWAY$TAXIWAY2).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_TAXIWAY2));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aeroway$terminal != null
@@ -3656,7 +3646,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_TERMINAL_OUTLINE));
 			this.layer.get(LayerIds.AEROWAY$TERMINAL).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_AEROWAY_TERMINAL_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3667,7 +3657,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_RED, (byte) 0);
 			this.layer.get(LayerIds.TOURISM$ATTRACTION).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ATTRACTION_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.tourism$zoo != null
@@ -3676,7 +3666,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ZOO_FILL));
 			this.layer.get(LayerIds.TOURISM$ZOO).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_TOURISM_ZOO_OUTLINE));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3699,7 +3689,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			if (wayName != null && this.currentTile.zoomLevel >= 15) {
 				addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.aerialway$chair_lift != null
@@ -3710,7 +3700,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 				addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				addWaySymbol(this.mapSymbols.chair_lift_2, false, false);
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3766,7 +3756,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 				}
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.piste$type$nordic != null
@@ -3776,7 +3766,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			if (wayName != null && this.currentTile.zoomLevel > 15) {
 				addWayName(wayName, PAINT_NAME_WHITE_STROKE_TINY);
 			}
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3785,7 +3775,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (this.tagIDsWays.route$ferry != null && wayTagIds[this.tagIDsWays.route$ferry.intValue()]) {
 			this.layer.get(LayerIds.ROUTE$FERRY).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_ROUTE_FERRY));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3801,14 +3791,14 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			}
 			this.layer.get(LayerIds.MILITARY$BARRACKS).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MILITARY_BARRACKS_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		} else if (this.tagIDsWays.military$naval_base != null
 				&& wayTagIds[this.tagIDsWays.military$naval_base.intValue()]) {
 			this.layer.get(LayerIds.MILITARY$NAVAL_BASE).add(
 					new ShapePaintContainer(this.shapeContainer, PAINT_MILITARY_NAVAL_BASE_FILL));
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3817,7 +3807,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (this.tagIDsWays.historic$ruins != null
 				&& wayTagIds[this.tagIDsWays.historic$ruins.intValue()]) {
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLUE, (byte) 0);
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}
@@ -3826,7 +3816,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (this.tagIDsWays.place$locality != null
 				&& wayTagIds[this.tagIDsWays.place$locality.intValue()]) {
 			addAreaName(wayName, wayLabelPosition, AREA_NAME_BLACK, (byte) 0);
-			if (--this.remainingTags <= 0) {
+			if (--remainingTags <= 0) {
 				return;
 			}
 		}

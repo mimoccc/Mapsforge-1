@@ -44,10 +44,6 @@ class MapDatabaseIndexCache {
 	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_CACHE_BLOCK
 			* BYTES_PER_INDEX_ENTRY;
 
-	private int addressInIndexBlock;
-	private byte[] indexBlock;
-	private long indexBlockNumber;
-	private IndexCacheEntryKey indexCacheEntryKey;
 	private RandomAccessFile inputFile;
 	private Map<IndexCacheEntryKey, byte[]> map;
 
@@ -110,35 +106,35 @@ class MapDatabaseIndexCache {
 			}
 
 			// calculate the index block number
-			this.indexBlockNumber = blockNumber / INDEX_ENTRIES_PER_CACHE_BLOCK;
+			long indexBlockNumber = blockNumber / INDEX_ENTRIES_PER_CACHE_BLOCK;
 
 			// create the cache entry key for this request
-			this.indexCacheEntryKey = new IndexCacheEntryKey(mapFileParameters,
-					this.indexBlockNumber);
+			IndexCacheEntryKey indexCacheEntryKey = new IndexCacheEntryKey(mapFileParameters,
+					indexBlockNumber);
 
 			// check for cached index block
-			this.indexBlock = this.map.get(this.indexCacheEntryKey);
-			if (this.indexBlock == null) {
+			byte[] indexBlock = this.map.get(indexCacheEntryKey);
+			if (indexBlock == null) {
 				// cache miss, create a new index block
-				this.indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
+				indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
 
 				// seek to the correct index block in the file and read it
-				this.inputFile.seek(mapFileParameters.indexStartAddress + this.indexBlockNumber
+				this.inputFile.seek(mapFileParameters.indexStartAddress + indexBlockNumber
 						* SIZE_OF_INDEX_BLOCK);
-				if (this.inputFile.read(this.indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
+				if (this.inputFile.read(indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
 					Logger.debug("reading the current index block has failed");
 					return -1;
 				}
 
 				// put the index block in the map
-				this.map.put(this.indexCacheEntryKey, this.indexBlock);
+				this.map.put(indexCacheEntryKey, indexBlock);
 			}
 
 			// calculate the address of the index entry inside the index block
-			this.addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
+			int addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
 
 			// return the real index entry
-			return Deserializer.getFiveBytesLong(this.indexBlock, this.addressInIndexBlock);
+			return Deserializer.getFiveBytesLong(indexBlock, addressInIndexBlock);
 		} catch (IOException e) {
 			Logger.exception(e);
 			return -1;

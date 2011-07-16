@@ -70,7 +70,7 @@ final class Deserializer {
 	}
 
 	/**
-	 * Converts two bytes of a byte array to a signed short.
+	 * Converts two bytes of a byte array to a signed int.
 	 * <p>
 	 * The byte order is big-endian.
 	 * 
@@ -78,10 +78,10 @@ final class Deserializer {
 	 *            the byte array.
 	 * @param offset
 	 *            the offset in the array.
-	 * @return the short value.
+	 * @return the int value.
 	 */
-	static short getShort(byte[] buffer, int offset) {
-		return (short) (buffer[offset] << 8 | (buffer[offset + 1] & 0xff));
+	static int getShort(byte[] buffer, int offset) {
+		return buffer[offset] << 8 | (buffer[offset + 1] & 0xff);
 	}
 
 	/**

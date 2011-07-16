@@ -39,26 +39,21 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	private Canvas canvas;
 	private float[][] coordinates;
 	private Path path;
-	private WayTextContainer pathTextContainer;
-	private PointTextContainer pointTextContainer;
-	private ShapePaintContainer shapePaintContainer;
-	private List<List<ShapePaintContainer>> shapePaintContainers;
 	private StringBuilder stringBuilder;
 	private Matrix symbolMatrix;
-	private float[] textCoordinates;
 	private float[] tileFrame;
-	private List<ShapePaintContainer> wayList;
 
 	@Override
 	void drawNodes(List<PointTextContainer> drawNodes) {
+		PointTextContainer pointTextContainer;
 		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.pointTextContainer = drawNodes.get(this.arrayListIndex);
-			if (this.pointTextContainer.paintBack != null) {
-				this.canvas.drawText(this.pointTextContainer.text, this.pointTextContainer.x,
-						this.pointTextContainer.y, this.pointTextContainer.paintBack);
+			pointTextContainer = drawNodes.get(this.arrayListIndex);
+			if (pointTextContainer.paintBack != null) {
+				this.canvas.drawText(pointTextContainer.text, pointTextContainer.x,
+						pointTextContainer.y, pointTextContainer.paintBack);
 			}
-			this.canvas.drawText(this.pointTextContainer.text, this.pointTextContainer.x,
-					this.pointTextContainer.y, this.pointTextContainer.paintFront);
+			this.canvas.drawText(pointTextContainer.text, pointTextContainer.x, pointTextContainer.y,
+					pointTextContainer.paintFront);
 		}
 	}
 
@@ -114,39 +109,44 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawWayNames(List<WayTextContainer> drawWayNames) {
+		WayTextContainer pathTextContainer;
+		float[] textCoordinates;
 		for (this.arrayListIndex = drawWayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			this.pathTextContainer = drawWayNames.get(this.arrayListIndex);
+			pathTextContainer = drawWayNames.get(this.arrayListIndex);
 			this.path.rewind();
-			this.textCoordinates = this.pathTextContainer.coordinates;
-			this.path.moveTo(this.textCoordinates[0], this.textCoordinates[1]);
-			for (int i = 2; i < this.textCoordinates.length; i += 2) {
-				this.path.lineTo(this.textCoordinates[i], this.textCoordinates[i + 1]);
+			textCoordinates = pathTextContainer.coordinates;
+			this.path.moveTo(textCoordinates[0], textCoordinates[1]);
+			for (int i = 2; i < textCoordinates.length; i += 2) {
+				this.path.lineTo(textCoordinates[i], textCoordinates[i + 1]);
 			}
-			this.canvas.drawTextOnPath(this.pathTextContainer.text, this.path, 0, 3,
-					this.pathTextContainer.paint);
+			this.canvas
+					.drawTextOnPath(pathTextContainer.text, this.path, 0, 3, pathTextContainer.paint);
 		}
 	}
 
 	@Override
 	void drawWays(List<List<List<ShapePaintContainer>>> drawWays, byte layers,
 			byte levelsPerLayer) {
+		List<List<ShapePaintContainer>> shapePaintContainers;
 		CircleContainer circleContainer;
 		WayContainer complexWayContainer;
+		ShapePaintContainer shapePaintContainer;
+		List<ShapePaintContainer> wayList;
 		for (byte currentLayer = 0; currentLayer < layers; ++currentLayer) {
-			this.shapePaintContainers = drawWays.get(currentLayer);
+			shapePaintContainers = drawWays.get(currentLayer);
 			for (byte currentLevel = 0; currentLevel < levelsPerLayer; ++currentLevel) {
-				this.wayList = this.shapePaintContainers.get(currentLevel);
-				for (this.arrayListIndex = this.wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-					this.shapePaintContainer = this.wayList.get(this.arrayListIndex);
+				wayList = shapePaintContainers.get(currentLevel);
+				for (this.arrayListIndex = wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
+					shapePaintContainer = wayList.get(this.arrayListIndex);
 					this.path.rewind();
-					switch (this.shapePaintContainer.shapeContainer.getShapeType()) {
+					switch (shapePaintContainer.shapeContainer.getShapeType()) {
 						case CIRCLE:
-							circleContainer = (CircleContainer) this.shapePaintContainer.shapeContainer;
+							circleContainer = (CircleContainer) shapePaintContainer.shapeContainer;
 							this.path.addCircle(circleContainer.x, circleContainer.y,
 									circleContainer.radius, Path.Direction.CCW);
 							break;
 						case WAY:
-							complexWayContainer = (WayContainer) this.shapePaintContainer.shapeContainer;
+							complexWayContainer = (WayContainer) shapePaintContainer.shapeContainer;
 							this.coordinates = complexWayContainer.coordinates;
 							for (int j = 0; j < this.coordinates.length; ++j) {
 								// make sure that the coordinates sequence is not empty
@@ -161,7 +161,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 							}
 							break;
 					}
-					this.canvas.drawPath(this.path, this.shapePaintContainer.paint);
+					this.canvas.drawPath(this.path, shapePaintContainer.paint);
 				}
 			}
 		}
