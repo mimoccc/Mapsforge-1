@@ -59,6 +59,7 @@ class TagIDsWays {
 	Integer building$university;
 	Integer building$yes;
 	Integer highway$bridleway;
+	Integer highway$byway;
 	Integer highway$construction;
 	Integer highway$cycleway;
 	Integer highway$footway;
@@ -210,6 +211,7 @@ class TagIDsWays {
 		this.building$yes = wayTags.get("building=yes");
 
 		this.highway$bridleway = wayTags.get("highway=bridleway");
+		this.highway$byway = wayTags.get("highway=byway");
 		this.highway$construction = wayTags.get("highway=construction");
 		this.highway$cycleway = wayTags.get("highway=cycleway");
 		this.highway$footway = wayTags.get("highway=footway");

@@ -96,6 +96,7 @@ highway=pedestrian1
 highway=cycleway1
 highway=path1
 highway=bridleway1
+highway=byway
 highway=track1
 highway=service1
 highway=unclassified1

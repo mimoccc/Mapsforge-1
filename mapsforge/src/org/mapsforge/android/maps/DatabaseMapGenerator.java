@@ -88,6 +88,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private static final Paint PAINT_HIGHWAY_BRIDLEWAY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_BRIDLEWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint PAINT_HIGHWAY_BYWAY = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_CONSTRUCTION = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_CYCLEWAY1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_HIGHWAY_CYCLEWAY2 = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -781,6 +782,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_HIGHWAY_BRIDLEWAY2.setColor(Color.rgb(112, 185, 113));
+		PAINT_HIGHWAY_BYWAY.setStyle(Paint.Style.STROKE);
+		PAINT_HIGHWAY_BYWAY.setStrokeJoin(Paint.Join.ROUND);
+		PAINT_HIGHWAY_BYWAY.setStrokeCap(Paint.Cap.ROUND);
+		PAINT_HIGHWAY_BYWAY.setColor(Color.rgb(239, 173, 170));
 		PAINT_HIGHWAY_CONSTRUCTION.setStyle(Paint.Style.STROKE);
 		PAINT_HIGHWAY_CONSTRUCTION.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_HIGHWAY_CONSTRUCTION.setStrokeCap(Paint.Cap.ROUND);
@@ -1493,6 +1498,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		PAINT_HIGHWAY_BRIDLEWAY1.setStrokeWidth(1.8f * paintScaleFactor);
 		PAINT_HIGHWAY_BRIDLEWAY2.setStrokeWidth(1.5f * paintScaleFactor);
+		PAINT_HIGHWAY_BYWAY.setStrokeWidth(1.2f * paintScaleFactor);
 		PAINT_HIGHWAY_CONSTRUCTION.setStrokeWidth(1.3f * paintScaleFactor);
 		PAINT_HIGHWAY_CYCLEWAY1.setStrokeWidth(1.1f * paintScaleFactor);
 		PAINT_HIGHWAY_CYCLEWAY2.setStrokeWidth(0.8f * paintScaleFactor);
@@ -3037,6 +3043,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 					if (wayName != null && this.currentTile.zoomLevel > 15) {
 						addWayName(wayName, PAINT_HIGHWAY_FOOTWAY2);
 					}
+				}
+			} else if (this.tagIDsWays.highway$byway != null
+					&& wayTagIds[this.tagIDsWays.highway$byway.intValue()]) {
+				this.layer.get(LayerIds.HIGHWAY$BYWAY).add(
+							new ShapePaintContainer(this.shapeContainer, PAINT_HIGHWAY_BYWAY));
+				if (wayName != null && this.currentTile.zoomLevel > 15) {
+					addWayName(wayName, PAINT_HIGHWAY_BYWAY);
 				}
 			} else if (this.tagIDsWays.highway$bridleway != null
 					&& wayTagIds[this.tagIDsWays.highway$bridleway.intValue()]) {
