@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.swing.ImageIcon;
@@ -183,7 +184,12 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		}
 		else if (cmd.equals(propertiesStrings.getProperty("menu_mapfile_select_file"))) {
 			//TODO:
-			parentFrame.startFileBrowser();
+			try {
+				parentFrame.startFileBrowser();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 		else if (cmd.equals("Exit")) {
 			parentFrame.close();

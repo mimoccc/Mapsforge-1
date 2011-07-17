@@ -16,12 +16,6 @@ package org.mapsforge.pc.maps;
 
 import java.util.ArrayList;
 
-//import org.mapsforge.core.app.Activity;
-//import android.content.SharedPreferences;
-//import org.mapsforge.core.content.SharedPreferences;
-//import android.content.SharedPreferences.Editor;
-//import org.mapsforge.core.content.SharedPreferences.Editor;
-
 /**
  * MapActivity is the abstract base class which must be extended in order to use a {@link MapView}.
  * There are no abstract methods in this implementation that subclasses need to override. In addition,
@@ -35,7 +29,7 @@ import java.util.ArrayList;
  * MapView are saved in a preferences file and restored automatically during the setup process of a
  * MapView.
  */
-public abstract class MapActivity extends Thread {
+public class MapActivity extends Thread {
 	/**
 	 * Name of the file where the map position and other settings are stored.
 	 */
@@ -46,6 +40,9 @@ public abstract class MapActivity extends Thread {
 	 */
 	private int lastMapViewId;
 
+	public MapActivity() {
+		
+	}
 	/**
 	 * Internal list which contains references to all running MapView objects.
 	 */

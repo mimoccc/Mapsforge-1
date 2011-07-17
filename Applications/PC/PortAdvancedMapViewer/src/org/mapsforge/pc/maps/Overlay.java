@@ -216,7 +216,7 @@ public abstract class Overlay extends Thread {
 			return;
 		}
 
-		this.mapViewProjection = this.internalMapView.getProjection();
+		//TODO this.mapViewProjection = this.internalMapView.getProjection();
 
 		// clear the second bitmap and make the canvas use it
 		//this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
@@ -225,7 +225,7 @@ public abstract class Overlay extends Thread {
 
 		// save the zoom level and map position before drawing
 		synchronized (this.internalMapView) {
-			this.zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
+			//TODO this.zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
 			this.positionBeforeDraw = this.mapViewProjection.toPoint(this.internalMapView
 					.getMapCenter(), this.positionBeforeDraw, this.zoomLevelBeforeDraw);
 		}
@@ -250,15 +250,15 @@ public abstract class Overlay extends Thread {
 
 		// save the zoom level and map position after drawing
 		synchronized (this.internalMapView) {
-			this.zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
+			//this.zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
 			this.positionAfterDraw = this.mapViewProjection.toPoint(this.internalMapView
 					.getMapCenter(), this.positionAfterDraw, this.zoomLevelBeforeDraw);
 		}
 
-		if (this.internalMapView.getZoomAnimator().isExecuting()) {
+		/*if (this.internalMapView.getZoomAnimator().isExecuting()) {
 			// do not disturb the ongoing animation
 			return;
-		}
+		}*/
 
 		// adjust the transformation matrix of the overlay
 		synchronized (this.matrix) {

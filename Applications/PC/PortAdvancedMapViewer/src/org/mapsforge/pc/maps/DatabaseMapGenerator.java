@@ -18,9 +18,9 @@ import java.util.ArrayList;
 
 //import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
+import org.mapsforge.core.graphics.Typeface;
 //import android.graphics.Color;
 import java.awt.Color;
-import java.awt.Font;
 //import android.graphics.DashPathEffect;
 import org.mapsforge.core.graphics.DashPathEffect;
 //import android.graphics.Paint;
@@ -32,7 +32,7 @@ import org.mapsforge.core.graphics.Paint.Align;
 /**
  * A MapGenerator that reads map data from a database and renders them.
  */
-abstract class DatabaseMapGenerator extends MapGenerator implements
+public abstract class DatabaseMapGenerator extends MapGenerator implements
 		CoastlineAlgorithm.ClosedPolygonHandler {
 	private static final byte AREA_NAME_BLACK = 0;
 	private static final byte AREA_NAME_BLUE = 1;
@@ -332,7 +332,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	/**
 	 * Default constructor that must be called by subclasses.
 	 */
-	DatabaseMapGenerator() {
+	public DatabaseMapGenerator() {
 		this.tagIDsNodes = new TagIDsNodes();
 		this.tagIDsWays = new TagIDsWays();
 	}
@@ -1094,99 +1094,99 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MILITARY_NAVAL_BASE_FILL.setColor(new Color(181, 214, 241));
 		PAINT_MILITARY_PATTERN.setShader(this.mapPatterns.militaryShader);
 
+		//TODO text size?
 		//PAINT_NAME_BLACK_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_TINY.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_BLACK_TINY.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_TINY.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_TINY.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_TINY_CENTER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_TINY_CENTER.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_BLACK_TINY_CENTER.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_TINY_CENTER.setTextAlign(Align.CENTER);
 		PAINT_NAME_BLACK_TINY_CENTER.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_SMALL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_SMALL.setFont(new Font(Font.SERIF, Font.PLAIN, 9));
+		PAINT_NAME_BLACK_SMALL.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_SMALL.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_SMALL.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_NORMAL.setFont(new Font(Font.SERIF, Font.PLAIN, 10));
+		PAINT_NAME_BLACK_NORMAL.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_NORMAL.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_NORMAL.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_LARGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_LARGE.setFont(new Font(Font.SERIF, Font.PLAIN, 12));
+		PAINT_NAME_BLACK_LARGE.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_LARGE.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_LARGE.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_LARGER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_LARGER.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+		PAINT_NAME_BLACK_LARGER.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_LARGER.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_LARGER.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLACK_HUGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLACK_HUGE.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+		PAINT_NAME_BLACK_HUGE.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLACK_HUGE.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLACK_HUGE.setColor(new Color(0, 0, 0));
 		//PAINT_NAME_BLUE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_BLUE_TINY.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_BLUE_TINY.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_BLUE_TINY.setTextAlign(Align.LEFT);
 		PAINT_NAME_BLUE_TINY.setColor(new Color(64, 64, 254));
 		//PAINT_NAME_PURPLE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		//TODO
-		PAINT_NAME_PURPLE_TINY.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_PURPLE_TINY.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_PURPLE_TINY.setTextAlign(Align.LEFT);
 		PAINT_NAME_PURPLE_TINY.setColor(new Color(255, 4, 255));
 		//PAINT_NAME_RED_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_TINY.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_RED_TINY.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_RED_TINY.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_TINY.setColor(new Color(236, 46, 46));
 		//PAINT_NAME_RED_SMALLER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_SMALLER.setFont(new Font(Font.SERIF, Font.PLAIN, 10));
+		PAINT_NAME_RED_SMALLER.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_RED_SMALLER.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_SMALLER.setColor(new Color(236, 46, 46));
 		//PAINT_NAME_RED_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_RED_NORMAL.setFont(new Font(Font.SERIF, Font.PLAIN, 10));
+		PAINT_NAME_RED_NORMAL.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_RED_NORMAL.setTextAlign(Align.LEFT);
 		PAINT_NAME_RED_NORMAL.setColor(new Color(236, 46, 46));
 		//PAINT_NAME_WHITE_STROKE_TINY.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_TINY.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_WHITE_STROKE_TINY.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_WHITE_STROKE_TINY.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_TINY.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_TINY.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_TINY.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setFont(new Font(Font.SERIF, Font.PLAIN, 8));
+		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setTextAlign(Align.CENTER);
 		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setStrokeWidth(2);
 		PAINT_NAME_WHITE_STROKE_TINY_CENTER.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_SMALLER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_SMALLER.setFont(new Font(Font.SERIF, Font.PLAIN, 7));
+		PAINT_NAME_WHITE_STROKE_SMALLER.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_WHITE_STROKE_SMALLER.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_SMALLER.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_SMALLER.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_SMALLER.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_SMALL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_SMALL.setFont(new Font(Font.SERIF, Font.PLAIN, 9));
+		PAINT_NAME_WHITE_STROKE_SMALL.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_WHITE_STROKE_SMALL.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_SMALL.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_SMALL.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_SMALL.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_NORMAL.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_NORMAL.setFont(new Font(Font.SERIF, Font.PLAIN, 10));
+		PAINT_NAME_WHITE_STROKE_NORMAL.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_NAME_WHITE_STROKE_NORMAL.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_NORMAL.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_NORMAL.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_NORMAL.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_LARGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_LARGE.setFont(new Font(Font.SERIF, Font.PLAIN, 12));
+		PAINT_NAME_WHITE_STROKE_LARGE.setTypeface(Typeface.DEFAULT_BOLD);		
 		PAINT_NAME_WHITE_STROKE_LARGE.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_LARGE.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_LARGE.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_LARGE.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_LARGER.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_LARGER.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+		PAINT_NAME_WHITE_STROKE_LARGER.setTypeface(Typeface.DEFAULT_BOLD);		
 		PAINT_NAME_WHITE_STROKE_LARGER.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_LARGER.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_LARGER.setStrokeWidth(3);
 		PAINT_NAME_WHITE_STROKE_LARGER.setColor(new Color(255, 255, 255));
 		//PAINT_NAME_WHITE_STROKE_HUGE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_NAME_WHITE_STROKE_HUGE.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+		PAINT_NAME_WHITE_STROKE_HUGE.setTypeface(Typeface.DEFAULT_BOLD);		
 		PAINT_NAME_WHITE_STROKE_HUGE.setTextAlign(Align.LEFT);
 		PAINT_NAME_WHITE_STROKE_HUGE.setStyle(Paint.Style.STROKE);
 		PAINT_NAME_WHITE_STROKE_HUGE.setStrokeWidth(3);
@@ -1776,7 +1776,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		if (mapGeneratorJob.drawTileCoordinates) {
 			drawTileCoordinates(this.currentTile);
 		}
-
 		finishMapGeneration();
 		return true;
 	}
@@ -1817,7 +1816,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	}
 
 	@Override
-	final void prepareMapGeneration() {
+	public final void prepareMapGeneration() {
 		// clear all data structures for the map objects
 		for (byte i = LAYERS - 1; i >= 0; --i) {
 			this.innerWayList = this.ways.get(i);
@@ -3861,17 +3860,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 * @param database
 	 *            the database.
 	 */
-	final void setDatabase(MapDatabase database) {
+	public final void setDatabase(MapDatabase database) {
 		this.database = database;
 		if (this.database.hasOpenFile()) {
 			onMapFileChange();
 		}
+
 	}
 
 	@Override
 	final void setupMapGenerator(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
-
 		this.coastlineAlgorithm = new CoastlineAlgorithm();
 		this.labelPlacement = new LabelPlacement();
 		this.mapPatterns = new MapPatterns();

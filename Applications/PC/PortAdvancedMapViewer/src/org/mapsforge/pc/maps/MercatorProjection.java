@@ -186,7 +186,7 @@ class MercatorProjection implements Projection {
 
 	@Override
 	public GeoPoint fromPixels(int x, int y) {
-		/*if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
+		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
 			// the MapView has no valid dimensions
 			return null;
 		}
@@ -203,8 +203,7 @@ class MercatorProjection implements Projection {
 
 		// convert the pixel coordinates to a GeoPoint and return it
 		return new GeoPoint(pixelYToLatitude(pixelY + y, mapZoomLevel), pixelXToLongitude(
-				pixelX + x, mapZoomLevel));*/
-		return null;
+				pixelX + x, mapZoomLevel));
 	}
 
 	@Override
@@ -221,7 +220,7 @@ class MercatorProjection implements Projection {
 
 	@Override
 	public Point toPixels(GeoPoint in, Point out) {
-		/*if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
+		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
 			// the MapView has no valid dimensions
 			return null;
 		}
@@ -245,8 +244,7 @@ class MercatorProjection implements Projection {
 		// reuse the existing point object
 		out.x = (int) (longitudeToPixelX(in.getLongitude(), mapZoomLevel) - pixelX);
 		out.y = (int) (latitudeToPixelY(in.getLatitude(), mapZoomLevel) - pixelY);
-		return out;*/
-		return null;
+		return out;
 	}
 
 	@Override

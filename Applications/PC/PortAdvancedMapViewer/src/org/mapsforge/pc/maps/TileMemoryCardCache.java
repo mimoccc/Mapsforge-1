@@ -34,7 +34,7 @@ import org.mapsforge.core.graphics.Bitmap;
 /**
  * A thread-safe cache for image files with a fixed size and LRU policy.
  */
-class TileMemoryCardCache {
+public class TileMemoryCardCache {
 	/**
 	 * Filename extension for cached image files.
 	 */
@@ -89,7 +89,7 @@ class TileMemoryCardCache {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	TileMemoryCardCache(String tempDir, int capacity) {
+	public TileMemoryCardCache(String tempDir, int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}

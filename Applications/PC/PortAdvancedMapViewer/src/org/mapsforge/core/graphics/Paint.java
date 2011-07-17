@@ -24,12 +24,10 @@ import android.text.TextUtils;*/
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Toolkit;
+import java.awt.FontMetrics;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,7 +43,7 @@ public class Paint {
      */
     public static final class FontInfo {
         Font mFont;
-        java.awt.FontMetrics mMetrics;
+        FontMetrics mMetrics;
     }
 
     public static final Integer ANTI_ALIAS_FLAG       = 0x01;
@@ -55,55 +53,6 @@ public class Paint {
     
     private static final int DEFAULT_PAINT_FLAGS = DEV_KERN_TEXT_FLAG;
 
-    
-    /**
-     * Class that describes the various metrics for a font at a given text size.
-     * Remember, Y values increase going down, so those values will be positive,
-     * and values that measure distances going up will be negative. This class
-     * is returned by getFontMetrics().
-     */
-    public static class FontMetrics {
-        /**
-         * The maximum distance above the baseline for the tallest glyph in
-         * the font at a given text size.
-         */
-        public float   top;
-        /**
-         * The recommended distance above the baseline for singled spaced text.
-         */
-        public float   ascent;
-        /**
-         * The recommended distance below the baseline for singled spaced text.
-         */
-        public float   descent;
-        /**
-         * The maximum distance below the baseline for the lowest glyph in
-         * the font at a given text size.
-         */
-        public float   bottom;
-        /**
-         * The recommended additional space to add between lines of text.
-         */
-        public float   leading;
-    }
-    
-    /**
-     * Convenience method for callers that want to have FontMetrics values as
-     * integers.
-     */
-    public static class FontMetricsInt {
-        public int   top;
-        public int   ascent;
-        public int   descent;
-        public int   bottom;
-        public int   leading;
-
-        // Override
-        public String toString() {
-            return "FontMetricsInt: top=" + top + " ascent=" + ascent + " descent=" + descent + " bottom=" + bottom +
-                    " leading=" + leading;
-        }
-    }
     
     /**
      * The Style specifies if the primitive being drawn is filled,
@@ -227,10 +176,10 @@ public class Paint {
          */
         RIGHT   (2);
 
-        private Align(int nativeInt) {
-            this.nativeInt = nativeInt;
+        private Align(int align) {
+            this.align = align;
         }
-        final int nativeInt;
+        final int align;
     }
 
     /* GLOBAL VARIABLE */
@@ -248,7 +197,7 @@ public class Paint {
     private int mFlags = 0;
     private float textSize;
     private Typeface typeface;
-    private Font font;
+    //private Font font;
     
     private List<FontInfo> mFonts = new LinkedList<FontInfo>();
     private final FontRenderContext mFontContext = new FontRenderContext(new AffineTransform(), true, true);
@@ -261,7 +210,6 @@ public class Paint {
 
 	private void initFont() {
 		typeface = Typeface.DEFAULT;
-		updateFontObject();		
 	}
 
 	public Paint(Paint src) {
@@ -275,14 +223,10 @@ public class Paint {
             strokeShader = src.strokeShader;
             pathEffect = src.pathEffect;
             
-            updateFontObject();
-
-            //super.set(src);
         }
 	}
 	
 	/* GETTER AND SETTER */
-
 
 	public void setColor(java.awt.Color color) {
 		this.color = color;
@@ -397,6 +341,7 @@ public class Paint {
 	
 	public float setTextSize(float f) {
 		this.textSize = f;
+		this.typeface.setSize((int) f);
 		return this.textSize;
 	}
 	
@@ -407,44 +352,15 @@ public class Paint {
         	this.typeface = Typeface.DEFAULT;
         }
 
-        updateFontObject();
-
-        return typeface;	
+        return this.typeface;	
 	}
 	
-	public Font setFont(Font font) {
+	//TODO removed
+	/*public Font setFont(Font font) {
 		this.font = font;
 		
 		return this.font;
-	}
-	
-	/* OTHER */
-
-	@SuppressWarnings("deprecation")
-	private void updateFontObject() {
-		if (typeface != null) {
-            // Get the fonts from the TypeFace object.
-            List<Font> fonts = typeface.getFonts();
-
-            // create new font objects as well as FontMetrics, based on the current text size
-            // and skew info.
-            ArrayList<FontInfo> infoList = new ArrayList<FontInfo>(fonts.size());
-            for (Font font : fonts) {
-                FontInfo info = new FontInfo();
-                info.mFont = font.deriveFont(textSize);
-                if (mScaleX != 1.0 || mSkewX != 0) {
-                    // TODO: support skew TEST
-                    info.mFont = info.mFont.deriveFont(new AffineTransform(
-                            mScaleX, mSkewX, 0, 0, 1, 0));
-                }
-                info.mMetrics = Toolkit.getDefaultToolkit().getFontMetrics(info.mFont);
-
-                infoList.add(info);
-            }
-
-            mFonts = Collections.unmodifiableList(infoList);
-        }
-	}
+	}*/
 
 	public float measureText(String text) {
         return measureText(text.toCharArray(), 0, text.length());
@@ -501,7 +417,6 @@ public class Paint {
                 }
             }
         }
-
         return 0;
     }
 

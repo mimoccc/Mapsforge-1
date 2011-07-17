@@ -51,6 +51,7 @@ abstract class MapGenerator extends Thread {
 	@Override
 	public final void run() {
 		setName(getThreadName());
+
 		// create the currentTileBitmap for the tile content
 		this.currentTileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
 				Bitmap.Config.RGB_565);
@@ -68,8 +69,10 @@ abstract class MapGenerator extends Thread {
 						// restore the interrupted status
 						interrupt();
 					}
+
 				}
 				this.ready = false;
+
 			}
 
 			if (isInterrupted()) {

@@ -22,7 +22,6 @@ import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
 import java.awt.Color;
-import java.awt.Font;
 //import android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 //import android.graphics.Paint;
@@ -37,31 +36,35 @@ import org.mapsforge.core.graphics.Typeface;
  * 
  * @see <a href="http://developer.android.com/reference/android/graphics/Canvas.html">Canvas</a>
  */
-class CanvasRenderer extends DatabaseMapGenerator {
-	private static final Paint PAINT_TILE_COORDINATES = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_TILE_COORDINATES_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final String THREAD_NAME = "CanvasRenderer";
-	private int arrayListIndex;
-	private Paint bitmapFilterPaint;
-	private Canvas canvas;
-	private CircleContainer circleContainer;
-	private WayContainer complexWayContainer;
-	private float[][] coordinates;
-	private byte currentLayer;
-	private byte currentLevel;
-	private Path path;
-	private WayTextContainer pathTextContainer;
-	private PointTextContainer pointTextContainer;
-	private ShapePaintContainer shapePaintContainer;
-	private ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
-	private StringBuilder stringBuilder;
-	private SymbolContainer symbolContainer;
-	private Matrix symbolMatrix;
-	private float[] textCoordinates;
-	private float[] tileFrame;
-	private ArrayList<ShapePaintContainer> wayList;
+public class CanvasRenderer extends DatabaseMapGenerator {
+	public static final Paint PAINT_TILE_COORDINATES = new Paint(Paint.ANTI_ALIAS_FLAG);
+	public static final Paint PAINT_TILE_COORDINATES_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
+	public static final Paint PAINT_TILE_FRAME = new Paint(Paint.ANTI_ALIAS_FLAG);
+	public static final String THREAD_NAME = "CanvasRenderer";
+	public int arrayListIndex;
+	public Paint bitmapFilterPaint;
+	public Canvas canvas;
+	public CircleContainer circleContainer;
+	public WayContainer complexWayContainer;
+	public float[][] coordinates;
+	public byte currentLayer;
+	public byte currentLevel;
+	public Path path;
+	public WayTextContainer pathTextContainer;
+	public PointTextContainer pointTextContainer;
+	public ShapePaintContainer shapePaintContainer;
+	public ArrayList<ArrayList<ShapePaintContainer>> shapePaintContainers;
+	public StringBuilder stringBuilder;
+	public SymbolContainer symbolContainer;
+	public Matrix symbolMatrix;
+	public float[] textCoordinates;
+	public float[] tileFrame;
+	public ArrayList<ShapePaintContainer> wayList;
 
+	public CanvasRenderer() {
+		super();
+	}
+	
 	@Override
 	void drawNodes(ArrayList<PointTextContainer> drawNodes) {
 		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
@@ -202,7 +205,7 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void setupRenderer(Bitmap bitmap) {
+	public void setupRenderer(Bitmap bitmap) {
 		this.canvas = new Canvas(bitmap);
 		this.symbolMatrix = new Matrix();
 		this.bitmapFilterPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
@@ -213,10 +216,10 @@ class CanvasRenderer extends DatabaseMapGenerator {
 		this.path.setFillType(Path.FillType.EVEN_ODD);
 		this.stringBuilder = new StringBuilder(16);
 		//PAINT_TILE_COORDINATES.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_TILE_COORDINATES.setFont(new Font(Font.SERIF, Font.PLAIN, 20));
+		PAINT_TILE_COORDINATES.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_TILE_COORDINATES.setTextSize(20);
 		//PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_TILE_COORDINATES_STROKE.setFont(new Font(Font.SERIF, Font.PLAIN, 20));
+		PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.DEFAULT_BOLD);
 		PAINT_TILE_COORDINATES_STROKE.setStyle(Paint.Style.STROKE);
 		PAINT_TILE_COORDINATES_STROKE.setStrokeWidth(5);
 		PAINT_TILE_COORDINATES_STROKE.setTextSize(20);

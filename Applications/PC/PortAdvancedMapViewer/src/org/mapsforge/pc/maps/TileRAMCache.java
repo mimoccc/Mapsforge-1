@@ -29,7 +29,7 @@ import org.mapsforge.core.graphics.Bitmap;
 /**
  * A thread-safe cache for bitmap images with a fixed size and LRU policy.
  */
-class TileRAMCache {
+public class TileRAMCache {
 	/**
 	 * Load factor of the internal HashMap.
 	 */
@@ -53,7 +53,7 @@ class TileRAMCache {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	TileRAMCache(int capacity) {
+	public TileRAMCache(int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}

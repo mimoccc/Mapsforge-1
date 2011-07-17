@@ -18,7 +18,7 @@ import org.mapsforge.core.graphics.Paint.Style;
 
 public class Canvas {
 
-	BufferedImage mBufferedImage;
+	public BufferedImage mBufferedImage;
 	
 	private static final long serialVersionUID = 5085355825188623626L;
 
@@ -31,6 +31,7 @@ public class Canvas {
 
 
 	public void drawText(String text, float x, float y, Paint paint) {
+		System.out.println("METHODS: drawText");
 		Graphics2D g = mBufferedImage.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
@@ -94,6 +95,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawBitmap(android.graphics.Bitmap, android.graphics.Matrix, android.graphics.Paint)
      */
     public void drawBitmap(Bitmap bitmap, Matrix matrix, Paint paint) {
+		System.out.println("METHODS: drawBitmap");
         if (matrix.isIdentity() == false) {
             // create a new graphics and apply the matrix to it
             //save(); // this creates a new Graphics2D, and stores it for children call to use
@@ -125,6 +127,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawTextOnPath(text, path, int, int, android.graphics.Paint)
      */
 	public void drawTextOnPath(String text, Path path, int i, int j, Paint paint) {
+		System.out.println("METHODS: drawTextOnPath");
 		Graphics2D g = mBufferedImage.createGraphics();
 		Style style = paint.getStyle();
 
@@ -151,6 +154,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawLines(float[], android.graphics.Paint)
      */
 	public void drawLines(float[] pts, Paint paint) {
+		System.out.println("METHODS: drawLines");
 		Graphics2D g = mBufferedImage.createGraphics();
 
 		for(int i = 0; i < pts.length; i += 4) {
@@ -163,6 +167,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawPath(android.graphics.Path, android.graphics.Paint)
      */
     public void drawPath(Path path, Paint paint) {
+		System.out.println("METHODS: drawPath");
         // get a Graphics2D object configured with the drawing parameters.
         Graphics2D g = getCustomGraphics(paint);
 
@@ -185,6 +190,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawLine(float, float, float, float, android.graphics.Paint)
      */
     public void drawLine(float startX, float startY, float stopX, float stopY, Paint paint) {
+		System.out.println("METHODS: drawLine");
         // get a Graphics2D object configured with the drawing parameters.
         Graphics2D g = getCustomGraphics(paint);
 
@@ -198,6 +204,7 @@ public class Canvas {
      * @see android.graphics.Canvas#drawBitmap(float, float, float, float, android.graphics.Paint)
      */
 	public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
+		System.out.println("METHODS: drawBitmap");
 		BufferedImage image = bitmap.getImage();
 
         Graphics2D g = mBufferedImage.createGraphics();

@@ -1,21 +1,29 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.filechooser.FileFilter;
 
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import org.mapsforge.pc.maps.MapActivity;
 import org.mapsforge.pc.maps.MapController;
 import org.mapsforge.pc.maps.MapView;
+import org.mapsforge.pc.maps.MapView.TextField;
 import org.mapsforge.pc.maps.MapViewMode;
+import org.mapsforge.pc.maps.TileMemoryCardCache;
+import org.mapsforge.pc.maps.TileRAMCache;
 import org.mapsforge.core.graphics.Canvas;
 
 
@@ -31,6 +39,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	private Canvas canvas;
 	private MenuBar menuBar;
 	private FilePickerPC filePicker;
+	private ArrayList<MapView> mapViews = new ArrayList<MapView>(2);
 	
 	
 	/** Constructor */
@@ -70,8 +79,14 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		this.add(filePicker = new FilePickerPC());
 
 		//Configure
-		this.onCreate(height, width);
-//		this.add(new Canvas());
+		this.onCreate(10);
+		try {
+			this.startFileBrowser();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//this.onCreate(height, width);
+		//this.add();
 	}
 	
 	
@@ -103,16 +118,39 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		System.exit(0);
 	}
 
-	/** File Browser */
-	protected void startFileBrowser() {
+	/** File Browser 
+	 * @throws IOException */
+	protected void startFileBrowser() throws IOException {
 		filePicker.configure();
 		String file = filePicker.openMap();
 		
 		startActivityForResult(file);
 	}
 	
-	public void startActivityForResult(String file) {
-		if(mapView != null) {
+	BufferedImage image = null;
+	TileRAMCache tileRAMCache = new TileRAMCache(16);
+	TileMemoryCardCache tileMemoryCardCache = new TileMemoryCardCache("res" + File.separatorChar + "cache",
+			500);
+	
+	public void startActivityForResult(String file) throws IOException {
+		/*
+		Bitmap bitmap = new Bitmap(new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB));
+		
+		MapDatabase db = new MapDatabase();
+		db.openFile(file);
+
+		CanvasRenderer gen = new CanvasRenderer();
+		
+		
+		gen.setDatabase(db);
+		gen.setupRenderer(bitmap);
+
+		gen.start();
+		image = gen.canvas.mBufferedImage;
+		 */
+		//image = ImageIO.read(new File("kanon0.jpg"));
+		
+		 if(mapView != null) {
 			mapView.setMapFile(file);
 		}
 		else {
@@ -134,17 +172,17 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		return propertiesSettings;
 	}
 	
-	
 	/** MapView Configuration
 	 *  onCreate --> onResume
 	 */
+	
 	MapView mapView;
 	MapController mapController;
 	MapViewMode mapViewMode;
 	
-	public void onCreate(int height, int width) {
+	public void onCreate(int id) {
 		// set up the layout views
-		this.mapView = new MapView(height, width);
+		this.mapView = new MapView(id);
 
 		configureMapView();
 
@@ -162,27 +200,25 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		//this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// set the map settings
-		this.mapView.setScaleBar(false);
+		//	this.mapView.setScaleBar(false);
 		this.mapViewMode = Enum.valueOf(MapViewMode.class, org.mapsforge.pc.maps.MapViewMode.CANVAS_RENDERER.name());
-		this.mapView.setMapViewMode(this.mapViewMode);
-		this.mapView.setTextScale(Float.parseFloat("1"));
+		this.mapView.setTextScale(1);
 
 
 		// set the general settings
 		//<- Removed: Android Specific ->
 
 		// set the debug settings
-		this.mapView.setFpsCounter(false);
-		this.mapView.setTileFrames(false);
-		this.mapView.setTileCoordinates(false);
-		this.mapView.setWaterTiles(false);
+		//this.mapView.setFpsCounter(false);
+		//this.mapView.setTileFrames(false);
+		//this.mapView.setTileCoordinates(false);
+		//this.mapView.setWaterTiles(false);
 
 		// check if the file browser needs to be displayed
 		//if (!this.mapView.getMapViewMode().requiresInternetConnection()
 		//		&& !this.mapView.hasValidMapFile()) {
 			//startFileBrowser();
 		//}
-		
 	}
 	
 	private void configureMapView() {
@@ -192,10 +228,11 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		//this.mapView.setFocusable(true);
 
 		// set the localized text fields
-		//this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));
-		//this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));
+		this.mapView.setText(TextField.KILOMETER, "KiloMeter");
+		this.mapView.setText(TextField.METER, "Meter");
 
 		// get the map controller for this MapView
 		this.mapController = this.mapView.getController();
 	}
+	
 }

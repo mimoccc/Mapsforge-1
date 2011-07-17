@@ -30,313 +30,313 @@ public class MapDatabase {
 	/**
 	 * Magic byte at the beginning of a valid binary map file.
 	 */
-	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
+	public static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
 
 	/**
 	 * Maximum supported version of the file format.
 	 */
-	private static final int BINARY_OSM_VERSION_MAX = 2;
+	public static final int BINARY_OSM_VERSION_MAX = 2;
 
 	/**
 	 * Minimal supported version of the file format.
 	 */
-	private static final int BINARY_OSM_VERSION_MIN = 2;
+	public static final int BINARY_OSM_VERSION_MIN = 2;
 
 	/**
 	 * Bitmask to extract the block offset from an index entry.
 	 */
-	private static final long BITMASK_INDEX_OFFSET = 0x7FFFFFFFFFL;
+	public static final long BITMASK_INDEX_OFFSET = 0x7FFFFFFFFFL;
 
 	/**
 	 * Bitmask to extract the water information from an index entry.
 	 */
-	private static final long BITMASK_INDEX_WATER = 0x8000000000L;
+	public static final long BITMASK_INDEX_WATER = 0x8000000000L;
 
 	/**
 	 * Bitmask for the debug flag in the file header.
 	 */
-	private static final int HEADER_BITMASK_DEBUG = 0x80;
+	public static final int HEADER_BITMASK_DEBUG = 0x80;
 
 	/**
 	 * Bitmask for the start position in the file header.
 	 */
-	private static final int HEADER_BITMASK_START_POSITION = 0x40;
+	public static final int HEADER_BITMASK_START_POSITION = 0x40;
 
 	/**
 	 * Amount of cache blocks that the index cache should store.
 	 */
-	private static final int INDEX_CACHE_SIZE = 64;
+	public static final int INDEX_CACHE_SIZE = 64;
 
 	/**
 	 * Initial length of the way nodes array.
 	 */
-	private static final int INITIAL_WAY_NODES_CAPACITY = 2048;
+	public static final int INITIAL_WAY_NODES_CAPACITY = 2048;
 
 	/**
 	 * Load factor of the internal HashMap.
 	 */
-	private static final float LOAD_FACTOR = 0.6f;
+	public static final float LOAD_FACTOR = 0.6f;
 
 	/**
 	 * Maximum tag ID which is considered as valid.
 	 */
-	private static final int MAXIMUM_ALLOWED_TAG_ID = 8192;
+	public static final int MAXIMUM_ALLOWED_TAG_ID = 8192;
 
 	/**
 	 * Maximum size of a single block in bytes that is supported by this implementation.
 	 */
-	private static final int MAXIMUM_BLOCK_SIZE = 2500000;
+	public static final int MAXIMUM_BLOCK_SIZE = 2500000;
 
 	/**
 	 * Maximum number of inner ways which is considered as valid.
 	 */
-	private static final int MAXIMUM_NUMBER_OF_INNER_WAYS = 1024;
+	public static final int MAXIMUM_NUMBER_OF_INNER_WAYS = 1024;
 
 	/**
 	 * Maximum way nodes sequence length which is considered as valid.
 	 */
-	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
+	public static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
 
 	/**
 	 * Bitmask for the optional node feature "elevation".
 	 */
-	private static final int NODE_FEATURE_BITMASK_ELEVATION = 0x40;
+	public static final int NODE_FEATURE_BITMASK_ELEVATION = 0x40;
 
 	/**
 	 * Bitmask for the optional node feature "house number".
 	 */
-	private static final int NODE_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
+	public static final int NODE_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
 
 	/**
 	 * Bitmask for the optional node feature "name".
 	 */
-	private static final int NODE_FEATURE_BITMASK_NAME = 0x80;
+	public static final int NODE_FEATURE_BITMASK_NAME = 0x80;
 
 	/**
 	 * Bitmask for the node layer.
 	 */
-	private static final int NODE_LAYER_BITMASK = 0xf0;
+	public static final int NODE_LAYER_BITMASK = 0xf0;
 
 	/**
 	 * Bit shift for calculating the node layer.
 	 */
-	private static final int NODE_LAYER_SHIFT = 4;
+	public static final int NODE_LAYER_SHIFT = 4;
 
 	/**
 	 * Bitmask for the number of node tags.
 	 */
-	private static final int NODE_NUMBER_OF_TAGS_BITMASK = 0x0f;
+	public static final int NODE_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
 	/**
 	 * Maximum size of the remaining file header in bytes.
 	 */
-	private static final int REMAINING_HEADER_SIZE_MAX = 1000000;
+	public static final int REMAINING_HEADER_SIZE_MAX = 1000000;
 
 	/**
 	 * Minimum size of the remaining file header in bytes.
 	 */
-	private static final int REMAINING_HEADER_SIZE_MIN = 50;
+	public static final int REMAINING_HEADER_SIZE_MIN = 50;
 
 	/**
 	 * Length of the debug signature at the beginning of each block.
 	 */
-	private static final byte SIGNATURE_LENGTH_BLOCK = 32;
+	public static final byte SIGNATURE_LENGTH_BLOCK = 32;
 
 	/**
 	 * Length of the debug signature at the beginning of the index.
 	 */
-	private static final byte SIGNATURE_LENGTH_INDEX = 16;
+	public static final byte SIGNATURE_LENGTH_INDEX = 16;
 
 	/**
 	 * Length of the debug signature at the beginning of each node.
 	 */
-	private static final byte SIGNATURE_LENGTH_NODE = 32;
+	public static final byte SIGNATURE_LENGTH_NODE = 32;
 
 	/**
 	 * Length of the debug signature at the beginning of each way.
 	 */
-	private static final byte SIGNATURE_LENGTH_WAY = 32;
+	public static final byte SIGNATURE_LENGTH_WAY = 32;
 
 	/**
 	 * Bitmask for the optional way feature "label position".
 	 */
-	private static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
+	public static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
 
 	/**
 	 * Bitmask for the optional way feature "multipolygon".
 	 */
-	private static final int WAY_FEATURE_BITMASK_MULTIPOLYGON = 0x10;
+	public static final int WAY_FEATURE_BITMASK_MULTIPOLYGON = 0x10;
 
 	/**
 	 * Bitmask for the optional way feature "name".
 	 */
-	private static final int WAY_FEATURE_BITMASK_NAME = 0x80;
+	public static final int WAY_FEATURE_BITMASK_NAME = 0x80;
 
 	/**
 	 * Bitmask for the optional way feature "reference".
 	 */
-	private static final int WAY_FEATURE_BITMASK_REF = 0x40;
+	public static final int WAY_FEATURE_BITMASK_REF = 0x40;
 
 	/**
 	 * Bitmask for the way layer.
 	 */
-	private static final int WAY_LAYER_BITMASK = 0xf0;
+	public static final int WAY_LAYER_BITMASK = 0xf0;
 
 	/**
 	 * Bit shift for calculating the way layer.
 	 */
-	private static final int WAY_LAYER_SHIFT = 4;
+	public static final int WAY_LAYER_SHIFT = 4;
 
 	/**
 	 * Bitmask for the number of way tags.
 	 */
-	private static final int WAY_NUMBER_OF_TAGS_BITMASK = 0x0f;
+	public static final int WAY_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
 	/**
 	 * Bitmask for the number of relevant way tags.
 	 */
-	private static final int WAY_RELEVANT_TAGS_BITMASK = 0xe0;
+	public static final int WAY_RELEVANT_TAGS_BITMASK = 0xe0;
 
 	/**
 	 * Bit shift for calculating the number of relevant way tags.
 	 */
-	private static final int WAY_RELEVANT_TAGS_SHIFT = 5;
+	public static final int WAY_RELEVANT_TAGS_SHIFT = 5;
 
-	private byte baseZoomLevel;
-	private int blockEntriesTableOffset;
-	private long blockNumber;
-	private String blockSignature;
-	private int boundaryBottom;
-	private int boundaryLeft;
-	private int boundaryRight;
-	private int boundaryTop;
-	private int bufferPosition;
-	private String commentText;
-	private long currentBlockIndexEntry;
-	private boolean currentBlockIsWater;
-	private long currentBlockPointer;
-	private int currentBlockSize;
-	private long currentColumn;
-	private long currentRow;
-	private MapDatabaseIndexCache databaseIndexCache;
-	private boolean debugFile;
-	private boolean[] defaultTagIds;
-	private short elementCounter;
-	private File file;
-	private long fileSize;
-	private int fileVersionNumber;
-	private int firstWayOffset;
-	private long fromBaseTileX;
-	private long fromBaseTileY;
-	private long fromBlockX;
-	private long fromBlockY;
-	private byte globalMaximumZoomLevel;
-	private byte globalMinimumZoomLevel;
-	private boolean headerStartPosition;
-	private long indexStartAddress;
-	private int[] innerWay;
-	private int innerWayNodesSequenceLength;
-	private int innerWayNumber;
-	private int innerWayNumberOfWayNodes;
-	private RandomAccessFile inputFile;
-	private String magicByte;
-	private Rect mapBoundary;
-	private long mapDate;
-	private MapFileParameters mapFileParameters;
-	private long mapFileSize;
-	private MapFileParameters[] mapFilesList;
-	private MapFileParameters[] mapFilesLookupTable;
-	private int maximumNodeTagId;
-	private int maximumWayTagId;
-	private byte metaFlags;
-	private long nextBlockPointer;
-	private String nodeElevation;
-	private byte nodeFeatureByte;
-	private boolean nodeFeatureElevation;
-	private boolean nodeFeatureHouseNumber;
-	private boolean nodeFeatureName;
-	private String nodeHouseNumber;
-	private int nodeLatitude;
-	private byte nodeLayer;
-	private int nodeLongitude;
-	private String nodeName;
-	private byte nodeNumberOfTags;
-	private String nodeSignature;
-	private short nodesOnZoomLevel;
-	private byte nodeSpecialByte;
-	private String nodeTag;
-	private int nodeTagId;
-	private boolean[] nodeTagIds;
-	private HashMap<String, Integer> nodeTags;
-	private byte numberOfMapFiles;
-	private short numberOfNodeTags;
-	private short numberOfWayTags;
-	private long parentTileX;
-	private long parentTileY;
-	private String projectionName;
-	private boolean queryIsWater;
-	private boolean queryReadWaterInfo;
-	private boolean queryReadWayNames;
-	private int queryTileBitmask;
-	private int queryZoomLevel;
-	private byte[] readBuffer;
-	private int remainingHeaderSize;
-	private long startAddress;
-	private int startPositionLatitude;
-	private int startPositionLongitude;
-	private boolean stopCurrentQuery;
-	private int stringLength;
-	private long subtileX;
-	private long subtileY;
-	private byte tempByte;
-	private int tempInt;
-	private int tileLatitude;
-	private int tileLongitude;
-	private short tilePixelSize;
-	private long toBaseTileX;
-	private long toBaseTileY;
-	private long toBlockX;
-	private long toBlockY;
-	private boolean useTileBitmask;
-	private int variableByteDecode;
-	private byte variableByteShift;
-	private byte wayFeatureByte;
-	private boolean wayFeatureLabelPosition;
-	private boolean wayFeatureMultipolygon;
-	private boolean wayFeatureName;
-	private boolean wayFeatureRef;
-	private int[][] wayInnerWays;
-	private int[] wayLabelPosition;
-	private byte wayLayer;
-	private String wayName;
-	private int wayNodeLatitude;
-	private int wayNodeLongitude;
-	private int[] wayNodesSequence;
-	private int wayNodesSequenceLength;
-	private int wayNumberOfInnerWays;
-	private byte wayNumberOfRelevantTags;
-	private byte wayNumberOfTags;
-	private int wayNumberOfWayNodes;
-	private String wayRef;
-	private String waySignature;
-	private int waySize;
-	private short waysOnZoomLevel;
-	private byte waySpecialByte1;
-	private byte waySpecialByte2;
-	private String wayTag;
-	private byte wayTagBitmap;
-	private int wayTagId;
-	private boolean[] wayTagIds;
-	private HashMap<String, Integer> wayTags;
-	private short wayTileBitmask;
-	private int zoomLevelDifference;
-	private byte zoomLevelMax;
-	private byte zoomLevelMin;
+	public byte baseZoomLevel;
+	public int blockEntriesTableOffset;
+	public long blockNumber;
+	public String blockSignature;
+	public int boundaryBottom;
+	public int boundaryLeft;
+	public int boundaryRight;
+	public int boundaryTop;
+	public int bufferPosition;
+	public String commentText;
+	public long currentBlockIndexEntry;
+	public boolean currentBlockIsWater;
+	public long currentBlockPointer;
+	public int currentBlockSize;
+	public long currentColumn;
+	public long currentRow;
+	public MapDatabaseIndexCache databaseIndexCache;
+	public boolean debugFile;
+	public boolean[] defaultTagIds;
+	public short elementCounter;
+	public File file;
+	public long fileSize;
+	public int fileVersionNumber;
+	public int firstWayOffset;
+	public long fromBaseTileX;
+	public long fromBaseTileY;
+	public long fromBlockX;
+	public long fromBlockY;
+	public byte globalMaximumZoomLevel;
+	public byte globalMinimumZoomLevel;
+	public boolean headerStartPosition;
+	public long indexStartAddress;
+	public int[] innerWay;
+	public int innerWayNodesSequenceLength;
+	public int innerWayNumber;
+	public int innerWayNumberOfWayNodes;
+	public RandomAccessFile inputFile;
+	public String magicByte;
+	public Rect mapBoundary;
+	public long mapDate;
+	public MapFileParameters mapFileParameters;
+	public long mapFileSize;
+	public MapFileParameters[] mapFilesList;
+	public MapFileParameters[] mapFilesLookupTable;
+	public int maximumNodeTagId;
+	public int maximumWayTagId;
+	public byte metaFlags;
+	public long nextBlockPointer;
+	public String nodeElevation;
+	public byte nodeFeatureByte;
+	public boolean nodeFeatureElevation;
+	public boolean nodeFeatureHouseNumber;
+	public boolean nodeFeatureName;
+	public String nodeHouseNumber;
+	public int nodeLatitude;
+	public byte nodeLayer;
+	public int nodeLongitude;
+	public String nodeName;
+	public byte nodeNumberOfTags;
+	public String nodeSignature;
+	public short nodesOnZoomLevel;
+	public byte nodeSpecialByte;
+	public String nodeTag;
+	public int nodeTagId;
+	public boolean[] nodeTagIds;
+	public HashMap<String, Integer> nodeTags;
+	public byte numberOfMapFiles;
+	public short numberOfNodeTags;
+	public short numberOfWayTags;
+	public long parentTileX;
+	public long parentTileY;
+	public String projectionName;
+	public boolean queryIsWater;
+	public boolean queryReadWaterInfo;
+	public boolean queryReadWayNames;
+	public int queryTileBitmask;
+	public int queryZoomLevel;
+	public byte[] readBuffer;
+	public int remainingHeaderSize;
+	public long startAddress;
+	public int startPositionLatitude;
+	public int startPositionLongitude;
+	public boolean stopCurrentQuery;
+	public int stringLength;
+	public long subtileX;
+	public long subtileY;
+	public byte tempByte;
+	public int tempInt;
+	public int tileLatitude;
+	public int tileLongitude;
+	public short tilePixelSize;
+	public long toBaseTileX;
+	public long toBaseTileY;
+	public long toBlockX;
+	public long toBlockY;
+	public boolean useTileBitmask;
+	public int variableByteDecode;
+	public byte variableByteShift;
+	public byte wayFeatureByte;
+	public boolean wayFeatureLabelPosition;
+	public boolean wayFeatureMultipolygon;
+	public boolean wayFeatureName;
+	public boolean wayFeatureRef;
+	public int[][] wayInnerWays;
+	public int[] wayLabelPosition;
+	public byte wayLayer;
+	public String wayName;
+	public int wayNodeLatitude;
+	public int wayNodeLongitude;
+	public int[] wayNodesSequence;
+	public int wayNodesSequenceLength;
+	public int wayNumberOfInnerWays;
+	public byte wayNumberOfRelevantTags;
+	public byte wayNumberOfTags;
+	public int wayNumberOfWayNodes;
+	public String wayRef;
+	public String waySignature;
+	public int waySize;
+	public short waysOnZoomLevel;
+	public byte waySpecialByte1;
+	public byte waySpecialByte2;
+	public String wayTag;
+	public byte wayTagBitmap;
+	public int wayTagId;
+	public boolean[] wayTagIds;
+	public HashMap<String, Integer> wayTags;
+	public short wayTileBitmask;
+	public int zoomLevelDifference;
+	public byte zoomLevelMax;
+	public byte zoomLevelMin;
 
 	/**
 	 * Empty default constructor with limited visibility.
 	 */
-	MapDatabase() {
+	public MapDatabase() {
 		// do nothing
 	}
 
@@ -408,7 +408,7 @@ public class MapDatabase {
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private void processBlock(DatabaseMapGenerator databaseMapGenerator)
+	public void processBlock(DatabaseMapGenerator databaseMapGenerator)
 			throws UnsupportedEncodingException {
 		if (this.debugFile) {
 			// get and check the block signature
@@ -779,7 +779,7 @@ public class MapDatabase {
 	 * @throws IOException
 	 *             if an error occurs while reading the file.
 	 */
-	private boolean processFileHeader() throws IOException {
+	public boolean processFileHeader() throws IOException {
 		// read the the magic byte and the file header size into the buffer
 		if (!readFromMapFile(BINARY_OSM_MAGIC_BYTE.length() + 4)) {
 			Logger.d("reading magic byte has failed");
@@ -1078,7 +1078,7 @@ public class MapDatabase {
 	 * 
 	 * @return the byte value.
 	 */
-	private byte readByte() {
+	public byte readByte() {
 		return this.readBuffer[this.bufferPosition++];
 	}
 
@@ -1089,7 +1089,7 @@ public class MapDatabase {
 	 * 
 	 * @return the long value.
 	 */
-	private long readFiveBytesLong() {
+	public long readFiveBytesLong() {
 		this.bufferPosition += 5;
 		return Deserializer.getFiveBytesLong(this.readBuffer, this.bufferPosition - 5);
 	}
@@ -1105,7 +1105,7 @@ public class MapDatabase {
 	 * @throws IOException
 	 *             if an error occurs while reading the file.
 	 */
-	private boolean readFromMapFile(int length) throws IOException {
+	public boolean readFromMapFile(int length) throws IOException {
 		// ensure that the read buffer is large enough
 		if (this.readBuffer == null || this.readBuffer.length < length) {
 			// ensure that the read buffer is not too large
@@ -1127,7 +1127,7 @@ public class MapDatabase {
 	 * 
 	 * @return the int value.
 	 */
-	private int readInt() {
+	public int readInt() {
 		this.bufferPosition += 4;
 		return Deserializer.getInt(this.readBuffer, this.bufferPosition - 4);
 	}
@@ -1139,7 +1139,7 @@ public class MapDatabase {
 	 * 
 	 * @return the long value.
 	 */
-	private long readLong() {
+	public long readLong() {
 		this.bufferPosition += 8;
 		return Deserializer.getLong(this.readBuffer, this.bufferPosition - 8);
 	}
@@ -1151,7 +1151,7 @@ public class MapDatabase {
 	 * 
 	 * @return the short value.
 	 */
-	private short readShort() {
+	public short readShort() {
 		this.bufferPosition += 2;
 		return Deserializer.getShort(this.readBuffer, this.bufferPosition - 2);
 	}
@@ -1165,7 +1165,7 @@ public class MapDatabase {
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private String readUTF8EncodedString(boolean readString)
+	public String readUTF8EncodedString(boolean readString)
 			throws UnsupportedEncodingException {
 		// get and check the length of string (VBE-U)
 		this.stringLength = readVariableByteEncodedUnsignedInt();
@@ -1191,7 +1191,7 @@ public class MapDatabase {
 	 * 
 	 * @return the int value.
 	 */
-	private int readVariableByteEncodedSignedInt() {
+	public int readVariableByteEncodedSignedInt() {
 		this.variableByteDecode = 0;
 		this.variableByteShift = 0;
 
@@ -1218,7 +1218,7 @@ public class MapDatabase {
 	 * 
 	 * @return the int value.
 	 */
-	private int readVariableByteEncodedUnsignedInt() {
+	public int readVariableByteEncodedUnsignedInt() {
 		this.variableByteDecode = 0;
 		this.variableByteShift = 0;
 
@@ -1564,7 +1564,7 @@ public class MapDatabase {
 	 *            the path to the map file.
 	 * @return true if the file could be opened and is a valid map file, false otherwise.
 	 */
-	boolean openFile(String fileName) {
+	public boolean openFile(String fileName) {
 		try {
 			// make sure to close any previous file first
 			closeFile();

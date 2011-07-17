@@ -77,7 +77,8 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
-		Projection projection = mapView.getProjection();
+		//Projection projection = mapView.getProjection();
+		Projection projection = null;
 		Point tapPosition = projection.toPixels(geoPoint, null);
 
 		// check if the translation to pixel coordinates has failed
