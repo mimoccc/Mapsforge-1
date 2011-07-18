@@ -62,6 +62,7 @@ abstract class MapGenerator extends Thread {
 
 			synchronized (this) {
 				while (!isInterrupted() && (this.jobQueue1.isEmpty() || this.pause)) {
+					System.out.println("TEST " + this.getId());
 					try {
 						this.ready = true;
 						wait();
@@ -69,16 +70,13 @@ abstract class MapGenerator extends Thread {
 						// restore the interrupted status
 						interrupt();
 					}
-
 				}
 				this.ready = false;
-
 			}
 
 			if (isInterrupted()) {
 				break;
 			}
-
 			// get the next tile from the job queue that needs to be processed
 			synchronized (this) {
 				if (this.scheduleNeeded) {
@@ -101,7 +99,7 @@ abstract class MapGenerator extends Thread {
 						// copy the tile to the MapView
 						this.mapView.putTileOnBitmap(this.currentMapGeneratorJob,
 								this.currentTileBitmap);
-						//TODO this.mapView.postInvalidate();
+						this.mapView.postInvalidate();
 					}
 
 					// put the tile image in the cache

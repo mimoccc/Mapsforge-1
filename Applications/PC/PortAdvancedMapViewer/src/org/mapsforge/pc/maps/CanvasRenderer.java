@@ -60,10 +60,6 @@ public class CanvasRenderer extends DatabaseMapGenerator {
 	public float[] textCoordinates;
 	public float[] tileFrame;
 	public ArrayList<ShapePaintContainer> wayList;
-
-	public CanvasRenderer() {
-		super();
-	}
 	
 	@Override
 	void drawNodes(ArrayList<PointTextContainer> drawNodes) {

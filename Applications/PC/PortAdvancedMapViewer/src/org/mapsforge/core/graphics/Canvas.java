@@ -23,7 +23,9 @@ public class Canvas {
 	private static final long serialVersionUID = 5085355825188623626L;
 
 	
-    public Canvas() {}
+    public Canvas() {
+    	mBufferedImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    }
 
 	public Canvas(Bitmap bitmap) {
 		mBufferedImage = bitmap.getImage();

@@ -133,21 +133,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 			500);
 	
 	public void startActivityForResult(String file) throws IOException {
-		/*
-		Bitmap bitmap = new Bitmap(new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB));
 		
-		MapDatabase db = new MapDatabase();
-		db.openFile(file);
-
-		CanvasRenderer gen = new CanvasRenderer();
-		
-		
-		gen.setDatabase(db);
-		gen.setupRenderer(bitmap);
-
-		gen.start();
-		image = gen.canvas.mBufferedImage;
-		 */
 		//image = ImageIO.read(new File("kanon0.jpg"));
 		
 		 if(mapView != null) {
@@ -172,6 +158,11 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		return propertiesSettings;
 	}
 	
+	
+	public void paint(Graphics g) {
+		g.drawImage(mapView.mapViewCanvas.mBufferedImage, 10, 10, null);
+	}
+	
 	/** MapView Configuration
 	 *  onCreate --> onResume
 	 */
@@ -179,6 +170,9 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	MapView mapView;
 	MapController mapController;
 	MapViewMode mapViewMode;
+	
+	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
+	static final int MOVE_SPEED_MAX = 30;
 	
 	public void onCreate(int id) {
 		// set up the layout views
@@ -200,19 +194,23 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		//this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// set the map settings
-		//	this.mapView.setScaleBar(false);
+		this.mapView.setScaleBar(false);
 		this.mapViewMode = Enum.valueOf(MapViewMode.class, org.mapsforge.pc.maps.MapViewMode.CANVAS_RENDERER.name());
 		this.mapView.setTextScale(1);
 
 
 		// set the general settings
 		//<- Removed: Android Specific ->
-
+		
+		this.mapView.setMemoryCardCachePersistence(false);
+		this.mapView.setMemoryCardCacheSize(MEMORY_CARD_CACHE_SIZE_MAX);
+		this.mapView.setMoveSpeed(MOVE_SPEED_MAX / 10f);
+		
 		// set the debug settings
-		//this.mapView.setFpsCounter(false);
-		//this.mapView.setTileFrames(false);
-		//this.mapView.setTileCoordinates(false);
-		//this.mapView.setWaterTiles(false);
+		this.mapView.setFpsCounter(false);
+		this.mapView.setTileFrames(false);
+		this.mapView.setTileCoordinates(false);
+		this.mapView.setWaterTiles(false);
 
 		// check if the file browser needs to be displayed
 		//if (!this.mapView.getMapViewMode().requiresInternetConnection()
@@ -224,15 +222,15 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	private void configureMapView() {
 		//TODO configure the MapView and activate the zoomLevel buttons
 		//this.mapView.setClickable(true);
-		//this.mapView.setBuiltInZoomControls(true);
-		//this.mapView.setFocusable(true);
+		this.mapView.setBuiltInZoomControls(true);
+		this.mapView.setFocusable(true);
 
 		// set the localized text fields
 		this.mapView.setText(TextField.KILOMETER, "KiloMeter");
 		this.mapView.setText(TextField.METER, "Meter");
 
 		// get the map controller for this MapView
-		this.mapController = this.mapView.getController();
+		//this.mapController = this.mapView.getController();
 	}
 	
 }

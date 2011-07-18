@@ -59,6 +59,8 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	private static final Paint PAINT_SCALE_BAR_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT_WHITE_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final short SCALE_BAR_WIDTH = 130;
+	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
+	private static final byte DEFAULT_ZOOM_LEVEL_MIN = 0;
 	
 	int mapViewId;
 	String mapFile;
@@ -67,7 +69,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	MapController mapController;
 	
 	//ACTIVITY
-	MapActivity mapActivity = new MapActivity();
+	MapActivity mapActivity;
 	
 	//GENERATOR
 	MapGenerator mapGenerator;
@@ -109,7 +111,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	Bitmap mapViewBitmapSwap;
 	Bitmap mapViewBitmap1;
 	Bitmap mapViewBitmap2;
-	public Canvas mapViewCanvas;
+	public Canvas mapViewCanvas = new Canvas();
 
 	long tileX;
 	long tileY;
@@ -143,12 +145,14 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	String text_kilometer;
 	String text_meter;
 	String text_ok;
+	boolean showFpsCounter;
 	
 	/**
 	 * Constructor
 	 */
 	public MapView(int mapViewId) {
 		this.mapViewId = mapViewId;
+		this.mapActivity  = new MapActivity();
 		setupMapView();
 	}
 	
@@ -157,8 +161,10 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 */
 	private synchronized void setupMapView() {
 
+		this.tileMemoryCardCacheSize = DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE;
+		
 		this.setBackground(MAP_VIEW_BACKGROUND);
-
+		//setWillNotDraw(false);
 		// create the projection
 		this.projection = new MercatorProjection(this);
 
@@ -177,6 +183,9 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		this.tileMemoryCardCache = new TileMemoryCardCache("res" + File.separatorChar + "tile" + File.separatorChar + this.mapViewId,
 				this.tileMemoryCardCacheSize);
 
+		// create the MapController for this MapView
+		this.mapController = new MapController(this);
+		
 		// create the database
 		this.mapDatabase = new MapDatabase();
 
@@ -186,7 +195,21 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		GeoPoint defaultStartPoint = this.mapGenerator.getDefaultStartPoint();
 		this.latitude = defaultStartPoint.getLatitude();
 		this.longitude = defaultStartPoint.getLongitude();
+		this.zoomLevel = this.mapGenerator.getDefaultZoomLevel();
+		this.zoomLevelMin = DEFAULT_ZOOM_LEVEL_MIN;
+		this.zoomLevelMax = Byte.MAX_VALUE;
 
+		// create and start the MapMover thread
+		//this.mapMover = new MapMover();
+		//this.mapMover.setMapView(this);
+		//this.mapMover.start();
+
+		// create and start the ZoomAnimator thread
+		//this.zoomAnimator = new ZoomAnimator();
+		//this.zoomAnimator.setMapView(this);
+		//this.zoomAnimator.start();
+		
+		//System.out.println(this.latitude + "<->" + this.longitude);
 		// register the MapView in the MapActivity
 		
 		this.mapActivity.registerMapView(this);
@@ -197,12 +220,12 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 */
 	private void startMapGeneratorThread() {
 		this.mapGenerator = new CanvasRenderer();
-		((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.mapDatabase);
-				
+		((DatabaseMapGenerator) this.mapGenerator).setDatabase(this.mapDatabase);	
 
 		if (this.attachedToWindow) {
 			this.mapGenerator.onAttachedToWindow();
 		}
+		
 		this.mapGenerator.setTileCaches(this.tileRAMCache, this.tileMemoryCardCache);
 		this.mapGenerator.setMapView(this);
 		this.mapGenerator.start();
@@ -258,6 +281,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 *            true if called from the UI thread, false otherwise.
 	 */
 	void handleTiles(boolean calledByUiThread) {
+
 		if (this.getWidth() == 0) {
 			return;
 		}
@@ -265,6 +289,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		if (this.mapFile == null) {
 			return;
 		}
+		System.out.println("DRAN");
 
 		synchronized (this) {
 			// calculate the XY position of the MapView
@@ -335,7 +360,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		}
 	}
 	
-	private void postInvalidate() {
+	void postInvalidate() {
 		invalidate();
 	}
 	
@@ -362,10 +387,10 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 			return;
 		}
 
-		if (this.zoomAnimator.isExecuting()) {
+		//if (this.zoomAnimator.isExecuting()) {
 			// do not disturb the ongoing animation
-			return;
-		}
+		//	return;
+		//}
 
 		if (!matrixIsIdentity()) {
 			// change the current MapView bitmap
@@ -490,7 +515,7 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 * This method is called by the MapGenerator when its job queue is empty.
 	 */
 	void requestMoreJobs() {
-		if (!this.mapViewMode.requiresInternetConnection() && this.mapFile == null) {
+		if (this.mapFile == null) {
 			return;
 		} else if (this.getWidth() == 0) {
 			return;
@@ -719,13 +744,23 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 */
 	
 	/**
+	 * Sets the visibility of the zoom controls.
+	 * 
+	 * @param showZoomControls
+	 *            true if the zoom controls should be visible, false otherwise.
+	 */
+	public void setBuiltInZoomControls(boolean showZoomControls) {
+		this.showZoomControls = showZoomControls;
+	}
+	
+	/**
 	 * Sets the center of the MapView and triggers a redraw.
 	 * 
 	 * @param point
 	 *            the new center point of the map.
 	 */
 	void setCenter(GeoPoint point) {
-		//TODO
+		setCenterAndZoom(point, this.zoomLevel);
 	}
 	
 	/**
@@ -755,6 +790,26 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 			mapGeneratorJob.priority = (int) Math.sqrt(diffX * diffX + diffY * diffY);
 		}
 		return mapGeneratorJob;
+	}
+	
+	/**
+	 * Sets the visibility of the scale bar.
+	 * 
+	 * @param showScaleBar
+	 *            true if the scale bar should be visible, false otherwise.
+	 */
+	public void setScaleBar(boolean showScaleBar) {
+		this.showScaleBar = showScaleBar;
+		if (showScaleBar) {
+			renderScaleBar();
+		}
+		// invalidate the MapView
+		getMapActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				invalidate();
+			}
+		});
 	}
 	
 	/**
@@ -802,6 +857,85 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	}
 	
 	/**
+	 * Sets the visibility of the frame rate.
+	 * <p>
+	 * This method is for debugging purposes only.
+	 * 
+	 * @param showFpsCounter
+	 *            true if the map frame rate should be visible, false otherwise.
+	 */
+	public void setFpsCounter(boolean showFpsCounter) {
+		this.showFpsCounter = showFpsCounter;
+		// invalidate the MapView
+		getMapActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				invalidate();
+			}
+		});
+	}
+	
+	/**
+	 * Sets the drawing of tile coordinates for debugging. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
+	 * 
+	 * @param drawTileCoordinates
+	 *            true if tile coordinates should be drawn, false otherwise.
+	 */
+	public void setTileCoordinates(boolean drawTileCoordinates) {
+		this.drawTileCoordinates = drawTileCoordinates;
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles(true);
+	}
+	
+	/**
+	 * Sets the drawing of tile frames for debugging. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
+	 * 
+	 * @param drawTileFrames
+	 *            true if tile frames should be drawn, false otherwise.
+	 */
+	public void setTileFrames(boolean drawTileFrames) {
+		this.drawTileFrames = drawTileFrames;
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles(true);
+	}
+	
+	/**
+	 * Sets the highlighting of water tiles. Has no effect in downloading mode.
+	 * <p>
+	 * This method is for debugging purposes only.
+	 * 
+	 * @param highlightWaterTiles
+	 *            true if water tiles should be highlighted, false otherwise.
+	 */
+	public void setWaterTiles(boolean highlightWaterTiles) {
+		this.highlightWaterTiles = highlightWaterTiles;
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles(true);
+	}
+	
+	/**
+	 * Sets the move speed of the map, used for trackball and keyboard events.
+	 * 
+	 * @param moveSpeedFactor
+	 *            the factor by which the move speed of the map will be multiplied.
+	 * @throws IllegalArgumentException
+	 *             if the new moveSpeedFactor is negative.
+	 */
+	public void setMoveSpeed(float moveSpeedFactor) {
+		if (moveSpeedFactor < 0) {
+			throw new IllegalArgumentException();
+		}
+		this.moveSpeedFactor = moveSpeedFactor;
+	}
+	
+	/**
 	 * Sets the map file for this MapView.
 	 * 
 	 * @param newMapFile
@@ -822,13 +956,17 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 			return;
 		}
 		
-		//
+		//this.mapMover.pause();
 		this.mapGenerator.pause();
 
+		//waitForZoomAnimator();
+		//waitForMapMover();
 		waitForMapGenerator();
 
+		//this.mapMover.stopMove();
 		this.mapGenerator.clearJobs();
 		
+		//this.mapMover.unpause();
 		this.mapGenerator.unpause();
 
 		//
@@ -1051,5 +1189,13 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	 */
 	public byte getZoomLevel() {
 		return this.zoomLevel;
+	}
+	
+	public int getWidth() {
+		return 100;
+	}
+	
+	public int getHeight() {
+		return 100;
 	}
 }

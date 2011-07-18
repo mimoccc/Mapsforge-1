@@ -109,7 +109,6 @@ public class TileMemoryCardCache {
 		} else {
 			this.capacity = capacity;
 		}
-
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 
 		// restore the serialized cache map if possible
