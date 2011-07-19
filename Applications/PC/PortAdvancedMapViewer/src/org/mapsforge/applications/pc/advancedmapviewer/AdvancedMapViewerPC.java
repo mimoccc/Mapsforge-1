@@ -64,7 +64,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		// Size
 		int height = Integer.parseInt(propertiesSettings.getProperty("application_size_height"));
 		int width = Integer.parseInt(propertiesSettings.getProperty("application_size_width"));
-		this.setSize(height, width);
+		this.setSize(width, height);
 		
 		//Position
 		int xPos = Integer.parseInt(propertiesSettings.getProperty("application_position_x"));
@@ -80,11 +80,18 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
 		//Configure
 		this.onCreate(10);
+		String defaultMap = propertiesSettings.getProperty("default_map");
 		try {
+			startActivityForResult(defaultMap);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*try {
 			this.startFileBrowser();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		//this.onCreate(height, width);
 		//this.add();
 	}
@@ -160,7 +167,9 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	
 	
 	public void paint(Graphics g) {
-		g.drawImage(mapView.mapViewCanvas.mBufferedImage, 10, 10, null);
+		int x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
+		int y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
+		g.drawImage(mapView.mapViewCanvas.mBufferedImage, x, y, null);
 	}
 	
 	/** MapView Configuration

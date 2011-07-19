@@ -8,9 +8,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Properties;
 
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.Canvas;
@@ -18,7 +22,7 @@ import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.widget.ZoomControls;
 
-public class MapView extends JLabel implements MouseListener, ActionListener {
+public class MapView extends JPanel implements MouseListener, ActionListener {
 
 	private static final long serialVersionUID = -7437435113432268381L;
 	public enum TextField { KILOMETER, METER, OKAY; }
@@ -147,10 +151,19 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 	String text_ok;
 	boolean showFpsCounter;
 	
+	private Properties propertiesSettings;
+	
 	/**
 	 * Constructor
 	 */
 	public MapView(int mapViewId) {
+		//Properties
+		try{
+			this.propertiesSettings = new Properties();
+			this.propertiesSettings.load(new FileReader("res/config/config.properties"));
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this, "Could not read properties files!");
+		}
 		this.mapViewId = mapViewId;
 		this.mapActivity  = new MapActivity();
 		setupMapView();
@@ -289,7 +302,6 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		if (this.mapFile == null) {
 			return;
 		}
-		System.out.println("DRAN");
 
 		synchronized (this) {
 			// calculate the XY position of the MapView
@@ -1191,11 +1203,13 @@ public class MapView extends JLabel implements MouseListener, ActionListener {
 		return this.zoomLevel;
 	}
 	
+	@Override
 	public int getWidth() {
-		return 100;
+		return Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
 	}
 	
+	@Override
 	public int getHeight() {
-		return 100;
+		return Integer.parseInt(propertiesSettings.getProperty("map_size_height"));
 	}
 }

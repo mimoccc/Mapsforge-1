@@ -10,7 +10,12 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
+
+import javax.swing.JOptionPane;
 
 import org.mapsforge.core.graphics.Paint.Align;
 import org.mapsforge.core.graphics.Paint.FontInfo;
@@ -21,10 +26,19 @@ public class Canvas {
 	public BufferedImage mBufferedImage;
 	
 	private static final long serialVersionUID = 5085355825188623626L;
-
+	private Properties propertiesSettings;
 	
     public Canvas() {
-    	mBufferedImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    	//Properties
+		try{
+			this.propertiesSettings = new Properties();
+			this.propertiesSettings.load(new FileReader("res/config/config.properties"));
+		} catch (IOException e) {
+			//JOptionPane.showMessageDialog(this, "Could not read properties files!");
+		}
+		int width = Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
+		int height = Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
+    	mBufferedImage = new BufferedImage(width , height, BufferedImage.TYPE_INT_RGB);
     }
 
 	public Canvas(Bitmap bitmap) {
@@ -33,7 +47,6 @@ public class Canvas {
 
 
 	public void drawText(String text, float x, float y, Paint paint) {
-		System.out.println("METHODS: drawText");
 		Graphics2D g = mBufferedImage.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
@@ -97,13 +110,13 @@ public class Canvas {
      * @see android.graphics.Canvas#drawBitmap(android.graphics.Bitmap, android.graphics.Matrix, android.graphics.Paint)
      */
     public void drawBitmap(Bitmap bitmap, Matrix matrix, Paint paint) {
-		System.out.println("METHODS: drawBitmap");
         if (matrix.isIdentity() == false) {
             // create a new graphics and apply the matrix to it
             //save(); // this creates a new Graphics2D, and stores it for children call to use
             //needsRestore = true;
             Graphics2D g = mBufferedImage.createGraphics(); // get the newly create Graphics2D
-
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
             // get the Graphics2D current matrix
             AffineTransform currentTx = g.getTransform();
             // get the AffineTransform from the matrix
@@ -129,8 +142,8 @@ public class Canvas {
      * @see android.graphics.Canvas#drawTextOnPath(text, path, int, int, android.graphics.Paint)
      */
 	public void drawTextOnPath(String text, Path path, int i, int j, Paint paint) {
-		System.out.println("METHODS: drawTextOnPath");
 		Graphics2D g = mBufferedImage.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		Style style = paint.getStyle();
 
 		//TODO TextStroke t = new TextStroke(text, new Font("Serif", Font.PLAIN, 10));
@@ -156,9 +169,9 @@ public class Canvas {
      * @see android.graphics.Canvas#drawLines(float[], android.graphics.Paint)
      */
 	public void drawLines(float[] pts, Paint paint) {
-		System.out.println("METHODS: drawLines");
 		Graphics2D g = mBufferedImage.createGraphics();
-
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		
 		for(int i = 0; i < pts.length; i += 4) {
 			g.drawLine((int) pts[i + 0], (int) pts[i + 0 + 1], (int) pts[i + 0 + 2], (int) pts[i + 0 + 3]);
 		}
@@ -169,10 +182,10 @@ public class Canvas {
      * @see android.graphics.Canvas#drawPath(android.graphics.Path, android.graphics.Paint)
      */
     public void drawPath(Path path, Paint paint) {
-		System.out.println("METHODS: drawPath");
         // get a Graphics2D object configured with the drawing parameters.
         Graphics2D g = getCustomGraphics(paint);
-
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         Style style = paint.getStyle();
 
         // draw
@@ -192,10 +205,10 @@ public class Canvas {
      * @see android.graphics.Canvas#drawLine(float, float, float, float, android.graphics.Paint)
      */
     public void drawLine(float startX, float startY, float stopX, float stopY, Paint paint) {
-		System.out.println("METHODS: drawLine");
         // get a Graphics2D object configured with the drawing parameters.
         Graphics2D g = getCustomGraphics(paint);
-
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         g.drawLine((int)startX, (int)startY, (int)stopX, (int)stopY);
 
         // dispose Graphics2D object
@@ -206,11 +219,11 @@ public class Canvas {
      * @see android.graphics.Canvas#drawBitmap(float, float, float, float, android.graphics.Paint)
      */
 	public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
-		System.out.println("METHODS: drawBitmap");
 		BufferedImage image = bitmap.getImage();
 
         Graphics2D g = mBufferedImage.createGraphics();
-
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         Composite c = null;
 
         if (paint != null) {

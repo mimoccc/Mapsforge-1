@@ -62,7 +62,6 @@ abstract class MapGenerator extends Thread {
 
 			synchronized (this) {
 				while (!isInterrupted() && (this.jobQueue1.isEmpty() || this.pause)) {
-					System.out.println("TEST " + this.getId());
 					try {
 						this.ready = true;
 						wait();
