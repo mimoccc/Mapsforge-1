@@ -1,7 +1,6 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
@@ -9,22 +8,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Properties;
 
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
-import org.mapsforge.pc.maps.MapActivity;
-import org.mapsforge.pc.maps.MapController;
 import org.mapsforge.pc.maps.MapView;
-import org.mapsforge.pc.maps.MapView.TextField;
-import org.mapsforge.pc.maps.MapViewMode;
 import org.mapsforge.pc.maps.TileMemoryCardCache;
 import org.mapsforge.pc.maps.TileRAMCache;
-import org.mapsforge.core.graphics.Canvas;
 
 
 
@@ -36,10 +27,9 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	private static final long serialVersionUID = -4127875987929158484L;
 	JFrame jFrame;
 	protected Properties propertiesStrings, propertiesSettings;
-	private Canvas canvas;
 	private MenuBar menuBar;
 	private FilePickerPC filePicker;
-	private ArrayList<MapView> mapViews = new ArrayList<MapView>(2);
+	MapView mapView;
 	
 	
 	/** Constructor */
@@ -77,9 +67,10 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		
 		//FilePicker
 		this.add(filePicker = new FilePickerPC());
-
-		//Configure
-		this.onCreate(10);
+		
+		//Map View Configure
+		this.mapView = new MapView(10);
+		this.add(mapView);
 		String defaultMap = propertiesSettings.getProperty("default_map");
 		try {
 			startActivityForResult(defaultMap);
@@ -164,82 +155,4 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	public Properties getPropertiesSettings() {
 		return propertiesSettings;
 	}
-	
-	
-	public void paint(Graphics g) {
-		int x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
-		int y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
-		g.drawImage(mapView.mapViewCanvas.mBufferedImage, x, y, null);
-	}
-	
-	/** MapView Configuration
-	 *  onCreate --> onResume
-	 */
-	
-	MapView mapView;
-	MapController mapController;
-	MapViewMode mapViewMode;
-	
-	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
-	static final int MOVE_SPEED_MAX = 30;
-	
-	public void onCreate(int id) {
-		// set up the layout views
-		this.mapView = new MapView(id);
-
-		configureMapView();
-
-		// get the pointers to different system services
-		//<- Removed: Android Specific ->
-
-		// set up the paint objects for the location overlay
-		//<- Removed: GPS Specific ->
-
-		onResume();
-	}
-	
-	public void onResume() {
-		// Read the default shared preferences
-		//this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-		// set the map settings
-		this.mapView.setScaleBar(false);
-		this.mapViewMode = Enum.valueOf(MapViewMode.class, org.mapsforge.pc.maps.MapViewMode.CANVAS_RENDERER.name());
-		this.mapView.setTextScale(1);
-
-
-		// set the general settings
-		//<- Removed: Android Specific ->
-		
-		this.mapView.setMemoryCardCachePersistence(false);
-		this.mapView.setMemoryCardCacheSize(MEMORY_CARD_CACHE_SIZE_MAX);
-		this.mapView.setMoveSpeed(MOVE_SPEED_MAX / 10f);
-		
-		// set the debug settings
-		this.mapView.setFpsCounter(false);
-		this.mapView.setTileFrames(false);
-		this.mapView.setTileCoordinates(false);
-		this.mapView.setWaterTiles(false);
-
-		// check if the file browser needs to be displayed
-		//if (!this.mapView.getMapViewMode().requiresInternetConnection()
-		//		&& !this.mapView.hasValidMapFile()) {
-			//startFileBrowser();
-		//}
-	}
-	
-	private void configureMapView() {
-		//TODO configure the MapView and activate the zoomLevel buttons
-		//this.mapView.setClickable(true);
-		this.mapView.setBuiltInZoomControls(true);
-		this.mapView.setFocusable(true);
-
-		// set the localized text fields
-		this.mapView.setText(TextField.KILOMETER, "KiloMeter");
-		this.mapView.setText(TextField.METER, "Meter");
-
-		// get the map controller for this MapView
-		//this.mapController = this.mapView.getController();
-	}
-	
 }

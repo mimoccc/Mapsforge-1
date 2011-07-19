@@ -1,6 +1,8 @@
 package org.mapsforge.pc.maps;
 
 import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,6 +51,8 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 	public void actionPerformed(ActionEvent arg0) { }
 
 	//Constant
+	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
+	static final int MOVE_SPEED_MAX = 30;
 	private static final int TILE_RAM_CACHE_SIZE = 16;
 	private static final Color MAP_VIEW_BACKGROUND = new Color(238, 238, 238);
 	static final double LATITUDE_MAX = 85.05113;
@@ -167,6 +171,51 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		this.mapViewId = mapViewId;
 		this.mapActivity  = new MapActivity();
 		setupMapView();
+		
+		//Application's specified
+		//TODO configure the MapView and activate the zoomLevel buttons
+		//this.mapView.setClickable(true);
+		setBuiltInZoomControls(true);
+		setFocusable(true);
+
+		// set the localized text fields
+		setText(TextField.KILOMETER, "KiloMeter");
+		setText(TextField.METER, "Meter");
+
+		// get the map controller for this MapView
+		//this.mapController = this.mapView.getController();
+
+		// get the pointers to different system services
+		//<- Removed: Android Specific ->
+
+		// set up the paint objects for the location overlay
+		//<- Removed: GPS Specific ->
+
+		//From onResume()
+		// set the map settings
+		setScaleBar(false);
+		this.mapViewMode = Enum.valueOf(MapViewMode.class, org.mapsforge.pc.maps.MapViewMode.CANVAS_RENDERER.name());
+		setTextScale(1);
+
+		// set the general settings
+		//<- Removed: Android Specific ->
+		
+		setMemoryCardCachePersistence(false);
+		setMemoryCardCacheSize(MEMORY_CARD_CACHE_SIZE_MAX);
+		setMoveSpeed(MOVE_SPEED_MAX / 10f);
+		
+		// set the debug settings
+		setFpsCounter(false);
+		setTileFrames(false);
+		setTileCoordinates(false);
+		setWaterTiles(false);
+	}
+	
+	public void paint(Graphics g) {
+		int x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
+		int y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.drawImage(mapViewCanvas.mBufferedImage, x, y, null);
 	}
 	
 	/**
