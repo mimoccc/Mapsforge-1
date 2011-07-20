@@ -45,11 +45,10 @@ import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactor
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 /**
- * This task writes a sql file (tested for postgresql 8.4) which represents a routing graph.
- * Executing the resulting file bulk-loads the graph to the database.
+ * This task writes a sql file (tested for postgresql 8.4) which represents a routing graph. Executing
+ * the resulting file bulk-loads the graph to the database.
  * 
- * As parameter this plugin requires an output-file and a comma separated white-list of osm way
- * types.
+ * As parameter this plugin requires an output-file and a comma separated white-list of osm way types.
  * 
  * 
  */
@@ -331,7 +330,7 @@ class RoutingGraphWriterTask implements Sink {
 					!oneway,
 					false,
 					isRoundabout(way),
-					wayTypes_2_id.get(getTag(way, "highway")),
+					wayTypes_2_id.get(getTag(way, "highway").getValue()),
 					lon,
 					lat);
 
