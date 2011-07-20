@@ -28,16 +28,15 @@ import org.mapsforge.core.WGS84;
 import org.mapsforge.preprocessing.highwayHierarchies.mobile.HHGlobals;
 
 /**
- * This class implements the routing graph, the highway hierarchies algorithm directly works on.
- * Thus it holds all information required by the algorithm. This class internally uses object
- * pooling, for recycling objects, the vertices and edges can be released back to the pool by
- * using this classes' release methods. The graph is blocked an stored on secondary storage. Due
- * to limited memory this graph uses a cache of specified size exploit locality of access
- * patterns. In Addition to the standard graph functionality this graph also provides
- * functionality to find an entry point to the graph in terms of nearest neighbor queries.
- * Furthermore some satellite data e.g. edge names are stored.
+ * This class implements the routing graph, the highway hierarchies algorithm directly works on. Thus it
+ * holds all information required by the algorithm. This class internally uses object pooling, for
+ * recycling objects, the vertices and edges can be released back to the pool by using this classes'
+ * release methods. The graph is blocked an stored on secondary storage. Due to limited memory this
+ * graph uses a cache of specified size exploit locality of access patterns. In Addition to the standard
+ * graph functionality this graph also provides functionality to find an entry point to the graph in
+ * terms of nearest neighbor queries. Furthermore some satellite data e.g. edge names are stored.
  */
-final class HHRoutingGraph {
+class HHRoutingGraph {
 	/** no hop indices, edges are expanded using dijkstra */
 	public static final int HOP_INDICES_NONE = 0;
 	/** recursive mapping to the respective subjacent layer of the edge */
@@ -46,8 +45,7 @@ final class HHRoutingGraph {
 	public static final int HOP_INDICES_DIRECT = 2;
 
 	/**
-	 * header magic of the highway hierarchies binary file. Used for checking if the file might
-	 * be o.k.
+	 * header magic of the highway hierarchies binary file. Used for checking if the file might be o.k.
 	 */
 	private static final byte[] BINARY_FILE_HEADER_MAGIC = HHGlobals.BINARY_FILE_HEADER_MAGIC;
 	/**
@@ -113,8 +111,8 @@ final class HHRoutingGraph {
 	 */
 	private final long startAddrClusterBlocks;
 	/**
-	 * This bitmask is used to efficiently compute the vertex offset within the block from a
-	 * given vertex id.
+	 * This bitmask is used to efficiently compute the vertex offset within the block from a given
+	 * vertex id.
 	 */
 	private final int bitMask;
 	/**
@@ -138,8 +136,8 @@ final class HHRoutingGraph {
 	 */
 	final byte bitsPerStreetType;
 	/**
-	 * true if the graph stores hop indices, which can be used to expand shortcuts recursively
-	 * without using dijkstra's algorithm.
+	 * true if the graph stores hop indices, which can be used to expand shortcuts recursively without
+	 * using dijkstra's algorithm.
 	 */
 	final boolean hasShortcutHopIndices;
 	/**
@@ -379,9 +377,9 @@ final class HHRoutingGraph {
 	}
 
 	/**
-	 * Collects all vertices within the specified range. If this functionality is really
-	 * required, this should be implemented by a lazy iterator like the ones in database
-	 * systems. Currently this suffices since the method was only used during testing.
+	 * Collects all vertices within the specified range. If this functionality is really required, this
+	 * should be implemented by a lazy iterator like the ones in database systems. Currently this
+	 * suffices since the method was only used during testing.
 	 * 
 	 * @param bbox
 	 *            the range to search for vertices.

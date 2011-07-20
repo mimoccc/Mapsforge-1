@@ -29,11 +29,10 @@ import org.mapsforge.core.Vertex;
 import org.mapsforge.preprocessing.highwayHierarchies.hierarchyComputation.util.renderer.RendererV2;
 
 /**
- * This class implements the router interface which is already used server sided. There is some
- * problem on IOException handling. The server side interface does not yet allow to throw
- * IOException thus this implementation returns just null values if an IO Error occurs. A nice
- * solution has to be found. This implementation can not provide id's for edes, thus always -1
- * is returned.
+ * This class implements the router interface which is already used server sided. There is some problem
+ * on IOException handling. The server side interface does not yet allow to throw IOException thus this
+ * implementation returns just null values if an IO Error occurs. A nice solution has to be found. This
+ * implementation can not provide id's for edges, thus always -1 is returned.
  */
 public class HHRouter implements Router {
 
@@ -46,7 +45,7 @@ public class HHRouter implements Router {
 	 * Construct a Router Object working on the given binary file.
 	 * 
 	 * @param hhBinaryFile
-	 *            the highway hieararchies binary file.
+	 *            the highway hierarchies binary file.
 	 * @param cacheSizeBytes
 	 *            Number of bytes to use for caching clusters of the graph.
 	 * @throws IOException
