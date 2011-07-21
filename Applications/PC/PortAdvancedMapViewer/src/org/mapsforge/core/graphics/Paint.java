@@ -311,6 +311,10 @@ public class Paint {
 		return this.align;
 	}
 	
+	public Typeface getTypeface() {
+		return this.typeface;
+	}
+	
 	public void getTextBounds(String text, int start, int end, Rect boundary) {
 		 if ((start | end | (end - start) | (text.length() - end)) < 0) {
 	            throw new IndexOutOfBoundsException();
@@ -338,12 +342,6 @@ public class Paint {
             bounds.set(0, 0, (int)rect.getWidth(), (int)rect.getHeight());
         }
     }
-	
-	public float setTextSize(float f) {
-		this.textSize = f;
-		this.typeface.setSize((int) f);
-		return this.textSize;
-	}
 	
 	public Typeface setTypeface(Typeface typeface) {
 		if (typeface != null) {

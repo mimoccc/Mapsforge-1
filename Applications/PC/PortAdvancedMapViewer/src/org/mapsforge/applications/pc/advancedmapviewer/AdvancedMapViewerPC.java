@@ -1,6 +1,5 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
-import java.awt.Graphics;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
@@ -131,9 +130,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 			500);
 	
 	public void startActivityForResult(String file) throws IOException {
-		
-		//image = ImageIO.read(new File("kanon0.jpg"));
-		
+			
 		 if(mapView != null) {
 			mapView.setMapFile(file);
 		}

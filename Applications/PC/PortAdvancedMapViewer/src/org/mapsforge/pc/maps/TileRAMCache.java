@@ -14,9 +14,10 @@
  */
 package org.mapsforge.pc.maps;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -24,7 +25,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-//import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
 /**
  * A thread-safe cache for bitmap images with a fixed size and LRU policy.
@@ -35,6 +35,7 @@ public class TileRAMCache {
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
+	@SuppressWarnings("unused")
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
 	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
@@ -141,7 +142,23 @@ public class TileRAMCache {
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}*/
-			PipedOutputStream outStream = new PipedOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				ImageIO.write( bitmap.getImage(), "jpg", baos );
+				baos.flush();
+				byte[] imageInByte = baos.toByteArray();
+				InputStream in = new ByteArrayInputStream(imageInByte);
+				this.tempBitmap = new Bitmap(ImageIO.read(in));
+				synchronized(this) {
+					this.map.put(mapGeneratorJob, this.tempBitmap);
+				}
+				baos.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			/*PipedOutputStream outStream = new PipedOutputStream();
 			try {
 				ImageIO.write(bitmap.getImage(), "tile", outStream);
 				PipedInputStream inStream = new PipedInputStream(outStream);
@@ -153,7 +170,7 @@ public class TileRAMCache {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 		}
 	}
 }

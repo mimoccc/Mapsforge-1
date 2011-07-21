@@ -2,55 +2,44 @@ package org.mapsforge.core.graphics;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
 
 public class Bitmap {
-	public enum CompressFormat {
-        JPEG    (0),
-        PNG     (1);
 
-        CompressFormat(int nativeInt) {
-            this.nativeInt = nativeInt;
-        }
-        final int nativeInt;
-    }
-    public enum Config {
-        // these native values must match up with the enum in SkBitmap.h
-        ALPHA_8     (2),
-        RGB_565     (4),
-        ARGB_4444   (5),
-        ARGB_8888   (6);
-
-        Config(int ni) {
-            this.nativeInt = ni;
-        }
-        final int nativeInt;
-
-        static Config nativeToConfig(int ni) {
-            return sConfigs[ni];
-        }
-
-        private static Config sConfigs[] = {
-            null, null, ALPHA_8, null, RGB_565, ARGB_4444, ARGB_8888
-        };
-    }
+	public enum CompressFormat {JPG , PNG;}
+    public enum Config {ALPHA_8,  RGB_565, ARGB_4444, ARGB_8888;}
 
     public static final int DENSITY_NONE = 0;
 
-    // Note:  mNativeBitmap is used by FaceDetector_jni.cpp
-    // Don't change/rename without updating FaceDetector_jni.cpp
-    private final int mNativeBitmap;
-
     private boolean mRecycled;
     private BufferedImage mImage;
+    int mImageWidth;
+    int mImageHeight;
     
-	public Bitmap(BufferedImage image) {
-		mNativeBitmap = 1;
+    public Bitmap(ByteBuffer buffer) {
+    	byte[] inArray = buffer.array();
+    	InputStream in = new ByteArrayInputStream(inArray);
+    	try {
+			mImage = ImageIO.read(in);
+			mImageWidth = mImage.getWidth();
+			mImageHeight = mImage.getHeight();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public Bitmap(BufferedImage image) {
         mImage = image;
+        mImageWidth = mImage.getWidth();
+        mImageHeight = mImage.getHeight();
 	}
+ 
 
 	/**
      * Free up the memory associated with this bitmap's pixels, and mark the
@@ -90,8 +79,8 @@ public class Bitmap {
 	 * and/or may have lost per-pixel alpha (e.g. JPEG only supports opaque pixels).
 	 */
 	public boolean compress(CompressFormat format, int quality, FileOutputStream outputStream) throws IOException {
-		if(format.equals(CompressFormat.JPEG)) {
-			ImageIO.write(mImage, "jpeg", outputStream);
+		if(format.equals(CompressFormat.JPG)) {
+			ImageIO.write(mImage, "jpg", outputStream);
 		}
 		else {
 			ImageIO.write(mImage, "png", outputStream);
@@ -111,25 +100,20 @@ public class Bitmap {
 			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
 		else
 			return new Bitmap(new BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB));
-
 	}
-
-	final int ni() {
-        return mNativeBitmap;
-    }
 	
 	/**
 	 * Returns the bitmap's height
 	 */
 	public int getHeight() {
-		return mImage.getHeight();
+		return mImageHeight;
 	}
 
 	/**
 	 * Returns the bitmap's width
 	 */
 	public int getWidth() {
-		return mImage.getWidth();
+		return mImageWidth;
 	}
 	
 	public BufferedImage getImage() {

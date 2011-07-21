@@ -5,6 +5,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -12,13 +13,9 @@ import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import java.util.Properties;
 
-import javax.swing.JOptionPane;
-
 import org.mapsforge.core.graphics.Paint.Align;
-import org.mapsforge.core.graphics.Paint.FontInfo;
 import org.mapsforge.core.graphics.Paint.Style;
 
 public class Canvas {
@@ -46,63 +43,50 @@ public class Canvas {
 	}
 
 
+	//TODO
 	public void drawText(String text, float x, float y, Paint paint) {
 		Graphics2D g = mBufferedImage.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		
 		g.setColor(new Color(paint.getColor().getRGB()));
 		int alpha = paint.getAlpha();
 		float falpha = alpha / 255.f;
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, falpha));
-		if(paint.getTextAlign() != Align.LEFT) {
+		if(paint.getTextAlign() == Align.LEFT) {
 			float m = paint.measureText(text.toCharArray(), 0, text.length());
 			if(paint.getTextAlign() == Align.CENTER) {
 				x -= m / 2;
 			} else if(paint.getTextAlign() == Align.RIGHT) {
 				x -= m;
 			}
-			List<FontInfo> fonts = paint.getFonts();
-			if(fonts.size() > 0) {
-				FontInfo mainFont = fonts.get(0);
-				int i = 0;
-				int lastIndex = 0 + text.length();
-				while(i < lastIndex) {
-					int upTo = mainFont.mFont.canDisplayUpTo(text.toCharArray(), i, lastIndex);
-					if(upTo == -1) {
-						g.setFont(mainFont.mFont);
-						g.drawChars(text.toCharArray(), i, lastIndex - i, (int) x, (int) y);
-						return;
-					} else if(upTo > 0) {
-						g.setFont(mainFont.mFont);
-						g.drawChars(text.toCharArray(), i, upTo - i, (int) x, (int) y);
-						x += mainFont.mMetrics.charsWidth(text.toCharArray(), i, upTo - i);
-						i = upTo;
-					}
-					boolean foundFont = false;
-					for(int f = 1; f < fonts.size();f++) {
-						FontInfo fontInfo = fonts.get(f);
-						int charCount = Character.isHighSurrogate(text.toCharArray()[i]) ? 2 : 1;
-						upTo = fontInfo.mFont.canDisplayUpTo(text.toCharArray(), i, i + charCount);
-						if(upTo == -1) {
-							g.setFont(fontInfo.mFont);
-							g.drawChars(text.toCharArray(), i, charCount, (int) x, (int) y);
-							x += fontInfo.mMetrics.charsWidth(text.toCharArray(), i, charCount);
-							i += charCount;
-							foundFont = true;
-							break;
-						}
-					}
-					if(!foundFont) {
-						int charCount = Character.isHighSurrogate(text.toCharArray()[i]) ? 2 : 1;
-						g.setFont(mainFont.mFont);
-						g.drawChars(text.toCharArray(), i, charCount, (int) x, (int) y);
-						x += mainFont.mMetrics.charsWidth(text.toCharArray(), i, charCount);
-						i += charCount;
-					}
-				}
+		}
+		//TODO Changed
+		int i = 0;
+		int lastIndex = 0 + text.length();
+		Typeface font = paint.getTypeface();
+		FontMetrics mMetrics = g.getFontMetrics(font);
+		while(i < lastIndex) {
+			int upTo = font.canDisplayUpTo(text.toCharArray(), i, lastIndex);
+			if(upTo == -1) {
+				g.setFont(font);
+
+				g.drawChars(text.toCharArray(), i, lastIndex - i, (int) x, (int) y);
+				return;
+			} else if(upTo > 0) {
+				g.setFont(font);
+				g.drawChars(text.toCharArray(), i, upTo - i, (int) x, (int) y);
+				x += mMetrics.charsWidth(text.toCharArray(), i, upTo - i);
+				i = upTo;
 			}
-			
-		} 
+			boolean foundFont = false;
+	
+			if(!foundFont) {
+				int charCount = Character.isHighSurrogate(text.toCharArray()[i]) ? 2 : 1;
+				g.setFont(font);
+				g.drawChars(text.toCharArray(), i, charCount, (int) x, (int) y);
+				x += mMetrics.charsWidth(text.toCharArray(), i, charCount);
+				i += charCount;
+			}
+		}				
 		g.dispose();
 	}
 	
@@ -242,7 +226,7 @@ public class Canvas {
 
         g.drawImage(image, (int) left, (int) top, (int) left+bitmap.getWidth(), (int) top+bitmap.getHeight(),
                 0, 0, bitmap.getWidth(), bitmap.getHeight(), null);
-
+        
         if (paint != null) {
             if (paint.isFilterBitmap()) {
                 g.dispose();

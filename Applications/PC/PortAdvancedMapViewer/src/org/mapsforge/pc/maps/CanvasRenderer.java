@@ -22,6 +22,7 @@ import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.Canvas;
 //import android.graphics.Color;
 import java.awt.Color;
+import java.awt.Font;
 //import android.graphics.Matrix;
 import org.mapsforge.core.graphics.Matrix;
 //import android.graphics.Paint;
@@ -212,13 +213,14 @@ public class CanvasRenderer extends DatabaseMapGenerator {
 		this.path.setFillType(Path.FillType.EVEN_ODD);
 		this.stringBuilder = new StringBuilder(16);
 		//PAINT_TILE_COORDINATES.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_TILE_COORDINATES.setTypeface(Typeface.DEFAULT_BOLD);
-		PAINT_TILE_COORDINATES.setTextSize(20);
+		//PAINT_TILE_COORDINATES.setTextSize(20);
+		PAINT_TILE_COORDINATES.setTypeface(new Typeface(null, Font.BOLD, 20));
 		//PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		PAINT_TILE_COORDINATES_STROKE.setTypeface(Typeface.DEFAULT_BOLD);
+		//PAINT_TILE_COORDINATES_STROKE.setTextSize(20);
+		PAINT_TILE_COORDINATES_STROKE.setTypeface(new Typeface(null, Font.BOLD, 20));
 		PAINT_TILE_COORDINATES_STROKE.setStyle(Paint.Style.STROKE);
 		PAINT_TILE_COORDINATES_STROKE.setStrokeWidth(5);
-		PAINT_TILE_COORDINATES_STROKE.setTextSize(20);
+		
 		PAINT_TILE_COORDINATES_STROKE.setColor(Color.WHITE);
 	}
 }

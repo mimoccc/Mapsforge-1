@@ -3,12 +3,10 @@ package org.mapsforge.pc.maps;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,7 +22,7 @@ import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.widget.ZoomControls;
 
-public class MapView extends JPanel implements MouseListener, ActionListener {
+public class MapView extends JPanel implements MouseListener, KeyListener {
 
 	private static final long serialVersionUID = -7437435113432268381L;
 	public enum TextField { KILOMETER, METER, OKAY; }
@@ -48,8 +46,36 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 	public void mouseReleased(MouseEvent arg0) { }
 
 	@Override
-	public void actionPerformed(ActionEvent arg0) { }
+	public void keyReleased(KeyEvent keyCode) { 
+		//System.out.println("RELEASED");
+		if (keyCode.getKeyCode() == KeyEvent.VK_LEFT || keyCode.getKeyCode() == KeyEvent.VK_RIGHT) {
+			this.mapMover.stopHorizontalMove();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_UP || keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
+			this.mapMover.stopVerticalMove();
+		}
+	}
 
+	@Override
+	public void keyPressed(KeyEvent keyCode) {
+		//System.out.println("PRESSED");
+		if (keyCode.getKeyCode() == KeyEvent.VK_LEFT) {
+			//System.out.println("Left");
+			this.mapMover.moveLeft();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_RIGHT) {
+			//System.out.println("Right");
+			this.mapMover.moveRight();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_UP) {
+			//System.out.println("Up");
+			this.mapMover.moveUp();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
+			//System.out.println("Down");
+			this.mapMover.moveDown();
+		}
+	}
+	
+	@Override
+	public void keyTyped(KeyEvent arg0) { }
+	
 	//Constant
 	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
 	static final int MOVE_SPEED_MAX = 30;
@@ -168,8 +194,11 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Could not read properties files!");
 		}
+		
+		//ID and Activity
 		this.mapViewId = mapViewId;
 		this.mapActivity  = new MapActivity();
+		addKeyListener(this);
 		setupMapView();
 		
 		//Application's specified
@@ -183,7 +212,7 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		setText(TextField.METER, "Meter");
 
 		// get the map controller for this MapView
-		//this.mapController = this.mapView.getController();
+		this.mapController = this.getController();
 
 		// get the pointers to different system services
 		//<- Removed: Android Specific ->
@@ -262,9 +291,9 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		this.zoomLevelMax = Byte.MAX_VALUE;
 
 		// create and start the MapMover thread
-		//this.mapMover = new MapMover();
-		//this.mapMover.setMapView(this);
-		//this.mapMover.start();
+		this.mapMover = new MapMover();
+		this.mapMover.setMapView(this);
+		this.mapMover.start();
 
 		// create and start the ZoomAnimator thread
 		//this.zoomAnimator = new ZoomAnimator();
@@ -291,6 +320,19 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		this.mapGenerator.setTileCaches(this.tileRAMCache, this.tileMemoryCardCache);
 		this.mapGenerator.setMapView(this);
 		this.mapGenerator.start();
+	}
+	
+	private void waitForMapMover() {
+		synchronized (this) {
+			while (!this.mapMover.isReady()) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
 	}
 	
 	private void waitForMapGenerator() {
@@ -383,11 +425,12 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
-							//this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-							
-							this.tileBitmap = new Bitmap((BufferedImage) Toolkit.getDefaultToolkit().createImage(this.tileBuffer.array()));
+							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+							this.tileBitmap = new Bitmap(this.tileBuffer);
+							System.out.println(this.currentJob + " " + this.tileBitmap);
 							putTileOnBitmap(this.currentJob, this.tileBitmap);
 							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
+
 						} else {
 							// the image data could not be read from the cache
 							this.mapGenerator.addJob(this.currentJob);
@@ -408,7 +451,7 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		if (calledByUiThread) {
 			invalidate();
 		} else {
-			postInvalidate();
+			invalidate();
 		}
 
 		// notify the MapGenerator to process the job list
@@ -447,19 +490,22 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 			// the tile doesn't fit to the current zoom level
 			return;
 		}
-
 		//if (this.zoomAnimator.isExecuting()) {
 			// do not disturb the ongoing animation
 		//	return;
 		//}
 
 		if (!matrixIsIdentity()) {
-			// change the current MapView bitmap
+			//TODO change the current MapView bitmap
+			if(this.mapViewBitmap2 == null)
+				this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
 			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
 			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
 
 			// draw the previous MapView bitmap on the current MapView bitmap
 			synchronized (this.matrix) {
+				if(this.mapViewBitmap1 == null)
+					this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
 				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 				this.matrix.reset();
 			}
@@ -503,7 +549,6 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 		}
 
 		// fill the bitmap with transparent color
-		//this.mapScaleBitmap.eraseColor(Color.TRANSPARENT);
 		this.mapScaleBitmap.eraseColor(Color.TRANSLUCENT);
 		
 		// draw the map scale
@@ -1017,17 +1062,17 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 			return;
 		}
 		
-		//this.mapMover.pause();
+		this.mapMover.pause();
 		this.mapGenerator.pause();
 
 		//waitForZoomAnimator();
-		//waitForMapMover();
+		waitForMapMover();
 		waitForMapGenerator();
 
-		//this.mapMover.stopMove();
+		this.mapMover.stopMove();
 		this.mapGenerator.clearJobs();
 		
-		//this.mapMover.unpause();
+		this.mapMover.unpause();
 		this.mapGenerator.unpause();
 
 		//
@@ -1261,4 +1306,6 @@ public class MapView extends JPanel implements MouseListener, ActionListener {
 	public int getHeight() {
 		return Integer.parseInt(propertiesSettings.getProperty("map_size_height"));
 	}
+
+
 }
