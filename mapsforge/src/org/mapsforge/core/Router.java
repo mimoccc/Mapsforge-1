@@ -18,9 +18,9 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * This class functionality is composed of spatial indices allowing for nearest neighbor
- * queries, a routing algorithm for shortest path queries and a graph like interface alowing
- * traversal and querying satellite data of vertices and edges.
+ * This class functionality is composed of spatial indices allowing for nearest neighbor queries, a
+ * routing algorithm for shortest path queries and a graph like interface alowing traversal and querying
+ * satellite data of vertices and edges.
  */
 public interface Router {
 
@@ -53,7 +53,7 @@ public interface Router {
 	 * Nearest neighbor query for vertices.
 	 * 
 	 * @param coord
-	 *            the query parameter.
+	 *            The query parameter.
 	 * @return Returns the vertex nearest to the given coordinate.
 	 */
 	public Vertex getNearestVertex(GeoCoordinate coord);
@@ -77,10 +77,20 @@ public interface Router {
 	public Iterator<? extends Vertex> getVerticesWithinBox(Rect bbox);
 
 	/**
+	 * Nearest Neighbor query for the nearest edge.
+	 * 
+	 * @param coord
+	 *            The query parameter.
+	 * @return The nearest edge with regard to the given coordinate. If multiple edges fulfill the
+	 *         Nearest Neighbor criterion then only one is returned arbitrarily.
+	 */
+	public Edge getNearestEdge(GeoCoordinate coord);
+
+	/**
 	 * Nearest Neighbor query for Edges.
 	 * 
 	 * @param coord
-	 *            query parameter.
+	 *            The query parameter.
 	 * @return The set of nearest Edges with regard to to the given coordinate.
 	 */
 	public Edge[] getNearestEdges(GeoCoordinate coord);

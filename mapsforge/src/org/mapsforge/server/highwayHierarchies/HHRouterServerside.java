@@ -36,8 +36,8 @@ import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticEdge;
 import org.mapsforge.server.highwayHierarchies.HHStaticGraph.HHStaticVertex;
 
 /**
- * This class servers the highway hierarchies routing functionality to other packages, thus it
- * is the interface of this package.
+ * This class servers the highway hierarchies routing functionality to other packages, thus it is the
+ * interface of this package.
  */
 public class HHRouterServerside implements Router {
 
@@ -95,8 +95,8 @@ public class HHRouterServerside implements Router {
 	}
 
 	/**
-	 * Loads a Router object from the given stream which has to be connected to a highway
-	 * hierarchies binary file.
+	 * Loads a Router object from the given stream which has to be connected to a highway hierarchies
+	 * binary file.
 	 * 
 	 * @param iStream
 	 *            the stream to read from.
@@ -129,9 +129,8 @@ public class HHRouterServerside implements Router {
 	}
 
 	/**
-	 * Loads the data from a highway hierarchies database and constructs a router object. This
-	 * is much slower than reading from a flat binary file. So it might be better to do this
-	 * only once.
+	 * Loads the data from a highway hierarchies database and constructs a router object. This is much
+	 * slower than reading from a flat binary file. So it might be better to do this only once.
 	 * 
 	 * @param conn
 	 *            connection to the database to read from.
@@ -418,6 +417,11 @@ public class HHRouterServerside implements Router {
 			}
 			return e_;
 		}
+	}
+
+	@Override
+	public Edge getNearestEdge(GeoCoordinate coord) {
+		throw new UnsupportedOperationException();
 	}
 
 	// public static void main(final String[] args) throws FileNotFoundException, IOException,

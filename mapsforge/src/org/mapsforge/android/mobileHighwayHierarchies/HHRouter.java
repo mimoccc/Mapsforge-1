@@ -331,4 +331,9 @@ public class HHRouter implements Router {
 		r.setRenderParam(new GeoCoordinate(52.50818, 13.28487), 4);
 		r.addRoute(shortestPath, Color.RED);
 	}
+
+	@Override
+	public Edge getNearestEdge(GeoCoordinate coord) {
+		throw new UnsupportedOperationException();
+	}
 }
