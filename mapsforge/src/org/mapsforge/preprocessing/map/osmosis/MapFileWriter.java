@@ -772,9 +772,9 @@ class MapFileWriter {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
 
-		if (way.isPolygon()) {
-
-		}
+		// if (way.isPolygon()) {
+		//
+		// }
 
 		// if the way is a polygon, clip the way to the current tile
 		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
