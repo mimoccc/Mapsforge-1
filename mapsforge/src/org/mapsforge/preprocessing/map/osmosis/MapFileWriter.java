@@ -444,26 +444,21 @@ class MapFileWriter {
 								tileBuffer);
 					}
 
-					short cumulatedPOIs = 0;
-					short cumulatedWays = 0;
-					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
-						if (poisByZoomlevel.get(zoomlevel) != null)
-							cumulatedPOIs += poisByZoomlevel.get(zoomlevel).size();
-						if (waysByZoomlevel.get(zoomlevel) != null)
-							cumulatedWays += waysByZoomlevel.get(zoomlevel).size();
-						tileBuffer.putShort(cumulatedPOIs);
-						tileBuffer.putShort(cumulatedWays);
-					}
-
-					if (maxWaysPerTile < cumulatedWays)
-						maxWaysPerTile = cumulatedWays;
-					cumulatedNumberOfWaysInTiles += cumulatedWays;
+					int entitiesPerZoomLevelTablePosition = tileBuffer.position();
+					short[][] entitiesPerZoomLevel = new short[maxZoomCurrentInterval
+															- minZoomCurrentInterval + 1][2];
+					// skip some bytes that will later be filled with the number of POIs and ways on
+					// each zoom level number of zoom levels times 2 (for POIs and ways) times
+					// Short.SIZE/8 for the amount of bytes
+					tileBuffer.position(tileBuffer.position() + entitiesPerZoomLevel.length * 2
+							* (Short.SIZE / 8));
 
 					// clear poi buffer
 					poiBuffer.clear();
 
 					// write POIs for each zoom level beginning with lowest zoom level
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
+						int indexEntitiesPerZoomLevelTable = zoomlevel - minZoomCurrentInterval;
 						List<TDNode> pois = poisByZoomlevel.get(zoomlevel);
 						if (pois == null)
 							continue;
@@ -517,6 +512,9 @@ class MapFileWriter {
 									&& poi.getHouseNumber().length() > 0) {
 								writeUTF8(poi.getHouseNumber(), poiBuffer);
 							}
+
+							// increment count of POIs on this zoom level
+							entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][0]++;
 						}
 					} // end for loop over POIs
 
@@ -528,6 +526,7 @@ class MapFileWriter {
 					// ***************** WAYS ********************
 					// loop over all relevant zoom levels
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
+						int indexEntitiesPerZoomLevelTable = zoomlevel - minZoomCurrentInterval;
 						List<TDWay> ways = waysByZoomlevel.get(zoomlevel);
 						if (ways == null)
 							continue;
@@ -543,19 +542,13 @@ class MapFileWriter {
 						for (TDWay way : ways) {
 							wayBuffer.clear();
 
-							// TODO Polygons that become invalid by pixel filtering should
-							// not be included in the map file. Currently we write the number
-							// of ways of a given tile before we know that a way may become
-							// invalid. We need to track the number of ways we have actually
-							// written and reinsert this information afterwards
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
 									maxZoomCurrentInterval, baseZoomCurrentInterval,
 									currentTileCoordinate, false);
 
 							if (wayNodePreprocessingResult == null) {
-								// length of way is zero
-								tileBuffer.put(Serializer.getVariableByteUnsigned(0));
+								// exclude this way
 								continue;
 							}
 							if (debugStrings) {
@@ -671,50 +664,71 @@ class MapFileWriter {
 									.position()));
 							// write way data to tile buffer
 							tileBuffer.put(wayBuffer.array(), 0, wayBuffer.position());
+
+							// increment count of ways on this zoom level
+							entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][1]++;
 						}
 					} // end for loop over ways
+
+					int tileSize = tileBuffer.position();
+
+					// write cumulated number of POIs and ways for this tile on each zoom level
+					tileBuffer.position(entitiesPerZoomLevelTablePosition);
+					short[] cumulatedCounts = new short[2];
+					for (short[] entityCount : entitiesPerZoomLevel) {
+						cumulatedCounts[0] += entityCount[0];
+						cumulatedCounts[1] += entityCount[1];
+						tileBuffer.putShort(cumulatedCounts[0]);
+						tileBuffer.putShort(cumulatedCounts[1]);
+					}
+
+					if (maxWaysPerTile < cumulatedCounts[1])
+						maxWaysPerTile = cumulatedCounts[1];
+					cumulatedNumberOfWaysInTiles += cumulatedCounts[1];
+
+					tileBuffer.position(tileSize);
+
+					// compress tile using Java Deflater
+					// deflater.reset();
+					// deflater.setInput(tileBuffer.array(), 0, tileBuffer.position());
+					// deflater.finish();
+					// byte[] compressedTile = new byte[tileBuffer.position()];
+					// int compressedTileSize = deflater.deflate(compressedTile);
+
+					currentSubfileOffset += tileBuffer.position();
+					// currentSubfileOffset += compressedTileSize;
+
+					// accounting
+					if (maxTileSize < tileSize)
+						maxTileSize = tileSize;
+					if (tileSize > 0)
+						cumulatedTileSizeOfNonEmptyTiles += tileSize;
+					// if (maxTileSize < compressedTileSize)
+					// maxTileSize = compressedTileSize;
+					// if (compressedTileSize > 0)
+					// cumulatedTileSizeOfNonEmptyTiles += compressedTileSize;
+
+					// add tile to tiles buffer
+					compressedTilesBuffer.put(tileBuffer.array(), 0, tileSize);
+					// compressedTilesBuffer.put(compressedTile, 0, compressedTileSize);
+
+					// if necessary, allocate new buffer
+					if (compressedTilesBuffer.remaining() < MIN_TILE_BUFFER_SIZE) {
+						randomAccessFile.write(compressedTilesBuffer.array(), 0,
+								compressedTilesBuffer.position());
+						compressedTilesBuffer.clear();
+					}
+
+					tilesProcessed++;
+					if (tilesProcessed % amountOfTilesInPercentStep == 0) {
+						LOGGER.info("written " + (tilesProcessed / amountOfTilesInPercentStep)
+								* PROGRESS_PERCENT_STEP
+								+ "% of file");
+					}
+
 				} // end if clause checking if tile is empty or not
 				else {
 					emptyTiles++;
-				}
-				int tileSize = tileBuffer.position();
-
-				// compress tile using Java Deflater
-				// deflater.reset();
-				// deflater.setInput(tileBuffer.array(), 0, tileBuffer.position());
-				// deflater.finish();
-				// byte[] compressedTile = new byte[tileBuffer.position()];
-				// int compressedTileSize = deflater.deflate(compressedTile);
-
-				currentSubfileOffset += tileBuffer.position();
-				// currentSubfileOffset += compressedTileSize;
-
-				// accounting
-				if (maxTileSize < tileSize)
-					maxTileSize = tileSize;
-				if (tileSize > 0)
-					cumulatedTileSizeOfNonEmptyTiles += tileSize;
-				// if (maxTileSize < compressedTileSize)
-				// maxTileSize = compressedTileSize;
-				// if (compressedTileSize > 0)
-				// cumulatedTileSizeOfNonEmptyTiles += compressedTileSize;
-
-				// add tile to tiles buffer
-				compressedTilesBuffer.put(tileBuffer.array(), 0, tileSize);
-				// compressedTilesBuffer.put(compressedTile, 0, compressedTileSize);
-
-				// if necessary, allocate new buffer
-				if (compressedTilesBuffer.remaining() < MIN_TILE_BUFFER_SIZE) {
-					randomAccessFile.write(compressedTilesBuffer.array(), 0,
-							compressedTilesBuffer.position());
-					compressedTilesBuffer.clear();
-				}
-
-				tilesProcessed++;
-				if (tilesProcessed % amountOfTilesInPercentStep == 0) {
-					LOGGER.info("written " + (tilesProcessed / amountOfTilesInPercentStep)
-							* PROGRESS_PERCENT_STEP
-							+ "% of file");
 				}
 			} // end for loop over tile columns
 		} // /end for loop over tile rows
@@ -757,6 +771,10 @@ class MapFileWriter {
 			TileCoordinate tile, boolean skipInvalidPolygons) {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
+
+		if (way.isPolygon()) {
+
+		}
 
 		// if the way is a polygon, clip the way to the current tile
 		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
