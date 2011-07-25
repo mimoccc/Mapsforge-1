@@ -142,7 +142,7 @@ public class TileRAMCache {
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}*/
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
 				ImageIO.write( bitmap.getImage(), "jpg", baos );
 				baos.flush();
@@ -156,21 +156,12 @@ public class TileRAMCache {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			
-			/*PipedOutputStream outStream = new PipedOutputStream();
-			try {
-				ImageIO.write(bitmap.getImage(), "tile", outStream);
-				PipedInputStream inStream = new PipedInputStream(outStream);
-				this.tempBitmap = this.bitmapPool.removeFirst();
-				this.tempBitmap = new Bitmap(ImageIO.read(inStream));
-				synchronized(this) {
-					this.map.put(mapGeneratorJob, this.tempBitmap);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}*/
+			
+			this.tempBitmap = bitmap;
+			synchronized(this) {
+				this.map.put(mapGeneratorJob, this.tempBitmap);
+			}
 		}
 	}
 }

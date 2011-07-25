@@ -183,6 +183,9 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	
 	private Properties propertiesSettings;
 	
+	int x;
+	int y;
+	
 	/**
 	 * Constructor
 	 */
@@ -194,6 +197,11 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Could not read properties files!");
 		}
+		
+		x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
+		y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
+		this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
+		this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
 		
 		//ID and Activity
 		this.mapViewId = mapViewId;
@@ -241,8 +249,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	}
 	
 	public void paint(Graphics g) {
-		int x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
-		int y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.drawImage(mapViewCanvas.mBufferedImage, x, y, null);
 	}
@@ -426,8 +432,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
 							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-							this.tileBitmap = new Bitmap(this.tileBuffer);
-							System.out.println(this.currentJob + " " + this.tileBitmap);
+							this.tileBitmap = new Bitmap(this.tileBuffer, getWidth(), getHeight());
 							putTileOnBitmap(this.currentJob, this.tileBitmap);
 							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
 
@@ -451,7 +456,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		if (calledByUiThread) {
 			invalidate();
 		} else {
-			invalidate();
+			postInvalidate();
 		}
 
 		// notify the MapGenerator to process the job list
@@ -464,8 +469,12 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		}
 	}
 	
-	void postInvalidate() {
-		invalidate();
+	public void invalidate() {
+		repaint();
+	}
+	
+	public void postInvalidate() {
+		repaint();
 	}
 	
 	/**
@@ -497,23 +506,19 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 
 		if (!matrixIsIdentity()) {
 			//TODO change the current MapView bitmap
-			if(this.mapViewBitmap2 == null)
-				this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
-			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
-			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
+			//this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+			//this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
 
 			// draw the previous MapView bitmap on the current MapView bitmap
 			synchronized (this.matrix) {
-				if(this.mapViewBitmap1 == null)
-					this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
-				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-				this.matrix.reset();
+				//this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+				//this.matrix.reset();
 			}
 
 			// swap the two MapView bitmaps
-			this.mapViewBitmapSwap = this.mapViewBitmap1;
-			this.mapViewBitmap1 = this.mapViewBitmap2;
-			this.mapViewBitmap2 = this.mapViewBitmapSwap;
+			//this.mapViewBitmapSwap = this.mapViewBitmap1;
+			//this.mapViewBitmap1 = this.mapViewBitmap2;
+			//this.mapViewBitmap2 = this.mapViewBitmapSwap;
 		}
 
 		// draw the tile bitmap at the correct position

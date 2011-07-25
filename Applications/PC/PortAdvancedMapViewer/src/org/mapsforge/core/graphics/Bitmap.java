@@ -22,13 +22,13 @@ public class Bitmap {
     int mImageWidth;
     int mImageHeight;
     
-    public Bitmap(ByteBuffer buffer) {
+    public Bitmap(ByteBuffer buffer, int width, int height) {
     	byte[] inArray = buffer.array();
     	InputStream in = new ByteArrayInputStream(inArray);
     	try {
 			mImage = ImageIO.read(in);
-			mImageWidth = mImage.getWidth();
-			mImageHeight = mImage.getHeight();
+			mImageWidth = width;
+			mImageHeight = height;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

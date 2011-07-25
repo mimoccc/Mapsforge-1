@@ -60,13 +60,15 @@ class MapMover extends Thread {
 			this.timeCurrent = SystemClock.uptimeMillis();
 			this.timeElapsed = this.timeCurrent - this.timePrevious;
 			this.timePrevious = this.timeCurrent;
-
+			this.mapView.x += this.moveX;
+			this.mapView.y += this.moveY;
 			// add the movement to the transformation matrices
-			this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX, this.timeElapsed
-					* this.moveY);
-
+			//this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX, this.timeElapsed
+			//		* this.moveY);
+			this.mapView.matrixPostTranslate(this.moveX, this.moveY);
 			// move the map and the overlays
-			this.mapView.moveMap(this.timeElapsed * this.moveX, this.timeElapsed * this.moveY);
+			//this.mapView.moveMap(this.timeElapsed * this.moveX, this.timeElapsed * this.moveY);
+			this.mapView.moveMap(this.moveX, this.moveY);
 
 			this.mapView.handleTiles(false);
 			synchronized (this) {
@@ -101,7 +103,8 @@ class MapMover extends Thread {
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = -MOVE_SPEED * this.mapView.getMoveSpeed();
+			//this.moveY = -MOVE_SPEED * this.mapView.getMoveSpeed();
+			this.moveY = -1;
 			this.timePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				notify();
@@ -118,7 +121,8 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = MOVE_SPEED * this.mapView.getMoveSpeed();
+			//this.moveX = MOVE_SPEED * this.mapView.getMoveSpeed();
+			this.moveX = 1;
 			this.timePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				notify();
@@ -135,7 +139,8 @@ class MapMover extends Thread {
 			this.moveX = 0;
 		} else if (this.moveX == 0) {
 			// start moving the map
-			this.moveX = -MOVE_SPEED * this.mapView.getMoveSpeed();
+			//this.moveX = -MOVE_SPEED * this.mapView.getMoveSpeed();
+			this.moveX = -1;
 			this.timePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				notify();
@@ -152,7 +157,8 @@ class MapMover extends Thread {
 			this.moveY = 0;
 		} else if (this.moveY == 0) {
 			// start moving the map
-			this.moveY = MOVE_SPEED * this.mapView.getMoveSpeed();
+			//this.moveY = MOVE_SPEED * this.mapView.getMoveSpeed();
+			this.moveY = 1;
 			this.timePrevious = SystemClock.uptimeMillis();
 			synchronized (this) {
 				notify();
