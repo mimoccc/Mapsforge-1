@@ -8,20 +8,32 @@ import javax.swing.filechooser.FileFilter;
 import java.util.Comparator;
 
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.mapsforge.pc.maps.MapView;
 
+/**
+ * A FilePicker displays the contents of directories. The user can navigate within the file
+ * system and select a single file whose path is then returned. 
+ * The ordering of directory contents can be specified via {@link #setFileComparator(Comparator)}.
+ * By default subfolders and files are grouped and each group is ordered alphabetically.
+ * <p>
+ * A {@link FileFilter} can be activated via {@link #setFileDisplayFilter(FileFilter)} to
+ * restrict the displayed files and folders. By default all files and folders are visible.
+ * <p>
+ * Another <code>FileFilter</code> can be applied via {@link #setFileSelectFilter(FileFilter)}
+ * to check if a selected file is valid before its path is returned. By default all files are
+ * considered as valid and can be selected by the user.
+ */
 public class FilePickerPC extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = -6634123407876979284L;
 
-	Comparator<File> fileComparator = getDefaultFileComparator();
-	FileFilter fileDisplayFilter;
-	FileFilter fileSelectFilter;
-	
-	String openedFile = new String();
+	private Comparator<File> fileComparator = getDefaultFileComparator();
+	private FileFilter fileDisplayFilter;
+	private FileFilter fileSelectFilter;
+	private JFileChooser fileChooser;	
+	private String openedFile = new String();
 
 	/**
 	 * Sets the file comparator which is used to order the contents of all directories before
@@ -77,51 +89,17 @@ public class FilePickerPC extends JPanel implements ActionListener {
 		};
 	}
 	
-	JFileChooser fileChooser;
-
+	/** Constructor */
 	public FilePickerPC() {
 		super(new BorderLayout());
 		fileChooser = new JFileChooser(".");
-		
-		
-
-		//TODO start the FilePicker
-
-		/*SwingUtilities.invokeLater(new Runnable() {
-			/**
-			 * Create FileChooser
-			 * @param frame
-			 
-			public void createFileChooser(JFrame frame) {
-				frame.add(this);
-
-		        //Display the window.
-		        //frame.pack();
-		        frame.setVisible(true);
-			}
-			
-			public void run() {
-	            //Turn off metal's use of bold fonts
-	            UIManager.put("swing.boldMetal", Boolean.FALSE); 
-	            this.createFileChooser(frame);
-	        }
-		});
-		
-		fileChooser.addChoosableFileFilter(this.fileDisplayFilter);
-		int returnVal = fileChooser.showOpenDialog(this);
-		if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            //This is where a real application would open the file.
-            System.out.println("Opening: " + file.getName() + ".");
-            if(file.getName().endsWith(".map")) {
-            	openedFile = file.getName();
-            }
-        } else {
-        	System.out.println("Open command cancelled by user.");
-        }*/
 	}
 	
+	/**
+	 * Configuration of filters.
+	 */
 	public void configure() {
+		//TODO: Configuration (if necessary)
 		// set the FileDisplayFilter
 		this.setFileDisplayFilter(new FileFilter() {
 			@Override
@@ -167,14 +145,10 @@ public class FilePickerPC extends JPanel implements ActionListener {
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            //This is where a real application would open the file.
-            System.out.println("Opening: " + file.getName() + ".");
-            //TODO PATH
-            return file.getName();
-        } else {
-        	System.out.println("Open command cancelled by user.");
-        	return "bremen-0.2.2.map";
-        }
+            return file.getAbsolutePath();
+        } 
+        
+        return null;
 	}
 	
 	@Override

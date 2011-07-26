@@ -5,15 +5,16 @@ import java.awt.event.ActionListener;
 import java.util.Properties;
 
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.SwingConstants;
 
+/**
+ * Preferences menu for the application.
+ */
 public class PreferencesMenu extends JMenu implements ActionListener {
 
+	private static final long serialVersionUID = 1L;
 	private Properties propertiesStrings, propertiesSettings;
 	private AdvancedMapViewerPC parentFrame;
 	
@@ -24,7 +25,8 @@ public class PreferencesMenu extends JMenu implements ActionListener {
 	
 	
 	/** Constructor 
-	 * @param parentFrame */
+	 * @param p parentFrame 
+	 * @param n name*/
 	public PreferencesMenu(AdvancedMapViewerPC p, String n) {
 		
 		super(n);
