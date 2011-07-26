@@ -189,8 +189,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	private Properties propertiesSettings;
 	
 	protected final Point point;
-	protected Point positionAfterDraw;
-	protected Point positionBeforeDraw;
 	
 	/**
 	 * Constructor
@@ -206,8 +204,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		
 		//Point
 		this.point = new Point();
-		this.positionAfterDraw = new Point();
-		this.positionBeforeDraw = new Point();
 		
 		this.point.x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
 		this.point.y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
@@ -255,7 +251,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		// set the debug settings
 		setFpsCounter(false);
 		setTileFrames(false);
-		setTileCoordinates(true);
+		setTileCoordinates(false);
 		setWaterTiles(false);
 	}
 	
@@ -268,7 +264,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	}
 	
 	public void paintOffScreen(Graphics2D g) {
-		g.drawImage(this.mapViewCanvas.mBufferedImage, this.point.x, this.point.y, null);
+		g.drawImage(this.mapViewCanvas.mBufferedImage, 0, 0, null);
 	}
 	
 	/**
@@ -427,8 +423,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 					this.zoomLevel)
 					- (getHeight() >> 1);
 
-			//x = (int) (this.mapViewPixelX - 1126062);
-			//y = (int) (this.mapViewPixelY - 687470);
 			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX,
 					this.zoomLevel);
 			this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY,
@@ -437,14 +431,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 					+ getWidth(), this.zoomLevel);
 			this.mapViewTileY2 = MercatorProjection.pixelYToTileY(this.mapViewPixelY
 					+ getHeight(), this.zoomLevel);
-			/*System.out.println("Map View Tile X1 = " + this.mapViewTileX1);
-			System.out.println("Map View Tile X2 = " + this.mapViewTileX2);
-			System.out.println("Map View Tile Y1 = " + this.mapViewTileY1);
-			System.out.println("Map View Tile Y2 = " + this.mapViewTileY2);
-			System.out.println("");
-			System.out.println("Map View Pixel X = " + this.mapViewPixelX);
-			System.out.println("Map View Pixel Y = " + this.mapViewPixelY);
-			System.out.println("-----------------------------------------");*/
 			// go through all tiles that intersect the screen rectangle
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
@@ -540,19 +526,19 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 
 		if (!matrixIsIdentity()) {
 			//TODO change the current MapView bitmap
-			//this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
-			//this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
+			this.mapViewBitmap2.eraseColor(MAP_VIEW_BACKGROUND);
+			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
 
 			// draw the previous MapView bitmap on the current MapView bitmap
 			synchronized (this.matrix) {
-				//this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-				//this.matrix.reset();
+				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+				this.matrix.reset();
 			}
 
 			// swap the two MapView bitmaps
-			//this.mapViewBitmapSwap = this.mapViewBitmap1;
-			//this.mapViewBitmap1 = this.mapViewBitmap2;
-			//this.mapViewBitmap2 = this.mapViewBitmapSwap;
+			this.mapViewBitmapSwap = this.mapViewBitmap1;
+			this.mapViewBitmap1 = this.mapViewBitmap2;
+			this.mapViewBitmap2 = this.mapViewBitmapSwap;
 		}
 
 		// draw the tile bitmap at the correct position

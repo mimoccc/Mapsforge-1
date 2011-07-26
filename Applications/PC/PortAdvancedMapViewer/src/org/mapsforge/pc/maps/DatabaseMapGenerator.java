@@ -1764,13 +1764,13 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 			return false;
 		}
 
-		drawWayNames(this.wayNames);
+		//drawWayNames(this.wayNames);
 		if (isInterrupted()) {
 			return false;
 		}
 
-		drawNodes(this.nodes);
-		drawNodes(this.areaLabels);
+		//drawNodes(this.nodes);
+		//drawNodes(this.areaLabels);
 
 		if (mapGeneratorJob.drawTileFrames) {
 			drawTileFrame();
