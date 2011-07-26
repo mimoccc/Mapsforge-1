@@ -21,9 +21,8 @@ import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.Canvas;
 import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
+import org.mapsforge.core.graphics.Point;
 import org.mapsforge.core.widget.ZoomControls;
-
-import android.graphics.Point;
 
 public class MapView extends JPanel implements MouseListener, KeyListener {
 
