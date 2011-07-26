@@ -84,7 +84,6 @@ abstract class MapGenerator extends Thread {
 				}
 				this.currentMapGeneratorJob = this.jobQueue1.poll();
 			}
-
 			// check if the current job can be skipped or must be processed
 			if (!this.tileRAMCache.containsKey(this.currentMapGeneratorJob)
 					&& !this.tileMemoryCardCache.containsKey(this.currentMapGeneratorJob)) {

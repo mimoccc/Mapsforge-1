@@ -70,6 +70,9 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		} else if (keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
 			//System.out.println("Down");
 			this.mapMover.moveDown();
+		} else if(keyCode.getKeyCode() == KeyEvent.VK_R) {
+			System.out.println("REPAINT");
+			repaint();
 		}
 	}
 	
@@ -243,7 +246,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		
 		// set the debug settings
 		setFpsCounter(false);
-		setTileFrames(false);
+		setTileFrames(true);
 		setTileCoordinates(false);
 		setWaterTiles(false);
 	}
@@ -409,6 +412,8 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 					this.zoomLevel)
 					- (getHeight() >> 1);
 
+			//x = (int) (this.mapViewPixelX - 1126062);
+			//y = (int) (this.mapViewPixelY - 687470);
 			this.mapViewTileX1 = MercatorProjection.pixelXToTileX(this.mapViewPixelX,
 					this.zoomLevel);
 			this.mapViewTileY1 = MercatorProjection.pixelYToTileY(this.mapViewPixelY,
@@ -417,7 +422,14 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 					+ getWidth(), this.zoomLevel);
 			this.mapViewTileY2 = MercatorProjection.pixelYToTileY(this.mapViewPixelY
 					+ getHeight(), this.zoomLevel);
-
+			/*System.out.println("Map View Tile X1 = " + this.mapViewTileX1);
+			System.out.println("Map View Tile X2 = " + this.mapViewTileX2);
+			System.out.println("Map View Tile Y1 = " + this.mapViewTileY1);
+			System.out.println("Map View Tile Y2 = " + this.mapViewTileY2);
+			System.out.println("");
+			System.out.println("Map View Pixel X = " + this.mapViewPixelX);
+			System.out.println("Map View Pixel Y = " + this.mapViewPixelY);
+			System.out.println("-----------------------------------------");*/
 			// go through all tiles that intersect the screen rectangle
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
@@ -427,21 +439,25 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 							this.drawTileCoordinates, this.highlightWaterTiles);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
-						putTileOnBitmap(this.currentJob, this.tileRAMCache.get(this.currentJob));
+						//System.out.println("bitmap cache hit");
+						//putTileOnBitmap(this.currentJob, this.tileRAMCache.get(this.currentJob));
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
 							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
+							//System.out.println("memory card cache hit");
 							this.tileBitmap = new Bitmap(this.tileBuffer, getWidth(), getHeight());
 							putTileOnBitmap(this.currentJob, this.tileBitmap);
 							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
 
 						} else {
 							// the image data could not be read from the cache
+							//System.out.println("could not be read from the cache");
 							this.mapGenerator.addJob(this.currentJob);
 						}
 					} else {
 						// cache miss
+						//System.out.println("cache miss");
 						this.mapGenerator.addJob(this.currentJob);
 					}
 				}
@@ -522,6 +538,10 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		}
 
 		// draw the tile bitmap at the correct position
+		//TODO
+		//System.out.println("pixelX - this.mapViewPixelX = " + (x + mapGeneratorJob.tile.pixelX - this.mapViewPixelX));
+		//System.out.println("pixelY - this.mapViewPixelY = " + (y + mapGeneratorJob.tile.pixelY - this.mapViewPixelY));
+		//System.out.println("-------------------");
 		this.mapViewCanvas.drawBitmap(bitmap,
 				(float) (mapGeneratorJob.tile.pixelX - this.mapViewPixelX),
 				(float) (mapGeneratorJob.tile.pixelY - this.mapViewPixelY), null);

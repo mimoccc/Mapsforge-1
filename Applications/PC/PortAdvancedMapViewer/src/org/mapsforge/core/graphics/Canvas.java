@@ -209,7 +209,7 @@ public class Canvas {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         Composite c = null;
-
+        
         if (paint != null) {
             if (paint.isFilterBitmap()) {
                 g = (Graphics2D)g.create();
