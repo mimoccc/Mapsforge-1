@@ -14,9 +14,7 @@
  */
 package org.mapsforge.pc.maps;
 
-import android.view.KeyEvent;
 //import org.mapsforge.core.view.KeyEvent;
-import android.view.View;
 //import org.mapsforge.core.view.View;
 
 /**
@@ -24,7 +22,7 @@ import android.view.View;
  * MapController is assigned to a single MapView instance. To retrieve a MapController for a given
  * MapView, call the {@link MapView#getController()} method.
  */
-public final class MapController implements android.view.View.OnKeyListener {
+public final class MapController {
 	private final MapView mapView;
 
 	/**
@@ -37,7 +35,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 		this.mapView = mapView;
 	}
 
-	@Override
+	/*@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 		if (event.getAction() == KeyEvent.ACTION_DOWN) {
 			// forward the event to the MapView
@@ -47,7 +45,7 @@ public final class MapController implements android.view.View.OnKeyListener {
 			//return this.mapView.onKeyUp(keyCode, event);
 		}
 		return false;
-	}
+	}*/
 
 	/**
 	 * Sets the center of the MapView without an animation to the given point.

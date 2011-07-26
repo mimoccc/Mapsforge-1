@@ -29,7 +29,7 @@ public class Bitmap {
 			mImage = ImageIO.read(in);
 			mImageWidth = width;
 			mImageHeight = height;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
     }
@@ -39,7 +39,12 @@ public class Bitmap {
         mImageWidth = mImage.getWidth();
         mImageHeight = mImage.getHeight();
 	}
- 
+    
+    public Bitmap() {
+    	mImage = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
+    	mImageWidth = 256;
+    	mImageHeight = 256;
+    }
 
 	/**
      * Free up the memory associated with this bitmap's pixels, and mark the

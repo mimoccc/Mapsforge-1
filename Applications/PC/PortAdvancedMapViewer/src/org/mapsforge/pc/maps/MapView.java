@@ -80,9 +80,9 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	public void keyTyped(KeyEvent arg0) { }
 	
 	//Constant
-	static final short MEMORY_CARD_CACHE_SIZE_MAX = 500;
+	static final short MEMORY_CARD_CACHE_SIZE_MAX = 0;
 	static final int MOVE_SPEED_MAX = 30;
-	private static final int TILE_RAM_CACHE_SIZE = 16;
+	private static final int TILE_RAM_CACHE_SIZE = 32;
 	private static final Color MAP_VIEW_BACKGROUND = new Color(238, 238, 238);
 	static final double LATITUDE_MAX = 85.05113;
 	static final double LATITUDE_MIN = -85.05113;
@@ -246,8 +246,8 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		
 		// set the debug settings
 		setFpsCounter(false);
-		setTileFrames(true);
-		setTileCoordinates(false);
+		setTileFrames(false);
+		setTileCoordinates(true);
 		setWaterTiles(false);
 	}
 	
@@ -438,26 +438,29 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 							this.mapFile, this.textScale, this.drawTileFrames,
 							this.drawTileCoordinates, this.highlightWaterTiles);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
-						// bitmap cache hit
-						//System.out.println("bitmap cache hit");
-						//putTileOnBitmap(this.currentJob, this.tileRAMCache.get(this.currentJob));
+						//bitmap cache hit
+						System.out.println("bitmap cache hit");
+						putTileOnBitmap(this.currentJob, this.tileRAMCache.get(this.currentJob));
 					} else if (this.tileMemoryCardCache.containsKey(this.currentJob)) {
 						// memory card cache hit
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
 							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-							//System.out.println("memory card cache hit");
+							System.out.println("memory card cache hit");
 							this.tileBitmap = new Bitmap(this.tileBuffer, getWidth(), getHeight());
+							//this.tileBitmap = new Bitmap();
+							//System.out.println(this.tileBitmap);
+							//this.tileBitmap.eraseColor(Color.BLUE);
 							putTileOnBitmap(this.currentJob, this.tileBitmap);
 							this.tileRAMCache.put(this.currentJob, this.tileBitmap);
 
 						} else {
 							// the image data could not be read from the cache
-							//System.out.println("could not be read from the cache");
+							System.out.println("could not be read from the cache");
 							this.mapGenerator.addJob(this.currentJob);
 						}
 					} else {
 						// cache miss
-						//System.out.println("cache miss");
+						System.out.println("cache miss");
 						this.mapGenerator.addJob(this.currentJob);
 					}
 				}

@@ -33,8 +33,8 @@ public class Canvas {
 		} catch (IOException e) {
 			//JOptionPane.showMessageDialog(this, "Could not read properties files!");
 		}
-		int width = Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
-		int height = Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
+		int width = 2400;//Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
+		int height = 1800;//Integer.parseInt(propertiesSettings.getProperty("map_size_width"));
     	mBufferedImage = new BufferedImage(width , height, BufferedImage.TYPE_INT_RGB);
     }
 
