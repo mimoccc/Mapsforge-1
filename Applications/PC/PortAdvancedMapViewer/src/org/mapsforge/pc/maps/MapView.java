@@ -7,6 +7,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,6 +22,8 @@ import org.mapsforge.core.graphics.Canvas;
 import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.widget.ZoomControls;
+
+import android.graphics.Point;
 
 public class MapView extends JPanel implements MouseListener, KeyListener {
 
@@ -186,8 +189,9 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	
 	private Properties propertiesSettings;
 	
-	int x;
-	int y;
+	protected final Point point;
+	protected Point positionAfterDraw;
+	protected Point positionBeforeDraw;
 	
 	/**
 	 * Constructor
@@ -201,8 +205,13 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 			JOptionPane.showMessageDialog(this, "Could not read properties files!");
 		}
 		
-		x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
-		y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
+		//Point
+		this.point = new Point();
+		this.positionAfterDraw = new Point();
+		this.positionBeforeDraw = new Point();
+		
+		this.point.x = Integer.parseInt(propertiesSettings.getProperty("map_position_x"));
+		this.point.y = Integer.parseInt(propertiesSettings.getProperty("map_position_y"));
 		this.mapViewBitmap1 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
 		this.mapViewBitmap2 = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.RGB_565);
 		
@@ -252,8 +261,15 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	}
 	
 	public void paint(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.drawImage(mapViewCanvas.mBufferedImage, x, y, null);
+		BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2d = (Graphics2D) image.getGraphics();
+		g2d.setBackground(MAP_VIEW_BACKGROUND);
+		paintOffScreen(g2d);
+		g.drawImage(image, 0, 0, null);
+	}
+	
+	public void paintOffScreen(Graphics2D g) {
+		g.drawImage(this.mapViewCanvas.mBufferedImage, this.point.x, this.point.y, null);
 	}
 	
 	/**

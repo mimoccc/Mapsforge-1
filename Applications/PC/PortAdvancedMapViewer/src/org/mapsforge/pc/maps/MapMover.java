@@ -23,7 +23,7 @@ import org.mapsforge.core.os.SystemClock;
  */
 class MapMover extends Thread {
 	private static final int FRAME_LENGTH = 15;
-	private static final float MOVE_SPEED = 0.2f;
+	//private static final float MOVE_SPEED = 0.2f;
 	private static final String THREAD_NAME = "MapMover";
 
 	private MapView mapView;
@@ -32,7 +32,7 @@ class MapMover extends Thread {
 	private boolean pause;
 	private boolean ready;
 	private long timeCurrent;
-	private long timeElapsed;
+	//private long timeElapsed;
 	private long timePrevious;
 
 	@Override
@@ -58,10 +58,10 @@ class MapMover extends Thread {
 			}
 			// calculate the time difference to previous call
 			this.timeCurrent = SystemClock.uptimeMillis();
-			this.timeElapsed = this.timeCurrent - this.timePrevious;
+			//this.timeElapsed = this.timeCurrent - this.timePrevious;
 			this.timePrevious = this.timeCurrent;
-			this.mapView.x += this.moveX;
-			this.mapView.y += this.moveY;
+			this.mapView.point.x += this.moveX;
+			this.mapView.point.y += this.moveY;
 			// add the movement to the transformation matrices
 			//this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX, this.timeElapsed
 			//		* this.moveY);
