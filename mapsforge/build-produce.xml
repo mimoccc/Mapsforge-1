@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="mapsforge-produce">
+	<property name="mapsforge.version" value="0.2.4" />
 	
 	<!-- JVM args -->
 	<property name="xmx" value="4000M"/>
@@ -113,7 +114,7 @@
          	<arg value="${data.binary}/${basename}.mobileHH"/>
 			<arg value="--format=mobile"/>
 			<classpath>
-				<pathelement location="dist/mapsforge-offboard-routing-0.2.2.jar"/>
+				<pathelement location="dist/mapsforge-offboard-routing-${mapsforge.version}.jar"/>
 				<fileset dir="lib">
 					<include name="**/*.jar"/>
        		    </fileset>
@@ -128,7 +129,7 @@
          	<arg value="${data.binary}/${basename}.hh"/>
 	    	<arg value="--format=server"/>
 	    		<classpath>
-				<pathelement location="dist/mapsforge-offboard-routing-0.2.2.jar"/>
+				<pathelement location="dist/mapsforge-offboard-routing-${mapsforge.version}.jar"/>
 				<fileset dir="lib">
 					<include name="**/*.jar"/>
        		    </fileset>

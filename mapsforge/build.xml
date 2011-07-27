@@ -468,7 +468,7 @@ purpose.
 			<classpath>
 				<pathelement location="${mapsforge.bin}" />
 				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar" />
-				<pathelement location="${mapsforge.lib}/trove-3.0.0a5.jar" />
+				<pathelement location="${mapsforge.lib}/trove-3.0.0rc1.jar" />
 			</classpath>
 		</java>
 		<java fork="true"
@@ -477,7 +477,7 @@ purpose.
 			<classpath>
 				<pathelement location="${mapsforge.bin}" />
 				<pathelement location="${mapsforge.lib}/postgresql-8.4-701.jdbc4.jar" />
-				<pathelement location="${mapsforge.lib}/trove-3.0.0a5.jar" />
+				<pathelement location="${mapsforge.lib}/trove-3.0.0rc1.jar" />
 			</classpath>
 		</java>
 	</target>
