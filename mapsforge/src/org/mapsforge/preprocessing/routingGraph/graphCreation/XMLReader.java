@@ -198,16 +198,17 @@ public class XMLReader {
 									nodeTagsSet.add(getKeyValue(tmpnode3));
 							}
 
-						/*
-						 * stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
-						 * "stopWayTags"); if (stopTagChildNode.hasChildNodes())
-						 * 
-						 * // Traverse Children of Child(2) stopWayTags: tags for (int j = 0; j <
-						 * stopTagChildNode.getChildNodes() .getLength(); j++) { Node tmpnode3 =
-						 * stopTagChildNode.getChildNodes().item(j); if
-						 * (tmpnode3.getNodeName().equals("tag")) wayTagsSet.add(getKeyValue(tmpnode3));
-						 * }
-						 */
+						/*stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
+								"stopWayTags");
+						if (stopTagChildNode.hasChildNodes())
+
+							// Traverse Children of Child(2) stopWayTags: tags
+							for (int j = 0; j < stopTagChildNode.getChildNodes()
+									.getLength(); j++) {
+								Node tmpnode3 = stopTagChildNode.getChildNodes().item(j);
+								if (tmpnode3.getNodeName().equals("tag"))
+									wayTagsSet.add(getKeyValue(tmpnode3));
+							}*/
 
 						traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
 								"speedreductions");
