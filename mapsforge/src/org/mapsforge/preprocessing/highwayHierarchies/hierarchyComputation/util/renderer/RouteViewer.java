@@ -143,7 +143,7 @@ public class RouteViewer {
 			// Paint the filtered image in place of the component
 			g.drawImage(filteredImage, 0, 0, null);
 			overlay.paint((Graphics2D) g, mapKit.getMainMap(), getWidth(), getHeight());
-			System.out.println("test");
+			// System.out.println("test");
 		}
 
 	}
@@ -197,7 +197,10 @@ public class RouteViewer {
 
 				@Override
 				public void mouseReleased(MouseEvent e) {
-					if (e.isPopupTrigger()) {
+					// isPopUpTrigger doesn't work on the Linux platform that's the reason for this
+					// complex if clause.
+					if ((System.getProperty("os.name").toLowerCase().startsWith("linux") && e
+							.getButton() == MouseEvent.BUTTON3) || e.isPopupTrigger()) {
 						show(e.getComponent(), e.getX(), e.getY());
 						position = e.getPoint();
 					}
@@ -357,9 +360,8 @@ public class RouteViewer {
 	public static void main(String[] args) {
 		try {
 			Router router = new HHRouter(new File("data/binary/berlin.mobileHH"), 1024 * 1024 * 100);
-			RouteViewer rv = new RouteViewer(router);
+			new RouteViewer(router);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
