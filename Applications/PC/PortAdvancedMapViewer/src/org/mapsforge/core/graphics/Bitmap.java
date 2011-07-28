@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
@@ -23,10 +22,12 @@ public class Bitmap {
     int mImageHeight;
     
     public Bitmap(ByteBuffer buffer, int width, int height) {
+		System.out.println(buffer);
     	byte[] inArray = buffer.array();
-    	InputStream in = new ByteArrayInputStream(inArray);
+    	ByteArrayInputStream in = new ByteArrayInputStream(inArray);
     	try {
 			mImage = ImageIO.read(in);
+			System.out.println(mImage);
 			mImageWidth = width;
 			mImageHeight = height;
 		} catch (Exception e) {
@@ -39,12 +40,6 @@ public class Bitmap {
         mImageWidth = mImage.getWidth();
         mImageHeight = mImage.getHeight();
 	}
-    
-    public Bitmap() {
-    	mImage = new BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB);
-    	mImageWidth = 256;
-    	mImageHeight = 256;
-    }
 
 	/**
      * Free up the memory associated with this bitmap's pixels, and mark the

@@ -14,6 +14,7 @@
  */
 package org.mapsforge.pc.maps;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -142,7 +143,7 @@ public class TileRAMCache {
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}*/
-			/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
 				ImageIO.write( bitmap.getImage(), "jpg", baos );
 				baos.flush();
@@ -156,7 +157,7 @@ public class TileRAMCache {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}*/
+			}
 			
 			this.tempBitmap = bitmap;
 			synchronized(this) {

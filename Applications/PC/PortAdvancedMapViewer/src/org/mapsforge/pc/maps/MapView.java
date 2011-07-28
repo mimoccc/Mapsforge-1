@@ -24,6 +24,7 @@ import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
 import org.mapsforge.core.widget.ZoomControls;
 
+
 public class MapView extends JPanel implements MouseListener, KeyListener {
 
 	private static final long serialVersionUID = -7437435113432268381L;
@@ -54,6 +55,8 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 			this.mapMover.stopHorizontalMove();
 		} else if (keyCode.getKeyCode() == KeyEvent.VK_UP || keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
 			this.mapMover.stopVerticalMove();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_ADD || keyCode.getKeyCode() == KeyEvent.VK_SUBTRACT) {
+			this.zoomAnimator.stopZoom();
 		}
 	}
 
@@ -72,9 +75,12 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		} else if (keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
 			//System.out.println("Down");
 			this.mapMover.moveDown();
-		} else if(keyCode.getKeyCode() == KeyEvent.VK_R) {
-			System.out.println("REPAINT");
-			repaint();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_ADD) {
+			//System.out.println("ZoomIn");
+			this.zoomAnimator.zoomIn();
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_SUBTRACT) {
+			//System.out.println("ZoomOut");
+			this.zoomAnimator.zoomOut();
 		}
 	}
 	
@@ -316,9 +322,9 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		this.mapMover.start();
 
 		// create and start the ZoomAnimator thread
-		//this.zoomAnimator = new ZoomAnimator();
-		//this.zoomAnimator.setMapView(this);
-		//this.zoomAnimator.start();
+		this.zoomAnimator = new ZoomAnimator();
+		this.zoomAnimator.setMapView(this);
+		this.zoomAnimator.start();
 		
 		//System.out.println(this.latitude + "<->" + this.longitude);
 		// register the MapView in the MapActivity
@@ -358,6 +364,19 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 	private void waitForMapGenerator() {
 		synchronized (this) {
 			while (!this.mapGenerator.isReady()) {
+				try {
+					wait(50);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
+	}
+	
+	private void waitForZoomAnimator() {
+		synchronized (this) {
+			while (this.zoomAnimator.isExecuting()) {
 				try {
 					wait(50);
 				} catch (InterruptedException e) {
@@ -447,7 +466,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 						if (this.tileMemoryCardCache.get(this.currentJob, this.tileBuffer)) {
 							//TODO this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
 							System.out.println("memory card cache hit");
-							this.tileBitmap = new Bitmap(this.tileBuffer, getWidth(), getHeight());
+							this.tileBitmap = new Bitmap(this.tileBuffer, Tile.TILE_SIZE, Tile.TILE_SIZE);
 							//this.tileBitmap = new Bitmap();
 							//System.out.println(this.tileBitmap);
 							//this.tileBitmap.eraseColor(Color.BLUE);
@@ -461,7 +480,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 						}
 					} else {
 						// cache miss
-						System.out.println("cache miss");
+						//System.out.println("cache miss");
 						this.mapGenerator.addJob(this.currentJob);
 					}
 				}
@@ -542,10 +561,6 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		}
 
 		// draw the tile bitmap at the correct position
-		//TODO
-		//System.out.println("pixelX - this.mapViewPixelX = " + (x + mapGeneratorJob.tile.pixelX - this.mapViewPixelX));
-		//System.out.println("pixelY - this.mapViewPixelY = " + (y + mapGeneratorJob.tile.pixelY - this.mapViewPixelY));
-		//System.out.println("-------------------");
 		this.mapViewCanvas.drawBitmap(bitmap,
 				(float) (mapGeneratorJob.tile.pixelX - this.mapViewPixelX),
 				(float) (mapGeneratorJob.tile.pixelY - this.mapViewPixelY), null);
@@ -1094,7 +1109,7 @@ public class MapView extends JPanel implements MouseListener, KeyListener {
 		this.mapMover.pause();
 		this.mapGenerator.pause();
 
-		//waitForZoomAnimator();
+		waitForZoomAnimator();
 		waitForMapMover();
 		waitForMapGenerator();
 
