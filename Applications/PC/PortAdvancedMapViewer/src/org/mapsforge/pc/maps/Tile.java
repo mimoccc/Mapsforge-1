@@ -22,9 +22,9 @@ import java.io.Serializable;
 import org.mapsforge.core.graphics.Rect;
 
 /**
- * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y
- * number together with their zoom level. The actual area that a tile covers on a map depends on the
- * underlying map projection.
+ * A tile represents a rectangular part of the world map. All tiles can be
+ * identified by their X and Y number together with their zoom level. The actual
+ * area that a tile covers on a map depends on the underlying map projection.
  */
 class Tile implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -42,18 +42,21 @@ class Tile implements Serializable {
 	/**
 	 * Size of a single map tile in bytes.
 	 */
-	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
+	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE
+			* TILE_BYTES_PER_PIXEL;
 
 	private transient int hashCode;
 	private transient Tile other;
 
 	/**
-	 * Pixel X coordinate of the upper left corner of this tile on the world map.
+	 * Pixel X coordinate of the upper left corner of this tile on the world
+	 * map.
 	 */
 	transient long pixelX;
 
 	/**
-	 * Pixel Y coordinate of the upper left corner of this tile on the world map.
+	 * Pixel Y coordinate of the upper left corner of this tile on the world
+	 * map.
 	 */
 	transient long pixelY;
 
@@ -141,8 +144,8 @@ class Tile implements Serializable {
 		this.hashCode = calculateHashCode();
 	}
 
-	private void readObject(ObjectInputStream objectInputStream) throws IOException,
-			ClassNotFoundException {
+	private void readObject(ObjectInputStream objectInputStream)
+			throws IOException, ClassNotFoundException {
 		objectInputStream.defaultReadObject();
 		calculateTransientValues();
 	}
@@ -153,11 +156,13 @@ class Tile implements Serializable {
 	 * @return the bounding box of this tile.
 	 */
 	Rect getBoundingBox() {
-		return new Rect(
-				(int) (MercatorProjection.pixelXToLongitude(this.pixelX, this.zoomLevel) * 1000000),
-				(int) (MercatorProjection.pixelYToLatitude(this.pixelY, this.zoomLevel) * 1000000),
-				(int) (MercatorProjection.pixelXToLongitude(this.pixelX + TILE_SIZE,
-						this.zoomLevel) * 1000000), (int) (MercatorProjection.pixelYToLatitude(
-						this.pixelY + TILE_SIZE, this.zoomLevel) * 1000000));
+		return new Rect((int) (MercatorProjection.pixelXToLongitude(
+				this.pixelX, this.zoomLevel) * 1000000),
+				(int) (MercatorProjection.pixelYToLatitude(this.pixelY,
+						this.zoomLevel) * 1000000),
+				(int) (MercatorProjection.pixelXToLongitude(this.pixelX
+						+ TILE_SIZE, this.zoomLevel) * 1000000),
+				(int) (MercatorProjection.pixelYToLatitude(this.pixelY
+						+ TILE_SIZE, this.zoomLevel) * 1000000));
 	}
 }

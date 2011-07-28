@@ -15,12 +15,14 @@
 package org.mapsforge.pc.maps;
 
 /**
- * A MapGenerator that downloads tiles from the TilesAtHome server at OpenStreetMap.
+ * A MapGenerator that downloads tiles from the TilesAtHome server at
+ * OpenStreetMap.
  */
 class OsmarenderTileDownload extends TileDownloadMapGenerator {
 	private static final String SERVER_HOST_NAME = "tah.openstreetmap.org";
 	private static final String THREAD_NAME = "OsmarenderTileDownload";
-	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME + "/Tiles/tile/";
+	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME
+			+ "/Tiles/tile/";
 	private static final byte ZOOM_MAX = 17;
 
 	@Override

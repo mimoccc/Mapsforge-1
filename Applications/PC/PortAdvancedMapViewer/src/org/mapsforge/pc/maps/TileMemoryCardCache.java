@@ -50,15 +50,18 @@ public class TileMemoryCardCache {
 	 */
 	private static final String SERIALIZATION_FILE_NAME = "cache.ser";
 
-	private static LinkedHashMap<MapGeneratorJob, File> createMap(final int initialCapacity) {
+	private static LinkedHashMap<MapGeneratorJob, File> createMap(
+			final int initialCapacity) {
 		return new LinkedHashMap<MapGeneratorJob, File>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, File> eldest) {
+			protected boolean removeEldestEntry(
+					Map.Entry<MapGeneratorJob, File> eldest) {
 				if (size() > initialCapacity) {
-					// remove the entry from the cache and delete the cached file
+					// remove the entry from the cache and delete the cached
+					// file
 					this.remove(eldest.getKey());
 					if (!eldest.getValue().delete()) {
 						eldest.getValue().deleteOnExit();
@@ -176,10 +179,13 @@ public class TileMemoryCardCache {
 
 			// create the input streams
 			FileInputStream inputStream = new FileInputStream(file);
-			ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+			ObjectInputStream objectInputStream = new ObjectInputStream(
+					inputStream);
 
-			// restore the serialized cache map (the compiler warning cannot be fixed)
-			this.map = (LinkedHashMap<MapGeneratorJob, File>) objectInputStream.readObject();
+			// restore the serialized cache map (the compiler warning cannot be
+			// fixed)
+			this.map = (LinkedHashMap<MapGeneratorJob, File>) objectInputStream
+					.readObject();
 
 			// close the input streams
 			objectInputStream.close();
@@ -225,7 +231,8 @@ public class TileMemoryCardCache {
 
 			// create the output streams
 			FileOutputStream outputStream = new FileOutputStream(file);
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+					outputStream);
 
 			// serialize the cache map
 			objectOutputStream.writeObject(this.map);
@@ -244,7 +251,8 @@ public class TileMemoryCardCache {
 	/**
 	 * @param mapGeneratorJob
 	 *            key of the image whose presence in the cache should be tested.
-	 * @return true if the cache contains an image for the specified key, false otherwise.
+	 * @return true if the cache contains an image for the specified key, false
+	 *         otherwise.
 	 * @see Map#containsKey(Object)
 	 */
 	boolean containsKey(MapGeneratorJob mapGeneratorJob) {
@@ -313,21 +321,23 @@ public class TileMemoryCardCache {
 		if (this.capacity > 0) {
 			// write the image to a temporary file
 			try {
-				//bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-				//this.bitmapBuffer.rewind();
+				// bitmap.copyPixelsToBuffer(this.bitmapBuffer);
+				// this.bitmapBuffer.rewind();
 				this.outputFile = new File(this.tempDir, ++this.cacheId
 						+ IMAGE_FILE_NAME_EXTENSION);
-				//TODO changed
+				// TODO changed
 				ImageIO.write(bitmap.getImage(), "tile", this.outputFile);
 				// check for an existing file with that name
 				while (this.outputFile.exists()) {
-					// increment the cache ID to avoid overwriting the existing file
+					// increment the cache ID to avoid overwriting the existing
+					// file
 					this.outputFile = new File(this.tempDir, ++this.cacheId
 							+ IMAGE_FILE_NAME_EXTENSION);
 				}
-				this.fileOutputStream = new FileOutputStream(this.outputFile, false);
-				this.fileOutputStream.write(this.bitmapBuffer.array(), 0, this.bitmapBuffer
-						.array().length);
+				this.fileOutputStream = new FileOutputStream(this.outputFile,
+						false);
+				this.fileOutputStream.write(this.bitmapBuffer.array(), 0,
+						this.bitmapBuffer.array().length);
 				this.fileOutputStream.close();
 				synchronized (this) {
 					this.map.put(mapGeneratorJob, this.outputFile);

@@ -20,7 +20,8 @@ package org.mapsforge.pc.maps;
 class MapnikTileDownload extends TileDownloadMapGenerator {
 	private static final String SERVER_HOST_NAME = "tile.openstreetmap.org";
 	private static final String THREAD_NAME = "MapnikTileDownload";
-	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME + "/";
+	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME
+			+ "/";
 	private static final byte ZOOM_MAX = 18;
 
 	@Override

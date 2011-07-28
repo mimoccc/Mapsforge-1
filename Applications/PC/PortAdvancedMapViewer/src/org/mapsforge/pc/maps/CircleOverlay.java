@@ -26,19 +26,21 @@ import org.mapsforge.core.graphics.Path;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * CircleOverlay is an abstract base class to display {@link OverlayCircle OverlayCircles}. The class
- * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
- * the redrawing process it handles tap events from the user to check if an OverlayCircle has been
+ * CircleOverlay is an abstract base class to display {@link OverlayCircle
+ * OverlayCircles}. The class defines some methods to access the backing data
+ * structure of deriving subclasses. Besides organizing the redrawing process it
+ * handles tap events from the user to check if an OverlayCircle has been
  * touched and {@link #onTap(int)} must be executed.
  * <p>
- * The overlay may be used to indicate positions which have a known accuracy, such as GPS fixes. The
- * radius of the circles is specified in meters and will be automatically converted to pixels at each
- * redraw.
+ * The overlay may be used to indicate positions which have a known accuracy,
+ * such as GPS fixes. The radius of the circles is specified in meters and will
+ * be automatically converted to pixels at each redraw.
  * 
  * @param <Circle>
  *            the type of circles handled by this overlay.
  */
-public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overlay {
+public abstract class CircleOverlay<Circle extends OverlayCircle> extends
+		Overlay {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "CircleOverlay";
 
@@ -58,17 +60,22 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 * Constructs a new CircleOverlay.
 	 * 
 	 * @param defaultPaintFill
-	 *            the default paint which will be used to fill the circles (may be null).
+	 *            the default paint which will be used to fill the circles (may
+	 *            be null).
 	 * @param defaultPaintOutline
-	 *            the default paint which will be used to draw the circle outlines (may be null).
+	 *            the default paint which will be used to draw the circle
+	 *            outlines (may be null).
 	 */
 	public CircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		this.defaultPaintFill = defaultPaintFill;
 		this.defaultPaintOutline = defaultPaintOutline;
-		this.hasDefaultPaint = defaultPaintFill != null || defaultPaintOutline != null;
+		this.hasDefaultPaint = defaultPaintFill != null
+				|| defaultPaintOutline != null;
 		this.circlePosition = new Point();
-		this.visibleCircles = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
-		this.visibleCirclesRedraw = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.visibleCircles = new ArrayList<Integer>(
+				ARRAY_LIST_INITIAL_CAPACITY);
+		this.visibleCirclesRedraw = new ArrayList<Integer>(
+				ARRAY_LIST_INITIAL_CAPACITY);
 		this.path = new Path();
 	}
 
@@ -77,7 +84,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	 */
 	@Override
 	public boolean onTap(GeoPoint geoPoint, MapView mapView) {
-		//Projection projection = mapView.getProjection();
+		// Projection projection = mapView.getProjection();
 		Projection projection = null;
 		Point tapPosition = projection.toPixels(geoPoint, null);
 
@@ -102,19 +109,22 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 				}
 
 				synchronized (tapOverlayCircle) {
-					// make sure that the current circle has a center position and a radius
-					if (tapOverlayCircle.center == null || tapOverlayCircle.radius < 0) {
+					// make sure that the current circle has a center position
+					// and a radius
+					if (tapOverlayCircle.center == null
+							|| tapOverlayCircle.radius < 0) {
 						continue;
 					}
 
-					tapCirclePoint = projection.toPixels(tapOverlayCircle.center,
-							tapCirclePoint);
+					tapCirclePoint = projection.toPixels(
+							tapOverlayCircle.center, tapCirclePoint);
 					// check if the translation to pixel coordinates has failed
 					if (tapCirclePoint == null) {
 						continue;
 					}
 
-					// calculate the Euclidian distance between the circle and the tap position
+					// calculate the Euclidian distance between the circle and
+					// the tap position
 					diffX = tapCirclePoint.x - tapPosition.x;
 					diffY = tapCirclePoint.y - tapPosition.y;
 					distance = Math.sqrt(diffX * diffX + diffY * diffY);
@@ -148,8 +158,8 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	protected abstract Circle createCircle(int i);
 
 	@Override
-	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
-			byte drawZoomLevel) {
+	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+			Projection projection, byte drawZoomLevel) {
 		// erase the list of visible circles
 		this.visibleCirclesRedraw.clear();
 
@@ -167,19 +177,23 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 			}
 
 			synchronized (this.overlayCircle) {
-				// make sure that the current circle has a center position and a radius
-				if (this.overlayCircle.center == null || this.overlayCircle.radius < 0) {
+				// make sure that the current circle has a center position and a
+				// radius
+				if (this.overlayCircle.center == null
+						|| this.overlayCircle.radius < 0) {
 					continue;
 				}
 
 				// make sure that the cached center position is valid
 				if (drawZoomLevel != this.overlayCircle.cachedZoomLevel) {
-					this.overlayCircle.cachedCenterPosition = projection.toPoint(
-							this.overlayCircle.center, this.overlayCircle.cachedCenterPosition,
-							drawZoomLevel);
+					this.overlayCircle.cachedCenterPosition = projection
+							.toPoint(this.overlayCircle.center,
+									this.overlayCircle.cachedCenterPosition,
+									drawZoomLevel);
 					this.overlayCircle.cachedZoomLevel = drawZoomLevel;
-					this.overlayCircle.cachedRadius = projection.metersToPixels(
-							this.overlayCircle.radius, drawZoomLevel);
+					this.overlayCircle.cachedRadius = projection
+							.metersToPixels(this.overlayCircle.radius,
+									drawZoomLevel);
 				}
 
 				// calculate the relative circle position on the canvas
@@ -189,28 +203,36 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 						- drawPosition.y;
 				this.circleRadius = this.overlayCircle.cachedRadius;
 
-				// check if the bounding box of the circle intersects with the canvas
+				// check if the bounding box of the circle intersects with the
+				// canvas
 				if ((this.circlePosition.x + this.circleRadius) >= 0
-						&& (this.circlePosition.x - this.circleRadius) <= canvas.getWidth()
+						&& (this.circlePosition.x - this.circleRadius) <= canvas
+								.getWidth()
 						&& (this.circlePosition.y + this.circleRadius) >= 0
-						&& (this.circlePosition.y - this.circleRadius) <= canvas.getHeight()) {
+						&& (this.circlePosition.y - this.circleRadius) <= canvas
+								.getHeight()) {
 					// assemble the path
 					this.path.reset();
-					this.path.addCircle(this.circlePosition.x, this.circlePosition.y,
-							this.circleRadius, Path.Direction.CCW);
+					this.path.addCircle(this.circlePosition.x,
+							this.circlePosition.y, this.circleRadius,
+							Path.Direction.CCW);
 
 					// draw the path on the canvas
 					if (this.overlayCircle.hasPaint) {
 						// use the paints from the current circle
 						if (this.overlayCircle.paintOutline != null) {
-							canvas.drawPath(this.path, this.overlayCircle.paintOutline);
+							canvas.drawPath(this.path,
+									this.overlayCircle.paintOutline);
 						}
 						if (this.overlayCircle.paintFill != null) {
-							canvas.drawPath(this.path, this.overlayCircle.paintFill);
+							canvas.drawPath(this.path,
+									this.overlayCircle.paintFill);
 						}
 
-						// add the current circle index to the list of visible circles
-						this.visibleCirclesRedraw.add(Integer.valueOf(circleIndex));
+						// add the current circle index to the list of visible
+						// circles
+						this.visibleCirclesRedraw.add(Integer
+								.valueOf(circleIndex));
 					} else if (this.hasDefaultPaint) {
 						// use the default paint objects
 						if (this.defaultPaintOutline != null) {
@@ -220,8 +242,10 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 							canvas.drawPath(this.path, this.defaultPaintFill);
 						}
 
-						// add the current circle index to the list of visible circles
-						this.visibleCirclesRedraw.add(Integer.valueOf(circleIndex));
+						// add the current circle index to the list of visible
+						// circles
+						this.visibleCirclesRedraw.add(Integer
+								.valueOf(circleIndex));
 					}
 				}
 			}
@@ -254,7 +278,8 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	}
 
 	/**
-	 * This method should be called after circles have been added to the overlay.
+	 * This method should be called after circles have been added to the
+	 * overlay.
 	 */
 	protected final void populate() {
 		super.requestRedraw();

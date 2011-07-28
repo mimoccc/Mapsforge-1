@@ -19,8 +19,9 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
- * A container class that holds all immutable rendering parameters for a single map image together with
- * a mutable priority field, which indicates the importance of this task.
+ * A container class that holds all immutable rendering parameters for a single
+ * map image together with a mutable priority field, which indicates the
+ * importance of this task.
  */
 class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -86,8 +87,9 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 * @param highlightWater
 	 *            flag to enable water tile highlighting.
 	 */
-	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, float textScale,
-			boolean drawTileFrames, boolean drawTileCoordinates, boolean highlightWater) {
+	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile,
+			float textScale, boolean drawTileFrames,
+			boolean drawTileCoordinates, boolean highlightWater) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
@@ -117,7 +119,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 				return false;
 			} else if (this.mapFile == null && this.other.mapFile != null) {
 				return false;
-			} else if (this.mapFile != null && !this.mapFile.equals(this.other.mapFile)) {
+			} else if (this.mapFile != null
+					&& !this.mapFile.equals(this.other.mapFile)) {
 				return false;
 			} else if (this.textScale != this.other.textScale) {
 				return false;
@@ -145,10 +148,13 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private int calculateHashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((this.tile == null) ? 0 : this.tile.hashCode());
 		result = prime * result
+				+ ((this.tile == null) ? 0 : this.tile.hashCode());
+		result = prime
+				* result
 				+ ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
-		result = prime * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = prime * result
+				+ ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
 		result = prime * result + Float.floatToIntBits(this.textScale);
 		result = prime * result + (this.drawTileFrames ? 1231 : 1237);
 		result = prime * result + (this.drawTileCoordinates ? 1231 : 1237);
@@ -163,8 +169,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 		this.hashCode = calculateHashCode();
 	}
 
-	private void readObject(ObjectInputStream objectInputStream) throws IOException,
-			ClassNotFoundException {
+	private void readObject(ObjectInputStream objectInputStream)
+			throws IOException, ClassNotFoundException {
 		objectInputStream.defaultReadObject();
 		calculateTransientValues();
 	}

@@ -20,9 +20,10 @@ import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering parameters
- * like color, stroke width, pattern and transparency can be configured via two {@link Paint} objects.
- * Each way is drawn twice - once with each paint object - to allow for different outlines and fillings.
+ * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All
+ * rendering parameters like color, stroke width, pattern and transparency can
+ * be configured via two {@link Paint} objects. Each way is drawn twice - once
+ * with each paint object - to allow for different outlines and fillings.
  */
 public class OverlayWay {
 	/**
@@ -30,7 +31,8 @@ public class OverlayWay {
 	 * 
 	 * @param wayNodes
 	 *            the way nodes to check for null elements.
-	 * @return true if the way nodes contain at least one null element, false otherwise.
+	 * @return true if the way nodes contain at least one null element, false
+	 *         otherwise.
 	 */
 	private static boolean containsNullElements(GeoPoint[] wayNodes) {
 		for (int i = wayNodes.length - 1; i >= 0; --i) {
@@ -83,7 +85,8 @@ public class OverlayWay {
 	 * Constructs a new OverlayWay.
 	 * 
 	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 *            the geographical coordinates of the way nodes, must not
+	 *            contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
@@ -97,11 +100,13 @@ public class OverlayWay {
 	 * Constructs a new OverlayWay.
 	 * 
 	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 *            the geographical coordinates of the way nodes, must not
+	 *            contain null elements.
 	 * @param paintFill
 	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the way outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be
+	 *            null).
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
@@ -118,7 +123,8 @@ public class OverlayWay {
 	 * @param paintFill
 	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the way outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be
+	 *            null).
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
@@ -140,12 +146,14 @@ public class OverlayWay {
 	/**
 	 * Sets the paints which will be used to draw this way.
 	 * <p>
-	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is
+	 * called.
 	 * 
 	 * @param paintFill
 	 *            the paint which will be used to fill the way (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the way outline (may be null).
+	 *            the paint which will be used to draw the way outline (may be
+	 *            null).
 	 */
 	public synchronized void setPaint(Paint paintFill, Paint paintOutline) {
 		this.paintFill = paintFill;
@@ -156,17 +164,20 @@ public class OverlayWay {
 	/**
 	 * Sets the way nodes of this way.
 	 * <p>
-	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is
+	 * called.
 	 * 
 	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 *            the geographical coordinates of the way nodes, must not
+	 *            contain null elements.
 	 * @throws IllegalArgumentException
 	 *             if the way nodes contain at least one null element.
 	 */
 	public synchronized void setWayData(GeoPoint[] wayNodes) {
 		// check for illegal null elements
 		if (wayNodes != null && containsNullElements(wayNodes)) {
-			throw new IllegalArgumentException("way nodes must not contain null elements");
+			throw new IllegalArgumentException(
+					"way nodes must not contain null elements");
 		}
 
 		this.wayNodes = wayNodes;

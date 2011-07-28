@@ -17,7 +17,8 @@ package org.mapsforge.pc.maps;
 /**
  * A CoastlineWay is a special way to outline a sea or an island.
  * 
- * @see <a href="http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline">Tag:natural=coastline</a>
+ * @see <a
+ *      href="http://wiki.openstreetmap.org/wiki/Tag:natural%3Dcoastline">Tag:natural=coastline</a>
  */
 class CoastlineWay {
 	private static final byte BOTTOM = 1;
@@ -26,9 +27,10 @@ class CoastlineWay {
 	private static final byte TOP = 3;
 
 	/**
-	 * Calculates the angle for a given coastline point. The angle is defined as zero at the middle of
-	 * the right tile side. The angle increases clockwise, therefore the middle of the bottom tile side
-	 * has a value of π/2 and the middle of the left tile side a value of π.
+	 * Calculates the angle for a given coastline point. The angle is defined as
+	 * zero at the middle of the right tile side. The angle increases clockwise,
+	 * therefore the middle of the bottom tile side has a value of π/2 and the
+	 * middle of the left tile side a value of π.
 	 * 
 	 * @param x
 	 *            the x coordinate of the coastline point.
@@ -40,7 +42,8 @@ class CoastlineWay {
 	 *            the size of the tile.
 	 * @return the angle, always between 0 (inclusively) and 2π (exclusively).
 	 */
-	private static double calculateAngle(float x, float y, int[] tileBoundaries, int tileSize) {
+	private static double calculateAngle(float x, float y,
+			int[] tileBoundaries, int tileSize) {
 		double angle = Math.atan2(y - tileBoundaries[1] - (tileSize >> 1), x
 				- tileBoundaries[0] - (tileSize >> 1));
 		if (angle < 0) {
@@ -53,7 +56,8 @@ class CoastlineWay {
 	 * Calculates the side of the tile that corresponds to a given angle.
 	 * 
 	 * @param angle
-	 *            the angle, must be between 0 (inclusively) and 2π (exclusively).
+	 *            the angle, must be between 0 (inclusively) and 2π
+	 *            (exclusively).
 	 * @return the corresponding side of the tile.
 	 */
 	private static byte calculateSide(double angle) {
@@ -71,8 +75,9 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Calculates the orientation of the given coastline segment by calculating the signed area. As the
-	 * origin is in the top left corner, a positive area means clockwise.
+	 * Calculates the orientation of the given coastline segment by calculating
+	 * the signed area. As the origin is in the top left corner, a positive area
+	 * means clockwise.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -102,16 +107,19 @@ class CoastlineWay {
 	}
 
 	/**
-	 * Checks if the given coastline segment starts and ends outside of the tile.
+	 * Checks if the given coastline segment starts and ends outside of the
+	 * tile.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
 	 * @param tileBoundaries
 	 *            the boundaries of the tile.
-	 * @return true if first and last point are outside of the tile, false otherwise.
+	 * @return true if first and last point are outside of the tile, false
+	 *         otherwise.
 	 */
 	static boolean isValid(float[] coastline, int[] tileBoundaries) {
-		return (coastline[0] <= tileBoundaries[0] || coastline[0] >= tileBoundaries[2]
+		return (coastline[0] <= tileBoundaries[0]
+				|| coastline[0] >= tileBoundaries[2]
 				|| coastline[1] <= tileBoundaries[1] || coastline[1] >= tileBoundaries[3])
 				&& (coastline[coastline.length - 2] <= tileBoundaries[0]
 						|| coastline[coastline.length - 2] >= tileBoundaries[2]
@@ -155,7 +163,8 @@ class CoastlineWay {
 	 */
 	CoastlineWay(float[] coastline, int[] tileBoundaries, int tileSize) {
 		this.data = coastline;
-		this.entryAngle = calculateAngle(this.data[0], this.data[1], tileBoundaries, tileSize);
+		this.entryAngle = calculateAngle(this.data[0], this.data[1],
+				tileBoundaries, tileSize);
 		this.exitAngle = calculateAngle(this.data[this.data.length - 2],
 				this.data[this.data.length - 1], tileBoundaries, tileSize);
 		this.entrySide = calculateSide(this.entryAngle);

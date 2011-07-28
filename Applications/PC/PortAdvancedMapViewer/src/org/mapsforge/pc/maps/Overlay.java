@@ -27,13 +27,16 @@ import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * Overlay is the abstract base class for all types of overlays. It handles the lifecycle of the overlay
- * thread and implements those parts of the redrawing process which all overlays have in common.
+ * Overlay is the abstract base class for all types of overlays. It handles the
+ * lifecycle of the overlay thread and implements those parts of the redrawing
+ * process which all overlays have in common.
  * <p>
- * To add an overlay to a <code>MapView</code>, create a subclass of this class and add an instance to
- * the list returned by {@link MapView#getOverlays()}. When an overlay gets removed from the list, the
- * corresponding thread is automatically interrupted and all its resources are freed. Re-adding a
- * previously removed overlay to the list will therefore cause an {@link IllegalThreadStateException}.
+ * To add an overlay to a <code>MapView</code>, create a subclass of this class
+ * and add an instance to the list returned by {@link MapView#getOverlays()}.
+ * When an overlay gets removed from the list, the corresponding thread is
+ * automatically interrupted and all its resources are freed. Re-adding a
+ * previously removed overlay to the list will therefore cause an
+ * {@link IllegalThreadStateException}.
  */
 public abstract class Overlay extends Thread {
 	private static final String THREAD_NAME = "Overlay";
@@ -216,23 +219,27 @@ public abstract class Overlay extends Thread {
 			return;
 		}
 
-		//TODO this.mapViewProjection = this.internalMapView.getProjection();
+		// TODO this.mapViewProjection = this.internalMapView.getProjection();
 
 		// clear the second bitmap and make the canvas use it
-		//this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
+		// this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
 		this.overlayBitmap2.eraseColor(Color.TRANSLUCENT);
 		this.overlayCanvas.setBitmap(this.overlayBitmap2);
 
 		// save the zoom level and map position before drawing
 		synchronized (this.internalMapView) {
-			//TODO this.zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
-			this.positionBeforeDraw = this.mapViewProjection.toPoint(this.internalMapView
-					.getMapCenter(), this.positionBeforeDraw, this.zoomLevelBeforeDraw);
+			// TODO this.zoomLevelBeforeDraw =
+			// this.internalMapView.getZoomLevel();
+			this.positionBeforeDraw = this.mapViewProjection.toPoint(
+					this.internalMapView.getMapCenter(),
+					this.positionBeforeDraw, this.zoomLevelBeforeDraw);
 		}
 
 		// calculate the top-left point of the visible rectangle
-		this.point.x = this.positionBeforeDraw.x - (this.overlayCanvas.getWidth() >> 1);
-		this.point.y = this.positionBeforeDraw.y - (this.overlayCanvas.getHeight() >> 1);
+		this.point.x = this.positionBeforeDraw.x
+				- (this.overlayCanvas.getWidth() >> 1);
+		this.point.y = this.positionBeforeDraw.y
+				- (this.overlayCanvas.getHeight() >> 1);
 
 		if (isInterrupted() || sizeHasChanged()) {
 			// stop working
@@ -240,8 +247,8 @@ public abstract class Overlay extends Thread {
 		}
 
 		// call the draw implementation of the subclass
-		drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection,
-				this.zoomLevelBeforeDraw);
+		drawOverlayBitmap(this.overlayCanvas, this.point,
+				this.mapViewProjection, this.zoomLevelBeforeDraw);
 
 		if (isInterrupted() || sizeHasChanged()) {
 			// stop working
@@ -250,37 +257,39 @@ public abstract class Overlay extends Thread {
 
 		// save the zoom level and map position after drawing
 		synchronized (this.internalMapView) {
-			//this.zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
-			this.positionAfterDraw = this.mapViewProjection.toPoint(this.internalMapView
-					.getMapCenter(), this.positionAfterDraw, this.zoomLevelBeforeDraw);
+			// this.zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
+			this.positionAfterDraw = this.mapViewProjection.toPoint(
+					this.internalMapView.getMapCenter(),
+					this.positionAfterDraw, this.zoomLevelBeforeDraw);
 		}
 
-		/*if (this.internalMapView.getZoomAnimator().isExecuting()) {
-			// do not disturb the ongoing animation
-			return;
-		}*/
+		/*
+		 * if (this.internalMapView.getZoomAnimator().isExecuting()) { // do not
+		 * disturb the ongoing animation return; }
+		 */
 
 		// adjust the transformation matrix of the overlay
 		synchronized (this.matrix) {
 			this.matrix.reset();
-			this.matrix.postTranslate(this.positionBeforeDraw.x - this.positionAfterDraw.x,
-					this.positionBeforeDraw.y - this.positionAfterDraw.y);
+			this.matrix.postTranslate(this.positionBeforeDraw.x
+					- this.positionAfterDraw.x, this.positionBeforeDraw.y
+					- this.positionAfterDraw.y);
 
 			this.zoomLevelDiff = (byte) (this.zoomLevelAfterDraw - this.zoomLevelBeforeDraw);
 			if (this.zoomLevelDiff > 0) {
 				// zoom level has increased
 				this.matrixScaleFactor = 1 << this.zoomLevelDiff;
-				this.matrix
-						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
-								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
-										.getHeight() >> 1);
+				this.matrix.postScale(this.matrixScaleFactor,
+						this.matrixScaleFactor,
+						this.overlayCanvas.getWidth() >> 1,
+						this.overlayCanvas.getHeight() >> 1);
 			} else if (this.zoomLevelDiff < 0) {
 				// zoom level has decreased
 				this.matrixScaleFactor = 1.0f / (1 << -this.zoomLevelDiff);
-				this.matrix
-						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
-								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
-										.getHeight() >> 1);
+				this.matrix.postScale(this.matrixScaleFactor,
+						this.matrixScaleFactor,
+						this.overlayCanvas.getWidth() >> 1,
+						this.overlayCanvas.getHeight() >> 1);
 			}
 
 			// swap the two overlay bitmaps
@@ -295,11 +304,12 @@ public abstract class Overlay extends Thread {
 		}
 
 		// request the MapView to redraw
-		//this.internalMapView.postInvalidate();
+		// this.internalMapView.postInvalidate();
 	}
 
 	/**
-	 * Draws the overlay on the canvas. All subclasses need to implement this method.
+	 * Draws the overlay on the canvas. All subclasses need to implement this
+	 * method.
 	 * 
 	 * @param canvas
 	 *            the canvas to draw the overlay on.
@@ -310,12 +320,13 @@ public abstract class Overlay extends Thread {
 	 * @param drawZoomLevel
 	 *            the zoom level of the map.
 	 */
-	protected abstract void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel);
+	protected abstract void drawOverlayBitmap(Canvas canvas,
+			Point drawPosition, Projection projection, byte drawZoomLevel);
 
 	/**
-	 * Returns the name of the overlay implementation. It will be used as the name for the overlay
-	 * thread. Subclasses should override this method to provide a more specific name.
+	 * Returns the name of the overlay implementation. It will be used as the
+	 * name for the overlay thread. Subclasses should override this method to
+	 * provide a more specific name.
 	 * 
 	 * @return the name of the overlay implementation.
 	 */
@@ -338,17 +349,18 @@ public abstract class Overlay extends Thread {
 		}
 
 		// check if the new dimensions are positive
-		/*if (this.internalMapView.getWidth() > 0 && this.internalMapView.getHeight() > 0) {
-			// create the two overlay bitmaps with the correct dimensions
-			this.overlayBitmap1 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
-			this.overlayBitmap2 = Bitmap.createBitmap(this.internalMapView.getWidth(),
-					this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
-			this.redraw = true;
-			this.hasValidDimensions = true;
-		} else {
-			this.hasValidDimensions = false;
-		}*/
+		/*
+		 * if (this.internalMapView.getWidth() > 0 &&
+		 * this.internalMapView.getHeight() > 0) { // create the two overlay
+		 * bitmaps with the correct dimensions this.overlayBitmap1 =
+		 * Bitmap.createBitmap(this.internalMapView.getWidth(),
+		 * this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+		 * this.overlayBitmap2 =
+		 * Bitmap.createBitmap(this.internalMapView.getWidth(),
+		 * this.internalMapView.getHeight(), Bitmap.Config.ARGB_8888);
+		 * this.redraw = true; this.hasValidDimensions = true; } else {
+		 * this.hasValidDimensions = false; }
+		 */
 	}
 
 	/**
@@ -411,7 +423,8 @@ public abstract class Overlay extends Thread {
 	 */
 	final void setupOverlay(MapView mapView) {
 		if (isInterrupted() || !isAlive()) {
-			throw new IllegalThreadStateException("overlay thread already destroyed");
+			throw new IllegalThreadStateException(
+					"overlay thread already destroyed");
 		}
 		this.internalMapView = mapView;
 		onSizeChanged();
@@ -420,7 +433,8 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Returns if the dimensions of the overlay have changed.
 	 * 
-	 * @return true if the dimensions of the overlay have changed, false otherwise.
+	 * @return true if the dimensions of the overlay have changed, false
+	 *         otherwise.
 	 */
 	boolean sizeHasChanged() {
 		return this.changeSize;

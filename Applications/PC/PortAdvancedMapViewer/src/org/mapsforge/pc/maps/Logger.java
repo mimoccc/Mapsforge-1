@@ -20,8 +20,9 @@ package org.mapsforge.pc.maps;
  * Class used for logging text to the console.
  */
 final class Logger {
-	
-	//private final static java.util.logging.Logger log = java.util.logging.Logger.getLogger(Logger.class.getName());
+
+	// private final static java.util.logging.Logger log =
+	// java.util.logging.Logger.getLogger(Logger.class.getName());
 	/**
 	 * Log a simple string message with debug level.
 	 * 
@@ -29,8 +30,8 @@ final class Logger {
 	 *            the log message to be printed.
 	 */
 	static void d(String str) {
-		//Log.d("osm", Thread.currentThread().getName() + ": " + str);
-		//log.log(Level.INFO, Thread.currentThread().getName() + ": " + str);
+		// Log.d("osm", Thread.currentThread().getName() + ": " + str);
+		// log.log(Level.INFO, Thread.currentThread().getName() + ": " + str);
 		System.out.println(Thread.currentThread().getName() + ": " + str);
 	}
 
@@ -42,16 +43,16 @@ final class Logger {
 	 */
 	static void e(Exception e) {
 		StringBuilder stringBuilder = new StringBuilder(512);
-		stringBuilder.append("Exception in thread \"" + Thread.currentThread().getName()
-				+ "\" " + e.toString());
+		stringBuilder.append("Exception in thread \""
+				+ Thread.currentThread().getName() + "\" " + e.toString());
 		StackTraceElement[] stack = e.getStackTrace();
 		for (int i = 0; i < stack.length; ++i) {
-			stringBuilder.append("\n\tat ").append(stack[i].getMethodName()).append("(")
-					.append(stack[i].getFileName()).append(":")
+			stringBuilder.append("\n\tat ").append(stack[i].getMethodName())
+					.append("(").append(stack[i].getFileName()).append(":")
 					.append(stack[i].getLineNumber()).append(")");
 		}
-		//Log.e("osm", stringBuilder.toString());
-		//log.log(Level.FINER, stringBuilder.toString());
+		// Log.e("osm", stringBuilder.toString());
+		// log.log(Level.FINER, stringBuilder.toString());
 		System.err.println(stringBuilder.toString());
 
 	}

@@ -20,10 +20,11 @@ import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All rendering
- * parameters like color, stroke width, pattern and transparency can be configured via two {@link Paint}
- * objects. Each circle is drawn twice - once with each paint object - to allow for different outlines
- * and fillings.
+ * OverlayCircle holds all parameters of a single circle on a
+ * {@link CircleOverlay}. All rendering parameters like color, stroke width,
+ * pattern and transparency can be configured via two {@link Paint} objects.
+ * Each circle is drawn twice - once with each paint object - to allow for
+ * different outlines and fillings.
  */
 public class OverlayCircle {
 	/**
@@ -89,12 +90,13 @@ public class OverlayCircle {
 	 * @param paintFill
 	 *            the paint which will be used to fill the circle (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the circle outline (may be null).
+	 *            the paint which will be used to draw the circle outline (may
+	 *            be null).
 	 * @param title
 	 *            the title of the circle (may be null).
 	 */
-	public OverlayCircle(GeoPoint center, float radius, Paint paintFill, Paint paintOutline,
-			String title) {
+	public OverlayCircle(GeoPoint center, float radius, Paint paintFill,
+			Paint paintOutline, String title) {
 		this.title = title;
 		this.cachedCenterPosition = new Point();
 		this.cachedZoomLevel = Byte.MIN_VALUE;
@@ -125,7 +127,8 @@ public class OverlayCircle {
 	 * @param paintFill
 	 *            the paint which will be used to fill the circle (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the circle outline (may be null).
+	 *            the paint which will be used to draw the circle outline (may
+	 *            be null).
 	 */
 	public OverlayCircle(Paint paintFill, Paint paintOutline) {
 		this.cachedCenterPosition = new Point();
@@ -145,7 +148,8 @@ public class OverlayCircle {
 	/**
 	 * Sets the parameters of the circle.
 	 * <p>
-	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is
+	 * called.
 	 * 
 	 * @param center
 	 *            the geographical coordinates of the center point.
@@ -161,12 +165,14 @@ public class OverlayCircle {
 	/**
 	 * Sets the paints which will be used to draw the overlay.
 	 * <p>
-	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is
+	 * called.
 	 * 
 	 * @param paintFill
 	 *            the paint which will be used to fill the circle (may be null).
 	 * @param paintOutline
-	 *            the paint which will be used to draw the circle outline (may be null).
+	 *            the paint which will be used to draw the circle outline (may
+	 *            be null).
 	 */
 	public synchronized void setPaint(Paint paintFill, Paint paintOutline) {
 		this.paintFill = paintFill;

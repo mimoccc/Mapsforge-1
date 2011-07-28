@@ -1,4 +1,5 @@
 package org.mapsforge.core.graphics;
+
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -25,11 +26,11 @@ import java.awt.Font;
 public class Typeface extends Font {
 
 	private static final long serialVersionUID = -6330183324992171615L;
-	
+
 	public Typeface(String name, int style, int size) {
 		super(name, style, size);
 	}
 
-    /** The default NORMAL typeface object */
-    public static Typeface DEFAULT = new Typeface(null, Font.PLAIN, 12);    
+	/** The default NORMAL typeface object */
+	public static Typeface DEFAULT = new Typeface(null, Font.PLAIN, 12);
 }

@@ -40,8 +40,8 @@ final class LineClipping {
 	 *            top coordinate of the rectangle.
 	 * @return the region code bitmask.
 	 */
-	private static byte calculateOutCode(double x, double y, double left, double bottom,
-			double right, double top) {
+	private static byte calculateOutCode(double x, double y, double left,
+			double bottom, double right, double top) {
 		if (y > top) {
 			if (x > right) {
 				return TOP | RIGHT;
@@ -90,8 +90,8 @@ final class LineClipping {
 	 *            top coordinate of the rectangle.
 	 * @return the clipped line or null, in case of no intersection.
 	 */
-	static double[] clipLineToRectangle(double x1, double y1, double x2, double y2,
-			double left, double bottom, double right, double top) {
+	static double[] clipLineToRectangle(double x1, double y1, double x2,
+			double y2, double left, double bottom, double right, double top) {
 		double x1new = x1;
 		double y1new = y1;
 		double x2new = x2;
@@ -111,37 +111,47 @@ final class LineClipping {
 			} else if (outcode1 != 0) {
 				// first point is outside the rectangle
 				if ((outcode1 & TOP) > 0) {
-					x1new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					x1new = x1new + (x2new - x1new) * (top - y1new)
+							/ (y2new - y1new);
 					y1new = top;
 				} else if ((outcode1 & BOTTOM) > 0) {
-					x1new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					x1new = x1new + (x2new - x1new) * (bottom - y1new)
+							/ (y2new - y1new);
 					y1new = bottom;
 				} else if ((outcode1 & RIGHT) > 0) {
-					y1new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					y1new = y1new + (y2new - y1new) * (right - x1new)
+							/ (x2new - x1new);
 					x1new = right;
 				} else { // must be LEFT
-					y1new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					y1new = y1new + (y2new - y1new) * (left - x1new)
+							/ (x2new - x1new);
 					x1new = left;
 				}
 				// recompute the region code for the first point
-				outcode1 = calculateOutCode(x1new, y1new, left, bottom, right, top);
+				outcode1 = calculateOutCode(x1new, y1new, left, bottom, right,
+						top);
 			} else {
 				// second point is outside the rectangle
 				if ((outcode2 & TOP) > 0) {
-					x2new = x1new + (x2new - x1new) * (top - y1new) / (y2new - y1new);
+					x2new = x1new + (x2new - x1new) * (top - y1new)
+							/ (y2new - y1new);
 					y2new = top;
 				} else if ((outcode2 & BOTTOM) > 0) {
-					x2new = x1new + (x2new - x1new) * (bottom - y1new) / (y2new - y1new);
+					x2new = x1new + (x2new - x1new) * (bottom - y1new)
+							/ (y2new - y1new);
 					y2new = bottom;
 				} else if ((outcode2 & RIGHT) > 0) {
-					y2new = y1new + (y2new - y1new) * (right - x1new) / (x2new - x1new);
+					y2new = y1new + (y2new - y1new) * (right - x1new)
+							/ (x2new - x1new);
 					x2new = right;
 				} else { // must be LEFT
-					y2new = y1new + (y2new - y1new) * (left - x1new) / (x2new - x1new);
+					y2new = y1new + (y2new - y1new) * (left - x1new)
+							/ (x2new - x1new);
 					x2new = left;
 				}
 				// recompute the region code for the second point
-				outcode2 = calculateOutCode(x2new, y2new, left, bottom, right, top);
+				outcode2 = calculateOutCode(x2new, y2new, left, bottom, right,
+						top);
 			}
 		}
 	}

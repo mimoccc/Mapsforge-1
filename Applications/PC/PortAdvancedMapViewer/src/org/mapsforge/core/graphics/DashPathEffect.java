@@ -1,4 +1,5 @@
 package org.mapsforge.core.graphics;
+
 /*
  * Copyright (C) 2010 The Android Open Source Project
  *
@@ -17,36 +18,38 @@ package org.mapsforge.core.graphics;
 
 public class DashPathEffect extends PathEffect {
 
-    private final float[] mIntervals;
-    private final float mPhase;
+	private final float[] mIntervals;
+	private final float mPhase;
 
-    /**
-     * The intervals array must contain an even number of entries (>=2), with
-     * the even indices specifying the "on" intervals, and the odd indices
-     * specifying the "off" intervals. phase is an offset into the intervals
-     * array (mod the sum of all of the intervals). The intervals array
-     * controls the length of the dashes. The paint's strokeWidth controls the
-     * thickness of the dashes.
-     * Note: this patheffect only affects drawing with the paint's style is set
-     * to STROKE or STROKE_AND_FILL. It is ignored if the drawing is done with
-     * style == FILL.
-     * @param intervals array of ON and OFF distances
-     * @param phase offset into the intervals array
-     */
-    public DashPathEffect(float intervals[], float phase) {
-        if (intervals.length < 2) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+	/**
+	 * The intervals array must contain an even number of entries (>=2), with
+	 * the even indices specifying the "on" intervals, and the odd indices
+	 * specifying the "off" intervals. phase is an offset into the intervals
+	 * array (mod the sum of all of the intervals). The intervals array controls
+	 * the length of the dashes. The paint's strokeWidth controls the thickness
+	 * of the dashes. Note: this patheffect only affects drawing with the
+	 * paint's style is set to STROKE or STROKE_AND_FILL. It is ignored if the
+	 * drawing is done with style == FILL.
+	 * 
+	 * @param intervals
+	 *            array of ON and OFF distances
+	 * @param phase
+	 *            offset into the intervals array
+	 */
+	public DashPathEffect(float intervals[], float phase) {
+		if (intervals.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
 
-        mIntervals = intervals;
-        mPhase = phase;
-    }
+		mIntervals = intervals;
+		mPhase = phase;
+	}
 
-    public float[] getIntervals() {
-        return mIntervals;
-    }
+	public float[] getIntervals() {
+		return mIntervals;
+	}
 
-    public float getPhase() {
-        return mPhase;
-    }
+	public float getPhase() {
+		return mPhase;
+	}
 }

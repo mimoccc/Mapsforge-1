@@ -18,27 +18,30 @@ package org.mapsforge.pc.maps;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * A Projection translates between the pixel coordinate system on the screen and geographical points on
- * the earth. To retrieve the currently used Projection for a given MapView, call the
- * {@link MapView#getProjection()} method.
+ * A Projection translates between the pixel coordinate system on the screen and
+ * geographical points on the earth. To retrieve the currently used Projection
+ * for a given MapView, call the {@link MapView#getProjection()} method.
  */
 public interface Projection {
 	/**
-	 * Translates the given screen coordinates to a GeoPoint. If the corresponding MapView has no valid
-	 * dimensions (width and height > 0), null is returned.
+	 * Translates the given screen coordinates to a GeoPoint. If the
+	 * corresponding MapView has no valid dimensions (width and height > 0),
+	 * null is returned.
 	 * 
 	 * @param x
 	 *            the pixel x coordinate on the screen.
 	 * @param y
 	 *            the pixel y coordinate on the screen.
-	 * @return a new GeoPoint which is relative to the top-left of the MapView or null, if the
-	 *         corresponding MapView has no valid dimensions (width and height > 0).
+	 * @return a new GeoPoint which is relative to the top-left of the MapView
+	 *         or null, if the corresponding MapView has no valid dimensions
+	 *         (width and height > 0).
 	 */
 	GeoPoint fromPixels(int x, int y);
 
 	/**
-	 * Converts the given distance in meters to the corresponding number of horizontal pixels. The
-	 * calculation is carried out at the current latitude coordinate and zoom level.
+	 * Converts the given distance in meters to the corresponding number of
+	 * horizontal pixels. The calculation is carried out at the current latitude
+	 * coordinate and zoom level.
 	 * 
 	 * @param meters
 	 *            the distance in meters.
@@ -47,39 +50,46 @@ public interface Projection {
 	float metersToPixels(float meters);
 
 	/**
-	 * Converts the given distance in meters at the given zoom level to the corresponding number of
-	 * horizontal pixels. The calculation is carried out at the current latitude coordinate.
+	 * Converts the given distance in meters at the given zoom level to the
+	 * corresponding number of horizontal pixels. The calculation is carried out
+	 * at the current latitude coordinate.
 	 * 
 	 * @param meters
 	 *            the distance in meters.
 	 * @param zoom
 	 *            the zoom level at which the distance should be calculated.
-	 * @return the number of pixels at the current map position and the given zoom level.
+	 * @return the number of pixels at the current map position and the given
+	 *         zoom level.
 	 */
 	float metersToPixels(float meters, byte zoom);
 
 	/**
-	 * Translates the given GeoPoint to relative pixel coordinates on the screen. If the corresponding
-	 * MapView has no valid dimensions (width and height > 0), null is returned.
+	 * Translates the given GeoPoint to relative pixel coordinates on the
+	 * screen. If the corresponding MapView has no valid dimensions (width and
+	 * height > 0), null is returned.
 	 * 
 	 * @param in
 	 *            the geographical point to convert.
 	 * @param out
-	 *            an already existing object to use for the output. If this parameter is null, a new
-	 *            Point object will be created and returned.
-	 * @return a Point which is relative to the top-left of the MapView or null, if the corresponding
-	 *         MapView has no valid dimensions (width and height > 0).
+	 *            an already existing object to use for the output. If this
+	 *            parameter is null, a new Point object will be created and
+	 *            returned.
+	 * @return a Point which is relative to the top-left of the MapView or null,
+	 *         if the corresponding MapView has no valid dimensions (width and
+	 *         height > 0).
 	 */
 	Point toPixels(GeoPoint in, Point out);
 
 	/**
-	 * Translates the given GeoPoint to absolute pixel coordinates on the world map.
+	 * Translates the given GeoPoint to absolute pixel coordinates on the world
+	 * map.
 	 * 
 	 * @param in
 	 *            the geographical point to convert.
 	 * @param out
-	 *            an already existing object to use for the output. If this parameter is null, a new
-	 *            Point object will be created and returned.
+	 *            an already existing object to use for the output. If this
+	 *            parameter is null, a new Point object will be created and
+	 *            returned.
 	 * @param zoom
 	 *            the zoom level at which the point should be converted.
 	 * @return a Point which is relative to the top-left of the world map.

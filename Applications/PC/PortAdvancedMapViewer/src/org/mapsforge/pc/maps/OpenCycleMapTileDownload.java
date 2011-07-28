@@ -20,7 +20,8 @@ package org.mapsforge.pc.maps;
 class OpenCycleMapTileDownload extends TileDownloadMapGenerator {
 	private static final String SERVER_HOST_NAME = "tile.opencyclemap.org";
 	private static final String THREAD_NAME = "OpenCycleMapTileDownload";
-	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME + "/cycle/";
+	private static final String URL_FIRST_PART = "http://" + SERVER_HOST_NAME
+			+ "/cycle/";
 	private static final byte ZOOM_MAX = 18;
 
 	@Override

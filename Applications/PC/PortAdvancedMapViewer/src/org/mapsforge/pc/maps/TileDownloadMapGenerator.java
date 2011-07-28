@@ -25,8 +25,9 @@ import org.mapsforge.core.graphics.Bitmap;
 import org.mapsforge.core.graphics.BitmapFactory;
 
 /**
- * A MapGenerator that downloads map tiles from a server. To build an implementation for a certain tile
- * server, extend this class and implement the abstract methods.
+ * A MapGenerator that downloads map tiles from a server. To build an
+ * implementation for a certain tile server, extend this class and implement the
+ * abstract methods.
  */
 abstract class TileDownloadMapGenerator extends MapGenerator {
 	private Bitmap decodedBitmap;
@@ -56,7 +57,8 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 		try {
 			getTilePath(mapGeneratorJob.tile, this.stringBuilder);
 			// read the data from the tile URL
-			this.inputStream = new URL(this.stringBuilder.toString()).openStream();
+			this.inputStream = new URL(this.stringBuilder.toString())
+					.openStream();
 			this.decodedBitmap = BitmapFactory.decodeStream(this.inputStream);
 			this.inputStream.close();
 
@@ -66,14 +68,14 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 			}
 
 			// copy all pixels from the decoded bitmap to the color array
-			this.decodedBitmap.getPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
-					Tile.TILE_SIZE, Tile.TILE_SIZE);
+			this.decodedBitmap.getPixels(this.pixelColors, 0, Tile.TILE_SIZE,
+					0, 0, Tile.TILE_SIZE, Tile.TILE_SIZE);
 			this.decodedBitmap.recycle();
 
 			// copy all pixels from the color array to the tile bitmap
 			if (this.tileBitmap != null) {
-				this.tileBitmap.setPixels(this.pixelColors, 0, Tile.TILE_SIZE, 0, 0,
-						Tile.TILE_SIZE, Tile.TILE_SIZE);
+				this.tileBitmap.setPixels(this.pixelColors, 0, Tile.TILE_SIZE,
+						0, 0, Tile.TILE_SIZE, Tile.TILE_SIZE);
 			}
 			return true;
 		} catch (UnknownHostException e) {
@@ -93,7 +95,8 @@ abstract class TileDownloadMapGenerator extends MapGenerator {
 	abstract String getServerHostName();
 
 	/**
-	 * Stores the absolute path to the requested tile in the given StringBuilder.
+	 * Stores the absolute path to the requested tile in the given
+	 * StringBuilder.
 	 * 
 	 * @param tile
 	 *            the tile for which an image is required.

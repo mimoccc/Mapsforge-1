@@ -246,7 +246,8 @@ class TagIDsWays {
 		this.landuse$greenfield = wayTags.get("landuse=greenfield");
 		this.landuse$industrial = wayTags.get("landuse=industrial");
 		this.landuse$military = wayTags.get("landuse=military");
-		this.landuse$recreation_ground = wayTags.get("landuse=recreation_ground");
+		this.landuse$recreation_ground = wayTags
+				.get("landuse=recreation_ground");
 		this.landuse$reservoir = wayTags.get("landuse=reservoir");
 		this.landuse$residential = wayTags.get("landuse=residential");
 		this.landuse$retail = wayTags.get("landuse=retail");
@@ -289,10 +290,13 @@ class TagIDsWays {
 
 		this.piste$difficulty$novice = wayTags.get("piste:difficulty=novice");
 		this.piste$difficulty$easy = wayTags.get("piste:difficulty=easy");
-		this.piste$difficulty$intermediate = wayTags.get("piste:difficulty=intermediate");
-		this.piste$difficulty$advanced = wayTags.get("piste:difficulty=advanced");
+		this.piste$difficulty$intermediate = wayTags
+				.get("piste:difficulty=intermediate");
+		this.piste$difficulty$advanced = wayTags
+				.get("piste:difficulty=advanced");
 		this.piste$difficulty$expert = wayTags.get("piste:difficulty=expert");
-		this.piste$difficulty$freeride = wayTags.get("piste:difficulty=freeride");
+		this.piste$difficulty$freeride = wayTags
+				.get("piste:difficulty=freeride");
 
 		this.place$locality = wayTags.get("place=locality");
 

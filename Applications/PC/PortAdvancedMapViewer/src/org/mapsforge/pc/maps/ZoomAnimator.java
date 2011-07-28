@@ -18,8 +18,9 @@ package org.mapsforge.pc.maps;
 import org.mapsforge.core.os.SystemClock;
 
 /**
- * A ZoomAnimator handles the zoom-in and zoom-out animations of the corresponding MapView. It runs in a
- * separate thread to avoid blocking the UI thread.
+ * A ZoomAnimator handles the zoom-in and zoom-out animations of the
+ * corresponding MapView. It runs in a separate thread to avoid blocking the UI
+ * thread.
  */
 class ZoomAnimator extends Thread {
 	private static final int DEFAULT_DURATION = 300;
@@ -34,10 +35,10 @@ class ZoomAnimator extends Thread {
 	private float pivotY;
 	private float scaleFactor;
 	private float scaleFactorApplied;
-	//private long timeCurrent;
-	//private long timeElapsed;
-	//private float timeElapsedPercent;
-	//private long timeStart;
+	// private long timeCurrent;
+	// private long timeElapsed;
+	// private float timeElapsedPercent;
+	// private long timeStart;
 	private float zoomDifference;
 	private float zoomEnd;
 	private float zoomStart;
@@ -70,65 +71,68 @@ class ZoomAnimator extends Thread {
 			}
 
 			// calculate the elapsed time
-			//this.timeCurrent = SystemClock.uptimeMillis();
-			//this.timeElapsed = this.timeCurrent - this.timeStart;
-			//this.timeElapsedPercent = Math.min(1, this.timeElapsed / (float) this.duration);
+			// this.timeCurrent = SystemClock.uptimeMillis();
+			// this.timeElapsed = this.timeCurrent - this.timeStart;
+			// this.timeElapsedPercent = Math.min(1, this.timeElapsed / (float)
+			// this.duration);
 			// calculate the zoom and scale values at the current moment
-			//this.currentZoom = this.zoomStart + this.timeElapsedPercent * this.zoomDifference;
+			// this.currentZoom = this.zoomStart + this.timeElapsedPercent *
+			// this.zoomDifference;
 			this.currentZoom = this.zoomStart + this.zoomDifference;
 			this.mapView.zoomLevel += this.currentZoom;
 			this.scaleFactor = this.currentZoom / this.scaleFactorApplied;
 			this.scaleFactorApplied *= this.scaleFactor;
-			this.mapView.matrixPostScale(this.scaleFactor, this.scaleFactor, this.pivotX,
-					this.pivotY);
+			this.mapView.matrixPostScale(this.scaleFactor, this.scaleFactor,
+					this.pivotX, this.pivotY);
 
 			// check if the animation time is over
-			//if (this.timeElapsed >= this.duration) {
-				this.executeAnimation = false;
-				this.mapView.handleTiles(false);
-			/*} else {
-				this.mapView.postInvalidate();*/
-				synchronized (this) {
-					try {
-						wait(FRAME_LENGTH);
-					} catch (InterruptedException e) {
-						// restore the interrupted status
-						interrupt();
-					}
+			// if (this.timeElapsed >= this.duration) {
+			this.executeAnimation = false;
+			this.mapView.handleTiles(false);
+			/*
+			 * } else { this.mapView.postInvalidate();
+			 */
+			synchronized (this) {
+				try {
+					wait(FRAME_LENGTH);
+				} catch (InterruptedException e) {
+					// restore the interrupted status
+					interrupt();
 				}
-			//}
+			}
+			// }
 		}
 
 		// set the pointer to null to avoid memory leaks
 		this.mapView = null;
 	}
-	
+
 	void zoomIn() {
 		if (this.zoomDifference < 0) {
-			// 
+			//
 			this.zoomDifference = 0;
 		} else if (this.zoomDifference == 0) {
 			//
-			this.zoomDifference = 1;
+			this.zoomDifference = 1f;
 			synchronized (this) {
 				notify();
 			}
 		}
 	}
-	
+
 	void zoomOut() {
 		if (this.zoomDifference > 0) {
-			// 
+			//
 			this.zoomDifference = 0;
 		} else if (this.zoomDifference == 0) {
 			//
-			this.zoomDifference = -1;
+			this.zoomDifference = -1f;
 			synchronized (this) {
 				notify();
 			}
 		}
 	}
-	
+
 	void stopZoom() {
 		this.zoomDifference = 0;
 	}
@@ -179,7 +183,8 @@ class ZoomAnimator extends Thread {
 	 * @param pivotY
 	 *            the y coordinate of the animation center.
 	 */
-	void setParameters(float zoomStart, float zoomEnd, float pivotX, float pivotY) {
+	void setParameters(float zoomStart, float zoomEnd, float pivotX,
+			float pivotY) {
 		this.zoomStart = zoomStart;
 		this.zoomEnd = zoomEnd;
 		this.pivotX = pivotX;
@@ -193,7 +198,7 @@ class ZoomAnimator extends Thread {
 		this.zoomDifference = this.zoomEnd - this.zoomStart;
 		this.scaleFactorApplied = this.zoomStart;
 		this.executeAnimation = true;
-		//this.timeStart = SystemClock.uptimeMillis();
+		// this.timeStart = SystemClock.uptimeMillis();
 		synchronized (this) {
 			notify();
 		}

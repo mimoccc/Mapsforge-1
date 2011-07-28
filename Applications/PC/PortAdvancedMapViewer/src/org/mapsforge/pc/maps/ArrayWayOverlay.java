@@ -21,9 +21,10 @@ import java.util.Collection;
 import org.mapsforge.core.graphics.Paint;
 
 /**
- * ArrayWayOverlay is a thread-safe implementation of the {@link WayOverlay} class using an
- * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayWay OverlayWays}
- * without individual paints can be defined via the constructor.
+ * ArrayWayOverlay is a thread-safe implementation of the {@link WayOverlay}
+ * class using an {@link ArrayList} as internal data structure. Default paints
+ * for all {@link OverlayWay OverlayWays} without individual paints can be
+ * defined via the constructor.
  */
 public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
@@ -35,13 +36,16 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	 * Constructs a new ArrayWayOverlay.
 	 * 
 	 * @param defaultPaintFill
-	 *            the default paint which will be used to fill the ways (may be null).
+	 *            the default paint which will be used to fill the ways (may be
+	 *            null).
 	 * @param defaultPaintOutline
-	 *            the default paint which will be used to draw the way outlines (may be null).
+	 *            the default paint which will be used to draw the way outlines
+	 *            (may be null).
 	 */
 	public ArrayWayOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		super(defaultPaintFill, defaultPaintOutline);
-		this.overlayWays = new ArrayList<OverlayWay>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.overlayWays = new ArrayList<OverlayWay>(
+				ARRAY_LIST_INITIAL_CAPACITY);
 	}
 
 	/**

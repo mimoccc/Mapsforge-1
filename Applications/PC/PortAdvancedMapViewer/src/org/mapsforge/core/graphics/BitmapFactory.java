@@ -5,8 +5,8 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 /**
- * Creates Bitmap objects from various sources, including files, streams,
- * and byte-arrays.
+ * Creates Bitmap objects from various sources, including files, streams, and
+ * byte-arrays.
  */
 public class BitmapFactory {
 

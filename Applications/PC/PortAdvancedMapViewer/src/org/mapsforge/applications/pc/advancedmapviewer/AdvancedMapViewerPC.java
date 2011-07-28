@@ -26,7 +26,6 @@ import javax.swing.JOptionPane;
 
 import org.mapsforge.pc.maps.MapView;
 
-
 /**
  * A map application which uses the features from the mapsforge map library. The
  * map can be centered to the current location. A simple file browser for
@@ -85,7 +84,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		// Map View Configuration
 		this.mapView = new MapView(10);
 		this.add(mapView);
-		
+
 		// Last used map file loading
 		String defaultMap = propertiesSettings.getProperty("default_map");
 		mapView.setMapFile(defaultMap);
@@ -103,22 +102,37 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		mainFrame.setVisible(true);
 	}
 
-	// WindowListener 
+	// WindowListener
 	@Override
-	public void windowActivated(WindowEvent e) {}
+	public void windowActivated(WindowEvent e) {
+	}
+
 	@Override
-	public void windowClosed(WindowEvent e) {	close();	}
+	public void windowClosed(WindowEvent e) {
+		close();
+	}
+
 	@Override
-	public void windowClosing(WindowEvent e) {	close();	}
+	public void windowClosing(WindowEvent e) {
+		close();
+	}
+
 	@Override
-	public void windowDeactivated(WindowEvent e) {}
+	public void windowDeactivated(WindowEvent e) {
+	}
+
 	@Override
-	public void windowDeiconified(WindowEvent e) {}
+	public void windowDeiconified(WindowEvent e) {
+	}
+
 	@Override
-	public void windowIconified(WindowEvent e) {}
+	public void windowIconified(WindowEvent e) {
+	}
+
 	@Override
-	public void windowOpened(WindowEvent e) {}
-	
+	public void windowOpened(WindowEvent e) {
+	}
+
 	/** Cleaning up before exit */
 	protected void close() {
 		// TODO: Cleaning up
@@ -145,17 +159,17 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 			mapView.setMapFile(file);
 			propertiesSettings.setProperty("default_map", file);
 		} else {
-			//TODO: Logging
+			// TODO: Logging
 		}
 	}
-	
+
 	/**
 	 * File Browser for selecting a render theme
 	 * 
 	 * @throws IOException
 	 */
 	protected void startRenderThemeFileBrowser() throws IOException {
-		//TODO: 
+		// TODO:
 	}
 
 	/**

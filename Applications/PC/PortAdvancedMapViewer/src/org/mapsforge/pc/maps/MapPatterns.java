@@ -24,9 +24,11 @@ import org.mapsforge.core.graphics.BitmapShader;
 import org.mapsforge.core.graphics.Shader;
 //import android.graphics.Shader.TileMode;
 import org.mapsforge.core.graphics.Shader.TileMode;
+
 /**
- * This class holds all patterns that can be rendered on the map. All bitmaps are created when the
- * MapPatterns constructor is called and are recycled when the recycle() method is called.
+ * This class holds all patterns that can be rendered on the map. All bitmaps
+ * are created when the MapPatterns constructor is called and are recycled when
+ * the recycle() method is called.
  */
 class MapPatterns {
 	private final Bitmap cemetery;
@@ -45,13 +47,13 @@ class MapPatterns {
 	final Shader woodMixedShader;
 
 	MapPatterns() {
-		this.cemetery = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/cemetery.png"));
+		this.cemetery = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/cemetery.png"));
 		if (this.cemetery == null) {
 			this.cemeteryShader = null;
 		} else {
-			this.cemeteryShader = new BitmapShader(this.cemetery, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.cemeteryShader = new BitmapShader(this.cemetery,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
 
 		this.marsh = BitmapFactory.decodeStream(getClass().getResourceAsStream(
@@ -59,51 +61,52 @@ class MapPatterns {
 		if (this.marsh == null) {
 			this.marshShader = null;
 		} else {
-			this.marshShader = new BitmapShader(this.marsh, TileMode.REPEAT, TileMode.REPEAT);
+			this.marshShader = new BitmapShader(this.marsh, TileMode.REPEAT,
+					TileMode.REPEAT);
 		}
 
-		this.military = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/military.png"));
+		this.military = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/military.png"));
 		if (this.military == null) {
 			this.militaryShader = null;
 		} else {
-			this.militaryShader = new BitmapShader(this.military, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.militaryShader = new BitmapShader(this.military,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
 
-		this.natureReserve = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/nature-reserve.png"));
+		this.natureReserve = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/nature-reserve.png"));
 		if (this.natureReserve == null) {
 			this.natureReserveShader = null;
 		} else {
-			this.natureReserveShader = new BitmapShader(this.natureReserve, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.natureReserveShader = new BitmapShader(this.natureReserve,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
 
-		this.woodConiferous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/wood-coniferous.png"));
+		this.woodConiferous = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/wood-coniferous.png"));
 		if (this.woodConiferous == null) {
 			this.woodConiferousShader = null;
 		} else {
-			this.woodConiferousShader = new BitmapShader(this.woodConiferous, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.woodConiferousShader = new BitmapShader(this.woodConiferous,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
-		this.woodDeciduous = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/wood-deciduous.png"));
+		this.woodDeciduous = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/wood-deciduous.png"));
 		if (this.woodDeciduous == null) {
 			this.woodDeciduousShader = null;
 		} else {
-			this.woodDeciduousShader = new BitmapShader(this.woodDeciduous, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.woodDeciduousShader = new BitmapShader(this.woodDeciduous,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
 
-		this.woodMixed = BitmapFactory.decodeStream(getClass().getResourceAsStream(
-				"patterns/wood-mixed.png"));
+		this.woodMixed = BitmapFactory.decodeStream(getClass()
+				.getResourceAsStream("patterns/wood-mixed.png"));
 		if (this.woodMixed == null) {
 			this.woodMixedShader = null;
 		} else {
-			this.woodMixedShader = new BitmapShader(this.woodMixed, TileMode.REPEAT,
-					TileMode.REPEAT);
+			this.woodMixedShader = new BitmapShader(this.woodMixed,
+					TileMode.REPEAT, TileMode.REPEAT);
 		}
 	}
 

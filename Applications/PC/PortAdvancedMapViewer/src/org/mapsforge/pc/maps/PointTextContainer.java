@@ -27,8 +27,8 @@ class PointTextContainer {
 	float y;
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable and one
-	 * paint objects.
+	 * Create a new point container, that holds the x-y coordinates of a point,
+	 * a text variable and one paint objects.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -52,8 +52,8 @@ class PointTextContainer {
 	}
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable and two
-	 * paint objects.
+	 * Create a new point container, that holds the x-y coordinates of a point,
+	 * a text variable and two paint objects.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -66,7 +66,8 @@ class PointTextContainer {
 	 * @param paintBack
 	 *            the paintBack for the point.
 	 */
-	PointTextContainer(String text, float x, float y, Paint paintFront, Paint paintBack) {
+	PointTextContainer(String text, float x, float y, Paint paintFront,
+			Paint paintBack) {
 		this.text = text;
 		this.x = x;
 		this.y = y;
@@ -83,8 +84,9 @@ class PointTextContainer {
 	}
 
 	/**
-	 * Create a new point container, that holds the x-y coordinates of a point, a text variable, two
-	 * paint objects, and a reference on a symbol, if the text is connected with a POI.
+	 * Create a new point container, that holds the x-y coordinates of a point,
+	 * a text variable, two paint objects, and a reference on a symbol, if the
+	 * text is connected with a POI.
 	 * 
 	 * @param text
 	 *            the text of the point.
@@ -99,8 +101,8 @@ class PointTextContainer {
 	 * @param symbol
 	 *            the connected Symbol.
 	 */
-	PointTextContainer(String text, float x, float y, Paint paintFront, Paint paintBack,
-			SymbolContainer symbol) {
+	PointTextContainer(String text, float x, float y, Paint paintFront,
+			Paint paintBack, SymbolContainer symbol) {
 		this.text = text;
 		this.x = x;
 		this.y = y;

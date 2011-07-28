@@ -21,9 +21,10 @@ import java.util.HashSet;
 import java.util.TreeMap;
 
 /**
- * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The algorithm is
- * based on the close-areas.pl script, written by Frederik Ramm for the Osmarender program. This
- * implementation is optimized for high performance and memory reusing.
+ * The CoastlineAlgorithm generates closed polygons from disjoint coastline
+ * segments. The algorithm is based on the close-areas.pl script, written by
+ * Frederik Ramm for the Osmarender program. This implementation is optimized
+ * for high performance and memory reusing.
  */
 class CoastlineAlgorithm {
 	/**
@@ -79,8 +80,10 @@ class CoastlineAlgorithm {
 		private int calculateHashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((this.start == null) ? 0 : this.start.hashCode());
-			result = prime * result + ((this.end == null) ? 0 : this.end.hashCode());
+			result = prime * result
+					+ ((this.start == null) ? 0 : this.start.hashCode());
+			result = prime * result
+					+ ((this.end == null) ? 0 : this.end.hashCode());
 			return result;
 		}
 	}
@@ -98,7 +101,8 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Interface which must be implemented to handle all events during polygon creation.
+	 * Interface which must be implemented to handle all events during polygon
+	 * creation.
 	 */
 	interface ClosedPolygonHandler {
 		/**
@@ -206,9 +210,10 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Adds a coastline segment to the internal data structures. Coastline segments are automatically
-	 * merged into longer parts when they share the same start or end point. Adding the same coastline
-	 * segment more than once has no effect.
+	 * Adds a coastline segment to the internal data structures. Coastline
+	 * segments are automatically merged into longer parts when they share the
+	 * same start or end point. Adding the same coastline segment more than once
+	 * has no effect.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -219,14 +224,16 @@ class CoastlineAlgorithm {
 			return;
 		}
 
-		// all coastline segments are accumulated and merged together if possible
+		// all coastline segments are accumulated and merged together if
+		// possible
 		this.nodesSequence = coastline;
 		this.coastlineStartPoint = new ImmutablePoint(this.nodesSequence[0],
 				this.nodesSequence[1]);
 		this.coastlineEndPoint = new ImmutablePoint(
 				this.nodesSequence[this.nodesSequence.length - 2],
 				this.nodesSequence[this.nodesSequence.length - 1]);
-		this.endPoints = new EndPoints(this.coastlineStartPoint, this.coastlineEndPoint);
+		this.endPoints = new EndPoints(this.coastlineStartPoint,
+				this.coastlineEndPoint);
 
 		// check for an already closed coastline segment
 		if (this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
@@ -237,14 +244,16 @@ class CoastlineAlgorithm {
 		// check to avoid duplicate coastline segments
 		if (!this.handledCoastlineSegments.contains(this.endPoints)) {
 			// update the set of handled coastline segments
-			this.handledCoastlineSegments.add(new EndPoints(this.coastlineStartPoint,
-					this.coastlineEndPoint));
+			this.handledCoastlineSegments.add(new EndPoints(
+					this.coastlineStartPoint, this.coastlineEndPoint));
 
 			// check if a data way starts with the last point of the current way
 			if (this.coastlineStarts.containsKey(this.coastlineEndPoint)) {
 				// merge both way segments
-				this.matchPath = this.coastlineStarts.remove(this.coastlineEndPoint);
-				this.newPath = new float[this.nodesSequence.length + this.matchPath.length - 2];
+				this.matchPath = this.coastlineStarts
+						.remove(this.coastlineEndPoint);
+				this.newPath = new float[this.nodesSequence.length
+						+ this.matchPath.length - 2];
 				System.arraycopy(this.nodesSequence, 0, this.newPath, 0,
 						this.nodesSequence.length - 2);
 				System.arraycopy(this.matchPath, 0, this.newPath,
@@ -257,23 +266,26 @@ class CoastlineAlgorithm {
 
 			// check if a data way ends with the first point of the current way
 			if (this.coastlineEnds.containsKey(this.coastlineStartPoint)) {
-				this.matchPath = this.coastlineEnds.remove(this.coastlineStartPoint);
+				this.matchPath = this.coastlineEnds
+						.remove(this.coastlineStartPoint);
 				// check if the merged way is already a circle
 				if (!this.coastlineStartPoint.equals(this.coastlineEndPoint)) {
 					// merge both way segments
-					this.newPath = new float[this.nodesSequence.length + this.matchPath.length
-							- 2];
+					this.newPath = new float[this.nodesSequence.length
+							+ this.matchPath.length - 2];
 					System.arraycopy(this.matchPath, 0, this.newPath, 0,
 							this.matchPath.length - 2);
 					System.arraycopy(this.nodesSequence, 0, this.newPath,
-							this.matchPath.length - 2, this.nodesSequence.length);
+							this.matchPath.length - 2,
+							this.nodesSequence.length);
 					this.nodesSequence = this.newPath;
-					this.coastlineStartPoint = new ImmutablePoint(this.nodesSequence[0],
-							this.nodesSequence[1]);
+					this.coastlineStartPoint = new ImmutablePoint(
+							this.nodesSequence[0], this.nodesSequence[1]);
 				}
 			}
 
-			this.coastlineStarts.put(this.coastlineStartPoint, this.nodesSequence);
+			this.coastlineStarts.put(this.coastlineStartPoint,
+					this.nodesSequence);
 			this.coastlineEnds.put(this.coastlineEndPoint, this.nodesSequence);
 		}
 	}
@@ -290,11 +302,13 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Generates closed water and land polygons from unconnected coastline segments. Closed segments are
-	 * handled either as water or islands, depending on their orientation.
+	 * Generates closed water and land polygons from unconnected coastline
+	 * segments. Closed segments are handled either as water or islands,
+	 * depending on their orientation.
 	 * 
 	 * @param closedPolygonHandler
-	 *            the implementation which will be called to handle the generated polygons.
+	 *            the implementation which will be called to handle the
+	 *            generated polygons.
 	 */
 	void generateClosedPolygons(ClosedPolygonHandler closedPolygonHandler) {
 		this.coastlineSegments.addAll(this.coastlineStarts.values());
@@ -310,7 +324,8 @@ class CoastlineAlgorithm {
 		for (float[] coastline : this.coastlineSegments) {
 			// is the current segment already closed?
 			if (CoastlineWay.isClosed(coastline)) {
-				// depending on the orientation we have either water or an island
+				// depending on the orientation we have either water or an
+				// island
 				if (CoastlineWay.isClockWise(coastline)) {
 					// water
 					this.waterBackground = false;
@@ -320,7 +335,8 @@ class CoastlineAlgorithm {
 					this.islandSituation = true;
 					closedPolygonHandler.onIslandPolygon(coastline);
 				}
-			} else if (CoastlineWay.isValid(coastline, this.virtualTileBoundaries)) {
+			} else if (CoastlineWay.isValid(coastline,
+					this.virtualTileBoundaries)) {
 				coastline = SutherlandHodgmanClipping.clipPolyline(coastline,
 						this.virtualTileBoundaries);
 				if (coastline != null) {
@@ -334,7 +350,8 @@ class CoastlineAlgorithm {
 		}
 
 		if (this.invalidCoastline) {
-			// do not create any closed polygons, just draw the coastline segments
+			// do not create any closed polygons, just draw the coastline
+			// segments
 			for (CoastlineWay coastlineWay : this.coastlineWays) {
 				closedPolygonHandler.onValidCoastlineSegment(coastlineWay.data);
 			}
@@ -342,7 +359,8 @@ class CoastlineAlgorithm {
 		}
 
 		// check if there are no errors and the tile needs a water background
-		if (this.islandSituation && this.waterBackground && this.coastlineWays.isEmpty()) {
+		if (this.islandSituation && this.waterBackground
+				&& this.coastlineWays.isEmpty()) {
 			// add a water polygon for the whole tile
 			closedPolygonHandler.onWaterTile();
 			return;
@@ -368,8 +386,10 @@ class CoastlineAlgorithm {
 			}
 			this.coastlineWays.remove(0);
 
-			// if the segment orientation is clockwise, we need at least one helper point
-			if (this.coastlineEnd.entrySide == 0 && this.coastlineStart.exitSide == 0) {
+			// if the segment orientation is clockwise, we need at least one
+			// helper point
+			if (this.coastlineEnd.entrySide == 0
+					&& this.coastlineStart.exitSide == 0) {
 				this.needHelperPoint = (this.coastlineStart.exitAngle > this.coastlineEnd.entryAngle && (this.coastlineStart.exitAngle - this.coastlineEnd.entryAngle) < Math.PI)
 						|| (this.coastlineStart.exitAngle < Math.PI && this.coastlineEnd.entryAngle > Math.PI);
 			} else {
@@ -380,9 +400,11 @@ class CoastlineAlgorithm {
 			this.currentSide = this.coastlineStart.exitSide;
 
 			// walk around the tile and add additional points to the list
-			while (this.currentSide != this.coastlineEnd.entrySide || this.needHelperPoint) {
+			while (this.currentSide != this.coastlineEnd.entrySide
+					|| this.needHelperPoint) {
 				this.needHelperPoint = false;
-				this.additionalCoastlinePoints.add(this.helperPoints[this.currentSide]);
+				this.additionalCoastlinePoints
+						.add(this.helperPoints[this.currentSide]);
 				this.currentSide = (this.currentSide + 1) % 4;
 			}
 
@@ -394,8 +416,8 @@ class CoastlineAlgorithm {
 						+ this.additionalCoastlinePoints.size() * 2 + 2];
 
 				// copy the start segment
-				System.arraycopy(this.coastlineStart.data, 0, this.coordinates, 0,
-						this.coastlineStartLength);
+				System.arraycopy(this.coastlineStart.data, 0, this.coordinates,
+						0, this.coastlineStartLength);
 
 				// copy the additional points
 				for (int i = 0; i < this.additionalCoastlinePoints.size(); ++i) {
@@ -416,7 +438,8 @@ class CoastlineAlgorithm {
 				this.coastlineStartLength = this.coastlineStart.data.length;
 				this.coastlineEndLength = this.coastlineEnd.data.length;
 				float[] newSegment = new float[this.coastlineStartLength
-						+ this.additionalCoastlinePoints.size() * 2 + this.coastlineEndLength];
+						+ this.additionalCoastlinePoints.size() * 2
+						+ this.coastlineEndLength];
 
 				// copy the start segment
 				System.arraycopy(this.coastlineStart.data, 0, newSegment, 0,
@@ -432,7 +455,8 @@ class CoastlineAlgorithm {
 
 				// copy the end segment
 				System.arraycopy(this.coastlineEnd.data, 0, newSegment,
-						this.coastlineStartLength + this.additionalCoastlinePoints.size() * 2,
+						this.coastlineStartLength
+								+ this.additionalCoastlinePoints.size() * 2,
 						this.coastlineEndLength);
 
 				// replace the end segment in the list with the new segment
@@ -442,7 +466,8 @@ class CoastlineAlgorithm {
 				if (newSegment != null) {
 					this.coastlineWays.add(new CoastlineWay(newSegment,
 							this.virtualTileBoundaries, this.virtualTileSize));
-					Collections.sort(this.coastlineWays, this.coastlineWayComparator);
+					Collections.sort(this.coastlineWays,
+							this.coastlineWayComparator);
 				}
 			}
 		}
@@ -459,7 +484,8 @@ class CoastlineAlgorithm {
 	void setTiles(Tile readCoastlineTile, Tile currentTile) {
 		if (readCoastlineTile.zoomLevel < currentTile.zoomLevel) {
 			// calculate the virtual tile dimensions
-			this.zoomLevelDifference = currentTile.zoomLevel - readCoastlineTile.zoomLevel;
+			this.zoomLevelDifference = currentTile.zoomLevel
+					- readCoastlineTile.zoomLevel;
 			this.virtualTileSize = Tile.TILE_SIZE << this.zoomLevelDifference;
 			this.relativeX1 = (int) ((readCoastlineTile.pixelX << this.zoomLevelDifference) - currentTile.pixelX);
 			this.relativeY1 = (int) ((readCoastlineTile.pixelY << this.zoomLevelDifference) - currentTile.pixelY);

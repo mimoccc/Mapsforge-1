@@ -21,8 +21,8 @@ import org.mapsforge.core.graphics.Rect;
  * 
  * @author Karsten Groll
  * 
- *         Helper class for retrieving metadata from a map, for example its bounding box and its base
- *         zoom level.
+ *         Helper class for retrieving metadata from a map, for example its
+ *         bounding box and its base zoom level.
  */
 public class MapInfo {
 	private Rect mapBoundary;
@@ -35,7 +35,8 @@ public class MapInfo {
 	/**
 	 * 
 	 * @param fileName
-	 *            Absolute path of the map's file whose meta data should be retrieved.
+	 *            Absolute path of the map's file whose meta data should be
+	 *            retrieved.
 	 */
 	public MapInfo(String fileName) {
 		MapDatabase mapDB;
@@ -97,7 +98,8 @@ public class MapInfo {
 	/**
 	 * Informs about the existence of debug information in the current map file.
 	 * 
-	 * @return true if the current map file includes debug information, false otherwise.
+	 * @return true if the current map file includes debug information, false
+	 *         otherwise.
 	 */
 	public boolean isDebugFile() {
 		return isDebugFile;

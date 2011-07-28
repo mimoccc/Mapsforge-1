@@ -1,4 +1,5 @@
 package org.mapsforge.core.graphics;
+
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -23,60 +24,65 @@ package org.mapsforge.core.graphics;
  */
 public abstract class Shader {
 
-    private final Matrix mMatrix = new Matrix();
+	private final Matrix mMatrix = new Matrix();
 
-    int native_instance;
-    
-    public enum TileMode {
-        /**
-         * replicate the edge color if the shader draws outside of its
-         * original bounds
-         */
-        CLAMP   (0),
-        /**
-         * repeat the shader's image horizontally and vertically
-         */
-        REPEAT  (1),
-        /**
-         * repeat the shader's image horizontally and vertically, alternating
-         * mirror images so that adjacent images always seam
-         */
-        MIRROR  (2);
+	int native_instance;
 
-        TileMode(int nativeInt) {
-            this.nativeInt = nativeInt;
-        }
-        final int nativeInt;
-    }
+	public enum TileMode {
+		/**
+		 * replicate the edge color if the shader draws outside of its original
+		 * bounds
+		 */
+		CLAMP(0),
+		/**
+		 * repeat the shader's image horizontally and vertically
+		 */
+		REPEAT(1),
+		/**
+		 * repeat the shader's image horizontally and vertically, alternating
+		 * mirror images so that adjacent images always seam
+		 */
+		MIRROR(2);
 
-    /**
-     * Return true if the shader has a non-identity local matrix.
-     * @param localM If not null, it is set to the shader's local matrix.
-     * @return true if the shader has a non-identity local matrix
-     */
-    public boolean getLocalMatrix(Matrix localM) {
-        if (localM != null) {
-            localM.set(mMatrix);
-        }
+		TileMode(int nativeInt) {
+			this.nativeInt = nativeInt;
+		}
 
-        return !mMatrix.isIdentity();
-    }
+		final int nativeInt;
+	}
 
-    /**
-     * Set the shader's local matrix. Passing null will reset the shader's
-     * matrix to identity
-     * @param localM The shader's new local matrix, or null to specify identity
-     */
-    public void setLocalMatrix(Matrix localM) {
-        if (localM != null) {
-            mMatrix.set(localM);
-        } else {
-            mMatrix.reset();
-        }
-    }
+	/**
+	 * Return true if the shader has a non-identity local matrix.
+	 * 
+	 * @param localM
+	 *            If not null, it is set to the shader's local matrix.
+	 * @return true if the shader has a non-identity local matrix
+	 */
+	public boolean getLocalMatrix(Matrix localM) {
+		if (localM != null) {
+			localM.set(mMatrix);
+		}
 
-    /**
-     * Returns a java.awt.Paint object matching this shader.
-     */
-    abstract java.awt.Paint getJavaPaint();
+		return !mMatrix.isIdentity();
+	}
+
+	/**
+	 * Set the shader's local matrix. Passing null will reset the shader's
+	 * matrix to identity
+	 * 
+	 * @param localM
+	 *            The shader's new local matrix, or null to specify identity
+	 */
+	public void setLocalMatrix(Matrix localM) {
+		if (localM != null) {
+			mMatrix.set(localM);
+		} else {
+			mMatrix.reset();
+		}
+	}
+
+	/**
+	 * Returns a java.awt.Paint object matching this shader.
+	 */
+	abstract java.awt.Paint getJavaPaint();
 }

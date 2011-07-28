@@ -69,13 +69,15 @@ class MapDatabaseIndexCache {
 		this.map = createMap(capacity);
 	}
 
-	private LinkedHashMap<IndexCacheEntryKey, byte[]> createMap(final int initialCapacity) {
+	private LinkedHashMap<IndexCacheEntryKey, byte[]> createMap(
+			final int initialCapacity) {
 		return new LinkedHashMap<IndexCacheEntryKey, byte[]>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<IndexCacheEntryKey, byte[]> eldest) {
+			protected boolean removeEldestEntry(
+					Map.Entry<IndexCacheEntryKey, byte[]> eldest) {
 				return size() > initialCapacity;
 			}
 		};
@@ -93,11 +95,13 @@ class MapDatabaseIndexCache {
 	}
 
 	/**
-	 * Returns the index entry of a block in the given map file. If the required index entry is not
-	 * cached, it will be read from the correct map file index and put in the cache.
+	 * Returns the index entry of a block in the given map file. If the required
+	 * index entry is not cached, it will be read from the correct map file
+	 * index and put in the cache.
 	 * 
 	 * @param mapFileParameters
-	 *            the parameters of the map file for which the index entry is needed.
+	 *            the parameters of the map file for which the index entry is
+	 *            needed.
 	 * @param blockNumber
 	 *            the number of the block in the map file.
 	 * @return the index entry or -1 if the block number is invalid.
@@ -123,9 +127,10 @@ class MapDatabaseIndexCache {
 				this.indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
 
 				// seek to the correct index block in the file and read it
-				this.inputFile.seek(mapFileParameters.indexStartAddress + this.indexBlockNumber
-						* SIZE_OF_INDEX_BLOCK);
-				if (this.inputFile.read(this.indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
+				this.inputFile.seek(mapFileParameters.indexStartAddress
+						+ this.indexBlockNumber * SIZE_OF_INDEX_BLOCK);
+				if (this.inputFile
+						.read(this.indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
 					Logger.d("reading the current index block has failed");
 					return -1;
 				}
@@ -138,7 +143,8 @@ class MapDatabaseIndexCache {
 			this.addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_CACHE_BLOCK) * BYTES_PER_INDEX_ENTRY);
 
 			// return the real index entry
-			return Deserializer.getFiveBytesLong(this.indexBlock, this.addressInIndexBlock);
+			return Deserializer.getFiveBytesLong(this.indexBlock,
+					this.addressInIndexBlock);
 		} catch (IOException e) {
 			Logger.e(e);
 			return -1;

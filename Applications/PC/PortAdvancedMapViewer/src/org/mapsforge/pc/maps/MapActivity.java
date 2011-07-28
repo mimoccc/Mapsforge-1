@@ -17,23 +17,24 @@ package org.mapsforge.pc.maps;
 import java.util.ArrayList;
 
 /**
- * MapActivity is the abstract base class which must be extended in order to use a {@link MapView}.
- * There are no abstract methods in this implementation that subclasses need to override. In addition,
- * no API key or registration is required.
+ * MapActivity is the abstract base class which must be extended in order to use
+ * a {@link MapView}. There are no abstract methods in this implementation that
+ * subclasses need to override. In addition, no API key or registration is
+ * required.
  * <p>
- * A subclass may create a MapView either via one of the MapView constructors or by inflating an XML
- * layout file. It is possible to use more than one MapView at the same time as each of them works
- * independently from the others.
+ * A subclass may create a MapView either via one of the MapView constructors or
+ * by inflating an XML layout file. It is possible to use more than one MapView
+ * at the same time as each of them works independently from the others.
  * <p>
- * When the MapActivity is shut down, the current center position, zoom level and map file of the
- * MapView are saved in a preferences file and restored automatically during the setup process of a
- * MapView.
+ * When the MapActivity is shut down, the current center position, zoom level
+ * and map file of the MapView are saved in a preferences file and restored
+ * automatically during the setup process of a MapView.
  */
 public class MapActivity extends Thread {
 	/**
 	 * Name of the file where the map position and other settings are stored.
 	 */
-	//private static final String PREFERENCES_FILE = "MapActivity";
+	// private static final String PREFERENCES_FILE = "MapActivity";
 
 	/**
 	 * Counter to store the last ID given to a MapView.
@@ -41,8 +42,9 @@ public class MapActivity extends Thread {
 	private int lastMapViewId;
 
 	public MapActivity() {
-		
+
 	}
+
 	/**
 	 * Internal list which contains references to all running MapView objects.
 	 */
@@ -64,43 +66,30 @@ public class MapActivity extends Thread {
 	protected void onDestroy() {
 		destroyMapViews();
 	}
-	
-	//TODO removed
-	/*@Override
-	protected void onPause() {
-		super.onPause();
-		Editor editor = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
-		for (MapView currentMapView : this.mapViews) {
-			currentMapView.onPause();
 
-			editor.clear();
-			if (currentMapView.hasValidCenter()) {
-				if (!currentMapView.getMapViewMode().requiresInternetConnection()
-						&& currentMapView.hasValidMapFile()) {
-					// save the map file
-					editor.putString("mapFile", currentMapView.getMapFile());
-				}
-				// save the map position and zoom level
-				GeoPoint mapCenter = currentMapView.getMapCenter();
-				editor.putInt("latitude", mapCenter.getLatitudeE6());
-				editor.putInt("longitude", mapCenter.getLongitudeE6());
-				editor.putInt("zoomLevel", currentMapView.getZoomLevel());
-			}
-			editor.commit();
-		}
+	// TODO removed
+	/*
+	 * @Override protected void onPause() { super.onPause(); Editor editor =
+	 * getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit(); for (MapView
+	 * currentMapView : this.mapViews) { currentMapView.onPause();
+	 * 
+	 * editor.clear(); if (currentMapView.hasValidCenter()) { if
+	 * (!currentMapView.getMapViewMode().requiresInternetConnection() &&
+	 * currentMapView.hasValidMapFile()) { // save the map file
+	 * editor.putString("mapFile", currentMapView.getMapFile()); } // save the
+	 * map position and zoom level GeoPoint mapCenter =
+	 * currentMapView.getMapCenter(); editor.putInt("latitude",
+	 * mapCenter.getLatitudeE6()); editor.putInt("longitude",
+	 * mapCenter.getLongitudeE6()); editor.putInt("zoomLevel",
+	 * currentMapView.getZoomLevel()); } editor.commit(); }
+	 * 
+	 * if (isFinishing()) { destroyMapViews(); } }
+	 */
 
-		if (isFinishing()) {
-			destroyMapViews();
-		}
-	}*/
-
-	/*@Override
-	protected void onResume() {
-		super.onResume();
-		for (MapView currentMapView : this.mapViews) {
-			currentMapView.onResume();
-		}
-	}*/
+	/*
+	 * @Override protected void onResume() { super.onResume(); for (MapView
+	 * currentMapView : this.mapViews) { currentMapView.onResume(); } }
+	 */
 
 	/**
 	 * Returns a unique MapView ID on each call.
@@ -120,25 +109,28 @@ public class MapActivity extends Thread {
 	final void registerMapView(MapView mapView) {
 		if (this.mapViews != null) {
 			this.mapViews.add(mapView);
-			//TODO removed?
+			// TODO removed?
 			/*
-			SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
-			// restore the position
-			if (preferences.contains("latitude") && preferences.contains("longitude")
-					&& preferences.contains("zoomLevel")) {
-				if (!mapView.getMapViewMode().requiresInternetConnection()
-						&& preferences.contains("mapFile")) {
-					// get and set the map file
-					mapView.setMapFileFromPreferences(preferences.getString("mapFile", null));
-				}
-
-				// get and set the map position and zoom level
-				GeoPoint defaultStartPoint = mapView.getDefaultStartPoint();
-				mapView.setCenterAndZoom(new GeoPoint(preferences.getInt("latitude",
-						defaultStartPoint.getLatitudeE6()), preferences.getInt("longitude",
-						defaultStartPoint.getLongitudeE6())), (byte) preferences.getInt(
-						"zoomLevel", mapView.getDefaultZoomLevel()));
-			}*/
+			 * SharedPreferences preferences =
+			 * getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE); // restore
+			 * the position if (preferences.contains("latitude") &&
+			 * preferences.contains("longitude") &&
+			 * preferences.contains("zoomLevel")) { if
+			 * (!mapView.getMapViewMode().requiresInternetConnection() &&
+			 * preferences.contains("mapFile")) { // get and set the map file
+			 * mapView
+			 * .setMapFileFromPreferences(preferences.getString("mapFile",
+			 * null)); }
+			 * 
+			 * // get and set the map position and zoom level GeoPoint
+			 * defaultStartPoint = mapView.getDefaultStartPoint();
+			 * mapView.setCenterAndZoom(new
+			 * GeoPoint(preferences.getInt("latitude",
+			 * defaultStartPoint.getLatitudeE6()),
+			 * preferences.getInt("longitude",
+			 * defaultStartPoint.getLongitudeE6())), (byte) preferences.getInt(
+			 * "zoomLevel", mapView.getDefaultZoomLevel())); }
+			 */
 		}
 	}
 
@@ -153,8 +145,8 @@ public class MapActivity extends Thread {
 			this.mapViews.remove(mapView);
 		}
 	}
-	
+
 	public final void runOnUiThread(Runnable action) {
 		action.run();
-    }
+	}
 }

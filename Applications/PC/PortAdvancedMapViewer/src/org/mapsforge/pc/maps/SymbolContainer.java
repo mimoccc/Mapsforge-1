@@ -52,7 +52,8 @@ class SymbolContainer {
 	 * @param rotation
 	 *            the rotation of the symbol.
 	 */
-	SymbolContainer(Bitmap symbol, float x, float y, boolean alignCenter, float rotation) {
+	SymbolContainer(Bitmap symbol, float x, float y, boolean alignCenter,
+			float rotation) {
 		this.symbol = symbol;
 		this.x = x;
 		this.y = y;

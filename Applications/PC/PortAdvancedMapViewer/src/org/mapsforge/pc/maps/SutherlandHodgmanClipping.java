@@ -47,7 +47,8 @@ final class SutherlandHodgmanClipping {
 					clippedPolyline[clippedPolylineEntries++] = x2;
 					clippedPolyline[clippedPolylineEntries++] = y2;
 				} else {
-					float[] intersection = computeIntersection(edge, x1, y1, x2, y2);
+					float[] intersection = computeIntersection(edge, x1, y1,
+							x2, y2);
 					clippedPolyline[clippedPolylineEntries++] = intersection[0];
 					clippedPolyline[clippedPolylineEntries++] = intersection[1];
 				}
@@ -69,15 +70,17 @@ final class SutherlandHodgmanClipping {
 		return retVal;
 	}
 
-	private static float[] computeIntersection(int[] edge, double x1, double y1, double x2,
-			double y2) {
+	private static float[] computeIntersection(int[] edge, double x1,
+			double y1, double x2, double y2) {
 		if (edge[1] == edge[3]) {
 			// horizontal edge
-			return new float[] { (float) (x1 + (edge[1] - y1) * ((x2 - x1) / (y2 - y1))),
+			return new float[] {
+					(float) (x1 + (edge[1] - y1) * ((x2 - x1) / (y2 - y1))),
 					edge[1] };
 		}
 		// vertical edge
-		return new float[] { edge[0], (float) (y1 + (edge[0] - x1) * ((y2 - y1) / (x2 - x1))) };
+		return new float[] { edge[0],
+				(float) (y1 + (edge[0] - x1) * ((y2 - y1) / (x2 - x1))) };
 	}
 
 	private static boolean isInside(double x, double y, int[] edge) {
@@ -109,17 +112,17 @@ final class SutherlandHodgmanClipping {
 	 */
 	static float[] clipPolyline(float[] polyline, int[] rectangle) {
 		// bottom edge
-		float[] clippedPolyline = clipPolylineToEdge(polyline, new int[] { rectangle[0],
-				rectangle[1], rectangle[2], rectangle[1] });
+		float[] clippedPolyline = clipPolylineToEdge(polyline, new int[] {
+				rectangle[0], rectangle[1], rectangle[2], rectangle[1] });
 		// right edge
-		clippedPolyline = clipPolylineToEdge(clippedPolyline, new int[] { rectangle[2],
-				rectangle[1], rectangle[2], rectangle[3] });
+		clippedPolyline = clipPolylineToEdge(clippedPolyline, new int[] {
+				rectangle[2], rectangle[1], rectangle[2], rectangle[3] });
 		// top edge
-		clippedPolyline = clipPolylineToEdge(clippedPolyline, new int[] { rectangle[2],
-				rectangle[3], rectangle[0], rectangle[3] });
+		clippedPolyline = clipPolylineToEdge(clippedPolyline, new int[] {
+				rectangle[2], rectangle[3], rectangle[0], rectangle[3] });
 		// left edge
-		return clipPolylineToEdge(clippedPolyline, new int[] { rectangle[0], rectangle[3],
-				rectangle[0], rectangle[1] });
+		return clipPolylineToEdge(clippedPolyline, new int[] { rectangle[0],
+				rectangle[3], rectangle[0], rectangle[1] });
 	}
 
 	/**

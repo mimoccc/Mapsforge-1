@@ -18,9 +18,10 @@ package org.mapsforge.pc.maps;
 //import org.mapsforge.core.view.View;
 
 /**
- * A MapController is used to programmatically modify the position and zoom level of a map. Each
- * MapController is assigned to a single MapView instance. To retrieve a MapController for a given
- * MapView, call the {@link MapView#getController()} method.
+ * A MapController is used to programmatically modify the position and zoom
+ * level of a map. Each MapController is assigned to a single MapView instance.
+ * To retrieve a MapController for a given MapView, call the
+ * {@link MapView#getController()} method.
  */
 public final class MapController {
 	private final MapView mapView;
@@ -35,17 +36,13 @@ public final class MapController {
 		this.mapView = mapView;
 	}
 
-	/*@Override
-	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		if (event.getAction() == KeyEvent.ACTION_DOWN) {
-			// forward the event to the MapView
-			//return this.mapView.onKeyDown(keyCode, event);
-		} else if (event.getAction() == KeyEvent.ACTION_UP) {
-			// forward the event to the MapView
-			//return this.mapView.onKeyUp(keyCode, event);
-		}
-		return false;
-	}*/
+	/*
+	 * @Override public boolean onKey(View v, int keyCode, KeyEvent event) { if
+	 * (event.getAction() == KeyEvent.ACTION_DOWN) { // forward the event to the
+	 * MapView //return this.mapView.onKeyDown(keyCode, event); } else if
+	 * (event.getAction() == KeyEvent.ACTION_UP) { // forward the event to the
+	 * MapView //return this.mapView.onKeyUp(keyCode, event); } return false; }
+	 */
 
 	/**
 	 * Sets the center of the MapView without an animation to the given point.
@@ -61,8 +58,8 @@ public final class MapController {
 	 * Sets the zoom level of the MapView.
 	 * 
 	 * @param zoomLevel
-	 *            the new zoom level. This value will be limited by the maximum and minimum possible
-	 *            zoom level.
+	 *            the new zoom level. This value will be limited by the maximum
+	 *            and minimum possible zoom level.
 	 * @return the new zoom level.
 	 */
 	public int setZoom(int zoomLevel) {
@@ -71,7 +68,8 @@ public final class MapController {
 	}
 
 	/**
-	 * Increases the zoom level of the MapView, unless the maximum zoom level has been reached.
+	 * Increases the zoom level of the MapView, unless the maximum zoom level
+	 * has been reached.
 	 * 
 	 * @return true if the zoom level has been changed, false otherwise.
 	 */
@@ -80,7 +78,8 @@ public final class MapController {
 	}
 
 	/**
-	 * Decreases the zoom level of the MapView, unless the minimum zoom level has been reached.
+	 * Decreases the zoom level of the MapView, unless the minimum zoom level
+	 * has been reached.
 	 * 
 	 * @return true if the zoom level has been changed, false otherwise.
 	 */

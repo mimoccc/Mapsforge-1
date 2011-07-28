@@ -24,12 +24,14 @@ import org.mapsforge.core.graphics.Path;
 import org.mapsforge.core.graphics.Point;
 
 /**
- * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class defines
- * some methods to access the backing data structure of deriving subclasses.
+ * WayOverlay is an abstract base class to display {@link OverlayWay
+ * OverlayWays}. The class defines some methods to access the backing data
+ * structure of deriving subclasses.
  * <p>
- * The overlay may be used to show additional ways such as calculated routes. Closed polygons, for
- * example buildings or areas, are also supported. A way node sequence is considered as a closed polygon
- * if the first and the last way node are equal.
+ * The overlay may be used to show additional ways such as calculated routes.
+ * Closed polygons, for example buildings or areas, are also supported. A way
+ * node sequence is considered as a closed polygon if the first and the last way
+ * node are equal.
  * 
  * @param <Way>
  *            the type of ways handled by this overlay.
@@ -47,9 +49,11 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	 * Constructs a new WayOverlay.
 	 * 
 	 * @param defaultPaintFill
-	 *            the default paint which will be used to fill the ways (may be null).
+	 *            the default paint which will be used to fill the ways (may be
+	 *            null).
 	 * @param defaultPaintOutline
-	 *            the default paint which will be used to draw the way outlines (may be null).
+	 *            the default paint which will be used to draw the way outlines
+	 *            (may be null).
 	 */
 	public WayOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		this.defaultPaintFill = defaultPaintFill;
@@ -74,8 +78,8 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	protected abstract Way createWay(int i);
 
 	@Override
-	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
-			byte drawZoomLevel) {
+	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition,
+			Projection projection, byte drawZoomLevel) {
 		this.numberOfWays = size();
 		for (int wayIndex = 0; wayIndex < this.numberOfWays; ++wayIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
@@ -91,27 +95,33 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 
 			synchronized (this.overlayWay) {
 				// make sure that the current way has way nodes
-				if (this.overlayWay.wayNodes == null || this.overlayWay.wayNodes.length == 0) {
+				if (this.overlayWay.wayNodes == null
+						|| this.overlayWay.wayNodes.length == 0) {
 					continue;
 				}
 
 				// make sure that the cached way node positions are valid
 				if (drawZoomLevel != this.overlayWay.cachedZoomLevel) {
 					for (int i = 0; i < this.overlayWay.cachedWayPositions.length; ++i) {
-						this.overlayWay.cachedWayPositions[i] = projection.toPoint(
-								this.overlayWay.wayNodes[i],
-								this.overlayWay.cachedWayPositions[i], drawZoomLevel);
+						this.overlayWay.cachedWayPositions[i] = projection
+								.toPoint(this.overlayWay.wayNodes[i],
+										this.overlayWay.cachedWayPositions[i],
+										drawZoomLevel);
 					}
 					this.overlayWay.cachedZoomLevel = drawZoomLevel;
 				}
 
 				// assemble the path
 				this.path.reset();
-				this.path.moveTo(this.overlayWay.cachedWayPositions[0].x - drawPosition.x,
-						this.overlayWay.cachedWayPositions[0].y - drawPosition.y);
+				this.path.moveTo(this.overlayWay.cachedWayPositions[0].x
+						- drawPosition.x,
+						this.overlayWay.cachedWayPositions[0].y
+								- drawPosition.y);
 				for (int j = 1; j < this.overlayWay.cachedWayPositions.length; ++j) {
-					this.path.lineTo(this.overlayWay.cachedWayPositions[j].x - drawPosition.x,
-							this.overlayWay.cachedWayPositions[j].y - drawPosition.y);
+					this.path.lineTo(this.overlayWay.cachedWayPositions[j].x
+							- drawPosition.x,
+							this.overlayWay.cachedWayPositions[j].y
+									- drawPosition.y);
 				}
 
 				// draw the path on the canvas

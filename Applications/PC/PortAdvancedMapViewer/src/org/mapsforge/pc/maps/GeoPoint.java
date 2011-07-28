@@ -15,8 +15,8 @@
 package org.mapsforge.pc.maps;
 
 /**
- * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values are
- * internally stored as integer numbers.
+ * A GeoPoint represents an immutable pair of latitude and longitude
+ * coordinates. Both values are internally stored as integer numbers.
  */
 public class GeoPoint implements Comparable<GeoPoint> {
 	/**
@@ -40,19 +40,21 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	private final int longitudeE6;
 
 	/**
-	 * Used to compare this GeoPoint with others in the {@link #equals(Object)} method.
+	 * Used to compare this GeoPoint with others in the {@link #equals(Object)}
+	 * method.
 	 */
 	private GeoPoint other;
 
 	/**
-	 * Constructs a new GeoPoint with the given latitude and longitude, measured in degrees.
+	 * Constructs a new GeoPoint with the given latitude and longitude, measured
+	 * in degrees.
 	 * 
 	 * @param latitude
-	 *            the latitude of the point. This will be limited by the minimum and maximum possible
-	 *            latitude value.
+	 *            the latitude of the point. This will be limited by the minimum
+	 *            and maximum possible latitude value.
 	 * @param longitude
-	 *            the longitude of the point. This will be limited by the minimum and maximum possible
-	 *            longitude value.
+	 *            the longitude of the point. This will be limited by the
+	 *            minimum and maximum possible longitude value.
 	 */
 	public GeoPoint(double latitude, double longitude) {
 		this.latitudeE6 = clipLatitude((int) (latitude * CONVERSION_FACTOR));
@@ -61,15 +63,15 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Constructs a new GeoPoint with the given latitude and longitude, measured in microdegrees
-	 * (degrees * 10^6).
+	 * Constructs a new GeoPoint with the given latitude and longitude, measured
+	 * in microdegrees (degrees * 10^6).
 	 * 
 	 * @param latitudeE6
-	 *            the latitude of the point in microdegrees. This will be limited by the minimum and
-	 *            maximum possible latitude value.
+	 *            the latitude of the point in microdegrees. This will be
+	 *            limited by the minimum and maximum possible latitude value.
 	 * @param longitudeE6
-	 *            the longitude of the point in microdegrees. This will be limited by the minimum and
-	 *            maximum possible longitude value.
+	 *            the longitude of the point in microdegrees. This will be
+	 *            limited by the minimum and maximum possible longitude value.
 	 */
 	public GeoPoint(int latitudeE6, int longitudeE6) {
 		this.latitudeE6 = clipLatitude(latitudeE6);
@@ -118,7 +120,8 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Returns the latitude value of this GeoPoint in microdegrees (degrees * 10^6).
+	 * Returns the latitude value of this GeoPoint in microdegrees (degrees *
+	 * 10^6).
 	 * 
 	 * @return the latitude value in microdegrees.
 	 */
@@ -136,7 +139,8 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Returns the longitude value of this GeoPoint in microdegrees (degrees * 10^6).
+	 * Returns the longitude value of this GeoPoint in microdegrees (degrees *
+	 * 10^6).
 	 * 
 	 * @return the longitude value in microdegrees.
 	 */

@@ -116,8 +116,9 @@ class MapFileParameters {
 	 * @param mapBoundary
 	 *            the boundary of the map file.
 	 */
-	MapFileParameters(long startAddress, long indexStartAddress, long mapFileSize,
-			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
+	MapFileParameters(long startAddress, long indexStartAddress,
+			long mapFileSize, byte baseZoomLevel, byte tileZoomLevelMin,
+			byte tileZoomLevelMax, Rect mapBoundary) {
 		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
 		this.mapFileSize = mapFileSize;
@@ -127,16 +128,17 @@ class MapFileParameters {
 		this.hashCode = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.bottom
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(mapBoundary.left
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(mapBoundary.top
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryRightTile = MercatorProjection.longitudeToTileX(mapBoundary.right
-				/ COORDINATES_DIVISOR, this.baseZoomLevel);
+		this.boundaryTopTile = MercatorProjection.latitudeToTileY(
+				mapBoundary.bottom / COORDINATES_DIVISOR, this.baseZoomLevel);
+		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(
+				mapBoundary.left / COORDINATES_DIVISOR, this.baseZoomLevel);
+		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(
+				mapBoundary.top / COORDINATES_DIVISOR, this.baseZoomLevel);
+		this.boundaryRightTile = MercatorProjection.longitudeToTileX(
+				mapBoundary.right / COORDINATES_DIVISOR, this.baseZoomLevel);
 
-		// calculate the horizontal and vertical amount of blocks in this map file
+		// calculate the horizontal and vertical amount of blocks in this map
+		// file
 		this.blocksWidth = this.boundaryRightTile - this.boundaryLeftTile + 1;
 		this.blocksHeight = this.boundaryBottomTile - this.boundaryTopTile + 1;
 
@@ -179,8 +181,10 @@ class MapFileParameters {
 	private int calculateHashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (this.startAddress ^ (this.startAddress >>> 32));
-		result = prime * result + (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
+		result = prime * result
+				+ (int) (this.startAddress ^ (this.startAddress >>> 32));
+		result = prime * result
+				+ (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
 		result = prime * result + this.baseZoomLevel;
 		return result;
 	}

@@ -14,7 +14,6 @@
  */
 package org.mapsforge.pc.maps;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import org.mapsforge.core.graphics.Bitmap;
+
 /**
  * A thread-safe cache for bitmap images with a fixed size and LRU policy.
  */
@@ -64,19 +64,21 @@ public class TileRAMCache {
 		this.bitmapPool = new LinkedList<Bitmap>();
 		// one more bitmap than the cache capacity is needed for put operations
 		for (int i = 0; i <= this.capacity; ++i) {
-			this.bitmapPool.add(Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE,
-					Bitmap.Config.RGB_565));
+			this.bitmapPool.add(Bitmap.createBitmap(Tile.TILE_SIZE,
+					Tile.TILE_SIZE, Bitmap.Config.RGB_565));
 		}
 		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
-	private LinkedHashMap<MapGeneratorJob, Bitmap> createMap(final int initialCapacity) {
+	private LinkedHashMap<MapGeneratorJob, Bitmap> createMap(
+			final int initialCapacity) {
 		return new LinkedHashMap<MapGeneratorJob, Bitmap>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<MapGeneratorJob, Bitmap> eldest) {
+			protected boolean removeEldestEntry(
+					Map.Entry<MapGeneratorJob, Bitmap> eldest) {
 				if (size() > initialCapacity) {
 					this.remove(eldest.getKey());
 					TileRAMCache.this.bitmapPool.addLast(eldest.getValue());
@@ -89,7 +91,8 @@ public class TileRAMCache {
 	/**
 	 * @param mapGeneratorJob
 	 *            key of the image whose presence in the cache should be tested.
-	 * @return true if the cache contains an image for the specified key, false otherwise.
+	 * @return true if the cache contains an image for the specified key, false
+	 *         otherwise.
 	 * @see Map#containsKey(Object)
 	 */
 	boolean containsKey(MapGeneratorJob mapGeneratorJob) {
@@ -135,22 +138,22 @@ public class TileRAMCache {
 	 */
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		if (this.capacity > 0) {
-			/*TODO UNSAFE 
-			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-			this.bitmapBuffer.rewind();
-			this.tempBitmap = this.bitmapPool.removeFirst();
-			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
-			synchronized (this) {
-				this.map.put(mapGeneratorJob, this.tempBitmap);
-			}*/
+			/*
+			 * TODO UNSAFE bitmap.copyPixelsToBuffer(this.bitmapBuffer);
+			 * this.bitmapBuffer.rewind(); this.tempBitmap =
+			 * this.bitmapPool.removeFirst();
+			 * this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
+			 * synchronized (this) { this.map.put(mapGeneratorJob,
+			 * this.tempBitmap); }
+			 */
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
-				ImageIO.write( bitmap.getImage(), "jpg", baos );
+				ImageIO.write(bitmap.getImage(), "jpg", baos);
 				baos.flush();
 				byte[] imageInByte = baos.toByteArray();
 				InputStream in = new ByteArrayInputStream(imageInByte);
 				this.tempBitmap = new Bitmap(ImageIO.read(in));
-				synchronized(this) {
+				synchronized (this) {
 					this.map.put(mapGeneratorJob, this.tempBitmap);
 				}
 				baos.close();
@@ -158,9 +161,9 @@ public class TileRAMCache {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			this.tempBitmap = bitmap;
-			synchronized(this) {
+			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}
 		}

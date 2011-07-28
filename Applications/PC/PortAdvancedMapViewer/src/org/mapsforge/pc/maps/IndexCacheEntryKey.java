@@ -31,7 +31,8 @@ class IndexCacheEntryKey {
 	 * @param indexBlockNumber
 	 *            the number of the index block.
 	 */
-	IndexCacheEntryKey(MapFileParameters mapFileParameters, long indexBlockNumber) {
+	IndexCacheEntryKey(MapFileParameters mapFileParameters,
+			long indexBlockNumber) {
 		this.mapFileParameters = mapFileParameters;
 		this.indexBlockNumber = indexBlockNumber;
 		this.hashCode = calculateHashCode();
@@ -45,10 +46,12 @@ class IndexCacheEntryKey {
 			return false;
 		} else {
 			this.other = (IndexCacheEntryKey) obj;
-			if (this.mapFileParameters == null && this.other.mapFileParameters != null) {
+			if (this.mapFileParameters == null
+					&& this.other.mapFileParameters != null) {
 				return false;
 			} else if (this.mapFileParameters != null
-					&& !this.mapFileParameters.equals(this.other.mapFileParameters)) {
+					&& !this.mapFileParameters
+							.equals(this.other.mapFileParameters)) {
 				return false;
 			} else if (this.indexBlockNumber != this.other.indexBlockNumber) {
 				return false;
@@ -70,9 +73,12 @@ class IndexCacheEntryKey {
 	private int calculateHashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((this.mapFileParameters == null) ? 0 : this.mapFileParameters.hashCode());
-		result = prime * result
+		result = prime
+				* result
+				+ ((this.mapFileParameters == null) ? 0
+						: this.mapFileParameters.hashCode());
+		result = prime
+				* result
 				+ (int) (this.indexBlockNumber ^ (this.indexBlockNumber >>> 32));
 		return result;
 	}
