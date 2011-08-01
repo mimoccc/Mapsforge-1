@@ -350,10 +350,19 @@ class RoutingGraphCreatorTask implements Sink {
 			double[] lon = new double[end - start + 1];
 			double[] lat = new double[end - start + 1];
 
+			// Save Waypoints as complete nodes
+			HashSet<CompleteNode> allWayNodes = new HashSet<CompleteNode>();
+
 			for (int j = start; j <= end; j++) {
-				int idx = usedNodes.get(way.getWayNodes().get(j).getNodeId());
+				Long tmp = way.getWayNodes().get(j).getNodeId();
+				int idx = usedNodes.get(tmp);
 				lon[j - start] = (longitudeE6[idx]);
 				lat[j - start] = (latitudeE6[idx]);
+
+				if (neededNodes.containsKey(tmp.intValue())) {
+					CompleteNode cn = neededNodes.get(tmp.intValue());
+					allWayNodes.add(cn);
+				}
 			}
 
 			int sourceId;
@@ -412,17 +421,6 @@ class RoutingGraphCreatorTask implements Sink {
 				allwp[m] = new GeoCoordinate(lat[m], lon[m]);
 			}
 
-			// Save Waypoints as complete nodes
-			HashSet<CompleteNode> allWayNodes = new HashSet<CompleteNode>();
-			// go through all waypoints
-			for (int j = 0; j < way.getWayNodes().size(); j++) {
-				WayNode wayNode = way.getWayNodes().get(j);
-
-				if (neededNodes.containsKey(((Long) wayNode.getNodeId()).intValue())) {
-					allWayNodes.add(neededNodes.get(((Long) wayNode.getNodeId()).intValue()));
-				}
-			}
-
 			HashSet<KeyValuePair> hs = new HashSet<KeyValuePair>();
 
 			// check all tags
@@ -431,6 +429,7 @@ class RoutingGraphCreatorTask implements Sink {
 			amountOfEdgesWritten++;
 			// create the new edge
 			int key = ((Long) way.getId()).intValue();
+
 			CompleteEdge ce = new CompleteEdge(key,
 					getVertexFromList(sourceId),
 					getVertexFromList(targetId),
