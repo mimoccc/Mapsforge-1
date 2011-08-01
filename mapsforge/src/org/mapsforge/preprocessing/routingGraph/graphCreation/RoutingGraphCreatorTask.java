@@ -517,9 +517,9 @@ class RoutingGraphCreatorTask implements Sink {
 	private void addPairsForTagToHashSet(Node node, HashSet<KeyValuePair> hs) {
 		for (Tag tag : node.getTags()) {
 
-			if (configObject.containsNodeTag(tag.getKey(), tag.getValue()))
+			if (configObject.containsNodeTag(tag.getKey(), tag.getValue())) {
 				hs.add(new KeyValuePair(tag.getValue(), tag.getKey()));
-
+			}
 		}
 	}
 
