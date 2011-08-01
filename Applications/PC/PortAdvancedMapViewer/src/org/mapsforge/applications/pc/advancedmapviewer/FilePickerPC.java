@@ -32,12 +32,17 @@ public class FilePickerPC extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = -6634123407876979284L;
 
-	private Comparator<File> fileComparator = getDefaultFileComparator();
-	private FileFilter fileDisplayFilter;
-	private FileFilter fileSelectFilter;
-	private JFileChooser fileChooser;
-	private String openedFile = new String();
+	JFileChooser fileChooser;
+	Comparator<File> fileComparator = getDefaultFileComparator();
+	FileFilter fileDisplayFilter;
+	FileFilter fileSelectFilter;
+	String openedFile = new String();
 
+	public FilePickerPC() {
+		super(new BorderLayout());
+		fileChooser = new JFileChooser(".");
+	}
+	
 	/**
 	 * Sets the file comparator which is used to order the contents of all
 	 * directories before displaying them. If set to null, subfolders and files
@@ -95,17 +100,12 @@ public class FilePickerPC extends JPanel implements ActionListener {
 		};
 	}
 
-	/** Constructor */
-	public FilePickerPC() {
-		super(new BorderLayout());
-		fileChooser = new JFileChooser(".");
-	}
+	
 
 	/**
-	 * Configuration of filters.
+	 * FilePickerPC's configuration
 	 */
 	public void configure() {
-		// TODO: Configuration (if necessary)
 		// set the FileDisplayFilter
 		this.setFileDisplayFilter(new FileFilter() {
 			@Override
@@ -122,12 +122,8 @@ public class FilePickerPC extends JPanel implements ActionListener {
 				}
 				return false;
 			}
-
 			@Override
-			public String getDescription() {
-				// TODO Auto-generated method stub
-				return null;
-			}
+			public String getDescription() { return null; }
 		});
 
 		// set the FileSelectFilter
@@ -137,29 +133,20 @@ public class FilePickerPC extends JPanel implements ActionListener {
 				// accept only valid map files
 				return MapView.isValidMapFile(file.getAbsolutePath());
 			}
-
 			@Override
-			public String getDescription() {
-				// TODO Auto-generated method stub
-				return null;
-			}
+			public String getDescription() { return null; }
 		});
 	}
 
 	public String openMap() {
 		int returnVal = fileChooser.showOpenDialog(FilePickerPC.this);
-
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fileChooser.getSelectedFile();
 			return file.getAbsolutePath();
 		}
-
 		return null;
 	}
 
 	@Override
-	// TODO
-	public void actionPerformed(ActionEvent event) {
-
-	}
+	public void actionPerformed(ActionEvent event) { }
 }

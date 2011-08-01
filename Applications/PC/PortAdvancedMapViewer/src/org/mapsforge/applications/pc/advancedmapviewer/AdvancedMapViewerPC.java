@@ -38,7 +38,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	private static final long serialVersionUID = -4127875987929158484L;
 	private MenuBar menuBar;
 	private FilePickerPC filePicker;
-	private MapView mapView;
+	protected MapView mapView;
 
 	/** Constructor */
 	public AdvancedMapViewerPC() {
@@ -157,9 +157,8 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
 		if (mapView != null) {
 			mapView.setMapFile(file);
-			propertiesSettings.setProperty("default_map", file);
 		} else {
-			// TODO: Logging
+			System.err.println("Internal Error: MapView is not found!");
 		}
 	}
 

@@ -169,6 +169,19 @@ class MapMover extends Thread {
 			}
 		}
 	}
+	
+	void moveMouse(int moveX, int moveY) {
+		this.moveX = moveX;
+		this.moveY = moveY;
+		synchronized(this) {
+			notify();
+		}
+	}
+	
+	void stopMouse() {
+		this.moveX = 0;
+		this.moveY = 0;
+	}
 
 	/**
 	 * Requests that the MapMover should stop working.
