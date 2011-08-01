@@ -85,7 +85,8 @@ public class ConfigObject {
 		 * for (KeyValuePair sp : relationTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
 		 * sp.value.equals(value)) return true; return false;
 		 */
-		return relationTagsSet.contains(new KeyValuePair(value, key));
+		return (relationTagsSet.contains(new KeyValuePair(value, key)) || relationTagsSet
+				.contains(new KeyValuePair(null, key)));
 	}
 
 	/**
@@ -102,7 +103,8 @@ public class ConfigObject {
 		 * for (KeyValuePair sp : nodeTagsSet) if (sp.value != null) if ((sp.key.equals(key)) &&
 		 * sp.value.equals(value)) return true; return false;
 		 */
-		return nodeTagsSet.contains(new KeyValuePair(value, key));
+		return (nodeTagsSet.contains(new KeyValuePair(value, key)) || nodeTagsSet
+				.contains(new KeyValuePair(null, key)));
 	}
 
 }
