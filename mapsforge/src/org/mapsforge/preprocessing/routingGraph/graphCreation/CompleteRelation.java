@@ -42,6 +42,20 @@ public class CompleteRelation {
 		this.tags = tags;
 	}
 
+	/**
+	 * @return all members of this relation
+	 */
+	public RelationMember[] getMember() {
+		return member;
+	}
+
+	/**
+	 * @return all tags for this relation
+	 */
+	public HashSet<KeyValuePair> getTags() {
+		return tags;
+	}
+
 	@Override
 	public String toString() {
 		String s = "";

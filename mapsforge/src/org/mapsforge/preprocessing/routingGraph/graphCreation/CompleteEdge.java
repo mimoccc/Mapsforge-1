@@ -192,6 +192,67 @@ public class CompleteEdge implements Edge {
 		return isOneWay;
 	}
 
+	/**
+	 * Sets the source vertex
+	 * 
+	 * @param source
+	 *            the vertex that represents the source
+	 */
+	public void setSource(Vertex source) {
+		this.source = source;
+	}
+
+	/**
+	 * Sets the target vertex
+	 * 
+	 * @param target
+	 *            the vertex that represents the target
+	 */
+	public void setTarget(Vertex target) {
+		this.target = target;
+	}
+
+	/**
+	 * Sets the waypoints of this edge
+	 * 
+	 * @param allWaypoints
+	 *            the new waypoints to be set
+	 */
+	public void setAllWaypoints(GeoCoordinate[] allWaypoints) {
+		System.out.println("set allWP " + allWaypoints.length);
+		this.allWaypoints = allWaypoints;
+	}
+
+	/**
+	 * Sets the type of this edge
+	 * 
+	 * @param type
+	 *            the new type
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	/**
+	 * sets the weight for this edge
+	 * 
+	 * @param weight
+	 *            the new weight
+	 */
+	public void setWeight(int weight) {
+		this.weight = weight;
+	}
+
+	/**
+	 * Sets the used nodes of this edge
+	 * 
+	 * @param allUsedNodes
+	 *            the hashset of new nodes
+	 */
+	public void setAllUsedNodes(HashSet<CompleteNode> allUsedNodes) {
+		this.allUsedNodes = allUsedNodes;
+	}
+
 	@Override
 	public String toString() {
 		String s = "[Way " + this.id;

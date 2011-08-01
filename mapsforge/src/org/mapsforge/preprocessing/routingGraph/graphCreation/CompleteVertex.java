@@ -70,12 +70,32 @@ public class CompleteVertex implements Vertex {
 	}
 
 	/**
+	 * Adds a new tag to this vertex
+	 * 
+	 * @param kv
+	 *            the tag to be added
+	 */
+	public void addNewTag(KeyValuePair kv) {
+		additionalTags.add(kv);
+	}
+
+	/**
 	 * Gets the HashSet with the additional Tags
 	 * 
 	 * @return the HashSets with the given additional Key/Value pairs.
 	 */
 	public HashSet<KeyValuePair> getAdditionalTags() {
 		return additionalTags;
+	}
+
+	/**
+	 * Sets the outboundEdges for this vertex
+	 * 
+	 * @param oe
+	 *            the new outgoind edges
+	 */
+	public void setOutboundEdges(Edge[] oe) {
+		outboundEdges = oe;
 	}
 
 	@Override

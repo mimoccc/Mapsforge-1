@@ -29,7 +29,15 @@ public class KeyValuePair implements Serializable {
 	String value;
 	String key;
 
-	KeyValuePair(String v, String k) {
+	/**
+	 * The constructor to create a new instance
+	 * 
+	 * @param v
+	 *            the value
+	 * @param k
+	 *            the key
+	 */
+	public KeyValuePair(String v, String k) {
 		value = v;
 		key = k;
 		// System.out.println("Key: " + k + " Value: " + v);
@@ -61,6 +69,40 @@ public class KeyValuePair implements Serializable {
 	@Override
 	public String toString() {
 		return "Key: " + key + " Value: " + value;
+	}
+
+	/**
+	 * @return the value
+	 */
+	public String getValue() {
+		return value;
+	}
+
+	/**
+	 * sets the value
+	 * 
+	 * @param value
+	 *            the new value
+	 */
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	/**
+	 * @return the key
+	 */
+	public String getKey() {
+		return key;
+	}
+
+	/**
+	 * sets a new key
+	 * 
+	 * @param key
+	 *            the new key
+	 */
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 }
