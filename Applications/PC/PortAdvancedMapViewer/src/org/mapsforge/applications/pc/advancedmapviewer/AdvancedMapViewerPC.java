@@ -14,8 +14,12 @@
  */
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import java.awt.Dimension;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,7 +36,7 @@ import org.mapsforge.pc.maps.MapView;
  * selecting the map file is also included. Some preferences can be adjusted and
  * screenshots of the map may be taken in different image formats.
  */
-public class AdvancedMapViewerPC extends JFrame implements WindowListener {
+public class AdvancedMapViewerPC extends JFrame implements WindowListener, ComponentListener {
 
 	protected Properties propertiesStrings, propertiesSettings;
 	private static final long serialVersionUID = -4127875987929158484L;
@@ -57,6 +61,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		}
 
 		this.addWindowListener(this);
+		this.addComponentListener(this);
 		this.setTitle(propertiesStrings.getProperty("application_name"));
 
 		// Size
@@ -82,7 +87,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 		this.add(filePicker);
 
 		// Map View Configuration
-		this.mapView = new MapView(10);
+		this.mapView = new MapView(10, propertiesSettings);
 		this.add(mapView);
 
 		// Last used map file loading
@@ -103,6 +108,30 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	}
 
 	// WindowListener
+	@Override
+	public void componentResized(ComponentEvent e) {
+		propertiesSettings.setProperty("application_size_height", ""+this.getHeight());
+		propertiesSettings.setProperty("application_size_width", ""+this.getWidth());
+		propertiesSettings.setProperty("map_size_height", ""+(this.getHeight()-103));
+		propertiesSettings.setProperty("map_size_width", ""+this.getWidth());
+		if (this.mapView != null)
+			this.mapView.invalidate();
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		propertiesSettings.setProperty("application_position_x", ""+this.getX());
+		propertiesSettings.setProperty("application_position_y", ""+this.getY());
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e) {
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+	}
+
 	@Override
 	public void windowActivated(WindowEvent e) {
 	}
@@ -157,6 +186,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 
 		if (mapView != null) {
 			mapView.setMapFile(file);
+			propertiesSettings.setProperty("default_map", file);
 		} else {
 			System.err.println("Internal Error: MapView is not found!");
 		}
@@ -188,4 +218,6 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener {
 	public Properties getPropertiesSettings() {
 		return propertiesSettings;
 	}
+
+
 }

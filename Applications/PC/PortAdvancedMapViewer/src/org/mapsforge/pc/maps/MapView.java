@@ -8,6 +8,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
@@ -24,7 +26,7 @@ import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
 
-public class MapView extends JPanel implements MouseListener, MouseMotionListener, KeyListener {
+public class MapView extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
 
 	private static final long serialVersionUID = -7437435113432268381L;
 
@@ -121,16 +123,9 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	byte zoomLevelMin;
 
 
-	public MapView(int mapViewId) {
+	public MapView(int mapViewId, Properties props) {
 		// Properties
-		try {
-			this.propertiesSettings = new Properties();
-			this.propertiesSettings.load(new FileReader(
-					"res/config/config.properties"));
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(this,
-					"Could not read properties files!");
-		}
+		this.propertiesSettings = props;
 
 		// Point
 		this.point = new Point();
@@ -151,6 +146,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addMouseWheelListener(this);
 		setupMapView();
 
 		// Application's specified
@@ -243,6 +239,18 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 
 	@Override
 	public void mouseMoved(MouseEvent keyEvent) { }
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		if (e.getWheelRotation() < 0) {
+			this.zoomAnimator.zoomIn();
+			System.out.println("Zooming In");
+		} else {
+			this.zoomAnimator.zoomOut();
+			System.out.println("Zooming Out");
+		}
+		this.zoomAnimator.stopZoom();
+	}
 	
 	@Override
 	public void keyReleased(KeyEvent keyCode) {
@@ -1414,4 +1422,6 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		this.zoomAnimator.startAnimation();
 		return true;
 	}
+
+	
 }

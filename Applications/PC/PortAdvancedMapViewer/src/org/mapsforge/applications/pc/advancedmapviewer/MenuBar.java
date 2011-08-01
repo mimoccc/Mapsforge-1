@@ -166,15 +166,13 @@ public class MenuBar extends JMenuBar implements ActionListener {
 				0));
 
 		this.itemZoomOut = new JMenuItem(
-				propertiesStrings.getProperty("preferences_zoom_out"), '-');
-		this.itemZoomOut.setAccelerator(KeyStroke.getKeyStroke(
-				KeyEvent.VK_MINUS, 0));
+				propertiesStrings.getProperty("preferences_zoom_out"));
+//		this.itemZoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0));
 		this.itemZoomOut.setToolTipText(propertiesStrings
 				.getProperty("preferences_zoom_out_desc"));
 		this.itemZoomIn = new JMenuItem(
-				propertiesStrings.getProperty("preferences_zoom_in"), '+');
-		this.itemZoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS,
-				0));
+				propertiesStrings.getProperty("preferences_zoom_in"));
+//		this.itemZoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 0));
 		this.itemZoomIn.setToolTipText(propertiesStrings
 				.getProperty("preferences_zoom_in_desc"));
 
