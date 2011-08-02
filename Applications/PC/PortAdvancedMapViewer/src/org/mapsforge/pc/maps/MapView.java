@@ -42,7 +42,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	static final double LONGITUDE_MAX = 180;
 	static final double LONGITUDE_MIN = -180;
 	private static final Color MAP_VIEW_BACKGROUND = new Color(238, 238, 238);
-	static final short MEMORY_CARD_CACHE_SIZE_MAX = 16;
+	static final short MEMORY_CARD_CACHE_SIZE_MAX = 0;
 	static final int MOVE_SPEED_MAX = 30;
 	private static final Paint PAINT_SCALE_BAR = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
