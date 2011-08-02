@@ -42,7 +42,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	static final double LONGITUDE_MAX = 180;
 	static final double LONGITUDE_MIN = -180;
 	private static final Color MAP_VIEW_BACKGROUND = new Color(238, 238, 238);
-	static final short MEMORY_CARD_CACHE_SIZE_MAX = 0;
+	static final short MEMORY_CARD_CACHE_SIZE_MAX = 16;
 	static final int MOVE_SPEED_MAX = 30;
 	private static final Paint PAINT_SCALE_BAR = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
@@ -257,11 +257,11 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		if (keyCode.getKeyCode() == KeyEvent.VK_LEFT
 				|| keyCode.getKeyCode() == KeyEvent.VK_RIGHT) {
 			this.mapMover.stopHorizontalMove();
-		} else if (keyCode.getKeyCode() == KeyEvent.VK_UP
-				|| keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_PLUS
+				|| keyCode.getKeyCode() == KeyEvent.VK_MINUS) {
 			this.mapMover.stopVerticalMove();
-		} else if (keyCode.getKeyCode() == KeyEvent.VK_ADD
-				|| keyCode.getKeyCode() == KeyEvent.VK_SUBTRACT) {
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_PLUS
+				|| keyCode.getKeyCode() == KeyEvent.VK_MINUS) {
 			this.zoomAnimator.stopZoom();
 		}
 	}
@@ -276,9 +276,9 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 			this.mapMover.moveUp();
 		} else if (keyCode.getKeyCode() == KeyEvent.VK_DOWN) {
 			this.mapMover.moveDown();
-		} else if (keyCode.getKeyCode() == KeyEvent.VK_ADD) {
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_PLUS) {
 			this.zoomAnimator.zoomIn();
-		} else if (keyCode.getKeyCode() == KeyEvent.VK_SUBTRACT) {
+		} else if (keyCode.getKeyCode() == KeyEvent.VK_MINUS) {
 			this.zoomAnimator.zoomOut();
 		}
 	}
@@ -1067,7 +1067,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 						}
 					} else {
 						// cache miss
-						// System.out.println("cache miss");
+						System.out.println("cache miss");
 						this.mapGenerator.addJob(this.currentJob);
 					}
 				}
