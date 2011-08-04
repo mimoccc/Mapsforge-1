@@ -267,6 +267,7 @@ public class CompleteEdge implements Edge {
 			s += kv.toString() + ", ";
 		}
 		s += " Nodes ";
+
 		for (CompleteNode node : this.allUsedNodes) {
 			s += node.toString() + ", ";
 		}
