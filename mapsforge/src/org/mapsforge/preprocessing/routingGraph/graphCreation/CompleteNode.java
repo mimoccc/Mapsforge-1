@@ -79,4 +79,23 @@ public class CompleteNode {
 	public HashSet<KeyValuePair> getAdditionalTags() {
 		return additionalTags;
 	}
+
+	@Override
+	public int hashCode() {
+		return new Integer(id).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof CompleteNode) {
+			CompleteNode o = (CompleteNode) obj;
+			if (this.getId() == o.getId() && this.getCoordinate().equals(o.getCoordinate())
+					&& ((this.getAdditionalTags() == null && o.getAdditionalTags() == null))
+					|| this.getAdditionalTags().equals(o.getAdditionalTags())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }
