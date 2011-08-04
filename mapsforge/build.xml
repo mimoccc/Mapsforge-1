@@ -338,6 +338,30 @@ purpose.
 			      file="${mapsforge.dist}/mapsforge-graph-creator-${mapsforge.version}.jar"
 			      todir="${user.home}/.openstreetmap/osmosis/plugins" />
 		</target>
+
+	
+	
+	<!-- ################## mapsforge-multimodal-routing.jar ################## -->
+
+
+	<!-- Create the JAR file -->
+	<target name="mapsforge-multimodal-routing-jar-create">
+		<mkdir dir="${mapsforge.dist}" />
+		<!-- Include source code and generated class files, avoid duplicates -->
+		<jar destfile="${mapsforge.dist}/mapsforge-multimodal-routing-${mapsforge.version}.jar"
+		     duplicate="preserve">
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/core/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/core/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/routingGraph/graphCreation/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/routingGraph/graphCreation/" />
+			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/preprocessing/highwayHierarchies/hierarchyComputation/util/renderer/" />
+			<fileset dir="${mapsforge.src}" includes="org/mapsforge/preprocessing/highwayHierarchies/hierarchyComputation/util/renderer/" />
+		</jar>
+		<antcall target="eclipse-refresh">
+			<param name="ressource" value="mapsforge/${mapsforge.dist}" />
+		</antcall>
+	</target>
+	
 	
 	<!-- ################## mapsforge-routing.jar ################## -->
 
