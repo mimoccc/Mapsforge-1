@@ -198,17 +198,16 @@ public class XMLReader {
 									nodeTagsSet.add(getKeyValue(tmpnode3));
 							}
 
-						/*stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
-								"stopWayTags");
-						if (stopTagChildNode.hasChildNodes())
-
-							// Traverse Children of Child(2) stopWayTags: tags
-							for (int j = 0; j < stopTagChildNode.getChildNodes()
-									.getLength(); j++) {
-								Node tmpnode3 = stopTagChildNode.getChildNodes().item(j);
-								if (tmpnode3.getNodeName().equals("tag"))
-									wayTagsSet.add(getKeyValue(tmpnode3));
-							}*/
+						/*
+						 * stopTagChildNode = this.getChildNodeByName(traversNode.getChildNodes(),
+						 * "stopWayTags"); if (stopTagChildNode.hasChildNodes())
+						 * 
+						 * // Traverse Children of Child(2) stopWayTags: tags for (int j = 0; j <
+						 * stopTagChildNode.getChildNodes() .getLength(); j++) { Node tmpnode3 =
+						 * stopTagChildNode.getChildNodes().item(j); if
+						 * (tmpnode3.getNodeName().equals("tag")) wayTagsSet.add(getKeyValue(tmpnode3));
+						 * }
+						 */
 
 						traversNode = this.getChildNodeByName(tmpnode2.getChildNodes(),
 								"speedreductions");
@@ -253,11 +252,11 @@ public class XMLReader {
 				}
 			}
 		}
-		System.out.println("[RGC] finished...");
-		System.out.println("[RGC] Vehicles processed: " + vehiclecount);
-		System.out.println("[RGC] wayTags found: " + wayTagsSet.size());
-		System.out.println("[RGC] nodeTags found: " + nodeTagsSet.size());
-		System.out.println("[RGC] relationsTags found: " + relationTagsSet.size());
+		System.out.println("[XML-Parse] finished...");
+		System.out.println("[XML-Parse] Vehicles processed: " + vehiclecount);
+		System.out.println("[XML-Parse] wayTags found: " + wayTagsSet.size());
+		System.out.println("[XML-Parse] nodeTags found: " + nodeTagsSet.size());
+		System.out.println("[XML-Parse] relationTags found: " + relationTagsSet.size());
 
 		return new ConfigObject(wayTagsSet, nodeTagsSet, relationTagsSet);
 

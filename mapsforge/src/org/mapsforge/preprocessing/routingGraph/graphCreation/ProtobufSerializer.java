@@ -14,12 +14,13 @@
  */
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
+import gnu.trove.map.hash.THashMap;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 
 import org.mapsforge.core.GeoCoordinate;
@@ -55,9 +56,9 @@ public class ProtobufSerializer {
 	 * @param relations
 	 *            , all nodes will be written into that map
 	 */
-	public static void loadFromFile(String path, HashMap<Integer, CompleteVertex> vertices,
-			HashMap<Integer, CompleteEdge> edges,
-			HashMap<Integer, CompleteRelation> relations) {
+	public static void loadFromFile(String path, THashMap<Integer, CompleteVertex> vertices,
+			THashMap<Integer, CompleteEdge> edges,
+			THashMap<Integer, CompleteRelation> relations) {
 		AllGraphDataPBF allGraphData = null;
 		try {
 			allGraphData = AllGraphDataPBF.parseFrom(new FileInputStream(path));
@@ -91,9 +92,9 @@ public class ProtobufSerializer {
 	 *            the relations to be saved
 	 */
 	public static void saveToFile(String path,
-			HashMap<Integer, CompleteVertex> vertices,
-			HashMap<Integer, CompleteEdge> edges,
-			HashMap<Integer, CompleteRelation> relations) {
+			THashMap<Integer, CompleteVertex> vertices,
+			THashMap<Integer, CompleteEdge> edges,
+			THashMap<Integer, CompleteRelation> relations) {
 
 		AllGraphDataPBF.Builder allGraphData = AllGraphDataPBF.newBuilder();
 
@@ -109,19 +110,17 @@ public class ProtobufSerializer {
 			allGraphData.build().writeTo(output);
 			output.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
 
 	private static void readEdges(AllGraphDataPBF allGraphData,
-			HashMap<Integer, CompleteEdge> edges, HashMap<Integer, CompleteVertex> vertices) {
-
+			THashMap<Integer, CompleteEdge> edges, THashMap<Integer, CompleteVertex> vertices) {
 		edges.clear();
+
 		int i = 1;
 		for (CompleteEdgePBF ce_pbf : allGraphData.getAllEdgesList()) {
 
@@ -176,7 +175,7 @@ public class ProtobufSerializer {
 	}
 
 	private static void readVertices(AllGraphDataPBF allGraphData,
-			HashMap<Integer, CompleteVertex> vertices) {
+			THashMap<Integer, CompleteVertex> vertices) {
 
 		vertices.clear();
 
@@ -199,7 +198,7 @@ public class ProtobufSerializer {
 	}
 
 	private static void readRelations(AllGraphDataPBF allGraphData,
-			HashMap<Integer, CompleteRelation> relations) {
+			THashMap<Integer, CompleteRelation> relations) {
 
 		relations.clear();
 
@@ -237,7 +236,8 @@ public class ProtobufSerializer {
 	}
 
 	private static void writeEdges(AllGraphDataPBF.Builder allGraphData,
-			HashMap<Integer, CompleteEdge> edges) {
+			THashMap<Integer, CompleteEdge> edges) {
+
 		for (CompleteEdge ce : edges.values()) {
 			CompleteEdgePBF.Builder ce_PBF = CompleteEdgePBF.newBuilder();
 
@@ -294,7 +294,7 @@ public class ProtobufSerializer {
 	}
 
 	private static void writeVertices(AllGraphDataPBF.Builder allGraphData,
-			HashMap<Integer, CompleteVertex> vertices) {
+			THashMap<Integer, CompleteVertex> vertices) {
 		for (CompleteVertex cv : vertices.values()) {
 			CompleteVertexPBF.Builder cv_PBF = CompleteVertexPBF.newBuilder();
 			cv_PBF.setId(cv.id);
@@ -317,7 +317,7 @@ public class ProtobufSerializer {
 	}
 
 	private static void writeRelations(AllGraphDataPBF.Builder allGraphData,
-			HashMap<Integer, CompleteRelation> relations) {
+			THashMap<Integer, CompleteRelation> relations) {
 		for (CompleteRelation cr : relations.values()) {
 			CompleteRelationPBF.Builder cr_PBF = CompleteRelationPBF.newBuilder();
 

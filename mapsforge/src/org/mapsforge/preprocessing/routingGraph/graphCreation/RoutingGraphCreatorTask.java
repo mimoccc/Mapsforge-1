@@ -15,13 +15,13 @@
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
 import gnu.trove.function.TIntFunction;
+import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.procedure.TIntProcedure;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,12 +78,12 @@ class RoutingGraphCreatorTask implements Sink {
 	private SimpleObjectStore<Relation> relations;
 
 	// List for completely filled objects
-	private HashMap<Integer, CompleteVertex> vertices;
-	private HashMap<Integer, CompleteEdge> edges;
-	private HashMap<Integer, CompleteRelation> completeRelations;
+	private THashMap<Integer, CompleteVertex> vertices;
+	private THashMap<Integer, CompleteEdge> edges;
+	private THashMap<Integer, CompleteRelation> completeRelations;
 
 	// List with all needed Nodes (usually on ways)
-	HashMap<Integer, CompleteNode> neededNodes;
+	THashMap<Integer, CompleteNode> neededNodes;
 
 	private final HashSet<String> remValues = new HashSet<String>(Arrays.asList(new String[] { "name",
 			"destination", "ref", "highway" }));
@@ -104,7 +104,7 @@ class RoutingGraphCreatorTask implements Sink {
 
 		this.usedNodes = new TLongIntHashMap();
 
-		this.neededNodes = new HashMap<Integer, CompleteNode>();
+		this.neededNodes = new THashMap<Integer, CompleteNode>();
 
 		// initialize stores where nodes an ways are temporarily written to :
 		this.nodes = new SimpleObjectStore<Node>(new SingleClassObjectSerializationFactory(
@@ -227,7 +227,7 @@ class RoutingGraphCreatorTask implements Sink {
 		});
 
 		// WRITE : all nodes
-		vertices = new HashMap<Integer, CompleteVertex>();
+		vertices = new THashMap<Integer, CompleteVertex>();
 		double[] latitudes = new double[usedNodes.size()];
 		double[] longitudes = new double[usedNodes.size()];
 
@@ -258,7 +258,7 @@ class RoutingGraphCreatorTask implements Sink {
 		iterNodes.release();
 
 		// WRITE : all edges
-		edges = new HashMap<Integer, CompleteEdge>();
+		edges = new THashMap<Integer, CompleteEdge>();
 		ReleasableIterator<Way> iterWays = ways.iterate();
 		while (iterWays.hasNext()) {
 			Way way = iterWays.next();
@@ -269,7 +269,7 @@ class RoutingGraphCreatorTask implements Sink {
 		iterWays.release();
 
 		// WRITE : all relations
-		completeRelations = new HashMap<Integer, CompleteRelation>();
+		completeRelations = new THashMap<Integer, CompleteRelation>();
 
 		ReleasableIterator<Relation> iterRelations = relations.iterate();
 		while (iterRelations.hasNext()) {
@@ -293,17 +293,17 @@ class RoutingGraphCreatorTask implements Sink {
 		this.usedNodes = null;
 
 		// print summary
-		System.out.println("amountOfNodesProcessed = " + amountOfNodesProcessed);
-		System.out.println("amountOfWaysProcessed = " + amountOfWaysProcessed);
-		System.out.println("amountOfRelationsProcessed = " + amountOfRelationsProcessed);
-		System.out.println("amountOfVerticesWritten = " + amountOfVerticesWritten);
-		System.out.println("amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
-		System.out.println("amountOfRelationsWritten = " + amountOfRelationsWritten);
+		System.out.println("[RGC] amountOfNodesProcessed = " + amountOfNodesProcessed);
+		System.out.println("[RGC] amountOfWaysProcessed = " + amountOfWaysProcessed);
+		System.out.println("[RGC] amountOfRelationsProcessed = " + amountOfRelationsProcessed);
+		System.out.println("[RGC] amountOfVerticesWritten = " + amountOfVerticesWritten);
+		System.out.println("[RGC] amountOfEdgesWritten = " + amountOfEdgesWritten + " ");
+		System.out.println("[RGC] amountOfRelationsWritten = " + amountOfRelationsWritten);
 
 		// TEST Save and read
 
-		int sum = vertices.values().size() + edges.values().size() +
-				completeRelations.values().size();
+		int sum = vertices.size() + edges.size() +
+				completeRelations.size();
 		System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
 		ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
 		//
