@@ -15,6 +15,7 @@
 package org.mapsforge.preprocessing.routingGraph.graphCreation;
 
 import gnu.trove.map.hash.THashMap;
+import gnu.trove.procedure.TObjectProcedure;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -235,127 +236,173 @@ public class ProtobufSerializer {
 
 	}
 
-	private static void writeEdges(AllGraphDataPBF.Builder allGraphData,
+	private static void writeEdges(final AllGraphDataPBF.Builder allGraphData,
 			THashMap<Integer, CompleteEdge> edges) {
 
-		for (CompleteEdge ce : edges.values()) {
-			CompleteEdgePBF.Builder ce_PBF = CompleteEdgePBF.newBuilder();
-
-			ce_PBF.setId(ce.id);
-			ce_PBF.setSourceID(ce.source.getId());
-			ce_PBF.setTargetID(ce.target.getId());
-			if (ce.name != null)
-				ce_PBF.setName(ce.name);
-			if (ce.type != null)
-				ce_PBF.setType(ce.type);
-			ce_PBF.setRoundabout(ce.roundabout);
-			ce_PBF.setIsOneWay(ce.isOneWay);
-			if (ce.ref != null)
-				ce_PBF.setRef(ce.ref);
-			if (ce.destination != null)
-				ce_PBF.setDestination(ce.destination);
-			ce_PBF.setWeight(ce.weight);
-
-			for (KeyValuePair kv : ce.additionalTags) {
-				KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder().setKey(kv.key);
-				kv_PBF.setValue(kv.value);
-				ce_PBF.addAdditionalTags(kv_PBF);
+		edges.forEachValue(new TObjectProcedure<CompleteEdge>() {
+			@Override
+			public boolean execute(CompleteEdge arg0) {
+				allGraphData.addAllEdges(writeSingleEdge(arg0));
+				return true;
 			}
+		});
 
-			for (GeoCoordinate geo : ce.allWaypoints) {
-				GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
-				geo_PBF.setLatitude(geo.getLatitude());
-				geo_PBF.setLongitude(geo.getLongitude());
-				ce_PBF.addAllWaypoints(geo_PBF);
-			}
-			// write nodes
-			for (CompleteNode node : ce.allUsedNodes) {
-				CompleteNodePBF.Builder node_PBF = CompleteNodePBF.newBuilder();
-				node_PBF.setId(node.id);
-
-				GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
-				geo_PBF.setLatitude(node.coordinate.getLatitude());
-				geo_PBF.setLongitude(node.coordinate.getLongitude());
-				node_PBF.setCoordinate(geo_PBF);
-
-				for (KeyValuePair kv : node.additionalTags) {
-					KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder();
-					kv_PBF.setKey(kv.key);
-					kv_PBF.setValue(kv.value);
-					node_PBF.addAdditionalTags(kv_PBF);
-				}
-
-				ce_PBF.addAllUsedNodes(node_PBF);
-
-			}
-			allGraphData.addAllEdges(ce_PBF);
-		}
+		// Old version remove final in arguments
+		/*
+		 * (CompleteEdge ce : edges.values()) { allGraphData.addAllEdges(writeSingleEdge(ce)); }
+		 */
 
 	}
 
-	private static void writeVertices(AllGraphDataPBF.Builder allGraphData,
-			THashMap<Integer, CompleteVertex> vertices) {
-		for (CompleteVertex cv : vertices.values()) {
-			CompleteVertexPBF.Builder cv_PBF = CompleteVertexPBF.newBuilder();
-			cv_PBF.setId(cv.id);
+	static CompleteEdgePBF.Builder writeSingleEdge(CompleteEdge ce) {
+		CompleteEdgePBF.Builder ce_PBF = CompleteEdgePBF.newBuilder();
+
+		ce_PBF.setId(ce.id);
+		ce_PBF.setSourceID(ce.source.getId());
+		ce_PBF.setTargetID(ce.target.getId());
+		if (ce.name != null)
+			ce_PBF.setName(ce.name);
+		if (ce.type != null)
+			ce_PBF.setType(ce.type);
+		ce_PBF.setRoundabout(ce.roundabout);
+		ce_PBF.setIsOneWay(ce.isOneWay);
+		if (ce.ref != null)
+			ce_PBF.setRef(ce.ref);
+		if (ce.destination != null)
+			ce_PBF.setDestination(ce.destination);
+		ce_PBF.setWeight(ce.weight);
+
+		for (KeyValuePair kv : ce.additionalTags) {
+			KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder().setKey(kv.key);
+			kv_PBF.setValue(kv.value);
+			ce_PBF.addAdditionalTags(kv_PBF);
+		}
+
+		for (GeoCoordinate geo : ce.allWaypoints) {
+			GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
+			geo_PBF.setLatitude(geo.getLatitude());
+			geo_PBF.setLongitude(geo.getLongitude());
+			ce_PBF.addAllWaypoints(geo_PBF);
+		}
+		// write nodes
+		for (CompleteNode node : ce.allUsedNodes) {
+			CompleteNodePBF.Builder node_PBF = CompleteNodePBF.newBuilder();
+			node_PBF.setId(node.id);
 
 			GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
-			geo_PBF.setLatitude(cv.coordinate.getLatitude());
-			geo_PBF.setLongitude(cv.coordinate.getLongitude());
-			cv_PBF.setCoordinate(geo_PBF);
+			geo_PBF.setLatitude(node.coordinate.getLatitude());
+			geo_PBF.setLongitude(node.coordinate.getLongitude());
+			node_PBF.setCoordinate(geo_PBF);
 
-			for (KeyValuePair kv : cv.additionalTags) {
+			for (KeyValuePair kv : node.additionalTags) {
 				KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder();
 				kv_PBF.setKey(kv.key);
 				kv_PBF.setValue(kv.value);
-				cv_PBF.addAdditionalTags(kv_PBF);
+				node_PBF.addAdditionalTags(kv_PBF);
 			}
 
-			allGraphData.addAllVertices(cv_PBF);
+			ce_PBF.addAllUsedNodes(node_PBF);
 
 		}
+
+		return ce_PBF;
 	}
 
-	private static void writeRelations(AllGraphDataPBF.Builder allGraphData,
-			THashMap<Integer, CompleteRelation> relations) {
-		for (CompleteRelation cr : relations.values()) {
-			CompleteRelationPBF.Builder cr_PBF = CompleteRelationPBF.newBuilder();
+	private static void writeVertices(final AllGraphDataPBF.Builder allGraphData,
+			THashMap<Integer, CompleteVertex> vertices) {
 
-			for (RelationMember rm : cr.member) {
-				RelationMemberPBF.Builder rm_PBF =
-						RelationMemberPBF.newBuilder();
+		vertices.forEachValue(new TObjectProcedure<CompleteVertex>() {
 
-				rm_PBF.setMemberId(rm.getMemberId());
-				rm_PBF.setMemberRole(rm.getMemberRole());
-
-				switch (rm.getMemberType()) {
-					case Node:
-						rm_PBF.setMemberType(MemberType.NODE);
-						break;
-					case Way:
-						rm_PBF.setMemberType(MemberType.WAY);
-						break;
-					case Relation:
-						rm_PBF.setMemberType(MemberType.RELATION);
-						break;
-					case Bound:
-						break;
-				}
-
-				cr_PBF.addMember(rm_PBF);
+			@Override
+			public boolean execute(CompleteVertex arg0) {
+				allGraphData.addAllVertices(writeSingleVertex(arg0));
+				return true;
 			}
+		});
 
-			for (KeyValuePair kv : cr.tags) {
-				KeyValuePairPBF.Builder kv_PBF =
-						KeyValuePairPBF.newBuilder();
-				kv_PBF.setKey(kv.key);
-				kv_PBF.setValue(kv.value);
-				cr_PBF.addTags(kv_PBF);
-			}
+		// Old version remove final in arguments
+		/*
+		 * for (CompleteVertex cv : vertices.values()) {
+		 * allGraphData.addAllVertices(writeSingleVertex(cv)); }
+		 */
+	}
 
-			allGraphData.addAllRelations(cr_PBF);
+	static CompleteVertexPBF.Builder writeSingleVertex(CompleteVertex cv) {
+		CompleteVertexPBF.Builder cv_PBF = CompleteVertexPBF.newBuilder();
+		cv_PBF.setId(cv.id);
 
+		GeoCoordinatePBF.Builder geo_PBF = GeoCoordinatePBF.newBuilder();
+		geo_PBF.setLatitude(cv.coordinate.getLatitude());
+		geo_PBF.setLongitude(cv.coordinate.getLongitude());
+		cv_PBF.setCoordinate(geo_PBF);
+
+		for (KeyValuePair kv : cv.additionalTags) {
+			KeyValuePairPBF.Builder kv_PBF = KeyValuePairPBF.newBuilder();
+			kv_PBF.setKey(kv.key);
+			kv_PBF.setValue(kv.value);
+			cv_PBF.addAdditionalTags(kv_PBF);
 		}
+
+		return cv_PBF;
+	}
+
+	private static void writeRelations(final AllGraphDataPBF.Builder allGraphData,
+			THashMap<Integer, CompleteRelation> relations) {
+
+		relations.forEachValue(new TObjectProcedure<CompleteRelation>() {
+
+			@Override
+			public boolean execute(CompleteRelation arg0) {
+				allGraphData.addAllRelations(writeSingleRelation(arg0));
+				return true;
+			}
+
+		});
+
+		// Old version (remove final in arguments)
+		/*
+		 * for (CompleteRelation cr : relations.values()) {
+		 * allGraphData.addAllRelations(writeSingleRelation(cr)); }
+		 */
+
+	}
+
+	static CompleteRelationPBF.Builder writeSingleRelation(CompleteRelation cr) {
+		CompleteRelationPBF.Builder cr_PBF = CompleteRelationPBF.newBuilder();
+
+		for (RelationMember rm : cr.member) {
+			RelationMemberPBF.Builder rm_PBF =
+					RelationMemberPBF.newBuilder();
+
+			rm_PBF.setMemberId(rm.getMemberId());
+			rm_PBF.setMemberRole(rm.getMemberRole());
+
+			switch (rm.getMemberType()) {
+				case Node:
+					rm_PBF.setMemberType(MemberType.NODE);
+					break;
+				case Way:
+					rm_PBF.setMemberType(MemberType.WAY);
+					break;
+				case Relation:
+					rm_PBF.setMemberType(MemberType.RELATION);
+					break;
+				case Bound:
+					break;
+			}
+
+			cr_PBF.addMember(rm_PBF);
+		}
+
+		for (KeyValuePair kv : cr.tags) {
+			KeyValuePairPBF.Builder kv_PBF =
+					KeyValuePairPBF.newBuilder();
+			kv_PBF.setKey(kv.key);
+			kv_PBF.setValue(kv.value);
+			cr_PBF.addTags(kv_PBF);
+		}
+
+		return cr_PBF;
 	}
 
 }
