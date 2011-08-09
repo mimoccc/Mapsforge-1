@@ -195,18 +195,22 @@ public class PreferencesMenu extends JMenu implements ActionListener {
 				.getProperty("preferences_show_scale_bar"))) {
 			propertiesSettings.setProperty("preferences_show_scale_bar",
 					Boolean.toString(itemMapScale.isSelected()));
+			//TODO: Render/Hide Scale this.parentFrame.mapView.setScaleBar(itemMapScale.isSelected());
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("preferences_show_fps_counter"))) {
 			propertiesSettings.setProperty("preferences_show_fps_counter",
 					Boolean.toString(itemFrameRate.isSelected()));
+			this.parentFrame.mapView.setFpsCounter(itemFrameRate.isSelected());
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("preferences_show_tile_frames"))) {
 			propertiesSettings.setProperty("preferences_show_tile_frames",
 					Boolean.toString(itemTileBoundaries.isSelected()));
+			this.parentFrame.mapView.setTileFrames(itemTileBoundaries.isSelected());
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("preferences_show_water_tiles"))) {
 			propertiesSettings.setProperty("preferences_show_water_tiles",
 					Boolean.toString(itemWaterTiles.isSelected()));
+			this.parentFrame.mapView.setWaterTiles(itemWaterTiles.isSelected());
 		}
 
 		// Map Mode

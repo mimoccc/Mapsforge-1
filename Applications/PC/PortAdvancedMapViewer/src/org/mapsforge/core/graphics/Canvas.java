@@ -26,19 +26,11 @@ public class Canvas {
 	private Properties propertiesSettings;
 
 	public Canvas() {
-		// Properties
-		try {
-			this.propertiesSettings = new Properties();
-			this.propertiesSettings.load(new FileReader(
-					"res/config/config.properties"));
-		} catch (IOException e) {
-			// JOptionPane.showMessageDialog(this,
-			// "Could not read properties files!");
-		}
-		int width = Integer.parseInt(propertiesSettings
-				.getProperty("map_size_width"));
-		int height = Integer.parseInt(propertiesSettings
-				.getProperty("map_size_width"));
+		mBufferedImage = new BufferedImage(640, 480,
+				BufferedImage.TYPE_INT_RGB);
+	}
+	
+	public Canvas(int width, int height) {
 		mBufferedImage = new BufferedImage(width, height,
 				BufferedImage.TYPE_INT_RGB);
 	}
@@ -47,7 +39,7 @@ public class Canvas {
 		mBufferedImage = bitmap.getImage();
 	}
 
-	// TODO
+	// TODO: Remove Cutting off text
 	public void drawText(String text, float x, float y, Paint paint) {
 		Graphics2D g = mBufferedImage.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,

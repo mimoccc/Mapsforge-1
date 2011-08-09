@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
@@ -214,57 +215,49 @@ public class MenuBar extends JMenuBar implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
-
+		// TODO: Menu functions
 		if (cmd.equals(propertiesStrings.getProperty("menu_info_map_file"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings.getProperty("menu_info_about"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_follow_gps_signal"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_last_known"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_enter_coordinates"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_map_file_center"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_screenshot_jpeg"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_screenshot_png"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_mapnik"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_osmarender"))) {
-			// TODO:
+
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_select_file"))) {
 			try {
 				parentFrame.startRenderThemeFileBrowser();
 			} catch (IOException e1) {
-				// TODO: Logging
-				e1.printStackTrace();
+				JOptionPane.showMessageDialog(this, e1.getMessage());
 			}
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_mapfile_select_file"))) {
 			try {
 				parentFrame.startMapFileBrowser();
 			} catch (IOException e1) {
-				// TODO: Logging
-				e1.printStackTrace();
+				JOptionPane.showMessageDialog(this, e1.getMessage());
 			}
-		} else if (cmd.equals(propertiesStrings
-				.getProperty("preferences_zoom_out"))) {
-			// TODO: Zooming out
-		} else if (cmd.equals(propertiesStrings
-				.getProperty("preferences_zoom_in"))) {
-			// TODO: Zooming in
 		} else if (cmd.equals("Exit")) {
 			parentFrame.close();
 

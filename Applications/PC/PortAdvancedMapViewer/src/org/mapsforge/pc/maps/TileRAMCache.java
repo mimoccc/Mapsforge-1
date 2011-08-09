@@ -36,7 +36,6 @@ public class TileRAMCache {
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
-	@SuppressWarnings("unused")
 	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
 	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
@@ -142,14 +141,15 @@ public class TileRAMCache {
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		System.out.println("RAM put: " + mapGeneratorJob);
 		if (this.capacity > 0) {
-			/*
-			 * TODO UNSAFE bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-			 * this.bitmapBuffer.rewind(); this.tempBitmap =
-			 * this.bitmapPool.removeFirst();
-			 * this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
-			 * synchronized (this) { this.map.put(mapGeneratorJob,
-			 * this.tempBitmap); }
-			 */
+			// TODO UNSAFE 
+//			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
+//			this.bitmapBuffer.rewind();
+//			this.tempBitmap = this.bitmapPool.remove(0);
+//			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
+//			synchronized (this) {
+//				this.map.put(mapGeneratorJob, this.tempBitmap);
+//			}
+			 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
 				ImageIO.write(bitmap.getImage(), "jpg", baos);
@@ -162,8 +162,8 @@ public class TileRAMCache {
 				}
 				baos.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.err.println("RAM put: " + e.getMessage());
+				return;
 			}
 
 			this.tempBitmap = bitmap;

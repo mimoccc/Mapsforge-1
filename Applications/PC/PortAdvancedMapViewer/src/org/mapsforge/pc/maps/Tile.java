@@ -89,7 +89,6 @@ class Tile implements Serializable {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;
-		System.out.println("Tile (" + x + "," + y + ")");
 		calculateTransientValues();
 	}
 

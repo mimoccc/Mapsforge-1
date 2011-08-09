@@ -14,8 +14,6 @@
  */
 package org.mapsforge.pc.maps;
 
-//import android.os.SystemClock;
-import org.mapsforge.core.os.SystemClock;
 
 /**
  * A ZoomAnimator handles the zoom-in and zoom-out animations of the
@@ -27,18 +25,13 @@ class ZoomAnimator extends Thread {
 	private static final int FRAME_LENGTH = 15;
 	private static final String THREAD_NAME = "ZoomAnimator";
 
-	private float currentZoom;
 	private int duration;
 	private boolean executeAnimation;
 	private MapView mapView;
 	private float pivotX;
 	private float pivotY;
-	private float scaleFactor;
 	private float scaleFactorApplied;
-	// private long timeCurrent;
-	// private long timeElapsed;
-	// private float timeElapsedPercent;
-	// private long timeStart;
+	private long timeStart;
 	private float zoomDifference;
 	private float zoomEnd;
 	private float zoomStart;
@@ -47,6 +40,7 @@ class ZoomAnimator extends Thread {
 	 * Constructs a new ZoomAnimator with the default duration.
 	 */
 	ZoomAnimator() {
+		super();
 		setDuration(DEFAULT_DURATION);
 	}
 
@@ -54,9 +48,14 @@ class ZoomAnimator extends Thread {
 	public void run() {
 		setName(THREAD_NAME);
 
+		long timeElapsed;
+		float timeElapsedPercent;
+		float currentZoom;
+		float scaleFactor;
+		
 		while (!isInterrupted()) {
 			synchronized (this) {
-				while (!isInterrupted() && ((this.zoomDifference == 0))) {
+				while (!isInterrupted() && !this.executeAnimation) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
@@ -71,19 +70,14 @@ class ZoomAnimator extends Thread {
 			}
 
 			// calculate the elapsed time
-			// this.timeCurrent = SystemClock.uptimeMillis();
-			// this.timeElapsed = this.timeCurrent - this.timeStart;
-			// this.timeElapsedPercent = Math.min(1, this.timeElapsed / (float)
-			// this.duration);
+			timeElapsed = System.currentTimeMillis() - this.timeStart;
+			timeElapsedPercent = Math.min(1, timeElapsed / (float) this.duration);
+
 			// calculate the zoom and scale values at the current moment
-			// this.currentZoom = this.zoomStart + this.timeElapsedPercent *
-			// this.zoomDifference;
-			this.currentZoom = this.zoomStart + this.zoomDifference;
-			this.mapView.zoomLevel += this.currentZoom;
-			this.scaleFactor = this.currentZoom / this.scaleFactorApplied;
-			this.scaleFactorApplied *= this.scaleFactor;
-			this.mapView.matrixPostScale(this.scaleFactor, this.scaleFactor,
-					this.pivotX, this.pivotY);
+			currentZoom = this.zoomStart + timeElapsedPercent * this.zoomDifference;
+			scaleFactor = currentZoom / this.scaleFactorApplied;
+			this.scaleFactorApplied *= scaleFactor;
+			this.mapView.matrixPostScale(scaleFactor, scaleFactor, this.pivotX, this.pivotY);
 
 			// check if the animation time is over
 			// if (this.timeElapsed >= this.duration) {
@@ -105,36 +99,6 @@ class ZoomAnimator extends Thread {
 
 		// set the pointer to null to avoid memory leaks
 		this.mapView = null;
-	}
-
-	void zoomIn() {
-		if (this.zoomDifference < 0) {
-			//
-			this.zoomDifference = 0;
-		} else if (this.zoomDifference == 0) {
-			//
-			this.zoomDifference = 1f;
-			synchronized (this) {
-				notify();
-			}
-		}
-	}
-
-	void zoomOut() {
-		if (this.zoomDifference > 0) {
-			//
-			this.zoomDifference = 0;
-		} else if (this.zoomDifference == 0) {
-			//
-			this.zoomDifference = -1f;
-			synchronized (this) {
-				notify();
-			}
-		}
-	}
-
-	void stopZoom() {
-		this.zoomDifference = 0;
 	}
 
 	/**
@@ -198,7 +162,7 @@ class ZoomAnimator extends Thread {
 		this.zoomDifference = this.zoomEnd - this.zoomStart;
 		this.scaleFactorApplied = this.zoomStart;
 		this.executeAnimation = true;
-		// this.timeStart = SystemClock.uptimeMillis();
+		this.timeStart = System.currentTimeMillis();
 		synchronized (this) {
 			notify();
 		}

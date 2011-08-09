@@ -115,7 +115,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Compo
 		propertiesSettings.setProperty("map_size_height", ""+(this.getHeight()-103));
 		propertiesSettings.setProperty("map_size_width", ""+this.getWidth());
 		if (this.mapView != null)
-			this.mapView.invalidate();
+			this.mapView.onSizeChanged(this.getWidth(), (this.getHeight()-103));
 	}
 
 	@Override
@@ -198,7 +198,7 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Compo
 	 * @throws IOException
 	 */
 	protected void startRenderThemeFileBrowser() throws IOException {
-		// TODO:
+		// TODO: Render Theme File Browser
 	}
 
 	/**
