@@ -106,8 +106,13 @@ abstract class MapGenerator extends Thread {
 					}
 
 					// put the tile image in the cache
-					this.tileMemoryCardCache.put(this.currentMapGeneratorJob,
+					System.out.println("Job to be put in: " + this.currentMapGeneratorJob);
+//					this.tileMemoryCardCache.put(this.currentMapGeneratorJob,
+//							this.currentTileBitmap);
+					this.tileRAMCache.put(this.currentMapGeneratorJob,
 							this.currentTileBitmap);
+					
+					
 				}
 			}
 

@@ -28,7 +28,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-//import android.graphics.Bitmap;
 import org.mapsforge.core.graphics.Bitmap;
 
 /**

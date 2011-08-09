@@ -59,6 +59,9 @@ public class TileRAMCache {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}
+		
+		System.out.println("TileRAMCache");
+		
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);
 		this.bitmapPool = new LinkedList<Bitmap>();
@@ -137,6 +140,7 @@ public class TileRAMCache {
 	 * @see Map#put(Object, Object)
 	 */
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
+		System.out.println("RAM put: " + mapGeneratorJob);
 		if (this.capacity > 0) {
 			/*
 			 * TODO UNSAFE bitmap.copyPixelsToBuffer(this.bitmapBuffer);

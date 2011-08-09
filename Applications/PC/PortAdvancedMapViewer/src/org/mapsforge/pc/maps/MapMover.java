@@ -68,7 +68,7 @@ class MapMover extends Thread {
 			// this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX,
 			// this.timeElapsed
 			// * this.moveY);
-			this.mapView.matrixPostTranslate(this.moveX, this.moveY);
+			//this.mapView.matrixPostTranslate(this.moveX, this.moveY);
 			// move the map and the overlays
 			// this.mapView.moveMap(this.timeElapsed * this.moveX,
 			// this.timeElapsed * this.moveY);

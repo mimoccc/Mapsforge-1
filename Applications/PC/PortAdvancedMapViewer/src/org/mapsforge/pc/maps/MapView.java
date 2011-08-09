@@ -26,7 +26,8 @@ import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
 
-public class MapView extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
+public class MapView extends JPanel implements MouseListener,
+		MouseMotionListener, MouseWheelListener, KeyListener {
 
 	private static final long serialVersionUID = -7437435113432268381L;
 
@@ -35,7 +36,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	}
 
 	// Constant
-	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
+	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 0;
 	private static final byte DEFAULT_ZOOM_LEVEL_MIN = 0;
 	static final double LATITUDE_MAX = 85.05113;
 	static final double LATITUDE_MIN = -85.05113;
@@ -53,10 +54,10 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	private static final Paint PAINT_SCALE_BAR_TEXT_WHITE_STROKE = new Paint(
 			Paint.ANTI_ALIAS_FLAG);
 	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000,
-		1000000, 500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000,
-		1000, 500, 200, 100, 50, 20, 10, 5, 2, 1 };
+			1000000, 500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000,
+			1000, 500, 200, 100, 50, 20, 10, 5, 2, 1 };
 	private static final short SCALE_BAR_WIDTH = 130;
-	private static final int TILE_RAM_CACHE_SIZE = 32;
+	private static final int TILE_RAM_CACHE_SIZE = 4;
 
 	boolean attachedToWindow;
 	MapGeneratorJob currentJob;
@@ -81,7 +82,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	Bitmap mapViewBitmapSwap;
 	Bitmap mapViewBitmap1;
 	Bitmap mapViewBitmap2;
-	public Canvas mapViewCanvas = new Canvas();	
+	public Canvas mapViewCanvas = new Canvas();
 	int mapViewId;
 	MapViewMode mapViewMode;
 	double mapViewPixelX;
@@ -122,7 +123,6 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	byte zoomLevelMax;
 	byte zoomLevelMin;
 
-
 	public MapView(int mapViewId, Properties props) {
 		// Properties
 		this.propertiesSettings = props;
@@ -152,12 +152,12 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		// Application's specified
 		// TODO configure the MapView and activate the zoomLevel buttons
 		// this.mapView.setClickable(true);
-		//setBuiltInZoomControls(true);
+		// setBuiltInZoomControls(true);
 		setFocusable(true);
 
 		// set the localized text fields
-		//setText(TextField.KILOMETER, "KiloMeter");
-		//setText(TextField.METER, "Meter");
+		// setText(TextField.KILOMETER, "KiloMeter");
+		// setText(TextField.METER, "Meter");
 
 		// get the map controller for this MapView
 		this.mapController = this.getController();
@@ -184,8 +184,8 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 
 		// set the debug settings
 		setFpsCounter(false);
-		setTileFrames(false);
-		setTileCoordinates(false);
+		setTileFrames(true);
+		setTileCoordinates(true);
 		setWaterTiles(false);
 	}
 
@@ -209,37 +209,44 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	 * Event Handler for moving and zooming map
 	 */
 	@Override
-	public void mouseClicked(MouseEvent keyEvent) { }
+	public void mouseClicked(MouseEvent keyEvent) {
+	}
 
 	@Override
-	public void mouseEntered(MouseEvent keyEvent) { }
+	public void mouseEntered(MouseEvent keyEvent) {
+	}
 
 	@Override
-	public void mouseExited(MouseEvent keyEvent) { }
+	public void mouseExited(MouseEvent keyEvent) {
+	}
 
 	@Override
-	public void mousePressed(MouseEvent keyEvent) { 
+	public void mousePressed(MouseEvent keyEvent) {
 		beforeClick.x = keyEvent.getX();
 		beforeClick.y = keyEvent.getY();
 	}
 
 	@Override
-	public void mouseReleased(MouseEvent keyEvent) { 
+	public void mouseReleased(MouseEvent keyEvent) {
 		this.mapMover.stopMouse();
 	}
-	
+
 	@Override
 	public void mouseDragged(MouseEvent keyEvent) {
 		afterClick.x = keyEvent.getX();
 		afterClick.y = keyEvent.getY();
-		this.mapMover.moveMouse((afterClick.x - beforeClick.x), (afterClick.y - beforeClick.y));
+		// TODO undo
+		this.mapMover.moveMouse((afterClick.x - beforeClick.x),
+				(afterClick.y - beforeClick.y));
+//		this.mapMover.moveMouse(0, 0);
 		beforeClick.x = afterClick.x;
 		beforeClick.y = afterClick.y;
 	}
 
 	@Override
-	public void mouseMoved(MouseEvent keyEvent) { }
-	
+	public void mouseMoved(MouseEvent keyEvent) {
+	}
+
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		if (e.getWheelRotation() < 0) {
@@ -251,7 +258,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		}
 		this.zoomAnimator.stopZoom();
 	}
-	
+
 	@Override
 	public void keyReleased(KeyEvent keyCode) {
 		if (keyCode.getKeyCode() == KeyEvent.VK_LEFT
@@ -284,10 +291,12 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	}
 
 	@Override
-	public void keyTyped(KeyEvent arg0) { }
-	
+	public void keyTyped(KeyEvent arg0) {
+	}
+
 	/**
-	 * MapView configuration. There are some elements removed for the application
+	 * MapView configuration. There are some elements removed for the
+	 * application
 	 */
 	private synchronized void setupMapView() {
 
@@ -430,7 +439,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	void setCenter(GeoPoint point) {
 		setCenterAndZoom(point, this.zoomLevel);
 	}
-	
+
 	/**
 	 * Sets the center and zoom level of the MapView and triggers a redraw.
 	 * 
@@ -481,7 +490,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 			handleTiles(true);
 		}
 	}
-	
+
 	/**
 	 * Sets the visibility of the frame rate.
 	 * <p>
@@ -613,7 +622,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	 * @param persistence
 	 *            the new persistence of the memory card cache.
 	 */
-	
+
 	public void setMemoryCardCachePersistence(boolean persistence) {
 		this.persistence = persistence;
 	}
@@ -633,7 +642,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		}
 		this.moveSpeedFactor = moveSpeedFactor;
 	}
-	
+
 	/**
 	 * Sets the visibility of the scale bar.
 	 * 
@@ -757,7 +766,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	GeoPoint getDefaultStartPoint() {
 		return this.mapGenerator.getDefaultStartPoint();
 	}
-	
+
 	/**
 	 * Returns the window's height of AdvancedMapViewerPC, which is used to
 	 * display map
@@ -785,7 +794,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	public synchronized GeoPoint getMapCenter() {
 		return new GeoPoint(this.latitude, this.longitude);
 	}
-	
+
 	/**
 	 * Returns the database which is currently used for reading the map file.
 	 * 
@@ -858,7 +867,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	public static int getTileSizeInBytes() {
 		return Tile.TILE_SIZE_IN_BYTES;
 	}
-	
+
 	/**
 	 * Makes sure that the given latitude value is within the possible range.
 	 * 
@@ -874,7 +883,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		}
 		return lat;
 	}
-	
+
 	/**
 	 * Returns the given zoom level limited to the minimum and maximum possible
 	 * zoom level.
@@ -901,7 +910,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		return Integer.parseInt(propertiesSettings
 				.getProperty("map_size_width"));
 	}
-	
+
 	/**
 	 * Returns the current zoom level of the map.
 	 * 
@@ -910,7 +919,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	public byte getZoomLevel() {
 		return this.zoomLevel;
 	}
-	
+
 	/**
 	 * Called by the enclosing {@link MapActivity} when the MapView is no longer
 	 * needed.
@@ -1037,39 +1046,19 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 							this.mapViewMode, this.mapFile, this.textScale,
 							this.drawTileFrames, this.drawTileCoordinates,
 							this.highlightWaterTiles);
+					
+					System.out.println("Looking for job: " + currentJob);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
-						System.out.println("bitmap cache hit");
 						putTileOnBitmap(this.currentJob,
 								this.tileRAMCache.get(this.currentJob));
-					} else if (this.tileMemoryCardCache
-							.containsKey(this.currentJob)) {
-						// memory card cache hit
-						if (this.tileMemoryCardCache.get(this.currentJob,
-								this.tileBuffer)) {
-							// TODO
-							// this.tileBitmap.copyPixelsFromBuffer(this.tileBuffer);
-							System.out.println("memory card cache hit");
-							this.tileBitmap = new Bitmap(this.tileBuffer,
-									Tile.TILE_SIZE, Tile.TILE_SIZE);
-							// this.tileBitmap = new Bitmap();
-							// System.out.println(this.tileBitmap);
-							// this.tileBitmap.eraseColor(Color.BLUE);
-							putTileOnBitmap(this.currentJob, this.tileBitmap);
-							this.tileRAMCache.put(this.currentJob,
-									this.tileBitmap);
 
-						} else {
-							// the image data could not be read from the cache
-							System.out
-									.println("could not be read from the cache");
-							this.mapGenerator.addJob(this.currentJob);
-						}
 					} else {
-						// cache miss
-						System.out.println("cache miss");
+						// the image data could not be read from the cache
+						System.out.println("Adding job: " + currentJob);
 						this.mapGenerator.addJob(this.currentJob);
 					}
+
 				}
 			}
 		}
@@ -1088,7 +1077,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		// notify the MapGenerator to process the job list
 		this.mapGenerator.requestSchedule(true);
 	}
-	
+
 	/**
 	 * Checks if the map currently has a valid center position.
 	 * 
@@ -1118,11 +1107,11 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 	void hideZoomControlsDelayed() {
 		// TODO
 	}
-	
+
 	public void invalidate() {
 		repaint();
 	}
-	
+
 	/**
 	 * Checks whether a given file is a valid map file.
 	 * 
@@ -1136,7 +1125,7 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		testDatabase.closeFile();
 		return isValid;
 	}
-	
+
 	boolean matrixIsIdentity() {
 		synchronized (this.matrix) {
 			return this.matrix.isIdentity();
@@ -1160,13 +1149,13 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 			this.matrix.postScale(sx, sy, px, py);
 		}
 	}
-	
+
 	void matrixPostTranslate(float dx, float dy) {
 		synchronized (this.matrix) {
 			this.matrix.postTranslate(dx, dy);
 		}
 	}
-	
+
 	/**
 	 * Moves the map by the given amount of pixels.
 	 * 
@@ -1299,8 +1288,6 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		}
 	}
 
-	
-
 	/**
 	 * This method is called by the MapGenerator when its job queue is empty.
 	 */
@@ -1373,8 +1360,6 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		this.mapGenerator.requestSchedule(false);
 	}
 
-	
-
 	private void stopMapGeneratorThread() {
 		// stop the MapGenerator thread
 		if (this.mapGenerator != null) {
@@ -1390,8 +1375,6 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		}
 	}
 
-	
-	
 	boolean zoom(byte zoomLevelDiff, float zoomStart) {
 		if (zoomLevelDiff > 0) {
 			// check if zoom in is possible
@@ -1423,5 +1406,4 @@ public class MapView extends JPanel implements MouseListener, MouseMotionListene
 		return true;
 	}
 
-	
 }
