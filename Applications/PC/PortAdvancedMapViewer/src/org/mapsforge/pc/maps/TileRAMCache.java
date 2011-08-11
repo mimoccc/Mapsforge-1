@@ -141,35 +141,34 @@ public class TileRAMCache {
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		System.out.println("RAM put: " + mapGeneratorJob);
 		if (this.capacity > 0) {
-			// TODO UNSAFE 
-//			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-//			this.bitmapBuffer.rewind();
-//			this.tempBitmap = this.bitmapPool.remove(0);
-//			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
-//			synchronized (this) {
-//				this.map.put(mapGeneratorJob, this.tempBitmap);
-//			}
-			 
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try {
-				ImageIO.write(bitmap.getImage(), "jpg", baos);
-				baos.flush();
-				byte[] imageInByte = baos.toByteArray();
-				InputStream in = new ByteArrayInputStream(imageInByte);
-				this.tempBitmap = new Bitmap(ImageIO.read(in));
-				synchronized (this) {
-					this.map.put(mapGeneratorJob, this.tempBitmap);
-				}
-				baos.close();
-			} catch (IOException e) {
-				System.err.println("RAM put: " + e.getMessage());
-				return;
-			}
-
-			this.tempBitmap = bitmap;
+			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
+			this.bitmapBuffer.rewind();
+			this.tempBitmap = this.bitmapPool.remove(0);
+			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}
+			 
+//			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//			try {
+//				ImageIO.write(bitmap.getImage(), "jpg", baos);
+//				baos.flush();
+//				byte[] imageInByte = baos.toByteArray();
+//				InputStream in = new ByteArrayInputStream(imageInByte);
+//				this.tempBitmap = new Bitmap(ImageIO.read(in));
+//				synchronized (this) {
+//					this.map.put(mapGeneratorJob, this.tempBitmap);
+//				}
+//				baos.close();
+//			} catch (IOException e) {
+//				System.err.println("RAM put: " + e.getMessage());
+//				return;
+//			}
+//
+//			this.tempBitmap = bitmap;
+//			synchronized (this) {
+//				this.map.put(mapGeneratorJob, this.tempBitmap);
+//			}
 		}
 	}
 }
