@@ -14,16 +14,10 @@
  */
 package org.mapsforge.pc.maps;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
+import java.awt.image.Raster;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import org.mapsforge.core.graphics.Bitmap;
 
@@ -36,7 +30,6 @@ public class TileRAMCache {
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
-	private final ByteBuffer bitmapBuffer;
 	private final int capacity;
 	private LinkedHashMap<MapGeneratorJob, Bitmap> map;
 	private Bitmap tempBitmap;
@@ -69,7 +62,7 @@ public class TileRAMCache {
 			this.bitmapPool.add(Bitmap.createBitmap(Tile.TILE_SIZE,
 					Tile.TILE_SIZE, Bitmap.Config.RGB_565));
 		}
-		this.bitmapBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
+		
 	}
 
 	private LinkedHashMap<MapGeneratorJob, Bitmap> createMap(
@@ -139,36 +132,16 @@ public class TileRAMCache {
 	 * @see Map#put(Object, Object)
 	 */
 	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
-		System.out.println("RAM put: " + mapGeneratorJob);
 		if (this.capacity > 0) {
-			bitmap.copyPixelsToBuffer(this.bitmapBuffer);
-			this.bitmapBuffer.rewind();
+			// Deep Copy of the Bitmap
+			Raster tmpRaster = bitmap.getImage().getData();
 			this.tempBitmap = this.bitmapPool.remove(0);
-			this.tempBitmap.copyPixelsFromBuffer(this.bitmapBuffer);
+			this.tempBitmap.getImage().setData(tmpRaster);
+			
 			synchronized (this) {
 				this.map.put(mapGeneratorJob, this.tempBitmap);
 			}
 			 
-//			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//			try {
-//				ImageIO.write(bitmap.getImage(), "jpg", baos);
-//				baos.flush();
-//				byte[] imageInByte = baos.toByteArray();
-//				InputStream in = new ByteArrayInputStream(imageInByte);
-//				this.tempBitmap = new Bitmap(ImageIO.read(in));
-//				synchronized (this) {
-//					this.map.put(mapGeneratorJob, this.tempBitmap);
-//				}
-//				baos.close();
-//			} catch (IOException e) {
-//				System.err.println("RAM put: " + e.getMessage());
-//				return;
-//			}
-//
-//			this.tempBitmap = bitmap;
-//			synchronized (this) {
-//				this.map.put(mapGeneratorJob, this.tempBitmap);
-//			}
 		}
 	}
 }

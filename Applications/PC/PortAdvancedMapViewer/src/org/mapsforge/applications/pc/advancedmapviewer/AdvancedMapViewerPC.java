@@ -14,12 +14,10 @@
  */
 package org.mapsforge.applications.pc.advancedmapviewer;
 
-import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.event.WindowStateListener;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
