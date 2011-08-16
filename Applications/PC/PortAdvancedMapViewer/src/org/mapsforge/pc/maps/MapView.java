@@ -12,6 +12,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
@@ -23,6 +25,8 @@ import org.mapsforge.core.graphics.Canvas;
 import org.mapsforge.core.graphics.Matrix;
 import org.mapsforge.core.graphics.Paint;
 import org.mapsforge.core.graphics.Point;
+
+import org.mapsforge.core.graphics.Bitmap.CompressFormat;
 
 /**
  * A MapView shows a map on the display of the device. It handles all user input and touch gestures to
@@ -265,7 +269,7 @@ public class MapView extends JPanel implements MouseListener,
 	public void mouseDragged(MouseEvent keyEvent) {
 		afterClick.x = keyEvent.getX();
 		afterClick.y = keyEvent.getY();
-		// TODO undo
+		// TODO exact movement
 		this.mapMover.moveMouse((afterClick.x - beforeClick.x),
 				(afterClick.y - beforeClick.y));
 //		this.mapMover.moveMouse(0, 0);
@@ -279,6 +283,8 @@ public class MapView extends JPanel implements MouseListener,
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
+		//TODO: Get the GeoPoint from the event
+		setCenter(new GeoPoint(e.getX(), getY()));
 		if (e.getWheelRotation() < 0) {
 			// Zoom in
 			zoom((byte) 1, 1);
@@ -322,6 +328,31 @@ public class MapView extends JPanel implements MouseListener,
 
 	@Override
 	public void keyTyped(KeyEvent arg0) {
+	}
+	
+	/**
+	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom buttons,
+	 * scale bar, overlays, menus and the title bar are not included in the screenshot.
+	 * 
+	 * @param fileName
+	 *            the name of the image file. If the file exists, it will be overwritten.
+	 * @param format
+	 *            the file format of the compressed image.
+	 * @param quality
+	 *            value from 0 (low) to 100 (high). Has no effect on some formats like PNG.
+	 * @return true if the image was saved successfully, false otherwise.
+	 * @throws IOException
+	 *             if an error occurs while writing the file.
+	 */
+	public boolean makeScreenshot(CompressFormat format, int quality, String fileName)
+			throws IOException {
+		FileOutputStream outputStream = new FileOutputStream(fileName);
+		boolean success;
+		synchronized (this.matrix) {
+			success = this.mapViewBitmap1.compress(format, quality, outputStream);
+		}
+		outputStream.close();
+		return success;
 	}
 
 	/**

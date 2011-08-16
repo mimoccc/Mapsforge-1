@@ -52,8 +52,6 @@ public class TileRAMCache {
 			throw new IllegalArgumentException();
 		}
 		
-		System.out.println("TileRAMCache");
-		
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);
 		this.bitmapPool = new LinkedList<Bitmap>();

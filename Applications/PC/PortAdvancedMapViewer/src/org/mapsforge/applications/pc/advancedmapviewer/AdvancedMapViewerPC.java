@@ -18,15 +18,19 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.mapsforge.core.graphics.Bitmap.CompressFormat;
 import org.mapsforge.pc.maps.MapView;
+
 
 /**
  * A map application which uses the features from the mapsforge map library. The
@@ -36,11 +40,15 @@ import org.mapsforge.pc.maps.MapView;
  */
 public class AdvancedMapViewerPC extends JFrame implements WindowListener, ComponentListener {
 
+	private static final String SCREENSHOT_DIRECTORY = "Pictures";
+	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
+	
 	protected Properties propertiesStrings, propertiesSettings;
 	private static final long serialVersionUID = -4127875987929158484L;
 	private MenuBar menuBar;
 	private FilePickerPC filePicker;
-	protected MapView mapView;
+	protected MapView mapView;	
+	
 
 	/** Constructor */
 	public AdvancedMapViewerPC() {
@@ -197,6 +205,48 @@ public class AdvancedMapViewerPC extends JFrame implements WindowListener, Compo
 	 */
 	protected void startRenderThemeFileBrowser() throws IOException {
 		// TODO: Render Theme File Browser
+	}
+	
+	/**
+	 * Makes a screenshot of the currently visible map and saves it as compressed image. 
+	 * Scale bar, overlays, menus and the title bar are not included in the screenshot.
+	 * 
+	 * @param format
+	 *            the file format of the compressed image.
+	 * @param quality
+	 *            value from 0 (low) to 100 (high). Has no effect on some formats like PNG.
+	 */
+	public void captureScreenshotAsync(final JComponent GUI, final CompressFormat format,final int quality) {
+		new Thread() {
+			@Override
+			public void run() {
+				try {
+					File path = new File(System.getProperty("user.dir"),
+							SCREENSHOT_DIRECTORY);
+					// make sure the Pictures directory exists
+					if (!path.exists() && !path.mkdirs()) {
+						JOptionPane.showMessageDialog(GUI, "Could not create screenshot directory");
+						return;
+					}
+
+					// assemble the complete name for the screenshot file
+					String fileName = path.getAbsolutePath() + File.separatorChar
+							+ SCREENSHOT_FILE_NAME + "." + format.name().toLowerCase();
+
+					if (AdvancedMapViewerPC.this.mapView.makeScreenshot(format,
+							quality, fileName)) {
+						// success
+						JOptionPane.showMessageDialog(GUI, fileName);
+					} else {
+						// failure
+						JOptionPane.showMessageDialog(GUI, "Screenshot could not be saved:\n" + fileName);
+					}
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(GUI, e.getLocalizedMessage());
+				}
+			}
+			
+		}.start();
 	}
 
 	/**

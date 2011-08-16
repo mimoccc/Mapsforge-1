@@ -92,7 +92,6 @@ public class Bitmap {
 		mImage.setRGB(x, y, width, height, pixels, offset, stride);
 	}
 
-	// TODO NO Quality
 	/**
 	 * Write a compressed version of the bitmap to the specified outputstream.
 	 * If this returns true, the bitmap can be reconstructed by passing a
@@ -101,15 +100,21 @@ public class Bitmap {
 	 * returned bitmap from BitmapFactory could be in a different bitdepth,
 	 * and/or may have lost per-pixel alpha (e.g. JPEG only supports opaque
 	 * pixels).
+	 * @param format - format of the Bitmap
+	 * @param quality - quality of the compression
+	 * @param outputStream - stream the result is written to
+	 * @return - true of written successful, false otherwise
+	 * @throws IOException - if the Bitmap could not be written to the stream
 	 */
 	public boolean compress(CompressFormat format, int quality,
 			FileOutputStream outputStream) throws IOException {
+		// TODO: Quality
 		if (format.equals(CompressFormat.JPG)) {
 			ImageIO.write(mImage, "jpg", outputStream);
 		} else {
 			ImageIO.write(mImage, "png", outputStream);
 		}
-		return false;
+		return true;
 	}
 
 	/**

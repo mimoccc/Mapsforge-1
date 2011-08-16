@@ -18,14 +18,16 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
+import org.mapsforge.core.graphics.Bitmap.CompressFormat;
+
 /**
  * Menu bar for the application preferences.
  */
 public class MenuBar extends JMenuBar implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
-//	private final String MENUINFOPATH = "D:/Projekte/PCAdvancedMapViewer/assets/info.html"; 
-	private final String MENUINFOPATH = "file://" + System.getProperty("user.dir") + "/assets/info.xml";
+//	private final String MENUINFOPATH = "file://" + System.getProperty("user.dir") + "/assets/info.xml";
+	private final String MENUINFOPATH = System.getProperty("user.dir") + "/assets/info.xml";
 	private Properties propertiesStrings, propertiesSettings;
 	private AdvancedMapViewerPC parentFrame;
 	private JMenu menuInfo, menuPosition, menuScreenshot;
@@ -224,9 +226,10 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		if (cmd.equals(propertiesStrings.getProperty("menu_info_map_file"))) {
 			String mapFilePath = propertiesSettings.getProperty("default_map");
 			MapFilePropertiesPane.showInfo(this, propertiesStrings, mapFilePath);
-//			JOptionPane.showMessageDialog(this, "Mapfile: " + mapFileName, propertiesStrings.getProperty("menu_info_map_file"), JOptionPane.INFORMATION_MESSAGE);
+			
 		} else if (cmd.equals(propertiesStrings.getProperty("menu_info_about"))) {
 			try {
+				//Open the MENUINFOPATH-URI in the default browser 
 				Desktop desktop = Desktop.getDesktop();
 				URI uri = new URI(MENUINFOPATH);
 				desktop.browse( uri );
@@ -235,30 +238,43 @@ public class MenuBar extends JMenuBar implements ActionListener {
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(this, e1.getMessage());
 			}
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_follow_gps_signal"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_last_known"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_enter_coordinates"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_map_file_center"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_screenshot_jpeg"))) {
-
+			parentFrame.captureScreenshotAsync(this, CompressFormat.JPG, 
+				Integer.parseInt(propertiesSettings
+				.getProperty("preferences_screenshot_quality")));
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_screenshot_png"))) {
-
+			parentFrame.captureScreenshotAsync(this, CompressFormat.PNG, 
+					Integer.parseInt(propertiesSettings
+					.getProperty("preferences_screenshot_quality")));
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_mapnik"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_osmarender"))) {
 
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_render_theme_select_file"))) {
 			try {
@@ -266,6 +282,7 @@ public class MenuBar extends JMenuBar implements ActionListener {
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(this, e1.getMessage());
 			}
+			
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_mapfile_select_file"))) {
 			try {
@@ -273,6 +290,7 @@ public class MenuBar extends JMenuBar implements ActionListener {
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(this, e1.getMessage());
 			}
+			
 		} else if (cmd.equals("Exit")) {
 			parentFrame.close();
 
