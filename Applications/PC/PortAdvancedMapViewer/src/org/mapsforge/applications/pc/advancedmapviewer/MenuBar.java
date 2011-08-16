@@ -1,10 +1,13 @@
 package org.mapsforge.applications.pc.advancedmapviewer;
 
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import javax.swing.ImageIcon;
@@ -21,6 +24,8 @@ import javax.swing.SwingConstants;
 public class MenuBar extends JMenuBar implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
+//	private final String MENUINFOPATH = "D:/Projekte/PCAdvancedMapViewer/assets/info.html"; 
+	private final String MENUINFOPATH = "file:///assets/info.xml";
 	private Properties propertiesStrings, propertiesSettings;
 	private AdvancedMapViewerPC parentFrame;
 	private JMenu menuInfo, menuPosition, menuScreenshot;
@@ -217,9 +222,19 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		String cmd = e.getActionCommand();
 		// TODO: Menu functions
 		if (cmd.equals(propertiesStrings.getProperty("menu_info_map_file"))) {
-
+			String mapFilePath = propertiesSettings.getProperty("default_map");
+			MapFilePropertiesPane.showInfo(this, propertiesStrings, mapFilePath);
+//			JOptionPane.showMessageDialog(this, "Mapfile: " + mapFileName, propertiesStrings.getProperty("menu_info_map_file"), JOptionPane.INFORMATION_MESSAGE);
 		} else if (cmd.equals(propertiesStrings.getProperty("menu_info_about"))) {
-
+			try {
+				Desktop desktop = Desktop.getDesktop();
+				URI uri = new URI(MENUINFOPATH);
+				desktop.browse( uri );
+			} catch (URISyntaxException e1) {
+				JOptionPane.showMessageDialog(this, e1.getMessage());
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(this, e1.getMessage());
+			}
 		} else if (cmd.equals(propertiesStrings
 				.getProperty("menu_position_follow_gps_signal"))) {
 
