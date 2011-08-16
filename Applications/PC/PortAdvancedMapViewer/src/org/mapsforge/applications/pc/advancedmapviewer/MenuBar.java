@@ -25,7 +25,7 @@ public class MenuBar extends JMenuBar implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
 //	private final String MENUINFOPATH = "D:/Projekte/PCAdvancedMapViewer/assets/info.html"; 
-	private final String MENUINFOPATH = "file:///assets/info.xml";
+	private final String MENUINFOPATH = "file://" + System.getProperty("user.dir") + "/assets/info.xml";
 	private Properties propertiesStrings, propertiesSettings;
 	private AdvancedMapViewerPC parentFrame;
 	private JMenu menuInfo, menuPosition, menuScreenshot;
