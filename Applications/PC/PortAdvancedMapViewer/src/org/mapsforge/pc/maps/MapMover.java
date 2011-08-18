@@ -14,8 +14,6 @@
  */
 package org.mapsforge.pc.maps;
 
-//import android.os.SystemClock;
-//import org.mapsforge.core.os.SystemClock;
 
 /**
  * A MapMover moves the map horizontally and vertically at a constant speed. It
@@ -32,9 +30,9 @@ class MapMover extends Thread {
 	private boolean pause;
 	private boolean ready;
 
-	// private long timeCurrent;
-	// private long timeElapsed;
-	// private long timePrevious;
+	private long timeCurrent;
+	private long timeElapsed;
+	private long timePrevious;
 
 	@Override
 	public void run() {
@@ -59,20 +57,22 @@ class MapMover extends Thread {
 				break;
 			}
 			// calculate the time difference to previous call
-			// this.timeCurrent = SystemClock.uptimeMillis();
-			// this.timeElapsed = this.timeCurrent - this.timePrevious;
-			// this.timePrevious = this.timeCurrent;
+			this.timeCurrent = System.currentTimeMillis();
+			this.timeElapsed = this.timeCurrent - this.timePrevious;
+			this.timePrevious = this.timeCurrent;
+			
 			this.mapView.point.x += this.moveX;
 			this.mapView.point.y += this.moveY;
+			
 			// add the movement to the transformation matrices
-			// this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX,
-			// this.timeElapsed
-			// * this.moveY);
-			//this.mapView.matrixPostTranslate(this.moveX, this.moveY);
+			this.mapView.matrixPostTranslate(this.timeElapsed * this.moveX,
+											this.timeElapsed * this.moveY);
+			this.mapView.matrixPostTranslate(this.moveX, this.moveY);
+			
 			// move the map and the overlays
-			// this.mapView.moveMap(this.timeElapsed * this.moveX,
-			// this.timeElapsed * this.moveY);
-			this.mapView.moveMap(this.moveX, this.moveY);
+			this.mapView.moveMap(this.timeElapsed * this.moveX,
+								this.timeElapsed * this.moveY);
+//			this.mapView.moveMap(this.moveX, this.moveY);
 
 			this.mapView.handleTiles(false);
 			synchronized (this) {
@@ -109,7 +109,7 @@ class MapMover extends Thread {
 			// start moving the map
 			// this.moveY = -MOVE_SPEED * this.mapView.getMoveSpeed();
 			this.moveY = -1;
-			// this.timePrevious = SystemClock.uptimeMillis();
+			this.timePrevious = System.currentTimeMillis();
 			synchronized (this) {
 				notify();
 			}
@@ -127,7 +127,7 @@ class MapMover extends Thread {
 			// start moving the map
 			// this.moveX = MOVE_SPEED * this.mapView.getMoveSpeed();
 			this.moveX = 1;
-			// this.timePrevious = SystemClock.uptimeMillis();
+			this.timePrevious = System.currentTimeMillis();
 			synchronized (this) {
 				notify();
 			}
@@ -145,7 +145,7 @@ class MapMover extends Thread {
 			// start moving the map
 			// this.moveX = -MOVE_SPEED * this.mapView.getMoveSpeed();
 			this.moveX = -1;
-			// this.timePrevious = SystemClock.uptimeMillis();
+			this.timePrevious = System.currentTimeMillis();
 			synchronized (this) {
 				notify();
 			}
@@ -163,7 +163,7 @@ class MapMover extends Thread {
 			// start moving the map
 			// this.moveY = MOVE_SPEED * this.mapView.getMoveSpeed();
 			this.moveY = 1;
-			// this.timePrevious = SystemClock.uptimeMillis();
+			this.timePrevious = System.currentTimeMillis();
 			synchronized (this) {
 				notify();
 			}
@@ -227,7 +227,7 @@ class MapMover extends Thread {
 	 */
 	synchronized void unpause() {
 		this.pause = false;
-		// this.timePrevious = SystemClock.uptimeMillis();
+		this.timePrevious = System.currentTimeMillis();
 		notify();
 	}
 }

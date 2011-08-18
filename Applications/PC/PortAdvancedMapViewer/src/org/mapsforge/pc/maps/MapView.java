@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.mapsforge.core.graphics.Bitmap;
@@ -127,8 +126,8 @@ public class MapView extends JPanel implements MouseListener,
 	int numberOfTiles;
 	boolean persistence;
 	final Point point;
-	final Point beforeClick;
-	final Point afterClick;
+	private final Point beforeClick;
+	private final Point afterClick;
 	Projection projection;
 	Properties propertiesSettings;
 	boolean showFpsCounter;
@@ -150,6 +149,8 @@ public class MapView extends JPanel implements MouseListener,
 	byte zoomLevel;
 	byte zoomLevelMax;
 	byte zoomLevelMin;
+	private float mapMoveX;
+	private float mapMoveY;
 
 	/** Constructor */
 	public MapView(int mapViewId, Properties props) {
@@ -267,12 +268,18 @@ public class MapView extends JPanel implements MouseListener,
 
 	@Override
 	public void mouseDragged(MouseEvent keyEvent) {
-		afterClick.x = keyEvent.getX();
-		afterClick.y = keyEvent.getY();
-		// TODO exact movement
-		this.mapMover.moveMouse((afterClick.x - beforeClick.x),
-				(afterClick.y - beforeClick.y));
-//		this.mapMover.moveMouse(0, 0);
+		// calculate the distance between previous and current position
+		this.mapMoveX = keyEvent.getX() - this.beforeClick.x;
+		this.mapMoveY = keyEvent.getY() - this.beforeClick.y;
+		
+		// save the position of the event
+		this.afterClick.x = keyEvent.getX();
+		this.afterClick.y = keyEvent.getY();
+		
+		matrixPostTranslate(this.mapMoveX, this.mapMoveY);
+		moveMap(this.mapMoveX, this.mapMoveY);
+		handleTiles(true);
+
 		beforeClick.x = afterClick.x;
 		beforeClick.y = afterClick.y;
 	}
@@ -1284,6 +1291,14 @@ public class MapView extends JPanel implements MouseListener,
 		}
 	}
 
+	/**
+	 * Translates the matrix of the MapView and all its overlays.
+	 * 
+	 * @param dx
+	 *            the horizontal translation.
+	 * @param dy
+	 *            the vertical translation.
+	 */
 	void matrixPostTranslate(float dx, float dy) {
 		synchronized (this.matrix) {
 			this.matrix.postTranslate(dx, dy);
