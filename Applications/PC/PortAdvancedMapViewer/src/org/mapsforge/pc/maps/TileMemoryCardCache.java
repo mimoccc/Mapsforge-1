@@ -324,7 +324,6 @@ public class TileMemoryCardCache {
 				// this.bitmapBuffer.rewind();
 				this.outputFile = new File(this.tempDir, ++this.cacheId
 						+ IMAGE_FILE_NAME_EXTENSION);
-				// TODO changed
 				ImageIO.write(bitmap.getImage(), "tile", this.outputFile);
 				// check for an existing file with that name
 				while (this.outputFile.exists()) {

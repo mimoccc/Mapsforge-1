@@ -48,7 +48,7 @@ public class Paint {
 	}
 
 	public static final Integer ANTI_ALIAS_FLAG = 0x01;
-	public static final Integer FILTER_BITMAP_FLAG = 0x02; // TODO
+	public static final Integer FILTER_BITMAP_FLAG = 0x02;
 	public static final Integer DITHER_FLAG = 0x03;
 	public static final Integer DEV_KERN_TEXT_FLAG = 0x04;
 
@@ -332,7 +332,6 @@ public class Paint {
 		getTextBounds(text.toCharArray(), start, end - start, boundary);
 	}
 
-	// TODO Test
 	public void getTextBounds(char[] text, int index, int count, Rect bounds) {
 		if (mFonts.size() > 0) {
 			if ((index | count) < 0 || index + count > text.length) {
@@ -359,13 +358,6 @@ public class Paint {
 
 		return this.typeface;
 	}
-
-	// TODO removed
-	/*
-	 * public Font setFont(Font font) { this.font = font;
-	 * 
-	 * return this.font; }
-	 */
 
 	public float measureText(String text) {
 		return measureText(text.toCharArray(), 0, text.length());

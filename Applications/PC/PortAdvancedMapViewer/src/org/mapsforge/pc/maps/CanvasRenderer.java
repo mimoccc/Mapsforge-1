@@ -231,9 +231,12 @@ public class CanvasRenderer extends DatabaseMapGenerator {
 		this.canvas = new Canvas(bitmap);
 		this.symbolMatrix = new Matrix();
 		this.bitmapFilterPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
+		//this.tileFrame = new float[] { 0, 0, 0, Tile.TILE_SIZE, 0,
+		//		Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE,
+		//		Tile.TILE_SIZE, Tile.TILE_SIZE, 0 };
 		this.tileFrame = new float[] { 0, 0, 0, Tile.TILE_SIZE, 0,
 				Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE, Tile.TILE_SIZE,
-				Tile.TILE_SIZE, Tile.TILE_SIZE, 0 };
+				Tile.TILE_SIZE, Tile.TILE_SIZE, 0, Tile.TILE_SIZE, 0, 0, 0 };
 		this.path = new Path();
 		this.path.setFillType(Path.FillType.EVEN_ODD);
 		this.stringBuilder = new StringBuilder(16);

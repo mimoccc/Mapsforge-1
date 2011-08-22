@@ -141,8 +141,6 @@ public class Canvas {
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		Style style = paint.getStyle();
 
-		// TODO TextStroke t = new TextStroke(text, new Font("Serif",
-		// Font.PLAIN, 10));
 		// Dummy Font
 		TextStroke t = new TextStroke(text, new Font("Serif", Font.PLAIN, 8));
 		GeneralPath generalPath = (GeneralPath) t.createStrokedShape(path
@@ -169,12 +167,13 @@ public class Canvas {
 	 */
 	public void drawLines(float[] pts, Paint paint) {
 		Graphics2D g = mBufferedImage.createGraphics();
+		g.setColor(Color.GRAY);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 
 		for (int i = 0; i < pts.length; i += 4) {
-			g.drawLine((int) pts[i + 0], (int) pts[i + 0 + 1],
-					(int) pts[i + 0 + 2], (int) pts[i + 0 + 3]);
+			g.drawLine((int) pts[i], (int) pts[i + 1],
+					(int) pts[i + 2], (int) pts[i + 3]);
 		}
 		g.dispose();
 	}

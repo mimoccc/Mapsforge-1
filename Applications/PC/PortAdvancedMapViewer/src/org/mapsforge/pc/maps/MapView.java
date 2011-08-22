@@ -550,11 +550,6 @@ public class MapView extends JPanel implements MouseListener,
 				this.zoomLevel = getValidZoomLevel(zoom);
 			}
 
-			// TODO enable or disable the zoom buttons if necessary
-			// this.zoomControls.setIsZoomInEnabled(this.zoomLevel <
-			// getMaximumPossibleZoomLevel());
-			// this.zoomControls.setIsZoomOutEnabled(this.zoomLevel >
-			// this.zoomLevelMin);
 			handleTiles(true);
 		}
 	}
@@ -1245,9 +1240,7 @@ public class MapView extends JPanel implements MouseListener,
 	/**
 	 * Displays the zoom controls for a short time.
 	 */
-	void hideZoomControlsDelayed() {
-		// TODO
-	}
+	void hideZoomControlsDelayed() { }
 
 	public void invalidate() {
 		repaint();

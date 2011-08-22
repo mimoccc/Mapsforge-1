@@ -42,7 +42,6 @@ public class BitmapShader extends Shader {
 
 	public BitmapShader(Bitmap mBitmap, TileMode tileX, TileMode tileY) {
 		this.mBitmap = mBitmap;
-		// TODO only repeat methode is used
 	}
 
 	public Bitmap getBitmap() {

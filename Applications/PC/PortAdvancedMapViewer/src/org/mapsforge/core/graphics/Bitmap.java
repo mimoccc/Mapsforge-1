@@ -108,7 +108,6 @@ public class Bitmap {
 	 */
 	public boolean compress(CompressFormat format, int quality,
 			FileOutputStream outputStream) throws IOException {
-		// TODO: Quality
 		if (format.equals(CompressFormat.JPG)) {
 			ImageIO.write(mImage, "jpg", outputStream);
 		} else {
