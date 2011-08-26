@@ -19,6 +19,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
 import org.mapsforge.core.graphics.Bitmap.CompressFormat;
+import org.mapsforge.pc.maps.MapDatabase;
 
 /**
  * Menu bar for the application preferences.
@@ -225,7 +226,8 @@ public class MenuBar extends JMenuBar implements ActionListener {
 		// TODO: Menu functions
 		if (cmd.equals(propertiesStrings.getProperty("menu_info_map_file"))) {
 			String mapFilePath = propertiesSettings.getProperty("default_map");
-			MapFilePropertiesPane.showInfo(this, propertiesStrings, mapFilePath);
+			MapDatabase mapDB =	parentFrame.mapView.getMapDatabase();
+			MapFilePropertiesPane.showInfo(this, propertiesStrings, mapDB);
 			
 		} else if (cmd.equals(propertiesStrings.getProperty("menu_info_about"))) {
 			try {
