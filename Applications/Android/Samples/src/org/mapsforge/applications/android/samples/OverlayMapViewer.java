@@ -14,16 +14,16 @@
  */
 package org.mapsforge.applications.android.samples;
 
-import org.mapsforge.android.maps.ArrayCircleOverlay;
-import org.mapsforge.android.maps.ArrayItemizedOverlay;
-import org.mapsforge.android.maps.ArrayWayOverlay;
 import org.mapsforge.android.maps.GeoPoint;
-import org.mapsforge.android.maps.ItemizedOverlay;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.OverlayCircle;
-import org.mapsforge.android.maps.OverlayItem;
-import org.mapsforge.android.maps.OverlayWay;
+import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
+import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
+import org.mapsforge.android.maps.overlay.ArrayWayOverlay;
+import org.mapsforge.android.maps.overlay.ItemizedOverlay;
+import org.mapsforge.android.maps.overlay.OverlayCircle;
+import org.mapsforge.android.maps.overlay.OverlayItem;
+import org.mapsforge.android.maps.overlay.OverlayWay;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;

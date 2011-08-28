@@ -51,6 +51,11 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	final String mapFile;
 
 	/**
+	 * The rendering theme of this job.
+	 */
+	final MapGeneratorJobTheme mapGeneratorJobTheme;
+
+	/**
 	 * MapViewMode used to render the map image.
 	 */
 	final MapViewMode mapViewMode;
@@ -79,6 +84,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 *            the operation mode in which the map image should be generated.
 	 * @param mapFile
 	 *            the map file or null, if no map file is needed.
+	 * @param mapGeneratorJobTheme
+	 *            the rendering theme.
 	 * @param textScale
 	 *            the text scale for map rendering.
 	 * @param drawTileFrames
@@ -88,11 +95,13 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	 * @param highlightWater
 	 *            flag to enable water tile highlighting.
 	 */
-	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, float textScale,
+	MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile,
+			MapGeneratorJobTheme mapGeneratorJobTheme, float textScale,
 			boolean drawTileFrames, boolean drawTileCoordinates, boolean highlightWater) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
+		this.mapGeneratorJobTheme = mapGeneratorJobTheme;
 		this.textScale = textScale;
 		this.drawTileFrames = drawTileFrames;
 		this.drawTileCoordinates = drawTileCoordinates;
@@ -121,6 +130,11 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 			return false;
 		} else if (this.mapFile != null && !this.mapFile.equals(other.mapFile)) {
 			return false;
+		} else if (this.mapGeneratorJobTheme == null && other.mapGeneratorJobTheme != null) {
+			return false;
+		} else if (this.mapGeneratorJobTheme != null
+				&& !this.mapGeneratorJobTheme.equals(other.mapGeneratorJobTheme)) {
+			return false;
 		} else if (this.textScale != other.textScale) {
 			return false;
 		} else if (this.drawTileFrames != other.drawTileFrames) {
@@ -148,6 +162,8 @@ class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 		result = 31 * result + ((this.tile == null) ? 0 : this.tile.hashCode());
 		result = 31 * result + ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		result = 31 * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		result = 31 * result
+				+ ((this.mapGeneratorJobTheme == null) ? 0 : this.mapGeneratorJobTheme.hashCode());
 		result = 31 * result + Float.floatToIntBits(this.textScale);
 		result = 31 * result + (this.drawTileFrames ? 1231 : 1237);
 		result = 31 * result + (this.drawTileCoordinates ? 1231 : 1237);

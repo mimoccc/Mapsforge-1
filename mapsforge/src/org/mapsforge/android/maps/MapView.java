@@ -14,6 +14,8 @@
  */
 package org.mapsforge.android.maps;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import org.mapsforge.android.maps.overlay.Overlay;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -74,6 +78,18 @@ import android.widget.ZoomControls;
  * {@link #setText(TextField, String)} method. The default texts are in English.
  */
 public class MapView extends ViewGroup {
+	/**
+	 * Enumeration of all internal rendering themes.
+	 */
+	public enum InternalRenderTheme {
+		/**
+		 * A rendering theme similar to the OpenStreetMap Osmarender style.
+		 * 
+		 * @see <a href="http://wiki.openstreetmap.org/wiki/Osmarender">Osmarender</a>
+		 */
+		OSMARENDER;
+	}
+
 	/**
 	 * Enumeration of all text fields that can be overridden at runtime via the
 	 * {@link MapView#setText(TextField, String)} method.
@@ -207,8 +223,8 @@ public class MapView extends ViewGroup {
 							(int) event.getX(this.pointerIndex),
 							(int) event.getY(this.pointerIndex));
 					synchronized (MapView.this.overlays) {
-						for (Overlay overlay : MapView.this.overlays) {
-							if (overlay.onTap(this.tapPoint, MapView.this)) {
+						for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+							if (MapView.this.overlays.get(i).onTap(this.tapPoint, MapView.this)) {
 								// the tap event has been handled
 								break;
 							}
@@ -381,8 +397,8 @@ public class MapView extends ViewGroup {
 					this.tapPoint = getProjection().fromPixels((int) event.getX(),
 							(int) event.getY());
 					synchronized (MapView.this.overlays) {
-						for (Overlay overlay : MapView.this.overlays) {
-							if (overlay.onTap(this.tapPoint, MapView.this)) {
+						for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+							if (MapView.this.overlays.get(i).onTap(this.tapPoint, MapView.this)) {
 								// the tap event has been handled
 								break;
 							}
@@ -612,8 +628,8 @@ public class MapView extends ViewGroup {
 					(int) previousPositionY);
 			if (this.longPressPoint != null) {
 				synchronized (MapView.this.overlays) {
-					for (Overlay overlay : MapView.this.overlays) {
-						if (overlay.onLongPress(this.longPressPoint, MapView.this)) {
+					for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+						if (MapView.this.overlays.get(i).onLongPress(this.longPressPoint, MapView.this)) {
 							// the long press event has been handled
 							return true;
 						}
@@ -651,6 +667,11 @@ public class MapView extends ViewGroup {
 	 * Default move speed factor of the map, used for trackball and keyboard events.
 	 */
 	private static final int DEFAULT_MOVE_SPEED = 10;
+
+	/**
+	 * Default render theme of the MapView.
+	 */
+	private static final InternalRenderTheme DEFAULT_RENDER_THEME = InternalRenderTheme.OSMARENDER;
 
 	/**
 	 * Default value for the kilometer text field.
@@ -774,9 +795,8 @@ public class MapView extends ViewGroup {
 	 * @return true if the Android emulator has been detected, false otherwise.
 	 */
 	private static boolean isAndroidEmulator() {
-		for (String name : EMULATOR_NAMES) {
-			if (Build.PRODUCT.equals(name)) {
-				// we have a match
+		for (int i = 0, n = EMULATOR_NAMES.length; i < n; ++i) {
+			if (Build.PRODUCT.equals(EMULATOR_NAMES[i])) {
 				return true;
 			}
 		}
@@ -827,6 +847,7 @@ public class MapView extends ViewGroup {
 	private boolean persistence;
 	private long previousTime;
 	private Projection projection;
+	private MapGeneratorJobTheme renderTheme;
 	private boolean showFpsCounter;
 	private boolean showScaleBar;
 	private boolean showZoomControls;
@@ -1081,6 +1102,15 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Returns whether the ZoomAnimator of this MapView is currently running.
+	 * 
+	 * @return true if the ZoomAnimator is currently running, false otherwise.
+	 */
+	public boolean isZoomAnimatorRunning() {
+		return this.zoomAnimator.isExecuting();
+	}
+
+	/**
 	 * Makes a screenshot of the currently visible map and saves it as compressed image. Zoom buttons,
 	 * scale bar, overlays, menus and the title bar are not included in the screenshot.
 	 * 
@@ -1245,7 +1275,6 @@ public class MapView extends ViewGroup {
 		this.mapDatabase.closeFile();
 		if (this.mapDatabase.openFile(newMapFile)) {
 			this.mapDatabase.prepareExecution();
-			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 			clearMapView();
 			setCenter(getDefaultStartPoint());
@@ -1315,6 +1344,78 @@ public class MapView extends ViewGroup {
 			throw new IllegalArgumentException();
 		}
 		this.moveSpeedFactor = moveSpeedFactor;
+	}
+
+	/**
+	 * Sets the internal theme which is used for rendering the map.
+	 * 
+	 * @param internalRenderTheme
+	 *            the internal rendering theme.
+	 * @throws IllegalArgumentException
+	 *             if the supplied internalRenderTheme is null.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView currently works in downloading mode.
+	 */
+	public void setRenderTheme(InternalRenderTheme internalRenderTheme) {
+		if (internalRenderTheme == null) {
+			throw new IllegalArgumentException("render theme must not be null");
+		} else if (this.mapViewMode.requiresInternetConnection()) {
+			throw new UnsupportedOperationException();
+		}
+
+		// check if the new theme differs from the old theme
+		if (internalRenderTheme.equals(this.renderTheme.internalRenderTheme)) {
+			return;
+		}
+
+		switch (internalRenderTheme) {
+			case OSMARENDER:
+				this.renderTheme = new MapGeneratorJobTheme(InternalRenderTheme.OSMARENDER);
+				break;
+		}
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles();
+	}
+
+	/**
+	 * Sets the theme file which is used for rendering the map.
+	 * 
+	 * @param renderThemePath
+	 *            the path to the XML file which defines the rendering theme.
+	 * @throws IllegalArgumentException
+	 *             if the supplied internalRenderTheme is null.
+	 * @throws UnsupportedOperationException
+	 *             if the MapView currently works in downloading mode.
+	 * @throws FileNotFoundException
+	 *             if the supplied file does not exist, is a directory or cannot be read.
+	 */
+	public void setRenderTheme(String renderThemePath) throws FileNotFoundException {
+		if (renderThemePath == null) {
+			throw new IllegalArgumentException("render theme must not be null");
+		} else if (this.mapViewMode.requiresInternetConnection()) {
+			throw new UnsupportedOperationException();
+		}
+
+		File renderThemeFile = new File(renderThemePath);
+		if (!renderThemeFile.exists()) {
+			throw new FileNotFoundException("file does not exist: " + renderThemePath);
+		} else if (!renderThemeFile.isFile()) {
+			throw new FileNotFoundException("not a file: " + renderThemePath);
+		} else if (!renderThemeFile.canRead()) {
+			throw new FileNotFoundException("cannot read file: " + renderThemePath);
+		}
+
+		long themeLastModified = renderThemeFile.lastModified();
+		if (themeLastModified == 0L) {
+			// an I/O error has occurred
+			throw new FileNotFoundException("cannot read last modification time");
+		}
+
+		this.renderTheme = new MapGeneratorJobTheme(renderThemePath, themeLastModified);
+		this.mapGenerator.clearJobs();
+		clearMapView();
+		handleTiles();
 	}
 
 	/**
@@ -1598,6 +1699,7 @@ public class MapView extends ViewGroup {
 		}
 
 		this.moveSpeedFactor = DEFAULT_MOVE_SPEED;
+		this.renderTheme = new MapGeneratorJobTheme(DEFAULT_RENDER_THEME);
 		this.textScale = DEFAULT_TEXT_SCALE;
 
 		setBackgroundColor(MAP_VIEW_BACKGROUND);
@@ -1905,8 +2007,8 @@ public class MapView extends ViewGroup {
 			canvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
 			// draw the overlays
 			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.draw(canvas);
+				for (int i = 0, n = this.overlays.size(); i < n; ++i) {
+					this.overlays.get(i).draw(canvas);
 				}
 			}
 		}
@@ -1979,8 +2081,8 @@ public class MapView extends ViewGroup {
 
 			// set up the overlays
 			synchronized (this.overlays) {
-				for (Overlay overlay : this.overlays) {
-					overlay.onSizeChanged();
+				for (int i = 0, n = this.overlays.size(); i < n; ++i) {
+					this.overlays.get(i).onSizeChanged();
 				}
 			}
 		}
@@ -2158,8 +2260,8 @@ public class MapView extends ViewGroup {
 		}
 
 		synchronized (this.overlays) {
-			for (Overlay overlay : this.overlays) {
-				overlay.requestRedraw();
+			for (int i = 0, n = this.overlays.size(); i < n; ++i) {
+				this.overlays.get(i).requestRedraw();
 			}
 		}
 
@@ -2190,7 +2292,7 @@ public class MapView extends ViewGroup {
 				for (this.tileX = this.mapViewTileX2; this.tileX >= this.mapViewTileX1; --this.tileX) {
 					this.currentTile = new Tile(this.tileX, this.tileY, this.zoomLevel);
 					this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-							this.mapFile, this.textScale, this.drawTileFrames,
+							this.mapFile, this.renderTheme, this.textScale, this.drawTileFrames,
 							this.drawTileCoordinates, this.highlightWaterTiles);
 					if (this.tileRAMCache.containsKey(this.currentJob)) {
 						// bitmap cache hit
@@ -2289,9 +2391,9 @@ public class MapView extends ViewGroup {
 	void matrixPostScale(float sx, float sy, float px, float py) {
 		synchronized (this.matrix) {
 			this.matrix.postScale(sx, sy, px, py);
-			synchronized (MapView.this.overlays) {
-				for (Overlay overlay : MapView.this.overlays) {
-					overlay.matrixPostScale(sx, sy, px, py);
+			synchronized (this.overlays) {
+				for (int i = 0, n = this.overlays.size(); i < n; ++i) {
+					this.overlays.get(i).matrixPostScale(sx, sy, px, py);
 				}
 			}
 		}
@@ -2308,9 +2410,9 @@ public class MapView extends ViewGroup {
 	void matrixPostTranslate(float dx, float dy) {
 		synchronized (this.matrix) {
 			this.matrix.postTranslate(dx, dy);
-			synchronized (MapView.this.overlays) {
-				for (Overlay overlay : MapView.this.overlays) {
-					overlay.matrixPostTranslate(dx, dy);
+			synchronized (this.overlays) {
+				for (int i = 0, n = this.overlays.size(); i < n; ++i) {
+					this.overlays.get(i).matrixPostTranslate(dx, dy);
 				}
 			}
 		}
@@ -2435,7 +2537,7 @@ public class MapView extends ViewGroup {
 			for (this.tileX = this.mapViewTileX2 + 1; this.tileX >= this.mapViewTileX1 - 1; --this.tileX) {
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY2 + 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.textScale, this.drawTileFrames,
+						this.mapFile, this.renderTheme, this.textScale, this.drawTileFrames,
 						this.drawTileCoordinates, this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
@@ -2444,7 +2546,7 @@ public class MapView extends ViewGroup {
 
 				this.currentTile = new Tile(this.tileX, this.mapViewTileY1 - 1, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.textScale, this.drawTileFrames,
+						this.mapFile, this.renderTheme, this.textScale, this.drawTileFrames,
 						this.drawTileCoordinates, this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
@@ -2456,7 +2558,7 @@ public class MapView extends ViewGroup {
 			for (this.tileY = this.mapViewTileY2; this.tileY >= this.mapViewTileY1; --this.tileY) {
 				this.currentTile = new Tile(this.mapViewTileX2 + 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.textScale, this.drawTileFrames,
+						this.mapFile, this.renderTheme, this.textScale, this.drawTileFrames,
 						this.drawTileCoordinates, this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
@@ -2465,7 +2567,7 @@ public class MapView extends ViewGroup {
 
 				this.currentTile = new Tile(this.mapViewTileX1 - 1, this.tileY, this.zoomLevel);
 				this.currentJob = new MapGeneratorJob(this.currentTile, this.mapViewMode,
-						this.mapFile, this.textScale, this.drawTileFrames,
+						this.mapFile, this.renderTheme, this.textScale, this.drawTileFrames,
 						this.drawTileCoordinates, this.highlightWaterTiles);
 				if (!this.tileMemoryCardCache.containsKey(this.currentJob)) {
 					// cache miss
@@ -2579,7 +2681,6 @@ public class MapView extends ViewGroup {
 		if (newMapFile != null && this.mapDatabase != null
 				&& this.mapDatabase.openFile(newMapFile)) {
 			this.mapDatabase.prepareExecution();
-			((DatabaseMapGenerator) this.mapGenerator).onMapFileChange();
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;

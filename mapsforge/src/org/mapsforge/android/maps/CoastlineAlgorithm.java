@@ -319,8 +319,8 @@ class CoastlineAlgorithm {
 
 		if (invalidCoastline) {
 			// do not create any closed polygons, just draw the coastline segments
-			for (CoastlineWay coastlineWay : this.coastlineWays) {
-				closedPolygonHandler.onValidCoastlineSegment(coastlineWay.data);
+			for (int i = 0, n = this.coastlineWays.size(); i < n; ++i) {
+				closedPolygonHandler.onValidCoastlineSegment(this.coastlineWays.get(i).data);
 			}
 			return;
 		}
@@ -343,7 +343,8 @@ class CoastlineAlgorithm {
 			coastlineStart = this.coastlineWays.get(0);
 			coastlineEnd = null;
 			// try to find a matching coastline segment
-			for (CoastlineWay coastline : this.coastlineWays) {
+			for (int i = 0, n = this.coastlineWays.size(); i < n; ++i) {
+				CoastlineWay coastline = this.coastlineWays.get(i);
 				if (coastline.entryAngle > coastlineStart.exitAngle) {
 					coastlineEnd = coastline;
 					break;

@@ -72,7 +72,8 @@ public abstract class MapActivity extends Activity {
 	protected void onPause() {
 		super.onPause();
 		Editor editor = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
-		for (MapView currentMapView : this.mapViews) {
+		for (int i = 0, n = this.mapViews.size(); i < n; ++i) {
+			MapView currentMapView = this.mapViews.get(i);
 			currentMapView.onPause();
 
 			editor.clear();
@@ -95,8 +96,8 @@ public abstract class MapActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		for (MapView currentMapView : this.mapViews) {
-			currentMapView.onResume();
+		for (int i = 0, n = this.mapViews.size(); i < n; ++i) {
+			this.mapViews.get(i).onResume();
 		}
 	}
 

@@ -101,8 +101,8 @@ class TileRAMCache {
 				for (Bitmap bitmap : this.map.values()) {
 					bitmap.recycle();
 				}
-				for (Bitmap bitmap : this.bitmapPool) {
-					bitmap.recycle();
+				for (int i = 0, n = this.bitmapPool.size(); i < n; ++i) {
+					this.bitmapPool.get(i).recycle();
 				}
 				this.map.clear();
 				this.map = null;

@@ -22,5 +22,11 @@
 		</menu>
 	</item>
 	<item android:id="@+id/menu_preferences" android:title="@string/menu_preferences" android:icon="@drawable/ic_menu_preferences" />
+	<item android:id="@+id/menu_render_theme" android:title="@string/menu_render_theme" android:icon="@drawable/ic_menu_mapmode">
+		<menu>
+			<item android:id="@+id/menu_render_theme_osmarender" android:title="@string/menu_render_theme_osmarender" />
+			<item android:id="@+id/menu_render_theme_select_file" android:title="@string/menu_render_theme_select_file" />
+		</menu>
+	</item>
 	<item android:id="@+id/menu_mapfile" android:title="@string/menu_mapfile" android:icon="@drawable/ic_menu_archive" />
 </menu>

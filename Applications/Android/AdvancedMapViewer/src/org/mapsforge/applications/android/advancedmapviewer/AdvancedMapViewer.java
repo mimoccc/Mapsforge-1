@@ -16,23 +16,32 @@ package org.mapsforge.applications.android.advancedmapviewer;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Date;
 
-import org.mapsforge.android.maps.ArrayCircleOverlay;
-import org.mapsforge.android.maps.ArrayItemizedOverlay;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.mapsforge.android.maps.GeoPoint;
-import org.mapsforge.android.maps.ItemizedOverlay;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapDatabase;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.MapViewMode;
-import org.mapsforge.android.maps.OverlayCircle;
-import org.mapsforge.android.maps.OverlayItem;
+import org.mapsforge.android.maps.MapView.InternalRenderTheme;
 import org.mapsforge.android.maps.MapView.TextField;
+import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
+import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
+import org.mapsforge.android.maps.overlay.ItemizedOverlay;
+import org.mapsforge.android.maps.overlay.OverlayCircle;
+import org.mapsforge.android.maps.overlay.OverlayItem;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -152,13 +161,53 @@ public class AdvancedMapViewer extends MapActivity {
 	};
 
 	/**
+	 * Accepts all readable files with a ".xml" extension.
+	 */
+	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			// accept only readable files
+			if (file.canRead()) {
+				if (file.isDirectory()) {
+					// accept all directories
+					return true;
+				} else if (file.isFile() && file.getName().endsWith(".xml")) {
+					// accept all files with a ".xml" extension
+					return true;
+				}
+			}
+			return false;
+		}
+	};
+
+	/**
 	 * Accepts all valid map files.
 	 */
 	private static final FileFilter FILE_FILTER_VALID_MAP = new FileFilter() {
 		@Override
 		public boolean accept(File file) {
-			// accept only valid map files
 			return MapDatabase.isValidMapFile(file.getAbsolutePath());
+		}
+	};
+
+	/**
+	 * Accepts all valid XML files.
+	 */
+	private static final FileFilter FILE_FILTER_VALID_XML = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			try {
+				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser()
+						.getXMLReader();
+				xmlReader.parse(new InputSource(new FileInputStream(file)));
+			} catch (ParserConfigurationException e) {
+				return false;
+			} catch (SAXException e) {
+				return false;
+			} catch (IOException e) {
+				return false;
+			}
+			return true;
 		}
 	};
 
@@ -166,6 +215,7 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
 	private static final int SCREENSHOT_QUALITY = 90;
 	private static final int SELECT_MAP_FILE = 0;
+	private static final int SELECT_RENDER_THEME_FILE = 1;
 
 	/**
 	 * The default size of the memory card cache.
@@ -181,11 +231,11 @@ public class AdvancedMapViewer extends MapActivity {
 	 * The default move speed of the map.
 	 */
 	static final int MOVE_SPEED_DEFAULT = 10;
-
 	/**
 	 * The maximum move speed of the map.
 	 */
 	static final int MOVE_SPEED_MAX = 30;
+
 	private Paint circleOverlayFill;
 	private Paint circleOverlayOutline;
 	private LocationManager locationManager;
@@ -263,6 +313,17 @@ public class AdvancedMapViewer extends MapActivity {
 				startActivity(new Intent(this, EditPreferences.class));
 				return true;
 
+			case R.id.menu_render_theme:
+				return true;
+
+			case R.id.menu_render_theme_osmarender:
+				this.mapView.setRenderTheme(InternalRenderTheme.OSMARENDER);
+				return true;
+
+			case R.id.menu_render_theme_select_file:
+				startRenderThemePicker();
+				return true;
+
 			case R.id.menu_mapfile:
 				startMapFilePicker();
 				return true;
@@ -296,6 +357,12 @@ public class AdvancedMapViewer extends MapActivity {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(true);
+		}
+
+		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+			menu.findItem(R.id.menu_render_theme).setEnabled(false);
+		} else {
+			menu.findItem(R.id.menu_render_theme).setEnabled(true);
 		}
 
 		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
@@ -473,18 +540,34 @@ public class AdvancedMapViewer extends MapActivity {
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
 	}
 
+	/**
+	 * Sets all file filters and starts the FilePicker to select an XML file.
+	 */
+	private void startRenderThemePicker() {
+		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
+		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_XML);
+		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == SELECT_MAP_FILE) {
 			if (resultCode == RESULT_OK) {
 				disableSnapToLocation(true);
-				if (data != null && data.getStringExtra("selectedFile") != null) {
-					this.mapView.setMapFile(data.getStringExtra("selectedFile"));
+				if (data != null && data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
+					this.mapView.setMapFile(data.getStringExtra(FilePicker.SELECTED_FILE));
 				}
 			} else if (resultCode == RESULT_CANCELED
 					&& !this.mapView.getMapViewMode().requiresInternetConnection()
 					&& !this.mapView.hasValidMapFile()) {
 				finish();
+			}
+		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK
+				&& data != null && data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
+			try {
+				this.mapView.setRenderTheme(data.getStringExtra(FilePicker.SELECTED_FILE));
+			} catch (FileNotFoundException e) {
+				showToast(e.getLocalizedMessage());
 			}
 		}
 	}

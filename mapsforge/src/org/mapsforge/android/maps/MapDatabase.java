@@ -18,8 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mapsforge.android.maps.theme.Tag;
 
 import android.graphics.Rect;
 
@@ -35,17 +37,14 @@ public class MapDatabase {
 	 * Maximum supported version of the map file format.
 	 */
 	public static final int BINARY_OSM_VERSION_MAX = 2;
-
 	/**
 	 * Minimal supported version of the map file format.
 	 */
 	public static final int BINARY_OSM_VERSION_MIN = 2;
-
 	/**
 	 * Magic byte at the beginning of a valid binary map file.
 	 */
 	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
-
 	/**
 	 * Bitmask to extract the block offset from an index entry.
 	 */
@@ -77,16 +76,6 @@ public class MapDatabase {
 	private static final int INDEX_CACHE_SIZE = 64;
 
 	/**
-	 * Initial length of the way nodes array.
-	 */
-	private static final int INITIAL_WAY_NODES_CAPACITY = 2048;
-
-	/**
-	 * Load factor of the internal HashMap.
-	 */
-	private static final float LOAD_FACTOR = 0.6f;
-
-	/**
 	 * Maximum tag ID which is considered as valid.
 	 */
 	private static final int MAXIMUM_ALLOWED_TAG_ID = 8192;
@@ -99,7 +88,7 @@ public class MapDatabase {
 	/**
 	 * Maximum number of inner ways which is considered as valid.
 	 */
-	private static final int MAXIMUM_NUMBER_OF_INNER_WAYS = 1024;
+	private static final int MAXIMUM_NUMBER_OF_INNER_WAYS = 256;
 
 	/**
 	 * Maximum way nodes sequence length which is considered as valid.
@@ -166,6 +155,14 @@ public class MapDatabase {
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
 
+	private static final String TAG_KEY_ELE = "ele";
+
+	private static final String TAG_KEY_HOUSE_NUMBER = "addr:housenumber";
+
+	private static final String TAG_KEY_NAME = "name";
+
+	private static final String TAG_KEY_REF = "ref";
+
 	/**
 	 * Bitmask for the optional way feature "label position".
 	 */
@@ -202,16 +199,6 @@ public class MapDatabase {
 	private static final int WAY_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
 	/**
-	 * Bitmask for the number of relevant way tags.
-	 */
-	private static final int WAY_RELEVANT_TAGS_BITMASK = 0xe0;
-
-	/**
-	 * Bit shift for calculating the number of relevant way tags.
-	 */
-	private static final int WAY_RELEVANT_TAGS_SHIFT = 5;
-
-	/**
 	 * Convenience method to check whether the given file is a valid map file.
 	 * 
 	 * @param file
@@ -225,24 +212,20 @@ public class MapDatabase {
 		return isValid;
 	}
 
-	private int blockEntriesTableOffset;
 	private String blockSignature;
 	private int bufferPosition;
 	private String commentText;
 	private boolean currentBlockIsWater;
 	private MapDatabaseIndexCache databaseIndexCache;
 	private boolean debugFile;
-	private boolean[] defaultTagIds;
 	private int elementCounter;
 	private long fileSize;
 	private int fileVersionNumber;
-	private int firstWayOffset;
 	private long fromBaseTileX;
 	private long fromBaseTileY;
 	private byte globalMaximumZoomLevel;
 	private byte globalMinimumZoomLevel;
 	private boolean headerStartPosition;
-	private int[] innerWay;
 	private int innerWayNodesSequenceLength;
 	private int innerWayNumber;
 	private int innerWayNumberOfWayNodes;
@@ -251,8 +234,7 @@ public class MapDatabase {
 	private long mapDate;
 	private MapFileParameters mapFileParameters;
 	private MapFileParameters[] mapFilesLookupTable;
-	private int maximumNodeTagId;
-	private int maximumWayTagId;
+	private String name;
 	private long nextBlockPointer;
 	private String nodeElevation;
 	private byte nodeFeatureByte;
@@ -263,15 +245,11 @@ public class MapDatabase {
 	private int nodeLatitude;
 	private byte nodeLayer;
 	private int nodeLongitude;
-	private String nodeName;
 	private byte nodeNumberOfTags;
 	private String nodeSignature;
 	private int nodesOnZoomLevel;
 	private byte nodeSpecialByte;
-	private String nodeTag;
-	private int nodeTagId;
-	private boolean[] nodeTagIds;
-	private Map<String, Integer> nodeTags;
+	private Tag[] nodeTags;
 	private int numberOfNodeTags;
 	private int numberOfWayTags;
 	private long parentTileX;
@@ -284,9 +262,11 @@ public class MapDatabase {
 	private int startPositionLatitude;
 	private int startPositionLongitude;
 	private boolean stopCurrentQuery;
-	private int stringLength;
 	private long subtileX;
 	private long subtileY;
+	private String tag;
+	private int tagId;
+	private List<Tag> tagList;
 	private byte tempByte;
 	private int tempInt;
 	private int tileLatitude;
@@ -296,21 +276,19 @@ public class MapDatabase {
 	private boolean useTileBitmask;
 	private int variableByteDecode;
 	private byte variableByteShift;
+	private float[] way;
 	private byte wayFeatureByte;
 	private boolean wayFeatureLabelPosition;
 	private boolean wayFeatureMultipolygon;
 	private boolean wayFeatureName;
 	private boolean wayFeatureRef;
-	private int[][] wayInnerWays;
-	private int[] wayLabelPosition;
+	private float[] wayLabelPosition;
 	private byte wayLayer;
-	private String wayName;
 	private int wayNodeLatitude;
 	private int wayNodeLongitude;
-	private int[] wayNodesSequence;
+	private float[][] wayNodes;
 	private int wayNodesSequenceLength;
 	private int wayNumberOfInnerWays;
-	private byte wayNumberOfRelevantTags;
 	private byte wayNumberOfTags;
 	private int wayNumberOfWayNodes;
 	private String wayRef;
@@ -318,12 +296,7 @@ public class MapDatabase {
 	private int waySize;
 	private int waysOnZoomLevel;
 	private byte waySpecialByte1;
-	private byte waySpecialByte2;
-	private String wayTag;
-	private byte wayTagBitmap;
-	private int wayTagId;
-	private boolean[] wayTagIds;
-	private Map<String, Integer> wayTags;
+	private Tag[] wayTags;
 	private int wayTileBitmask;
 	private int zoomLevelDifference;
 
@@ -515,21 +488,21 @@ public class MapDatabase {
 		}
 
 		// calculate the offset in the block entries table and move the pointer
-		this.blockEntriesTableOffset = (this.queryZoomLevel - this.mapFileParameters.zoomLevelMin) * 4;
-		this.bufferPosition += this.blockEntriesTableOffset;
+		int blockEntriesTableOffset = (this.queryZoomLevel - this.mapFileParameters.zoomLevelMin) * 4;
+		this.bufferPosition += blockEntriesTableOffset;
 
 		// get the amount of way and nodes on the current zoomLevel level
 		this.nodesOnZoomLevel = readShort();
 		this.waysOnZoomLevel = readShort();
 
 		// move the pointer to the end of the block entries table
-		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize
-				- this.blockEntriesTableOffset - 4;
+		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize - blockEntriesTableOffset
+				- 4;
 
 		// get the relative offset to the first stored way in the block
-		this.firstWayOffset = readVariableByteEncodedUnsignedInt();
-		if (this.firstWayOffset < 0) {
-			Logger.debug("invalid first way offset: " + this.firstWayOffset);
+		int firstWayOffset = readUnsignedInt();
+		if (firstWayOffset < 0) {
+			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
 				Logger.debug("block signature: " + this.blockSignature);
 			}
@@ -537,9 +510,9 @@ public class MapDatabase {
 		}
 
 		// add the current buffer position to the relative first way offset
-		this.firstWayOffset += this.bufferPosition;
-		if (this.firstWayOffset > this.readBuffer.length) {
-			Logger.debug("invalid first way offset: " + this.firstWayOffset);
+		firstWayOffset += this.bufferPosition;
+		if (firstWayOffset > this.readBuffer.length) {
+			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
 				Logger.debug("block signature: " + this.blockSignature);
 			}
@@ -561,10 +534,10 @@ public class MapDatabase {
 			}
 
 			// get the node latitude offset (VBE-S)
-			this.nodeLatitude = this.tileLatitude + readVariableByteEncodedSignedInt();
+			this.nodeLatitude = this.tileLatitude + readSignedInt();
 
 			// get the node longitude offset (VBE-S)
-			this.nodeLongitude = this.tileLongitude + readVariableByteEncodedSignedInt();
+			this.nodeLongitude = this.tileLongitude + readSignedInt();
 
 			// get the special byte that encodes multiple fields
 			this.nodeSpecialByte = readByte();
@@ -574,20 +547,20 @@ public class MapDatabase {
 			// bit 5-8 of the special byte represent the number of tag IDs
 			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
 
-			// reset the node tag array
-			System.arraycopy(this.defaultTagIds, 0, this.nodeTagIds, 0, this.nodeTagIds.length);
+			this.tagList.clear();
+
 			// get the node tag IDs (VBE-U)
 			for (this.tempByte = this.nodeNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.nodeTagId = readVariableByteEncodedUnsignedInt();
-				if (this.nodeTagId < 0 || this.nodeTagId >= this.nodeTagIds.length) {
-					Logger.debug("invalid node tag ID: " + this.nodeTagId);
+				this.tagId = readUnsignedInt();
+				if (this.tagId < 0 || this.tagId >= this.nodeTags.length) {
+					Logger.debug("invalid node tag ID: " + this.tagId);
 					if (this.debugFile) {
 						Logger.debug("node signature: " + this.nodeSignature);
 						Logger.debug("block signature: " + this.blockSignature);
 					}
 					return;
 				}
-				this.nodeTagIds[this.nodeTagId] = true;
+				this.tagList.add(this.nodeTags[this.tagId]);
 			}
 
 			// get the feature byte
@@ -600,39 +573,32 @@ public class MapDatabase {
 
 			// check if the node has a name
 			if (this.nodeFeatureName) {
-				this.nodeName = readUTF8EncodedString(true);
-			} else {
-				// no node name
-				this.nodeName = null;
+				this.name = readUTF8EncodedString(true);
+				this.tagList.add(new Tag(TAG_KEY_NAME, this.name));
 			}
 
 			// check if the node has an elevation
 			if (this.nodeFeatureElevation) {
 				// get the node elevation (VBE-S)
-				this.nodeElevation = Integer.toString(readVariableByteEncodedSignedInt());
-			} else {
-				// no elevation
-				this.nodeElevation = null;
+				this.nodeElevation = Integer.toString(readSignedInt());
+				this.tagList.add(new Tag(TAG_KEY_ELE, this.nodeElevation));
 			}
 
 			// check if the node has a house number
 			if (this.nodeFeatureHouseNumber) {
 				this.nodeHouseNumber = readUTF8EncodedString(true);
-			} else {
-				// no house number
-				this.nodeHouseNumber = null;
+				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.nodeHouseNumber));
 			}
 
 			// render the node
 			databaseMapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
-					this.nodeLongitude, this.nodeName, this.nodeHouseNumber,
-					this.nodeElevation, this.nodeTagIds);
+					this.nodeLongitude, this.tagList);
 		}
 
 		// finished reading nodes, check if the current buffer position is valid
-		if (this.bufferPosition > this.firstWayOffset) {
+		if (this.bufferPosition > firstWayOffset) {
 			Logger.debug("invalid buffer position: " + this.bufferPosition + " - "
-					+ this.firstWayOffset);
+					+ firstWayOffset);
 			if (this.debugFile) {
 				Logger.debug("block signature: " + this.blockSignature);
 			}
@@ -640,7 +606,7 @@ public class MapDatabase {
 		}
 
 		// move the pointer to the first way
-		this.bufferPosition = this.firstWayOffset;
+		this.bufferPosition = firstWayOffset;
 
 		// get the ways
 		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
@@ -657,7 +623,7 @@ public class MapDatabase {
 			}
 
 			// get the size of the way (VBE-U)
-			this.waySize = readVariableByteEncodedUnsignedInt();
+			this.waySize = readUnsignedInt();
 			if (this.waySize < 0) {
 				Logger.debug("invalid way size: " + this.waySize);
 				if (this.debugFile) {
@@ -688,33 +654,30 @@ public class MapDatabase {
 			// bit 5-8 of the first special byte represent the number of tag IDs
 			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
 
-			// get the second special byte that encodes multiple fields
-			this.waySpecialByte2 = readByte();
+			// skip the second special byte
+			readByte();
 
-			// bit 1-3 of the second special byte represent the number of relevant tags
-			this.wayNumberOfRelevantTags = (byte) ((this.waySpecialByte2 & WAY_RELEVANT_TAGS_BITMASK) >>> WAY_RELEVANT_TAGS_SHIFT);
+			// skip the way tag bitmap
+			readByte();
 
-			// get the way tag bitmap
-			this.wayTagBitmap = readByte();
+			this.tagList.clear();
 
-			// reset the way tag array
-			System.arraycopy(this.defaultTagIds, 0, this.wayTagIds, 0, this.wayTagIds.length);
 			// get the way tag IDs (VBE-U)
 			for (this.tempByte = this.wayNumberOfTags; this.tempByte != 0; --this.tempByte) {
-				this.wayTagId = readVariableByteEncodedUnsignedInt();
-				if (this.wayTagId < 0 || this.wayTagId >= this.wayTagIds.length) {
-					Logger.debug("invalid way tag ID: " + this.wayTagId);
+				this.tagId = readUnsignedInt();
+				if (this.tagId < 0 || this.tagId >= this.wayTags.length) {
+					Logger.debug("invalid way tag ID: " + this.tagId);
 					if (this.debugFile) {
 						Logger.debug("way signature: " + this.waySignature);
 						Logger.debug("block signature: " + this.blockSignature);
 					}
 					return;
 				}
-				this.wayTagIds[this.wayTagId] = true;
+				this.tagList.add(this.wayTags[this.tagId]);
 			}
 
 			// get and check the number of way nodes (VBE-U)
-			this.wayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
+			this.wayNumberOfWayNodes = readUnsignedInt();
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.debug("invalid number of way nodes: " + this.wayNumberOfWayNodes);
@@ -728,32 +691,27 @@ public class MapDatabase {
 			// each way node consists of latitude and longitude fields
 			this.wayNodesSequenceLength = this.wayNumberOfWayNodes * 2;
 
-			// make sure that the array for the way nodes is large enough
-			if (this.wayNodesSequenceLength > this.wayNodesSequence.length) {
-				this.wayNodesSequence = new int[this.wayNodesSequenceLength];
-			}
+			this.way = new float[this.wayNodesSequenceLength];
 
 			// get the first way node latitude offset (VBE-S)
-			this.wayNodeLatitude = this.tileLatitude + readVariableByteEncodedSignedInt();
+			this.wayNodeLatitude = this.tileLatitude + readSignedInt();
 			// get the first way node longitude offset (VBE-S)
-			this.wayNodeLongitude = this.tileLongitude + readVariableByteEncodedSignedInt();
+			this.wayNodeLongitude = this.tileLongitude + readSignedInt();
 
 			// store the first way node
-			this.wayNodesSequence[1] = this.wayNodeLatitude;
-			this.wayNodesSequence[0] = this.wayNodeLongitude;
+			this.way[1] = this.wayNodeLatitude;
+			this.way[0] = this.wayNodeLongitude;
 
 			// get the remaining way nodes offsets
 			for (this.tempInt = 2; this.tempInt < this.wayNodesSequenceLength; this.tempInt += 2) {
 				// get the way node latitude offset (VBE-S)
-				this.wayNodeLatitude = readVariableByteEncodedSignedInt();
+				this.wayNodeLatitude = readSignedInt();
 				// get the way node longitude offset (VBE-S)
-				this.wayNodeLongitude = readVariableByteEncodedSignedInt();
+				this.wayNodeLongitude = readSignedInt();
 
 				// calculate the way node coordinates
-				this.wayNodesSequence[this.tempInt] = this.wayNodesSequence[this.tempInt - 2]
-						+ this.wayNodeLongitude;
-				this.wayNodesSequence[this.tempInt + 1] = this.wayNodesSequence[this.tempInt - 1]
-						+ this.wayNodeLatitude;
+				this.way[this.tempInt] = this.way[this.tempInt - 2] + this.wayNodeLongitude;
+				this.way[this.tempInt + 1] = this.way[this.tempInt - 1] + this.wayNodeLatitude;
 			}
 
 			// get the feature byte
@@ -767,34 +725,28 @@ public class MapDatabase {
 
 			// check if the way has a name
 			if (this.wayFeatureName) {
-				this.wayName = readUTF8EncodedString(this.queryReadWayNames);
-			} else {
-				// no way name
-				this.wayName = null;
+				this.name = readUTF8EncodedString(this.queryReadWayNames);
+				this.tagList.add(new Tag(TAG_KEY_NAME, this.name));
 			}
 
 			// check if the way has a reference
 			if (this.wayFeatureRef) {
 				this.wayRef = readUTF8EncodedString(this.queryReadWayNames);
-			} else {
-				// no reference
-				this.wayRef = null;
+				this.tagList.add(new Tag(TAG_KEY_REF, this.wayRef));
 			}
 
 			// check if the way has a label position
 			if (this.wayFeatureLabelPosition) {
 				if (this.queryReadWayNames) {
-					this.wayLabelPosition = new int[2];
+					this.wayLabelPosition = new float[2];
 					// get the label position latitude offset (VBE-S)
-					this.wayLabelPosition[1] = this.wayNodesSequence[1]
-							+ readVariableByteEncodedSignedInt();
+					this.wayLabelPosition[1] = this.way[1] + readSignedInt();
 					// get the label position longitude offset (VBE-S)
-					this.wayLabelPosition[0] = this.wayNodesSequence[0]
-							+ readVariableByteEncodedSignedInt();
+					this.wayLabelPosition[0] = this.way[0] + readSignedInt();
 				} else {
 					// skip the label position latitude and longitude offsets (VBE-S)
-					readVariableByteEncodedSignedInt();
-					readVariableByteEncodedSignedInt();
+					readSignedInt();
+					readSignedInt();
 					this.wayLabelPosition = null;
 				}
 			} else {
@@ -805,20 +757,20 @@ public class MapDatabase {
 			// check if the way represents a multipolygon
 			if (this.wayFeatureMultipolygon) {
 				// get the amount of inner ways (VBE-U)
-				this.wayNumberOfInnerWays = readVariableByteEncodedUnsignedInt();
+				this.wayNumberOfInnerWays = readUnsignedInt();
 
 				if (this.wayNumberOfInnerWays > 0
 						&& this.wayNumberOfInnerWays < MAXIMUM_NUMBER_OF_INNER_WAYS) {
-					// create a two-dimensional array for the coordinates of the inner ways
-					this.wayInnerWays = new int[this.wayNumberOfInnerWays][];
+					this.wayNodes = new float[1 + this.wayNumberOfInnerWays][];
+					this.wayNodes[0] = this.way;
 
 					// for each inner way
-					for (this.innerWayNumber = this.wayNumberOfInnerWays - 1; this.innerWayNumber >= 0; --this.innerWayNumber) {
+					for (this.innerWayNumber = 1; this.innerWayNumber <= this.wayNumberOfInnerWays; ++this.innerWayNumber) {
 						// get and check the number of inner way nodes (VBE-U)
-						this.innerWayNumberOfWayNodes = readVariableByteEncodedUnsignedInt();
+						this.innerWayNumberOfWayNodes = readUnsignedInt();
 						if (this.innerWayNumberOfWayNodes < 1
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-							Logger.debug("invalid inner way number of way nodes: "
+							Logger.debug("invalid number of inner way nodes: "
 									+ this.innerWayNumberOfWayNodes);
 							if (this.debugFile) {
 								Logger.debug("way signature: " + this.waySignature);
@@ -830,39 +782,29 @@ public class MapDatabase {
 						// each inner way node consists of a latitude and a longitude field
 						this.innerWayNodesSequenceLength = this.innerWayNumberOfWayNodes * 2;
 
-						// create an array for the inner way coordinates
-						this.innerWay = new int[this.innerWayNodesSequenceLength];
+						this.wayNodes[this.innerWayNumber] = new float[this.innerWayNodesSequenceLength];
 
-						// get the first inner way node latitude offset (VBE-S)
-						this.wayNodeLatitude = this.wayNodesSequence[1]
-								+ readVariableByteEncodedSignedInt();
-						// get the first inner way node longitude offset (VBE-S)
-						this.wayNodeLongitude = this.wayNodesSequence[0]
-								+ readVariableByteEncodedSignedInt();
-
-						// store the first inner way node
-						this.innerWay[1] = this.wayNodeLatitude;
-						this.innerWay[0] = this.wayNodeLongitude;
+						// get the first inner way node latitude (VBE-S)
+						this.wayNodes[this.innerWayNumber][1] = this.way[1] + readSignedInt();
+						// get the first inner way node longitude (VBE-S)
+						this.wayNodes[this.innerWayNumber][0] = this.way[0] + readSignedInt();
 
 						// get and store the remaining inner way nodes offsets
 						for (this.tempInt = 2; this.tempInt < this.innerWayNodesSequenceLength; this.tempInt += 2) {
 							// get the inner way node latitude offset (VBE-S)
-							this.wayNodeLatitude = readVariableByteEncodedSignedInt();
+							this.wayNodeLatitude = readSignedInt();
 							// get the inner way node longitude offset (VBE-S)
-							this.wayNodeLongitude = readVariableByteEncodedSignedInt();
+							this.wayNodeLongitude = readSignedInt();
 
 							// calculate the inner way node coordinates
-							this.innerWay[this.tempInt] = this.innerWay[this.tempInt - 2]
+							this.wayNodes[this.innerWayNumber][this.tempInt] = this.wayNodes[this.innerWayNumber][this.tempInt - 2]
 									+ this.wayNodeLongitude;
-							this.innerWay[this.tempInt + 1] = this.innerWay[this.tempInt - 1]
+							this.wayNodes[this.innerWayNumber][this.tempInt + 1] = this.wayNodes[this.innerWayNumber][this.tempInt - 1]
 									+ this.wayNodeLatitude;
 						}
-
-						// store the inner way
-						this.wayInnerWays[this.innerWayNumber] = this.innerWay;
 					}
 				} else {
-					Logger.debug("invalid way number of inner ways: " + this.wayNumberOfInnerWays);
+					Logger.debug("invalid number of inner ways: " + this.wayNumberOfInnerWays);
 					if (this.debugFile) {
 						Logger.debug("way signature: " + this.waySignature);
 						Logger.debug("block signature: " + this.blockSignature);
@@ -871,14 +813,12 @@ public class MapDatabase {
 				}
 			} else {
 				// no multipolygon
-				this.wayInnerWays = null;
+				this.wayNodes = new float[][] { this.way };
 			}
 
 			// render the way
-			databaseMapGenerator.renderWay(this.wayLayer, this.wayNumberOfRelevantTags,
-					this.wayName, this.wayRef, this.wayLabelPosition, this.wayTagIds,
-					this.wayTagBitmap, this.wayNodesSequenceLength, this.wayNodesSequence,
-					this.wayInnerWays);
+			databaseMapGenerator.renderWay(this.wayLayer, this.wayLabelPosition, this.tagList,
+					this.wayNodes);
 		}
 	}
 
@@ -1014,40 +954,23 @@ public class MapDatabase {
 			return false;
 		}
 
-		// create the hash map for the mapping of node tag IDs
-		this.nodeTags = new HashMap<String, Integer>(
-				(int) (this.numberOfNodeTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
+		this.nodeTags = new Tag[this.numberOfNodeTags];
 
-		// get the node tag mapping and store the maximum node tag ID
-		this.maximumNodeTagId = 0;
 		for (this.tempInt = 0; this.tempInt < this.numberOfNodeTags; ++this.tempInt) {
 			// get and check the node tag
-			this.nodeTag = readUTF8EncodedString(true);
-			if (this.nodeTag == null) {
+			this.tag = readUTF8EncodedString(true);
+			if (this.tag == null) {
 				return false;
 			}
 
 			// get and check the node tag ID (2 bytes)
-			this.nodeTagId = readShort();
-			if (this.nodeTagId < 0 || this.nodeTagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.debug("invalid node tag ID: " + this.nodeTagId);
+			this.tagId = readShort();
+			if (this.tagId < 0 || this.tagId > MAXIMUM_ALLOWED_TAG_ID) {
+				Logger.debug("invalid node tag ID: " + this.tagId);
 				return false;
 			}
 
-			// check for an existing mapping of this node tag
-			if (this.nodeTags.containsKey(this.nodeTag)) {
-				Logger.debug("duplicate node tag mapping: " + this.nodeTag);
-				Logger.debug("IDs: " + this.nodeTags.get(this.nodeTag) + " " + this.nodeTagId);
-				return false;
-			}
-
-			// store the mapping in the hash map
-			this.nodeTags.put(this.nodeTag, Integer.valueOf(this.nodeTagId));
-
-			// update the maximum node tag ID information
-			if (this.nodeTagId > this.maximumNodeTagId) {
-				this.maximumNodeTagId = this.nodeTagId;
-			}
+			this.nodeTags[this.tagId] = new Tag(this.tag);
 		}
 
 		// get and check the number of way tags (2 bytes)
@@ -1057,40 +980,23 @@ public class MapDatabase {
 			return false;
 		}
 
-		// create the hash map for the mapping of way tag IDs
-		this.wayTags = new HashMap<String, Integer>(
-				(int) (this.numberOfWayTags / LOAD_FACTOR) + 2, LOAD_FACTOR);
+		this.wayTags = new Tag[this.numberOfWayTags];
 
-		// get the way tag mapping and store the maximum way tag ID
-		this.maximumWayTagId = 0;
 		for (this.tempInt = 0; this.tempInt < this.numberOfWayTags; ++this.tempInt) {
 			// get and check the way tag
-			this.wayTag = readUTF8EncodedString(true);
-			if (this.wayTag == null) {
+			this.tag = readUTF8EncodedString(true);
+			if (this.tag == null) {
 				return false;
 			}
 
 			// get and check the way tag ID (2 bytes)
-			this.wayTagId = readShort();
-			if (this.wayTagId < 0 || this.wayTagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.debug("invalid way tag ID: " + this.wayTagId);
+			this.tagId = readShort();
+			if (this.tagId < 0 || this.tagId > MAXIMUM_ALLOWED_TAG_ID) {
+				Logger.debug("invalid way tag ID: " + this.tagId);
 				return false;
 			}
 
-			// check for an existing mapping of this way tag
-			if (this.wayTags.containsKey(this.wayTag)) {
-				Logger.debug("duplicate way tag mapping: " + this.wayTag);
-				Logger.debug("IDs: " + this.wayTags.get(this.wayTag) + " " + this.wayTagId);
-				return false;
-			}
-
-			// store the mapping in the hash map
-			this.wayTags.put(this.wayTag, Integer.valueOf(this.wayTagId));
-
-			// update the maximum way tag ID information
-			if (this.wayTagId > this.maximumWayTagId) {
-				this.maximumWayTagId = this.wayTagId;
-			}
+			this.wayTags[this.tagId] = new Tag(this.tag);
 		}
 
 		// get and check the comment text
@@ -1259,33 +1165,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Decodes a variable amount of bytes from the read buffer to a string.
-	 * 
-	 * @param readString
-	 *            true if the string should be decoded and returned, false otherwise.
-	 * @return the UTF-8 decoded string (may be null).
-	 * @throws UnsupportedEncodingException
-	 *             if string decoding fails.
-	 */
-	private String readUTF8EncodedString(boolean readString)
-			throws UnsupportedEncodingException {
-		// get and check the length of string (VBE-U)
-		this.stringLength = readVariableByteEncodedUnsignedInt();
-		if (this.stringLength >= 0
-				&& this.bufferPosition + this.stringLength <= this.readBuffer.length) {
-			this.bufferPosition += this.stringLength;
-			if (readString) {
-				// get the string
-				return new String(this.readBuffer, this.bufferPosition - this.stringLength,
-						this.stringLength, CHARSET_UTF8);
-			}
-			return null;
-		}
-		Logger.debug("invalid string length: " + this.stringLength);
-		return null;
-	}
-
-	/**
 	 * Converts a variable amount of bytes from the read buffer to a signed int.
 	 * <p>
 	 * The first bit is for continuation info, the other six (last byte) or seven (all other bytes) bits
@@ -1293,7 +1172,7 @@ public class MapDatabase {
 	 * 
 	 * @return the int value.
 	 */
-	private int readVariableByteEncodedSignedInt() {
+	private int readSignedInt() {
 		this.variableByteDecode = 0;
 		this.variableByteShift = 0;
 
@@ -1320,7 +1199,7 @@ public class MapDatabase {
 	 * 
 	 * @return the int value or -1 in case of an error.
 	 */
-	private int readVariableByteEncodedUnsignedInt() {
+	private int readUnsignedInt() {
 		try {
 			this.variableByteDecode = 0;
 			this.variableByteShift = 0;
@@ -1338,6 +1217,33 @@ public class MapDatabase {
 			Logger.exception(e);
 			return -1;
 		}
+	}
+
+	/**
+	 * Decodes a variable amount of bytes from the read buffer to a string.
+	 * 
+	 * @param readString
+	 *            true if the string should be decoded and returned, false otherwise.
+	 * @return the UTF-8 decoded string (may be null).
+	 * @throws UnsupportedEncodingException
+	 *             if string decoding fails.
+	 */
+	private String readUTF8EncodedString(boolean readString)
+			throws UnsupportedEncodingException {
+		// get and check the length of string (VBE-U)
+		int stringLength = readUnsignedInt();
+		if (stringLength >= 0
+				&& this.bufferPosition + stringLength <= this.readBuffer.length) {
+			this.bufferPosition += stringLength;
+			if (readString) {
+				// get the string
+				return new String(this.readBuffer, this.bufferPosition - stringLength, stringLength,
+						CHARSET_UTF8);
+			}
+			return null;
+		}
+		Logger.debug("invalid string length: " + stringLength);
+		return null;
 	}
 
 	/**
@@ -1613,24 +1519,6 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the mapping of node tags to IDs in the current map file.
-	 * 
-	 * @return a map containing the tags and their corresponding IDs.
-	 */
-	Map<String, Integer> getNodeTags() {
-		return this.nodeTags;
-	}
-
-	/**
-	 * Returns the mapping of way tags to IDs in the current map file.
-	 * 
-	 * @return a map containing the tags and their corresponding IDs.
-	 */
-	Map<String, Integer> getWayTags() {
-		return this.wayTags;
-	}
-
-	/**
 	 * Returns the current state of the database.
 	 * 
 	 * @return true if the database has an open map file, false otherwise.
@@ -1644,18 +1532,8 @@ public class MapDatabase {
 	 * first read query is executed.
 	 */
 	void prepareExecution() {
-		// create the DatabaseIndexCache
-		this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile,
-					INDEX_CACHE_SIZE);
-
-		// create an array for the way nodes coordinates
-		this.wayNodesSequence = new int[INITIAL_WAY_NODES_CAPACITY];
-
-		// create the tag arrays
-		this.defaultTagIds = new boolean[Math.max(this.maximumNodeTagId,
-					this.maximumWayTagId) + 1];
-		this.nodeTagIds = new boolean[this.maximumNodeTagId + 1];
-		this.wayTagIds = new boolean[this.maximumWayTagId + 1];
+		this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile, INDEX_CACHE_SIZE);
+		this.tagList = new ArrayList<Tag>();
 	}
 
 	/**

@@ -65,18 +65,12 @@ class MapMover extends Thread {
 			// add the movement to the transformation matrices
 			this.mapView.matrixPostTranslate(timeElapsed * this.moveX, timeElapsed
 					* this.moveY);
-			synchronized (this.mapView.overlays) {
-				for (Overlay overlay : this.mapView.overlays) {
-					overlay.matrixPostTranslate(timeElapsed * this.moveX, timeElapsed
-							* this.moveY);
-				}
-			}
 
 			// move the map and the overlays
 			this.mapView.moveMap(timeElapsed * this.moveX, timeElapsed * this.moveY);
 			synchronized (this.mapView.overlays) {
-				for (Overlay overlay : this.mapView.overlays) {
-					overlay.requestRedraw();
+				for (int i = 0, n = this.mapView.overlays.size(); i < n; ++i) {
+					this.mapView.overlays.get(i).requestRedraw();
 				}
 			}
 

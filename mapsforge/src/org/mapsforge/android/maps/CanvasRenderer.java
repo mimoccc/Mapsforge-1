@@ -125,16 +125,17 @@ class CanvasRenderer extends DatabaseMapGenerator {
 	}
 
 	@Override
-	void drawWays(List<List<List<ShapePaintContainer>>> drawWays, byte layers,
-			byte levelsPerLayer) {
+	void drawWays(List<List<List<ShapePaintContainer>>> drawWays) {
 		List<List<ShapePaintContainer>> shapePaintContainers;
 		CircleContainer circleContainer;
 		WayContainer complexWayContainer;
 		ShapePaintContainer shapePaintContainer;
 		List<ShapePaintContainer> wayList;
+		int layers = drawWays.size();
+		int levelsPerLayer = drawWays.get(0).size();
 		for (byte currentLayer = 0; currentLayer < layers; ++currentLayer) {
 			shapePaintContainers = drawWays.get(currentLayer);
-			for (byte currentLevel = 0; currentLevel < levelsPerLayer; ++currentLevel) {
+			for (int currentLevel = 0; currentLevel < levelsPerLayer; ++currentLevel) {
 				wayList = shapePaintContainers.get(currentLevel);
 				for (this.arrayListIndex = wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
 					shapePaintContainer = wayList.get(this.arrayListIndex);

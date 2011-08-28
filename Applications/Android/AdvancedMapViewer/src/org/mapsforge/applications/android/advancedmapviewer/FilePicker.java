@@ -53,6 +53,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	private static FileFilter fileDisplayFilter;
 	private static FileFilter fileSelectFilter;
 	private static final String PREFERENCES_FILE = "FilePicker";
+	static final String SELECTED_FILE = "selectedFile";
 
 	/**
 	 * Sets the file comparator which is used to order the contents of all directories before
@@ -120,7 +121,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 			this.currentDirectory = selectedFile;
 			browseToCurrentDirectory();
 		} else if (fileSelectFilter == null || fileSelectFilter.accept(selectedFile)) {
-			setResult(RESULT_OK, new Intent().putExtra("selectedFile", selectedFile
+			setResult(RESULT_OK, new Intent().putExtra(SELECTED_FILE, selectedFile
 					.getAbsolutePath()));
 			finish();
 		} else {

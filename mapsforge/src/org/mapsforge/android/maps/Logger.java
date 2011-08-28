@@ -19,7 +19,7 @@ import android.util.Log;
 /**
  * Class used for logging text to the console.
  */
-final class Logger {
+public final class Logger {
 	private static final String LOG_TAG = "osm";
 
 	/**
@@ -28,7 +28,7 @@ final class Logger {
 	 * @param message
 	 *            the message which should be logged.
 	 */
-	static void debug(String message) {
+	public static void debug(String message) {
 		Log.d(LOG_TAG, Thread.currentThread().getName() + ": " + message);
 	}
 
@@ -38,7 +38,7 @@ final class Logger {
 	 * @param exception
 	 *            the exception which should be logged.
 	 */
-	static void exception(Exception exception) {
+	public static void exception(Exception exception) {
 		StringBuilder stringBuilder = new StringBuilder(512);
 		stringBuilder.append("Exception in thread \"");
 		stringBuilder.append(Thread.currentThread().getName());
