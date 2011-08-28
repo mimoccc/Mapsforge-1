@@ -234,6 +234,7 @@ public class MapView extends JPanel implements MouseListener,
 		g2d.setBackground(MAP_VIEW_BACKGROUND);
 		paintOffScreen(g2d);
 		g.drawImage(image, 0, 0, null);
+		
 	}
 
 	public void paintOffScreen(Graphics2D g) {

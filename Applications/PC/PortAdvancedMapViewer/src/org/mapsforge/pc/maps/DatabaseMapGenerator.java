@@ -1245,8 +1245,8 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LANDUSE_CEMETERY_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_CEMETERY_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_LANDUSE_CEMETERY_FILL.setColor(new Color(189, 227, 203));
-		PAINT_LANDUSE_CEMETERY_PATTERN
-				.setShader(this.mapPatterns.cemeteryShader);
+		//PAINT_LANDUSE_CEMETERY_PATTERN.setShader(this.mapPatterns.cemeteryShader);
+		PAINT_LANDUSE_CEMETERY_PATTERN.setColor(new Color(237, 237, 237));
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LANDUSE_COMMERCIAL_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1304,8 +1304,8 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_LEISURE_NATURE_RESERVE_OUTLINE.setColor(new Color(112, 193, 142));
-		PAINT_LEISURE_NATURE_RESERVE_PATTERN
-				.setShader(this.mapPatterns.natureReserveShader);
+		//PAINT_LEISURE_NATURE_RESERVE_PATTERN.setShader(this.mapPatterns.natureReserveShader);
+		PAINT_LEISURE_NATURE_RESERVE_PATTERN.setColor(new Color(0, 100, 0));
 		PAINT_LEISURE_STADIUM_FILL.setStyle(Paint.Style.FILL);
 		PAINT_LEISURE_STADIUM_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_LEISURE_STADIUM_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1328,8 +1328,8 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_MILITARY_NAVAL_BASE_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_MILITARY_NAVAL_BASE_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_MILITARY_NAVAL_BASE_FILL.setColor(new Color(181, 214, 241));
-		PAINT_MILITARY_PATTERN.setShader(this.mapPatterns.militaryShader);
-
+		//PAINT_MILITARY_PATTERN.setShader(this.mapPatterns.militaryShader);
+		PAINT_MILITARY_PATTERN.setColor(new Color(100, 0, 0));
 		PAINT_NATURAL_BEACH_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_BEACH_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_BEACH_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1362,7 +1362,8 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_NATURAL_LAND_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_LAND_FILL.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_NATURAL_LAND_FILL.setColor(new Color(248, 248, 248));
-		PAINT_NATURAL_MARSH_PATTERN.setShader(this.mapPatterns.marshShader);
+		//PAINT_NATURAL_MARSH_PATTERN.setShader(this.mapPatterns.marshShader);
+		PAINT_NATURAL_MARSH_PATTERN.setColor(new Color(85, 107, 47));
 		PAINT_NATURAL_WATER_FILL.setStyle(Paint.Style.FILL);
 		PAINT_NATURAL_WATER_FILL.setStrokeJoin(Paint.Join.ROUND);
 		PAINT_NATURAL_WATER_FILL.setStrokeCap(Paint.Cap.ROUND);
@@ -1522,11 +1523,12 @@ public abstract class DatabaseMapGenerator extends MapGenerator implements
 		PAINT_WATERWAY_STREAM.setStrokeCap(Paint.Cap.ROUND);
 		PAINT_WATERWAY_STREAM.setColor(new Color(179, 213, 241));
 
-		PAINT_WOOD_CONIFEROUS_PATTERN
-				.setShader(this.mapPatterns.woodConiferousShader);
-		PAINT_WOOD_DECIDUOUS_PATTERN
-				.setShader(this.mapPatterns.woodDeciduousShader);
-		PAINT_WOOD_MIXED_PATTERN.setShader(this.mapPatterns.woodMixedShader);
+		//PAINT_WOOD_CONIFEROUS_PATTERN.setShader(this.mapPatterns.woodConiferousShader);
+		PAINT_WOOD_CONIFEROUS_PATTERN.setColor(new Color(184,134,11));
+		//PAINT_WOOD_DECIDUOUS_PATTERN.setShader(this.mapPatterns.woodDeciduousShader);
+		PAINT_WOOD_DECIDUOUS_PATTERN.setColor(new Color(205,149,12));
+		//PAINT_WOOD_MIXED_PATTERN.setShader(this.mapPatterns.woodMixedShader);
+		PAINT_WOOD_MIXED_PATTERN.setColor(new Color(139,101,8));
 	}
 
 	/**

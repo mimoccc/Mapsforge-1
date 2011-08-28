@@ -261,14 +261,14 @@ public class Paint {
 		return this.pathEffect;
 	}
 
-	public void setShader(Shader shader) {
+	/*public void setShader(Shader shader) {
 		this.strokeShader = shader;
-	}
+	}*/
 
-	public Shader getShader() {
+	/*public Shader getShader() {
 		return this.strokeShader;
-	}
-
+	}*/	
+	
 	public void setStrokeCap(Cap cap) {
 		this.strokeCap = cap;
 	}

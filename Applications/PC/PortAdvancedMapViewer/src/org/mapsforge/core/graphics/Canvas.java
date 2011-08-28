@@ -11,9 +11,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Properties;
 
 import org.mapsforge.core.graphics.Paint.Align;
 import org.mapsforge.core.graphics.Paint.Style;
@@ -23,7 +20,6 @@ public class Canvas {
 	public BufferedImage mBufferedImage;
 
 	private static final long serialVersionUID = 5085355825188623626L;
-	private Properties propertiesSettings;
 
 	public Canvas() {
 		mBufferedImage = new BufferedImage(640, 480,
@@ -57,7 +53,7 @@ public class Canvas {
 				x -= m;
 			}
 		}
-		// TODO Changed
+		//TODO: Changed
 		int i = 0;
 		int lastIndex = 0 + text.length();
 		Typeface font = paint.getTypeface();
@@ -167,13 +163,12 @@ public class Canvas {
 	 */
 	public void drawLines(float[] pts, Paint paint) {
 		Graphics2D g = mBufferedImage.createGraphics();
-		g.setColor(Color.GRAY);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 
+		
 		for (int i = 0; i < pts.length; i += 4) {
-			g.drawLine((int) pts[i], (int) pts[i + 1],
-					(int) pts[i + 2], (int) pts[i + 3]);
+			drawLine( pts[i],  pts[i + 1], pts[i + 2],  pts[i + 3], paint);
 		}
 		g.dispose();
 	}
@@ -217,7 +212,7 @@ public class Canvas {
 		Graphics2D g = getCustomGraphics(paint);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
-
+		
 		g.drawLine((int) startX, (int) startY, (int) stopX, (int) stopY);
 
 		// dispose Graphics2D object
@@ -306,13 +301,13 @@ public class Canvas {
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				falpha));
 
-		Shader shader = paint.getShader();
+		/*Shader shader = paint.getShader();
 		if (shader != null) {
 			java.awt.Paint shaderPaint = shader.getJavaPaint();
 			if (shaderPaint != null) {
 				g.setPaint(shaderPaint);
 			}
-		}
+		}*/
 
 		return g;
 	}
