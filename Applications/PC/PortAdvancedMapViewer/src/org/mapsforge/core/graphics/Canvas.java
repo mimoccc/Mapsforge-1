@@ -117,7 +117,7 @@ public class Canvas {
 		}
 
 		// draw the bitmap
-		drawBitmap(bitmap, 0, 0, paint);
+		drawBitmap(bitmap, (float) matrix.getTransform().getTranslateX(), (float) matrix.getTransform().getTranslateY(), paint);
 
 		// if (needsRestore) {
 		// remove the new graphics
