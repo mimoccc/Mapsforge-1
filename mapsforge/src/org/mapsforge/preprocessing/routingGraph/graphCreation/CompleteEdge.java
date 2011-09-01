@@ -253,6 +253,16 @@ public class CompleteEdge implements Edge {
 		this.allUsedNodes = allUsedNodes;
 	}
 
+	/**
+	 * Sets the reference field
+	 * 
+	 * @param ref
+	 *            the new reference to be set
+	 */
+	public void setRef(String ref) {
+		this.ref = ref;
+	}
+
 	@Override
 	public String toString() {
 		String s = "[Way " + this.id;
