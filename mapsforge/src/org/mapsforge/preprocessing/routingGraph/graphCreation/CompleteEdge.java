@@ -219,7 +219,6 @@ public class CompleteEdge implements Edge {
 	 *            the new waypoints to be set
 	 */
 	public void setAllWaypoints(GeoCoordinate[] allWaypoints) {
-		System.out.println("set allWP " + allWaypoints.length);
 		this.allWaypoints = allWaypoints;
 	}
 
