@@ -87,6 +87,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		}
 	}
 
+	/**
+	 * Returns true if the given way is closed, false otherwise.
+	 * 
+	 * @param way
+	 *            the coordinates of the way.
+	 * @return true if the given way is closed, false otherwise.
+	 */
+	private static boolean isClosedWay(float[] way) {
+		return way[0] == way[way.length - 2] && way[1] == way[way.length - 1];
+	}
+
 	private List<PointTextContainer> areaLabels;
 	private float[] centerPosition;
 	private CoastlineAlgorithm coastlineAlgorithm;
@@ -345,7 +356,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 *            the latitude value.
 	 * @return the Y coordinate on the current tile.
 	 */
-	private float scaleLatitude(int latitude) {
+	private float scaleLatitude(float latitude) {
 		return (float) (MercatorProjection.latitudeToPixelY(latitude / (double) 1000000,
 				this.currentTile.zoomLevel) - this.currentTile.pixelY);
 	}
@@ -357,7 +368,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 *            the longitude value.
 	 * @return the X coordinate on the current tile.
 	 */
-	private float scaleLongitude(int longitude) {
+	private float scaleLongitude(float longitude) {
 		return (float) (MercatorProjection.longitudeToPixelX(longitude / (double) 1000000,
 				this.currentTile.zoomLevel) - this.currentTile.pixelX);
 	}
@@ -638,19 +649,17 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	 */
 	final void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
 		this.drawingLayer = this.ways.get(getValidLayer(layer));
+		// TODO what about the label position?
 		this.coordinates = wayNodes;
 		for (int i = 0; i < this.coordinates.length; ++i) {
 			for (int j = 0; j < this.coordinates[i].length; j += 2) {
-				this.coordinates[i][j] = scaleLongitude((int) this.coordinates[i][j]);
-				this.coordinates[i][j + 1] = scaleLatitude((int) this.coordinates[i][j + 1]);
+				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
+				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
 			}
 		}
 		this.shapeContainer = new WayContainer(this.coordinates);
 
-		// TODO what about the label position?
-		int length = this.coordinates[0].length;
-		if (this.coordinates[0][0] == this.coordinates[0][length - 2]
-				&& this.coordinates[0][1] == this.coordinates[0][length - 1]) {
+		if (isClosedWay(this.coordinates[0])) {
 			this.renderTheme.matchClosedWay(this, tags, this.currentTile.zoomLevel);
 		} else {
 			this.renderTheme.matchLinearWay(this, tags, this.currentTile.zoomLevel);

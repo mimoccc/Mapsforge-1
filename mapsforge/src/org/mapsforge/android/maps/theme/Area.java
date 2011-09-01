@@ -29,7 +29,7 @@ final class Area extends RenderingInstruction {
 	static Area create(String elementName, Attributes attributes, int level) throws IOException {
 		String file = null;
 		String jar = null;
-		int fill = Color.TRANSPARENT;
+		int fill = Color.BLACK;
 		int stroke = Color.TRANSPARENT;
 		float strokeWidth = 0;
 
@@ -73,6 +73,7 @@ final class Area extends RenderingInstruction {
 			this.fill.setShader(shader);
 			this.fill.setStyle(Style.FILL);
 			this.fill.setColor(fill);
+			this.fill.setStrokeCap(Cap.ROUND);
 		}
 
 		if (stroke == Color.TRANSPARENT) {

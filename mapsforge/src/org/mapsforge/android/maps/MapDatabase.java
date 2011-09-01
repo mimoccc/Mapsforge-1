@@ -267,8 +267,6 @@ public class MapDatabase {
 	private String tag;
 	private int tagId;
 	private List<Tag> tagList;
-	private byte tempByte;
-	private int tempInt;
 	private int tileLatitude;
 	private int tileLongitude;
 	private long toBaseTileX;
@@ -550,7 +548,7 @@ public class MapDatabase {
 			this.tagList.clear();
 
 			// get the node tag IDs (VBE-U)
-			for (this.tempByte = this.nodeNumberOfTags; this.tempByte != 0; --this.tempByte) {
+			for (byte tempByte = this.nodeNumberOfTags; tempByte != 0; --tempByte) {
 				this.tagId = readUnsignedInt();
 				if (this.tagId < 0 || this.tagId >= this.nodeTags.length) {
 					Logger.debug("invalid node tag ID: " + this.tagId);
@@ -663,7 +661,7 @@ public class MapDatabase {
 			this.tagList.clear();
 
 			// get the way tag IDs (VBE-U)
-			for (this.tempByte = this.wayNumberOfTags; this.tempByte != 0; --this.tempByte) {
+			for (byte tempByte = this.wayNumberOfTags; tempByte != 0; --tempByte) {
 				this.tagId = readUnsignedInt();
 				if (this.tagId < 0 || this.tagId >= this.wayTags.length) {
 					Logger.debug("invalid way tag ID: " + this.tagId);
@@ -703,15 +701,15 @@ public class MapDatabase {
 			this.way[0] = this.wayNodeLongitude;
 
 			// get the remaining way nodes offsets
-			for (this.tempInt = 2; this.tempInt < this.wayNodesSequenceLength; this.tempInt += 2) {
+			for (int tempInt = 2; tempInt < this.wayNodesSequenceLength; tempInt += 2) {
 				// get the way node latitude offset (VBE-S)
 				this.wayNodeLatitude = readSignedInt();
 				// get the way node longitude offset (VBE-S)
 				this.wayNodeLongitude = readSignedInt();
 
 				// calculate the way node coordinates
-				this.way[this.tempInt] = this.way[this.tempInt - 2] + this.wayNodeLongitude;
-				this.way[this.tempInt + 1] = this.way[this.tempInt - 1] + this.wayNodeLatitude;
+				this.way[tempInt] = this.way[tempInt - 2] + this.wayNodeLongitude;
+				this.way[tempInt + 1] = this.way[tempInt - 1] + this.wayNodeLatitude;
 			}
 
 			// get the feature byte
@@ -790,16 +788,16 @@ public class MapDatabase {
 						this.wayNodes[this.innerWayNumber][0] = this.way[0] + readSignedInt();
 
 						// get and store the remaining inner way nodes offsets
-						for (this.tempInt = 2; this.tempInt < this.innerWayNodesSequenceLength; this.tempInt += 2) {
+						for (int tempInt = 2; tempInt < this.innerWayNodesSequenceLength; tempInt += 2) {
 							// get the inner way node latitude offset (VBE-S)
 							this.wayNodeLatitude = readSignedInt();
 							// get the inner way node longitude offset (VBE-S)
 							this.wayNodeLongitude = readSignedInt();
 
 							// calculate the inner way node coordinates
-							this.wayNodes[this.innerWayNumber][this.tempInt] = this.wayNodes[this.innerWayNumber][this.tempInt - 2]
+							this.wayNodes[this.innerWayNumber][tempInt] = this.wayNodes[this.innerWayNumber][tempInt - 2]
 									+ this.wayNodeLongitude;
-							this.wayNodes[this.innerWayNumber][this.tempInt + 1] = this.wayNodes[this.innerWayNumber][this.tempInt - 1]
+							this.wayNodes[this.innerWayNumber][tempInt + 1] = this.wayNodes[this.innerWayNumber][tempInt - 1]
 									+ this.wayNodeLatitude;
 						}
 					}
@@ -956,7 +954,7 @@ public class MapDatabase {
 
 		this.nodeTags = new Tag[this.numberOfNodeTags];
 
-		for (this.tempInt = 0; this.tempInt < this.numberOfNodeTags; ++this.tempInt) {
+		for (int tempInt = 0; tempInt < this.numberOfNodeTags; ++tempInt) {
 			// get and check the node tag
 			this.tag = readUTF8EncodedString(true);
 			if (this.tag == null) {
@@ -982,7 +980,7 @@ public class MapDatabase {
 
 		this.wayTags = new Tag[this.numberOfWayTags];
 
-		for (this.tempInt = 0; this.tempInt < this.numberOfWayTags; ++this.tempInt) {
+		for (int tempInt = 0; tempInt < this.numberOfWayTags; ++tempInt) {
 			// get and check the way tag
 			this.tag = readUTF8EncodedString(true);
 			if (this.tag == null) {
@@ -1008,7 +1006,7 @@ public class MapDatabase {
 		this.globalMaximumZoomLevel = Byte.MIN_VALUE;
 
 		// get and check the information for each contained map file
-		for (this.tempByte = 0; this.tempByte < numberOfMapFiles; ++this.tempByte) {
+		for (byte tempByte = 0; tempByte < numberOfMapFiles; ++tempByte) {
 			// get and check the base zoom level
 			byte baseZoomLevel = readByte();
 			if (baseZoomLevel < 0 || baseZoomLevel > 21) {
@@ -1057,7 +1055,7 @@ public class MapDatabase {
 			}
 
 			// add the current map file to the map files list
-			mapFilesList[this.tempByte] = new MapFileParameters(startAddress, indexStartAddress,
+			mapFilesList[tempByte] = new MapFileParameters(startAddress, indexStartAddress,
 					mapFileSize, baseZoomLevel, zoomLevelMin, zoomLevelMax, this.mapBoundary);
 
 			// update the global minimum and maximum zoom level information
@@ -1071,10 +1069,10 @@ public class MapDatabase {
 
 		// create and fill the lookup table for the map files
 		this.mapFilesLookupTable = new MapFileParameters[this.globalMaximumZoomLevel + 1];
-		for (this.tempInt = 0; this.tempInt < numberOfMapFiles; ++this.tempInt) {
-			this.mapFileParameters = mapFilesList[this.tempInt];
-			for (this.tempByte = this.mapFileParameters.zoomLevelMin; this.tempByte <= this.mapFileParameters.zoomLevelMax; ++this.tempByte) {
-				this.mapFilesLookupTable[this.tempByte] = this.mapFileParameters;
+		for (int tempInt = 0; tempInt < numberOfMapFiles; ++tempInt) {
+			this.mapFileParameters = mapFilesList[tempInt];
+			for (byte tempByte = this.mapFileParameters.zoomLevelMin; tempByte <= this.mapFileParameters.zoomLevelMax; ++tempByte) {
+				this.mapFilesLookupTable[tempByte] = this.mapFileParameters;
 			}
 		}
 

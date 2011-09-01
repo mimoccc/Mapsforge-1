@@ -77,7 +77,7 @@
 	<xs:complexType name="area">
 		<xs:attribute name="file" type="xs:string" use="optional" />
 		<xs:attribute name="jar" type="xs:string" use="optional" />
-		<xs:attribute name="fill" type="tns:color" use="optional" default="#00000000" />
+		<xs:attribute name="fill" type="tns:color" use="optional" default="#000000" />
 		<xs:attribute name="stroke" type="tns:color" use="optional" default="#00000000" />
 		<xs:attribute name="stroke-width" type="tns:nonNegativeFloat" use="optional" default="0" />
 	</xs:complexType>
