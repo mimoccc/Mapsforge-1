@@ -24,38 +24,48 @@ import java.util.List;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
-import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
 
 abstract class RenderingInstruction {
-	Shader createBitmapShader(String file, String jar) throws IOException {
-		InputStream inputStream;
+	static BitmapShader createBitmapShader(Bitmap bitmap) {
+		if (bitmap == null) {
+			return null;
+		}
 
-		if (file != null && file.length() > 0) {
-			File inputFile = new File(file);
-			if (!inputFile.exists()) {
-				throw new IllegalArgumentException("file does not exist: " + file);
-			} else if (!inputFile.isFile()) {
-				throw new IllegalArgumentException("not a file: " + file);
-			} else if (!inputFile.canRead()) {
-				throw new IllegalArgumentException("cannot read file: " + file);
-			}
-			inputStream = new FileInputStream(inputFile);
-		} else if (jar != null && jar.length() > 0) {
-			inputStream = getClass().getResourceAsStream(jar);
-			if (inputStream == null) {
-				throw new FileNotFoundException("resource not found: " + jar);
-			}
-		} else {
+		BitmapShader shader = new BitmapShader(bitmap, TileMode.REPEAT, TileMode.REPEAT);
+		bitmap.recycle();
+		return shader;
+	}
+
+	Bitmap createBitmap(String src) throws IOException {
+		if (src == null || src.length() == 0) {
 			// no image source defined
 			return null;
 		}
 
+		InputStream inputStream;
+		if (src.startsWith("jar:")) {
+			inputStream = getClass().getResourceAsStream(src.substring(4));
+			if (inputStream == null) {
+				throw new FileNotFoundException("resource not found: " + src);
+			}
+		} else if (src.startsWith("file:")) {
+			File inputFile = new File(src.substring(5));
+			if (!inputFile.exists()) {
+				throw new IllegalArgumentException("file does not exist: " + src);
+			} else if (!inputFile.isFile()) {
+				throw new IllegalArgumentException("not a file: " + src);
+			} else if (!inputFile.canRead()) {
+				throw new IllegalArgumentException("cannot read file: " + src);
+			}
+			inputStream = new FileInputStream(inputFile);
+		} else {
+			throw new IllegalArgumentException("invalid bitmap source: " + src);
+		}
+
 		Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 		inputStream.close();
-		Shader shader = new BitmapShader(bitmap, TileMode.REPEAT, TileMode.REPEAT);
-		bitmap.recycle();
-		return shader;
+		return bitmap;
 	}
 
 	abstract void onDestroy();

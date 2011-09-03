@@ -26,6 +26,16 @@ import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 
 final class Caption extends RenderingInstruction {
+	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
+		if (textKey == null) {
+			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
+		} else if (fontSize < 0) {
+			throw new IllegalArgumentException("font-size must not be negative: " + fontSize);
+		} else if (strokeWidth < 0) {
+			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
+		}
+	}
+
 	static Caption create(String elementName, Attributes attributes) {
 		TextKey textKey = null;
 		float dy = 0;
@@ -61,10 +71,7 @@ final class Caption extends RenderingInstruction {
 			}
 		}
 
-		if (textKey == null) {
-			throw new IllegalArgumentException("missing attribute: k");
-		}
-
+		validate(elementName, textKey, fontSize, strokeWidth);
 		return new Caption(textKey, dy, fontFamily, fontStyle, fontSize, fill, stroke, strokeWidth);
 	}
 

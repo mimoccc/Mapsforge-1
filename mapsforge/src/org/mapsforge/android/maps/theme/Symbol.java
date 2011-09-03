@@ -14,65 +14,44 @@
  */
 package org.mapsforge.android.maps.theme;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import org.xml.sax.Attributes;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 final class Symbol extends RenderingInstruction {
+	private static void validate(String elementName, String src) {
+		if (src == null) {
+			throw new IllegalArgumentException("missing attribute src for element: " + elementName);
+		}
+	}
+
 	static Symbol create(String elementName, Attributes attributes) throws IOException {
-		String file = null;
-		String jar = null;
+		String src = null;
 
 		for (int i = 0; i < attributes.getLength(); ++i) {
 			String name = attributes.getLocalName(i);
 			String value = attributes.getValue(i);
 
-			if ("file".equals(name)) {
-				file = value;
-			} else if ("jar".equals(name)) {
-				jar = value;
+			if ("src".equals(name)) {
+				src = value;
 			} else {
 				RenderThemeHandler.logUnknownAttribute(elementName, name, value, i);
 			}
 		}
 
-		return new Symbol(file, jar);
+		validate(elementName, src);
+		return new Symbol(src);
 	}
 
 	private final Bitmap bitmap;
 
-	private Symbol(String file, String jar) throws IOException {
+	private Symbol(String src) throws IOException {
 		super();
 
-		InputStream inputStream;
-		if (file != null && file.length() > 0) {
-			File inputFile = new File(file);
-			if (!inputFile.exists()) {
-				throw new IllegalArgumentException("file does not exist: " + file);
-			} else if (!inputFile.isFile()) {
-				throw new IllegalArgumentException("not a file: " + file);
-			} else if (!inputFile.canRead()) {
-				throw new IllegalArgumentException("cannot read file: " + file);
-			}
-			inputStream = new FileInputStream(inputFile);
-		} else if (jar != null && jar.length() > 0) {
-			inputStream = getClass().getResourceAsStream(jar);
-			if (inputStream == null) {
-				throw new FileNotFoundException("resource not found: " + jar);
-			}
-		} else {
-			throw new IllegalArgumentException("no image source defined");
-		}
-		this.bitmap = BitmapFactory.decodeStream(inputStream);
-		inputStream.close();
+		this.bitmap = createBitmap(src);
 	}
 
 	@Override

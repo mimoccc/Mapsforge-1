@@ -23,9 +23,13 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * SAX2 handler class to parse render theme XML files.
+ * SAX2 handler to parse XML render theme files.
  */
 public class RenderThemeHandler extends DefaultHandler {
+	private static enum Element {
+		RENDERING_INSTRUCTION, RULE, RULES;
+	}
+
 	static void logUnknownAttribute(String element, String name, String value, int attributeIndex) {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("unknown attribute in element ");
@@ -40,26 +44,32 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	private Rule currentRule;
+	private final Stack<Element> elementStack = new Stack<Element>();
 	private int level;
 	private RenderTheme renderTheme;
-
-	private final Stack<Rule> rulesStack = new Stack<Rule>();
+	private final Stack<Rule> ruleStack = new Stack<Rule>();
 
 	@Override
 	public void endDocument() {
+		if (this.renderTheme == null) {
+			throw new IllegalArgumentException("missing element: rules");
+		}
+
 		this.renderTheme.setLevels(this.level);
 		this.renderTheme.complete();
 	}
 
 	@Override
 	public void endElement(String uri, String localName, String qName) {
+		this.elementStack.pop();
+
 		if ("rule".equals(localName)) {
-			this.rulesStack.pop();
-			if (this.rulesStack.isEmpty()) {
+			this.ruleStack.pop();
+			if (this.ruleStack.empty()) {
 				this.renderTheme.addRule(this.currentRule);
 				this.currentRule = null;
 			} else {
-				this.currentRule = this.rulesStack.peek();
+				this.currentRule = this.ruleStack.peek();
 			}
 		}
 	}
@@ -82,65 +92,97 @@ public class RenderThemeHandler extends DefaultHandler {
 	public void startElement(String uri, String localName, String qName, Attributes attributes) {
 		try {
 			if ("rules".equals(localName)) {
+				checkState(localName, Element.RULES);
 				this.renderTheme = RenderTheme.create(localName, attributes);
 			}
 
 			else if ("rule".equals(localName)) {
+				checkState(localName, Element.RULE);
 				Rule rule = Rule.create(localName, attributes);
 				if (this.currentRule != null) {
 					this.currentRule.addSubRule(rule);
 				}
 				this.currentRule = rule;
-				this.rulesStack.push(this.currentRule);
+				this.ruleStack.push(this.currentRule);
 			}
 
 			else if ("area".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				Area area = Area.create(localName, attributes, this.level++);
-				this.currentRule.addRenderingInstruction(area);
+				this.ruleStack.peek().addRenderingInstruction(area);
 			}
 
 			else if ("caption".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				Caption caption = Caption.create(localName, attributes);
 				this.currentRule.addRenderingInstruction(caption);
 			}
 
 			else if ("circle".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				Circle circle = Circle.create(localName, attributes, this.level++);
 				this.currentRule.addRenderingInstruction(circle);
 			}
 
 			else if ("line".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				Line line = Line.create(localName, attributes, this.level++);
 				this.currentRule.addRenderingInstruction(line);
 			}
 
 			else if ("lineSymbol".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				LineSymbol lineSymbol = LineSymbol.create(localName, attributes);
 				this.currentRule.addRenderingInstruction(lineSymbol);
 			}
 
 			else if ("pathText".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				PathText pathText = PathText.create(localName, attributes);
 				this.currentRule.addRenderingInstruction(pathText);
 			}
 
 			else if ("symbol".equals(localName)) {
+				checkState(localName, Element.RENDERING_INSTRUCTION);
 				Symbol symbol = Symbol.create(localName, attributes);
 				this.currentRule.addRenderingInstruction(symbol);
 			}
 
 			else {
-				Logger.debug("unknown element:" + localName);
+				throw new IllegalArgumentException("unknown element: " + localName);
 			}
 		} catch (IOException e) {
-			Logger.exception(e);
-		} catch (IllegalArgumentException e) {
-			Logger.exception(e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
 	@Override
 	public void warning(SAXParseException e) {
 		Logger.exception(e);
+	}
+
+	private void checkState(String elementName, Element element) {
+		switch (element) {
+			case RULES:
+				if (!this.elementStack.empty()) {
+					throw new IllegalArgumentException("element not allowed: " + elementName);
+				}
+				break;
+			case RULE:
+				Element parentElement = this.elementStack.peek();
+				if (parentElement != Element.RULES && parentElement != Element.RULE) {
+					throw new IllegalArgumentException("element not allowed: " + elementName);
+				}
+				break;
+			case RENDERING_INSTRUCTION:
+				if (this.elementStack.peek() != Element.RULE) {
+					throw new IllegalArgumentException("element not allowed: " + elementName);
+				}
+				break;
+			default:
+				throw new IllegalArgumentException("unknown enum value: " + element);
+		}
+
+		this.elementStack.push(element);
 	}
 }

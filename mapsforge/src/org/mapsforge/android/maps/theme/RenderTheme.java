@@ -25,6 +25,16 @@ import android.graphics.Color;
  * A RenderTheme defines how ways and nodes are drawn.
  */
 public class RenderTheme {
+	private static void validate(float scaleStrokeWidth, float scaleTextWidth) {
+		if (scaleStrokeWidth < 0) {
+			throw new IllegalArgumentException("scale-stroke-width must not be negative: "
+					+ scaleStrokeWidth);
+		} else if (scaleTextWidth < 0) {
+			throw new IllegalArgumentException("scale-text-width must not be negative: "
+					+ scaleTextWidth);
+		}
+	}
+
 	static RenderTheme create(String elementName, Attributes attributes) {
 		int mapBackground = Color.WHITE;
 		float scaleStrokeWidth = 1;
@@ -47,6 +57,7 @@ public class RenderTheme {
 			}
 		}
 
+		validate(scaleStrokeWidth, scaleTextWidth);
 		return new RenderTheme(mapBackground, scaleStrokeWidth, scaleTextWidth);
 	}
 

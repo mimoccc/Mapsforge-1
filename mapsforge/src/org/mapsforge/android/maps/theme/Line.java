@@ -31,18 +31,14 @@ import android.graphics.Paint.Style;
 final class Line extends RenderingInstruction {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
 
-	static float[] parseFloatArray(String dashString) {
-		String[] dashEntries = SPLIT_PATTERN.split(dashString);
-		float[] dashIntervals = new float[dashEntries.length];
-		for (int i = 0; i < dashEntries.length; ++i) {
-			dashIntervals[i] = Float.parseFloat(dashEntries[i]);
+	private static void validate(float strokeWidth) {
+		if (strokeWidth < 0) {
+			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
 		}
-		return dashIntervals;
 	}
 
 	static Line create(String elementName, Attributes attributes, int level) throws IOException {
-		String file = null;
-		String jar = null;
+		String src = null;
 		int stroke = Color.BLACK;
 		float strokeWidth = 0;
 		float[] strokeDasharray = null;
@@ -52,10 +48,8 @@ final class Line extends RenderingInstruction {
 			String name = attributes.getLocalName(i);
 			String value = attributes.getValue(i);
 
-			if ("file".equals(name)) {
-				file = value;
-			} else if ("jar".equals(name)) {
-				jar = value;
+			if ("src".equals(name)) {
+				src = value;
 			} else if ("stroke".equals(name)) {
 				stroke = Color.parseColor(value);
 			} else if ("stroke-width".equals(name)) {
@@ -69,18 +63,28 @@ final class Line extends RenderingInstruction {
 			}
 		}
 
-		return new Line(file, jar, stroke, strokeWidth, strokeDasharray, strokeLinecap, level);
+		validate(strokeWidth);
+		return new Line(src, stroke, strokeWidth, strokeDasharray, strokeLinecap, level);
+	}
+
+	static float[] parseFloatArray(String dashString) {
+		String[] dashEntries = SPLIT_PATTERN.split(dashString);
+		float[] dashIntervals = new float[dashEntries.length];
+		for (int i = 0; i < dashEntries.length; ++i) {
+			dashIntervals[i] = Float.parseFloat(dashEntries[i]);
+		}
+		return dashIntervals;
 	}
 
 	private final int level;
 	private final Paint paint;
 	private final float strokeWidth;
 
-	private Line(String file, String jar, int stroke, float strokeWidth, float[] strokeDasharray,
-			Cap strokeLinecap, int level) throws IOException {
+	private Line(String src, int stroke, float strokeWidth, float[] strokeDasharray, Cap strokeLinecap,
+			int level) throws IOException {
 		super();
 
-		Shader shader = createBitmapShader(file, jar);
+		Shader shader = createBitmapShader(createBitmap(src));
 
 		this.paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		this.paint.setShader(shader);

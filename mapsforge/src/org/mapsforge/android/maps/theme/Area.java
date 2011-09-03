@@ -26,9 +26,14 @@ import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
 
 final class Area extends RenderingInstruction {
+	private static void validate(float strokeWidth) {
+		if (strokeWidth < 0) {
+			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
+		}
+	}
+
 	static Area create(String elementName, Attributes attributes, int level) throws IOException {
-		String file = null;
-		String jar = null;
+		String src = null;
 		int fill = Color.BLACK;
 		int stroke = Color.TRANSPARENT;
 		float strokeWidth = 0;
@@ -37,10 +42,8 @@ final class Area extends RenderingInstruction {
 			String name = attributes.getLocalName(i);
 			String value = attributes.getValue(i);
 
-			if ("file".equals(name)) {
-				file = value;
-			} else if ("jar".equals(name)) {
-				jar = value;
+			if ("src".equals(name)) {
+				src = value;
 			} else if ("fill".equals(name)) {
 				fill = Color.parseColor(value);
 			} else if ("stroke".equals(name)) {
@@ -52,7 +55,8 @@ final class Area extends RenderingInstruction {
 			}
 		}
 
-		return new Area(file, jar, fill, stroke, strokeWidth, level);
+		validate(strokeWidth);
+		return new Area(src, fill, stroke, strokeWidth, level);
 	}
 
 	private final Paint fill;
@@ -60,11 +64,10 @@ final class Area extends RenderingInstruction {
 	private final Paint outline;
 	private final float strokeWidth;
 
-	private Area(String file, String jar, int fill, int stroke, float strokeWidth, int level)
-			throws IOException {
+	private Area(String src, int fill, int stroke, float strokeWidth, int level) throws IOException {
 		super();
 
-		Shader shader = createBitmapShader(file, jar);
+		Shader shader = createBitmapShader(createBitmap(src));
 
 		if (fill == Color.TRANSPARENT) {
 			this.fill = null;

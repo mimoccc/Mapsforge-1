@@ -26,6 +26,16 @@ import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 
 final class PathText extends RenderingInstruction {
+	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
+		if (textKey == null) {
+			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
+		} else if (fontSize < 0) {
+			throw new IllegalArgumentException("font-size must not be negative: " + fontSize);
+		} else if (strokeWidth < 0) {
+			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
+		}
+	}
+
 	static PathText create(String elementName, Attributes attributes) {
 		TextKey textKey = null;
 		FontFamily fontFamily = FontFamily.DEFAULT;
@@ -58,10 +68,7 @@ final class PathText extends RenderingInstruction {
 			}
 		}
 
-		if (textKey == null) {
-			throw new IllegalArgumentException("missing attribute: k");
-		}
-
+		validate(elementName, textKey, fontSize, strokeWidth);
 		return new PathText(textKey, fontFamily, fontStyle, fontSize, fill, stroke, strokeWidth);
 	}
 

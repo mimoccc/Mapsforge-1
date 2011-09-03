@@ -25,6 +25,49 @@ import org.xml.sax.Attributes;
 abstract class Rule {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile("\\|");
 
+	private static ClosedMatcher getClosedMatcher(Closed closed) {
+		switch (closed) {
+			case YES:
+				return ClosedWayMatcher.getInstance();
+			case NO:
+				return LinearWayMatcher.getInstance();
+			case ANY:
+				return AnyWayMatcher.getInstance();
+			default:
+				throw new IllegalArgumentException("unknown enum value: " + closed);
+		}
+	}
+
+	private static ElementMatcher getElementMatcher(Element element) {
+		switch (element) {
+			case NODE:
+				return ElementNodeMatcher.getInstance();
+			case WAY:
+				return ElementWayMatcher.getInstance();
+			case ANY:
+				return AnyElementMatcher.getInstance();
+			default:
+				throw new IllegalArgumentException("unknown enum value: " + element);
+		}
+	}
+
+	private static void validate(String elementName, Element element, String keys, String values,
+			byte zoomMin, byte zoomMax) {
+		if (element == null) {
+			throw new IllegalArgumentException("missing attribute e for element: " + elementName);
+		} else if (keys == null) {
+			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
+		} else if (values == null) {
+			throw new IllegalArgumentException("missing attribute v for element: " + elementName);
+		} else if (zoomMin < 0) {
+			throw new IllegalArgumentException("zoom-min must not be negative: " + zoomMin);
+		} else if (zoomMax < 0) {
+			throw new IllegalArgumentException("zoom-max must not be negative: " + zoomMax);
+		} else if (zoomMin > zoomMax) {
+			throw new IllegalArgumentException("zoom-min must be less or equal zoom-max: " + zoomMin);
+		}
+	}
+
 	static Rule create(String elementName, Attributes attributes) {
 		Element element = null;
 		String keys = null;
@@ -54,44 +97,10 @@ abstract class Rule {
 			}
 		}
 
-		ElementMatcher elementMatcher;
-		switch (element) {
-			case NODE:
-				elementMatcher = ElementNodeMatcher.getInstance();
-				break;
-			case WAY:
-				elementMatcher = ElementWayMatcher.getInstance();
-				break;
-			case ANY:
-				elementMatcher = AnyElementMatcher.getInstance();
-				break;
-			default:
-				throw new IllegalArgumentException("unknown enum: " + closed);
-		}
+		validate(elementName, element, keys, values, zoomMin, zoomMax);
 
-		ClosedMatcher closedMatcher;
-		switch (closed) {
-			case YES:
-				closedMatcher = ClosedWayMatcher.getInstance();
-				break;
-			case NO:
-				closedMatcher = LinearWayMatcher.getInstance();
-				break;
-			case ANY:
-				closedMatcher = AnyWayMatcher.getInstance();
-				break;
-			default:
-				throw new IllegalArgumentException("unknown enum: " + closed);
-		}
-
-		if (zoomMin > zoomMax) {
-			throw new IllegalArgumentException("zoomMin must be <= zoomMax");
-		} else if (keys == null) {
-			throw new IllegalArgumentException("missing attribute: k");
-		} else if (values == null) {
-			throw new IllegalArgumentException("missing attribute: v");
-		}
-
+		ElementMatcher elementMatcher = getElementMatcher(element);
+		ClosedMatcher closedMatcher = getClosedMatcher(closed);
 		List<String> keyList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(keys)));
 		List<String> valueList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(values)));
 

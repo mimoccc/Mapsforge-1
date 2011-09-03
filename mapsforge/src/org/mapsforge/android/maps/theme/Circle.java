@@ -23,8 +23,16 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 
 final class Circle extends RenderingInstruction {
+	private static void validate(String elementName, Float radius, float strokeWidth) {
+		if (radius == null) {
+			throw new IllegalArgumentException("missing attribute r for element: " + elementName);
+		} else if (strokeWidth < 0) {
+			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
+		}
+	}
+
 	static Circle create(String elementName, Attributes attributes, int level) {
-		float radius = 0;
+		Float radius = null;
 		boolean scaleRadius = false;
 		int fill = Color.TRANSPARENT;
 		int stroke = Color.TRANSPARENT;
@@ -49,6 +57,7 @@ final class Circle extends RenderingInstruction {
 			}
 		}
 
+		validate(elementName, radius, strokeWidth);
 		return new Circle(radius, scaleRadius, fill, stroke, strokeWidth, level);
 	}
 
@@ -60,10 +69,10 @@ final class Circle extends RenderingInstruction {
 	private final boolean scaleRadius;
 	private final float strokeWidth;
 
-	private Circle(float radius, boolean scaleRadius, int fill, int stroke, float strokeWidth, int level) {
+	private Circle(Float radius, boolean scaleRadius, int fill, int stroke, float strokeWidth, int level) {
 		super();
 
-		this.radius = radius;
+		this.radius = radius.floatValue();
 		this.scaleRadius = scaleRadius;
 
 		if (fill == Color.TRANSPARENT) {

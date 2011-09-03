@@ -57,6 +57,12 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<xs:simpleType name="src">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="(jar|file)\:.+" />
+		</xs:restriction>
+	</xs:simpleType>
+
 	<xs:simpleType name="strokeDasharray">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="([0-9]+(\.[0-9]+)? *, *[0-9]+(\.[0-9]+)? *, *)*[0-9]+(\.[0-9]+)? *, *[0-9]+(\.[0-9]+)?" />
@@ -75,8 +81,7 @@
 
 	<!-- rendering instructions -->
 	<xs:complexType name="area">
-		<xs:attribute name="file" type="xs:string" use="optional" />
-		<xs:attribute name="jar" type="xs:string" use="optional" />
+		<xs:attribute name="src" type="tns:src" use="optional" />
 		<xs:attribute name="fill" type="tns:color" use="optional" default="#000000" />
 		<xs:attribute name="stroke" type="tns:color" use="optional" default="#00000000" />
 		<xs:attribute name="stroke-width" type="tns:nonNegativeFloat" use="optional" default="0" />
@@ -102,8 +107,7 @@
 	</xs:complexType>
 
 	<xs:complexType name="line">
-		<xs:attribute name="file" type="xs:string" use="optional" />
-		<xs:attribute name="jar" type="xs:string" use="optional" />
+		<xs:attribute name="src" type="tns:src" use="optional" />
 		<xs:attribute name="stroke" type="tns:color" use="optional" default="#000000" />
 		<xs:attribute name="stroke-width" type="tns:nonNegativeFloat" use="optional" default="0" />
 		<xs:attribute name="stroke-dasharray" type="tns:strokeDasharray" use="optional" />
@@ -112,8 +116,7 @@
 	</xs:complexType>
 
 	<xs:complexType name="lineSymbol">
-		<xs:attribute name="file" type="xs:string" use="optional" />
-		<xs:attribute name="jar" type="xs:string" use="optional" />
+		<xs:attribute name="src" type="tns:src" use="required" />
 		<xs:attribute name="align-center" type="xs:boolean" use="optional" default="false" />
 		<xs:attribute name="repeat" type="xs:boolean" use="optional" default="false" />
 	</xs:complexType>
@@ -130,8 +133,7 @@
 	</xs:complexType>
 
 	<xs:complexType name="symbol">
-		<xs:attribute name="file" type="xs:string" use="optional" />
-		<xs:attribute name="jar" type="xs:string" use="optional" />
+		<xs:attribute name="src" type="tns:src" use="required" />
 	</xs:complexType>
 
 
