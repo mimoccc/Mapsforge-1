@@ -64,6 +64,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	private final HashMap<TileCoordinate, TLongHashSet> tilesToCoastlines;
 	private final TLongObjectHashMap<TLongHashSet> multipolygons;
 	private final TLongObjectHashMap<TShortSet> multipolygonTags;
+	private final TLongObjectHashMap<String> multipolygonNames;
 	private final IdTracker innerWayTracker;
 	private final IdTracker innerWaysWithAdditionalTags;
 	private final IdTracker multipolygonTracker;
@@ -100,6 +101,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 		tilesToCoastlines = new HashMap<TileCoordinate, TLongHashSet>();
 		multipolygons = new TLongObjectHashMap<TLongHashSet>();
 		multipolygonTags = new TLongObjectHashMap<TShortSet>();
+		multipolygonNames = new TLongObjectHashMap<String>();
 		innerWayTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 		innerWaysWithAdditionalTags = IdTrackerFactory.createInstance(IdTrackerType.IdList);
 		multipolygonTracker = IdTrackerFactory.createInstance(IdTrackerType.IdList);
@@ -185,7 +187,7 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 
 	@Override
 	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			List<OSMTag> relationTags) {
+			List<OSMTag> relationTags, long relationID, String relationName) {
 
 		TLongHashSet iw = multipolygons.get(outerWayID);
 		if (iw == null) {
@@ -202,6 +204,9 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 			countWayTags(tags.toArray());
 			multipolygonTags.put(outerWayID, tags);
 		}
+
+		if (relationName != null)
+			multipolygonNames.put(outerWayID, relationName);
 
 		multipolygonTracker.set(outerWayID);
 
@@ -296,6 +301,43 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 				}
 			}
 
+			// ADD ADDITIONAL RELATION TAGS TO OUTERWAYS (SOME OUTERWAYS
+			// MAY NOT HAVE HAD ANY TAGS YET)
+
+			// REMOVE WAYS FROM LIST OF INNER WAYS IF THEY CONTAIN ADDITIONAL
+			// TAGS TO THEIR CORRESPONDING OUTER WAY
+
+			// is it an outer way, i.e. part of multi-polygon?
+			if (way.isPolygon() && multipolygonTracker.get(way.getId())) {
+				// retrieve all tags of the outer way
+				TShortSet relationTags = multipolygonTags.get(way.getId());
+				if (relationTags == null)
+					relationTags = new TShortHashSet();
+
+				// add relation tags to way
+				way.addTags(relationTags.toArray());
+				// build set of all tags (way and relation)
+				relationTags.addAll(way.getTags());
+
+				// compare set of all tags with tags of inner way
+				List<TDWay> correspondingInnerWays = getInnerWaysOfMultipolygon(way.getId());
+				TShortSet innerwayTagsSet = null;
+				for (TDWay innerWay : correspondingInnerWays) {
+					if (innerWay.getTags() == null || innerWay.getTags().length == 0)
+						continue;
+					innerwayTagsSet = new TShortHashSet(innerWay.getTags());
+					if (!relationTags.containsAll(innerwayTagsSet)) {
+						innerWaysWithAdditionalTags.set(innerWay.getId());
+					}
+				}
+
+				// add name of relation to outer way?
+				String relationName = multipolygonNames.get(way.getId());
+				if ((way.getName() == null || way.getName().length() == 0) && relationName != null) {
+					way.setName(relationName);
+				}
+			}
+
 			// ADD WAY TO CORRESPONDING TILES
 			byte minZoomLevel = way.getMinimumZoomLevel();
 			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
@@ -310,32 +352,6 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 							hdt.addWay(way.getId());
 							countWayTags(way);
 						}
-					}
-				}
-			}
-
-			// REMOVE WAYS FROM LIST OF INNER WAYS IF THEY CONTAIN ADDITIONAL
-			// TAGS TO THEIR CORRESPONDING OUTER WAY
-
-			// look at all outer ways and fetch corresponding inner ways
-			if (way.isPolygon() && multipolygonTracker.get(way.getId())) {
-				// retrieve all tags of the outer way
-				TShortSet relationTags = multipolygonTags.get(way.getId());
-				if (relationTags == null)
-					relationTags = new TShortHashSet();
-				if (way.getTags() != null && way.getTags().length > 0) {
-					relationTags.addAll(way.getTags());
-				}
-
-				// compare with tags of inner way
-				List<TDWay> correspondingInnerWays = getInnerWaysOfMultipolygon(way.getId());
-				TShortSet innerwayTagsSet = null;
-				for (TDWay innerWay : correspondingInnerWays) {
-					if (innerWay.getTags() == null || innerWay.getTags().length == 0)
-						continue;
-					innerwayTagsSet = new TShortHashSet(innerWay.getTags());
-					if (!relationTags.containsAll(innerwayTagsSet)) {
-						innerWaysWithAdditionalTags.set(innerWay.getId());
 					}
 				}
 			}

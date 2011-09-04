@@ -267,7 +267,7 @@ class TileData {
 
 		private final long id;
 		private final byte layer;
-		private final String name;
+		private String name;
 		private final String ref;
 		private short[] tags;
 		private byte shape;
@@ -405,6 +405,10 @@ class TileData {
 
 		String getName() {
 			return name;
+		}
+
+		void setName(String name) {
+			this.name = name;
 		}
 
 		String getRef() {

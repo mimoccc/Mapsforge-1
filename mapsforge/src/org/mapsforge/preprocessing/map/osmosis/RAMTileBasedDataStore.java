@@ -162,7 +162,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 		if (tdWay == null)
 			return false;
 		this.ways.put(tdWay.getId(), tdWay);
-		byte minZoomLevel = tdWay.getMinimumZoomLevel();
+
 		int bboxEnlargementLocal = bboxEnlargement;
 
 		if (tdWay.getTags() != null && tdWay.isCoastline()) {
@@ -180,6 +180,13 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 			}
 		}
 
+		addWayToTiles(tdWay, bboxEnlargementLocal);
+
+		return true;
+	}
+
+	private void addWayToTiles(TDWay tdWay, int bboxEnlargementLocal) {
+		byte minZoomLevel = tdWay.getMinimumZoomLevel();
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			// is way seen in a zoom interval?
 			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
@@ -200,13 +207,12 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 					countWays[i]++;
 			}
 		}
-
-		return true;
 	}
 
 	@Override
 	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			List<OSMTag> relationTags) {
+			List<OSMTag> relationTags, long relationID, String relationName) {
+
 		TDWay outerWay = ways.get(outerWayID);
 		// check if outer way exists
 		if (outerWay == null) {
@@ -228,7 +234,17 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 
 		// add relation tags to outer way
 		short[] additionalTags = MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags);
-		outerWay.addTags(additionalTags);
+		// if the outer way had no tags and thus has not yet been associated with corresponding tiles
+		if ((outerWay.getTags() == null || outerWay.getTags().length == 0) && additionalTags.length > 0) {
+			outerWay.addTags(additionalTags);
+			addWayToTiles(outerWay, bboxEnlargement);
+		} else {
+			outerWay.addTags(additionalTags);
+		}
+		// if the outer way had not a name, it gets the name of the relation (if existent)
+		if (relationName != null && (outerWay.getName() == null || outerWay.getName().length() == 0)) {
+			outerWay.setName(relationName);
+		}
 		countWayTags(additionalTags);
 
 		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
@@ -253,11 +269,12 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 					}
 				}
 			}
+			// TODO semantic changed in new renderer?
 			// the inner way has tags other than the outer way --> must be rendered as normal
 			// way, remove it from list of inner ways
-			else {
-				innerWaysIterator.remove();
-			}
+			// else {
+			// innerWaysIterator.remove();
+			// }
 		}
 
 		// add inner ways to multipolygon

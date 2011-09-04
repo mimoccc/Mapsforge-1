@@ -256,9 +256,14 @@ public class MapFileWriterTask implements Sink {
 			case Relation:
 				Relation currentRelation = (Relation) entity;
 
+				String relationName = null;
 				if (isWayMultiPolygon(currentRelation)) {
 					List<OSMTag> relationTags = new ArrayList<OSMTag>();
 					for (Tag tag : currentRelation.getTags()) {
+						if (tag.getKey().equalsIgnoreCase("name")) {
+							relationName = tag.getValue();
+							continue;
+						}
 						OSMTag wayTag = TAG_MAPPING.getWayTag(tag.getKey(), tag.getValue());
 						if (wayTag != null)
 							relationTags.add(wayTag);
@@ -278,7 +283,8 @@ public class MapFileWriterTask implements Sink {
 						long[] innerMemberIDsArray = innerMemberIDs.toArray();
 						for (Long outerID : outerMemberIDs) {
 							if (tileBasedGeoObjectStore.addWayMultipolygon(outerID,
-									innerMemberIDsArray, relationTags))
+									innerMemberIDsArray, relationTags, currentRelation.getId(),
+									relationName))
 								amountOfMultipolygons++;
 						}
 					}

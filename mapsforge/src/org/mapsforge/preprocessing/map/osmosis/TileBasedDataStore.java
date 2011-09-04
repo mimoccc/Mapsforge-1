@@ -24,8 +24,8 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 /**
- * A TileBasedDataStore allows tile based access to OpenStreetMap geo data. POIs and ways are
- * mapped to tiles on configured base zoom levels.
+ * A TileBasedDataStore allows tile based access to OpenStreetMap geo data. POIs and ways are mapped to
+ * tiles on configured base zoom levels.
  * 
  * @author bross
  * 
@@ -88,7 +88,7 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 * @return true if the multipolygon has been successfully added
 	 */
 	boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			List<OSMTag> relationTags);
+			List<OSMTag> relationTags, long relationID, String name);
 
 	/**
 	 * Retrieves all the data that is associated with a tile.
