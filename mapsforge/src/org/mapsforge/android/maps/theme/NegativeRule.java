@@ -17,28 +17,25 @@ package org.mapsforge.android.maps.theme;
 import java.util.List;
 
 class NegativeRule extends Rule {
-	private final AttributeMatcher attributeMatcher;
-	private final ClosedMatcher closedMatcher;
-	private final ElementMatcher elementMatcher;
-	private final byte zoomMax;
-	private final byte zoomMin;
+	final AttributeMatcher attributeMatcher;
 
-	NegativeRule(ElementMatcher elementMatcher, List<String> keysList, List<String> valuesList,
-			ClosedMatcher closedMatcher, byte zoomMin, byte zoomMax) {
-		super();
+	NegativeRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin,
+			byte zoomMax, AttributeMatcher attributeMatcher) {
+		super(elementMatcher, closedMatcher, zoomMin, zoomMax);
 
-		this.elementMatcher = elementMatcher;
-		this.attributeMatcher = new NegativeListMatcher(keysList, valuesList);
-
-		this.closedMatcher = closedMatcher;
-		this.zoomMin = zoomMin;
-		this.zoomMax = zoomMax;
+		this.attributeMatcher = attributeMatcher;
 	}
 
 	@Override
-	boolean matches(Element element, List<Tag> tags, byte zoomLevel, Closed closed) {
+	boolean matchesNode(List<Tag> tags, byte zoomLevel) {
 		return this.zoomMin <= zoomLevel && this.zoomMax >= zoomLevel
-				&& this.elementMatcher.matches(element) && this.closedMatcher.matches(closed)
+				&& this.elementMatcher.matches(Element.NODE) && this.attributeMatcher.matches(tags);
+	}
+
+	@Override
+	boolean matchesWay(List<Tag> tags, byte zoomLevel, Closed closed) {
+		return this.zoomMin <= zoomLevel && this.zoomMax >= zoomLevel
+				&& this.elementMatcher.matches(Element.WAY) && this.closedMatcher.matches(closed)
 				&& this.attributeMatcher.matches(tags);
 	}
 }

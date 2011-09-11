@@ -14,22 +14,30 @@
  */
 package org.mapsforge.android.maps.theme;
 
-final class AnyElementMatcher implements ElementMatcher {
-	private static final AnyElementMatcher INSTANCE = new AnyElementMatcher();
+import java.util.List;
 
-	static AnyElementMatcher getInstance() {
-		return INSTANCE;
-	}
-
-	/**
-	 * Private constructor prevents instantiation from other classes.
-	 */
-	private AnyElementMatcher() {
-		// do nothing
+class KeyMatcher extends ListMatcher {
+	KeyMatcher(List<String> list) {
+		super(list);
 	}
 
 	@Override
-	public boolean matches(Element element) {
-		return true;
+	public boolean isCoveredBy(AttributeMatcher attributeMatcher) {
+		return attributeMatcher.matches(getTags());
+	}
+
+	@Override
+	public boolean matches(List<Tag> tags) {
+		for (int i = 0, n = tags.size(); i < n; ++i) {
+			if (this.list.contains(tags.get(i).key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	Tag getTag(String string) {
+		return new Tag(string, null);
 	}
 }

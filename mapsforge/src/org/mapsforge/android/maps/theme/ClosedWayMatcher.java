@@ -15,17 +15,22 @@
 package org.mapsforge.android.maps.theme;
 
 final class ClosedWayMatcher implements ClosedMatcher {
-	private static final ClosedMatcher INSTANCE = new ClosedWayMatcher();
+	private static final ClosedWayMatcher INSTANCE = new ClosedWayMatcher();
 
-	static ClosedMatcher getInstance() {
+	static ClosedWayMatcher getInstance() {
 		return INSTANCE;
 	}
 
 	/**
-	 * Private constructor prevents instantiation from other classes.
+	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private ClosedWayMatcher() {
 		// do nothing
+	}
+
+	@Override
+	public boolean isCoveredBy(ClosedMatcher closedMatcher) {
+		return closedMatcher.matches(Closed.YES);
 	}
 
 	@Override

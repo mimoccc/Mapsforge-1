@@ -14,6 +14,7 @@
  */
 package org.mapsforge.android.maps.theme;
 
+import java.util.ArrayList;
 import java.util.List;
 
 abstract class ListMatcher implements AttributeMatcher {
@@ -21,5 +22,17 @@ abstract class ListMatcher implements AttributeMatcher {
 
 	ListMatcher(List<String> list) {
 		this.list = list;
+	}
+
+	abstract Tag getTag(String string);
+
+	List<Tag> getTags() {
+		List<Tag> tags = new ArrayList<Tag>(this.list.size());
+
+		for (int i = 0, n = this.list.size(); i < n; ++i) {
+			tags.add(getTag(this.list.get(i)));
+		}
+
+		return tags;
 	}
 }

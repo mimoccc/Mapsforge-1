@@ -15,5 +15,7 @@
 package org.mapsforge.android.maps.theme;
 
 interface ClosedMatcher {
+	boolean isCoveredBy(ClosedMatcher closedMatcher);
+
 	boolean matches(Closed closed);
 }

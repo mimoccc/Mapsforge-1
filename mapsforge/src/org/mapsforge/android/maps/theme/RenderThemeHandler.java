@@ -98,7 +98,7 @@ public class RenderThemeHandler extends DefaultHandler {
 
 			else if ("rule".equals(localName)) {
 				checkState(localName, Element.RULE);
-				Rule rule = Rule.create(localName, attributes);
+				Rule rule = Rule.create(localName, attributes, this.ruleStack);
 				if (this.currentRule != null) {
 					this.currentRule.addSubRule(rule);
 				}

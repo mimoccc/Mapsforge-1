@@ -18,12 +18,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.xml.sax.Attributes;
 
 abstract class Rule {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile("\\|");
+	private static final String WILDCARD_STRING = "*";
 
 	private static ClosedMatcher getClosedMatcher(Closed closed) {
 		switch (closed) {
@@ -32,7 +34,7 @@ abstract class Rule {
 			case NO:
 				return LinearWayMatcher.getInstance();
 			case ANY:
-				return AnyWayMatcher.getInstance();
+				return AnyMatcher.getInstance();
 			default:
 				throw new IllegalArgumentException("unknown enum value: " + closed);
 		}
@@ -45,10 +47,24 @@ abstract class Rule {
 			case WAY:
 				return ElementWayMatcher.getInstance();
 			case ANY:
-				return AnyElementMatcher.getInstance();
+				return AnyMatcher.getInstance();
 			default:
 				throw new IllegalArgumentException("unknown enum value: " + element);
 		}
+	}
+
+	private static AttributeMatcher getKeyMatcher(List<String> keysList) {
+		if (WILDCARD_STRING.equals(keysList.get(0))) {
+			return AnyMatcher.getInstance();
+		}
+		return new KeyMatcher(keysList);
+	}
+
+	private static AttributeMatcher getValueMatcher(List<String> valuesList) {
+		if (WILDCARD_STRING.equals(valuesList.get(0))) {
+			return AnyMatcher.getInstance();
+		}
+		return new ValueMatcher(valuesList);
 	}
 
 	private static void validate(String elementName, Element element, String keys, String values,
@@ -68,7 +84,7 @@ abstract class Rule {
 		}
 	}
 
-	static Rule create(String elementName, Attributes attributes) {
+	static Rule create(String elementName, Attributes attributes, Stack<Rule> ruleStack) {
 		Element element = null;
 		String keys = null;
 		String values = null;
@@ -104,16 +120,39 @@ abstract class Rule {
 		List<String> keyList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(keys)));
 		List<String> valueList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(values)));
 
+		elementMatcher = RuleOptimizer.optimize(elementMatcher, ruleStack);
+		closedMatcher = RuleOptimizer.optimize(closedMatcher, ruleStack);
+
 		if (valueList.remove("~")) {
-			return new NegativeRule(elementMatcher, keyList, valueList, closedMatcher, zoomMin, zoomMax);
+			AttributeMatcher keyMatcher = new NegativeMatcher(keyList, valueList);
+
+			return new NegativeRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher);
 		}
-		return new PositiveRule(elementMatcher, keyList, valueList, closedMatcher, zoomMin, zoomMax);
+
+		AttributeMatcher keyMatcher = getKeyMatcher(keyList);
+		AttributeMatcher valueMatcher = getValueMatcher(valueList);
+
+		keyMatcher = RuleOptimizer.optimize(keyMatcher, ruleStack);
+		valueMatcher = RuleOptimizer.optimize(valueMatcher, ruleStack);
+
+		return new PositiveRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher,
+				valueMatcher);
 	}
 
 	private final ArrayList<RenderingInstruction> renderingInstructions;
 	private final ArrayList<Rule> subRules;
 
-	Rule() {
+	final ClosedMatcher closedMatcher;
+	final ElementMatcher elementMatcher;
+	final byte zoomMax;
+	final byte zoomMin;
+
+	Rule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin, byte zoomMax) {
+		this.elementMatcher = elementMatcher;
+		this.closedMatcher = closedMatcher;
+		this.zoomMin = zoomMin;
+		this.zoomMax = zoomMax;
+
 		this.renderingInstructions = new ArrayList<RenderingInstruction>(4);
 		this.subRules = new ArrayList<Rule>(4);
 	}
@@ -126,10 +165,12 @@ abstract class Rule {
 		this.subRules.add(rule);
 	}
 
-	abstract boolean matches(Element element, List<Tag> tags, byte zoomLevel, Closed closed);
+	abstract boolean matchesNode(List<Tag> tags, byte zoomLevel);
+
+	abstract boolean matchesWay(List<Tag> tags, byte zoomLevel, Closed closed);
 
 	void matchNode(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel) {
-		if (matches(Element.NODE, tags, zoomLevel, Closed.ANY)) {
+		if (matchesNode(tags, zoomLevel)) {
 			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
 				this.renderingInstructions.get(i).renderNode(renderThemeCallback, tags);
 			}
@@ -140,9 +181,8 @@ abstract class Rule {
 		}
 	}
 
-	void matchWay(RenderThemeCallback renderThemeCallback, List<Tag> tags,
-			byte zoomLevel, Closed closed) {
-		if (matches(Element.WAY, tags, zoomLevel, closed)) {
+	void matchWay(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
+		if (matchesWay(tags, zoomLevel, closed)) {
 			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
 				this.renderingInstructions.get(i).renderWay(renderThemeCallback, tags);
 			}

@@ -16,18 +16,47 @@ package org.mapsforge.android.maps.theme;
 
 import java.util.List;
 
-class ValueListMatcher extends ListMatcher {
-	ValueListMatcher(List<String> list) {
-		super(list);
+final class AnyMatcher implements ElementMatcher, AttributeMatcher, ClosedMatcher {
+	private static final AnyMatcher INSTANCE = new AnyMatcher();
+
+	static AnyMatcher getInstance() {
+		return INSTANCE;
+	}
+
+	/**
+	 * Private constructor to prevent instantiation from other classes.
+	 */
+	private AnyMatcher() {
+		// do nothing
+	}
+
+	@Override
+	public boolean isCoveredBy(AttributeMatcher attributeMatcher) {
+		return attributeMatcher == this;
+	}
+
+	@Override
+	public boolean isCoveredBy(ClosedMatcher closedMatcher) {
+		return closedMatcher == this;
+	}
+
+	@Override
+	public boolean isCoveredBy(ElementMatcher elementMatcher) {
+		return elementMatcher == this;
+	}
+
+	@Override
+	public boolean matches(Closed closed) {
+		return true;
+	}
+
+	@Override
+	public boolean matches(Element element) {
+		return true;
 	}
 
 	@Override
 	public boolean matches(List<Tag> tags) {
-		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.list.contains(tags.get(i).value)) {
-				return true;
-			}
-		}
-		return false;
+		return true;
 	}
 }

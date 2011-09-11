@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rules xmlns="http://mapsforge.org/renderTheme" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://mapsforge.org/renderTheme ../renderTheme.xsd" map-background="#f8f8f8">
+
 	<!-- ways -->
 	<rule e="way" k="*" v="*">
 		<!-- landuse -->
@@ -50,7 +51,7 @@
 				<rule e="way" k="highway" v="road">
 					<line stroke="#707070" stroke-width="1.3" stroke-dasharray="5,5" stroke-linecap="butt" />
 				</rule>
-				<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street">
+				<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street|byway">
 					<line stroke="#707070" stroke-width="1.5" stroke-dasharray="5,5" stroke-linecap="butt" />
 				</rule>
 				<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
@@ -76,7 +77,7 @@
 				<rule e="way" k="highway" v="road">
 					<line stroke="#ffffff" stroke-width="1.25" stroke-dasharray="5,5" stroke-linecap="butt" />
 				</rule>
-				<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street">
+				<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street|byway">
 					<line stroke="#ffffff" stroke-width="1.35" stroke-dasharray="5,5" stroke-linecap="butt" />
 				</rule>
 				<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
@@ -124,14 +125,16 @@
 
 
 		<rule e="way" k="natural|landuse" v="forest|wood|scrub">
-			<rule e="way" k="wood" v="coniferous">
-				<area src="jar:osmarender/patterns/wood-coniferous.png" />
-			</rule>
-			<rule e="way" k="wood" v="deciduous">
-				<area src="jar:osmarender/patterns/wood-deciduous.png" />
-			</rule>
-			<rule e="way" k="wood" v="mixed">
-				<area src="jar:osmarender/patterns/wood-mixed.png" />
+			<rule e="way" k="wood" v="*">
+				<rule e="way" k="wood" v="coniferous">
+					<area src="jar:osmarender/patterns/wood-coniferous.png" />
+				</rule>
+				<rule e="way" k="wood" v="deciduous">
+					<area src="jar:osmarender/patterns/wood-deciduous.png" />
+				</rule>
+				<rule e="way" k="wood" v="mixed">
+					<area src="jar:osmarender/patterns/wood-mixed.png" />
+				</rule>
 			</rule>
 			<rule e="way" k="wood" v="~">
 				<area fill="#6fc18e" stroke="#6fc18e" stroke-width="0.2" />
@@ -340,29 +343,31 @@
 
 		<!-- highway area -->
 		<rule e="way" k="area" v="yes|true">
-			<rule e="way" k="highway" v="footway|footpath">
-				<area fill="#e5e0c2" stroke="#707070" stroke-width="0.15" />
-			</rule>
-			<rule e="way" k="highway" v="pedestrian">
-				<area fill="#e5e0c2" stroke="#707070" stroke-width="0.15" />
-			</rule>
-			<rule e="way" k="highway" v="path">
-				<area fill="#d0d0d0" stroke="#d0d0d0" stroke-width="0.45" />
-			</rule>
-			<rule e="way" k="highway" v="service">
-				<area fill="#ffffff" stroke="#707070" stroke-width="0.15" />
-			</rule>
-			<rule e="way" k="highway" v="unclassified">
-				<area fill="#ffffff" stroke="#707070" stroke-width="0.3" />
-			</rule>
-			<rule e="way" k="highway" v="residential">
-				<area fill="#ffffff" stroke="#707070" stroke-width="0.15" />
-			</rule>
-			<rule e="way" k="highway" v="road">
-				<area fill="#d0d0d0" />
-			</rule>
-			<rule e="way" k="highway" v="living_street">
-				<area fill="#ffffff" stroke="#ffffff" stroke-width="0.15" />
+			<rule e="way" k="highway" v="*">
+				<rule e="way" k="highway" v="footway|footpath">
+					<area fill="#e5e0c2" stroke="#707070" stroke-width="0.15" />
+				</rule>
+				<rule e="way" k="highway" v="pedestrian">
+					<area fill="#e5e0c2" stroke="#707070" stroke-width="0.15" />
+				</rule>
+				<rule e="way" k="highway" v="path">
+					<area fill="#d0d0d0" stroke="#d0d0d0" stroke-width="0.45" />
+				</rule>
+				<rule e="way" k="highway" v="service">
+					<area fill="#ffffff" stroke="#707070" stroke-width="0.15" />
+				</rule>
+				<rule e="way" k="highway" v="unclassified">
+					<area fill="#ffffff" stroke="#707070" stroke-width="0.3" />
+				</rule>
+				<rule e="way" k="highway" v="residential">
+					<area fill="#ffffff" stroke="#707070" stroke-width="0.15" />
+				</rule>
+				<rule e="way" k="highway" v="road">
+					<area fill="#d0d0d0" />
+				</rule>
+				<rule e="way" k="highway" v="living_street">
+					<area fill="#ffffff" stroke="#ffffff" stroke-width="0.15" />
+				</rule>
 			</rule>
 		</rule>
 
@@ -409,60 +414,67 @@
 	</rule>
 
 
+	<!-- ways -->
 	<rule e="way" k="*" v="*">
 		<!-- no tunnel -->
 		<rule e="way" k="tunnel" v="~|no|false">
 			<!-- no area -->
 			<rule e="way" k="area" v="~|no|false">
-				<!-- no bridge -->
-				<rule e="way" k="bridge" v="~|no|false">
-					<!-- highway casings -->
-					<rule e="way" k="highway" v="steps">
-						<line stroke="#707070" stroke-width="0.6" />
+				<!-- highway -->
+				<rule e="way" k="highway" v="*">
+					<!-- no bridge -->
+					<rule e="way" k="bridge" v="~|no|false">
+						<!-- highway casings -->
+						<rule e="way" k="highway" v="steps">
+							<line stroke="#707070" stroke-width="0.6" />
+						</rule>
+						<rule e="way" k="highway" v="footway|path">
+							<line stroke="#707070" stroke-width="0.6" stroke-dasharray="2,2" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="track">
+							<line stroke="#d79331" stroke-width="1.0" stroke-dasharray="18,2" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="cycleway|bridleway|service">
+							<line stroke="#707070" stroke-width="1.0" />
+						</rule>
+						<rule e="way" k="highway" v="byway">
+							<line stroke="#707070" stroke-width="1.5" stroke-dasharray="7,2" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street">
+							<line stroke="#707070" stroke-width="1.5" />
+						</rule>
+						<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
+							<line stroke="#707070" stroke-width="1.8" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="motorway">
+							<line stroke="#707070" stroke-width="2.0" stroke-linecap="butt" />
+						</rule>
 					</rule>
-					<rule e="way" k="highway" v="footway|path">
-						<line stroke="#707070" stroke-width="0.6" stroke-dasharray="2,2" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="track">
-						<line stroke="#d79331" stroke-width="1.0" stroke-dasharray="18,2" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="cycleway|bridleway|service">
-						<line stroke="#707070" stroke-width="1.0" />
-					</rule>
-					<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street">
-						<line stroke="#707070" stroke-width="1.5" />
-					</rule>
-					<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
-						<line stroke="#707070" stroke-width="1.8" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="motorway">
-						<line stroke="#707070" stroke-width="2.0" stroke-linecap="butt" />
-					</rule>
-				</rule>
 
-				<!-- bridge -->
-				<rule e="way" k="bridge" v="yes|true">
-					<!-- highway casings -->
-					<rule e="way" k="highway" v="steps|footway|path">
-						<line stroke="#000000" stroke-width="0.7" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="track|cycleway|bridleway|service">
-						<line stroke="#000000" stroke-width="1.1" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="construction">
-						<line stroke="#000000" stroke-width="1.2" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="road">
-						<line stroke="#000000" stroke-width="1.4" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street">
-						<line stroke="#000000" stroke-width="1.6" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
-						<line stroke="#000000" stroke-width="1.9" stroke-linecap="butt" />
-					</rule>
-					<rule e="way" k="highway" v="motorway">
-						<line stroke="#000000" stroke-width="2.1" stroke-linecap="butt" />
+					<!-- bridge -->
+					<rule e="way" k="bridge" v="yes|true">
+						<!-- highway casings -->
+						<rule e="way" k="highway" v="steps|footway|path">
+							<line stroke="#000000" stroke-width="0.7" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="track|cycleway|bridleway|service">
+							<line stroke="#000000" stroke-width="1.1" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="construction">
+							<line stroke="#000000" stroke-width="1.2" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="road">
+							<line stroke="#000000" stroke-width="1.4" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="pedestrian|unclassified|residential|living_street|byway">
+							<line stroke="#000000" stroke-width="1.6" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="tertiary|secondary_link|secondary|primary_link|trunk_link|motorway_link|primary|trunk">
+							<line stroke="#000000" stroke-width="1.9" stroke-linecap="butt" />
+						</rule>
+						<rule e="way" k="highway" v="motorway">
+							<line stroke="#000000" stroke-width="2.1" stroke-linecap="butt" />
+						</rule>
 					</rule>
 				</rule>
 			</rule>
@@ -479,94 +491,100 @@
 		</rule>
 
 
-		<!-- no tunnel -->
-		<rule e="way" k="tunnel" v="~|no|false">
-			<!-- no area -->
-			<rule e="way" k="area" v="~|no|false">
-				<!-- highway cores -->
-				<rule e="way" k="highway" v="steps">
-					<line stroke="#e5e0c2" stroke-width="0.45" stroke-dasharray="3,1" stroke-linecap="butt" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="footway">
-					<line stroke="#e5e0c2" stroke-width="0.45" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="path">
-					<line stroke="#d0d0d0" stroke-width="0.45" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="track">
-					<line stroke="#fff2de" stroke-width="0.7" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#fff2de" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="cycleway">
-					<line stroke="#d1fad1" stroke-width="0.85" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#d1fad1" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="bridleway">
-					<line stroke="#d3cb98" stroke-width="0.85" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#d3cb98" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="service">
-					<line stroke="#ffffff" stroke-width="0.85" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#ffffff" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="construction">
-					<line stroke="#d0d0d0" stroke-width="1.0" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="road">
-					<line stroke="#d0d0d0" stroke-width="1.25" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="pedestrian">
-					<line stroke="#e5e0c2" stroke-width="1.35" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="unclassified|residential|living_street">
-					<line stroke="#ffffff" stroke-width="1.35" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#ffffff" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="tertiary">
-					<line stroke="#ffff90" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#ffff90" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="secondary_link|secondary">
-					<line stroke="#fdbf6f" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#fdbf6f" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="primary_link">
-					<line stroke="#e46d71" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#e46d71" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="trunk_link">
-					<line stroke="#7fc97f" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#7fc97f" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="motorway_link">
-					<line stroke="#809bc0" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#809bc0" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="primary">
-					<line stroke="#e46d71" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#e46d71" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="trunk">
-					<line stroke="#7fc97f" stroke-width="1.5" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#7fc97f" stroke-width="2.0" />
-				</rule>
-				<rule e="way" k="highway" v="motorway">
-					<line stroke="#809bc0" stroke-width="1.7" />
-					<pathText k="name" font-style="bold" font-size="10" stroke="#809bc0" stroke-width="2.0" />
-				</rule>
-
-				<rule e="way" k="highway" v="*" zoom-min="16">
-					<rule e="way" k="access" v="destination">
-						<line src="jar:osmarender/patterns/access-destination.png" stroke-width="1.5" />
+		<rule e="way" k="highway" v="*">
+			<!-- no tunnel -->
+			<rule e="way" k="tunnel" v="~|no|false">
+				<!-- no area -->
+				<rule e="way" k="area" v="~|no|false">
+					<!-- highway cores -->
+					<rule e="way" k="highway" v="steps">
+						<line stroke="#e5e0c2" stroke-width="0.45" stroke-dasharray="3,1" stroke-linecap="butt" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
 					</rule>
-					<rule e="way" k="access" v="private">
-						<line src="jar:osmarender/patterns/access-private.png" stroke-width="1.5" />
+					<rule e="way" k="highway" v="footway">
+						<line stroke="#e5e0c2" stroke-width="0.45" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="path">
+						<line stroke="#d0d0d0" stroke-width="0.45" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="track">
+						<line stroke="#fff2de" stroke-width="0.7" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#fff2de" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="cycleway">
+						<line stroke="#d1fad1" stroke-width="0.85" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#d1fad1" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="bridleway">
+						<line stroke="#d3cb98" stroke-width="0.85" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#d3cb98" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="service">
+						<line stroke="#ffffff" stroke-width="0.85" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#ffffff" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="construction">
+						<line stroke="#d0d0d0" stroke-width="1.0" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="road">
+						<line stroke="#d0d0d0" stroke-width="1.25" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#d0d0d0" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="pedestrian">
+						<line stroke="#e5e0c2" stroke-width="1.35" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#e5e0c2" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="unclassified|residential|living_street">
+						<line stroke="#ffffff" stroke-width="1.35" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#ffffff" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="byway">
+						<line stroke="#efadaa" stroke-width="1.35" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#efadaa" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="tertiary">
+						<line stroke="#ffff90" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#ffff90" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="secondary_link|secondary">
+						<line stroke="#fdbf6f" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#fdbf6f" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="primary_link">
+						<line stroke="#e46d71" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#e46d71" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="trunk_link">
+						<line stroke="#7fc97f" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#7fc97f" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="motorway_link">
+						<line stroke="#809bc0" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#809bc0" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="primary">
+						<line stroke="#e46d71" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#e46d71" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="trunk">
+						<line stroke="#7fc97f" stroke-width="1.5" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#7fc97f" stroke-width="2.0" />
+					</rule>
+					<rule e="way" k="highway" v="motorway">
+						<line stroke="#809bc0" stroke-width="1.7" />
+						<pathText k="name" font-style="bold" font-size="10" stroke="#809bc0" stroke-width="2.0" />
+					</rule>
+
+					<rule e="way" k="highway" v="*" zoom-min="16">
+						<rule e="way" k="access" v="destination">
+							<line src="jar:osmarender/patterns/access-destination.png" stroke-width="1.5" />
+						</rule>
+						<rule e="way" k="access" v="private">
+							<line src="jar:osmarender/patterns/access-private.png" stroke-width="1.5" />
+						</rule>
 					</rule>
 				</rule>
 			</rule>
@@ -586,11 +604,11 @@
 
 		<!-- man_made features -->
 		<rule e="way" k="man_made" v="pier">
-			<rule e="way" k="man_made" v="pier" closed="no">
+			<rule e="way" k="*" v="*" closed="no">
 				<line stroke="#d0d0d0" stroke-width="0.4" stroke-linecap="butt" />
 				<line stroke="#e4e4e4" stroke-width="0.3" stroke-linecap="butt" />
 			</rule>
-			<rule e="way" k="man_made" v="pier" closed="yes">
+			<rule e="way" k="*" v="*" closed="yes">
 				<area fill="#e4e4e4" stroke="#d0d0d0" stroke-width="0.05" />
 			</rule>
 		</rule>
@@ -761,40 +779,42 @@
 				<line stroke="#4ef94b" stroke-width="0.25" stroke-dasharray="15, 5, 5, 5" />
 			</rule>
 			<rule e="way" k="boundary" v="administrative">
-				<rule e="way" k="admin_level" v="11">
-					<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="1, 5" />
-				</rule>
-				<rule e="way" k="admin_level" v="10">
-					<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="5, 25" />
-				</rule>
-				<rule e="way" k="admin_level" v="9">
-					<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="15, 15" />
-				</rule>
-				<rule e="way" k="admin_level" v="8">
-					<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="15, 5, 5, 5" />
-				</rule>
-				<rule e="way" k="admin_level" v="7">
-					<line stroke="#f9574b" stroke-width="0.1" />
-				</rule>
-				<rule e="way" k="admin_level" v="6">
-					<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="5, 5" />
-				</rule>
-				<rule e="way" k="admin_level" v="5">
-					<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 15" />
-				</rule>
-				<rule e="way" k="admin_level" v="4">
-					<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 5, 5, 5" />
-				</rule>
-				<rule e="way" k="admin_level" v="3">
-					<line stroke="#f9574b" stroke-width="0.25" />
-				</rule>
-				<rule e="way" k="admin_level" v="2">
-					<line stroke="#80ffff00" stroke-width="0.75" />
-					<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 15" />
-				</rule>
-				<rule e="way" k="admin_level" v="1">
-					<line stroke="#80ffff00" stroke-width="1.75" />
-					<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 5, 5, 5" />
+				<rule e="way" k="admin_level" v="*">
+					<rule e="way" k="admin_level" v="11">
+						<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="1, 5" />
+					</rule>
+					<rule e="way" k="admin_level" v="10">
+						<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="5, 25" />
+					</rule>
+					<rule e="way" k="admin_level" v="9">
+						<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="15, 15" />
+					</rule>
+					<rule e="way" k="admin_level" v="8">
+						<line stroke="#f9574b" stroke-width="0.1" stroke-dasharray="15, 5, 5, 5" />
+					</rule>
+					<rule e="way" k="admin_level" v="7">
+						<line stroke="#f9574b" stroke-width="0.1" />
+					</rule>
+					<rule e="way" k="admin_level" v="6">
+						<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="5, 5" />
+					</rule>
+					<rule e="way" k="admin_level" v="5">
+						<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 15" />
+					</rule>
+					<rule e="way" k="admin_level" v="4">
+						<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 5, 5, 5" />
+					</rule>
+					<rule e="way" k="admin_level" v="3">
+						<line stroke="#f9574b" stroke-width="0.25" />
+					</rule>
+					<rule e="way" k="admin_level" v="2">
+						<line stroke="#80ffff00" stroke-width="0.75" />
+						<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 15" />
+					</rule>
+					<rule e="way" k="admin_level" v="1">
+						<line stroke="#80ffff00" stroke-width="1.75" />
+						<line stroke="#f9574b" stroke-width="0.25" stroke-dasharray="15, 5, 5, 5" />
+					</rule>
 				</rule>
 			</rule>
 		</rule>

@@ -15,5 +15,7 @@
 package org.mapsforge.android.maps.theme;
 
 interface ElementMatcher {
+	boolean isCoveredBy(ElementMatcher elementMatcher);
+
 	boolean matches(Element element);
 }

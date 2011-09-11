@@ -17,5 +17,7 @@ package org.mapsforge.android.maps.theme;
 import java.util.List;
 
 interface AttributeMatcher {
+	boolean isCoveredBy(AttributeMatcher attributeMatcher);
+
 	boolean matches(List<Tag> tags);
 }

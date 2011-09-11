@@ -22,10 +22,15 @@ final class ElementNodeMatcher implements ElementMatcher {
 	}
 
 	/**
-	 * Private constructor prevents instantiation from other classes.
+	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private ElementNodeMatcher() {
 		// do nothing
+	}
+
+	@Override
+	public boolean isCoveredBy(ElementMatcher elementMatcher) {
+		return elementMatcher.matches(Element.NODE);
 	}
 
 	@Override

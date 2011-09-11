@@ -147,7 +147,7 @@ final class LineClipping {
 	}
 
 	/**
-	 * Empty private constructor to prevent object creation.
+	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private LineClipping() {
 		// do nothing

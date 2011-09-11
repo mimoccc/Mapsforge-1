@@ -17,40 +17,28 @@ package org.mapsforge.android.maps.theme;
 import java.util.List;
 
 class PositiveRule extends Rule {
-	private final ClosedMatcher closedMatcher;
-	private final ElementMatcher elementMatcher;
-	private final AttributeMatcher keysMatcher;
-	private final AttributeMatcher valuesMatcher;
-	private final byte zoomMax;
-	private final byte zoomMin;
+	final AttributeMatcher keyMatcher;
+	final AttributeMatcher valueMatcher;
 
-	PositiveRule(ElementMatcher elementMatcher, List<String> keysList, List<String> valuesList,
-			ClosedMatcher closedMatcher, byte zoomMin, byte zoomMax) {
-		super();
+	PositiveRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin,
+			byte zoomMax, AttributeMatcher keyMatcher, AttributeMatcher valueMatcher) {
+		super(elementMatcher, closedMatcher, zoomMin, zoomMax);
 
-		this.elementMatcher = elementMatcher;
-
-		if ("*".equals(keysList.get(0))) {
-			this.keysMatcher = AnyValueMatcher.getInstance();
-		} else {
-			this.keysMatcher = new KeyListMatcher(keysList);
-		}
-
-		if ("*".equals(valuesList.get(0))) {
-			this.valuesMatcher = AnyValueMatcher.getInstance();
-		} else {
-			this.valuesMatcher = new ValueListMatcher(valuesList);
-		}
-
-		this.closedMatcher = closedMatcher;
-		this.zoomMin = zoomMin;
-		this.zoomMax = zoomMax;
+		this.keyMatcher = keyMatcher;
+		this.valueMatcher = valueMatcher;
 	}
 
 	@Override
-	boolean matches(Element element, List<Tag> tags, byte zoomLevel, Closed closed) {
+	boolean matchesNode(List<Tag> tags, byte zoomLevel) {
 		return this.zoomMin <= zoomLevel && this.zoomMax >= zoomLevel
-				&& this.elementMatcher.matches(element) && this.closedMatcher.matches(closed)
-				&& this.keysMatcher.matches(tags) && this.valuesMatcher.matches(tags);
+				&& this.elementMatcher.matches(Element.NODE) && this.keyMatcher.matches(tags)
+				&& this.valueMatcher.matches(tags);
+	}
+
+	@Override
+	boolean matchesWay(List<Tag> tags, byte zoomLevel, Closed closed) {
+		return this.zoomMin <= zoomLevel && this.zoomMax >= zoomLevel
+				&& this.elementMatcher.matches(Element.WAY) && this.closedMatcher.matches(closed)
+				&& this.keyMatcher.matches(tags) && this.valueMatcher.matches(tags);
 	}
 }

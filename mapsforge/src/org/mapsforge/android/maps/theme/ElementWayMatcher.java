@@ -22,10 +22,15 @@ final class ElementWayMatcher implements ElementMatcher {
 	}
 
 	/**
-	 * Private constructor prevents instantiation from other classes.
+	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private ElementWayMatcher() {
 		// do nothing
+	}
+
+	@Override
+	public boolean isCoveredBy(ElementMatcher elementMatcher) {
+		return elementMatcher.matches(Element.WAY);
 	}
 
 	@Override

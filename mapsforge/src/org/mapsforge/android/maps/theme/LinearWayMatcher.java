@@ -22,10 +22,15 @@ final class LinearWayMatcher implements ClosedMatcher {
 	}
 
 	/**
-	 * Private constructor prevents instantiation from other classes.
+	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private LinearWayMatcher() {
 		// do nothing
+	}
+
+	@Override
+	public boolean isCoveredBy(ClosedMatcher closedMatcher) {
+		return closedMatcher.matches(Closed.NO);
 	}
 
 	@Override
