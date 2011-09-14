@@ -478,6 +478,7 @@ class RoutingGraphWriterTask implements Sink {
 		if (s == null) {
 			return "";
 		}
-		return s;
+		// takes a bit longer to create the sql file but solves some issues with street names
+		return s.replaceAll("[\r\n\t\\\\]", "").trim();
 	}
 }
