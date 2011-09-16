@@ -136,7 +136,7 @@ public class Canvas {
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		Style style = paint.getStyle();
-
+		g.setColor(Color.BLACK);
 		// Dummy Font
 		TextStroke t = new TextStroke(text, new Font("Serif", Font.PLAIN, 8));
 		GeneralPath generalPath = (GeneralPath) t.createStrokedShape(path

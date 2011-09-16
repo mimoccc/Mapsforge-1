@@ -83,7 +83,7 @@ public class MapView extends JPanel implements MouseListener,
 			1000000, 500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000,
 			1000, 500, 200, 100, 50, 20, 10, 5, 2, 1 };
 	private static final short SCALE_BAR_WIDTH = 130;
-	private static final int TILE_RAM_CACHE_SIZE = 1280;
+	private static final int TILE_RAM_CACHE_SIZE = 256;
 
 	boolean attachedToWindow;
 	MapGeneratorJob currentJob;
@@ -228,18 +228,18 @@ public class MapView extends JPanel implements MouseListener,
 	 * Paint and Repaint methods
 	 */
 	public void paint(Graphics g) {
-		BufferedImage image = new BufferedImage(getWidth(), getHeight(),
-				BufferedImage.TYPE_INT_RGB);
-		Graphics2D g2d = (Graphics2D) image.getGraphics();
+		//BufferedImage image = new BufferedImage(getWidth(), getHeight(),
+		//		BufferedImage.TYPE_INT_RGB);
+		/*Graphics2D g2d = (Graphics2D) image.getGraphics();
 		g2d.setBackground(MAP_VIEW_BACKGROUND);
-		paintOffScreen(g2d);
-		g.drawImage(image, 0, 0, null);
-		
-	}
-
-	public void paintOffScreen(Graphics2D g) {
+		paintOffScreen(g2d);*/
 		g.drawImage(this.mapViewCanvas.mBufferedImage, 0, 0, null);
+		//g.drawImage(image, 0, 0, null);
 	}
+	
+	/*public void paintOffScreen(Graphics2D g) {
+		g.drawImage(this.mapViewCanvas.mBufferedImage, 0, 0, null);
+	}*/
 
 	/**
 	 * Event Handler for moving and zooming map
