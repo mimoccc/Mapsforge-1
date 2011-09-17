@@ -16,16 +16,46 @@ package org.mapsforge.android.maps.theme;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.xml.sax.Attributes;
 
 abstract class Rule {
+	private static final Map<List<String>, AttributeMatcher> MATCHERS_CACHE_KEY = new HashMap<List<String>, AttributeMatcher>();
+	private static final Map<List<String>, AttributeMatcher> MATCHERS_CACHE_VALUE = new HashMap<List<String>, AttributeMatcher>();
 	private static final Pattern SPLIT_PATTERN = Pattern.compile("\\|");
-	private static final String WILDCARD_STRING = "*";
+	private static final String STRING_NEGATION = "~";
+	private static final String STRING_WILDCARD = "*";
+
+	private static Rule createRule(Stack<Rule> ruleStack, Element element, String keys, String values,
+			Closed closed, byte zoomMin, byte zoomMax) {
+		ElementMatcher elementMatcher = getElementMatcher(element);
+		ClosedMatcher closedMatcher = getClosedMatcher(closed);
+		List<String> keyList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(keys)));
+		List<String> valueList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(values)));
+
+		elementMatcher = RuleOptimizer.optimize(elementMatcher, ruleStack);
+		closedMatcher = RuleOptimizer.optimize(closedMatcher, ruleStack);
+
+		if (valueList.remove(STRING_NEGATION)) {
+			AttributeMatcher attributeMatcher = new NegativeMatcher(keyList, valueList);
+			return new NegativeRule(elementMatcher, closedMatcher, zoomMin, zoomMax, attributeMatcher);
+		}
+
+		AttributeMatcher keyMatcher = getKeyMatcher(keyList);
+		AttributeMatcher valueMatcher = getValueMatcher(valueList);
+
+		keyMatcher = RuleOptimizer.optimize(keyMatcher, ruleStack);
+		valueMatcher = RuleOptimizer.optimize(valueMatcher, ruleStack);
+
+		return new PositiveRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher,
+				valueMatcher);
+	}
 
 	private static ClosedMatcher getClosedMatcher(Closed closed) {
 		switch (closed) {
@@ -53,18 +83,38 @@ abstract class Rule {
 		}
 	}
 
-	private static AttributeMatcher getKeyMatcher(List<String> keysList) {
-		if (WILDCARD_STRING.equals(keysList.get(0))) {
+	private static AttributeMatcher getKeyMatcher(List<String> keyList) {
+		if (STRING_WILDCARD.equals(keyList.get(0))) {
 			return AnyMatcher.getInstance();
 		}
-		return new KeyMatcher(keysList);
+
+		AttributeMatcher attributeMatcher = MATCHERS_CACHE_KEY.get(keyList);
+		if (attributeMatcher == null) {
+			if (keyList.size() == 1) {
+				attributeMatcher = new SingleKeyMatcher(keyList.get(0));
+			} else {
+				attributeMatcher = new MultiKeyMatcher(keyList);
+			}
+			MATCHERS_CACHE_KEY.put(keyList, attributeMatcher);
+		}
+		return attributeMatcher;
 	}
 
-	private static AttributeMatcher getValueMatcher(List<String> valuesList) {
-		if (WILDCARD_STRING.equals(valuesList.get(0))) {
+	private static AttributeMatcher getValueMatcher(List<String> valueList) {
+		if (STRING_WILDCARD.equals(valueList.get(0))) {
 			return AnyMatcher.getInstance();
 		}
-		return new ValueMatcher(valuesList);
+
+		AttributeMatcher attributeMatcher = MATCHERS_CACHE_VALUE.get(valueList);
+		if (attributeMatcher == null) {
+			if (valueList.size() == 1) {
+				attributeMatcher = new SingleValueMatcher(valueList.get(0));
+			} else {
+				attributeMatcher = new MultiValueMatcher(valueList);
+			}
+			MATCHERS_CACHE_VALUE.put(valueList, attributeMatcher);
+		}
+		return attributeMatcher;
 	}
 
 	private static void validate(String elementName, Element element, String keys, String values,
@@ -114,29 +164,7 @@ abstract class Rule {
 		}
 
 		validate(elementName, element, keys, values, zoomMin, zoomMax);
-
-		ElementMatcher elementMatcher = getElementMatcher(element);
-		ClosedMatcher closedMatcher = getClosedMatcher(closed);
-		List<String> keyList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(keys)));
-		List<String> valueList = new ArrayList<String>(Arrays.asList(SPLIT_PATTERN.split(values)));
-
-		elementMatcher = RuleOptimizer.optimize(elementMatcher, ruleStack);
-		closedMatcher = RuleOptimizer.optimize(closedMatcher, ruleStack);
-
-		if (valueList.remove("~")) {
-			AttributeMatcher keyMatcher = new NegativeMatcher(keyList, valueList);
-
-			return new NegativeRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher);
-		}
-
-		AttributeMatcher keyMatcher = getKeyMatcher(keyList);
-		AttributeMatcher valueMatcher = getValueMatcher(valueList);
-
-		keyMatcher = RuleOptimizer.optimize(keyMatcher, ruleStack);
-		valueMatcher = RuleOptimizer.optimize(valueMatcher, ruleStack);
-
-		return new PositiveRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher,
-				valueMatcher);
+		return createRule(ruleStack, element, keys, values, closed, zoomMin, zoomMax);
 	}
 
 	private final ArrayList<RenderingInstruction> renderingInstructions;
@@ -174,7 +202,6 @@ abstract class Rule {
 			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
 				this.renderingInstructions.get(i).renderNode(renderThemeCallback, tags);
 			}
-
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 				this.subRules.get(i).matchNode(renderThemeCallback, tags, zoomLevel);
 			}
@@ -186,7 +213,6 @@ abstract class Rule {
 			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
 				this.renderingInstructions.get(i).renderWay(renderThemeCallback, tags);
 			}
-
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 				this.subRules.get(i).matchWay(renderThemeCallback, tags, zoomLevel, closed);
 			}
@@ -194,6 +220,9 @@ abstract class Rule {
 	}
 
 	void onComplete() {
+		MATCHERS_CACHE_KEY.clear();
+		MATCHERS_CACHE_VALUE.clear();
+
 		this.renderingInstructions.trimToSize();
 		this.subRules.trimToSize();
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {

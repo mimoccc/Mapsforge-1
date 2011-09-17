@@ -19,40 +19,45 @@ import java.util.Stack;
 import org.mapsforge.android.maps.Logger;
 
 final class RuleOptimizer {
-	private static AttributeMatcher optimizeKeyMatcher(KeyMatcher keyMatcher, Stack<Rule> ruleStack) {
-		for (int i = 0, n = ruleStack.size(); i < n; ++i) {
-			if (ruleStack.get(i) instanceof PositiveRule) {
-				PositiveRule positiveRule = (PositiveRule) ruleStack.get(i);
-				if (positiveRule.keyMatcher.isCoveredBy(keyMatcher)) {
-					return AnyMatcher.getInstance();
-				}
-			}
-		}
-
-		return keyMatcher;
-	}
-
-	private static AttributeMatcher optimizeValueMatcher(ValueMatcher valueMatcher,
+	private static AttributeMatcher optimizeKeyMatcher(AttributeMatcher attributeMatcher,
 			Stack<Rule> ruleStack) {
 		for (int i = 0, n = ruleStack.size(); i < n; ++i) {
 			if (ruleStack.get(i) instanceof PositiveRule) {
 				PositiveRule positiveRule = (PositiveRule) ruleStack.get(i);
-				if (positiveRule.valueMatcher.isCoveredBy(valueMatcher)) {
+				if (positiveRule.keyMatcher.isCoveredBy(attributeMatcher)) {
 					return AnyMatcher.getInstance();
 				}
 			}
 		}
 
-		return valueMatcher;
+		return attributeMatcher;
+	}
+
+	private static AttributeMatcher optimizeValueMatcher(AttributeMatcher attributeMatcher,
+			Stack<Rule> ruleStack) {
+		for (int i = 0, n = ruleStack.size(); i < n; ++i) {
+			if (ruleStack.get(i) instanceof PositiveRule) {
+				PositiveRule positiveRule = (PositiveRule) ruleStack.get(i);
+				if (positiveRule.valueMatcher.isCoveredBy(attributeMatcher)) {
+					return AnyMatcher.getInstance();
+				}
+			}
+		}
+
+		return attributeMatcher;
 	}
 
 	static AttributeMatcher optimize(AttributeMatcher attributeMatcher, Stack<Rule> ruleStack) {
 		if (attributeMatcher instanceof AnyMatcher || attributeMatcher instanceof NegativeMatcher) {
 			return attributeMatcher;
-		} else if (attributeMatcher instanceof KeyMatcher) {
-			return optimizeKeyMatcher((KeyMatcher) attributeMatcher, ruleStack);
-		} else if (attributeMatcher instanceof ValueMatcher) {
-			return optimizeValueMatcher((ValueMatcher) attributeMatcher, ruleStack);
+		} else if (attributeMatcher instanceof SingleKeyMatcher) {
+			return optimizeKeyMatcher(attributeMatcher, ruleStack);
+		} else if (attributeMatcher instanceof SingleValueMatcher) {
+			return optimizeValueMatcher(attributeMatcher, ruleStack);
+		} else if (attributeMatcher instanceof MultiKeyMatcher) {
+			return optimizeKeyMatcher(attributeMatcher, ruleStack);
+		} else if (attributeMatcher instanceof MultiValueMatcher) {
+			return optimizeValueMatcher(attributeMatcher, ruleStack);
 		}
 		throw new IllegalArgumentException("unknown AttributeMatcher: " + attributeMatcher);
 	}

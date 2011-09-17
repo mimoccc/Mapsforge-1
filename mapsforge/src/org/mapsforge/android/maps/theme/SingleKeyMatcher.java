@@ -14,25 +14,28 @@
  */
 package org.mapsforge.android.maps.theme;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-abstract class ListMatcher implements AttributeMatcher {
-	final List<String> list;
+class SingleKeyMatcher implements AttributeMatcher {
+	private final String key;
 
-	ListMatcher(List<String> list) {
-		this.list = list;
+	SingleKeyMatcher(String key) {
+		this.key = key;
 	}
 
-	abstract Tag getTag(String string);
+	@Override
+	public boolean isCoveredBy(AttributeMatcher attributeMatcher) {
+		return attributeMatcher == this || attributeMatcher.matches(Arrays.asList(new Tag(key, null)));
+	}
 
-	List<Tag> getTags() {
-		List<Tag> tags = new ArrayList<Tag>(this.list.size());
-
-		for (int i = 0, n = this.list.size(); i < n; ++i) {
-			tags.add(getTag(this.list.get(i)));
+	@Override
+	public boolean matches(List<Tag> tags) {
+		for (int i = 0, n = tags.size(); i < n; ++i) {
+			if (this.key.equals(tags.get(i).key)) {
+				return true;
+			}
 		}
-
-		return tags;
+		return false;
 	}
 }

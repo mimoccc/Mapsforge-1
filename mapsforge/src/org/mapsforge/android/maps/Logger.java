@@ -40,7 +40,8 @@ public final class Logger {
 	 */
 	public static void exception(Exception exception) {
 		StringBuilder stringBuilder = new StringBuilder(512);
-		stringBuilder.append("Exception in thread \"");
+		stringBuilder.append(exception.getClass().getName());
+		stringBuilder.append(" in thread \"");
 		stringBuilder.append(Thread.currentThread().getName());
 		stringBuilder.append("\" ");
 		stringBuilder.append(exception.toString());

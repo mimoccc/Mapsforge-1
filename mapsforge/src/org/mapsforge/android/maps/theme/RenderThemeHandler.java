@@ -19,6 +19,7 @@ import java.util.Stack;
 
 import org.mapsforge.android.maps.Logger;
 import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -89,7 +90,8 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes) {
+	public void startElement(String uri, String localName, String qName, Attributes attributes)
+			throws SAXException {
 		try {
 			if ("rules".equals(localName)) {
 				checkState(localName, Element.RULES);
@@ -149,10 +151,12 @@ public class RenderThemeHandler extends DefaultHandler {
 			}
 
 			else {
-				throw new IllegalArgumentException("unknown element: " + localName);
+				throw new SAXException("unknown element: " + localName);
 			}
+		} catch (IllegalArgumentException e) {
+			throw new SAXException(null, e);
 		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
+			throw new SAXException(null, e);
 		}
 	}
 
@@ -161,26 +165,26 @@ public class RenderThemeHandler extends DefaultHandler {
 		Logger.exception(e);
 	}
 
-	private void checkState(String elementName, Element element) {
+	private void checkState(String elementName, Element element) throws SAXException {
 		switch (element) {
 			case RULES:
 				if (!this.elementStack.empty()) {
-					throw new IllegalArgumentException("element not allowed: " + elementName);
+					throw new SAXException("unexpected element: " + elementName);
 				}
 				break;
 			case RULE:
 				Element parentElement = this.elementStack.peek();
 				if (parentElement != Element.RULES && parentElement != Element.RULE) {
-					throw new IllegalArgumentException("element not allowed: " + elementName);
+					throw new SAXException("unexpected element: " + elementName);
 				}
 				break;
 			case RENDERING_INSTRUCTION:
 				if (this.elementStack.peek() != Element.RULE) {
-					throw new IllegalArgumentException("element not allowed: " + elementName);
+					throw new SAXException("unexpected element: " + elementName);
 				}
 				break;
 			default:
-				throw new IllegalArgumentException("unknown enum value: " + element);
+				throw new SAXException("unknown enum value: " + element);
 		}
 
 		this.elementStack.push(element);

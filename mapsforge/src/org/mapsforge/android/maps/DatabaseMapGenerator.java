@@ -349,6 +349,57 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
 	}
 
+	private void createWayLists() {
+		int levels = this.renderTheme.getLevels();
+		this.ways.clear();
+		for (byte i = LAYERS - 1; i >= 0; --i) {
+			this.innerWayList = new ArrayList<List<ShapePaintContainer>>(levels);
+			for (int j = levels - 1; j >= 0; --j) {
+				this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
+			}
+			this.ways.add(this.innerWayList);
+		}
+	}
+
+	private RenderTheme getRenderTheme(MapGeneratorJobTheme mapGeneratorJobTheme) {
+		InputStream inputStream = null;
+
+		try {
+			if (mapGeneratorJobTheme.internal) {
+				switch (mapGeneratorJobTheme.internalRenderTheme) {
+					case OSMARENDER:
+						inputStream = getClass().getResourceAsStream("theme/osmarender/osmarender.xml");
+						break;
+					default:
+						throw new IllegalArgumentException();
+				}
+			} else {
+				inputStream = new FileInputStream(mapGeneratorJobTheme.themePath);
+			}
+
+			RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
+			XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+			xmlReader.setContentHandler(renderThemeHandler);
+			xmlReader.parse(new InputSource(inputStream));
+			return renderThemeHandler.getRenderTheme();
+		} catch (ParserConfigurationException e) {
+			Logger.exception(e);
+		} catch (SAXException e) {
+			Logger.exception(e);
+		} catch (IOException e) {
+			Logger.exception(e);
+		} finally {
+			try {
+				if (inputStream != null) {
+					inputStream.close();
+				}
+			} catch (IOException e) {
+				Logger.exception(e);
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Converts a latitude value into an Y coordinate on the current tile.
 	 * 
@@ -371,45 +422,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private float scaleLongitude(float longitude) {
 		return (float) (MercatorProjection.longitudeToPixelX(longitude / (double) 1000000,
 				this.currentTile.zoomLevel) - this.currentTile.pixelX);
-	}
-
-	private void setRenderTheme(MapGeneratorJobTheme mapGeneratorJobTheme) {
-		try {
-			InputStream inputStream;
-			if (mapGeneratorJobTheme.internal) {
-				switch (mapGeneratorJobTheme.internalRenderTheme) {
-					case OSMARENDER:
-						inputStream = getClass().getResourceAsStream("theme/osmarender/osmarender.xml");
-						break;
-					default:
-						throw new IllegalArgumentException();
-				}
-			} else {
-				inputStream = new FileInputStream(mapGeneratorJobTheme.themePath);
-			}
-
-			RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
-			XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-			xmlReader.setContentHandler(renderThemeHandler);
-			xmlReader.parse(new InputSource(inputStream));
-			inputStream.close();
-
-			this.renderTheme = renderThemeHandler.getRenderTheme();
-			int levels = this.renderTheme.getLevels();
-			for (byte i = LAYERS - 1; i >= 0; --i) {
-				this.innerWayList = new ArrayList<List<ShapePaintContainer>>(levels);
-				for (int j = levels - 1; j >= 0; --j) {
-					this.innerWayList.add(new ArrayList<ShapePaintContainer>(0));
-				}
-				this.ways.add(this.innerWayList);
-			}
-		} catch (ParserConfigurationException e) {
-			Logger.exception(e);
-		} catch (SAXException e) {
-			Logger.exception(e);
-		} catch (IOException e) {
-			Logger.exception(e);
-		}
 	}
 
 	/**
@@ -492,7 +504,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		// check if the render theme has changed
 		if (!currentJob.mapGeneratorJobTheme.equals(this.lastMapGeneratorJobTheme)) {
-			setRenderTheme(currentJob.mapGeneratorJobTheme);
+			this.renderTheme = getRenderTheme(currentJob.mapGeneratorJobTheme);
+			if (this.renderTheme == null) {
+				this.lastMapGeneratorJobTheme = null;
+				return false;
+			}
+			createWayLists();
 			this.lastMapGeneratorJobTheme = currentJob.mapGeneratorJobTheme;
 			this.lastTileZoomLevel = Byte.MIN_VALUE;
 		}
