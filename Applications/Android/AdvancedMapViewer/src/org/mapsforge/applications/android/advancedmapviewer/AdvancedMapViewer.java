@@ -19,6 +19,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -39,6 +40,7 @@ import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.overlay.ItemizedOverlay;
 import org.mapsforge.android.maps.overlay.OverlayCircle;
 import org.mapsforge.android.maps.overlay.OverlayItem;
+import org.mapsforge.android.maps.theme.RenderThemeHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -191,21 +193,34 @@ public class AdvancedMapViewer extends MapActivity {
 	};
 
 	/**
-	 * Accepts all valid XML files.
+	 * Accepts all valid render theme XML files.
 	 */
-	private static final FileFilter FILE_FILTER_VALID_XML = new FileFilter() {
+	private static final FileFilter FILE_FILTER_VALID_RENDER_THEME = new FileFilter() {
 		@Override
 		public boolean accept(File file) {
+			InputStream inputStream = null;
+
 			try {
+				inputStream = new FileInputStream(file);
+				RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
 				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser()
 						.getXMLReader();
-				xmlReader.parse(new InputSource(new FileInputStream(file)));
+				xmlReader.setContentHandler(renderThemeHandler);
+				xmlReader.parse(new InputSource(inputStream));
 			} catch (ParserConfigurationException e) {
 				return false;
 			} catch (SAXException e) {
 				return false;
 			} catch (IOException e) {
 				return false;
+			} finally {
+				try {
+					if (inputStream != null) {
+						inputStream.close();
+					}
+				} catch (IOException e) {
+					return false;
+				}
 			}
 			return true;
 		}
@@ -545,7 +560,7 @@ public class AdvancedMapViewer extends MapActivity {
 	 */
 	private void startRenderThemePicker() {
 		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
-		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_XML);
+		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_RENDER_THEME);
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
 	}
 
