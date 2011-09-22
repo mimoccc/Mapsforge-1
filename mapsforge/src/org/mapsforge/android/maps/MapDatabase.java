@@ -282,8 +282,6 @@ public class MapDatabase {
 	private boolean wayFeatureRef;
 	private float[] wayLabelPosition;
 	private byte wayLayer;
-	private int wayNodeLatitude;
-	private int wayNodeLongitude;
 	private float[][] wayNodes;
 	private int wayNodesSequenceLength;
 	private int wayNumberOfInnerWays;
@@ -692,24 +690,28 @@ public class MapDatabase {
 			this.way = new float[this.wayNodesSequenceLength];
 
 			// get the first way node latitude offset (VBE-S)
-			this.wayNodeLatitude = this.tileLatitude + readSignedInt();
+			int wayNodeLatitude = this.tileLatitude + readSignedInt();
+
 			// get the first way node longitude offset (VBE-S)
-			this.wayNodeLongitude = this.tileLongitude + readSignedInt();
+			int wayNodeLongitude = this.tileLongitude + readSignedInt();
 
 			// store the first way node
-			this.way[1] = this.wayNodeLatitude;
-			this.way[0] = this.wayNodeLongitude;
+			this.way[1] = wayNodeLatitude;
+			this.way[0] = wayNodeLongitude;
+
+			final int firstWayNodeLatitude = wayNodeLatitude;
+			final int firstWayNodeLongitude = wayNodeLongitude;
 
 			// get the remaining way nodes offsets
 			for (int tempInt = 2; tempInt < this.wayNodesSequenceLength; tempInt += 2) {
 				// get the way node latitude offset (VBE-S)
-				this.wayNodeLatitude = readSignedInt();
-				// get the way node longitude offset (VBE-S)
-				this.wayNodeLongitude = readSignedInt();
+				wayNodeLatitude = wayNodeLatitude + readSignedInt();
 
-				// calculate the way node coordinates
-				this.way[tempInt] = this.way[tempInt - 2] + this.wayNodeLongitude;
-				this.way[tempInt + 1] = this.way[tempInt - 1] + this.wayNodeLatitude;
+				// get the way node longitude offset (VBE-S)
+				wayNodeLongitude = wayNodeLongitude + readSignedInt();
+
+				this.way[tempInt] = wayNodeLongitude;
+				this.way[tempInt + 1] = wayNodeLatitude;
 			}
 
 			// get the feature byte
@@ -737,10 +739,12 @@ public class MapDatabase {
 			if (this.wayFeatureLabelPosition) {
 				if (this.queryReadWayNames) {
 					this.wayLabelPosition = new float[2];
+
 					// get the label position latitude offset (VBE-S)
-					this.wayLabelPosition[1] = this.way[1] + readSignedInt();
+					this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
+
 					// get the label position longitude offset (VBE-S)
-					this.wayLabelPosition[0] = this.way[0] + readSignedInt();
+					this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
 				} else {
 					// skip the label position latitude and longitude offsets (VBE-S)
 					readSignedInt();
@@ -783,22 +787,24 @@ public class MapDatabase {
 						this.wayNodes[this.innerWayNumber] = new float[this.innerWayNodesSequenceLength];
 
 						// get the first inner way node latitude (VBE-S)
-						this.wayNodes[this.innerWayNumber][1] = this.way[1] + readSignedInt();
+						wayNodeLatitude = firstWayNodeLatitude + readSignedInt();
+
 						// get the first inner way node longitude (VBE-S)
-						this.wayNodes[this.innerWayNumber][0] = this.way[0] + readSignedInt();
+						wayNodeLongitude = firstWayNodeLongitude + readSignedInt();
+
+						this.wayNodes[this.innerWayNumber][1] = wayNodeLatitude;
+						this.wayNodes[this.innerWayNumber][0] = wayNodeLongitude;
 
 						// get and store the remaining inner way nodes offsets
 						for (int tempInt = 2; tempInt < this.innerWayNodesSequenceLength; tempInt += 2) {
 							// get the inner way node latitude offset (VBE-S)
-							this.wayNodeLatitude = readSignedInt();
-							// get the inner way node longitude offset (VBE-S)
-							this.wayNodeLongitude = readSignedInt();
+							wayNodeLatitude = wayNodeLatitude + readSignedInt();
 
-							// calculate the inner way node coordinates
-							this.wayNodes[this.innerWayNumber][tempInt] = this.wayNodes[this.innerWayNumber][tempInt - 2]
-									+ this.wayNodeLongitude;
-							this.wayNodes[this.innerWayNumber][tempInt + 1] = this.wayNodes[this.innerWayNumber][tempInt - 1]
-									+ this.wayNodeLatitude;
+							// get the inner way node longitude offset (VBE-S)
+							wayNodeLongitude = wayNodeLongitude + readSignedInt();
+
+							this.wayNodes[this.innerWayNumber][tempInt] = wayNodeLongitude;
+							this.wayNodes[this.innerWayNumber][tempInt + 1] = wayNodeLatitude;
 						}
 					}
 				} else {
