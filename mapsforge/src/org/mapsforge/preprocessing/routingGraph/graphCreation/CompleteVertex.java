@@ -89,6 +89,16 @@ public class CompleteVertex implements Vertex {
 	}
 
 	/**
+	 * Sets the identifying int of this vertex
+	 * 
+	 * @param id
+	 *            the new id
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	/**
 	 * Sets the outboundEdges for this vertex
 	 * 
 	 * @param oe
