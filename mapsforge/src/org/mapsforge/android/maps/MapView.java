@@ -40,6 +40,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -694,6 +695,11 @@ public class MapView extends ViewGroup {
 	private static final int DEFAULT_TILE_MEMORY_CARD_CACHE_SIZE = 100;
 
 	/**
+	 * Default gravity of the zoom controls.
+	 */
+	private static final int DEFAULT_ZOOM_CONTROLS_GRAVITY = Gravity.BOTTOM | Gravity.RIGHT;
+
+	/**
 	 * Default minimum zoom level.
 	 */
 	private static final byte DEFAULT_ZOOM_LEVEL_MIN = 0;
@@ -719,6 +725,7 @@ public class MapView extends ViewGroup {
 	private static final int MSG_ZOOM_CONTROLS_HIDE = 0;
 
 	private static final Paint PAINT_SCALE_BAR = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private static final Paint PAINT_SCALE_BAR_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint PAINT_SCALE_BAR_TEXT_WHITE_STROKE = new Paint(
@@ -728,7 +735,6 @@ public class MapView extends ViewGroup {
 			500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50,
 			20, 10, 5, 2, 1 };
 	private static final int SCALE_BAR_WIDTH = 130;
-
 	/**
 	 * Capacity of the RAM cache.
 	 */
@@ -740,10 +746,14 @@ public class MapView extends ViewGroup {
 	private static final float TRACKBALL_MOVE_SPEED = 40;
 
 	/**
+	 * Horizontal padding for the zoom controls.
+	 */
+	private static final int ZOOM_CONTROLS_HORIZONTAL_PADDING = 5;
+
+	/**
 	 * Delay in milliseconds after which the zoom controls disappear.
 	 */
-	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration
-			.getZoomControlsTimeout();
+	private static final long ZOOM_CONTROLS_TIMEOUT = ViewConfiguration.getZoomControlsTimeout();
 
 	/**
 	 * Minimum possible zoom level.
@@ -864,6 +874,8 @@ public class MapView extends ViewGroup {
 	private TouchEventHandler touchEventHandler;
 	private ZoomAnimator zoomAnimator;
 	private ZoomControls zoomControls;
+	private int zoomControlsGravity;
+	private boolean zoomControlsGravityChanged;
 	private Handler zoomControlsHideHandler;
 	private byte zoomLevel;
 	private byte zoomLevelMax;
@@ -1076,6 +1088,15 @@ public class MapView extends ViewGroup {
 	 */
 	public Projection getProjection() {
 		return this.projection;
+	}
+
+	/**
+	 * Returns the current gravity for the placing of the zoom controls.
+	 * 
+	 * @return the current gravity for the placing of the zoom controls.
+	 */
+	public int getZoomControlsGravity() {
+		return this.zoomControlsGravity;
 	}
 
 	/**
@@ -1510,6 +1531,21 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * Sets the gravity for the placing of the zoom controls. Supported values are {@link Gravity#TOP},
+	 * {@link Gravity#CENTER_VERTICAL}, {@link Gravity#BOTTOM}, {@link Gravity#LEFT},
+	 * {@link Gravity#CENTER_HORIZONTAL} and {@link Gravity#RIGHT}.
+	 * 
+	 * @param zoomControlsGravity
+	 *            a combination of {@link Gravity} constants describing the desired placement.
+	 */
+	public void setZoomControlsGravity(int zoomControlsGravity) {
+		if (this.zoomControlsGravity != zoomControlsGravity) {
+			this.zoomControlsGravity = zoomControlsGravity;
+			this.zoomControlsGravityChanged = true;
+		}
+	}
+
+	/**
 	 * Sets the maximum zoom level of the map to which the user may zoom in.
 	 * <p>
 	 * The maximum possible zoom level of the MapView depends also on the currently selected
@@ -1856,6 +1892,8 @@ public class MapView extends ViewGroup {
 	}
 
 	private void setupZoomControls() {
+		this.zoomControlsGravity = DEFAULT_ZOOM_CONTROLS_GRAVITY;
+
 		// create the ZoomControls and set the click listeners
 		this.zoomControls = new ZoomControls(this.mapActivity);
 		this.zoomControls.setVisibility(View.GONE);
@@ -2032,14 +2070,50 @@ public class MapView extends ViewGroup {
 	}
 
 	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		if (!changed) {
-			// neither size nor position have changed
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+		if (!changed && !this.zoomControlsGravityChanged) {
+			// neither size nor position nor zoom controls gravity have changed
 			return;
 		}
-		// position the ZoomControls at the bottom right corner
-		this.zoomControls.layout(r - this.zoomControls.getMeasuredWidth() - l - 5, b
-				- this.zoomControls.getMeasuredHeight() - t, r - l - 5, b - t);
+
+		// position the ZoomControls according to the gravity setting
+		int zoomControlsWidth = this.zoomControls.getMeasuredWidth();
+		int zoomControlsHeight = this.zoomControls.getMeasuredHeight();
+
+		int positionLeft;
+		int positionTop;
+
+		switch (this.zoomControlsGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+			case Gravity.LEFT:
+				positionLeft = ZOOM_CONTROLS_HORIZONTAL_PADDING;
+				break;
+
+			case Gravity.CENTER_HORIZONTAL:
+				positionLeft = (right - left - zoomControlsWidth) / 2;
+				break;
+
+			// default is RIGHT, covers NO_GRAVITY and other cases as well
+			default:
+				positionLeft = right - left - zoomControlsWidth - ZOOM_CONTROLS_HORIZONTAL_PADDING;
+		}
+
+		switch (this.zoomControlsGravity & Gravity.VERTICAL_GRAVITY_MASK) {
+			case Gravity.TOP:
+				positionTop = 0;
+				break;
+
+			case Gravity.CENTER_VERTICAL:
+				positionTop = (bottom - top - zoomControlsHeight) / 2;
+				break;
+
+			// default is BOTTOM, covers NO_GRAVITY and other cases as well
+			default:
+				positionTop = bottom - top - zoomControlsHeight;
+		}
+
+		this.zoomControls.layout(positionLeft, positionTop, positionLeft + zoomControlsWidth,
+				positionTop + zoomControlsHeight);
+		this.zoomControlsGravityChanged = false;
 	}
 
 	@Override
