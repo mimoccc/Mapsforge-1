@@ -25,6 +25,8 @@ import android.graphics.Color;
  * A RenderTheme defines how ways and nodes are drawn.
  */
 public class RenderTheme {
+	private static final int MATCHING_CACHE_SIZE = 512;
+
 	private static void validate(float scaleStrokeWidth, float scaleTextWidth) {
 		if (scaleStrokeWidth < 0) {
 			throw new IllegalArgumentException("scale-stroke-width must not be negative: "
@@ -63,6 +65,7 @@ public class RenderTheme {
 
 	private int levels;
 	private final int mapBackground;
+	private final MatchingCache matchingCache;
 	private final ArrayList<Rule> rulesList;
 	private final float scaleStrokeWidth;
 	private final float scaleTextWidth;
@@ -72,12 +75,14 @@ public class RenderTheme {
 		this.scaleStrokeWidth = scaleStrokeWidth;
 		this.scaleTextWidth = scaleTextWidth;
 		this.rulesList = new ArrayList<Rule>();
+		this.matchingCache = new MatchingCache(MATCHING_CACHE_SIZE);
 	}
 
 	/**
 	 * Must be called when this RenderTheme gets destroyed to clean up and free resources.
 	 */
 	public void destroy() {
+		this.matchingCache.destroy();
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
 			this.rulesList.get(i).onDestroy();
 		}
@@ -105,48 +110,44 @@ public class RenderTheme {
 	/**
 	 * Matches a closed way with the given parameters against this RenderTheme.
 	 * 
-	 * @param renderThemeCallback
+	 * @param renderCallback
 	 *            the callback implementation which will be executed on each match.
 	 * @param tags
 	 *            the tags of the way.
 	 * @param zoomLevel
 	 *            the zoom level at which the way should be matched.
 	 */
-	public void matchClosedWay(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel) {
-		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).matchWay(renderThemeCallback, tags, zoomLevel, Closed.YES);
-		}
+	public void matchClosedWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
+		matchWay(renderCallback, tags, zoomLevel, Closed.YES);
 	}
 
 	/**
 	 * Matches a linear way with the given parameters against this RenderTheme.
 	 * 
-	 * @param renderThemeCallback
+	 * @param renderCallback
 	 *            the callback implementation which will be executed on each match.
 	 * @param tags
 	 *            the tags of the way.
 	 * @param zoomLevel
 	 *            the zoom level at which the way should be matched.
 	 */
-	public void matchLinearWay(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel) {
-		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).matchWay(renderThemeCallback, tags, zoomLevel, Closed.NO);
-		}
+	public void matchLinearWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
+		matchWay(renderCallback, tags, zoomLevel, Closed.NO);
 	}
 
 	/**
 	 * Matches a node with the given parameters against this RenderTheme.
 	 * 
-	 * @param renderThemeCallback
+	 * @param renderCallback
 	 *            the callback implementation which will be executed on each match.
 	 * @param tags
 	 *            the tags of the node.
 	 * @param zoomLevel
 	 *            the zoom level at which the node should be matched.
 	 */
-	public void matchNode(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel) {
+	public void matchNode(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).matchNode(renderThemeCallback, tags, zoomLevel);
+			this.rulesList.get(i).matchNode(renderCallback, tags, zoomLevel);
 		}
 	}
 
@@ -172,6 +173,25 @@ public class RenderTheme {
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
 			this.rulesList.get(i).scaleTextSize(scaleFactor * this.scaleTextWidth);
 		}
+	}
+
+	private void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
+		List<RenderInstruction> matchingList = this.matchingCache.get(tags);
+		if (matchingList != null) {
+			// cache hit
+			for (int i = 0, n = matchingList.size(); i < n; ++i) {
+				matchingList.get(i).renderWay(renderCallback, tags);
+			}
+			return;
+		}
+
+		// cache miss
+		matchingList = new ArrayList<RenderInstruction>();
+		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
+			this.rulesList.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
+		}
+
+		this.matchingCache.put(new ArrayList<Tag>(tags), matchingList);
 	}
 
 	void addRule(Rule rule) {

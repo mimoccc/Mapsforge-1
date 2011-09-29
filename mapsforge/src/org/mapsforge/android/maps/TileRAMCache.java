@@ -51,7 +51,7 @@ class TileRAMCache {
 	 */
 	TileRAMCache(int capacity) {
 		if (capacity < 0) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("capacity must not be negative: " + capacity);
 		}
 		this.capacity = capacity;
 		this.map = createMap(this.capacity);

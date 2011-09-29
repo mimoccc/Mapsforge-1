@@ -167,7 +167,7 @@ abstract class Rule {
 		return createRule(ruleStack, element, keys, values, closed, zoomMin, zoomMax);
 	}
 
-	private final ArrayList<RenderingInstruction> renderingInstructions;
+	private final ArrayList<RenderInstruction> renderInstructions;
 	private final ArrayList<Rule> subRules;
 
 	final ClosedMatcher closedMatcher;
@@ -181,12 +181,12 @@ abstract class Rule {
 		this.zoomMin = zoomMin;
 		this.zoomMax = zoomMax;
 
-		this.renderingInstructions = new ArrayList<RenderingInstruction>(4);
+		this.renderInstructions = new ArrayList<RenderInstruction>(4);
 		this.subRules = new ArrayList<Rule>(4);
 	}
 
-	void addRenderingInstruction(RenderingInstruction renderingInstruction) {
-		this.renderingInstructions.add(renderingInstruction);
+	void addRenderingInstruction(RenderInstruction renderInstruction) {
+		this.renderInstructions.add(renderInstruction);
 	}
 
 	void addSubRule(Rule rule) {
@@ -197,24 +197,26 @@ abstract class Rule {
 
 	abstract boolean matchesWay(List<Tag> tags, byte zoomLevel, Closed closed);
 
-	void matchNode(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel) {
+	void matchNode(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel) {
 		if (matchesNode(tags, zoomLevel)) {
-			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
-				this.renderingInstructions.get(i).renderNode(renderThemeCallback, tags);
+			for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
+				this.renderInstructions.get(i).renderNode(renderCallback, tags);
 			}
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
-				this.subRules.get(i).matchNode(renderThemeCallback, tags, zoomLevel);
+				this.subRules.get(i).matchNode(renderCallback, tags, zoomLevel);
 			}
 		}
 	}
 
-	void matchWay(RenderThemeCallback renderThemeCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
+	void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed,
+			List<RenderInstruction> matchingList) {
 		if (matchesWay(tags, zoomLevel, closed)) {
-			for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
-				this.renderingInstructions.get(i).renderWay(renderThemeCallback, tags);
+			for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
+				this.renderInstructions.get(i).renderWay(renderCallback, tags);
+				matchingList.add(this.renderInstructions.get(i));
 			}
 			for (int i = 0, n = this.subRules.size(); i < n; ++i) {
-				this.subRules.get(i).matchWay(renderThemeCallback, tags, zoomLevel, closed);
+				this.subRules.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
 			}
 		}
 	}
@@ -223,7 +225,7 @@ abstract class Rule {
 		MATCHERS_CACHE_KEY.clear();
 		MATCHERS_CACHE_VALUE.clear();
 
-		this.renderingInstructions.trimToSize();
+		this.renderInstructions.trimToSize();
 		this.subRules.trimToSize();
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 			this.subRules.get(i).onComplete();
@@ -231,8 +233,8 @@ abstract class Rule {
 	}
 
 	void onDestroy() {
-		for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
-			this.renderingInstructions.get(i).onDestroy();
+		for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
+			this.renderInstructions.get(i).onDestroy();
 		}
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 			this.subRules.get(i).onDestroy();
@@ -240,8 +242,8 @@ abstract class Rule {
 	}
 
 	void scaleStrokeWidth(float scaleFactor) {
-		for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
-			this.renderingInstructions.get(i).scaleStrokeWidth(scaleFactor);
+		for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
+			this.renderInstructions.get(i).scaleStrokeWidth(scaleFactor);
 		}
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 			this.subRules.get(i).scaleStrokeWidth(scaleFactor);
@@ -249,8 +251,8 @@ abstract class Rule {
 	}
 
 	void scaleTextSize(float scaleFactor) {
-		for (int i = 0, n = this.renderingInstructions.size(); i < n; ++i) {
-			this.renderingInstructions.get(i).scaleTextSize(scaleFactor);
+		for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
+			this.renderInstructions.get(i).scaleTextSize(scaleFactor);
 		}
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 			this.subRules.get(i).scaleTextSize(scaleFactor);

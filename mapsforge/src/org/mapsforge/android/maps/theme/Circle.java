@@ -22,7 +22,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 
-final class Circle extends RenderingInstruction {
+final class Circle extends RenderInstruction {
 	private static void validate(String elementName, Float radius, float strokeWidth) {
 		if (radius == null) {
 			throw new IllegalArgumentException("missing attribute r for element: " + elementName);
@@ -108,17 +108,17 @@ final class Circle extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		if (this.outline != null) {
-			renderThemeCallback.addNodeCircle(this.renderRadius, this.outline, this.level);
+			renderCallback.addNodeCircle(this.renderRadius, this.outline, this.level);
 		}
 		if (this.fill != null) {
-			renderThemeCallback.addNodeCircle(this.renderRadius, this.fill, this.level);
+			renderCallback.addNodeCircle(this.renderRadius, this.fill, this.level);
 		}
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
 		// do nothing
 	}
 

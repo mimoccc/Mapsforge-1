@@ -20,6 +20,11 @@ package org.mapsforge.android.maps.theme;
 public class Tag {
 	private static final char KEY_VALUE_SEPARATOR = '=';
 
+	/**
+	 * Stores the hash value of this object.
+	 */
+	private final int hashCode;
+
 	final String key;
 	final String value;
 
@@ -33,6 +38,7 @@ public class Tag {
 		int splitPosition = tag.indexOf(KEY_VALUE_SEPARATOR);
 		this.key = tag.substring(0, splitPosition);
 		this.value = tag.substring(splitPosition + 1);
+		this.hashCode = calculateHashCode();
 	}
 
 	/**
@@ -46,5 +52,43 @@ public class Tag {
 	public Tag(String key, String value) {
 		this.key = key;
 		this.value = value;
+		this.hashCode = calculateHashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof Tag)) {
+			return false;
+		}
+		Tag other = (Tag) obj;
+		if (this.key == null && other.key != null) {
+			return false;
+		} else if (this.key != null && !this.key.equals(other.key)) {
+			return false;
+		} else if (this.value == null && other.value != null) {
+			return false;
+		} else if (this.value != null && !this.value.equals(other.value)) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCode;
+	}
+
+	/**
+	 * Calculates the hash value of this object.
+	 * 
+	 * @return the hash value of this object.
+	 */
+	private int calculateHashCode() {
+		int result = 7;
+		result = 31 * result + ((this.key == null) ? 0 : this.key.hashCode());
+		result = 31 * result + ((this.value == null) ? 0 : this.value.hashCode());
+		return result;
 	}
 }

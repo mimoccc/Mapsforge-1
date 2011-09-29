@@ -85,7 +85,7 @@ class TileMemoryCardCache {
 	 */
 	TileMemoryCardCache(String tempDir, int capacity) {
 		if (capacity < 0) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("capacity must not be negative: " + capacity);
 		}
 
 		this.tempDir = new File(tempDir);
@@ -171,7 +171,7 @@ class TileMemoryCardCache {
 			FileInputStream inputStream = new FileInputStream(file);
 			ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 
-			// restore the serialized cache map (the compiler warning cannot be fixed)
+			// restore the serialized cache map (the compiler warning cannot be avoided)
 			this.map = (Map<MapGeneratorJob, File>) objectInputStream.readObject();
 
 			// close the input streams

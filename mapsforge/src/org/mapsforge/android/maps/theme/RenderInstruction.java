@@ -26,7 +26,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Shader.TileMode;
 
-abstract class RenderingInstruction {
+abstract class RenderInstruction {
 	static BitmapShader createBitmapShader(Bitmap bitmap) {
 		if (bitmap == null) {
 			return null;
@@ -70,9 +70,9 @@ abstract class RenderingInstruction {
 
 	abstract void onDestroy();
 
-	abstract void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags);
+	abstract void renderNode(RenderCallback renderCallback, List<Tag> tags);
 
-	abstract void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags);
+	abstract void renderWay(RenderCallback renderCallback, List<Tag> tags);
 
 	abstract void scaleStrokeWidth(float scaleFactor);
 

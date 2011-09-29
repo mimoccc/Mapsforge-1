@@ -21,7 +21,7 @@ import org.xml.sax.Attributes;
 
 import android.graphics.Bitmap;
 
-final class Symbol extends RenderingInstruction {
+final class Symbol extends RenderInstruction {
 	private static void validate(String elementName, String src) {
 		if (src == null) {
 			throw new IllegalArgumentException("missing attribute src for element: " + elementName);
@@ -60,13 +60,13 @@ final class Symbol extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
-		renderThemeCallback.addNodeSymbol(this.bitmap);
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
+		renderCallback.addNodeSymbol(this.bitmap);
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
-		renderThemeCallback.addAreaSymbol(this.bitmap);
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
+		renderCallback.addAreaSymbol(this.bitmap);
 	}
 
 	@Override

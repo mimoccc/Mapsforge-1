@@ -21,7 +21,7 @@ import org.xml.sax.Attributes;
 
 import android.graphics.Bitmap;
 
-final class LineSymbol extends RenderingInstruction {
+final class LineSymbol extends RenderInstruction {
 	private static void validate(String elementName, String src) {
 		if (src == null) {
 			throw new IllegalArgumentException("missing attribute src for element: " + elementName);
@@ -70,13 +70,13 @@ final class LineSymbol extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		// do nothing
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
-		renderThemeCallback.addWaySymbol(this.bitmap, this.alignCenter, this.repeat);
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
+		renderCallback.addWaySymbol(this.bitmap, this.alignCenter, this.repeat);
 	}
 
 	@Override

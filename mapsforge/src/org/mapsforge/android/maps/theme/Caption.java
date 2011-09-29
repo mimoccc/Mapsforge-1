@@ -25,7 +25,7 @@ import android.graphics.Typeface;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 
-final class Caption extends RenderingInstruction {
+final class Caption extends RenderInstruction {
 	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
 		if (textKey == null) {
 			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
@@ -110,21 +110,21 @@ final class Caption extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		String caption = this.textKey.getValue(tags);
 		if (caption == null) {
 			return;
 		}
-		renderThemeCallback.addNodeCaption(caption, this.dy, this.paint, this.stroke);
+		renderCallback.addNodeCaption(caption, this.dy, this.paint, this.stroke);
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
 		String caption = this.textKey.getValue(tags);
 		if (caption == null) {
 			return;
 		}
-		renderThemeCallback.addAreaCaption(caption, this.dy, this.paint, this.stroke);
+		renderCallback.addAreaCaption(caption, this.dy, this.paint, this.stroke);
 	}
 
 	@Override

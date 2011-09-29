@@ -28,7 +28,7 @@ import android.graphics.Shader;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
 
-final class Line extends RenderingInstruction {
+final class Line extends RenderInstruction {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
 
 	private static void validate(float strokeWidth) {
@@ -105,13 +105,13 @@ final class Line extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		// do nothing
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
-		renderThemeCallback.addWay(this.paint, this.level);
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
+		renderCallback.addWay(this.paint, this.level);
 	}
 
 	@Override

@@ -25,7 +25,7 @@ import android.graphics.Typeface;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 
-final class PathText extends RenderingInstruction {
+final class PathText extends RenderInstruction {
 	private static void validate(String elementName, TextKey textKey, float fontSize, float strokeWidth) {
 		if (textKey == null) {
 			throw new IllegalArgumentException("missing attribute k for element: " + elementName);
@@ -105,17 +105,17 @@ final class PathText extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		// do nothing
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
 		String caption = this.textKey.getValue(tags);
 		if (caption == null) {
 			return;
 		}
-		renderThemeCallback.addWayText(caption, this.paint, this.stroke);
+		renderCallback.addWayText(caption, this.paint, this.stroke);
 	}
 
 	@Override

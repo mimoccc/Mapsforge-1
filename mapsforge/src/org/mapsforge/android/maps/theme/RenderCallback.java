@@ -18,9 +18,9 @@ import android.graphics.Bitmap;
 import android.graphics.Paint;
 
 /**
- * Callback methods which can be triggered by a {@link RenderingInstruction}.
+ * Callback methods which can be triggered by a {@link RenderInstruction}.
  */
-public interface RenderThemeCallback {
+public interface RenderCallback {
 	/**
 	 * Renders the current area with the given parameters.
 	 * 

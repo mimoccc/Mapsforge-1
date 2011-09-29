@@ -25,7 +25,7 @@ import android.graphics.Shader;
 import android.graphics.Paint.Cap;
 import android.graphics.Paint.Style;
 
-final class Area extends RenderingInstruction {
+final class Area extends RenderInstruction {
 	private static void validate(float strokeWidth) {
 		if (strokeWidth < 0) {
 			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
@@ -98,17 +98,17 @@ final class Area extends RenderingInstruction {
 	}
 
 	@Override
-	public void renderNode(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderNode(RenderCallback renderCallback, List<Tag> tags) {
 		// do nothing
 	}
 
 	@Override
-	public void renderWay(RenderThemeCallback renderThemeCallback, List<Tag> tags) {
+	public void renderWay(RenderCallback renderCallback, List<Tag> tags) {
 		if (this.outline != null) {
-			renderThemeCallback.addArea(this.outline, this.level);
+			renderCallback.addArea(this.outline, this.level);
 		}
 		if (this.fill != null) {
-			renderThemeCallback.addArea(this.fill, this.level);
+			renderCallback.addArea(this.fill, this.level);
 		}
 	}
 

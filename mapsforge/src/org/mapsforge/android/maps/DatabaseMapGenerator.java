@@ -23,8 +23,8 @@ import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.mapsforge.android.maps.theme.RenderCallback;
 import org.mapsforge.android.maps.theme.RenderTheme;
-import org.mapsforge.android.maps.theme.RenderThemeCallback;
 import org.mapsforge.android.maps.theme.RenderThemeHandler;
 import org.mapsforge.android.maps.theme.Tag;
 import org.xml.sax.InputSource;
@@ -36,7 +36,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 
 abstract class DatabaseMapGenerator extends MapGenerator implements
-		CoastlineAlgorithm.ClosedPolygonHandler, RenderThemeCallback {
+		CoastlineAlgorithm.ClosedPolygonHandler, RenderCallback {
 	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
 	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 14;
