@@ -223,7 +223,7 @@ public class MapView extends ViewGroup {
 							(int) event.getX(this.pointerIndex),
 							(int) event.getY(this.pointerIndex));
 					synchronized (MapView.this.overlays) {
-						for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+						for (int i = MapView.this.overlays.size() - 1; i >= 0; --i) {
 							if (MapView.this.overlays.get(i).onTap(this.tapPoint, MapView.this)) {
 								// the tap event has been handled
 								break;
@@ -397,7 +397,7 @@ public class MapView extends ViewGroup {
 					this.tapPoint = getProjection().fromPixels((int) event.getX(),
 							(int) event.getY());
 					synchronized (MapView.this.overlays) {
-						for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+						for (int i = MapView.this.overlays.size() - 1; i >= 0; --i) {
 							if (MapView.this.overlays.get(i).onTap(this.tapPoint, MapView.this)) {
 								// the tap event has been handled
 								break;
@@ -628,7 +628,7 @@ public class MapView extends ViewGroup {
 					(int) previousPositionY);
 			if (this.longPressPoint != null) {
 				synchronized (MapView.this.overlays) {
-					for (int i = 0, n = MapView.this.overlays.size(); i < n; ++i) {
+					for (int i = MapView.this.overlays.size() - 1; i >= 0; --i) {
 						if (MapView.this.overlays.get(i).onLongPress(this.longPressPoint, MapView.this)) {
 							// the long press event has been handled
 							return true;
