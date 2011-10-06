@@ -176,7 +176,9 @@ public class RenderTheme {
 	}
 
 	private void matchWay(RenderCallback renderCallback, List<Tag> tags, byte zoomLevel, Closed closed) {
-		List<RenderInstruction> matchingList = this.matchingCache.get(tags);
+		MatchingCacheKey matchingCacheKey = new MatchingCacheKey(tags, zoomLevel, closed);
+
+		List<RenderInstruction> matchingList = this.matchingCache.get(matchingCacheKey);
 		if (matchingList != null) {
 			// cache hit
 			for (int i = 0, n = matchingList.size(); i < n; ++i) {
@@ -191,7 +193,7 @@ public class RenderTheme {
 			this.rulesList.get(i).matchWay(renderCallback, tags, zoomLevel, closed, matchingList);
 		}
 
-		this.matchingCache.put(new ArrayList<Tag>(tags), matchingList);
+		this.matchingCache.put(matchingCacheKey, matchingList);
 	}
 
 	void addRule(Rule rule) {

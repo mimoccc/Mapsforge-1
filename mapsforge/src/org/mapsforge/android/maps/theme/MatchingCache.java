@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A cache for matching tags with a fixed size and LRU policy.
+ * A cache with a fixed size and LRU policy to speed up matching of ways against the render theme.
  * <p>
  * This class is not thread-safe. Each thread should use its own instance.
  */
@@ -29,7 +29,7 @@ class MatchingCache {
 	 */
 	private static final float LOAD_FACTOR = 0.6f;
 
-	private final Map<List<Tag>, List<RenderInstruction>> map;
+	private final Map<MatchingCacheKey, List<RenderInstruction>> map;
 
 	MatchingCache(int capacity) {
 		if (capacity < 0) {
@@ -38,13 +38,14 @@ class MatchingCache {
 		this.map = createMap(capacity);
 	}
 
-	private Map<List<Tag>, List<RenderInstruction>> createMap(final int initialCapacity) {
-		return new LinkedHashMap<List<Tag>, List<RenderInstruction>>(
+	private Map<MatchingCacheKey, List<RenderInstruction>> createMap(final int initialCapacity) {
+		return new LinkedHashMap<MatchingCacheKey, List<RenderInstruction>>(
 				(int) (initialCapacity / LOAD_FACTOR) + 2, LOAD_FACTOR, true) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(Map.Entry<List<Tag>, List<RenderInstruction>> eldest) {
+			protected boolean removeEldestEntry(
+					Map.Entry<MatchingCacheKey, List<RenderInstruction>> eldest) {
 				return size() > initialCapacity;
 			}
 		};
@@ -54,11 +55,11 @@ class MatchingCache {
 		this.map.clear();
 	}
 
-	List<RenderInstruction> get(List<Tag> tags) {
-		return this.map.get(tags);
+	List<RenderInstruction> get(MatchingCacheKey key) {
+		return this.map.get(key);
 	}
 
-	void put(List<Tag> tags, List<RenderInstruction> matchingList) {
-		this.map.put(tags, matchingList);
+	void put(MatchingCacheKey key, List<RenderInstruction> matchingList) {
+		this.map.put(key, matchingList);
 	}
 }
