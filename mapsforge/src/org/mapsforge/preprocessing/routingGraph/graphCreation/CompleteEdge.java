@@ -262,6 +262,26 @@ public class CompleteEdge implements Edge {
 		this.ref = ref;
 	}
 
+	/**
+	 * Sets the name
+	 * 
+	 * @param name
+	 *            the new name to be set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * Sets the destination
+	 * 
+	 * @param destination
+	 *            the new destination to be set
+	 */
+	public void setDestination(String destination) {
+		this.destination = destination;
+	}
+
 	@Override
 	public String toString() {
 		String s = "[Way " + this.id;
