@@ -43,7 +43,7 @@ final class Circle extends RenderInstruction {
 			String value = attributes.getValue(i);
 
 			if ("r".equals(name)) {
-				radius = Float.parseFloat(value);
+				radius = Float.valueOf(Float.parseFloat(value));
 			} else if ("scale-radius".equals(name)) {
 				scaleRadius = Boolean.parseBoolean(value);
 			} else if ("fill".equals(name)) {
