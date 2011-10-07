@@ -282,6 +282,16 @@ public class CompleteEdge implements Edge {
 		this.destination = destination;
 	}
 
+	/**
+	 * Sets the ID
+	 * 
+	 * @param id
+	 *            the new id to be set
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	@Override
 	public String toString() {
 		String s = "[Way " + this.id;
