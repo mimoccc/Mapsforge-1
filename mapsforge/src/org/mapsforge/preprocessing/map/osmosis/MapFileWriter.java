@@ -446,7 +446,7 @@ class MapFileWriter {
 
 					int entitiesPerZoomLevelTablePosition = tileBuffer.position();
 					short[][] entitiesPerZoomLevel = new short[maxZoomCurrentInterval
-															- minZoomCurrentInterval + 1][2];
+							- minZoomCurrentInterval + 1][2];
 					// skip some bytes that will later be filled with the number of POIs and ways on
 					// each zoom level number of zoom levels times 2 (for POIs and ways) times
 					// Short.SIZE/8 for the amount of bytes
@@ -573,9 +573,6 @@ class MapFileWriter {
 							wayBuffer.put(infoByteWayAmountRenderedTags(
 									way.getTags()));
 
-							// write tag bitmap
-							wayBuffer.put(infoByteTagBitmask(way.getTags()));
-
 							// write tag ids
 							if (way.getTags() != null) {
 								for (short tagID : way.getTags()) {
@@ -585,24 +582,10 @@ class MapFileWriter {
 
 								}
 							}
-							// write the amount of way nodes to the file
-							wayBuffer
-									.put(Serializer
-											.getVariableByteUnsigned(wayNodePreprocessingResult
-													.getCoordinates()
-													.size() / 2));
-
-							// write the way nodes:
-							// the first node is always stored with four bytes
-							// the remaining way node differences are stored according to the
-							// compression type
-							writeWayNodes(wayNodePreprocessingResult.getCoordinates(),
-									currentTileLat,
-									currentTileLon, wayBuffer);
 
 							// write a byte with name, label and way type information
 							wayBuffer.put(infoByteWay(way.getName(), way.getRef(),
-										wayNodePreprocessingResult.getLabelPosition() != null,
+									wayNodePreprocessingResult.getLabelPosition() != null,
 									way.getShape() == TDWay.MULTI_POLYGON));
 
 							// // if the way has a name, write it to the file
@@ -615,50 +598,58 @@ class MapFileWriter {
 								writeUTF8(way.getRef(), wayBuffer);
 							}
 
-							if (wayNodePreprocessingResult.getLabelPosition() != null) {
-								wayBuffer.put(Serializer
-										.getVariableByteSigned(wayNodePreprocessingResult
-												.getLabelPosition().getLatitudeE6()
-												- wayNodePreprocessingResult.getCoordinates()
-														.get(0)));
-								wayBuffer.put(Serializer
-										.getVariableByteSigned(wayNodePreprocessingResult
-												.getLabelPosition().getLongitudeE6()
-												- wayNodePreprocessingResult.getCoordinates()
-														.get(1)));
+							// if (wayNodePreprocessingResult.getLabelPosition() != null) {
+							// wayBuffer.put(Serializer
+							// .getVariableByteSigned(wayNodePreprocessingResult
+							// .getLabelPosition().getLatitudeE6()
+							// - wayNodePreprocessingResult.getCoordinates()
+							// .get(0)));
+							// wayBuffer.put(Serializer
+							// .getVariableByteSigned(wayNodePreprocessingResult
+							// .getLabelPosition().getLongitudeE6()
+							// - wayNodePreprocessingResult.getCoordinates()
+							// .get(1)));
+							// }
+
+							// TODO: Write with the new file format
+							wayBuffer.put((byte) wayNodePreprocessingResult.getWayDataBlocks().size());
+
+							List<WayDataBlock> wayDataBlockList = wayNodePreprocessingResult
+									.getWayDataBlocks();
+
+							for (WayDataBlock wayDataBlock : wayDataBlockList) {
+								// we have at least one outerway and possible innerways
+								if (wayDataBlock.innerWays != null)
+									wayBuffer.put((byte) (1 + wayDataBlock.innerWays.size()));
+								else
+									wayBuffer.put((byte) 1);
+
+								// write outerway
+								writeWay(wayDataBlock.outerWay, currentTileLat, currentTileLon,
+										wayBuffer);
+
+								if (wayDataBlock.innerWays != null)
+									for (List<Integer> innerWayCoordinates : wayDataBlock.innerWays)
+										writeWay(innerWayCoordinates, currentTileLat, currentTileLon,
+												wayBuffer);
+
 							}
 
-							// ***************** MULTIPOLYGONS WITH INNER WAYS ***************
-							if (way.getShape() == TDWay.MULTI_POLYGON) {
-								List<TDWay> innerways = dataStore
-										.getInnerWaysOfMultipolygon(way.getId());
-								if (innerways != null && innerways.size() > 0) {
+							// write the amount of way nodes to the file
+							// wayBuffer
+							// .put(Serializer
+							// .getVariableByteUnsigned(wayNodePreprocessingResult
+							// .getCoordinates()
+							// .size() / 2));
+							//
+							// // write the way nodes:
+							// // the first node is always stored with four bytes
+							// // the remaining way node differences are stored according to the
+							// // compression type
+							// writeWayNodes(wayNodePreprocessingResult.getCoordinates(),
+							// currentTileLat,
+							// currentTileLon, wayBuffer);
 
-									wayBuffer.put(Serializer.getVariableByteUnsigned(innerways
-											.size()));
-									for (TDWay innerway : innerways) {
-										WayNodePreprocessingResult innerWayAsList =
-													preprocessWayNodes(innerway,
-															waynodeCompression,
-															pixelCompression,
-															false,
-															maxZoomCurrentInterval,
-															baseZoomCurrentInterval,
-															currentTileCoordinate, false);
-										// write the amount of way nodes to the file
-										wayBuffer
-												.put(Serializer
-														.getVariableByteUnsigned(innerWayAsList
-																.getCoordinates()
-																.size() / 2));
-										writeInnerWayNodes(wayNodePreprocessingResult
-												.getCoordinates().get(0),
-												wayNodePreprocessingResult.getCoordinates()
-														.get(1),
-												innerWayAsList.getCoordinates(), wayBuffer);
-									}
-								}
-							}
 							// write size of way to tile buffer
 							tileBuffer.put(Serializer.getVariableByteUnsigned(wayBuffer
 									.position()));
@@ -748,6 +739,23 @@ class MapFileWriter {
 		return currentSubfileOffset;
 	} // end writeSubfile()
 
+	private void writeWay(List<Integer> wayNodes, int currentTileLat, int currentTileLon,
+			ByteBuffer buffer) {
+		// write the amount of way nodes to the file
+		// wayBuffer
+		buffer.put(Serializer
+				.getVariableByteUnsigned(wayNodes
+						.size() / 2));
+
+		// write the way nodes:
+		// the first node is always stored with four bytes
+		// the remaining way node differences are stored according to the
+		// compression type
+		writeWayNodes(wayNodes,
+				currentTileLat,
+				currentTileLon, buffer);
+	}
+
 	private void appendWhitespace(int amount, ByteBuffer buffer) {
 		for (int i = 0; i < amount; i++) {
 			buffer.put((byte) ' ');
@@ -772,75 +780,81 @@ class MapFileWriter {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
 		GeoCoordinate polygonCentroid = null;
 
+		List<WayDataBlock> wayDataBlockList = null;
+
+		if (way.getShape() == TDWay.MULTI_POLYGON)
+			wayDataBlockList = GeoUtils.preprocessWay(way,
+					dataStore.getInnerWaysOfMultipolygon(way.getId()),
+					polygonClipping,
+					tile, bboxEnlargement);
+		else
+			wayDataBlockList = GeoUtils.preprocessWay(way, null,
+					polygonClipping,
+					tile, bboxEnlargement);
+
 		// if (way.isPolygon()) {
 		//
 		// }
 
-		// if the way is a polygon, clip the way to the current tile
-		if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
-
-			if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
-				List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
-						waynodeCoordinates, tile, bboxEnlargement, false);
-
-				// TODO is it ok to compute the label position before thinning out
-				// via pixel filtering?
-				if (clipped != null && !clipped.isEmpty()) {
-					waynodeCoordinates = clipped;
-					// DO WE NEED TO COMPUTE A LABEL POSITION?
-					if (way.getName() != null && way.getName().length() > 0) {
-						// check if the polygon is completely contained in the current tile
-						// in that case clipped polygon equals the original polygon
-						// as a consequence we do not try to compute a label position
-						// this is left to the renderer for more flexibility
-						if (clipped.size() != waynodeCoordinates.size()
-								&& !waynodeCoordinates.containsAll(clipped)) {
-
-							polygonCentroid = GeoUtils.computePolygonCentroid(
-									waynodeCoordinates, way);
-						}
-						// if the label position is not located in the current tile
-						// we can ignore it
-						if (polygonCentroid != null
-								&& !GeoUtils.pointInTile(polygonCentroid, tile))
-							polygonCentroid = null;
-					}
-				} else {
-					// the clipped polygon is not included in the current tile
-					// !! should not happen !! (as the way would not have been mapped to this
-					// tile)
-					LOGGER.warning("clipped polygon not in tile: " + way.getId() + " tile: "
-							+ tile.toString());
-					return null;
-				}
-			}
-		}
+		// // if the way is a polygon, clip the way to the current tile
+		// if (polygonClipping && way.getMinimumZoomLevel() >= baseZoomCurrentInterval) {
+		//
+		// if (way.isPolygon() && waynodeCoordinates.size() >= GeoUtils.MIN_NODES_POLYGON) {
+		// List<GeoCoordinate> clipped = GeoUtils.clipPolygonToTile(
+		// waynodeCoordinates, tile, bboxEnlargement, false);
+		//
+		// // TODO is it ok to compute the label position before thinning out
+		// // via pixel filtering?
+		// if (clipped != null && !clipped.isEmpty()) {
+		// waynodeCoordinates = clipped;
+		// // DO WE NEED TO COMPUTE A LABEL POSITION?
+		// if (way.getName() != null && way.getName().length() > 0) {
+		// // check if the polygon is completely contained in the current tile
+		// // in that case clipped polygon equals the original polygon
+		// // as a consequence we do not try to compute a label position
+		// // this is left to the renderer for more flexibility
+		// if (clipped.size() != waynodeCoordinates.size()
+		// && !waynodeCoordinates.containsAll(clipped)) {
+		//
+		// polygonCentroid = GeoUtils.computePolygonCentroid(
+		// waynodeCoordinates, way);
+		// }
+		// // if the label position is not located in the current tile
+		// // we can ignore it
+		// if (polygonCentroid != null
+		// && !GeoUtils.pointInTile(polygonCentroid, tile))
+		// polygonCentroid = null;
+		// }
+		// } else {
+		// // the clipped polygon is not included in the current tile
+		// // !! should not happen !! (as the way would not have been mapped to this
+		// // tile)
+		// LOGGER.warning("clipped polygon not in tile: " + way.getId() + " tile: "
+		// + tile.toString());
+		// return null;
+		// }
+		// }
+		// }
 
 		// TODO is it possible that pixel filtering produces invalid polygons?
 
 		// if the sub file for lower zoom levels is written, remove all way
 		// nodes from the list which are projected on the same pixel
-		if (pixelCompression && maxZoomCurrentInterval <= MAX_ZOOMLEVEL_PIXEL_FILTER) {
-			boolean checkOrientation = way.isCoastline() && way.isPolygon();
-			waynodeCoordinates = GeoUtils.filterWaynodesOnSamePixel(
-					waynodeCoordinates, maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA,
-					checkOrientation);
-			if (skipInvalidPolygons && way.isPolygon()
-					&& waynodeCoordinates.size() < GeoUtils.MIN_NODES_POLYGON) {
-				return null;
-			}
-		}
+		// if (pixelCompression && maxZoomCurrentInterval <= MAX_ZOOMLEVEL_PIXEL_FILTER) {
+		// boolean checkOrientation = way.isCoastline() && way.isPolygon();
+		// waynodeCoordinates = GeoUtils.filterWaynodesOnSamePixel(
+		// waynodeCoordinates, maxZoomCurrentInterval, PIXEL_COMPRESSION_MAX_DELTA,
+		// checkOrientation);
+		// if (skipInvalidPolygons && way.isPolygon()
+		// && waynodeCoordinates.size() < GeoUtils.MIN_NODES_POLYGON) {
+		// return null;
+		// }
+		// }
 
-		// if the wayNodeCompression flag is set, compress the way nodes
-		// with a minimal amount of bytes
-		List<Integer> waynodesAsList = null;
-		if (waynodeCompression) {
-			waynodesAsList = GeoUtils.waynodeAbsoluteCoordinatesToOffsets(waynodeCoordinates);
-		} else {
-			waynodesAsList = waynodesAsList(waynodeCoordinates);
-		}
+		if (wayDataBlockList == null)
+			return null;
 
-		return new WayNodePreprocessingResult(waynodesAsList, polygonCentroid);
+		return new WayNodePreprocessingResult(wayDataBlockList, null);
 	}
 
 	private byte infoByteLayerAndTagAmount(byte layer, short tagAmount) {
@@ -1006,17 +1020,17 @@ class MapFileWriter {
 
 	private class WayNodePreprocessingResult {
 
-		final List<Integer> coordinates;
+		final List<WayDataBlock> wayDataBlocks;
 		final GeoCoordinate labelPosition;
 
-		public WayNodePreprocessingResult(List<Integer> coordinates, GeoCoordinate labelPosition) {
+		public WayNodePreprocessingResult(List<WayDataBlock> wayDataBlocks, GeoCoordinate labelPosition) {
 			super();
-			this.coordinates = coordinates;
+			this.wayDataBlocks = wayDataBlocks;
 			this.labelPosition = labelPosition;
 		}
 
-		public List<Integer> getCoordinates() {
-			return coordinates;
+		public List<WayDataBlock> getWayDataBlocks() {
+			return wayDataBlocks;
 		}
 
 		public GeoCoordinate getLabelPosition() {

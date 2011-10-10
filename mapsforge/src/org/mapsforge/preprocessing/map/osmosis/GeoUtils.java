@@ -30,6 +30,11 @@ import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.operation.overlay.OverlayOp;
+
 /**
  * Provides utility functions for the maps preprocessing.
  * 
@@ -46,6 +51,50 @@ final class GeoUtils {
 	private static final int[] TILE_BITMASK_VALUES = new int[] { 32768, 16384,
 			8192, 4096, 2048, 1024,
 			512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
+
+	// JTS
+	private static final GeometryFactory gf = new GeometryFactory();
+
+	/**
+	 * Internal conversion method to convert our internal data structure for ways to geometry objects in
+	 * JTS. It will care about ways and polygons and will create the right JTS onjects.
+	 * 
+	 * @param way
+	 * @return return
+	 */
+	static Geometry toJTSGeometry(TDWay way) {
+		if (way.getWayNodes().length < 2) {
+			throw new IllegalArgumentException("way has fewer than 2 nodes");
+		}
+
+		Coordinate[] coordinates = new Coordinate[way.getWayNodes().length];
+		for (int i = 0; i < way.getWayNodes().length; i++) {
+			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(way.getWayNodes()[i]
+					.getLongitude()),
+					GeoCoordinate.intToDouble(way.getWayNodes()[i].getLatitude()));
+		}
+
+		// check for closed polygon
+		if (coordinates[0].equals2D(coordinates[coordinates.length - 1]))
+			return gf.createPolygon(gf.createLinearRing(coordinates), null);
+
+		return gf.createLineString(coordinates);
+	}
+
+	static List<GeoCoordinate> toGeoCoordinateList(Geometry jtsGeometry) {
+
+		Coordinate[] jtsCoords = jtsGeometry.getCoordinates();
+
+		ArrayList<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
+
+		for (int j = 0; j < jtsCoords.length; j++) {
+			GeoCoordinate geoCoord = new GeoCoordinate(jtsCoords[j].y, jtsCoords[j].x);
+			result.add(geoCoord);
+		}
+
+		return result;
+
+	}
 
 	private GeoUtils() {
 		// prevent creation of a GeoUtils object
@@ -78,18 +127,18 @@ final class GeoUtils {
 	}
 
 	/**
-	 * Computes which tiles on the given base zoom level need to include the given way (which
-	 * may be a polygon).
+	 * Computes which tiles on the given base zoom level need to include the given way (which may be a
+	 * polygon).
 	 * 
 	 * @param way
 	 *            the way that is mapped to tiles
 	 * @param baseZoomLevel
 	 *            the base zoom level which is used in the mapping
 	 * @param enlargementInMeter
-	 *            amount of pixels that is used to enlarge the bounding box of the way and the
-	 *            tiles in the mapping process
-	 * @return all tiles on the given base zoom level that need to include the given way, an
-	 *         empty set if no tiles are matched
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in
+	 *            the mapping process
+	 * @return all tiles on the given base zoom level that need to include the given way, an empty set
+	 *         if no tiles are matched
 	 */
 	static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel,
 			final int enlargementInMeter) {
@@ -132,20 +181,20 @@ final class GeoUtils {
 	}
 
 	/**
-	 * A tile on zoom level <i>z</i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each
-	 * of these 16 sub tiles it is analyzed if the given way needs to be included. The result is
-	 * represented as a 16 bit short value. Each bit represents one of the 16 sub tiles. A bit
-	 * is set to 1 if the sub tile needs to include the way. Representation is row-wise.
+	 * A tile on zoom level <i>z</i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each of
+	 * these 16 sub tiles it is analyzed if the given way needs to be included. The result is
+	 * represented as a 16 bit short value. Each bit represents one of the 16 sub tiles. A bit is set to
+	 * 1 if the sub tile needs to include the way. Representation is row-wise.
 	 * 
 	 * @param way
 	 *            the way which is analyzed
 	 * @param tile
 	 *            the tile which is split into 16 sub tiles
 	 * @param enlargementInMeters
-	 *            amount of pixels that is used to enlarge the bounding box of the way and the
-	 *            tiles in the mapping process
-	 * @return a 16 bit short value that represents the information which of the sub tiles needs
-	 *         to include the way
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in
+	 *            the mapping process
+	 * @return a 16 bit short value that represents the information which of the sub tiles needs to
+	 *         include the way
 	 */
 	static short computeBitmask(final TDWay way, final TileCoordinate tile,
 			final int enlargementInMeters) {
@@ -183,9 +232,9 @@ final class GeoUtils {
 	}
 
 	/**
-	 * On coarse zoom levels way nodes maybe mapped to the same or an adjacent pixel, so that
-	 * they cannot be distinguished anymore by the human eye. We can therefore eliminate way
-	 * nodes that are mapped on the same or adjacent (see parameter delta) pixels.
+	 * On coarse zoom levels way nodes maybe mapped to the same or an adjacent pixel, so that they
+	 * cannot be distinguished anymore by the human eye. We can therefore eliminate way nodes that are
+	 * mapped on the same or adjacent (see parameter delta) pixels.
 	 * 
 	 * @param waynodes
 	 *            the list of way nodes
@@ -194,10 +243,10 @@ final class GeoUtils {
 	 * @param delta
 	 *            the minimum distance in pixels that separates two way nodes
 	 * @param checkOrientation
-	 *            filtering pixels of concave polygons may reverse its orientation, set this
-	 *            flag if it is important that the orientation is preserved
-	 * @return a new list of way nodes that includes only those way nodes that do not fall onto
-	 *         the same or adjacent pixels
+	 *            filtering pixels of concave polygons may reverse its orientation, set this flag if it
+	 *            is important that the orientation is preserved
+	 * @return a new list of way nodes that includes only those way nodes that do not fall onto the same
+	 *         or adjacent pixels
 	 */
 	static List<GeoCoordinate> filterWaynodesOnSamePixel(
 			final List<GeoCoordinate> waynodes,
@@ -250,16 +299,15 @@ final class GeoUtils {
 	}
 
 	/**
-	 * Transforms a list of absolute way node coordinates to a list of offsets between the
-	 * coordinates. The first coordinate of the way is represented as an absolute coordinate,
-	 * all following coordinates are represented as offsets to their previous coordinate in the
-	 * way.
+	 * Transforms a list of absolute way node coordinates to a list of offsets between the coordinates.
+	 * The first coordinate of the way is represented as an absolute coordinate, all following
+	 * coordinates are represented as offsets to their previous coordinate in the way.
 	 * 
 	 * @param waynodes
 	 *            the list of absolute way node coordinates
-	 * @return A list of offsets, where the first coordinate is absolute and all following are
-	 *         offsets to their predecessor. For each way node first latitude (offset) and
-	 *         second longitude (offset) is added.
+	 * @return A list of offsets, where the first coordinate is absolute and all following are offsets
+	 *         to their predecessor. For each way node first latitude (offset) and second longitude
+	 *         (offset) is added.
 	 */
 	static List<Integer> waynodeAbsoluteCoordinatesToOffsets(
 			final List<GeoCoordinate> waynodes) {
@@ -403,6 +451,283 @@ final class GeoUtils {
 		return arrayAsGeoCoordinates(clippedLine);
 	}
 
+	private static double[] bufferInDegrees(long tileY, byte zoom,
+			int enlargementInMeter) {
+		if (enlargementInMeter == 0)
+			return EPSILON_ZERO;
+
+		double[] epsilons = new double[2];
+		double lat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInMeter);
+		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInMeter, lat);
+
+		return epsilons;
+	}
+
+	private static double[] bufferInDegrees(double lat, int enlargementInMeter) {
+
+		if (enlargementInMeter == 0)
+			return EPSILON_ZERO;
+
+		double[] epsilons = new double[2];
+
+		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInMeter);
+		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInMeter, lat);
+
+		return epsilons;
+	}
+
+	static Geometry tileToJTSGeometry(long tileX, long tileY, byte zoom,
+			int enlargementInMeter) {
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
+		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+
+		double[] epsilons = bufferInDegrees(tileY, zoom, enlargementInMeter);
+
+		minLon -= epsilons[1];
+		minLat -= epsilons[0];
+		maxLon += epsilons[1];
+		maxLat += epsilons[0];
+
+		Coordinate bottomLeft = new Coordinate(minLon, minLat);
+		Coordinate topRight = new Coordinate(maxLon, maxLat);
+
+		return gf.createLineString(new Coordinate[] { bottomLeft, topRight }).getEnvelope();
+	}
+
+	/**
+	 * Clips a way to the bounding box of a tile.
+	 * 
+	 * @param way
+	 *            the way which will be clipped
+	 * @param tile
+	 *            the tile which represents the clipping area
+	 * @param enlargementInMeters
+	 *            the enlargement of bounding boxes in meters
+	 * @return a list of one way when the way is complete in the bounding box of the tile. a list of one
+	 *         ore more ways if the way intersects the tile multiple times.
+	 * 
+	 */
+	static List<List<GeoCoordinate>> clipWayToTile(TDWay way, final TileCoordinate tile,
+			int enlargementInMeters) {
+
+		// create tile bounding box
+		Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
+				tile.getY(),
+				tile.getZoomlevel(),
+				enlargementInMeters);
+
+		Geometry wayAsGeometryJTS = toJTSGeometry(way);
+
+		// find all intersecting way
+		Geometry intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
+				OverlayOp.INTERSECTION);
+
+		if (intersectingWaysJTS.getNumGeometries() == 0)
+			return null;
+
+		// convert JTS coords to geocoords
+		List<List<GeoCoordinate>> list = new ArrayList<List<GeoCoordinate>>();
+
+		// loop through all arising new ways
+		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
+			Geometry lineStringJTS = intersectingWaysJTS.getGeometryN(i);
+
+			list.add(toGeoCoordinateList(lineStringJTS));
+		}
+
+		return list;
+
+	}
+
+	/**
+	 * Converts a mapsforge way with possible innerWays to a JTS wayBlock.
+	 * 
+	 * @param way
+	 * @param innerWays
+	 * @return
+	 */
+	static JtsWayBlock toJtsWayBlock(TDWay way, List<TDWay> innerWays) {
+
+		Geometry jtsWay = toJTSGeometry(way);
+		List<Geometry> jtsInnerWays = new ArrayList<Geometry>();
+
+		if (innerWays != null) {
+
+			for (TDWay innerWay : innerWays) {
+				jtsInnerWays.add(toJTSGeometry(innerWay));
+
+			}
+		}
+
+		return new JtsWayBlock(jtsWay, jtsInnerWays);
+	}
+
+	/**
+	 * Convert a JtsWayBlock list to a WayDataBlock list with delta compressed waynode coordinates.
+	 * 
+	 * @param jtsWayBlockList
+	 * @return
+	 */
+	static List<WayDataBlock> toWayDataBlockList(List<JtsWayBlock> jtsWayBlockList) {
+		if (jtsWayBlockList == null)
+			return null;
+
+		List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+
+		for (JtsWayBlock wayBlock : jtsWayBlockList) {
+
+			List<Integer> way = waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(wayBlock.way));
+
+			List<List<Integer>> innerWays = new ArrayList<List<Integer>>();
+
+			for (Geometry jtsInnerWay : wayBlock.innerWays) {
+				innerWays.add(waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(jtsInnerWay)));
+
+			}
+			wayDataBlockList.add(new WayDataBlock(way, innerWays));
+
+		}
+
+		return wayDataBlockList;
+
+	}
+
+	/**
+	 * This method will check all outerway polygons against its innerway polygons.
+	 * 
+	 * @param wayBlocks
+	 *            List of multipolygons with innerways.
+	 * @return
+	 */
+	static List<JtsWayBlock> matchInnerwaysToOuterWays(List<JtsWayBlock> wayBlocks) {
+
+		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+
+		for (JtsWayBlock wayBlock : wayBlocks) {
+
+			JtsWayBlock newWayBlock = new JtsWayBlock(wayBlock.way, new ArrayList<Geometry>());
+
+			if (wayBlock.innerWays != null) {
+				for (Geometry innerWay : wayBlock.innerWays) {
+					if (innerWay.within(wayBlock.way)) {
+						newWayBlock.innerWays.add(innerWay);
+					} else
+						System.out.println("inner polygon does not belong to outer polygon");
+
+				}
+			}
+			jtsWayBlockList.add(newWayBlock);
+
+		}
+
+		return jtsWayBlockList;
+	}
+
+	static List<WayDataBlock> preprocessWay(TDWay way, List<TDWay> innerWays, boolean polygonClipping,
+			final TileCoordinate tile,
+			int enlargementInMeters) {
+
+		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+
+		if (!polygonClipping) {
+			// do no clipping and match the innerways to this way
+			if (way.getShape() == TDWay.MULTI_POLYGON) {
+
+				jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
+				jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+
+			} else {
+				jtsWayBlockList.add(toJtsWayBlock(way, null));
+
+			}
+			return toWayDataBlockList(jtsWayBlockList);
+
+		} else {
+			// do clipping to the outer and innerways of a multipolygon and match the innerways
+			if (way.getShape() == TDWay.MULTI_POLYGON) {
+
+			}
+			// clip a simple polygon or way
+			else {
+
+				List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+
+				List<List<GeoCoordinate>> segments = clipWayToTile(way, tile, enlargementInMeters);
+
+				for (List<GeoCoordinate> segment : segments) {
+
+					WayDataBlock wayDataBlock = new WayDataBlock(
+							waynodeAbsoluteCoordinatesToOffsets(segment), null);
+
+					wayDataBlockList.add(wayDataBlock);
+
+				}
+
+				return wayDataBlockList;
+
+			}
+
+		}
+
+		return null;
+
+	}
+
+	// static MultipolygonPreprocessingResult clipMultipolygonToTile(TDWay outerWay,
+	// List<TDWay> innerWays,
+	// final TileCoordinate tile, int enlargementInMeters) {
+	//
+	// Geometry tileBB = tileToJTSGeometry(tile.getX(),
+	// tile.getY(),
+	// tile.getZoomlevel(),
+	// enlargementInMeters);
+	//
+	// Geometry outerWayAsGeometry = toJTSGeometry(outerWay);
+	//
+	// // get intersecting polygons with the tile bounding box
+	// Geometry outerWays = OverlayOp.overlayOp(tileBB, outerWayAsGeometry, OverlayOp.INTERSECTION);
+	//
+	// if (outerWays.getNumGeometries() == 0)
+	// return null;
+	//
+	// MultipolygonPreprocessingResult preprocessingResult = new MultipolygonPreprocessingResult();
+	//
+	// // loop through all outerways and check the innerways against them
+	// for (int i = 0; i < outerWays.getNumGeometries(); i++) {
+	//
+	// Geometry outerWayN = outerWays.getGeometryN(i);
+	//
+	// MultipolygonResult multiPolygonResult = new MultipolygonResult();
+	//
+	// multiPolygonResult.outerWayCoordinates = toGeoCoordinateList(outerWayN);
+	//
+	// // get all polygons which are intersecting the tile bounding box
+	// for (TDWay innerWay : innerWays) {
+	// Geometry innerWayJTS = toJTSGeometry(innerWay);
+	//
+	// Geometry innerWaysJTS = OverlayOp
+	// .overlayOp(tileBB, innerWayJTS, OverlayOp.INTERSECTION);
+	//
+	// // loop through all possible innerways which occurs by the intersection
+	// for (int j = 0; j < innerWaysJTS.getNumGeometries(); j++) {
+	// innerWayJTS = innerWaysJTS.getGeometryN(j);
+	//
+	// if (innerWayJTS.within(outerWayN))
+	// multiPolygonResult.innerWayCoordinates.add(toGeoCoordinateList(innerWayJTS));
+	//
+	// }
+	//
+	// preprocessingResult.multiPolygons.add(multiPolygonResult);
+	//
+	// }
+	// }
+	//
+	// return preprocessingResult;
+	// }
+
 	/**
 	 * Clips a polygon to the bounding box of a tile.
 	 * 
@@ -413,10 +738,10 @@ final class GeoUtils {
 	 * @param enlargementInMeters
 	 *            the enlargement of bounding boxes in meters
 	 * @param coordinateSystemOriginUpperLeft
-	 *            set flag if the origin of the coordinate system is in the upper left,
-	 *            otherwise the origin is assumed to be in the bottom left
-	 * @return the clipped polygon, null if the polygon is not valid or if the intersection
-	 *         between polygon and the tile's bounding box is empty
+	 *            set flag if the origin of the coordinate system is in the upper left, otherwise the
+	 *            origin is assumed to be in the bottom left
+	 * @return the clipped polygon, null if the polygon is not valid or if the intersection between
+	 *         polygon and the tile's bounding box is empty
 	 */
 	static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
 			final TileCoordinate tile, int enlargementInMeters,
@@ -642,18 +967,17 @@ final class GeoUtils {
 	static class SutherlandHodgmanClipping {
 
 		/**
-		 * Check whether the polygon "touches" the clipping region (that includes "covers"), or
-		 * whether the polygon is completely outside of the clipping region.
+		 * Check whether the polygon "touches" the clipping region (that includes "covers"), or whether
+		 * the polygon is completely outside of the clipping region.
 		 * 
 		 * @param polygon
-		 *            A closed polygon as a double array in the form
-		 *            [x1,y1,x2,y2,x3,y3,...,x1,y1]
+		 *            A closed polygon as a double array in the form [x1,y1,x2,y2,x3,y3,...,x1,y1]
 		 * @param rectangle
-		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
-		 *            ymin, xmax, ymax]
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
+		 *            xmax, ymax]
 		 * @param coordinateSystemOriginUpperLeft
-		 *            set flag if the origin of the coordinate system is in the upper left,
-		 *            otherwise the origin is assumed to be in the bottom left
+		 *            set flag if the origin of the coordinate system is in the upper left, otherwise
+		 *            the origin is assumed to be in the bottom left
 		 * @return true if the polygon "touches" (includes "covers") the clipping region, false
 		 *         otherwise
 		 */
@@ -667,16 +991,15 @@ final class GeoUtils {
 		 * Clips a closed polygon to a rectangular clipping region.
 		 * 
 		 * @param polygon
-		 *            A closed polygon as a double array in the form
-		 *            [x1,y1,x2,y2,x3,y3,...,x1,y1]
+		 *            A closed polygon as a double array in the form [x1,y1,x2,y2,x3,y3,...,x1,y1]
 		 * @param rectangle
-		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
-		 *            ymin, xmax, ymax]
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
+		 *            xmax, ymax]
 		 * @param coordinateSystemOriginUpperLeft
-		 *            set flag if the origin of the coordinate system is in the upper left,
-		 *            otherwise the origin is assumed to be in the bottom left
-		 * @return the clipped polygon if the polygon "touches" the clipping region, an empty
-		 *         array otherwise
+		 *            set flag if the origin of the coordinate system is in the upper left, otherwise
+		 *            the origin is assumed to be in the bottom left
+		 * @return the clipped polygon if the polygon "touches" the clipping region, an empty array
+		 *         otherwise
 		 */
 		static double[] clipPolygon(final double[] polygon, final double[] rectangle,
 				boolean coordinateSystemOriginUpperLeft) {
@@ -813,8 +1136,8 @@ final class GeoUtils {
 		 * @param line
 		 *            A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
 		 * @param rectangle
-		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
-		 *            ymin, xmax, ymax]
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
+		 *            xmax, ymax]
 		 * @return All line segments that can be clipped to the clipping region.
 		 */
 		static double[] clipLine(final double[] line, final double[] rectangle) {
@@ -842,8 +1165,8 @@ final class GeoUtils {
 		 * @param line
 		 *            A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
 		 * @param rectangle
-		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin,
-		 *            ymin, xmax, ymax]
+		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
+		 *            xmax, ymax]
 		 * @return true if any line segments intersects the clipping region, false otherwise
 		 */
 		static boolean intersectsClippingRegion(final double[] line, final double[] rectangle) {
@@ -942,4 +1265,5 @@ final class GeoUtils {
 			}
 		}
 	}
+
 }

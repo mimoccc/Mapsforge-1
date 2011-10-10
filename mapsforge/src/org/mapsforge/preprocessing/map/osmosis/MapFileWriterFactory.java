@@ -59,7 +59,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
 				true);
 		boolean pixelFilter = getBooleanArgument(taskConfig, PARAM_PIXEL_FILTER, true);
-		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
+		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, false);
 		int threadpoolSize = getIntegerArgument(taskConfig, PARAM_THREAD_POOL_SIZE,
 				DEFAULT_THREAD_POOL_SIZE);
 		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
