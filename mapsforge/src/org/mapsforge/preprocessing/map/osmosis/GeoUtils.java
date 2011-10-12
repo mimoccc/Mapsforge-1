@@ -60,7 +60,8 @@ final class GeoUtils {
 	 * JTS. It will care about ways and polygons and will create the right JTS onjects.
 	 * 
 	 * @param way
-	 * @return return
+	 *            TDway which will be converted.
+	 * @return return Converted way as JTS object.
 	 */
 	static Geometry toJTSGeometry(TDWay way) {
 		if (way.getWayNodes().length < 2) {
@@ -510,7 +511,8 @@ final class GeoUtils {
 	 *         ore more ways if the way intersects the tile multiple times.
 	 * 
 	 */
-	static List<List<GeoCoordinate>> clipWayToTile(TDWay way, final TileCoordinate tile,
+	static List<List<GeoCoordinate>> clipSimpleWayOrSimplePolygonToTile(TDWay way,
+			final TileCoordinate tile,
 			int enlargementInMeters) {
 
 		// create tile bounding box
@@ -521,7 +523,7 @@ final class GeoUtils {
 
 		Geometry wayAsGeometryJTS = toJTSGeometry(way);
 
-		// find all intersecting way
+		// find all intersecting ways
 		Geometry intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
 				OverlayOp.INTERSECTION);
 
@@ -546,8 +548,10 @@ final class GeoUtils {
 	 * Converts a mapsforge way with possible innerWays to a JTS wayBlock.
 	 * 
 	 * @param way
+	 *            outer way.
 	 * @param innerWays
-	 * @return
+	 *            list of innerways belonging to this way.
+	 * @return a JtsWayBlock which contains the way as JTS Geometry objects.
 	 */
 	static JtsWayBlock toJtsWayBlock(TDWay way, List<TDWay> innerWays) {
 
@@ -569,7 +573,8 @@ final class GeoUtils {
 	 * Convert a JtsWayBlock list to a WayDataBlock list with delta compressed waynode coordinates.
 	 * 
 	 * @param jtsWayBlockList
-	 * @return
+	 *            a list of way blocks which are in stored as JTS objects.
+	 * @return a list of WayBlocks which you can use tp save the way.
 	 */
 	static List<WayDataBlock> toWayDataBlockList(List<JtsWayBlock> jtsWayBlockList) {
 		if (jtsWayBlockList == null)
@@ -600,7 +605,7 @@ final class GeoUtils {
 	 * 
 	 * @param wayBlocks
 	 *            List of multipolygons with innerways.
-	 * @return
+	 * @return a list of JtsWayBlocks with matching innerways.
 	 */
 	static List<JtsWayBlock> matchInnerwaysToOuterWays(List<JtsWayBlock> wayBlocks) {
 
@@ -626,13 +631,83 @@ final class GeoUtils {
 		return jtsWayBlockList;
 	}
 
+	/**
+	 * Clips a given multipolygon to the bounding box of a tile
+	 * 
+	 * @param wayBlock
+	 *            a way block which represents one multipolygon with one outerpolygon and one to many
+	 *            innerpolygons.
+	 * @param tile
+	 *            the tile which represents the clipping area
+	 * @param enlargementInMeters
+	 *            the enlargement of bounding boxes in meters
+	 * @return returns a list of multipolygons. It is possible that a multipolygon with one outerpolygon
+	 *         can result many outerpolygons due to the clipping operation.
+	 */
+	static List<JtsWayBlock> clipMultiPolygonToTile(JtsWayBlock wayBlock, final TileCoordinate tile,
+			int enlargementInMeters) {
+
+		List<JtsWayBlock> res = new ArrayList<JtsWayBlock>();
+
+		// create tile bounding box
+		Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
+				tile.getY(),
+				tile.getZoomlevel(),
+				enlargementInMeters);
+
+		// find all intersecting ways
+		Geometry intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.way,
+				OverlayOp.INTERSECTION);
+
+		List<Geometry> clippedInnerWays = new ArrayList<Geometry>();
+
+		// create slightly smaller bounding box to prevent inner polygons on the same bound as the
+		// outerpolygon
+		tileBBJTS = tileToJTSGeometry(tile.getX(),
+				tile.getY(),
+				tile.getZoomlevel(),
+				enlargementInMeters - 1);
+
+		// clip all innerways and collect the occuring clipped innerways. A innerway can be divded in to
+		// multiple innerways due to clipping.
+		for (Geometry innerway : wayBlock.innerWays) {
+
+			Geometry intersectingInnerWaysJTS = OverlayOp.overlayOp(tileBBJTS, innerway,
+					OverlayOp.INTERSECTION);
+
+			for (int i = 0; i < intersectingInnerWaysJTS.getNumGeometries(); i++) {
+				clippedInnerWays.add(intersectingInnerWaysJTS.getGeometryN(i));
+			}
+
+		}
+
+		// loop through all outerways which can be occur due to the clipping operation and assign all
+		// clipped innerways.
+		//
+		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
+			Geometry outerWay = intersectingWaysJTS.getGeometryN(i);
+
+			List<Geometry> innerWays = new ArrayList<Geometry>();
+
+			for (Geometry clippedInnerWay : clippedInnerWays) {
+				innerWays.add(clippedInnerWay);
+
+			}
+
+			res.add(new JtsWayBlock(outerWay, innerWays));
+
+		}
+
+		return res;
+
+	}
+
 	static List<WayDataBlock> preprocessWay(TDWay way, List<TDWay> innerWays, boolean polygonClipping,
 			final TileCoordinate tile,
 			int enlargementInMeters) {
 
-		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-
 		if (!polygonClipping) {
+			List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
 			// do no clipping and match the innerways to this way
 			if (way.getShape() == TDWay.MULTI_POLYGON) {
 
@@ -645,34 +720,34 @@ final class GeoUtils {
 			}
 			return toWayDataBlockList(jtsWayBlockList);
 
-		} else {
+		}
+		else {
 			// do clipping to the outer and innerways of a multipolygon and match the innerways
 			if (way.getShape() == TDWay.MULTI_POLYGON) {
 
+				List<JtsWayBlock> jtsWayBlockList = clipMultiPolygonToTile(
+						toJtsWayBlock(way, innerWays), tile, enlargementInMeters);
+
+				jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+				return toWayDataBlockList(jtsWayBlockList);
 			}
 			// clip a simple polygon or way
 			else {
 
 				List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
-
-				List<List<GeoCoordinate>> segments = clipWayToTile(way, tile, enlargementInMeters);
+				List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
+						enlargementInMeters);
 
 				for (List<GeoCoordinate> segment : segments) {
 
 					WayDataBlock wayDataBlock = new WayDataBlock(
 							waynodeAbsoluteCoordinatesToOffsets(segment), null);
-
 					wayDataBlockList.add(wayDataBlock);
 
 				}
-
 				return wayDataBlockList;
-
 			}
-
 		}
-
-		return null;
 
 	}
 
