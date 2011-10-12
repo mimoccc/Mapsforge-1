@@ -46,6 +46,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_TYPE = "type";
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
+	private static final String PARAM_PREFERRED_LANGUAGE = "language-preference";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -66,9 +67,10 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
 				DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
+		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
 				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
-				threadpoolSize, type, bboxEnlargement, tagConfFile);
+				threadpoolSize, type, bboxEnlargement, tagConfFile, preferredLanguage);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

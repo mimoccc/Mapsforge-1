@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -55,6 +54,8 @@ class MapFileWriter {
 	private static final int BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE = 5;
 
 	private static final String MAGIC_BYTE = "mapsforge binary OSM";
+
+	private static final int OFFSET_FILE_SIZE = 28;
 
 	private static final CoastlineHandler COASTLINE_HANDLER = new CoastlineHandler();
 
@@ -157,12 +158,12 @@ class MapFileWriter {
 
 	final void writeFile(long date, int version, short tilePixel, String comment,
 			boolean debugStrings, boolean waynodeCompression, boolean polygonClipping,
-			boolean pixelCompression, GeoCoordinate mapStartPosition)
+			boolean pixelCompression, GeoCoordinate mapStartPosition, String preferredLanguage)
 			throws IOException {
 
 		// CONTAINER HEADER
 		long totalHeaderSize = writeContainerHeader(date, version, tilePixel,
-				comment, debugStrings, mapStartPosition);
+				comment, debugStrings, mapStartPosition, preferredLanguage);
 
 		int amountOfZoomIntervals = dataStore.getZoomIntervalConfiguration()
 				.getNumberOfZoomIntervals();
@@ -182,6 +183,12 @@ class MapFileWriter {
 		randomAccessFile.seek(posZoomIntervalConfig);
 		byte[] containerB = bufferZoomIntervalConfig.array();
 		randomAccessFile.write(containerB);
+
+		// WRITE FILE SIZE TO HEADER
+		long fileSize = randomAccessFile.getFilePointer();
+		randomAccessFile.seek(OFFSET_FILE_SIZE);
+		randomAccessFile.writeLong(fileSize);
+
 		randomAccessFile.close();
 
 		LOGGER.info("Finished writing file.");
@@ -216,7 +223,7 @@ class MapFileWriter {
 	}
 
 	private long writeContainerHeader(long date, int version, short tilePixel, String comment,
-			boolean debugStrings, GeoCoordinate mapStartPosition)
+			boolean debugStrings, GeoCoordinate mapStartPosition, String preferredLanguage)
 			throws IOException {
 
 		// get metadata for the map file
@@ -224,82 +231,86 @@ class MapFileWriter {
 				.getNumberOfZoomIntervals();
 
 		LOGGER.fine("writing header");
-
-		ByteBuffer containerHeaderBuffer = ByteBuffer.allocate(HEADER_BUFFER_SIZE);
-
-		// write file header
-		// magic byte
-		byte[] magicBytes = MAGIC_BYTE.getBytes();
-		containerHeaderBuffer.put(magicBytes);
-
-		// write container header size
-		int headerSizePosition = containerHeaderBuffer.position();
-		containerHeaderBuffer.position(headerSizePosition + 4);
-
-		// version number of the binary file format
-		containerHeaderBuffer.putInt(version);
-
-		// meta info byte
-		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings,
-				mapStartPosition != null));
-
-		// amount of map files inside this file
-		containerHeaderBuffer.put((byte) numberOfZoomIntervals);
-
-		// projection type
-		writeUTF8(PROJECTION, containerHeaderBuffer);
-
-		// width and height of a tile in pixel
-		containerHeaderBuffer.putShort(tilePixel);
-
 		LOGGER.fine("Bounding box for file: "
 				+ dataStore.getBoundingBox().maxLatitudeE6 + ", "
 				+ dataStore.getBoundingBox().minLongitudeE6 + ", "
 				+ dataStore.getBoundingBox().minLatitudeE6 + ", "
 				+ dataStore.getBoundingBox().maxLongitudeE6);
-		// upper left corner of the bounding box
+
+		ByteBuffer containerHeaderBuffer = ByteBuffer.allocate(HEADER_BUFFER_SIZE);
+
+		// write file header
+		// MAGIC BYTE
+		byte[] magicBytes = MAGIC_BYTE.getBytes();
+		containerHeaderBuffer.put(magicBytes);
+
+		// HEADER SIZE: SKIP 4 BYTES
+		int headerSizePosition = containerHeaderBuffer.position();
+		containerHeaderBuffer.position(headerSizePosition + 4);
+
+		// FILE VERSION
+		containerHeaderBuffer.putInt(version);
+
+		// FILE SIZE: SKIP 8 BYTES
+		containerHeaderBuffer.position(headerSizePosition + 8);
+
+		// DATE OF CREATION
+		containerHeaderBuffer.putLong(date);
+
+		// BOUNDING BOX
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLatitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLongitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLatitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLongitudeE6);
 
+		// TILE SIZE
+		containerHeaderBuffer.putShort(tilePixel);
+
+		// PROJECTION
+		writeUTF8(PROJECTION, containerHeaderBuffer);
+
+		// PREFERRED LANGUAGE
+		if (preferredLanguage == null)
+			writeUTF8("", containerHeaderBuffer);
+		else
+			writeUTF8(preferredLanguage, containerHeaderBuffer);
+
+		// FLAGS
+		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings,
+				mapStartPosition != null));
+
+		// MAP START POSITION
 		if (mapStartPosition != null) {
 			containerHeaderBuffer.putInt(mapStartPosition.getLatitudeE6());
 			containerHeaderBuffer.putInt(mapStartPosition.getLongitudeE6());
 		}
 
-		// date of the map data
-		containerHeaderBuffer.putLong(date);
-
-		// store the mapping of tags to tag ids
+		// AMOUNT POI TAGS
 		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.optimizedPoiIds()
 				.size());
 
-		for (Entry<Short, Short> idMapping : MapFileWriterTask.TAG_MAPPING.optimizedPoiIds()
-				.entrySet()) {
-			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getPoiTag(idMapping.getKey());
+		// POI TAGS
+		// retrieves tag ids in order of frequency, most frequent come first
+		for (short tagId : MapFileWriterTask.TAG_MAPPING.optimizedPoiIds().keySet()) {
+			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tagId);
 			writeUTF8(tag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(idMapping.getValue());
 		}
 
+		// AMOUNT OF WAY TAGS
 		containerHeaderBuffer.putShort((short) MapFileWriterTask.TAG_MAPPING.optimizedWayIds()
 				.size());
 
-		for (Entry<Short, Short> idMapping : MapFileWriterTask.TAG_MAPPING.optimizedWayIds()
-				.entrySet()) {
-			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getWayTag(idMapping.getKey());
+		// WAY TAGS
+		for (short tagId : MapFileWriterTask.TAG_MAPPING.optimizedWayIds()
+				.keySet()) {
+			OSMTag tag = MapFileWriterTask.TAG_MAPPING.getWayTag(tagId);
 			writeUTF8(tag.tagKey(), containerHeaderBuffer);
-			containerHeaderBuffer.putShort(idMapping.getValue());
 		}
 
-		// comment
-		if (comment != null && !comment.equals("")) {
-			writeUTF8(comment, containerHeaderBuffer);
-		} else {
-			writeUTF8("", containerHeaderBuffer);
-		}
+		// AMOUNT OF ZOOM INTERVALS
+		containerHeaderBuffer.put((byte) numberOfZoomIntervals);
 
-		// initialize buffer for writing zoom interval configurations
+		// ZOOM INTERVAL CONFIGURATION: SKIP COMPUTED AMOUNT OF BYTES
 		this.posZoomIntervalConfig = containerHeaderBuffer.position();
 		bufferZoomIntervalConfig = ByteBuffer.allocate(SIZE_ZOOMINTERVAL_CONFIGURATION
 				* numberOfZoomIntervals);
@@ -308,6 +319,14 @@ class MapFileWriter {
 				+ SIZE_ZOOMINTERVAL_CONFIGURATION
 				* numberOfZoomIntervals);
 
+		// COMMENT
+		if (comment != null && !comment.equals("")) {
+			writeUTF8(comment, containerHeaderBuffer);
+		} else {
+			writeUTF8("", containerHeaderBuffer);
+		}
+
+		// now write header size
 		// -4 bytes of header size variable itself
 		int headerSize = containerHeaderBuffer.position() - headerSizePosition - 4;
 		containerHeaderBuffer.putInt(headerSizePosition, headerSize);
@@ -335,8 +354,8 @@ class MapFileWriter {
 		bufferZoomIntervalConfig.put(baseZoomCurrentInterval);
 		bufferZoomIntervalConfig.put(minZoomCurrentInterval);
 		bufferZoomIntervalConfig.put(maxZoomCurrentInterval);
-		bufferZoomIntervalConfig.put(Serializer.getFiveBytes(startIndexOfSubfile));
-		bufferZoomIntervalConfig.put(Serializer.getFiveBytes(subfileSize));
+		bufferZoomIntervalConfig.putLong(startIndexOfSubfile);
+		bufferZoomIntervalConfig.putLong(subfileSize);
 	}
 
 	private long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,

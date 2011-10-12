@@ -46,12 +46,13 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
  * 
  */
 public class MapFileWriterTask implements Sink {
+	private static final int VERSION_BINARY_FORMAT = 3;
+	private static final String VERSION_LIBRARY = "0.2.4";
+
 	private static final int MAX_THREADPOOL_SIZE = 128;
 
 	private static final Logger LOGGER = Logger.getLogger(MapFileWriterTask.class
 			.getName());
-
-	private static final String VERSION = "0.2.4";
 
 	private TileBasedDataStore tileBasedGeoObjectStore;
 	static OSMTagMapping TAG_MAPPING;
@@ -77,19 +78,21 @@ public class MapFileWriterTask implements Sink {
 	private int threadpoolSize;
 	private String type;
 	private int bboxEnlargement;
+	private String preferredLanguage;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
-			int threadpoolSize, String type, int bboxEnlargement, String tagConfFile) {
+			int threadpoolSize, String type, int bboxEnlargement, String tagConfFile,
+			String preferredLanguage) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException(
 					"file parameter points to a directory, must be a file");
 		}
 
-		LOGGER.info("mapfile-writer version " + VERSION);
+		LOGGER.info("mapfile-writer version " + VERSION_LIBRARY);
 
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate
 				.fromString(mapStartPosition);
@@ -139,6 +142,7 @@ public class MapFileWriterTask implements Sink {
 						zoomIntervalConfiguration, bboxEnlargement);
 		}
 		this.bboxEnlargement = bboxEnlargement;
+		this.preferredLanguage = preferredLanguage;
 	}
 
 	/*
@@ -167,8 +171,10 @@ public class MapFileWriterTask implements Sink {
 			MapFileWriter mfw = new MapFileWriter(tileBasedGeoObjectStore, file,
 					threadpoolSize, bboxEnlargement);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
-			mfw.writeFile(System.currentTimeMillis(), 2, (short) 256, comment, debugInfo,
-					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition);
+			mfw.writeFile(System.currentTimeMillis(), VERSION_BINARY_FORMAT, (short) 256, comment,
+					debugInfo,
+					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition,
+					preferredLanguage);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}
@@ -183,8 +189,8 @@ public class MapFileWriterTask implements Sink {
 
 		System.gc();
 		LOGGER.fine("estimated memory consumption: " + nfMegabyte.format(
-						+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
-								.freeMemory()) / Math.pow(1024, 2))) + "MB");
+				+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
+						.freeMemory()) / Math.pow(1024, 2))) + "MB");
 	}
 
 	@Override
