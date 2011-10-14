@@ -36,15 +36,18 @@ public class MapDatabase {
 	/**
 	 * Maximum supported version of the map file format.
 	 */
-	public static final int BINARY_OSM_VERSION_MAX = 2;
+	public static final int BINARY_OSM_VERSION_MAX = 3;
+
 	/**
 	 * Minimal supported version of the map file format.
 	 */
-	public static final int BINARY_OSM_VERSION_MIN = 2;
+	public static final int BINARY_OSM_VERSION_MIN = 3;
+
 	/**
 	 * Magic byte at the beginning of a valid binary map file.
 	 */
 	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
+
 	/**
 	 * Bitmask to extract the block offset from an index entry.
 	 */
@@ -76,9 +79,24 @@ public class MapDatabase {
 	private static final int INDEX_CACHE_SIZE = 64;
 
 	/**
-	 * Maximum tag ID which is considered as valid.
+	 * The maximum latitude values in microdegrees.
 	 */
-	private static final int MAXIMUM_ALLOWED_TAG_ID = 8192;
+	private static final int LATITUDE_MAX = 90000000;
+
+	/**
+	 * The minimum latitude values in microdegrees.
+	 */
+	private static final int LATITUDE_MIN = -90000000;
+
+	/**
+	 * The maximum longitude values in microdegrees.
+	 */
+	private static final int LONGITUDE_MAX = 180000000;
+
+	/**
+	 * The minimum longitude values in microdegrees.
+	 */
+	private static final int LONGITUDE_MIN = -180000000;
 
 	/**
 	 * Maximum size of a single block in bytes that is supported by this implementation.
@@ -94,6 +112,11 @@ public class MapDatabase {
 	 * Maximum way nodes sequence length which is considered as valid.
 	 */
 	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
+
+	/**
+	 * The name of the Mercator projection as stored in the file header.
+	 */
+	private static final String MERCATOR = "Mercator";
 
 	/**
 	 * Bitmask for the optional node feature "elevation".
@@ -133,7 +156,7 @@ public class MapDatabase {
 	/**
 	 * Minimum size of the remaining file header in bytes.
 	 */
-	private static final int REMAINING_HEADER_SIZE_MIN = 50;
+	private static final int REMAINING_HEADER_SIZE_MIN = 75;
 
 	/**
 	 * Length of the debug signature at the beginning of each block.
@@ -230,6 +253,7 @@ public class MapDatabase {
 	private int innerWayNumber;
 	private int innerWayNumberOfWayNodes;
 	private RandomAccessFile inputFile;
+	private String languagePreference;
 	private Rect mapBoundary;
 	private long mapDate;
 	private MapFileParameters mapFileParameters;
@@ -250,8 +274,6 @@ public class MapDatabase {
 	private int nodesOnZoomLevel;
 	private byte nodeSpecialByte;
 	private Tag[] nodeTags;
-	private int numberOfNodeTags;
-	private int numberOfWayTags;
 	private long parentTileX;
 	private long parentTileY;
 	private String projectionName;
@@ -264,7 +286,6 @@ public class MapDatabase {
 	private boolean stopCurrentQuery;
 	private long subtileX;
 	private long subtileY;
-	private String tag;
 	private int tagId;
 	private List<Tag> tagList;
 	private int tileLatitude;
@@ -349,6 +370,15 @@ public class MapDatabase {
 	 */
 	public int getFileVersion() {
 		return this.fileVersionNumber;
+	}
+
+	/**
+	 * Returns the preferred language for names as defined in ISO 3166-1 (may be null).
+	 * 
+	 * @return the preferred language for names as defined in ISO 3166-1 (may be null).
+	 */
+	public String getLanguagePreference() {
+		return this.languagePreference;
 	}
 
 	/**
@@ -871,77 +901,11 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get the meta-information byte that encodes multiple flags
-		byte metaFlags = readByte();
-
-		// extract the important flags from the meta-information byte
-		this.debugFile = (metaFlags & HEADER_BITMASK_DEBUG) != 0;
-		this.headerStartPosition = (metaFlags & HEADER_BITMASK_START_POSITION) != 0;
-
-		// get and check the number of contained map files
-		byte numberOfMapFiles = readByte();
-		if (numberOfMapFiles < 1) {
-			Logger.debug("invalid number of contained map files: " + numberOfMapFiles);
+		// get and check the file size (8 bytes)
+		long headerFileSize = readLong();
+		if (headerFileSize != this.fileSize) {
+			Logger.debug("invalid file size: " + headerFileSize);
 			return false;
-		}
-
-		// get and check the projection name (VBE-U)
-		this.projectionName = readUTF8EncodedString(true);
-
-		// get and check the tile pixel size (2 bytes)
-		int tilePixelSize = readShort();
-		if (tilePixelSize < 1) {
-			Logger.debug("invalid tile pixel size: " + tilePixelSize);
-			return false;
-		}
-
-		// get and check the the top boundary (4 bytes)
-		int boundaryTop = readInt();
-		if (boundaryTop > 90000000) {
-			Logger.debug("invalid top boundary: " + boundaryTop);
-			return false;
-		}
-
-		// get and check the left boundary (4 bytes)
-		int boundaryLeft = readInt();
-		if (boundaryLeft < -180000000) {
-			Logger.debug("invalid left boundary: " + boundaryLeft);
-			return false;
-		}
-
-		// get and check the bottom boundary (4 bytes)
-		int boundaryBottom = readInt();
-		if (boundaryBottom < -90000000) {
-			Logger.debug("invalid bottom boundary: " + boundaryBottom);
-			return false;
-		}
-
-		// get and check the right boundary (4 bytes)
-		int boundaryRight = readInt();
-		if (boundaryRight > 180000000) {
-			Logger.debug("invalid right boundary: " + boundaryRight);
-			return false;
-		}
-
-		// create the map boundary rectangle
-		this.mapBoundary = new Rect(boundaryLeft, boundaryBottom, boundaryRight, boundaryTop);
-
-		// check if the header contains a start position
-		if (this.headerStartPosition) {
-			// get and check the start position latitude (4 byte)
-			this.startPositionLatitude = readInt();
-			if (this.startPositionLatitude < -90000000 || this.startPositionLatitude > 90000000) {
-				Logger.debug("invalid start position latitude: " + this.startPositionLatitude);
-				return false;
-			}
-
-			// get and check the start position longitude (4 byte)
-			this.startPositionLongitude = readInt();
-			if (this.startPositionLongitude < -180000000
-					|| this.startPositionLongitude > 180000000) {
-				Logger.debug("invalid start position longitude: " + this.startPositionLongitude);
-				return false;
-			}
 		}
 
 		// get and check the the map date (8 bytes)
@@ -951,60 +915,128 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get and check the number of node tags (2 bytes)
-		this.numberOfNodeTags = readShort();
-		if (this.numberOfNodeTags < 0) {
-			Logger.debug("invalid number of node tags: " + this.numberOfNodeTags);
+		// get and check the the top boundary (4 bytes)
+		int boundaryTop = readInt();
+		if (boundaryTop > LATITUDE_MAX) {
+			Logger.debug("invalid top boundary: " + boundaryTop);
 			return false;
 		}
 
-		this.nodeTags = new Tag[this.numberOfNodeTags];
+		// get and check the left boundary (4 bytes)
+		int boundaryLeft = readInt();
+		if (boundaryLeft < LONGITUDE_MIN) {
+			Logger.debug("invalid left boundary: " + boundaryLeft);
+			return false;
+		}
 
-		for (int tempInt = 0; tempInt < this.numberOfNodeTags; ++tempInt) {
+		// get and check the bottom boundary (4 bytes)
+		int boundaryBottom = readInt();
+		if (boundaryBottom < LATITUDE_MIN) {
+			Logger.debug("invalid bottom boundary: " + boundaryBottom);
+			return false;
+		}
+
+		// get and check the right boundary (4 bytes)
+		int boundaryRight = readInt();
+		if (boundaryRight > LONGITUDE_MAX) {
+			Logger.debug("invalid right boundary: " + boundaryRight);
+			return false;
+		}
+
+		// create the map boundary rectangle
+		this.mapBoundary = new Rect(boundaryLeft, boundaryBottom, boundaryRight, boundaryTop);
+
+		// get and check the tile pixel size (2 bytes)
+		int tilePixelSize = readShort();
+		if (tilePixelSize < 1) {
+			Logger.debug("invalid tile pixel size: " + tilePixelSize);
+			return false;
+		} else if (tilePixelSize != Tile.TILE_SIZE) {
+			Logger.debug("unsupported tile pixel size: " + tilePixelSize);
+			return false;
+		}
+
+		// get and check the projection name (VBE-U)
+		this.projectionName = readUTF8EncodedString(true);
+		if (!MERCATOR.equals(this.projectionName)) {
+			Logger.debug("unsupported projection: " + this.projectionName);
+			return false;
+		}
+
+		// get and check the language preference (VBE-U)
+		this.languagePreference = readUTF8EncodedString(true);
+
+		// get the meta-information byte that encodes multiple flags
+		byte metaFlags = readByte();
+
+		// extract the important flags from the meta-information byte
+		this.debugFile = (metaFlags & HEADER_BITMASK_DEBUG) != 0;
+		this.headerStartPosition = (metaFlags & HEADER_BITMASK_START_POSITION) != 0;
+
+		// check if the header contains a start position
+		if (this.headerStartPosition) {
+			// get and check the start position latitude (4 byte)
+			this.startPositionLatitude = readInt();
+			if (this.startPositionLatitude < LATITUDE_MIN || this.startPositionLatitude > LATITUDE_MAX) {
+				Logger.debug("invalid start position latitude: " + this.startPositionLatitude);
+				return false;
+			}
+
+			// get and check the start position longitude (4 byte)
+			this.startPositionLongitude = readInt();
+			if (this.startPositionLongitude < LONGITUDE_MIN
+					|| this.startPositionLongitude > LONGITUDE_MAX) {
+				Logger.debug("invalid start position longitude: " + this.startPositionLongitude);
+				return false;
+			}
+		}
+
+		// get and check the number of node tags (2 bytes)
+		int numberOfNodeTags = readShort();
+		if (numberOfNodeTags < 0) {
+			Logger.debug("invalid number of node tags: " + numberOfNodeTags);
+			return false;
+		}
+
+		this.nodeTags = new Tag[numberOfNodeTags];
+
+		for (int tempInt = 0; tempInt < numberOfNodeTags; ++tempInt) {
 			// get and check the node tag
-			this.tag = readUTF8EncodedString(true);
-			if (this.tag == null) {
+			String tag = readUTF8EncodedString(true);
+			if (tag == null) {
+				Logger.debug("node tag must not be null: " + tempInt);
 				return false;
 			}
 
-			// get and check the node tag ID (2 bytes)
-			this.tagId = readShort();
-			if (this.tagId < 0 || this.tagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.debug("invalid node tag ID: " + this.tagId);
-				return false;
-			}
-
-			this.nodeTags[this.tagId] = new Tag(this.tag);
+			this.nodeTags[tempInt] = new Tag(tag);
 		}
 
 		// get and check the number of way tags (2 bytes)
-		this.numberOfWayTags = readShort();
-		if (this.numberOfWayTags < 0) {
-			Logger.debug("invalid number of way tags: " + this.numberOfWayTags);
+		int numberOfWayTags = readShort();
+		if (numberOfWayTags < 0) {
+			Logger.debug("invalid number of way tags: " + numberOfWayTags);
 			return false;
 		}
 
-		this.wayTags = new Tag[this.numberOfWayTags];
+		this.wayTags = new Tag[numberOfWayTags];
 
-		for (int tempInt = 0; tempInt < this.numberOfWayTags; ++tempInt) {
+		for (int tempInt = 0; tempInt < numberOfWayTags; ++tempInt) {
 			// get and check the way tag
-			this.tag = readUTF8EncodedString(true);
-			if (this.tag == null) {
+			String tag = readUTF8EncodedString(true);
+			if (tag == null) {
+				Logger.debug("way tag must not be null: " + tempInt);
 				return false;
 			}
 
-			// get and check the way tag ID (2 bytes)
-			this.tagId = readShort();
-			if (this.tagId < 0 || this.tagId > MAXIMUM_ALLOWED_TAG_ID) {
-				Logger.debug("invalid way tag ID: " + this.tagId);
-				return false;
-			}
-
-			this.wayTags[this.tagId] = new Tag(this.tag);
+			this.wayTags[tempInt] = new Tag(tag);
 		}
 
-		// get and check the comment text
-		this.commentText = readUTF8EncodedString(true);
+		// get and check the number of contained map files
+		byte numberOfMapFiles = readByte();
+		if (numberOfMapFiles < 1) {
+			Logger.debug("invalid number of contained map files: " + numberOfMapFiles);
+			return false;
+		}
 
 		// create the list of all contained map files
 		MapFileParameters[] mapFilesList = new MapFileParameters[numberOfMapFiles];
@@ -1081,6 +1113,9 @@ public class MapDatabase {
 				this.mapFilesLookupTable[tempByte] = this.mapFileParameters;
 			}
 		}
+
+		// get and check the comment text
+		this.commentText = readUTF8EncodedString(true);
 
 		return true;
 	}
@@ -1227,7 +1262,7 @@ public class MapDatabase {
 	 * Decodes a variable amount of bytes from the read buffer to a string.
 	 * 
 	 * @param readString
-	 *            true if the string should be decoded and returned, false otherwise.
+	 *            true if the string should be actually decoded and returned, false otherwise.
 	 * @return the UTF-8 decoded string (may be null).
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
