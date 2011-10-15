@@ -726,54 +726,95 @@ final class GeoUtils {
 	}
 
 	static List<WayDataBlock> preprocessWay(TDWay way, List<TDWay> innerWays, boolean polygonClipping,
+			boolean wayClipping,
 			final TileCoordinate tile,
 			int enlargementInMeters) {
 
-		if (!polygonClipping) {
+		// Check for Multipolygon and clip when clipping is enabled
+		if (way.getShape() == TDWay.MULTI_POLYGON) {
 			List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-			// do no clipping and match the innerways to this way
-			if (way.getShape() == TDWay.MULTI_POLYGON) {
+			jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
 
-				jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
-				jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+			if (polygonClipping)
+				jtsWayBlockList = clipMultiPolygonToTile(jtsWayBlockList.get(0), tile,
+						enlargementInMeters);
 
-			} else {
-				jtsWayBlockList.add(toJtsWayBlock(way, null));
-
-			}
+			jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
 			return toWayDataBlockList(jtsWayBlockList);
 
 		}
-		else {
-			// do clipping to the outer and innerways of a multipolygon and match the innerways
-			if (way.getShape() == TDWay.MULTI_POLYGON) {
 
-				List<JtsWayBlock> jtsWayBlockList = clipMultiPolygonToTile(
-						toJtsWayBlock(way, innerWays), tile, enlargementInMeters);
+		// //check for clipping of simple polygons and ways
+		if ((polygonClipping && way.isPolygon()) ||
+				(wayClipping && !way.isPolygon())) {
+			List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+			List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
+					enlargementInMeters);
 
-				jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
-				return toWayDataBlockList(jtsWayBlockList);
+			if (segments == null)
+				return null;
+
+			for (List<GeoCoordinate> segment : segments) {
+
+				WayDataBlock wayDataBlock = new WayDataBlock(
+						waynodeAbsoluteCoordinatesToOffsets(segment), null);
+				wayDataBlockList.add(wayDataBlock);
+
 			}
-			// clip a simple polygon or way
-			else {
+			return wayDataBlockList;
 
-				List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
-				List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
-						enlargementInMeters);
-
-				if (segments == null)
-					return null;
-
-				for (List<GeoCoordinate> segment : segments) {
-
-					WayDataBlock wayDataBlock = new WayDataBlock(
-							waynodeAbsoluteCoordinatesToOffsets(segment), null);
-					wayDataBlockList.add(wayDataBlock);
-
-				}
-				return wayDataBlockList;
-			}
 		}
+
+		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+		jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
+
+		return toWayDataBlockList(jtsWayBlockList);
+
+		// if (!polygonClipping) {
+		// List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+		// // do no clipping and match the innerways to this way
+		// if (way.getShape() == TDWay.MULTI_POLYGON) {
+		//
+		// jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
+		// jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+		//
+		// } else {
+		// jtsWayBlockList.add(toJtsWayBlock(way, null));
+		//
+		// }
+		// return toWayDataBlockList(jtsWayBlockList);
+		//
+		// }
+		// else {
+		// // do clipping to the outer and innerways of a multipolygon and match the innerways
+		// if (way.getShape() == TDWay.MULTI_POLYGON) {
+		//
+		// List<JtsWayBlock> jtsWayBlockList = clipMultiPolygonToTile(
+		// toJtsWayBlock(way, innerWays), tile, enlargementInMeters);
+		//
+		// jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+		// return toWayDataBlockList(jtsWayBlockList);
+		// }
+		// // clip a simple polygon or way
+		// else {
+		//
+		// List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+		// List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
+		// enlargementInMeters);
+		//
+		// if (segments == null)
+		// return null;
+		//
+		// for (List<GeoCoordinate> segment : segments) {
+		//
+		// WayDataBlock wayDataBlock = new WayDataBlock(
+		// waynodeAbsoluteCoordinatesToOffsets(segment), null);
+		// wayDataBlockList.add(wayDataBlock);
+		//
+		// }
+		// return wayDataBlockList;
+		// }
+		// }
 
 	}
 

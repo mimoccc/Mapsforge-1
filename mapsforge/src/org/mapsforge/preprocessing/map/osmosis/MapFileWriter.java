@@ -47,7 +47,7 @@ class MapFileWriter {
 
 	private static final String DEBUG_INDEX_START_STRING = "+++IndexStart+++";
 
-	private static final int SIZE_ZOOMINTERVAL_CONFIGURATION = 13;
+	private static final int SIZE_ZOOMINTERVAL_CONFIGURATION = 19;
 
 	private static final int PIXEL_COMPRESSION_MAX_DELTA = 5;
 
@@ -158,6 +158,7 @@ class MapFileWriter {
 
 	final void writeFile(long date, int version, short tilePixel, String comment,
 			boolean debugStrings, boolean waynodeCompression, boolean polygonClipping,
+			boolean wayClipping,
 			boolean pixelCompression, GeoCoordinate mapStartPosition, String preferredLanguage)
 			throws IOException {
 
@@ -174,7 +175,7 @@ class MapFileWriter {
 		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
 			long subfileSize = writeSubfile(currentFileSize, i, debugStrings,
-					waynodeCompression, polygonClipping, pixelCompression);
+					waynodeCompression, polygonClipping, wayClipping, pixelCompression);
 			// SUB FILE META DATA IN CONTAINER HEADER
 			writeSubfileMetaDataToContainerHeader(i, currentFileSize, subfileSize);
 			currentFileSize += subfileSize;
@@ -185,7 +186,7 @@ class MapFileWriter {
 		randomAccessFile.write(containerB);
 
 		// WRITE FILE SIZE TO HEADER
-		long fileSize = randomAccessFile.getFilePointer();
+		long fileSize = randomAccessFile.length();
 		randomAccessFile.seek(OFFSET_FILE_SIZE);
 		randomAccessFile.writeLong(fileSize);
 
@@ -244,16 +245,15 @@ class MapFileWriter {
 		byte[] magicBytes = MAGIC_BYTE.getBytes();
 		containerHeaderBuffer.put(magicBytes);
 
-		// HEADER SIZE: SKIP 4 BYTES
+		// HEADER SIZE: Write dummy pattern as header size. It will be replaced later in time
 		int headerSizePosition = containerHeaderBuffer.position();
-		containerHeaderBuffer.position(headerSizePosition + 4);
+		containerHeaderBuffer.putInt(0xf0f0f0f0);
 
 		// FILE VERSION
 		containerHeaderBuffer.putInt(version);
 
-		// FILE SIZE: SKIP 8 BYTES
-		containerHeaderBuffer.position(headerSizePosition + 8);
-
+		// FILE SIZE: Write dummy pattern as file size. It will be replaced later in time
+		containerHeaderBuffer.putLong(0xf0f0f0f0f0f0f0f0L);
 		// DATE OF CREATION
 		containerHeaderBuffer.putLong(date);
 
@@ -360,7 +360,7 @@ class MapFileWriter {
 
 	private long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,
 			final boolean debugStrings, final boolean waynodeCompression,
-			final boolean polygonClipping,
+			final boolean polygonClipping, final boolean wayClipping,
 			final boolean pixelCompression)
 			throws IOException {
 
@@ -563,6 +563,7 @@ class MapFileWriter {
 
 							WayNodePreprocessingResult wayNodePreprocessingResult = preprocessWayNodes(
 									way, waynodeCompression, pixelCompression, polygonClipping,
+									wayClipping,
 									maxZoomCurrentInterval, baseZoomCurrentInterval,
 									currentTileCoordinate, false);
 
@@ -793,7 +794,8 @@ class MapFileWriter {
 
 	private WayNodePreprocessingResult preprocessWayNodes(TDWay way,
 			boolean waynodeCompression,
-			boolean pixelCompression, boolean polygonClipping, byte maxZoomCurrentInterval,
+			boolean pixelCompression, boolean polygonClipping, boolean wayClipping,
+			byte maxZoomCurrentInterval,
 			byte baseZoomCurrentInterval,
 			TileCoordinate tile, boolean skipInvalidPolygons) {
 		List<GeoCoordinate> waynodeCoordinates = way.wayNodesAsCoordinateList();
@@ -804,11 +806,11 @@ class MapFileWriter {
 		if (way.getShape() == TDWay.MULTI_POLYGON)
 			wayDataBlockList = GeoUtils.preprocessWay(way,
 					dataStore.getInnerWaysOfMultipolygon(way.getId()),
-					polygonClipping,
+					polygonClipping, wayClipping,
 					tile, bboxEnlargement);
 		else
 			wayDataBlockList = GeoUtils.preprocessWay(way, null,
-					polygonClipping,
+					polygonClipping, wayClipping,
 					tile, bboxEnlargement);
 
 		// if (way.isPolygon()) {

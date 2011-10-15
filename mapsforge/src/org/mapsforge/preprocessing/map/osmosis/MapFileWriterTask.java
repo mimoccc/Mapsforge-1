@@ -73,6 +73,7 @@ public class MapFileWriterTask implements Sink {
 	private boolean waynodeCompression;
 	private boolean pixelFilter;
 	private boolean polygonClipping;
+	private boolean wayClipping;
 	private String comment;
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 	private int threadpoolSize;
@@ -84,6 +85,7 @@ public class MapFileWriterTask implements Sink {
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
 			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
+			boolean wayClipping,
 			int threadpoolSize, String type, int bboxEnlargement, String tagConfFile,
 			String preferredLanguage) {
 		this.outFile = new File(outFile);
@@ -100,6 +102,7 @@ public class MapFileWriterTask implements Sink {
 		this.waynodeCompression = waynodeCompression;
 		this.pixelFilter = pixelFilter;
 		this.polygonClipping = polygonClipping;
+		this.wayClipping = wayClipping;
 		this.comment = comment;
 		if (tagConfFile == null) {
 			TAG_MAPPING = new OSMTagMapping(
@@ -173,7 +176,7 @@ public class MapFileWriterTask implements Sink {
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
 			mfw.writeFile(System.currentTimeMillis(), VERSION_BINARY_FORMAT, (short) 256, comment,
 					debugInfo,
-					waynodeCompression, polygonClipping, pixelFilter, mapStartPosition,
+					waynodeCompression, polygonClipping, wayClipping, pixelFilter, mapStartPosition,
 					preferredLanguage);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
