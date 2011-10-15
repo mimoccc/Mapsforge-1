@@ -12,10 +12,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps;
+package org.mapsforge.android.maps.database;
 
 /**
- * This class converts byte arrays to numbers.
+ * This utility class contains methods to convert byte arrays to numbers.
  */
 final class Deserializer {
 	/**
@@ -88,6 +88,6 @@ final class Deserializer {
 	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private Deserializer() {
-		// do nothing
+		throw new IllegalStateException();
 	}
 }

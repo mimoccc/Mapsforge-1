@@ -62,6 +62,6 @@ public final class Logger {
 	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private Logger() {
-		// do nothing
+		throw new IllegalStateException();
 	}
 }

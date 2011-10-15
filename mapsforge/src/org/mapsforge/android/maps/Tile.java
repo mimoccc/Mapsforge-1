@@ -25,7 +25,12 @@ import android.graphics.Rect;
  * number together with their zoom level. The actual area that a tile covers on a map depends on the
  * underlying map projection.
  */
-class Tile implements Serializable {
+public class Tile implements Serializable {
+	/**
+	 * Width and height of a map tile in pixel.
+	 */
+	public static final int TILE_SIZE = 256;
+
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -34,14 +39,24 @@ class Tile implements Serializable {
 	static final byte TILE_BYTES_PER_PIXEL = 2;
 
 	/**
-	 * Width and height of a map tile in pixel.
-	 */
-	static final int TILE_SIZE = 256;
-
-	/**
 	 * Size of a single map tile in bytes.
 	 */
 	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
+
+	/**
+	 * X number of this tile.
+	 */
+	public final long x;
+
+	/**
+	 * Y number of this tile.
+	 */
+	public final long y;
+
+	/**
+	 * Zoom level of this tile.
+	 */
+	public final byte zoomLevel;
 
 	/**
 	 * Stores the hash value of this object.
@@ -59,22 +74,7 @@ class Tile implements Serializable {
 	transient long pixelY;
 
 	/**
-	 * X number of this tile.
-	 */
-	final long x;
-
-	/**
-	 * Y number of this tile.
-	 */
-	final long y;
-
-	/**
-	 * Zoom level of this tile.
-	 */
-	final byte zoomLevel;
-
-	/**
-	 * Constructs an immutable tile with the specified XY number and zoom level.
+	 * Constructs an immutable tile instance with the specified XY number and zoom level.
 	 * 
 	 * @param x
 	 *            the X number of the tile.
@@ -83,7 +83,7 @@ class Tile implements Serializable {
 	 * @param zoomLevel
 	 *            the zoom level of the tile.
 	 */
-	Tile(long x, long y, byte zoomLevel) {
+	public Tile(long x, long y, byte zoomLevel) {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;

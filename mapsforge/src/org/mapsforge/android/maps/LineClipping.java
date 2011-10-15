@@ -150,6 +150,6 @@ final class LineClipping {
 	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private LineClipping() {
-		// do nothing
+		throw new IllegalStateException();
 	}
 }

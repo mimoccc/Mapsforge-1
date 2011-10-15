@@ -126,6 +126,6 @@ final class SutherlandHodgmanClipping {
 	 * Private constructor to prevent instantiation from other classes.
 	 */
 	private SutherlandHodgmanClipping() {
-		// do nothing
+		throw new IllegalStateException();
 	}
 }

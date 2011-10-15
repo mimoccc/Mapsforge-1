@@ -112,7 +112,6 @@
 		<xs:attribute name="stroke-width" type="tns:nonNegativeFloat" use="optional" default="0" />
 		<xs:attribute name="stroke-dasharray" type="tns:strokeDasharray" use="optional" />
 		<xs:attribute name="stroke-linecap" type="tns:cap" use="optional" default="round" />
-		<xs:attribute name="coastlineSegment" type="xs:boolean" use="optional" default="false" />
 	</xs:complexType>
 
 	<xs:complexType name="lineSymbol">
@@ -159,6 +158,8 @@
 		<xs:attribute name="zoom-max" type="xs:unsignedByte" use="optional" default="127" />
 	</xs:complexType>
 
+
+	<!-- rules element -->
 	<xs:complexType name="rules">
 		<xs:sequence minOccurs="0" maxOccurs="unbounded">
 			<xs:element name="rule" type="tns:rule" />
@@ -167,6 +168,7 @@
 		<xs:attribute name="scale-stroke-width" type="tns:nonNegativeFloat" use="optional" default="1" />
 		<xs:attribute name="scale-text-width" type="tns:nonNegativeFloat" use="optional" default="1" />
 	</xs:complexType>
+
 
 	<!-- root element -->
 	<xs:element name="rules" type="tns:rules" />

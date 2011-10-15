@@ -132,13 +132,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			return false;
 		}
 
-		Item checkOverlayItem;
 		Point checkItemPoint = new Point();
-		Rect checkMarkerBounds;
-		int checkLeft;
-		int checkRight;
-		int checkTop;
-		int checkBottom;
 
 		synchronized (this.visibleItems) {
 			// iterate over all visible items
@@ -146,7 +140,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 				Integer itemIndex = this.visibleItems.get(i);
 
 				// get the current item
-				checkOverlayItem = createItem(itemIndex.intValue());
+				Item checkOverlayItem = createItem(itemIndex.intValue());
 				if (checkOverlayItem == null) {
 					continue;
 				}
@@ -164,6 +158,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 					}
 
 					// select the correct marker for the item and get the position
+					Rect checkMarkerBounds;
 					if (checkOverlayItem.getMarker() == null) {
 						if (this.defaultMarker == null) {
 							// no marker to draw the item
@@ -175,10 +170,10 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 					}
 
 					// calculate the bounding box of the marker
-					checkLeft = checkItemPoint.x + checkMarkerBounds.left;
-					checkRight = checkItemPoint.x + checkMarkerBounds.right;
-					checkTop = checkItemPoint.y + checkMarkerBounds.top;
-					checkBottom = checkItemPoint.y + checkMarkerBounds.bottom;
+					int checkLeft = checkItemPoint.x + checkMarkerBounds.left;
+					int checkRight = checkItemPoint.x + checkMarkerBounds.right;
+					int checkTop = checkItemPoint.y + checkMarkerBounds.top;
+					int checkBottom = checkItemPoint.y + checkMarkerBounds.bottom;
 
 					// check if the event position is within the bounds of the marker
 					if (checkRight >= eventPosition.x && checkLeft <= eventPosition.x

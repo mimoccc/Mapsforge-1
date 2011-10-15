@@ -12,7 +12,9 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps;
+package org.mapsforge.android.maps.database;
+
+import org.mapsforge.core.MercatorProjection;
 
 import android.graphics.Rect;
 
@@ -23,7 +25,7 @@ class MapFileParameters {
 	/**
 	 * Divisor for converting coordinates stored as integers to double values.
 	 */
-	private static final double COORDINATES_DIVISOR = 1000000.0;
+	private static final double COORDINATES_DIVISOR = 1000000d;
 
 	/**
 	 * Stores the hash value of this object.

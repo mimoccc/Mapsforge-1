@@ -12,17 +12,19 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps;
+package org.mapsforge.android.maps.database;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.mapsforge.android.maps.Logger;
+
 /**
  * A cache for database index blocks with a fixed size and LRU policy.
  */
-class MapDatabaseIndexCache {
+class IndexCache {
 	/**
 	 * Number of bytes a single index entry consists of.
 	 */
@@ -57,7 +59,7 @@ class MapDatabaseIndexCache {
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	MapDatabaseIndexCache(RandomAccessFile inputFile, int capacity) {
+	IndexCache(RandomAccessFile inputFile, int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException();
 		}

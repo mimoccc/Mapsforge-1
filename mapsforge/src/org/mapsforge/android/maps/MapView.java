@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.mapsforge.android.maps.database.MapDatabase;
 import org.mapsforge.android.maps.overlay.Overlay;
 
 import android.content.Context;
@@ -1295,7 +1296,6 @@ public class MapView extends ViewGroup {
 
 		this.mapDatabase.closeFile();
 		if (this.mapDatabase.openFile(newMapFile)) {
-			this.mapDatabase.prepareExecution();
 			this.mapFile = newMapFile;
 			clearMapView();
 			setCenter(getDefaultStartPoint());
@@ -2754,7 +2754,6 @@ public class MapView extends ViewGroup {
 		}
 		if (newMapFile != null && this.mapDatabase != null
 				&& this.mapDatabase.openFile(newMapFile)) {
-			this.mapDatabase.prepareExecution();
 			this.mapFile = newMapFile;
 		} else {
 			this.mapFile = null;

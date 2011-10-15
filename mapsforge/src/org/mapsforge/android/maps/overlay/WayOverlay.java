@@ -76,7 +76,6 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
 			byte drawZoomLevel) {
 		int numberOfWays = size();
-		Way overlayWay;
 		for (int wayIndex = 0; wayIndex < numberOfWays; ++wayIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
@@ -84,7 +83,7 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 			}
 
 			// get the current way
-			overlayWay = createWay(wayIndex);
+			Way overlayWay = createWay(wayIndex);
 			if (overlayWay == null) {
 				continue;
 			}

@@ -23,6 +23,8 @@ import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.mapsforge.android.maps.database.MapDatabase;
+import org.mapsforge.android.maps.database.MapDatabaseCallback;
 import org.mapsforge.android.maps.theme.RenderCallback;
 import org.mapsforge.android.maps.theme.RenderTheme;
 import org.mapsforge.android.maps.theme.RenderThemeHandler;
@@ -36,10 +38,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 
 abstract class DatabaseMapGenerator extends MapGenerator implements
-		CoastlineAlgorithm.ClosedPolygonHandler, RenderCallback {
+		CoastlineAlgorithm.ClosedPolygonHandler, RenderCallback, MapDatabaseCallback {
 	private static final byte DEFAULT_ZOOM_LEVEL = 13;
 	private static final byte LAYERS = 11;
-	private static final byte MIN_ZOOM_LEVEL_WAY_NAMES = 14;
 	private static final Paint PAINT_WATER_TILE_HIGHTLIGHT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final double STROKE_INCREASE = 1.5;
 	private static final byte STROKE_MIN_ZOOM_LEVEL = 12;
@@ -100,12 +101,10 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private List<PointTextContainer> areaLabels;
 	private float[] centerPosition;
-	private CoastlineAlgorithm coastlineAlgorithm;
 	private float[][] coordinates;
 	private Tile currentTile;
 	private float currentX;
 	private float currentY;
-	private MapDatabase database;
 	private float diffX;
 	private float diffY;
 	private List<List<ShapePaintContainer>> drawingLayer;
@@ -114,6 +113,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private MapGeneratorJobTheme lastMapGeneratorJobTheme;
 	private float lastTileTextScale;
 	private byte lastTileZoomLevel;
+	private MapDatabase mapDatabase;
 	private List<PointTextContainer> nodes;
 	private float nodeX;
 	private float nodeY;
@@ -126,7 +126,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	private int skipPixels;
 	private List<Tag> tagList;
 	private Bitmap tileBitmap;
-	private Tile tileForCoastlineAlgorithm;
 	private float[] wayNamePath;
 	private List<WayTextContainer> wayNames;
 	private List<List<List<ShapePaintContainer>>> ways;
@@ -349,6 +348,43 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
 	}
 
+	@Override
+	public final void renderPointOfInterest(byte layer, int latitude, int longitude, List<Tag> tags) {
+		this.drawingLayer = this.ways.get(getValidLayer(layer));
+		this.nodeX = scaleLongitude(longitude);
+		this.nodeY = scaleLatitude(latitude);
+		this.renderTheme.matchNode(this, tags, this.currentTile.zoomLevel);
+	}
+
+	@Override
+	public final void renderWaterBackground() {
+		this.tagList.clear();
+		this.tagList.add(TAG_NATURAL_WATER);
+		this.coordinates = WATER_TILE_COORDINATES;
+		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
+	}
+
+	@Override
+	public final void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
+		this.drawingLayer = this.ways.get(getValidLayer(layer));
+		// TODO what about the label position?
+		this.coordinates = wayNodes;
+		for (int i = 0; i < this.coordinates.length; ++i) {
+			for (int j = 0; j < this.coordinates[i].length; j += 2) {
+				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
+				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
+			}
+		}
+		this.shapeContainer = new WayContainer(this.coordinates);
+
+		if (isClosedWay(this.coordinates[0])) {
+			this.renderTheme.matchClosedWay(this, tags, this.currentTile.zoomLevel);
+		} else {
+			this.renderTheme.matchLinearWay(this, tags, this.currentTile.zoomLevel);
+		}
+
+	}
+
 	private void createWayLists() {
 		int levels = this.renderTheme.getLevels();
 		this.ways.clear();
@@ -363,7 +399,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	private RenderTheme getRenderTheme(MapGeneratorJobTheme mapGeneratorJobTheme) {
 		InputStream inputStream = null;
-
 		try {
 			if (mapGeneratorJobTheme.internal) {
 				switch (mapGeneratorJobTheme.internalRenderTheme) {
@@ -435,11 +470,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.renderTheme.scaleStrokeWidth((float) Math.pow(STROKE_INCREASE, zoomLevelDiff));
 	}
 
-	void addCoastlineSegment() {
-		// TODO what about this?
-		this.coastlineAlgorithm.addCoastlineSegment(this.coordinates[0]);
-	}
-
 	@Override
 	final void cleanup() {
 		if (this.renderTheme != null) {
@@ -449,7 +479,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 		this.currentTile = null;
 		this.tileBitmap = null;
-		this.database = null;
+		this.mapDatabase = null;
 	}
 
 	/**
@@ -526,16 +556,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			this.lastTileTextScale = currentJob.textScale;
 		}
 
-		this.database.executeQuery(this.currentTile,
-				this.currentTile.zoomLevel >= MIN_ZOOM_LEVEL_WAY_NAMES, this);
+		this.mapDatabase.executeQuery(this.currentTile, this);
 
 		if (isInterrupted()) {
 			return false;
 		}
-
-		// start the coastline algorithm for generating closed polygons
-		this.coastlineAlgorithm.setTiles(this.tileForCoastlineAlgorithm, this.currentTile);
-		this.coastlineAlgorithm.generateClosedPolygons(this);
 
 		// erase the tileBitmap with the map background color
 		this.tileBitmap.eraseColor(this.renderTheme.getMapBackground());
@@ -582,11 +607,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 
 	@Override
 	final GeoPoint getDefaultStartPoint() {
-		if (this.database != null) {
-			if (this.database.getStartPosition() != null) {
-				return this.database.getStartPosition();
-			} else if (this.database.getMapCenter() != null) {
-				return this.database.getMapCenter();
+		if (this.mapDatabase != null) {
+			if (this.mapDatabase.getStartPosition() != null) {
+				return this.mapDatabase.getStartPosition();
+			} else if (this.mapDatabase.getMapCenter() != null) {
+				return this.mapDatabase.getMapCenter();
 			}
 		}
 		return super.getDefaultStartPoint();
@@ -616,89 +641,22 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.areaLabels.clear();
 		this.waySymbols.clear();
 		this.pointSymbols.clear();
-		this.coastlineAlgorithm.clearCoastlineSegments();
-	}
-
-	final void renderCoastlineTile(Tile tile) {
-		this.tileForCoastlineAlgorithm = tile;
 	}
 
 	/**
-	 * Renders a single POI.
+	 * Sets the MapDatabase from which the map data will be read.
 	 * 
-	 * @param layer
-	 *            the layer of the node.
-	 * @param latitude
-	 *            the latitude of the node.
-	 * @param longitude
-	 *            the longitude of the node.
-	 * @param tags
-	 *            the tags of the node.
+	 * @param mapDatabase
+	 *            the MapDatabase from which the map data will be read.
 	 */
-	final void renderPointOfInterest(byte layer, int latitude, int longitude, List<Tag> tags) {
-		this.drawingLayer = this.ways.get(getValidLayer(layer));
-		this.nodeX = scaleLongitude(longitude);
-		this.nodeY = scaleLatitude(latitude);
-		this.renderTheme.matchNode(this, tags, this.currentTile.zoomLevel);
-	}
-
-	/**
-	 * Renders water background for the current tile.
-	 */
-	final void renderWaterBackground() {
-		this.tagList.clear();
-		this.tagList.add(TAG_NATURAL_WATER);
-		this.coordinates = WATER_TILE_COORDINATES;
-		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
-	}
-
-	/**
-	 * Renders a single way or area.
-	 * 
-	 * @param layer
-	 *            the layer of the way.
-	 * @param labelPosition
-	 *            the position of the area label (may be null).
-	 * @param tags
-	 *            the tags of the way.
-	 * @param wayNodes
-	 *            the way node positions.
-	 */
-	final void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
-		this.drawingLayer = this.ways.get(getValidLayer(layer));
-		// TODO what about the label position?
-		this.coordinates = wayNodes;
-		for (int i = 0; i < this.coordinates.length; ++i) {
-			for (int j = 0; j < this.coordinates[i].length; j += 2) {
-				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
-				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
-			}
-		}
-		this.shapeContainer = new WayContainer(this.coordinates);
-
-		if (isClosedWay(this.coordinates[0])) {
-			this.renderTheme.matchClosedWay(this, tags, this.currentTile.zoomLevel);
-		} else {
-			this.renderTheme.matchLinearWay(this, tags, this.currentTile.zoomLevel);
-		}
-
-	}
-
-	/**
-	 * Sets the database from which the map data will be read.
-	 * 
-	 * @param database
-	 *            the database.
-	 */
-	final void setDatabase(MapDatabase database) {
-		this.database = database;
+	final void setDatabase(MapDatabase mapDatabase) {
+		this.mapDatabase = mapDatabase;
 	}
 
 	@Override
 	final void setupMapGenerator(Bitmap bitmap) {
 		this.tileBitmap = bitmap;
 
-		this.coastlineAlgorithm = new CoastlineAlgorithm();
 		this.labelPlacement = new LabelPlacement();
 
 		this.ways = new ArrayList<List<List<ShapePaintContainer>>>(LAYERS);

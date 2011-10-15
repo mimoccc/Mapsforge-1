@@ -182,8 +182,6 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 		this.visibleCirclesRedraw.clear();
 
 		int numberOfCircles = size();
-		Circle overlayCircle;
-		float circleRadius;
 		for (int circleIndex = 0; circleIndex < numberOfCircles; ++circleIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
@@ -191,7 +189,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 			}
 
 			// get the current circle
-			overlayCircle = createCircle(circleIndex);
+			Circle overlayCircle = createCircle(circleIndex);
 			if (overlayCircle == null) {
 				continue;
 			}
@@ -217,7 +215,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 						- drawPosition.x;
 				this.circlePosition.y = overlayCircle.cachedCenterPosition.y
 						- drawPosition.y;
-				circleRadius = overlayCircle.cachedRadius;
+				float circleRadius = overlayCircle.cachedRadius;
 
 				// check if the bounding box of the circle intersects with the canvas
 				if ((this.circlePosition.x + circleRadius) >= 0

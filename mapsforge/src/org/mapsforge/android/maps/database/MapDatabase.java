@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps;
+package org.mapsforge.android.maps.database;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mapsforge.android.maps.GeoPoint;
+import org.mapsforge.android.maps.Logger;
+import org.mapsforge.android.maps.MercatorProjection;
+import org.mapsforge.android.maps.Tile;
 import org.mapsforge.android.maps.theme.Tag;
 
 import android.graphics.Rect;
@@ -33,6 +37,12 @@ import android.graphics.Rect;
  * @see <a href="http://code.google.com/p/mapsforge/wiki/SpecificationBinaryMapFile">Specification</a>
  */
 public class MapDatabase {
+	private static final String SIGNATURE_NODE = "node signature: ";
+
+	private static final String SIGNATURE_WAY = "way signature: ";
+
+	private static final String SIGNATURE_BLOCK = "block signature: ";
+
 	/**
 	 * Maximum supported version of the map file format.
 	 */
@@ -178,12 +188,24 @@ public class MapDatabase {
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
 
+	/**
+	 * The key of the elevation OpenStreetMap tag.
+	 */
 	private static final String TAG_KEY_ELE = "ele";
 
+	/**
+	 * The key of the house number OpenStreetMap tag.
+	 */
 	private static final String TAG_KEY_HOUSE_NUMBER = "addr:housenumber";
 
+	/**
+	 * The key of the name OpenStreetMap tag.
+	 */
 	private static final String TAG_KEY_NAME = "name";
 
+	/**
+	 * The key of the reference OpenStreetMap tag.
+	 */
 	private static final String TAG_KEY_REF = "ref";
 
 	/**
@@ -238,17 +260,14 @@ public class MapDatabase {
 	private String blockSignature;
 	private int bufferPosition;
 	private String commentText;
-	private boolean currentBlockIsWater;
-	private MapDatabaseIndexCache databaseIndexCache;
+	private IndexCache databaseIndexCache;
 	private boolean debugFile;
-	private int elementCounter;
 	private long fileSize;
-	private int fileVersionNumber;
+	private int fileVersion;
 	private long fromBaseTileX;
 	private long fromBaseTileY;
 	private byte globalMaximumZoomLevel;
 	private byte globalMinimumZoomLevel;
-	private boolean headerStartPosition;
 	private int innerWayNodesSequenceLength;
 	private int innerWayNumber;
 	private int innerWayNumberOfWayNodes;
@@ -256,37 +275,21 @@ public class MapDatabase {
 	private String languagePreference;
 	private Rect mapBoundary;
 	private long mapDate;
-	private MapFileParameters mapFileParameters;
 	private MapFileParameters[] mapFilesLookupTable;
-	private String name;
+	private boolean mapStartPosition;
 	private long nextBlockPointer;
-	private String nodeElevation;
-	private byte nodeFeatureByte;
-	private boolean nodeFeatureElevation;
-	private boolean nodeFeatureHouseNumber;
-	private boolean nodeFeatureName;
-	private String nodeHouseNumber;
-	private int nodeLatitude;
-	private byte nodeLayer;
-	private int nodeLongitude;
-	private byte nodeNumberOfTags;
 	private String nodeSignature;
-	private int nodesOnZoomLevel;
-	private byte nodeSpecialByte;
 	private Tag[] nodeTags;
 	private long parentTileX;
 	private long parentTileY;
 	private String projectionName;
-	private boolean queryReadWayNames;
 	private int queryTileBitmask;
 	private int queryZoomLevel;
 	private byte[] readBuffer;
 	private int startPositionLatitude;
 	private int startPositionLongitude;
-	private boolean stopCurrentQuery;
 	private long subtileX;
 	private long subtileY;
-	private int tagId;
 	private List<Tag> tagList;
 	private int tileLatitude;
 	private int tileLongitude;
@@ -296,33 +299,16 @@ public class MapDatabase {
 	private int variableByteDecode;
 	private byte variableByteShift;
 	private float[] way;
-	private byte wayFeatureByte;
-	private boolean wayFeatureLabelPosition;
-	private boolean wayFeatureMultipolygon;
-	private boolean wayFeatureName;
-	private boolean wayFeatureRef;
 	private float[] wayLabelPosition;
-	private byte wayLayer;
 	private float[][] wayNodes;
 	private int wayNodesSequenceLength;
 	private int wayNumberOfInnerWays;
 	private byte wayNumberOfTags;
 	private int wayNumberOfWayNodes;
-	private String wayRef;
 	private String waySignature;
-	private int waySize;
-	private int waysOnZoomLevel;
-	private byte waySpecialByte1;
 	private Tag[] wayTags;
 	private int wayTileBitmask;
 	private int zoomLevelDifference;
-
-	/**
-	 * Constructs a new MapDatabase instance for reading binary map files.
-	 */
-	public MapDatabase() {
-		// do nothing
-	}
 
 	/**
 	 * Closes the map file. Has no effect if no map file is currently opened.
@@ -340,6 +326,252 @@ public class MapDatabase {
 			}
 
 			this.readBuffer = null;
+		} catch (IOException e) {
+			Logger.exception(e);
+		}
+	}
+
+	/**
+	 * Starts a database query with the given parameters.
+	 * 
+	 * @param tile
+	 *            the tile to read.
+	 * @param mapDatabaseCallback
+	 *            the callback which handles the extracted map elements.
+	 */
+	public void executeQuery(Tile tile, MapDatabaseCallback mapDatabaseCallback) {
+		try {
+			prepareExecution();
+
+			// limit the zoom level of the requested tile for this query
+			if (tile.zoomLevel > this.globalMaximumZoomLevel) {
+				this.queryZoomLevel = this.globalMaximumZoomLevel;
+			} else if (tile.zoomLevel < this.globalMinimumZoomLevel) {
+				this.queryZoomLevel = this.globalMinimumZoomLevel;
+			} else {
+				this.queryZoomLevel = tile.zoomLevel;
+			}
+
+			// get and check the map file for the query zoom level
+			MapFileParameters mapFileParameters = this.mapFilesLookupTable[this.queryZoomLevel];
+			if (mapFileParameters == null) {
+				Logger.debug("no map file for zoom level: " + tile.zoomLevel);
+				return;
+			}
+
+			// calculate the blocks that cover the area of the requested tile
+			if (tile.zoomLevel < mapFileParameters.baseZoomLevel) {
+				// calculate the XY numbers of the upper left and lower right subtiles
+				this.zoomLevelDifference = mapFileParameters.baseZoomLevel - tile.zoomLevel;
+				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
+				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
+				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
+				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
+				this.useTileBitmask = false;
+			} else if (tile.zoomLevel > mapFileParameters.baseZoomLevel) {
+				// calculate the XY numbers of the parent base tile
+				this.zoomLevelDifference = tile.zoomLevel - mapFileParameters.baseZoomLevel;
+				this.fromBaseTileX = tile.x >>> this.zoomLevelDifference;
+				this.fromBaseTileY = tile.y >>> this.zoomLevelDifference;
+				this.toBaseTileX = this.fromBaseTileX;
+				this.toBaseTileY = this.fromBaseTileY;
+
+				if (this.zoomLevelDifference == 1) {
+					// determine the correct bitmask for all quadrants
+					if (tile.x % 2 == 0 && tile.y % 2 == 0) {
+						// upper left quadrant
+						this.queryTileBitmask = 0xcc00;
+					} else if (tile.x % 2 == 1 && tile.y % 2 == 0) {
+						// upper right quadrant
+						this.queryTileBitmask = 0x3300;
+					} else if (tile.x % 2 == 0 && tile.y % 2 == 1) {
+						// lower left quadrant
+						this.queryTileBitmask = 0xcc;
+					} else {
+						// lower right quadrant
+						this.queryTileBitmask = 0x33;
+					}
+				} else {
+					// calculate the XY numbers of the second level subtile
+					this.subtileX = tile.x >>> (this.zoomLevelDifference - 2);
+					this.subtileY = tile.y >>> (this.zoomLevelDifference - 2);
+
+					// calculate the XY numbers of the parent tile
+					this.parentTileX = this.subtileX >>> 1;
+					this.parentTileY = this.subtileY >>> 1;
+
+					// determine the correct bitmask for all 16 subtiles
+					if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 0) {
+						// upper left quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x8000;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x4000;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x800;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x400;
+						}
+					} else if (this.parentTileX % 2 == 1 && this.parentTileY % 2 == 0) {
+						// upper right quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x2000;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x1000;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x200;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x100;
+						}
+					} else if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 1) {
+						// lower left quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x80;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x40;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x8;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x4;
+						}
+					} else {
+						// lower right quadrant
+						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
+							// upper left subtile
+							this.queryTileBitmask = 0x20;
+						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
+							// upper right subtile
+							this.queryTileBitmask = 0x10;
+						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
+							// lower left subtile
+							this.queryTileBitmask = 0x2;
+						} else {
+							// lower right subtile
+							this.queryTileBitmask = 0x1;
+						}
+					}
+				}
+				this.useTileBitmask = true;
+			} else {
+				// use the tile XY numbers of the requested tile
+				this.fromBaseTileX = tile.x;
+				this.fromBaseTileY = tile.y;
+				this.toBaseTileX = this.fromBaseTileX;
+				this.toBaseTileY = this.fromBaseTileY;
+				this.useTileBitmask = false;
+			}
+
+			// calculate the blocks in the file which need to be read
+			long fromBlockX = Math.max(this.fromBaseTileX - mapFileParameters.boundaryLeftTile, 0);
+			long fromBlockY = Math.max(this.fromBaseTileY - mapFileParameters.boundaryTopTile, 0);
+			long toBlockX = Math.min(
+					this.toBaseTileX - mapFileParameters.boundaryLeftTile,
+					mapFileParameters.blocksWidth - 1);
+			long toBlockY = Math.min(this.toBaseTileY - mapFileParameters.boundaryTopTile,
+					mapFileParameters.blocksHeight - 1);
+
+			boolean queryIsWater = true;
+			boolean queryReadWaterInfo = false;
+
+			// read and process all necessary blocks from top to bottom and from left to right
+			for (long currentRow = fromBlockY; currentRow <= toBlockY; ++currentRow) {
+				for (long currentColumn = fromBlockX; currentColumn <= toBlockX; ++currentColumn) {
+					// calculate the actual block number of the needed block in the file
+					long blockNumber = currentRow * mapFileParameters.blocksWidth + currentColumn;
+
+					// get the current index entry
+					long currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(
+							mapFileParameters, blockNumber);
+
+					// check if the current query would still return a water tile
+					if (queryIsWater) {
+						// check the water flag of the current block
+						boolean currentBlockIsWater = (currentBlockIndexEntry & BITMASK_INDEX_WATER) != 0;
+						queryIsWater = queryIsWater && currentBlockIsWater;
+						queryReadWaterInfo = true;
+					}
+
+					// get and check the current block pointer
+					long currentBlockPointer = currentBlockIndexEntry & BITMASK_INDEX_OFFSET;
+					if (currentBlockPointer < 1 || currentBlockPointer > mapFileParameters.mapFileSize) {
+						Logger.debug("invalid current block pointer: " + currentBlockPointer);
+						Logger.debug("mapFileSize: " + mapFileParameters.mapFileSize);
+						return;
+					}
+
+					// check if the current block is the last block in the file
+					if (blockNumber + 1 == mapFileParameters.numberOfBlocks) {
+						// set the next block pointer to the end of the file
+						this.nextBlockPointer = mapFileParameters.mapFileSize;
+					} else {
+						// get and check the next block pointer
+						this.nextBlockPointer = this.databaseIndexCache.getIndexEntry(
+								mapFileParameters, blockNumber + 1) & BITMASK_INDEX_OFFSET;
+						if (this.nextBlockPointer < 1
+								|| this.nextBlockPointer > mapFileParameters.mapFileSize) {
+							Logger.debug("invalid next block pointer: " + this.nextBlockPointer);
+							Logger.debug("mapFileSize: " + mapFileParameters.mapFileSize);
+							return;
+						}
+					}
+
+					// calculate the size of the current block
+					int currentBlockSize = (int) (this.nextBlockPointer - currentBlockPointer);
+					if (currentBlockSize < 0) {
+						Logger.debug("invalid current block size: " + currentBlockSize);
+						return;
+					} else if (currentBlockSize == 0) {
+						// the current block is empty, continue with the next block
+						continue;
+					} else if (currentBlockSize > MAXIMUM_BLOCK_SIZE) {
+						// the current block is too large, continue with the next block
+						Logger.debug("current block size too large: " + currentBlockSize);
+						continue;
+					} else if (currentBlockPointer + currentBlockSize > this.fileSize) {
+						Logger.debug("invalid current block size: " + currentBlockSize);
+						return;
+					}
+
+					// go to the current block in the map file and read the data into the buffer
+					this.inputFile.seek(mapFileParameters.startAddress + currentBlockPointer);
+
+					// read the current block into the buffer
+					if (!readFromMapFile(currentBlockSize)) {
+						// skip the current block
+						Logger.debug("reading current block has failed: " + currentBlockSize);
+						return;
+					}
+
+					// calculate the top-left coordinates of the underlying tile
+					this.tileLatitude = (int) (MercatorProjection.tileYToLatitude(
+							mapFileParameters.boundaryTopTile + currentRow,
+							mapFileParameters.baseZoomLevel) * 1000000);
+					this.tileLongitude = (int) (MercatorProjection.tileXToLongitude(
+							mapFileParameters.boundaryLeftTile + currentColumn,
+							mapFileParameters.baseZoomLevel) * 1000000);
+
+					// handle the current block data
+					processBlock(mapFileParameters, mapDatabaseCallback);
+				}
+			}
+
+			// the query is finished, was the water flag set for all blocks?
+			if (queryIsWater && queryReadWaterInfo) {
+				// render the water background
+				mapDatabaseCallback.renderWaterBackground();
+			}
 		} catch (IOException e) {
 			Logger.exception(e);
 		}
@@ -369,7 +601,7 @@ public class MapDatabase {
 	 * @return the file version number of the current map file.
 	 */
 	public int getFileVersion() {
-		return this.fileVersionNumber;
+		return this.fileVersion;
 	}
 
 	/**
@@ -426,7 +658,7 @@ public class MapDatabase {
 	 * @return the start position from the map file header (may be null).
 	 */
 	public GeoPoint getStartPosition() {
-		if (this.headerStartPosition) {
+		if (this.mapStartPosition) {
 			return new GeoPoint(this.startPositionLatitude, this.startPositionLongitude);
 		}
 		return null;
@@ -493,15 +725,30 @@ public class MapDatabase {
 	}
 
 	/**
+	 * Prepares and sets up the internal data structures and caches.
+	 */
+	private void prepareExecution() {
+		if (this.databaseIndexCache == null) {
+			this.databaseIndexCache = new IndexCache(this.inputFile, INDEX_CACHE_SIZE);
+		}
+
+		if (this.tagList == null) {
+			this.tagList = new ArrayList<Tag>();
+		}
+	}
+
+	/**
 	 * Reads a single block and calls the render functions on all map elements.
 	 * 
-	 * @param databaseMapGenerator
-	 *            the DatabaseMapGenerator callback which handles the extracted map elements.
+	 * @param mapFileParameters
+	 *            the parameters of the current map file.
+	 * @param mapDatabaseCallback
+	 *            the callback which handles the extracted map elements.
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private void processBlock(DatabaseMapGenerator databaseMapGenerator)
-			throws UnsupportedEncodingException {
+	private void processBlock(MapFileParameters mapFileParameters,
+			MapDatabaseCallback mapDatabaseCallback) throws UnsupportedEncodingException {
 		if (this.debugFile) {
 			// get and check the block signature
 			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
@@ -514,15 +761,15 @@ public class MapDatabase {
 		}
 
 		// calculate the offset in the block entries table and move the pointer
-		int blockEntriesTableOffset = (this.queryZoomLevel - this.mapFileParameters.zoomLevelMin) * 4;
+		int blockEntriesTableOffset = (this.queryZoomLevel - mapFileParameters.zoomLevelMin) * 4;
 		this.bufferPosition += blockEntriesTableOffset;
 
 		// get the amount of way and nodes on the current zoomLevel level
-		this.nodesOnZoomLevel = readShort();
-		this.waysOnZoomLevel = readShort();
+		int nodesOnZoomLevel = readShort();
+		int waysOnZoomLevel = readShort();
 
 		// move the pointer to the end of the block entries table
-		this.bufferPosition += this.mapFileParameters.blockEntriesTableSize - blockEntriesTableOffset
+		this.bufferPosition += mapFileParameters.blockEntriesTableSize - blockEntriesTableOffset
 				- 4;
 
 		// get the relative offset to the first stored way in the block
@@ -530,7 +777,7 @@ public class MapDatabase {
 		if (firstWayOffset < 0) {
 			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug("block signature: " + this.blockSignature);
+				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 			}
 			return;
 		}
@@ -540,13 +787,13 @@ public class MapDatabase {
 		if (firstWayOffset > this.readBuffer.length) {
 			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug("block signature: " + this.blockSignature);
+				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 			}
 			return;
 		}
 
 		// get the nodes
-		for (this.elementCounter = this.nodesOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
+		for (int elementCounter = nodesOnZoomLevel; elementCounter != 0; --elementCounter) {
 			if (this.debugFile) {
 				// get and check the node signature
 				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
@@ -554,71 +801,67 @@ public class MapDatabase {
 				this.bufferPosition += SIGNATURE_LENGTH_NODE;
 				if (!this.nodeSignature.startsWith("***POIStart")) {
 					Logger.debug("invalid node signature: " + this.nodeSignature);
-					Logger.debug("block signature: " + this.blockSignature);
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 					return;
 				}
 			}
 
 			// get the node latitude offset (VBE-S)
-			this.nodeLatitude = this.tileLatitude + readSignedInt();
+			int nodeLatitude = this.tileLatitude + readSignedInt();
 
 			// get the node longitude offset (VBE-S)
-			this.nodeLongitude = this.tileLongitude + readSignedInt();
+			int nodeLongitude = this.tileLongitude + readSignedInt();
 
 			// get the special byte that encodes multiple fields
-			this.nodeSpecialByte = readByte();
+			byte nodeSpecialByte = readByte();
 
 			// bit 1-4 of the special byte represent the node layer
-			this.nodeLayer = (byte) ((this.nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
+			byte nodeLayer = (byte) ((nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
 			// bit 5-8 of the special byte represent the number of tag IDs
-			this.nodeNumberOfTags = (byte) (this.nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
+			byte nodeNumberOfTags = (byte) (nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
 
 			this.tagList.clear();
 
 			// get the node tag IDs (VBE-U)
-			for (byte tempByte = this.nodeNumberOfTags; tempByte != 0; --tempByte) {
-				this.tagId = readUnsignedInt();
-				if (this.tagId < 0 || this.tagId >= this.nodeTags.length) {
-					Logger.debug("invalid node tag ID: " + this.tagId);
+			for (byte tempByte = nodeNumberOfTags; tempByte != 0; --tempByte) {
+				int tagId = readUnsignedInt();
+				if (tagId < 0 || tagId >= this.nodeTags.length) {
+					Logger.debug("invalid node tag ID: " + tagId);
 					if (this.debugFile) {
-						Logger.debug("node signature: " + this.nodeSignature);
-						Logger.debug("block signature: " + this.blockSignature);
+						Logger.debug(SIGNATURE_NODE + this.nodeSignature);
+						Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 					}
 					return;
 				}
-				this.tagList.add(this.nodeTags[this.tagId]);
+				this.tagList.add(this.nodeTags[tagId]);
 			}
 
 			// get the feature byte
-			this.nodeFeatureByte = readByte();
+			byte nodeFeatureByte = readByte();
 
 			// bit 1-3 of the node feature byte enable optional features
-			this.nodeFeatureName = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
-			this.nodeFeatureElevation = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
-			this.nodeFeatureHouseNumber = (this.nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
+			boolean nodeFeatureName = (nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
+			boolean nodeFeatureElevation = (nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
+			boolean nodeFeatureHouseNumber = (nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
 
 			// check if the node has a name
-			if (this.nodeFeatureName) {
-				this.name = readUTF8EncodedString(true);
-				this.tagList.add(new Tag(TAG_KEY_NAME, this.name));
+			if (nodeFeatureName) {
+				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
 			}
 
 			// check if the node has an elevation
-			if (this.nodeFeatureElevation) {
+			if (nodeFeatureElevation) {
 				// get the node elevation (VBE-S)
-				this.nodeElevation = Integer.toString(readSignedInt());
-				this.tagList.add(new Tag(TAG_KEY_ELE, this.nodeElevation));
+				this.tagList.add(new Tag(TAG_KEY_ELE, Integer.toString(readSignedInt())));
 			}
 
 			// check if the node has a house number
-			if (this.nodeFeatureHouseNumber) {
-				this.nodeHouseNumber = readUTF8EncodedString(true);
-				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.nodeHouseNumber));
+			if (nodeFeatureHouseNumber) {
+				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, readUTF8EncodedString()));
 			}
 
-			// render the node
-			databaseMapGenerator.renderPointOfInterest(this.nodeLayer, this.nodeLatitude,
-					this.nodeLongitude, this.tagList);
+			mapDatabaseCallback.renderPointOfInterest(nodeLayer, nodeLatitude,
+					nodeLongitude, this.tagList);
 		}
 
 		// finished reading nodes, check if the current buffer position is valid
@@ -626,7 +869,7 @@ public class MapDatabase {
 			Logger.debug("invalid buffer position: " + this.bufferPosition + " - "
 					+ firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug("block signature: " + this.blockSignature);
+				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 			}
 			return;
 		}
@@ -635,7 +878,7 @@ public class MapDatabase {
 		this.bufferPosition = firstWayOffset;
 
 		// get the ways
-		for (this.elementCounter = this.waysOnZoomLevel; this.elementCounter != 0; --this.elementCounter) {
+		for (int elementCounter = waysOnZoomLevel; elementCounter != 0; --elementCounter) {
 			if (this.debugFile) {
 				// get and check the way signature
 				this.waySignature = new String(this.readBuffer, this.bufferPosition,
@@ -643,17 +886,17 @@ public class MapDatabase {
 				this.bufferPosition += SIGNATURE_LENGTH_WAY;
 				if (!this.waySignature.startsWith("---WayStart")) {
 					Logger.debug("invalid way signature: " + this.waySignature);
-					Logger.debug("block signature: " + this.blockSignature);
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 					return;
 				}
 			}
 
 			// get the size of the way (VBE-U)
-			this.waySize = readUnsignedInt();
-			if (this.waySize < 0) {
-				Logger.debug("invalid way size: " + this.waySize);
+			int waySize = readUnsignedInt();
+			if (waySize < 0) {
+				Logger.debug("invalid way size: " + waySize);
 				if (this.debugFile) {
-					Logger.debug("block signature: " + this.blockSignature);
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 				}
 				return;
 			}
@@ -664,7 +907,7 @@ public class MapDatabase {
 				// check if the way is inside the requested tile
 				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
 					// skip the rest of the way and continue with the next way
-					this.bufferPosition += this.waySize - 2;
+					this.bufferPosition += waySize - 2;
 					continue;
 				}
 			} else {
@@ -673,12 +916,12 @@ public class MapDatabase {
 			}
 
 			// get the first special byte that encodes multiple fields
-			this.waySpecialByte1 = readByte();
+			byte waySpecialByte1 = readByte();
 
 			// bit 1-4 of the first special byte represent the way layer
-			this.wayLayer = (byte) ((this.waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
+			byte wayLayer = (byte) ((waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
 			// bit 5-8 of the first special byte represent the number of tag IDs
-			this.wayNumberOfTags = (byte) (this.waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
+			this.wayNumberOfTags = (byte) (waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
 
 			// skip the second special byte
 			readByte();
@@ -690,16 +933,13 @@ public class MapDatabase {
 
 			// get the way tag IDs (VBE-U)
 			for (byte tempByte = this.wayNumberOfTags; tempByte != 0; --tempByte) {
-				this.tagId = readUnsignedInt();
-				if (this.tagId < 0 || this.tagId >= this.wayTags.length) {
-					Logger.debug("invalid way tag ID: " + this.tagId);
-					if (this.debugFile) {
-						Logger.debug("way signature: " + this.waySignature);
-						Logger.debug("block signature: " + this.blockSignature);
-					}
+				int tagId = readUnsignedInt();
+				if (tagId < 0 || tagId >= this.wayTags.length) {
+					Logger.debug("invalid way tag ID: " + tagId);
+					logSignatures();
 					return;
 				}
-				this.tagList.add(this.wayTags[this.tagId]);
+				this.tagList.add(this.wayTags[tagId]);
 			}
 
 			// get and check the number of way nodes (VBE-U)
@@ -707,10 +947,7 @@ public class MapDatabase {
 			if (this.wayNumberOfWayNodes < 1
 					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 				Logger.debug("invalid number of way nodes: " + this.wayNumberOfWayNodes);
-				if (this.debugFile) {
-					Logger.debug("way signature: " + this.waySignature);
-					Logger.debug("block signature: " + this.blockSignature);
-				}
+				logSignatures();
 				return;
 			}
 
@@ -745,49 +982,41 @@ public class MapDatabase {
 			}
 
 			// get the feature byte
-			this.wayFeatureByte = readByte();
+			byte wayFeatureByte = readByte();
 
 			// bit 1-4 of the way feature byte enable optional features
-			this.wayFeatureName = (this.wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
-			this.wayFeatureRef = (this.wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
-			this.wayFeatureLabelPosition = (this.wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
-			this.wayFeatureMultipolygon = (this.wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
+			boolean wayFeatureName = (wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
+			boolean wayFeatureRef = (wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
+			boolean wayFeatureLabelPosition = (wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
+			boolean wayFeatureMultipolygon = (wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
 
 			// check if the way has a name
-			if (this.wayFeatureName) {
-				this.name = readUTF8EncodedString(this.queryReadWayNames);
-				this.tagList.add(new Tag(TAG_KEY_NAME, this.name));
+			if (wayFeatureName) {
+				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
 			}
 
 			// check if the way has a reference
-			if (this.wayFeatureRef) {
-				this.wayRef = readUTF8EncodedString(this.queryReadWayNames);
-				this.tagList.add(new Tag(TAG_KEY_REF, this.wayRef));
+			if (wayFeatureRef) {
+				this.tagList.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
 			}
 
 			// check if the way has a label position
-			if (this.wayFeatureLabelPosition) {
-				if (this.queryReadWayNames) {
-					this.wayLabelPosition = new float[2];
+			if (wayFeatureLabelPosition) {
+				this.wayLabelPosition = new float[2];
 
-					// get the label position latitude offset (VBE-S)
-					this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
+				// get the label position latitude offset (VBE-S)
+				this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
 
-					// get the label position longitude offset (VBE-S)
-					this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
-				} else {
-					// skip the label position latitude and longitude offsets (VBE-S)
-					readSignedInt();
-					readSignedInt();
-					this.wayLabelPosition = null;
-				}
+				// get the label position longitude offset (VBE-S)
+				this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
+
 			} else {
 				// no label position
 				this.wayLabelPosition = null;
 			}
 
 			// check if the way represents a multipolygon
-			if (this.wayFeatureMultipolygon) {
+			if (wayFeatureMultipolygon) {
 				// get the amount of inner ways (VBE-U)
 				this.wayNumberOfInnerWays = readUnsignedInt();
 
@@ -804,10 +1033,7 @@ public class MapDatabase {
 								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
 							Logger.debug("invalid number of inner way nodes: "
 									+ this.innerWayNumberOfWayNodes);
-							if (this.debugFile) {
-								Logger.debug("way signature: " + this.waySignature);
-								Logger.debug("block signature: " + this.blockSignature);
-							}
+							logSignatures();
 							return;
 						}
 
@@ -839,10 +1065,7 @@ public class MapDatabase {
 					}
 				} else {
 					Logger.debug("invalid number of inner ways: " + this.wayNumberOfInnerWays);
-					if (this.debugFile) {
-						Logger.debug("way signature: " + this.waySignature);
-						Logger.debug("block signature: " + this.blockSignature);
-					}
+					logSignatures();
 					return;
 				}
 			} else {
@@ -850,9 +1073,18 @@ public class MapDatabase {
 				this.wayNodes = new float[][] { this.way };
 			}
 
-			// render the way
-			databaseMapGenerator.renderWay(this.wayLayer, this.wayLabelPosition, this.tagList,
+			mapDatabaseCallback.renderWay(wayLayer, this.wayLabelPosition, this.tagList,
 					this.wayNodes);
+		}
+	}
+
+	/**
+	 * Logs the signature of the current way and block.
+	 */
+	private void logSignatures() {
+		if (this.debugFile) {
+			Logger.debug(SIGNATURE_WAY + this.waySignature);
+			Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
 		}
 	}
 
@@ -893,11 +1125,10 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get and check the file version number (4 bytes)
-		this.fileVersionNumber = readInt();
-		if (this.fileVersionNumber < BINARY_OSM_VERSION_MIN
-				|| this.fileVersionNumber > BINARY_OSM_VERSION_MAX) {
-			Logger.debug("unsupported file format version: " + this.fileVersionNumber);
+		// get and check the file version (4 bytes)
+		this.fileVersion = readInt();
+		if (this.fileVersion < BINARY_OSM_VERSION_MIN || this.fileVersion > BINARY_OSM_VERSION_MAX) {
+			Logger.debug("unsupported file version: " + this.fileVersion);
 			return false;
 		}
 
@@ -957,28 +1188,28 @@ public class MapDatabase {
 		}
 
 		// get and check the projection name (VBE-U)
-		this.projectionName = readUTF8EncodedString(true);
+		this.projectionName = readUTF8EncodedString();
 		if (!MERCATOR.equals(this.projectionName)) {
 			Logger.debug("unsupported projection: " + this.projectionName);
 			return false;
 		}
 
-		// get and check the language preference (VBE-U)
-		this.languagePreference = readUTF8EncodedString(true);
+		// get the language preference (VBE-U)
+		this.languagePreference = readUTF8EncodedString();
 
 		// get the meta-information byte that encodes multiple flags
 		byte metaFlags = readByte();
 
 		// extract the important flags from the meta-information byte
 		this.debugFile = (metaFlags & HEADER_BITMASK_DEBUG) != 0;
-		this.headerStartPosition = (metaFlags & HEADER_BITMASK_START_POSITION) != 0;
+		this.mapStartPosition = (metaFlags & HEADER_BITMASK_START_POSITION) != 0;
 
-		// check if the header contains a start position
-		if (this.headerStartPosition) {
+		// check if the header contains a map start position
+		if (this.mapStartPosition) {
 			// get and check the start position latitude (4 byte)
 			this.startPositionLatitude = readInt();
 			if (this.startPositionLatitude < LATITUDE_MIN || this.startPositionLatitude > LATITUDE_MAX) {
-				Logger.debug("invalid start position latitude: " + this.startPositionLatitude);
+				Logger.debug("invalid map start position latitude: " + this.startPositionLatitude);
 				return false;
 			}
 
@@ -986,7 +1217,7 @@ public class MapDatabase {
 			this.startPositionLongitude = readInt();
 			if (this.startPositionLongitude < LONGITUDE_MIN
 					|| this.startPositionLongitude > LONGITUDE_MAX) {
-				Logger.debug("invalid start position longitude: " + this.startPositionLongitude);
+				Logger.debug("invalid map start position longitude: " + this.startPositionLongitude);
 				return false;
 			}
 		}
@@ -1002,7 +1233,7 @@ public class MapDatabase {
 
 		for (int tempInt = 0; tempInt < numberOfNodeTags; ++tempInt) {
 			// get and check the node tag
-			String tag = readUTF8EncodedString(true);
+			String tag = readUTF8EncodedString();
 			if (tag == null) {
 				Logger.debug("node tag must not be null: " + tempInt);
 				return false;
@@ -1022,7 +1253,7 @@ public class MapDatabase {
 
 		for (int tempInt = 0; tempInt < numberOfWayTags; ++tempInt) {
 			// get and check the way tag
-			String tag = readUTF8EncodedString(true);
+			String tag = readUTF8EncodedString();
 			if (tag == null) {
 				Logger.debug("way tag must not be null: " + tempInt);
 				return false;
@@ -1108,14 +1339,14 @@ public class MapDatabase {
 		// create and fill the lookup table for the map files
 		this.mapFilesLookupTable = new MapFileParameters[this.globalMaximumZoomLevel + 1];
 		for (int tempInt = 0; tempInt < numberOfMapFiles; ++tempInt) {
-			this.mapFileParameters = mapFilesList[tempInt];
-			for (byte tempByte = this.mapFileParameters.zoomLevelMin; tempByte <= this.mapFileParameters.zoomLevelMax; ++tempByte) {
-				this.mapFilesLookupTable[tempByte] = this.mapFileParameters;
+			MapFileParameters mapFileParameters = mapFilesList[tempInt];
+			for (byte tempByte = mapFileParameters.zoomLevelMin; tempByte <= mapFileParameters.zoomLevelMax; ++tempByte) {
+				this.mapFilesLookupTable[tempByte] = mapFileParameters;
 			}
 		}
 
-		// get and check the comment text
-		this.commentText = readUTF8EncodedString(true);
+		// get the comment text
+		this.commentText = readUTF8EncodedString();
 
 		return true;
 	}
@@ -1261,324 +1492,21 @@ public class MapDatabase {
 	/**
 	 * Decodes a variable amount of bytes from the read buffer to a string.
 	 * 
-	 * @param readString
-	 *            true if the string should be actually decoded and returned, false otherwise.
 	 * @return the UTF-8 decoded string (may be null).
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private String readUTF8EncodedString(boolean readString)
-			throws UnsupportedEncodingException {
+	private String readUTF8EncodedString() throws UnsupportedEncodingException {
 		// get and check the length of string (VBE-U)
 		int stringLength = readUnsignedInt();
-		if (stringLength >= 0
-				&& this.bufferPosition + stringLength <= this.readBuffer.length) {
+		if (stringLength >= 0 && this.bufferPosition + stringLength <= this.readBuffer.length) {
 			this.bufferPosition += stringLength;
-			if (readString) {
-				// get the string
-				return new String(this.readBuffer, this.bufferPosition - stringLength, stringLength,
-						CHARSET_UTF8);
-			}
-			return null;
+
+			// get the string
+			return new String(this.readBuffer, this.bufferPosition - stringLength, stringLength,
+					CHARSET_UTF8);
 		}
 		Logger.debug("invalid string length: " + stringLength);
 		return null;
-	}
-
-	/**
-	 * Starts a database query with the given parameters.
-	 * 
-	 * @param tile
-	 *            the tile to read.
-	 * @param readWayNames
-	 *            if way names should be read.
-	 * @param databaseMapGenerator
-	 *            the DatabaseMapGenerator callback which handles the extracted map elements.
-	 */
-	void executeQuery(Tile tile, boolean readWayNames, DatabaseMapGenerator databaseMapGenerator) {
-		try {
-			// reset the stop execution flag
-			this.stopCurrentQuery = false;
-
-			// limit the zoom level of the requested tile for this query
-			if (tile.zoomLevel > this.globalMaximumZoomLevel) {
-				this.queryZoomLevel = this.globalMaximumZoomLevel;
-			} else if (tile.zoomLevel < this.globalMinimumZoomLevel) {
-				this.queryZoomLevel = this.globalMinimumZoomLevel;
-			} else {
-				this.queryZoomLevel = tile.zoomLevel;
-			}
-
-			// get and check the map file for the query zoom level
-			this.mapFileParameters = this.mapFilesLookupTable[this.queryZoomLevel];
-			if (this.mapFileParameters == null) {
-				Logger.debug("no map file for zoom level: " + tile.zoomLevel);
-				return;
-			}
-
-			this.queryReadWayNames = readWayNames;
-
-			// calculate the blocks that cover the area of the requested tile
-			if (tile.zoomLevel < this.mapFileParameters.baseZoomLevel) {
-				// calculate the XY numbers of the upper left and lower right subtiles
-				this.zoomLevelDifference = this.mapFileParameters.baseZoomLevel
-						- tile.zoomLevel;
-				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
-				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
-				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
-				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
-				this.useTileBitmask = false;
-				databaseMapGenerator.renderCoastlineTile(tile);
-			} else if (tile.zoomLevel > this.mapFileParameters.baseZoomLevel) {
-				// calculate the XY numbers of the parent base tile
-				this.zoomLevelDifference = tile.zoomLevel
-						- this.mapFileParameters.baseZoomLevel;
-				this.fromBaseTileX = tile.x >>> this.zoomLevelDifference;
-				this.fromBaseTileY = tile.y >>> this.zoomLevelDifference;
-				this.toBaseTileX = this.fromBaseTileX;
-				this.toBaseTileY = this.fromBaseTileY;
-				databaseMapGenerator.renderCoastlineTile(new Tile(this.fromBaseTileX,
-						this.fromBaseTileY, this.mapFileParameters.baseZoomLevel));
-
-				if (this.zoomLevelDifference == 1) {
-					// determine the correct bitmask for all quadrants
-					if (tile.x % 2 == 0 && tile.y % 2 == 0) {
-						// upper left quadrant
-						this.queryTileBitmask = 0xcc00;
-					} else if (tile.x % 2 == 1 && tile.y % 2 == 0) {
-						// upper right quadrant
-						this.queryTileBitmask = 0x3300;
-					} else if (tile.x % 2 == 0 && tile.y % 2 == 1) {
-						// lower left quadrant
-						this.queryTileBitmask = 0xcc;
-					} else {
-						// lower right quadrant
-						this.queryTileBitmask = 0x33;
-					}
-				} else {
-					// calculate the XY numbers of the second level subtile
-					this.subtileX = tile.x >>> (this.zoomLevelDifference - 2);
-					this.subtileY = tile.y >>> (this.zoomLevelDifference - 2);
-
-					// calculate the XY numbers of the parent tile
-					this.parentTileX = this.subtileX >>> 1;
-					this.parentTileY = this.subtileY >>> 1;
-
-					// determine the correct bitmask for all 16 subtiles
-					if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 0) {
-						// upper left quadrant
-						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
-							// upper left subtile
-							this.queryTileBitmask = 0x8000;
-						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
-							// upper right subtile
-							this.queryTileBitmask = 0x4000;
-						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
-							// lower left subtile
-							this.queryTileBitmask = 0x800;
-						} else {
-							// lower right subtile
-							this.queryTileBitmask = 0x400;
-						}
-					} else if (this.parentTileX % 2 == 1 && this.parentTileY % 2 == 0) {
-						// upper right quadrant
-						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
-							// upper left subtile
-							this.queryTileBitmask = 0x2000;
-						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
-							// upper right subtile
-							this.queryTileBitmask = 0x1000;
-						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
-							// lower left subtile
-							this.queryTileBitmask = 0x200;
-						} else {
-							// lower right subtile
-							this.queryTileBitmask = 0x100;
-						}
-					} else if (this.parentTileX % 2 == 0 && this.parentTileY % 2 == 1) {
-						// lower left quadrant
-						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
-							// upper left subtile
-							this.queryTileBitmask = 0x80;
-						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
-							// upper right subtile
-							this.queryTileBitmask = 0x40;
-						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
-							// lower left subtile
-							this.queryTileBitmask = 0x8;
-						} else {
-							// lower right subtile
-							this.queryTileBitmask = 0x4;
-						}
-					} else {
-						// lower right quadrant
-						if (this.subtileX % 2 == 0 && this.subtileY % 2 == 0) {
-							// upper left subtile
-							this.queryTileBitmask = 0x20;
-						} else if (this.subtileX % 2 == 1 && this.subtileY % 2 == 0) {
-							// upper right subtile
-							this.queryTileBitmask = 0x10;
-						} else if (this.subtileX % 2 == 0 && this.subtileY % 2 == 1) {
-							// lower left subtile
-							this.queryTileBitmask = 0x2;
-						} else {
-							// lower right subtile
-							this.queryTileBitmask = 0x1;
-						}
-					}
-				}
-				this.useTileBitmask = true;
-			} else {
-				// use the tile XY numbers of the requested tile
-				this.fromBaseTileX = tile.x;
-				this.fromBaseTileY = tile.y;
-				this.toBaseTileX = this.fromBaseTileX;
-				this.toBaseTileY = this.fromBaseTileY;
-				this.useTileBitmask = false;
-				databaseMapGenerator.renderCoastlineTile(tile);
-			}
-
-			// calculate the blocks in the file which need to be read
-			long fromBlockX = Math.max(this.fromBaseTileX
-					- this.mapFileParameters.boundaryLeftTile, 0);
-			long fromBlockY = Math.max(this.fromBaseTileY
-					- this.mapFileParameters.boundaryTopTile, 0);
-			long toBlockX = Math.min(
-					this.toBaseTileX - this.mapFileParameters.boundaryLeftTile,
-					this.mapFileParameters.blocksWidth - 1);
-			long toBlockY = Math.min(this.toBaseTileY - this.mapFileParameters.boundaryTopTile,
-					this.mapFileParameters.blocksHeight - 1);
-
-			boolean queryIsWater = true;
-			boolean queryReadWaterInfo = false;
-
-			// read and process all necessary blocks from top to bottom and from left to right
-			long currentRow;
-			long currentColumn;
-			long blockNumber;
-			long currentBlockPointer;
-			long currentBlockIndexEntry;
-			int currentBlockSize;
-			for (currentRow = fromBlockY; currentRow <= toBlockY; ++currentRow) {
-				for (currentColumn = fromBlockX; currentColumn <= toBlockX; ++currentColumn) {
-					// check if the query was interrupted
-					if (this.stopCurrentQuery) {
-						return;
-					}
-
-					// calculate the actual block number of the needed block in the file
-					blockNumber = currentRow * this.mapFileParameters.blocksWidth + currentColumn;
-
-					// get the current index entry
-					currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(
-							this.mapFileParameters, blockNumber);
-
-					// check if the current query would still return a water tile
-					if (queryIsWater) {
-						// check the water flag of the current block
-						this.currentBlockIsWater = (currentBlockIndexEntry & BITMASK_INDEX_WATER) != 0;
-						queryIsWater = queryIsWater && this.currentBlockIsWater;
-						queryReadWaterInfo = true;
-					}
-
-					// get and check the current block pointer
-					currentBlockPointer = currentBlockIndexEntry & BITMASK_INDEX_OFFSET;
-					if (currentBlockPointer < 1
-							|| currentBlockPointer > this.mapFileParameters.mapFileSize) {
-						Logger.debug("invalid current block pointer: " + currentBlockPointer);
-						Logger.debug("mapFileSize: " + this.mapFileParameters.mapFileSize);
-						return;
-					}
-
-					// check if the current block is the last block in the file
-					if (blockNumber + 1 == this.mapFileParameters.numberOfBlocks) {
-						// set the next block pointer to the end of the file
-						this.nextBlockPointer = this.mapFileParameters.mapFileSize;
-					} else {
-						// get and check the next block pointer
-						this.nextBlockPointer = this.databaseIndexCache.getIndexEntry(
-								this.mapFileParameters, blockNumber + 1)
-								& BITMASK_INDEX_OFFSET;
-						if (this.nextBlockPointer < 1
-								|| this.nextBlockPointer > this.mapFileParameters.mapFileSize) {
-							Logger.debug("invalid next block pointer: " + this.nextBlockPointer);
-							Logger.debug("mapFileSize: " + this.mapFileParameters.mapFileSize);
-							return;
-						}
-					}
-
-					// calculate the size of the current block
-					currentBlockSize = (int) (this.nextBlockPointer - currentBlockPointer);
-					if (currentBlockSize < 0) {
-						Logger.debug("invalid current block size: " + currentBlockSize);
-						return;
-					} else if (currentBlockSize == 0) {
-						// the current block is empty, continue with the next block
-						continue;
-					} else if (currentBlockSize > MAXIMUM_BLOCK_SIZE) {
-						// the current block is too large, continue with the next block
-						Logger.debug("current block size too large: " + currentBlockSize);
-						continue;
-					} else if (currentBlockPointer + currentBlockSize > this.fileSize) {
-						Logger.debug("invalid current block size: " + currentBlockSize);
-						return;
-					}
-
-					// go to the current block in the map file and read the data into the buffer
-					this.inputFile.seek(this.mapFileParameters.startAddress + currentBlockPointer);
-
-					// read the current block into the buffer
-					if (!readFromMapFile(currentBlockSize)) {
-						// skip the current block
-						Logger.debug("reading current block has failed: " + currentBlockSize);
-						return;
-					}
-
-					// calculate the top-left coordinates of the underlying tile
-					this.tileLatitude = (int) (MercatorProjection.tileYToLatitude(
-							this.mapFileParameters.boundaryTopTile + currentRow,
-							this.mapFileParameters.baseZoomLevel) * 1000000);
-					this.tileLongitude = (int) (MercatorProjection.tileXToLongitude(
-							this.mapFileParameters.boundaryLeftTile + currentColumn,
-							this.mapFileParameters.baseZoomLevel) * 1000000);
-
-					// handle the current block data
-					processBlock(databaseMapGenerator);
-				}
-			}
-
-			// the query is finished, was the water flag set for all blocks?
-			if (queryIsWater && queryReadWaterInfo) {
-				// render the water background
-				databaseMapGenerator.renderWaterBackground();
-			}
-		} catch (IOException e) {
-			Logger.exception(e);
-		}
-	}
-
-	/**
-	 * Returns the current state of the database.
-	 * 
-	 * @return true if the database has an open map file, false otherwise.
-	 */
-	boolean hasOpenFile() {
-		return this.inputFile != null;
-	}
-
-	/**
-	 * Prepares and sets up the internal data structures and caches. Must be called once before the
-	 * first read query is executed.
-	 */
-	void prepareExecution() {
-		this.databaseIndexCache = new MapDatabaseIndexCache(this.inputFile, INDEX_CACHE_SIZE);
-		this.tagList = new ArrayList<Tag>();
-	}
-
-	/**
-	 * Notifies the database reader to stop the currently executed query.
-	 */
-	void stopCurrentQuery() {
-		this.stopCurrentQuery = true;
 	}
 }
