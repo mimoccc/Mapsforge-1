@@ -33,6 +33,7 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.TopologyException;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
 
 /**
@@ -523,9 +524,16 @@ final class GeoUtils {
 
 		Geometry wayAsGeometryJTS = toJTSGeometry(way);
 
-		// find all intersecting ways
-		Geometry intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
-				OverlayOp.INTERSECTION);
+		Geometry intersectingWaysJTS = null;
+
+		try {
+			// find all intersecting ways
+			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
+					OverlayOp.INTERSECTION);
+		} catch (TopologyException e) {
+			System.out.println("JTS Error:" + e);
+			return null;
+		}
 
 		if (intersectingWaysJTS.getNumGeometries() == 0)
 			return null;
@@ -655,9 +663,18 @@ final class GeoUtils {
 				tile.getZoomlevel(),
 				enlargementInMeters);
 
+		Geometry intersectingWaysJTS = null;
+
+		try {
+			// find all intersecting ways
+			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.way,
+					OverlayOp.INTERSECTION);
+
+		} catch (TopologyException e) {
+			System.out.println("JTS Error:" + e);
+			return null;
+		}
 		// find all intersecting ways
-		Geometry intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.way,
-				OverlayOp.INTERSECTION);
 
 		List<Geometry> clippedInnerWays = new ArrayList<Geometry>();
 
@@ -671,9 +688,15 @@ final class GeoUtils {
 		// clip all innerways and collect the occuring clipped innerways. A innerway can be divded in to
 		// multiple innerways due to clipping.
 		for (Geometry innerway : wayBlock.innerWays) {
+			Geometry intersectingInnerWaysJTS = null;
 
-			Geometry intersectingInnerWaysJTS = OverlayOp.overlayOp(tileBBJTS, innerway,
-					OverlayOp.INTERSECTION);
+			try {
+				intersectingInnerWaysJTS = OverlayOp.overlayOp(tileBBJTS, innerway,
+						OverlayOp.INTERSECTION);
+			} catch (TopologyException e) {
+				System.out.println("JTS Error: " + e);
+				continue;
+			}
 
 			for (int i = 0; i < intersectingInnerWaysJTS.getNumGeometries(); i++) {
 				clippedInnerWays.add(intersectingInnerWaysJTS.getGeometryN(i));
@@ -737,6 +760,9 @@ final class GeoUtils {
 				List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
 				List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
 						enlargementInMeters);
+
+				if (segments == null)
+					return null;
 
 				for (List<GeoCoordinate> segment : segments) {
 
