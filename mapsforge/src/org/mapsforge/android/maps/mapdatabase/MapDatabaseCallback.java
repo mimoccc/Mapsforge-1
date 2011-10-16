@@ -12,11 +12,11 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps.database;
+package org.mapsforge.android.maps.mapdatabase;
 
 import java.util.List;
 
-import org.mapsforge.android.maps.theme.Tag;
+import org.mapsforge.android.maps.rendertheme.Tag;
 
 /**
  * Callback methods which can be triggered from the {@link MapDatabase}.

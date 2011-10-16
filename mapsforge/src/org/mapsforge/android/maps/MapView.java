@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.mapsforge.android.maps.database.MapDatabase;
+import org.mapsforge.android.maps.mapdatabase.MapDatabase;
 import org.mapsforge.android.maps.overlay.Overlay;
 
 import android.content.Context;

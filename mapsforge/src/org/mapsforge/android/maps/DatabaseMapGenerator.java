@@ -23,12 +23,12 @@ import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.mapsforge.android.maps.database.MapDatabase;
-import org.mapsforge.android.maps.database.MapDatabaseCallback;
-import org.mapsforge.android.maps.theme.RenderCallback;
-import org.mapsforge.android.maps.theme.RenderTheme;
-import org.mapsforge.android.maps.theme.RenderThemeHandler;
-import org.mapsforge.android.maps.theme.Tag;
+import org.mapsforge.android.maps.mapdatabase.MapDatabase;
+import org.mapsforge.android.maps.mapdatabase.MapDatabaseCallback;
+import org.mapsforge.android.maps.rendertheme.RenderCallback;
+import org.mapsforge.android.maps.rendertheme.RenderTheme;
+import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
+import org.mapsforge.android.maps.rendertheme.Tag;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;

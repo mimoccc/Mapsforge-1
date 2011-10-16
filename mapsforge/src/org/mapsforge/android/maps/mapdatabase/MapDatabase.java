@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps.database;
+package org.mapsforge.android.maps.mapdatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.Logger;
 import org.mapsforge.android.maps.MercatorProjection;
 import org.mapsforge.android.maps.Tile;
-import org.mapsforge.android.maps.theme.Tag;
+import org.mapsforge.android.maps.rendertheme.Tag;
 
 import android.graphics.Rect;
 
@@ -37,12 +37,6 @@ import android.graphics.Rect;
  * @see <a href="http://code.google.com/p/mapsforge/wiki/SpecificationBinaryMapFile">Specification</a>
  */
 public class MapDatabase {
-	private static final String SIGNATURE_NODE = "node signature: ";
-
-	private static final String SIGNATURE_WAY = "way signature: ";
-
-	private static final String SIGNATURE_BLOCK = "block signature: ";
-
 	/**
 	 * Maximum supported version of the map file format.
 	 */
@@ -168,6 +162,8 @@ public class MapDatabase {
 	 */
 	private static final int REMAINING_HEADER_SIZE_MIN = 75;
 
+	private static final String SIGNATURE_BLOCK = "block signature: ";
+
 	/**
 	 * Length of the debug signature at the beginning of each block.
 	 */
@@ -187,6 +183,10 @@ public class MapDatabase {
 	 * Length of the debug signature at the beginning of each way.
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
+
+	private static final String SIGNATURE_NODE = "node signature: ";
+
+	private static final String SIGNATURE_WAY = "way signature: ";
 
 	/**
 	 * The key of the elevation OpenStreetMap tag.
@@ -298,13 +298,9 @@ public class MapDatabase {
 	private boolean useTileBitmask;
 	private int variableByteDecode;
 	private byte variableByteShift;
-	private float[] way;
 	private float[] wayLabelPosition;
 	private float[][] wayNodes;
-	private int wayNodesSequenceLength;
 	private int wayNumberOfInnerWays;
-	private byte wayNumberOfTags;
-	private int wayNumberOfWayNodes;
 	private String waySignature;
 	private Tag[] wayTags;
 	private int wayTileBitmask;
@@ -476,8 +472,7 @@ public class MapDatabase {
 			// calculate the blocks in the file which need to be read
 			long fromBlockX = Math.max(this.fromBaseTileX - mapFileParameters.boundaryLeftTile, 0);
 			long fromBlockY = Math.max(this.fromBaseTileY - mapFileParameters.boundaryTopTile, 0);
-			long toBlockX = Math.min(
-					this.toBaseTileX - mapFileParameters.boundaryLeftTile,
+			long toBlockX = Math.min(this.toBaseTileX - mapFileParameters.boundaryLeftTile,
 					mapFileParameters.blocksWidth - 1);
 			long toBlockY = Math.min(this.toBaseTileY - mapFileParameters.boundaryTopTile,
 					mapFileParameters.blocksHeight - 1);
@@ -725,6 +720,16 @@ public class MapDatabase {
 	}
 
 	/**
+	 * Logs the signature of the current way and block.
+	 */
+	private void logSignatures() {
+		if (this.debugFile) {
+			Logger.debug(SIGNATURE_WAY + this.waySignature);
+			Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+		}
+	}
+
+	/**
 	 * Prepares and sets up the internal data structures and caches.
 	 */
 	private void prepareExecution() {
@@ -738,7 +743,7 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Reads a single block and calls the render functions on all map elements.
+	 * Processes a single block and executes the callback functions on all map elements.
 	 * 
 	 * @param mapFileParameters
 	 *            the parameters of the current map file.
@@ -749,22 +754,15 @@ public class MapDatabase {
 	 */
 	private void processBlock(MapFileParameters mapFileParameters,
 			MapDatabaseCallback mapDatabaseCallback) throws UnsupportedEncodingException {
-		if (this.debugFile) {
-			// get and check the block signature
-			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
-					SIGNATURE_LENGTH_BLOCK, CHARSET_UTF8);
-			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
-			if (!this.blockSignature.startsWith("###TileStart")) {
-				Logger.debug("invalid block signature: " + this.blockSignature);
-				return;
-			}
+		if (!processBlockSignature()) {
+			return;
 		}
 
 		// calculate the offset in the block entries table and move the pointer
 		int blockEntriesTableOffset = (this.queryZoomLevel - mapFileParameters.zoomLevelMin) * 4;
 		this.bufferPosition += blockEntriesTableOffset;
 
-		// get the amount of way and nodes on the current zoomLevel level
+		// get the amount of nodes and ways on the current zoomLevel level
 		int nodesOnZoomLevel = readShort();
 		int waysOnZoomLevel = readShort();
 
@@ -792,76 +790,8 @@ public class MapDatabase {
 			return;
 		}
 
-		// get the nodes
-		for (int elementCounter = nodesOnZoomLevel; elementCounter != 0; --elementCounter) {
-			if (this.debugFile) {
-				// get and check the node signature
-				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
-						SIGNATURE_LENGTH_NODE, CHARSET_UTF8);
-				this.bufferPosition += SIGNATURE_LENGTH_NODE;
-				if (!this.nodeSignature.startsWith("***POIStart")) {
-					Logger.debug("invalid node signature: " + this.nodeSignature);
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
-					return;
-				}
-			}
-
-			// get the node latitude offset (VBE-S)
-			int nodeLatitude = this.tileLatitude + readSignedInt();
-
-			// get the node longitude offset (VBE-S)
-			int nodeLongitude = this.tileLongitude + readSignedInt();
-
-			// get the special byte that encodes multiple fields
-			byte nodeSpecialByte = readByte();
-
-			// bit 1-4 of the special byte represent the node layer
-			byte nodeLayer = (byte) ((nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
-			// bit 5-8 of the special byte represent the number of tag IDs
-			byte nodeNumberOfTags = (byte) (nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
-
-			this.tagList.clear();
-
-			// get the node tag IDs (VBE-U)
-			for (byte tempByte = nodeNumberOfTags; tempByte != 0; --tempByte) {
-				int tagId = readUnsignedInt();
-				if (tagId < 0 || tagId >= this.nodeTags.length) {
-					Logger.debug("invalid node tag ID: " + tagId);
-					if (this.debugFile) {
-						Logger.debug(SIGNATURE_NODE + this.nodeSignature);
-						Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
-					}
-					return;
-				}
-				this.tagList.add(this.nodeTags[tagId]);
-			}
-
-			// get the feature byte
-			byte nodeFeatureByte = readByte();
-
-			// bit 1-3 of the node feature byte enable optional features
-			boolean nodeFeatureName = (nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
-			boolean nodeFeatureElevation = (nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
-			boolean nodeFeatureHouseNumber = (nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
-
-			// check if the node has a name
-			if (nodeFeatureName) {
-				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
-			}
-
-			// check if the node has an elevation
-			if (nodeFeatureElevation) {
-				// get the node elevation (VBE-S)
-				this.tagList.add(new Tag(TAG_KEY_ELE, Integer.toString(readSignedInt())));
-			}
-
-			// check if the node has a house number
-			if (nodeFeatureHouseNumber) {
-				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, readUTF8EncodedString()));
-			}
-
-			mapDatabaseCallback.renderPointOfInterest(nodeLayer, nodeLatitude,
-					nodeLongitude, this.tagList);
+		if (!processNodes(mapDatabaseCallback, nodesOnZoomLevel)) {
+			return;
 		}
 
 		// finished reading nodes, check if the current buffer position is valid
@@ -877,215 +807,31 @@ public class MapDatabase {
 		// move the pointer to the first way
 		this.bufferPosition = firstWayOffset;
 
-		// get the ways
-		for (int elementCounter = waysOnZoomLevel; elementCounter != 0; --elementCounter) {
-			if (this.debugFile) {
-				// get and check the way signature
-				this.waySignature = new String(this.readBuffer, this.bufferPosition,
-						SIGNATURE_LENGTH_WAY, CHARSET_UTF8);
-				this.bufferPosition += SIGNATURE_LENGTH_WAY;
-				if (!this.waySignature.startsWith("---WayStart")) {
-					Logger.debug("invalid way signature: " + this.waySignature);
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
-					return;
-				}
-			}
-
-			// get the size of the way (VBE-U)
-			int waySize = readUnsignedInt();
-			if (waySize < 0) {
-				Logger.debug("invalid way size: " + waySize);
-				if (this.debugFile) {
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
-				}
-				return;
-			}
-
-			if (this.useTileBitmask) {
-				// get the way tile bitmask (2 bytes)
-				this.wayTileBitmask = readShort();
-				// check if the way is inside the requested tile
-				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
-					// skip the rest of the way and continue with the next way
-					this.bufferPosition += waySize - 2;
-					continue;
-				}
-			} else {
-				// ignore the way tile bitmask (2 bytes)
-				this.bufferPosition += 2;
-			}
-
-			// get the first special byte that encodes multiple fields
-			byte waySpecialByte1 = readByte();
-
-			// bit 1-4 of the first special byte represent the way layer
-			byte wayLayer = (byte) ((waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
-			// bit 5-8 of the first special byte represent the number of tag IDs
-			this.wayNumberOfTags = (byte) (waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
-
-			// skip the second special byte
-			readByte();
-
-			// skip the way tag bitmap
-			readByte();
-
-			this.tagList.clear();
-
-			// get the way tag IDs (VBE-U)
-			for (byte tempByte = this.wayNumberOfTags; tempByte != 0; --tempByte) {
-				int tagId = readUnsignedInt();
-				if (tagId < 0 || tagId >= this.wayTags.length) {
-					Logger.debug("invalid way tag ID: " + tagId);
-					logSignatures();
-					return;
-				}
-				this.tagList.add(this.wayTags[tagId]);
-			}
-
-			// get and check the number of way nodes (VBE-U)
-			this.wayNumberOfWayNodes = readUnsignedInt();
-			if (this.wayNumberOfWayNodes < 1
-					|| this.wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-				Logger.debug("invalid number of way nodes: " + this.wayNumberOfWayNodes);
-				logSignatures();
-				return;
-			}
-
-			// each way node consists of latitude and longitude fields
-			this.wayNodesSequenceLength = this.wayNumberOfWayNodes * 2;
-
-			this.way = new float[this.wayNodesSequenceLength];
-
-			// get the first way node latitude offset (VBE-S)
-			int wayNodeLatitude = this.tileLatitude + readSignedInt();
-
-			// get the first way node longitude offset (VBE-S)
-			int wayNodeLongitude = this.tileLongitude + readSignedInt();
-
-			// store the first way node
-			this.way[1] = wayNodeLatitude;
-			this.way[0] = wayNodeLongitude;
-
-			final int firstWayNodeLatitude = wayNodeLatitude;
-			final int firstWayNodeLongitude = wayNodeLongitude;
-
-			// get the remaining way nodes offsets
-			for (int tempInt = 2; tempInt < this.wayNodesSequenceLength; tempInt += 2) {
-				// get the way node latitude offset (VBE-S)
-				wayNodeLatitude = wayNodeLatitude + readSignedInt();
-
-				// get the way node longitude offset (VBE-S)
-				wayNodeLongitude = wayNodeLongitude + readSignedInt();
-
-				this.way[tempInt] = wayNodeLongitude;
-				this.way[tempInt + 1] = wayNodeLatitude;
-			}
-
-			// get the feature byte
-			byte wayFeatureByte = readByte();
-
-			// bit 1-4 of the way feature byte enable optional features
-			boolean wayFeatureName = (wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
-			boolean wayFeatureRef = (wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
-			boolean wayFeatureLabelPosition = (wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
-			boolean wayFeatureMultipolygon = (wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
-
-			// check if the way has a name
-			if (wayFeatureName) {
-				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
-			}
-
-			// check if the way has a reference
-			if (wayFeatureRef) {
-				this.tagList.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
-			}
-
-			// check if the way has a label position
-			if (wayFeatureLabelPosition) {
-				this.wayLabelPosition = new float[2];
-
-				// get the label position latitude offset (VBE-S)
-				this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
-
-				// get the label position longitude offset (VBE-S)
-				this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
-
-			} else {
-				// no label position
-				this.wayLabelPosition = null;
-			}
-
-			// check if the way represents a multipolygon
-			if (wayFeatureMultipolygon) {
-				// get the amount of inner ways (VBE-U)
-				this.wayNumberOfInnerWays = readUnsignedInt();
-
-				if (this.wayNumberOfInnerWays > 0
-						&& this.wayNumberOfInnerWays < MAXIMUM_NUMBER_OF_INNER_WAYS) {
-					this.wayNodes = new float[1 + this.wayNumberOfInnerWays][];
-					this.wayNodes[0] = this.way;
-
-					// for each inner way
-					for (this.innerWayNumber = 1; this.innerWayNumber <= this.wayNumberOfInnerWays; ++this.innerWayNumber) {
-						// get and check the number of inner way nodes (VBE-U)
-						this.innerWayNumberOfWayNodes = readUnsignedInt();
-						if (this.innerWayNumberOfWayNodes < 1
-								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-							Logger.debug("invalid number of inner way nodes: "
-									+ this.innerWayNumberOfWayNodes);
-							logSignatures();
-							return;
-						}
-
-						// each inner way node consists of a latitude and a longitude field
-						this.innerWayNodesSequenceLength = this.innerWayNumberOfWayNodes * 2;
-
-						this.wayNodes[this.innerWayNumber] = new float[this.innerWayNodesSequenceLength];
-
-						// get the first inner way node latitude (VBE-S)
-						wayNodeLatitude = firstWayNodeLatitude + readSignedInt();
-
-						// get the first inner way node longitude (VBE-S)
-						wayNodeLongitude = firstWayNodeLongitude + readSignedInt();
-
-						this.wayNodes[this.innerWayNumber][1] = wayNodeLatitude;
-						this.wayNodes[this.innerWayNumber][0] = wayNodeLongitude;
-
-						// get and store the remaining inner way nodes offsets
-						for (int tempInt = 2; tempInt < this.innerWayNodesSequenceLength; tempInt += 2) {
-							// get the inner way node latitude offset (VBE-S)
-							wayNodeLatitude = wayNodeLatitude + readSignedInt();
-
-							// get the inner way node longitude offset (VBE-S)
-							wayNodeLongitude = wayNodeLongitude + readSignedInt();
-
-							this.wayNodes[this.innerWayNumber][tempInt] = wayNodeLongitude;
-							this.wayNodes[this.innerWayNumber][tempInt + 1] = wayNodeLatitude;
-						}
-					}
-				} else {
-					Logger.debug("invalid number of inner ways: " + this.wayNumberOfInnerWays);
-					logSignatures();
-					return;
-				}
-			} else {
-				// no multipolygon
-				this.wayNodes = new float[][] { this.way };
-			}
-
-			mapDatabaseCallback.renderWay(wayLayer, this.wayLabelPosition, this.tagList,
-					this.wayNodes);
+		if (!processWays(mapDatabaseCallback, waysOnZoomLevel)) {
+			return;
 		}
 	}
 
 	/**
-	 * Logs the signature of the current way and block.
+	 * Processes the block signature, if present.
+	 * 
+	 * @return true if the block signature could be processed successfully, false otherwise.
+	 * @throws UnsupportedEncodingException
+	 *             if string decoding fails.
 	 */
-	private void logSignatures() {
+	private boolean processBlockSignature() throws UnsupportedEncodingException {
 		if (this.debugFile) {
-			Logger.debug(SIGNATURE_WAY + this.waySignature);
-			Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+			// get and check the block signature
+			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
+					SIGNATURE_LENGTH_BLOCK, CHARSET_UTF8);
+			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
+			if (!this.blockSignature.startsWith("###TileStart")) {
+				Logger.debug("invalid block signature: " + this.blockSignature);
+				return false;
+			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -1347,6 +1093,307 @@ public class MapDatabase {
 
 		// get the comment text
 		this.commentText = readUTF8EncodedString();
+
+		return true;
+	}
+
+	/**
+	 * Processes the given number of nodes.
+	 * 
+	 * @param mapDatabaseCallback
+	 *            the callback which handles the extracted nodes.
+	 * @param numberOfNodes
+	 *            how many nodes should be processed.
+	 * @return true if the nodes could be processed successfully, false otherwise.
+	 * @throws UnsupportedEncodingException
+	 *             if string decoding fails.
+	 */
+	private boolean processNodes(MapDatabaseCallback mapDatabaseCallback, int numberOfNodes)
+			throws UnsupportedEncodingException {
+		for (int elementCounter = numberOfNodes; elementCounter != 0; --elementCounter) {
+			if (this.debugFile) {
+				// get and check the node signature
+				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_NODE, CHARSET_UTF8);
+				this.bufferPosition += SIGNATURE_LENGTH_NODE;
+				if (!this.nodeSignature.startsWith("***POIStart")) {
+					Logger.debug("invalid node signature: " + this.nodeSignature);
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+					return false;
+				}
+			}
+
+			// get the node latitude offset (VBE-S)
+			int nodeLatitude = this.tileLatitude + readSignedInt();
+
+			// get the node longitude offset (VBE-S)
+			int nodeLongitude = this.tileLongitude + readSignedInt();
+
+			// get the special byte that encodes multiple fields
+			byte nodeSpecialByte = readByte();
+
+			// bit 1-4 of the special byte represent the node layer
+			byte nodeLayer = (byte) ((nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
+			// bit 5-8 of the special byte represent the number of tag IDs
+			byte nodeNumberOfTags = (byte) (nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
+
+			this.tagList.clear();
+
+			// get the node tag IDs (VBE-U)
+			for (byte tempByte = nodeNumberOfTags; tempByte != 0; --tempByte) {
+				int tagId = readUnsignedInt();
+				if (tagId < 0 || tagId >= this.nodeTags.length) {
+					Logger.debug("invalid node tag ID: " + tagId);
+					if (this.debugFile) {
+						Logger.debug(SIGNATURE_NODE + this.nodeSignature);
+						Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+					}
+					return false;
+				}
+				this.tagList.add(this.nodeTags[tagId]);
+			}
+
+			// get the feature byte
+			byte nodeFeatureByte = readByte();
+
+			// bit 1-3 of the node feature byte enable optional features
+			boolean nodeFeatureName = (nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
+			boolean nodeFeatureElevation = (nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
+			boolean nodeFeatureHouseNumber = (nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
+
+			// check if the node has a name
+			if (nodeFeatureName) {
+				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+			}
+
+			// check if the node has an elevation
+			if (nodeFeatureElevation) {
+				// get the node elevation (VBE-S)
+				this.tagList.add(new Tag(TAG_KEY_ELE, Integer.toString(readSignedInt())));
+			}
+
+			// check if the node has a house number
+			if (nodeFeatureHouseNumber) {
+				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, readUTF8EncodedString()));
+			}
+
+			mapDatabaseCallback.renderPointOfInterest(nodeLayer, nodeLatitude,
+					nodeLongitude, this.tagList);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Processes the given number of ways.
+	 * 
+	 * @param mapDatabaseCallback
+	 *            the callback which handles the extracted ways.
+	 * @param numberOfWays
+	 *            how many ways should be processed.
+	 * @return true if the ways could be processed successfully, false otherwise.
+	 * @throws UnsupportedEncodingException
+	 *             if string decoding fails.
+	 */
+	private boolean processWays(MapDatabaseCallback mapDatabaseCallback, int numberOfWays)
+			throws UnsupportedEncodingException {
+		for (int elementCounter = numberOfWays; elementCounter != 0; --elementCounter) {
+			if (this.debugFile) {
+				// get and check the way signature
+				this.waySignature = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_WAY, CHARSET_UTF8);
+				this.bufferPosition += SIGNATURE_LENGTH_WAY;
+				if (!this.waySignature.startsWith("---WayStart")) {
+					Logger.debug("invalid way signature: " + this.waySignature);
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+					return false;
+				}
+			}
+
+			// get the size of the way (VBE-U)
+			int waySize = readUnsignedInt();
+			if (waySize < 0) {
+				Logger.debug("invalid way size: " + waySize);
+				if (this.debugFile) {
+					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				}
+				return false;
+			}
+
+			if (this.useTileBitmask) {
+				// get the way tile bitmask (2 bytes)
+				this.wayTileBitmask = readShort();
+				// check if the way is inside the requested tile
+				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
+					// skip the rest of the way and continue with the next way
+					this.bufferPosition += waySize - 2;
+					continue;
+				}
+			} else {
+				// ignore the way tile bitmask (2 bytes)
+				this.bufferPosition += 2;
+			}
+
+			// get the first special byte that encodes multiple fields
+			byte waySpecialByte1 = readByte();
+
+			// bit 1-4 of the first special byte represent the way layer
+			byte wayLayer = (byte) ((waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
+			// bit 5-8 of the first special byte represent the number of tag IDs
+			byte wayNumberOfTags = (byte) (waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
+
+			// skip the second special byte
+			readByte();
+
+			// skip the way tag bitmap
+			readByte();
+
+			this.tagList.clear();
+
+			// get the way tag IDs (VBE-U)
+			for (byte tempByte = wayNumberOfTags; tempByte != 0; --tempByte) {
+				int tagId = readUnsignedInt();
+				if (tagId < 0 || tagId >= this.wayTags.length) {
+					Logger.debug("invalid way tag ID: " + tagId);
+					logSignatures();
+					return false;
+				}
+				this.tagList.add(this.wayTags[tagId]);
+			}
+
+			// get and check the number of way nodes (VBE-U)
+			int wayNumberOfWayNodes = readUnsignedInt();
+			if (wayNumberOfWayNodes < 1 || wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
+				Logger.debug("invalid number of way nodes: " + wayNumberOfWayNodes);
+				logSignatures();
+				return false;
+			}
+
+			// each way node consists of latitude and longitude fields
+			int wayNodesSequenceLength = wayNumberOfWayNodes * 2;
+
+			float[] way = new float[wayNodesSequenceLength];
+
+			// get the first way node latitude offset (VBE-S)
+			int wayNodeLatitude = this.tileLatitude + readSignedInt();
+
+			// get the first way node longitude offset (VBE-S)
+			int wayNodeLongitude = this.tileLongitude + readSignedInt();
+
+			// store the first way node
+			way[1] = wayNodeLatitude;
+			way[0] = wayNodeLongitude;
+
+			final int firstWayNodeLatitude = wayNodeLatitude;
+			final int firstWayNodeLongitude = wayNodeLongitude;
+
+			// get the remaining way nodes offsets
+			for (int tempInt = 2; tempInt < wayNodesSequenceLength; tempInt += 2) {
+				// get the way node latitude offset (VBE-S)
+				wayNodeLatitude = wayNodeLatitude + readSignedInt();
+
+				// get the way node longitude offset (VBE-S)
+				wayNodeLongitude = wayNodeLongitude + readSignedInt();
+
+				way[tempInt] = wayNodeLongitude;
+				way[tempInt + 1] = wayNodeLatitude;
+			}
+
+			// get the feature byte
+			byte wayFeatureByte = readByte();
+
+			// bit 1-4 of the way feature byte enable optional features
+			boolean wayFeatureName = (wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
+			boolean wayFeatureRef = (wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
+			boolean wayFeatureLabelPosition = (wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
+			boolean wayFeatureMultipolygon = (wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
+
+			// check if the way has a name
+			if (wayFeatureName) {
+				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+			}
+
+			// check if the way has a reference
+			if (wayFeatureRef) {
+				this.tagList.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
+			}
+
+			// check if the way has a label position
+			if (wayFeatureLabelPosition) {
+				this.wayLabelPosition = new float[2];
+
+				// get the label position latitude offset (VBE-S)
+				this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
+
+				// get the label position longitude offset (VBE-S)
+				this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
+
+			} else {
+				// no label position
+				this.wayLabelPosition = null;
+			}
+
+			// check if the way represents a multipolygon
+			if (wayFeatureMultipolygon) {
+				// get the amount of inner ways (VBE-U)
+				this.wayNumberOfInnerWays = readUnsignedInt();
+
+				if (this.wayNumberOfInnerWays > 0
+						&& this.wayNumberOfInnerWays < MAXIMUM_NUMBER_OF_INNER_WAYS) {
+					this.wayNodes = new float[1 + this.wayNumberOfInnerWays][];
+					this.wayNodes[0] = way;
+
+					// for each inner way
+					for (this.innerWayNumber = 1; this.innerWayNumber <= this.wayNumberOfInnerWays; ++this.innerWayNumber) {
+						// get and check the number of inner way nodes (VBE-U)
+						this.innerWayNumberOfWayNodes = readUnsignedInt();
+						if (this.innerWayNumberOfWayNodes < 1
+								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
+							Logger.debug("invalid number of inner way nodes: "
+									+ this.innerWayNumberOfWayNodes);
+							logSignatures();
+							return false;
+						}
+
+						// each inner way node consists of a latitude and a longitude field
+						this.innerWayNodesSequenceLength = this.innerWayNumberOfWayNodes * 2;
+
+						this.wayNodes[this.innerWayNumber] = new float[this.innerWayNodesSequenceLength];
+
+						// get the first inner way node latitude (VBE-S)
+						wayNodeLatitude = firstWayNodeLatitude + readSignedInt();
+
+						// get the first inner way node longitude (VBE-S)
+						wayNodeLongitude = firstWayNodeLongitude + readSignedInt();
+
+						this.wayNodes[this.innerWayNumber][1] = wayNodeLatitude;
+						this.wayNodes[this.innerWayNumber][0] = wayNodeLongitude;
+
+						// get and store the remaining inner way nodes offsets
+						for (int tempInt = 2; tempInt < this.innerWayNodesSequenceLength; tempInt += 2) {
+							// get the inner way node latitude offset (VBE-S)
+							wayNodeLatitude = wayNodeLatitude + readSignedInt();
+
+							// get the inner way node longitude offset (VBE-S)
+							wayNodeLongitude = wayNodeLongitude + readSignedInt();
+
+							this.wayNodes[this.innerWayNumber][tempInt] = wayNodeLongitude;
+							this.wayNodes[this.innerWayNumber][tempInt + 1] = wayNodeLatitude;
+						}
+					}
+				} else {
+					Logger.debug("invalid number of inner ways: " + this.wayNumberOfInnerWays);
+					logSignatures();
+					return false;
+				}
+			} else {
+				// no multipolygon
+				this.wayNodes = new float[][] { way };
+			}
+
+			mapDatabaseCallback.renderWay(wayLayer, this.wayLabelPosition, this.tagList,
+					this.wayNodes);
+		}
 
 		return true;
 	}
