@@ -21,7 +21,7 @@ import android.graphics.Rect;
 /**
  * Holds all parameters of a map file.
  */
-class MapFileParameters {
+class MapFileParameter {
 	/**
 	 * Divisor for converting coordinates stored as integers to double values.
 	 */
@@ -102,7 +102,7 @@ class MapFileParameters {
 	final byte zoomLevelMin;
 
 	/**
-	 * Creates a new immutable set of parameters for a MapFileParameters.
+	 * Constructs an immutable MapFileParameter with the given values.
 	 * 
 	 * @param startAddress
 	 *            the start address of the map file.
@@ -119,7 +119,7 @@ class MapFileParameters {
 	 * @param mapBoundary
 	 *            the boundary of the map file.
 	 */
-	MapFileParameters(long startAddress, long indexStartAddress, long mapFileSize,
+	MapFileParameter(long startAddress, long indexStartAddress, long mapFileSize,
 			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
 		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
@@ -154,10 +154,10 @@ class MapFileParameters {
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (!(obj instanceof MapFileParameters)) {
+		} else if (!(obj instanceof MapFileParameter)) {
 			return false;
 		}
-		MapFileParameters other = (MapFileParameters) obj;
+		MapFileParameter other = (MapFileParameter) obj;
 		if (this.startAddress != other.startAddress) {
 			return false;
 		} else if (this.mapFileSize != other.mapFileSize) {

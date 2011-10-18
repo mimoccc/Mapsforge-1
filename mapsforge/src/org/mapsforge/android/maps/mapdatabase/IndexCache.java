@@ -94,16 +94,16 @@ class IndexCache {
 	 * Returns the index entry of a block in the given map file. If the required index entry is not
 	 * cached, it will be read from the correct map file index and put in the cache.
 	 * 
-	 * @param mapFileParameters
+	 * @param mapFileParameter
 	 *            the parameters of the map file for which the index entry is needed.
 	 * @param blockNumber
 	 *            the number of the block in the map file.
 	 * @return the index entry or -1 if the block number is invalid.
 	 */
-	long getIndexEntry(MapFileParameters mapFileParameters, long blockNumber) {
+	long getIndexEntry(MapFileParameter mapFileParameter, long blockNumber) {
 		try {
 			// check if the block number is out of bounds
-			if (blockNumber >= mapFileParameters.numberOfBlocks) {
+			if (blockNumber >= mapFileParameter.numberOfBlocks) {
 				return -1;
 			}
 
@@ -111,7 +111,7 @@ class IndexCache {
 			long indexBlockNumber = blockNumber / INDEX_ENTRIES_PER_CACHE_BLOCK;
 
 			// create the cache entry key for this request
-			IndexCacheEntryKey indexCacheEntryKey = new IndexCacheEntryKey(mapFileParameters,
+			IndexCacheEntryKey indexCacheEntryKey = new IndexCacheEntryKey(mapFileParameter,
 					indexBlockNumber);
 
 			// check for cached index block
@@ -121,7 +121,7 @@ class IndexCache {
 				indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
 
 				// seek to the correct index block in the file and read it
-				this.inputFile.seek(mapFileParameters.indexStartAddress + indexBlockNumber
+				this.inputFile.seek(mapFileParameter.indexStartAddress + indexBlockNumber
 						* SIZE_OF_INDEX_BLOCK);
 				if (this.inputFile.read(indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
 					Logger.debug("reading the current index block has failed");

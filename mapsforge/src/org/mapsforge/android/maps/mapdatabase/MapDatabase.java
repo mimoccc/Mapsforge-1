@@ -40,12 +40,12 @@ public class MapDatabase {
 	/**
 	 * Maximum supported version of the map file format.
 	 */
-	public static final int BINARY_OSM_VERSION_MAX = 3;
+	public static final int FILE_VERSION_MAX = 3;
 
 	/**
 	 * Minimal supported version of the map file format.
 	 */
-	public static final int BINARY_OSM_VERSION_MIN = 3;
+	public static final int FILE_VERSION_MIN = 3;
 
 	/**
 	 * Magic byte at the beginning of a valid binary map file.
@@ -76,6 +76,16 @@ public class MapDatabase {
 	 * Bitmask for the start position in the file header.
 	 */
 	private static final int HEADER_BITMASK_START_POSITION = 0x40;
+
+	/**
+	 * Maximum size of the file header in bytes.
+	 */
+	private static final int HEADER_SIZE_MAX = 1000000;
+
+	/**
+	 * Minimum size of the file header in bytes.
+	 */
+	private static final int HEADER_SIZE_MIN = 70;
 
 	/**
 	 * Amount of cache blocks that the index cache should store.
@@ -151,16 +161,6 @@ public class MapDatabase {
 	 * Bitmask for the number of node tags.
 	 */
 	private static final int NODE_NUMBER_OF_TAGS_BITMASK = 0x0f;
-
-	/**
-	 * Maximum size of the remaining file header in bytes.
-	 */
-	private static final int REMAINING_HEADER_SIZE_MAX = 1000000;
-
-	/**
-	 * Minimum size of the remaining file header in bytes.
-	 */
-	private static final int REMAINING_HEADER_SIZE_MIN = 75;
 
 	private static final String SIGNATURE_BLOCK = "block signature: ";
 
@@ -275,7 +275,9 @@ public class MapDatabase {
 	private String languagePreference;
 	private Rect mapBoundary;
 	private long mapDate;
-	private MapFileParameters[] mapFilesLookupTable;
+	private MapFileParameter[] mapFilesLookupTable;
+	private int mapStartLatitude;
+	private int mapStartLongitude;
 	private boolean mapStartPosition;
 	private long nextBlockPointer;
 	private String nodeSignature;
@@ -286,8 +288,6 @@ public class MapDatabase {
 	private int queryTileBitmask;
 	private int queryZoomLevel;
 	private byte[] readBuffer;
-	private int startPositionLatitude;
-	private int startPositionLongitude;
 	private long subtileX;
 	private long subtileY;
 	private List<Tag> tagList;
@@ -349,24 +349,24 @@ public class MapDatabase {
 			}
 
 			// get and check the map file for the query zoom level
-			MapFileParameters mapFileParameters = this.mapFilesLookupTable[this.queryZoomLevel];
-			if (mapFileParameters == null) {
+			MapFileParameter mapFileParameter = this.mapFilesLookupTable[this.queryZoomLevel];
+			if (mapFileParameter == null) {
 				Logger.debug("no map file for zoom level: " + tile.zoomLevel);
 				return;
 			}
 
 			// calculate the blocks that cover the area of the requested tile
-			if (tile.zoomLevel < mapFileParameters.baseZoomLevel) {
+			if (tile.zoomLevel < mapFileParameter.baseZoomLevel) {
 				// calculate the XY numbers of the upper left and lower right subtiles
-				this.zoomLevelDifference = mapFileParameters.baseZoomLevel - tile.zoomLevel;
+				this.zoomLevelDifference = mapFileParameter.baseZoomLevel - tile.zoomLevel;
 				this.fromBaseTileX = tile.x << this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y << this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX + (1 << this.zoomLevelDifference) - 1;
 				this.toBaseTileY = this.fromBaseTileY + (1 << this.zoomLevelDifference) - 1;
 				this.useTileBitmask = false;
-			} else if (tile.zoomLevel > mapFileParameters.baseZoomLevel) {
+			} else if (tile.zoomLevel > mapFileParameter.baseZoomLevel) {
 				// calculate the XY numbers of the parent base tile
-				this.zoomLevelDifference = tile.zoomLevel - mapFileParameters.baseZoomLevel;
+				this.zoomLevelDifference = tile.zoomLevel - mapFileParameter.baseZoomLevel;
 				this.fromBaseTileX = tile.x >>> this.zoomLevelDifference;
 				this.fromBaseTileY = tile.y >>> this.zoomLevelDifference;
 				this.toBaseTileX = this.fromBaseTileX;
@@ -470,12 +470,12 @@ public class MapDatabase {
 			}
 
 			// calculate the blocks in the file which need to be read
-			long fromBlockX = Math.max(this.fromBaseTileX - mapFileParameters.boundaryLeftTile, 0);
-			long fromBlockY = Math.max(this.fromBaseTileY - mapFileParameters.boundaryTopTile, 0);
-			long toBlockX = Math.min(this.toBaseTileX - mapFileParameters.boundaryLeftTile,
-					mapFileParameters.blocksWidth - 1);
-			long toBlockY = Math.min(this.toBaseTileY - mapFileParameters.boundaryTopTile,
-					mapFileParameters.blocksHeight - 1);
+			long fromBlockX = Math.max(this.fromBaseTileX - mapFileParameter.boundaryLeftTile, 0);
+			long fromBlockY = Math.max(this.fromBaseTileY - mapFileParameter.boundaryTopTile, 0);
+			long toBlockX = Math.min(this.toBaseTileX - mapFileParameter.boundaryLeftTile,
+					mapFileParameter.blocksWidth - 1);
+			long toBlockY = Math.min(this.toBaseTileY - mapFileParameter.boundaryTopTile,
+					mapFileParameter.blocksHeight - 1);
 
 			boolean queryIsWater = true;
 			boolean queryReadWaterInfo = false;
@@ -484,11 +484,11 @@ public class MapDatabase {
 			for (long currentRow = fromBlockY; currentRow <= toBlockY; ++currentRow) {
 				for (long currentColumn = fromBlockX; currentColumn <= toBlockX; ++currentColumn) {
 					// calculate the actual block number of the needed block in the file
-					long blockNumber = currentRow * mapFileParameters.blocksWidth + currentColumn;
+					long blockNumber = currentRow * mapFileParameter.blocksWidth + currentColumn;
 
 					// get the current index entry
 					long currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(
-							mapFileParameters, blockNumber);
+							mapFileParameter, blockNumber);
 
 					// check if the current query would still return a water tile
 					if (queryIsWater) {
@@ -500,24 +500,24 @@ public class MapDatabase {
 
 					// get and check the current block pointer
 					long currentBlockPointer = currentBlockIndexEntry & BITMASK_INDEX_OFFSET;
-					if (currentBlockPointer < 1 || currentBlockPointer > mapFileParameters.mapFileSize) {
+					if (currentBlockPointer < 1 || currentBlockPointer > mapFileParameter.mapFileSize) {
 						Logger.debug("invalid current block pointer: " + currentBlockPointer);
-						Logger.debug("mapFileSize: " + mapFileParameters.mapFileSize);
+						Logger.debug("mapFileSize: " + mapFileParameter.mapFileSize);
 						return;
 					}
 
 					// check if the current block is the last block in the file
-					if (blockNumber + 1 == mapFileParameters.numberOfBlocks) {
+					if (blockNumber + 1 == mapFileParameter.numberOfBlocks) {
 						// set the next block pointer to the end of the file
-						this.nextBlockPointer = mapFileParameters.mapFileSize;
+						this.nextBlockPointer = mapFileParameter.mapFileSize;
 					} else {
 						// get and check the next block pointer
 						this.nextBlockPointer = this.databaseIndexCache.getIndexEntry(
-								mapFileParameters, blockNumber + 1) & BITMASK_INDEX_OFFSET;
+								mapFileParameter, blockNumber + 1) & BITMASK_INDEX_OFFSET;
 						if (this.nextBlockPointer < 1
-								|| this.nextBlockPointer > mapFileParameters.mapFileSize) {
+								|| this.nextBlockPointer > mapFileParameter.mapFileSize) {
 							Logger.debug("invalid next block pointer: " + this.nextBlockPointer);
-							Logger.debug("mapFileSize: " + mapFileParameters.mapFileSize);
+							Logger.debug("mapFileSize: " + mapFileParameter.mapFileSize);
 							return;
 						}
 					}
@@ -540,7 +540,7 @@ public class MapDatabase {
 					}
 
 					// go to the current block in the map file and read the data into the buffer
-					this.inputFile.seek(mapFileParameters.startAddress + currentBlockPointer);
+					this.inputFile.seek(mapFileParameter.startAddress + currentBlockPointer);
 
 					// read the current block into the buffer
 					if (!readFromMapFile(currentBlockSize)) {
@@ -551,14 +551,14 @@ public class MapDatabase {
 
 					// calculate the top-left coordinates of the underlying tile
 					this.tileLatitude = (int) (MercatorProjection.tileYToLatitude(
-							mapFileParameters.boundaryTopTile + currentRow,
-							mapFileParameters.baseZoomLevel) * 1000000);
+							mapFileParameter.boundaryTopTile + currentRow,
+							mapFileParameter.baseZoomLevel) * 1000000);
 					this.tileLongitude = (int) (MercatorProjection.tileXToLongitude(
-							mapFileParameters.boundaryLeftTile + currentColumn,
-							mapFileParameters.baseZoomLevel) * 1000000);
+							mapFileParameter.boundaryLeftTile + currentColumn,
+							mapFileParameter.baseZoomLevel) * 1000000);
 
 					// handle the current block data
-					processBlock(mapFileParameters, mapDatabaseCallback);
+					processBlock(mapFileParameter, mapDatabaseCallback);
 				}
 			}
 
@@ -648,13 +648,13 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Returns the start position from the map file header (may be null).
+	 * Returns the map start position from the file header (may be null).
 	 * 
-	 * @return the start position from the map file header (may be null).
+	 * @return the map start position from the file header (may be null).
 	 */
 	public GeoPoint getStartPosition() {
 		if (this.mapStartPosition) {
-			return new GeoPoint(this.startPositionLatitude, this.startPositionLongitude);
+			return new GeoPoint(this.mapStartLatitude, this.mapStartLongitude);
 		}
 		return null;
 	}
@@ -745,21 +745,21 @@ public class MapDatabase {
 	/**
 	 * Processes a single block and executes the callback functions on all map elements.
 	 * 
-	 * @param mapFileParameters
+	 * @param mapFileParameter
 	 *            the parameters of the current map file.
 	 * @param mapDatabaseCallback
 	 *            the callback which handles the extracted map elements.
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private void processBlock(MapFileParameters mapFileParameters,
+	private void processBlock(MapFileParameter mapFileParameter,
 			MapDatabaseCallback mapDatabaseCallback) throws UnsupportedEncodingException {
 		if (!processBlockSignature()) {
 			return;
 		}
 
 		// calculate the offset in the block entries table and move the pointer
-		int blockEntriesTableOffset = (this.queryZoomLevel - mapFileParameters.zoomLevelMin) * 4;
+		int blockEntriesTableOffset = (this.queryZoomLevel - mapFileParameter.zoomLevelMin) * 4;
 		this.bufferPosition += blockEntriesTableOffset;
 
 		// get the amount of nodes and ways on the current zoomLevel level
@@ -767,7 +767,7 @@ public class MapDatabase {
 		int waysOnZoomLevel = readShort();
 
 		// move the pointer to the end of the block entries table
-		this.bufferPosition += mapFileParameters.blockEntriesTableSize - blockEntriesTableOffset
+		this.bufferPosition += mapFileParameter.blockEntriesTableSize - blockEntriesTableOffset
 				- 4;
 
 		// get the relative offset to the first stored way in the block
@@ -843,24 +843,24 @@ public class MapDatabase {
 	 */
 	private boolean processFileHeader() throws IOException {
 		// read the the magic byte and the file header size into the buffer
-		if (!readFromMapFile(BINARY_OSM_MAGIC_BYTE.length() + 4)) {
+		int magicByteLength = BINARY_OSM_MAGIC_BYTE.length();
+		if (!readFromMapFile(magicByteLength + 4)) {
 			Logger.debug("reading magic byte has failed");
 			return false;
 		}
 
 		// get and check the magic byte
-		String magicByte = new String(this.readBuffer, this.bufferPosition, BINARY_OSM_MAGIC_BYTE
-				.length(), CHARSET_UTF8);
-		this.bufferPosition += BINARY_OSM_MAGIC_BYTE.length();
-		if (!magicByte.equals(BINARY_OSM_MAGIC_BYTE)) {
+		String magicByte = new String(this.readBuffer, this.bufferPosition, magicByteLength,
+				CHARSET_UTF8);
+		this.bufferPosition += magicByteLength;
+		if (!BINARY_OSM_MAGIC_BYTE.equals(magicByte)) {
 			Logger.debug("invalid magic byte: " + magicByte);
 			return false;
 		}
 
 		// get and check the size of the remaining file header (4 bytes)
 		int remainingHeaderSize = readInt();
-		if (remainingHeaderSize < REMAINING_HEADER_SIZE_MIN
-				|| remainingHeaderSize > REMAINING_HEADER_SIZE_MAX) {
+		if (remainingHeaderSize < HEADER_SIZE_MIN || remainingHeaderSize > HEADER_SIZE_MAX) {
 			Logger.debug("invalid remaining header size: " + remainingHeaderSize);
 			return false;
 		}
@@ -873,7 +873,7 @@ public class MapDatabase {
 
 		// get and check the file version (4 bytes)
 		this.fileVersion = readInt();
-		if (this.fileVersion < BINARY_OSM_VERSION_MIN || this.fileVersion > BINARY_OSM_VERSION_MAX) {
+		if (this.fileVersion < FILE_VERSION_MIN || this.fileVersion > FILE_VERSION_MAX) {
 			Logger.debug("unsupported file version: " + this.fileVersion);
 			return false;
 		}
@@ -892,7 +892,7 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get and check the the top boundary (4 bytes)
+		// get and check the top boundary (4 bytes)
 		int boundaryTop = readInt();
 		if (boundaryTop > LATITUDE_MAX) {
 			Logger.debug("invalid top boundary: " + boundaryTop);
@@ -933,17 +933,17 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get and check the projection name (VBE-U)
+		// get and check the projection name
 		this.projectionName = readUTF8EncodedString();
 		if (!MERCATOR.equals(this.projectionName)) {
 			Logger.debug("unsupported projection: " + this.projectionName);
 			return false;
 		}
 
-		// get the language preference (VBE-U)
+		// get the language preference
 		this.languagePreference = readUTF8EncodedString();
 
-		// get the meta-information byte that encodes multiple flags
+		// get the meta-information byte which encodes multiple flags
 		byte metaFlags = readByte();
 
 		// extract the important flags from the meta-information byte
@@ -953,17 +953,16 @@ public class MapDatabase {
 		// check if the header contains a map start position
 		if (this.mapStartPosition) {
 			// get and check the start position latitude (4 byte)
-			this.startPositionLatitude = readInt();
-			if (this.startPositionLatitude < LATITUDE_MIN || this.startPositionLatitude > LATITUDE_MAX) {
-				Logger.debug("invalid map start position latitude: " + this.startPositionLatitude);
+			this.mapStartLatitude = readInt();
+			if (this.mapStartLatitude < LATITUDE_MIN || this.mapStartLatitude > LATITUDE_MAX) {
+				Logger.debug("invalid map start latitude: " + this.mapStartLatitude);
 				return false;
 			}
 
 			// get and check the start position longitude (4 byte)
-			this.startPositionLongitude = readInt();
-			if (this.startPositionLongitude < LONGITUDE_MIN
-					|| this.startPositionLongitude > LONGITUDE_MAX) {
-				Logger.debug("invalid map start position longitude: " + this.startPositionLongitude);
+			this.mapStartLongitude = readInt();
+			if (this.mapStartLongitude < LONGITUDE_MIN || this.mapStartLongitude > LONGITUDE_MAX) {
+				Logger.debug("invalid map start longitude: " + this.mapStartLongitude);
 				return false;
 			}
 		}
@@ -977,15 +976,15 @@ public class MapDatabase {
 
 		this.nodeTags = new Tag[numberOfNodeTags];
 
-		for (int tempInt = 0; tempInt < numberOfNodeTags; ++tempInt) {
+		for (int currentTagId = 0; currentTagId < numberOfNodeTags; ++currentTagId) {
 			// get and check the node tag
 			String tag = readUTF8EncodedString();
 			if (tag == null) {
-				Logger.debug("node tag must not be null: " + tempInt);
+				Logger.debug("node tag must not be null: " + currentTagId);
 				return false;
 			}
 
-			this.nodeTags[tempInt] = new Tag(tag);
+			this.nodeTags[currentTagId] = new Tag(tag);
 		}
 
 		// get and check the number of way tags (2 bytes)
@@ -997,15 +996,15 @@ public class MapDatabase {
 
 		this.wayTags = new Tag[numberOfWayTags];
 
-		for (int tempInt = 0; tempInt < numberOfWayTags; ++tempInt) {
+		for (int currentTagId = 0; currentTagId < numberOfWayTags; ++currentTagId) {
 			// get and check the way tag
 			String tag = readUTF8EncodedString();
 			if (tag == null) {
-				Logger.debug("way tag must not be null: " + tempInt);
+				Logger.debug("way tag must not be null: " + currentTagId);
 				return false;
 			}
 
-			this.wayTags[tempInt] = new Tag(tag);
+			this.wayTags[currentTagId] = new Tag(tag);
 		}
 
 		// get and check the number of contained map files
@@ -1015,13 +1014,12 @@ public class MapDatabase {
 			return false;
 		}
 
-		// create the list of all contained map files
-		MapFileParameters[] mapFilesList = new MapFileParameters[numberOfMapFiles];
+		MapFileParameter[] mapFileParameters = new MapFileParameter[numberOfMapFiles];
 		this.globalMinimumZoomLevel = Byte.MAX_VALUE;
 		this.globalMaximumZoomLevel = Byte.MIN_VALUE;
 
 		// get and check the information for each contained map file
-		for (byte tempByte = 0; tempByte < numberOfMapFiles; ++tempByte) {
+		for (byte currentMapFile = 0; currentMapFile < numberOfMapFiles; ++currentMapFile) {
 			// get and check the base zoom level
 			byte baseZoomLevel = readByte();
 			if (baseZoomLevel < 0 || baseZoomLevel > 21) {
@@ -1045,13 +1043,13 @@ public class MapDatabase {
 
 			// check for valid zoom level range
 			if (zoomLevelMin > zoomLevelMax) {
-				Logger.debug("invalid zoom level range: " + zoomLevelMin + " - " + zoomLevelMax);
+				Logger.debug("invalid zoom level range: " + zoomLevelMin + " > " + zoomLevelMax);
 				return false;
 			}
 
-			// get and check the start address of the map file (5 bytes)
-			long startAddress = readFiveBytesLong();
-			if (startAddress < 1 || startAddress >= this.fileSize) {
+			// get and check the start address of the map file (8 bytes)
+			long startAddress = readLong();
+			if (startAddress < HEADER_SIZE_MIN || startAddress >= this.fileSize) {
 				Logger.debug("invalid start address: " + startAddress);
 				return false;
 			}
@@ -1062,15 +1060,15 @@ public class MapDatabase {
 				indexStartAddress += SIGNATURE_LENGTH_INDEX;
 			}
 
-			// get and check the size of the map file (5 bytes)
-			long mapFileSize = readFiveBytesLong();
+			// get and check the size of the map file (8 bytes)
+			long mapFileSize = readLong();
 			if (mapFileSize < 1) {
 				Logger.debug("invalid map file size: " + mapFileSize);
 				return false;
 			}
 
 			// add the current map file to the map files list
-			mapFilesList[tempByte] = new MapFileParameters(startAddress, indexStartAddress,
+			mapFileParameters[currentMapFile] = new MapFileParameter(startAddress, indexStartAddress,
 					mapFileSize, baseZoomLevel, zoomLevelMin, zoomLevelMax, this.mapBoundary);
 
 			// update the global minimum and maximum zoom level information
@@ -1083,11 +1081,11 @@ public class MapDatabase {
 		}
 
 		// create and fill the lookup table for the map files
-		this.mapFilesLookupTable = new MapFileParameters[this.globalMaximumZoomLevel + 1];
-		for (int tempInt = 0; tempInt < numberOfMapFiles; ++tempInt) {
-			MapFileParameters mapFileParameters = mapFilesList[tempInt];
-			for (byte tempByte = mapFileParameters.zoomLevelMin; tempByte <= mapFileParameters.zoomLevelMax; ++tempByte) {
-				this.mapFilesLookupTable[tempByte] = mapFileParameters;
+		this.mapFilesLookupTable = new MapFileParameter[this.globalMaximumZoomLevel + 1];
+		for (int currentMapFile = 0; currentMapFile < numberOfMapFiles; ++currentMapFile) {
+			MapFileParameter mapFileParameter = mapFileParameters[currentMapFile];
+			for (byte zoomLevel = mapFileParameter.zoomLevelMin; zoomLevel <= mapFileParameter.zoomLevelMax; ++zoomLevel) {
+				this.mapFilesLookupTable[zoomLevel] = mapFileParameter;
 			}
 		}
 
@@ -1405,18 +1403,6 @@ public class MapDatabase {
 	 */
 	private byte readByte() {
 		return this.readBuffer[this.bufferPosition++];
-	}
-
-	/**
-	 * Converts five bytes from the read buffer to an unsigned long.
-	 * <p>
-	 * The byte order is big-endian.
-	 * 
-	 * @return the long value.
-	 */
-	private long readFiveBytesLong() {
-		this.bufferPosition += 5;
-		return Deserializer.getFiveBytesLong(this.readBuffer, this.bufferPosition - 5);
 	}
 
 	/**
