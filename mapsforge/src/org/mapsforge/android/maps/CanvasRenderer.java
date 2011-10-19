@@ -45,9 +45,8 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawNodes(List<PointTextContainer> drawNodes) {
-		PointTextContainer pointTextContainer;
 		for (this.arrayListIndex = drawNodes.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			pointTextContainer = drawNodes.get(this.arrayListIndex);
+			PointTextContainer pointTextContainer = drawNodes.get(this.arrayListIndex);
 			if (pointTextContainer.paintBack != null) {
 				this.canvas.drawText(pointTextContainer.text, pointTextContainer.x,
 						pointTextContainer.y, pointTextContainer.paintBack);
@@ -59,9 +58,8 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawSymbols(List<SymbolContainer> drawSymbols) {
-		SymbolContainer symbolContainer;
 		for (this.arrayListIndex = drawSymbols.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			symbolContainer = drawSymbols.get(this.arrayListIndex);
+			SymbolContainer symbolContainer = drawSymbols.get(this.arrayListIndex);
 			// use the matrix for rotation and translation of the symbol
 			if (symbolContainer.alignCenter) {
 				this.symbolMatrix
@@ -109,12 +107,10 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawWayNames(List<WayTextContainer> drawWayNames) {
-		WayTextContainer pathTextContainer;
-		float[] textCoordinates;
 		for (this.arrayListIndex = drawWayNames.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-			pathTextContainer = drawWayNames.get(this.arrayListIndex);
+			WayTextContainer pathTextContainer = drawWayNames.get(this.arrayListIndex);
 			this.path.rewind();
-			textCoordinates = pathTextContainer.coordinates;
+			float[] textCoordinates = pathTextContainer.coordinates;
 			this.path.moveTo(textCoordinates[0], textCoordinates[1]);
 			for (int i = 2; i < textCoordinates.length; i += 2) {
 				this.path.lineTo(textCoordinates[i], textCoordinates[i + 1]);
@@ -126,34 +122,30 @@ class CanvasRenderer extends DatabaseMapGenerator {
 
 	@Override
 	void drawWays(List<List<List<ShapePaintContainer>>> drawWays) {
-		List<List<ShapePaintContainer>> shapePaintContainers;
-		CircleContainer circleContainer;
-		WayContainer complexWayContainer;
-		ShapePaintContainer shapePaintContainer;
-		List<ShapePaintContainer> wayList;
-		int layers = drawWays.size();
 		int levelsPerLayer = drawWays.get(0).size();
-		for (byte currentLayer = 0; currentLayer < layers; ++currentLayer) {
-			shapePaintContainers = drawWays.get(currentLayer);
+
+		for (int currentLayer = 0, layers = drawWays.size(); currentLayer < layers; ++currentLayer) {
+			List<List<ShapePaintContainer>> shapePaintContainers = drawWays.get(currentLayer);
+
 			for (int currentLevel = 0; currentLevel < levelsPerLayer; ++currentLevel) {
-				wayList = shapePaintContainers.get(currentLevel);
+				List<ShapePaintContainer> wayList = shapePaintContainers.get(currentLevel);
+
 				for (this.arrayListIndex = wayList.size() - 1; this.arrayListIndex >= 0; --this.arrayListIndex) {
-					shapePaintContainer = wayList.get(this.arrayListIndex);
+					ShapePaintContainer shapePaintContainer = wayList.get(this.arrayListIndex);
 					this.path.rewind();
 					switch (shapePaintContainer.shapeContainer.getShapeType()) {
 						case CIRCLE:
-							circleContainer = (CircleContainer) shapePaintContainer.shapeContainer;
+							CircleContainer circleContainer = (CircleContainer) shapePaintContainer.shapeContainer;
 							this.path.addCircle(circleContainer.x, circleContainer.y,
 									circleContainer.radius, Path.Direction.CCW);
 							break;
 						case WAY:
-							complexWayContainer = (WayContainer) shapePaintContainer.shapeContainer;
+							WayContainer complexWayContainer = (WayContainer) shapePaintContainer.shapeContainer;
 							this.coordinates = complexWayContainer.coordinates;
 							for (int j = 0; j < this.coordinates.length; ++j) {
 								// make sure that the coordinates sequence is not empty
 								if (this.coordinates[j].length > 2) {
-									this.path.moveTo(this.coordinates[j][0],
-											this.coordinates[j][1]);
+									this.path.moveTo(this.coordinates[j][0], this.coordinates[j][1]);
 									for (int i = 2; i < this.coordinates[j].length; i += 2) {
 										this.path.lineTo(this.coordinates[j][i],
 												this.coordinates[j][i + 1]);

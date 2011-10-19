@@ -561,16 +561,12 @@ class LabelPlacement {
 
 			if (this.smb.x > Tile.TILE_SIZE) {
 				symbols.remove(i);
-
 			} else if (this.smb.y > Tile.TILE_SIZE) {
 				symbols.remove(i);
-
 			} else if (this.smb.x + this.smb.symbol.getWidth() < 0.0f) {
 				symbols.remove(i);
-
 			} else if (this.smb.y + this.smb.symbol.getHeight() < 0.0f) {
 				symbols.remove(i);
-
 			} else {
 				i++;
 			}

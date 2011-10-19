@@ -190,7 +190,6 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 									return true;
 								}
 								break;
-
 						}
 					}
 				}

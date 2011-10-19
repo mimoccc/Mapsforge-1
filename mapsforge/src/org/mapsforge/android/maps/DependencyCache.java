@@ -268,7 +268,6 @@ class DependencyCache {
 							label.x + Tile.TILE_SIZE, label.y + Tile.TILE_SIZE)));
 
 					toAdd.addTile(leftup);
-
 				}
 
 				if ((label.x + label.boundary.width() > Tile.TILE_SIZE)
@@ -279,7 +278,6 @@ class DependencyCache {
 							label.x - Tile.TILE_SIZE, label.y + Tile.TILE_SIZE)));
 
 					toAdd.addTile(rightup);
-
 				}
 			}
 
@@ -296,7 +294,6 @@ class DependencyCache {
 							new ImmutablePoint(label.x, label.y)));
 
 					toAdd.depCounter++;
-
 				}
 
 				linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(
@@ -311,7 +308,6 @@ class DependencyCache {
 							label.x + Tile.TILE_SIZE, label.y - Tile.TILE_SIZE)));
 
 					toAdd.addTile(leftdown);
-
 				}
 
 				if ((label.x + label.boundary.width() > Tile.TILE_SIZE)
@@ -323,7 +319,6 @@ class DependencyCache {
 							label.x - Tile.TILE_SIZE, label.y - Tile.TILE_SIZE)));
 
 					toAdd.addTile(rightdown);
-
 				}
 			}
 			// left
@@ -339,14 +334,12 @@ class DependencyCache {
 							new ImmutablePoint(label.x, label.y)));
 
 					toAdd.depCounter++;
-
 				}
 
 				linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(
 						label.x + Tile.TILE_SIZE, label.y)));
 
 				toAdd.addTile(left);
-
 			}
 			// right
 			if ((label.x + label.boundary.width() > Tile.TILE_SIZE)
@@ -361,14 +354,12 @@ class DependencyCache {
 							new ImmutablePoint(label.x, label.y)));
 
 					toAdd.depCounter++;
-
 				}
 
 				linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(
 						label.x - Tile.TILE_SIZE, label.y)));
 
 				toAdd.addTile(right);
-
 			}
 
 			// check symbols
@@ -399,7 +390,6 @@ class DependencyCache {
 										+ Tile.TILE_SIZE)));
 
 						toAdd.addTile(leftup);
-
 					}
 
 					if ((label.symbol.x + label.symbol.symbol.getWidth() > Tile.TILE_SIZE)
@@ -411,7 +401,6 @@ class DependencyCache {
 										+ Tile.TILE_SIZE)));
 
 						toAdd.addTile(rightup);
-
 					}
 				}
 
@@ -428,7 +417,6 @@ class DependencyCache {
 								toAdd, new ImmutablePoint(label.x, label.y)));
 
 						toAdd.depCounter++;
-
 					}
 
 					linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(
@@ -444,7 +432,6 @@ class DependencyCache {
 										- Tile.TILE_SIZE)));
 
 						toAdd.addTile(leftdown);
-
 					}
 
 					if ((label.symbol.x + label.symbol.symbol.getWidth() > Tile.TILE_SIZE)
@@ -457,7 +444,6 @@ class DependencyCache {
 										- Tile.TILE_SIZE)));
 
 						toAdd.addTile(rightdown);
-
 					}
 				}
 
@@ -472,14 +458,12 @@ class DependencyCache {
 								toAdd, new ImmutablePoint(label.x, label.y)));
 
 						toAdd.depCounter++;
-
 					}
 
 					linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(
 							label.x - Tile.TILE_SIZE, label.y)));
 
 					toAdd.addTile(left);
-
 				}
 
 				if ((label.symbol.x + label.symbol.symbol.getWidth() >= Tile.TILE_SIZE)
@@ -494,7 +478,6 @@ class DependencyCache {
 								toAdd, new ImmutablePoint(label.x, label.y)));
 
 						toAdd.depCounter++;
-
 					}
 
 					linkedDep.addText(new Dependency<DependencyText>(toAdd, new ImmutablePoint(

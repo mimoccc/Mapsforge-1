@@ -68,6 +68,21 @@ public class MapDatabase {
 	private static final String CHARSET_UTF8 = "UTF-8";
 
 	/**
+	 * Debug message prefix for the block signature.
+	 */
+	private static final String DEBUG_SIGNATURE_BLOCK = "block signature: ";
+
+	/**
+	 * Debug message prefix for the POI signature.
+	 */
+	private static final String DEBUG_SIGNATURE_POI = "POI signature: ";
+
+	/**
+	 * Debug message prefix for the way signature.
+	 */
+	private static final String DEBUG_SIGNATURE_WAY = "way signature: ";
+
+	/**
 	 * Bitmask for the debug flag in the file header.
 	 */
 	private static final int HEADER_BITMASK_DEBUG = 0x80;
@@ -118,51 +133,39 @@ public class MapDatabase {
 	private static final int MAXIMUM_BLOCK_SIZE = 2500000;
 
 	/**
-	 * Maximum number of inner ways which is considered as valid.
-	 */
-	private static final int MAXIMUM_NUMBER_OF_INNER_WAYS = 256;
-
-	/**
-	 * Maximum way nodes sequence length which is considered as valid.
-	 */
-	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
-
-	/**
 	 * The name of the Mercator projection as stored in the file header.
 	 */
 	private static final String MERCATOR = "Mercator";
 
 	/**
-	 * Bitmask for the optional node feature "elevation".
+	 * Bitmask for the optional POI feature "elevation".
 	 */
-	private static final int NODE_FEATURE_BITMASK_ELEVATION = 0x40;
+	private static final int POI_FEATURE_BITMASK_ELEVATION = 0x40;
 
 	/**
-	 * Bitmask for the optional node feature "house number".
+	 * Bitmask for the optional POI feature "house number".
 	 */
-	private static final int NODE_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
+	private static final int POI_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
 
 	/**
-	 * Bitmask for the optional node feature "name".
+	 * Bitmask for the optional POI feature "name".
 	 */
-	private static final int NODE_FEATURE_BITMASK_NAME = 0x80;
+	private static final int POI_FEATURE_BITMASK_NAME = 0x80;
 
 	/**
-	 * Bitmask for the node layer.
+	 * Bitmask for the POI layer.
 	 */
-	private static final int NODE_LAYER_BITMASK = 0xf0;
+	private static final int POI_LAYER_BITMASK = 0xf0;
 
 	/**
-	 * Bit shift for calculating the node layer.
+	 * Bit shift for calculating the POI layer.
 	 */
-	private static final int NODE_LAYER_SHIFT = 4;
+	private static final int POI_LAYER_SHIFT = 4;
 
 	/**
-	 * Bitmask for the number of node tags.
+	 * Bitmask for the number of POI tags.
 	 */
-	private static final int NODE_NUMBER_OF_TAGS_BITMASK = 0x0f;
-
-	private static final String SIGNATURE_BLOCK = "block signature: ";
+	private static final int POI_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
 	/**
 	 * Length of the debug signature at the beginning of each block.
@@ -175,18 +178,14 @@ public class MapDatabase {
 	private static final byte SIGNATURE_LENGTH_INDEX = 16;
 
 	/**
-	 * Length of the debug signature at the beginning of each node.
+	 * Length of the debug signature at the beginning of each POI.
 	 */
-	private static final byte SIGNATURE_LENGTH_NODE = 32;
+	private static final byte SIGNATURE_LENGTH_POI = 32;
 
 	/**
 	 * Length of the debug signature at the beginning of each way.
 	 */
 	private static final byte SIGNATURE_LENGTH_WAY = 32;
-
-	private static final String SIGNATURE_NODE = "node signature: ";
-
-	private static final String SIGNATURE_WAY = "way signature: ";
 
 	/**
 	 * The key of the elevation OpenStreetMap tag.
@@ -212,11 +211,6 @@ public class MapDatabase {
 	 * Bitmask for the optional way feature "label position".
 	 */
 	private static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
-
-	/**
-	 * Bitmask for the optional way feature "multipolygon".
-	 */
-	private static final int WAY_FEATURE_BITMASK_MULTIPOLYGON = 0x10;
 
 	/**
 	 * Bitmask for the optional way feature "name".
@@ -257,7 +251,6 @@ public class MapDatabase {
 		return isValid;
 	}
 
-	private String blockSignature;
 	private int bufferPosition;
 	private String commentText;
 	private IndexCache databaseIndexCache;
@@ -268,9 +261,6 @@ public class MapDatabase {
 	private long fromBaseTileY;
 	private byte globalMaximumZoomLevel;
 	private byte globalMinimumZoomLevel;
-	private int innerWayNodesSequenceLength;
-	private int innerWayNumber;
-	private int innerWayNumberOfWayNodes;
 	private RandomAccessFile inputFile;
 	private String languagePreference;
 	private Rect mapBoundary;
@@ -280,34 +270,29 @@ public class MapDatabase {
 	private int mapStartLongitude;
 	private boolean mapStartPosition;
 	private long nextBlockPointer;
-	private String nodeSignature;
-	private Tag[] nodeTags;
 	private long parentTileX;
 	private long parentTileY;
+	private Tag[] poiTags;
 	private String projectionName;
 	private int queryTileBitmask;
 	private int queryZoomLevel;
 	private byte[] readBuffer;
+	private String signatureBlock;
+	private String signaturePoi;
+	private String signatureWay;
 	private long subtileX;
 	private long subtileY;
-	private List<Tag> tagList;
 	private int tileLatitude;
 	private int tileLongitude;
 	private long toBaseTileX;
 	private long toBaseTileY;
 	private boolean useTileBitmask;
-	private int variableByteDecode;
-	private byte variableByteShift;
-	private float[] wayLabelPosition;
-	private float[][] wayNodes;
-	private int wayNumberOfInnerWays;
-	private String waySignature;
 	private Tag[] wayTags;
-	private int wayTileBitmask;
 	private int zoomLevelDifference;
 
 	/**
-	 * Closes the map file. Has no effect if no map file is currently opened.
+	 * Closes the map file and destroys all internal caches. This method has no effect if no map file is
+	 * currently opened.
 	 */
 	public void closeFile() {
 		try {
@@ -724,8 +709,8 @@ public class MapDatabase {
 	 */
 	private void logSignatures() {
 		if (this.debugFile) {
-			Logger.debug(SIGNATURE_WAY + this.waySignature);
-			Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+			Logger.debug(DEBUG_SIGNATURE_WAY + this.signatureWay);
+			Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 		}
 	}
 
@@ -735,10 +720,6 @@ public class MapDatabase {
 	private void prepareExecution() {
 		if (this.databaseIndexCache == null) {
 			this.databaseIndexCache = new IndexCache(this.inputFile, INDEX_CACHE_SIZE);
-		}
-
-		if (this.tagList == null) {
-			this.tagList = new ArrayList<Tag>();
 		}
 	}
 
@@ -762,20 +743,19 @@ public class MapDatabase {
 		int blockEntriesTableOffset = (this.queryZoomLevel - mapFileParameter.zoomLevelMin) * 4;
 		this.bufferPosition += blockEntriesTableOffset;
 
-		// get the amount of nodes and ways on the current zoomLevel level
-		int nodesOnZoomLevel = readShort();
+		// get the amount of POIs and ways on the current zoomLevel level
+		int poisOnZoomLevel = readShort();
 		int waysOnZoomLevel = readShort();
 
 		// move the pointer to the end of the block entries table
-		this.bufferPosition += mapFileParameter.blockEntriesTableSize - blockEntriesTableOffset
-				- 4;
+		this.bufferPosition += mapFileParameter.blockEntriesTableSize - blockEntriesTableOffset - 4;
 
 		// get the relative offset to the first stored way in the block
 		int firstWayOffset = readUnsignedInt();
 		if (firstWayOffset < 0) {
 			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
 		}
@@ -785,21 +765,20 @@ public class MapDatabase {
 		if (firstWayOffset > this.readBuffer.length) {
 			Logger.debug("invalid first way offset: " + firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
 		}
 
-		if (!processNodes(mapDatabaseCallback, nodesOnZoomLevel)) {
+		if (!processPOIs(mapDatabaseCallback, poisOnZoomLevel)) {
 			return;
 		}
 
-		// finished reading nodes, check if the current buffer position is valid
+		// finished reading POIs, check if the current buffer position is valid
 		if (this.bufferPosition > firstWayOffset) {
-			Logger.debug("invalid buffer position: " + this.bufferPosition + " - "
-					+ firstWayOffset);
+			Logger.debug("invalid buffer position: " + this.bufferPosition + " - " + firstWayOffset);
 			if (this.debugFile) {
-				Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
 		}
@@ -822,11 +801,11 @@ public class MapDatabase {
 	private boolean processBlockSignature() throws UnsupportedEncodingException {
 		if (this.debugFile) {
 			// get and check the block signature
-			this.blockSignature = new String(this.readBuffer, this.bufferPosition,
+			this.signatureBlock = new String(this.readBuffer, this.bufferPosition,
 					SIGNATURE_LENGTH_BLOCK, CHARSET_UTF8);
 			this.bufferPosition += SIGNATURE_LENGTH_BLOCK;
-			if (!this.blockSignature.startsWith("###TileStart")) {
-				Logger.debug("invalid block signature: " + this.blockSignature);
+			if (!this.signatureBlock.startsWith("###TileStart")) {
+				Logger.debug("invalid block signature: " + this.signatureBlock);
 				return false;
 			}
 		}
@@ -967,24 +946,24 @@ public class MapDatabase {
 			}
 		}
 
-		// get and check the number of node tags (2 bytes)
-		int numberOfNodeTags = readShort();
-		if (numberOfNodeTags < 0) {
-			Logger.debug("invalid number of node tags: " + numberOfNodeTags);
+		// get and check the number of POI tags (2 bytes)
+		int numberOfPoiTags = readShort();
+		if (numberOfPoiTags < 0) {
+			Logger.debug("invalid number of POI tags: " + numberOfPoiTags);
 			return false;
 		}
 
-		this.nodeTags = new Tag[numberOfNodeTags];
+		this.poiTags = new Tag[numberOfPoiTags];
 
-		for (int currentTagId = 0; currentTagId < numberOfNodeTags; ++currentTagId) {
-			// get and check the node tag
+		for (int currentTagId = 0; currentTagId < numberOfPoiTags; ++currentTagId) {
+			// get and check the POI tag
 			String tag = readUTF8EncodedString();
 			if (tag == null) {
-				Logger.debug("node tag must not be null: " + currentTagId);
+				Logger.debug("POI tag must not be null: " + currentTagId);
 				return false;
 			}
 
-			this.nodeTags[currentTagId] = new Tag(tag);
+			this.poiTags[currentTagId] = new Tag(tag);
 		}
 
 		// get and check the number of way tags (2 bytes)
@@ -1007,7 +986,7 @@ public class MapDatabase {
 			this.wayTags[currentTagId] = new Tag(tag);
 		}
 
-		// get and check the number of contained map files
+		// get and check the number of contained map files (1 byte)
 		byte numberOfMapFiles = readByte();
 		if (numberOfMapFiles < 1) {
 			Logger.debug("invalid number of contained map files: " + numberOfMapFiles);
@@ -1020,21 +999,21 @@ public class MapDatabase {
 
 		// get and check the information for each contained map file
 		for (byte currentMapFile = 0; currentMapFile < numberOfMapFiles; ++currentMapFile) {
-			// get and check the base zoom level
+			// get and check the base zoom level (1 byte)
 			byte baseZoomLevel = readByte();
 			if (baseZoomLevel < 0 || baseZoomLevel > 21) {
 				Logger.debug("invalid base zooom level: " + baseZoomLevel);
 				return false;
 			}
 
-			// get and check the minimum zoom level
+			// get and check the minimum zoom level (1 byte)
 			byte zoomLevelMin = readByte();
 			if (zoomLevelMin < 0 || zoomLevelMin > 21) {
 				Logger.debug("invalid minimum zoom level: " + zoomLevelMin);
 				return false;
 			}
 
-			// get and check the maximum zoom level
+			// get and check the maximum zoom level (1 byte)
 			byte zoomLevelMax = readByte();
 			if (zoomLevelMax < 0 || zoomLevelMax > 21) {
 				Logger.debug("invalid maximum zoom level: " + zoomLevelMax);
@@ -1096,90 +1075,136 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Processes the given number of nodes.
+	 * Processes the given number of POIs.
 	 * 
 	 * @param mapDatabaseCallback
-	 *            the callback which handles the extracted nodes.
-	 * @param numberOfNodes
-	 *            how many nodes should be processed.
-	 * @return true if the nodes could be processed successfully, false otherwise.
+	 *            the callback which handles the extracted POIs.
+	 * @param numberOfPois
+	 *            how many POIs should be processed.
+	 * @return true if the POIs could be processed successfully, false otherwise.
 	 * @throws UnsupportedEncodingException
 	 *             if string decoding fails.
 	 */
-	private boolean processNodes(MapDatabaseCallback mapDatabaseCallback, int numberOfNodes)
+	private boolean processPOIs(MapDatabaseCallback mapDatabaseCallback, int numberOfPois)
 			throws UnsupportedEncodingException {
-		for (int elementCounter = numberOfNodes; elementCounter != 0; --elementCounter) {
+		List<Tag> tags = new ArrayList<Tag>();
+
+		for (int elementCounter = numberOfPois; elementCounter != 0; --elementCounter) {
 			if (this.debugFile) {
-				// get and check the node signature
-				this.nodeSignature = new String(this.readBuffer, this.bufferPosition,
-						SIGNATURE_LENGTH_NODE, CHARSET_UTF8);
-				this.bufferPosition += SIGNATURE_LENGTH_NODE;
-				if (!this.nodeSignature.startsWith("***POIStart")) {
-					Logger.debug("invalid node signature: " + this.nodeSignature);
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				// get and check the POI signature
+				this.signaturePoi = new String(this.readBuffer, this.bufferPosition,
+						SIGNATURE_LENGTH_POI, CHARSET_UTF8);
+				this.bufferPosition += SIGNATURE_LENGTH_POI;
+				if (!this.signaturePoi.startsWith("***POIStart")) {
+					Logger.debug("invalid POI signature: " + this.signaturePoi);
+					Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					return false;
 				}
 			}
 
-			// get the node latitude offset (VBE-S)
-			int nodeLatitude = this.tileLatitude + readSignedInt();
+			// get the POI latitude offset (VBE-S)
+			int latitude = this.tileLatitude + readSignedInt();
 
-			// get the node longitude offset (VBE-S)
-			int nodeLongitude = this.tileLongitude + readSignedInt();
+			// get the POI longitude offset (VBE-S)
+			int longitude = this.tileLongitude + readSignedInt();
 
-			// get the special byte that encodes multiple fields
-			byte nodeSpecialByte = readByte();
+			// get the special byte which encodes multiple fields
+			byte specialByte = readByte();
 
-			// bit 1-4 of the special byte represent the node layer
-			byte nodeLayer = (byte) ((nodeSpecialByte & NODE_LAYER_BITMASK) >>> NODE_LAYER_SHIFT);
+			// bit 1-4 of the special byte represent the layer
+			byte layer = (byte) ((specialByte & POI_LAYER_BITMASK) >>> POI_LAYER_SHIFT);
 			// bit 5-8 of the special byte represent the number of tag IDs
-			byte nodeNumberOfTags = (byte) (nodeSpecialByte & NODE_NUMBER_OF_TAGS_BITMASK);
+			byte numberOfTags = (byte) (specialByte & POI_NUMBER_OF_TAGS_BITMASK);
 
-			this.tagList.clear();
+			tags.clear();
 
-			// get the node tag IDs (VBE-U)
-			for (byte tempByte = nodeNumberOfTags; tempByte != 0; --tempByte) {
+			// get the tag IDs (VBE-U)
+			for (byte tagIndex = numberOfTags; tagIndex != 0; --tagIndex) {
 				int tagId = readUnsignedInt();
-				if (tagId < 0 || tagId >= this.nodeTags.length) {
-					Logger.debug("invalid node tag ID: " + tagId);
+				if (tagId < 0 || tagId >= this.poiTags.length) {
+					Logger.debug("invalid POI tag ID: " + tagId);
 					if (this.debugFile) {
-						Logger.debug(SIGNATURE_NODE + this.nodeSignature);
-						Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+						Logger.debug(DEBUG_SIGNATURE_POI + this.signaturePoi);
+						Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					}
 					return false;
 				}
-				this.tagList.add(this.nodeTags[tagId]);
+				tags.add(this.poiTags[tagId]);
 			}
 
-			// get the feature byte
-			byte nodeFeatureByte = readByte();
+			// get the feature bitmask (1 byte)
+			byte featureByte = readByte();
 
-			// bit 1-3 of the node feature byte enable optional features
-			boolean nodeFeatureName = (nodeFeatureByte & NODE_FEATURE_BITMASK_NAME) != 0;
-			boolean nodeFeatureElevation = (nodeFeatureByte & NODE_FEATURE_BITMASK_ELEVATION) != 0;
-			boolean nodeFeatureHouseNumber = (nodeFeatureByte & NODE_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
+			// bit 1-3 of the feature byte enable optional features
+			boolean featureName = (featureByte & POI_FEATURE_BITMASK_NAME) != 0;
+			boolean featureElevation = (featureByte & POI_FEATURE_BITMASK_ELEVATION) != 0;
+			boolean featureHouseNumber = (featureByte & POI_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
 
-			// check if the node has a name
-			if (nodeFeatureName) {
-				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+			// check if the POI has a name
+			if (featureName) {
+				tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
 			}
 
-			// check if the node has an elevation
-			if (nodeFeatureElevation) {
-				// get the node elevation (VBE-S)
-				this.tagList.add(new Tag(TAG_KEY_ELE, Integer.toString(readSignedInt())));
+			// check if the POI has an elevation
+			if (featureElevation) {
+				tags.add(new Tag(TAG_KEY_ELE, Integer.toString(readSignedInt())));
 			}
 
-			// check if the node has a house number
-			if (nodeFeatureHouseNumber) {
-				this.tagList.add(new Tag(TAG_KEY_HOUSE_NUMBER, readUTF8EncodedString()));
+			// check if the POI has a house number
+			if (featureHouseNumber) {
+				tags.add(new Tag(TAG_KEY_HOUSE_NUMBER, readUTF8EncodedString()));
 			}
 
-			mapDatabaseCallback.renderPointOfInterest(nodeLayer, nodeLatitude,
-					nodeLongitude, this.tagList);
+			mapDatabaseCallback.renderPointOfInterest(layer, latitude, longitude, tags);
 		}
 
 		return true;
+	}
+
+	private float[][] processWayDataBlock() {
+		// get the number of coordinate blocks (1 byte)
+		byte numberOfCoordinateBlocks = readByte();
+
+		// create the array which will store the different way coordinate blocks
+		float[][] wayCoordinates = new float[numberOfCoordinateBlocks][];
+
+		// read the way coordinate blocks
+		for (byte coordinateBlock = 0; coordinateBlock < numberOfCoordinateBlocks; ++coordinateBlock) {
+			// get the number of way nodes (VBE-U)
+			int numberOfWayNodes = readUnsignedInt();
+
+			// each way node consists of latitude and longitude
+			int wayNodesSequenceLength = numberOfWayNodes * 2;
+
+			// create the array which will store the current way segment
+			float[] waySegment = new float[wayNodesSequenceLength];
+
+			// get the first way node latitude offset (VBE-S)
+			int wayNodeLatitude = this.tileLatitude + readSignedInt();
+
+			// get the first way node longitude offset (VBE-S)
+			int wayNodeLongitude = this.tileLongitude + readSignedInt();
+
+			// store the first way node
+			waySegment[0] = wayNodeLatitude;
+			waySegment[1] = wayNodeLongitude;
+
+			// get the remaining way nodes offsets
+			for (int wayNodesIndex = 2; wayNodesIndex < wayNodesSequenceLength; wayNodesIndex += 2) {
+				// get the way node latitude offset (VBE-S)
+				wayNodeLatitude = wayNodeLatitude + readSignedInt();
+
+				// get the way node longitude offset (VBE-S)
+				wayNodeLongitude = wayNodeLongitude + readSignedInt();
+
+				waySegment[wayNodesIndex] = wayNodeLatitude;
+				waySegment[wayNodesIndex + 1] = wayNodeLongitude;
+			}
+
+			wayCoordinates[coordinateBlock] = waySegment;
+		}
+
+		return wayCoordinates;
 	}
 
 	/**
@@ -1195,36 +1220,38 @@ public class MapDatabase {
 	 */
 	private boolean processWays(MapDatabaseCallback mapDatabaseCallback, int numberOfWays)
 			throws UnsupportedEncodingException {
+		List<Tag> tags = new ArrayList<Tag>();
+
 		for (int elementCounter = numberOfWays; elementCounter != 0; --elementCounter) {
 			if (this.debugFile) {
 				// get and check the way signature
-				this.waySignature = new String(this.readBuffer, this.bufferPosition,
+				this.signatureWay = new String(this.readBuffer, this.bufferPosition,
 						SIGNATURE_LENGTH_WAY, CHARSET_UTF8);
 				this.bufferPosition += SIGNATURE_LENGTH_WAY;
-				if (!this.waySignature.startsWith("---WayStart")) {
-					Logger.debug("invalid way signature: " + this.waySignature);
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+				if (!this.signatureWay.startsWith("---WayStart")) {
+					Logger.debug("invalid way signature: " + this.signatureWay);
+					Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					return false;
 				}
 			}
 
 			// get the size of the way (VBE-U)
-			int waySize = readUnsignedInt();
-			if (waySize < 0) {
-				Logger.debug("invalid way size: " + waySize);
+			int wayDataSize = readUnsignedInt();
+			if (wayDataSize < 0) {
+				Logger.debug("invalid way data size: " + wayDataSize);
 				if (this.debugFile) {
-					Logger.debug(SIGNATURE_BLOCK + this.blockSignature);
+					Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 				}
 				return false;
 			}
 
 			if (this.useTileBitmask) {
 				// get the way tile bitmask (2 bytes)
-				this.wayTileBitmask = readShort();
+				int tileBitmask = readShort();
 				// check if the way is inside the requested tile
-				if ((this.queryTileBitmask & this.wayTileBitmask) == 0) {
+				if ((this.queryTileBitmask & tileBitmask) == 0) {
 					// skip the rest of the way and continue with the next way
-					this.bufferPosition += waySize - 2;
+					this.bufferPosition += wayDataSize - 2;
 					continue;
 				}
 			} else {
@@ -1232,165 +1259,72 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 			}
 
-			// get the first special byte that encodes multiple fields
-			byte waySpecialByte1 = readByte();
+			// get the special byte which encodes multiple fields
+			byte specialByte = readByte();
 
-			// bit 1-4 of the first special byte represent the way layer
-			byte wayLayer = (byte) ((waySpecialByte1 & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
-			// bit 5-8 of the first special byte represent the number of tag IDs
-			byte wayNumberOfTags = (byte) (waySpecialByte1 & WAY_NUMBER_OF_TAGS_BITMASK);
+			// bit 1-4 of the special byte represent the layer
+			byte layer = (byte) ((specialByte & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
+			// bit 5-8 of the special byte represent the number of tag IDs
+			byte numberOfTags = (byte) (specialByte & WAY_NUMBER_OF_TAGS_BITMASK);
 
-			// skip the second special byte
-			readByte();
+			tags.clear();
 
-			// skip the way tag bitmap
-			readByte();
-
-			this.tagList.clear();
-
-			// get the way tag IDs (VBE-U)
-			for (byte tempByte = wayNumberOfTags; tempByte != 0; --tempByte) {
+			// get the tag IDs (VBE-U)
+			for (byte tagIndex = numberOfTags; tagIndex != 0; --tagIndex) {
 				int tagId = readUnsignedInt();
 				if (tagId < 0 || tagId >= this.wayTags.length) {
 					Logger.debug("invalid way tag ID: " + tagId);
 					logSignatures();
 					return false;
 				}
-				this.tagList.add(this.wayTags[tagId]);
+				tags.add(this.wayTags[tagId]);
 			}
 
-			// get and check the number of way nodes (VBE-U)
-			int wayNumberOfWayNodes = readUnsignedInt();
-			if (wayNumberOfWayNodes < 1 || wayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-				Logger.debug("invalid number of way nodes: " + wayNumberOfWayNodes);
+			// get the feature bitmask (1 byte)
+			byte featureByte = readByte();
+
+			// bit 1-4 of the feature byte enable optional features
+			boolean featureName = (featureByte & WAY_FEATURE_BITMASK_NAME) != 0;
+			boolean featureRef = (featureByte & WAY_FEATURE_BITMASK_REF) != 0;
+			boolean featureLabelPosition = (featureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
+
+			// check if the way has a name
+			if (featureName) {
+				tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+			}
+
+			// check if the way has a reference
+			if (featureRef) {
+				tags.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
+			}
+
+			// check if the way has a label position
+			float[] labelPosition;
+			if (featureLabelPosition) {
+				labelPosition = new float[2];
+
+				// get the label position latitude offset (VBE-S)
+				labelPosition[1] = this.tileLatitude + readSignedInt();
+
+				// get the label position longitude offset (VBE-S)
+				labelPosition[0] = this.tileLongitude + readSignedInt();
+			} else {
+				// no label position
+				labelPosition = null;
+			}
+
+			// get and check the number of way data blocks (1 byte)
+			byte wayDataBlocks = readByte();
+			if (wayDataBlocks < 1) {
+				Logger.debug("invalid number of way data blocks: " + wayDataBlocks);
 				logSignatures();
 				return false;
 			}
 
-			// each way node consists of latitude and longitude fields
-			int wayNodesSequenceLength = wayNumberOfWayNodes * 2;
-
-			float[] way = new float[wayNodesSequenceLength];
-
-			// get the first way node latitude offset (VBE-S)
-			int wayNodeLatitude = this.tileLatitude + readSignedInt();
-
-			// get the first way node longitude offset (VBE-S)
-			int wayNodeLongitude = this.tileLongitude + readSignedInt();
-
-			// store the first way node
-			way[1] = wayNodeLatitude;
-			way[0] = wayNodeLongitude;
-
-			final int firstWayNodeLatitude = wayNodeLatitude;
-			final int firstWayNodeLongitude = wayNodeLongitude;
-
-			// get the remaining way nodes offsets
-			for (int tempInt = 2; tempInt < wayNodesSequenceLength; tempInt += 2) {
-				// get the way node latitude offset (VBE-S)
-				wayNodeLatitude = wayNodeLatitude + readSignedInt();
-
-				// get the way node longitude offset (VBE-S)
-				wayNodeLongitude = wayNodeLongitude + readSignedInt();
-
-				way[tempInt] = wayNodeLongitude;
-				way[tempInt + 1] = wayNodeLatitude;
+			for (byte wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
+				float[][] wayNodes = processWayDataBlock();
+				mapDatabaseCallback.renderWay(layer, labelPosition, tags, wayNodes);
 			}
-
-			// get the feature byte
-			byte wayFeatureByte = readByte();
-
-			// bit 1-4 of the way feature byte enable optional features
-			boolean wayFeatureName = (wayFeatureByte & WAY_FEATURE_BITMASK_NAME) != 0;
-			boolean wayFeatureRef = (wayFeatureByte & WAY_FEATURE_BITMASK_REF) != 0;
-			boolean wayFeatureLabelPosition = (wayFeatureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
-			boolean wayFeatureMultipolygon = (wayFeatureByte & WAY_FEATURE_BITMASK_MULTIPOLYGON) != 0;
-
-			// check if the way has a name
-			if (wayFeatureName) {
-				this.tagList.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
-			}
-
-			// check if the way has a reference
-			if (wayFeatureRef) {
-				this.tagList.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
-			}
-
-			// check if the way has a label position
-			if (wayFeatureLabelPosition) {
-				this.wayLabelPosition = new float[2];
-
-				// get the label position latitude offset (VBE-S)
-				this.wayLabelPosition[1] = firstWayNodeLatitude + readSignedInt();
-
-				// get the label position longitude offset (VBE-S)
-				this.wayLabelPosition[0] = firstWayNodeLongitude + readSignedInt();
-
-			} else {
-				// no label position
-				this.wayLabelPosition = null;
-			}
-
-			// check if the way represents a multipolygon
-			if (wayFeatureMultipolygon) {
-				// get the amount of inner ways (VBE-U)
-				this.wayNumberOfInnerWays = readUnsignedInt();
-
-				if (this.wayNumberOfInnerWays > 0
-						&& this.wayNumberOfInnerWays < MAXIMUM_NUMBER_OF_INNER_WAYS) {
-					this.wayNodes = new float[1 + this.wayNumberOfInnerWays][];
-					this.wayNodes[0] = way;
-
-					// for each inner way
-					for (this.innerWayNumber = 1; this.innerWayNumber <= this.wayNumberOfInnerWays; ++this.innerWayNumber) {
-						// get and check the number of inner way nodes (VBE-U)
-						this.innerWayNumberOfWayNodes = readUnsignedInt();
-						if (this.innerWayNumberOfWayNodes < 1
-								|| this.innerWayNumberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-							Logger.debug("invalid number of inner way nodes: "
-									+ this.innerWayNumberOfWayNodes);
-							logSignatures();
-							return false;
-						}
-
-						// each inner way node consists of a latitude and a longitude field
-						this.innerWayNodesSequenceLength = this.innerWayNumberOfWayNodes * 2;
-
-						this.wayNodes[this.innerWayNumber] = new float[this.innerWayNodesSequenceLength];
-
-						// get the first inner way node latitude (VBE-S)
-						wayNodeLatitude = firstWayNodeLatitude + readSignedInt();
-
-						// get the first inner way node longitude (VBE-S)
-						wayNodeLongitude = firstWayNodeLongitude + readSignedInt();
-
-						this.wayNodes[this.innerWayNumber][1] = wayNodeLatitude;
-						this.wayNodes[this.innerWayNumber][0] = wayNodeLongitude;
-
-						// get and store the remaining inner way nodes offsets
-						for (int tempInt = 2; tempInt < this.innerWayNodesSequenceLength; tempInt += 2) {
-							// get the inner way node latitude offset (VBE-S)
-							wayNodeLatitude = wayNodeLatitude + readSignedInt();
-
-							// get the inner way node longitude offset (VBE-S)
-							wayNodeLongitude = wayNodeLongitude + readSignedInt();
-
-							this.wayNodes[this.innerWayNumber][tempInt] = wayNodeLongitude;
-							this.wayNodes[this.innerWayNumber][tempInt + 1] = wayNodeLatitude;
-						}
-					}
-				} else {
-					Logger.debug("invalid number of inner ways: " + this.wayNumberOfInnerWays);
-					logSignatures();
-					return false;
-				}
-			} else {
-				// no multipolygon
-				this.wayNodes = new float[][] { way };
-			}
-
-			mapDatabaseCallback.renderWay(wayLayer, this.wayLabelPosition, this.tagList,
-					this.wayNodes);
 		}
 
 		return true;
@@ -1476,23 +1410,23 @@ public class MapDatabase {
 	 * @return the int value.
 	 */
 	private int readSignedInt() {
-		this.variableByteDecode = 0;
-		this.variableByteShift = 0;
+		int variableByteDecode = 0;
+		byte variableByteShift = 0;
 
 		// check if the continuation bit is set
 		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-			this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
-			this.variableByteShift += 7;
+			variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << variableByteShift;
+			variableByteShift += 7;
 		}
 
 		// read the six data bits from the last byte
 		if ((this.readBuffer[this.bufferPosition] & 0x40) != 0) {
 			// negative
-			return -(this.variableByteDecode | ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift));
+			return -(variableByteDecode | ((this.readBuffer[this.bufferPosition++] & 0x3f) << variableByteShift));
 		}
 		// positive
-		return this.variableByteDecode
-				| ((this.readBuffer[this.bufferPosition++] & 0x3f) << this.variableByteShift);
+		return variableByteDecode
+				| ((this.readBuffer[this.bufferPosition++] & 0x3f) << variableByteShift);
 	}
 
 	/**
@@ -1504,18 +1438,17 @@ public class MapDatabase {
 	 */
 	private int readUnsignedInt() {
 		try {
-			this.variableByteDecode = 0;
-			this.variableByteShift = 0;
+			int variableByteDecode = 0;
+			byte variableByteShift = 0;
 
 			// check if the continuation bit is set
 			while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-				this.variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << this.variableByteShift;
-				this.variableByteShift += 7;
+				variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << variableByteShift;
+				variableByteShift += 7;
 			}
 
 			// read the seven data bits from the last byte
-			return this.variableByteDecode
-					| (this.readBuffer[this.bufferPosition++] << this.variableByteShift);
+			return variableByteDecode | (this.readBuffer[this.bufferPosition++] << variableByteShift);
 		} catch (ArrayIndexOutOfBoundsException e) {
 			Logger.exception(e);
 			return -1;

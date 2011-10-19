@@ -51,7 +51,7 @@ public interface MapDatabaseCallback {
 	 * @param tags
 	 *            the tags of the way.
 	 * @param wayNodes
-	 *            the way node positions.
+	 *            the geographical coordinates of the way nodes in the order latitude/longitude.
 	 */
 	void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes);
 }

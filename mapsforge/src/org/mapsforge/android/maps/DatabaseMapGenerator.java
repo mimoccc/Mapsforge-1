@@ -368,11 +368,13 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	public final void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
 		this.drawingLayer = this.ways.get(getValidLayer(layer));
 		// TODO what about the label position?
+
+		// convert from latitude/longitude coordinates to XY position
 		this.coordinates = wayNodes;
 		for (int i = 0; i < this.coordinates.length; ++i) {
 			for (int j = 0; j < this.coordinates[i].length; j += 2) {
-				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
-				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
+				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j + 1]);
+				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j]);
 			}
 		}
 		this.shapeContainer = new WayContainer(this.coordinates);
@@ -382,7 +384,6 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		} else {
 			this.renderTheme.matchLinearWay(this, tags, this.currentTile.zoomLevel);
 		}
-
 	}
 
 	private void createWayLists() {
