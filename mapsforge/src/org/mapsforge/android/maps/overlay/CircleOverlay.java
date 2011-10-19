@@ -122,7 +122,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 
 		synchronized (this.visibleCircles) {
 			// iterate over all visible circles
-			for (int i = 0, n = this.visibleCircles.size(); i < n; ++i) {
+			for (int i = this.visibleCircles.size() - 1; i >= 0; ++i) {
 				Integer circleIndex = this.visibleCircles.get(i);
 
 				// get the current circle
@@ -153,9 +153,16 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 					if (distance <= checkOverlayCircle.cachedRadius) {
 						switch (eventType) {
 							case LONG_PRESS:
-								return onLongPress(circleIndex.intValue());
+								if (onLongPress(circleIndex.intValue())) {
+									return true;
+								}
+								break;
+
 							case TAP:
-								return onTap(circleIndex.intValue());
+								if (onTap(circleIndex.intValue())) {
+									return true;
+								}
+								break;
 						}
 					}
 				}

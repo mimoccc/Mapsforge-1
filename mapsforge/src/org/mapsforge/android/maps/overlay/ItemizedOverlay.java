@@ -136,7 +136,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 		synchronized (this.visibleItems) {
 			// iterate over all visible items
-			for (int i = 0, n = this.visibleItems.size(); i < n; ++i) {
+			for (int i = this.visibleItems.size() - 1; i >= 0; --i) {
 				Integer itemIndex = this.visibleItems.get(i);
 
 				// get the current item
@@ -180,9 +180,17 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 							&& checkBottom >= eventPosition.y && checkTop <= eventPosition.y) {
 						switch (eventType) {
 							case LONG_PRESS:
-								return onLongPress(itemIndex.intValue());
+								if (onLongPress(itemIndex.intValue())) {
+									return true;
+								}
+								break;
+
 							case TAP:
-								return onTap(itemIndex.intValue());
+								if (onTap(itemIndex.intValue())) {
+									return true;
+								}
+								break;
+
 						}
 					}
 				}
