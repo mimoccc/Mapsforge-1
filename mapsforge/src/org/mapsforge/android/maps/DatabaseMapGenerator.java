@@ -404,7 +404,8 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 			if (mapGeneratorJobTheme.internal) {
 				switch (mapGeneratorJobTheme.internalRenderTheme) {
 					case OSMARENDER:
-						inputStream = getClass().getResourceAsStream("theme/osmarender/osmarender.xml");
+						inputStream = getClass().getResourceAsStream(
+								"rendertheme/osmarender/osmarender.xml");
 						break;
 					default:
 						throw new IllegalArgumentException();

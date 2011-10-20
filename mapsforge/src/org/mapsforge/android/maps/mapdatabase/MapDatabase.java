@@ -542,8 +542,11 @@ public class MapDatabase {
 							mapFileParameter.boundaryLeftTile + currentColumn,
 							mapFileParameter.baseZoomLevel) * 1000000);
 
-					// handle the current block data
-					processBlock(mapFileParameter, mapDatabaseCallback);
+					try {
+						processBlock(mapFileParameter, mapDatabaseCallback);
+					} catch (ArrayIndexOutOfBoundsException e) {
+						Logger.exception(e);
+					}
 				}
 			}
 
@@ -705,9 +708,9 @@ public class MapDatabase {
 	}
 
 	/**
-	 * Logs the signature of the current way and block.
+	 * Logs the debug signatures of the current way and block.
 	 */
-	private void logSignatures() {
+	private void logDebugSignatures() {
 		if (this.debugFile) {
 			Logger.debug(DEBUG_SIGNATURE_WAY + this.signatureWay);
 			Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
@@ -1108,12 +1111,12 @@ public class MapDatabase {
 			// get the POI longitude offset (VBE-S)
 			int longitude = this.tileLongitude + readSignedInt();
 
-			// get the special byte which encodes multiple fields
+			// get the special byte which encodes multiple flags
 			byte specialByte = readByte();
 
-			// bit 1-4 of the special byte represent the layer
+			// bit 1-4 represent the layer
 			byte layer = (byte) ((specialByte & POI_LAYER_BITMASK) >>> POI_LAYER_SHIFT);
-			// bit 5-8 of the special byte represent the number of tag IDs
+			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & POI_NUMBER_OF_TAGS_BITMASK);
 
 			tags.clear();
@@ -1135,7 +1138,7 @@ public class MapDatabase {
 			// get the feature bitmask (1 byte)
 			byte featureByte = readByte();
 
-			// bit 1-3 of the feature byte enable optional features
+			// bit 1-3 enable optional features
 			boolean featureName = (featureByte & POI_FEATURE_BITMASK_NAME) != 0;
 			boolean featureElevation = (featureByte & POI_FEATURE_BITMASK_ELEVATION) != 0;
 			boolean featureHouseNumber = (featureByte & POI_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
@@ -1162,8 +1165,12 @@ public class MapDatabase {
 	}
 
 	private float[][] processWayDataBlock() {
-		// get the number of coordinate blocks (1 byte)
+		// get and check the number of coordinate blocks (1 byte)
 		byte numberOfCoordinateBlocks = readByte();
+		if (numberOfCoordinateBlocks < 0) {
+			Logger.debug("negative number of coordinate blocks: " + numberOfCoordinateBlocks);
+			return null;
+		}
 
 		// create the array which will store the different way coordinate blocks
 		float[][] wayCoordinates = new float[numberOfCoordinateBlocks][];
@@ -1233,6 +1240,8 @@ public class MapDatabase {
 					Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					return false;
 				}
+				// TODO delete
+				logDebugSignatures();
 			}
 
 			// get the size of the way (VBE-U)
@@ -1259,12 +1268,12 @@ public class MapDatabase {
 				this.bufferPosition += 2;
 			}
 
-			// get the special byte which encodes multiple fields
+			// get the special byte which encodes multiple flags
 			byte specialByte = readByte();
 
-			// bit 1-4 of the special byte represent the layer
+			// bit 1-4 represent the layer
 			byte layer = (byte) ((specialByte & WAY_LAYER_BITMASK) >>> WAY_LAYER_SHIFT);
-			// bit 5-8 of the special byte represent the number of tag IDs
+			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & WAY_NUMBER_OF_TAGS_BITMASK);
 
 			tags.clear();
@@ -1274,28 +1283,38 @@ public class MapDatabase {
 				int tagId = readUnsignedInt();
 				if (tagId < 0 || tagId >= this.wayTags.length) {
 					Logger.debug("invalid way tag ID: " + tagId);
-					logSignatures();
+					logDebugSignatures();
 					return false;
 				}
 				tags.add(this.wayTags[tagId]);
+				// TODO delete
+				Logger.debug("tag: " + this.wayTags[tagId]);
 			}
 
 			// get the feature bitmask (1 byte)
 			byte featureByte = readByte();
 
-			// bit 1-4 of the feature byte enable optional features
+			// bit 1-3 enable optional features
 			boolean featureName = (featureByte & WAY_FEATURE_BITMASK_NAME) != 0;
 			boolean featureRef = (featureByte & WAY_FEATURE_BITMASK_REF) != 0;
 			boolean featureLabelPosition = (featureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
 
 			// check if the way has a name
 			if (featureName) {
-				tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+				// TODO delete
+				String name = readUTF8EncodedString();
+				Logger.debug("name: " + name);
+				tags.add(new Tag(TAG_KEY_NAME, name));
+				// tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
 			}
 
 			// check if the way has a reference
 			if (featureRef) {
-				tags.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
+				// TODO delete
+				String ref = readUTF8EncodedString();
+				Logger.debug("ref: " + ref);
+				tags.add(new Tag(TAG_KEY_REF, ref));
+				// tags.add(new Tag(TAG_KEY_REF, readUTF8EncodedString));
 			}
 
 			// check if the way has a label position
@@ -1317,12 +1336,16 @@ public class MapDatabase {
 			byte wayDataBlocks = readByte();
 			if (wayDataBlocks < 1) {
 				Logger.debug("invalid number of way data blocks: " + wayDataBlocks);
-				logSignatures();
+				logDebugSignatures();
 				return false;
 			}
 
 			for (byte wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
 				float[][] wayNodes = processWayDataBlock();
+				if (wayNodes == null) {
+					logDebugSignatures();
+					return false;
+				}
 				mapDatabaseCallback.renderWay(layer, labelPosition, tags, wayNodes);
 			}
 		}
@@ -1437,22 +1460,17 @@ public class MapDatabase {
 	 * @return the int value or -1 in case of an error.
 	 */
 	private int readUnsignedInt() {
-		try {
-			int variableByteDecode = 0;
-			byte variableByteShift = 0;
+		int variableByteDecode = 0;
+		byte variableByteShift = 0;
 
-			// check if the continuation bit is set
-			while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
-				variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << variableByteShift;
-				variableByteShift += 7;
-			}
-
-			// read the seven data bits from the last byte
-			return variableByteDecode | (this.readBuffer[this.bufferPosition++] << variableByteShift);
-		} catch (ArrayIndexOutOfBoundsException e) {
-			Logger.exception(e);
-			return -1;
+		// check if the continuation bit is set
+		while ((this.readBuffer[this.bufferPosition] & 0x80) != 0) {
+			variableByteDecode |= (this.readBuffer[this.bufferPosition++] & 0x7f) << variableByteShift;
+			variableByteShift += 7;
 		}
+
+		// read the seven data bits from the last byte
+		return variableByteDecode | (this.readBuffer[this.bufferPosition++] << variableByteShift);
 	}
 
 	/**

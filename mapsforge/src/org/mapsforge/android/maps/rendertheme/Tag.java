@@ -80,6 +80,11 @@ public class Tag {
 		return this.hashCode;
 	}
 
+	@Override
+	public String toString() {
+		return "Tag [key=" + this.key + ", value=" + this.value + "]";
+	}
+
 	/**
 	 * Calculates the hash value of this object.
 	 * 

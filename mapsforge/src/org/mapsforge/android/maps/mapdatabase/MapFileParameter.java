@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps.mapdatabase;
 
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.android.maps.MercatorProjection;
 
 import android.graphics.Rect;
 
