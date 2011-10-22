@@ -369,12 +369,12 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 		this.drawingLayer = this.ways.get(getValidLayer(layer));
 		// TODO what about the label position?
 
-		// convert from latitude/longitude coordinates to XY position
+		// convert from longitude/latitude coordinates to XY positions
 		this.coordinates = wayNodes;
 		for (int i = 0; i < this.coordinates.length; ++i) {
 			for (int j = 0; j < this.coordinates[i].length; j += 2) {
-				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j + 1]);
-				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j]);
+				this.coordinates[i][j] = scaleLongitude(this.coordinates[i][j]);
+				this.coordinates[i][j + 1] = scaleLatitude(this.coordinates[i][j + 1]);
 			}
 		}
 		this.shapeContainer = new WayContainer(this.coordinates);

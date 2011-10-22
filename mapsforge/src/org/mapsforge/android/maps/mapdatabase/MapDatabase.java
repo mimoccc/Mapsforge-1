@@ -130,7 +130,12 @@ public class MapDatabase {
 	/**
 	 * Maximum size of a single block in bytes that is supported by this implementation.
 	 */
-	private static final int MAXIMUM_BLOCK_SIZE = 2500000;
+	private static final int MAXIMUM_BLOCK_SIZE = 2000000;
+
+	/**
+	 * Maximum way nodes sequence length which is considered as valid.
+	 */
+	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
 
 	/**
 	 * The name of the Mercator projection as stored in the file header.
@@ -869,35 +874,36 @@ public class MapDatabase {
 
 		// get and check the the map date (8 bytes)
 		this.mapDate = readLong();
-		if (this.mapDate < 0) {
+		// is the map date before 2010-01-10 ?
+		if (this.mapDate < 1200000000000L) {
 			Logger.debug("invalid map date: " + this.mapDate);
 			return false;
 		}
 
 		// get and check the top boundary (4 bytes)
 		int boundaryTop = readInt();
-		if (boundaryTop > LATITUDE_MAX) {
+		if (boundaryTop < LATITUDE_MIN || boundaryTop > LATITUDE_MAX) {
 			Logger.debug("invalid top boundary: " + boundaryTop);
 			return false;
 		}
 
 		// get and check the left boundary (4 bytes)
 		int boundaryLeft = readInt();
-		if (boundaryLeft < LONGITUDE_MIN) {
+		if (boundaryLeft < LONGITUDE_MIN || boundaryLeft > LONGITUDE_MAX) {
 			Logger.debug("invalid left boundary: " + boundaryLeft);
 			return false;
 		}
 
 		// get and check the bottom boundary (4 bytes)
 		int boundaryBottom = readInt();
-		if (boundaryBottom < LATITUDE_MIN) {
+		if (boundaryBottom < LATITUDE_MIN || boundaryBottom > LATITUDE_MAX) {
 			Logger.debug("invalid bottom boundary: " + boundaryBottom);
 			return false;
 		}
 
 		// get and check the right boundary (4 bytes)
 		int boundaryRight = readInt();
-		if (boundaryRight > LONGITUDE_MAX) {
+		if (boundaryRight < LONGITUDE_MIN || boundaryRight > LONGITUDE_MAX) {
 			Logger.debug("invalid right boundary: " + boundaryRight);
 			return false;
 		}
@@ -907,10 +913,7 @@ public class MapDatabase {
 
 		// get and check the tile pixel size (2 bytes)
 		int tilePixelSize = readShort();
-		if (tilePixelSize < 1) {
-			Logger.debug("invalid tile pixel size: " + tilePixelSize);
-			return false;
-		} else if (tilePixelSize != Tile.TILE_SIZE) {
+		if (tilePixelSize != Tile.TILE_SIZE) {
 			Logger.debug("unsupported tile pixel size: " + tilePixelSize);
 			return false;
 		}
@@ -1004,21 +1007,21 @@ public class MapDatabase {
 		for (byte currentMapFile = 0; currentMapFile < numberOfMapFiles; ++currentMapFile) {
 			// get and check the base zoom level (1 byte)
 			byte baseZoomLevel = readByte();
-			if (baseZoomLevel < 0 || baseZoomLevel > 21) {
+			if (baseZoomLevel < 0 || baseZoomLevel > 20) {
 				Logger.debug("invalid base zooom level: " + baseZoomLevel);
 				return false;
 			}
 
 			// get and check the minimum zoom level (1 byte)
 			byte zoomLevelMin = readByte();
-			if (zoomLevelMin < 0 || zoomLevelMin > 21) {
+			if (zoomLevelMin < 0 || zoomLevelMin > 22) {
 				Logger.debug("invalid minimum zoom level: " + zoomLevelMin);
 				return false;
 			}
 
 			// get and check the maximum zoom level (1 byte)
 			byte zoomLevelMax = readByte();
-			if (zoomLevelMax < 0 || zoomLevelMax > 21) {
+			if (zoomLevelMax < 0 || zoomLevelMax > 22) {
 				Logger.debug("invalid maximum zoom level: " + zoomLevelMax);
 				return false;
 			}
@@ -1167,8 +1170,9 @@ public class MapDatabase {
 	private float[][] processWayDataBlock() {
 		// get and check the number of coordinate blocks (1 byte)
 		byte numberOfCoordinateBlocks = readByte();
-		if (numberOfCoordinateBlocks < 0) {
-			Logger.debug("negative number of coordinate blocks: " + numberOfCoordinateBlocks);
+		if (numberOfCoordinateBlocks < 1) {
+			Logger.debug("invalid number of coordinate blocks: " + numberOfCoordinateBlocks);
+			logDebugSignatures();
 			return null;
 		}
 
@@ -1177,8 +1181,13 @@ public class MapDatabase {
 
 		// read the way coordinate blocks
 		for (byte coordinateBlock = 0; coordinateBlock < numberOfCoordinateBlocks; ++coordinateBlock) {
-			// get the number of way nodes (VBE-U)
+			// get and check the number of way nodes (VBE-U)
 			int numberOfWayNodes = readUnsignedInt();
+			if (numberOfWayNodes < 2 || numberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
+				Logger.debug("invalid number of way nodes: " + numberOfWayNodes);
+				logDebugSignatures();
+				return null;
+			}
 
 			// each way node consists of latitude and longitude
 			int wayNodesSequenceLength = numberOfWayNodes * 2;
@@ -1193,8 +1202,8 @@ public class MapDatabase {
 			int wayNodeLongitude = this.tileLongitude + readSignedInt();
 
 			// store the first way node
-			waySegment[0] = wayNodeLatitude;
-			waySegment[1] = wayNodeLongitude;
+			waySegment[1] = wayNodeLatitude;
+			waySegment[0] = wayNodeLongitude;
 
 			// get the remaining way nodes offsets
 			for (int wayNodesIndex = 2; wayNodesIndex < wayNodesSequenceLength; wayNodesIndex += 2) {
@@ -1204,8 +1213,8 @@ public class MapDatabase {
 				// get the way node longitude offset (VBE-S)
 				wayNodeLongitude = wayNodeLongitude + readSignedInt();
 
-				waySegment[wayNodesIndex] = wayNodeLatitude;
-				waySegment[wayNodesIndex + 1] = wayNodeLongitude;
+				waySegment[wayNodesIndex + 1] = wayNodeLatitude;
+				waySegment[wayNodesIndex] = wayNodeLongitude;
 			}
 
 			wayCoordinates[coordinateBlock] = waySegment;
@@ -1240,8 +1249,6 @@ public class MapDatabase {
 					Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					return false;
 				}
-				// TODO delete
-				logDebugSignatures();
 			}
 
 			// get the size of the way (VBE-U)
@@ -1276,6 +1283,9 @@ public class MapDatabase {
 			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & WAY_NUMBER_OF_TAGS_BITMASK);
 
+			// TODO: delete
+			readByte();
+
 			tags.clear();
 
 			// get the tag IDs (VBE-U)
@@ -1287,8 +1297,6 @@ public class MapDatabase {
 					return false;
 				}
 				tags.add(this.wayTags[tagId]);
-				// TODO delete
-				Logger.debug("tag: " + this.wayTags[tagId]);
 			}
 
 			// get the feature bitmask (1 byte)
@@ -1301,20 +1309,12 @@ public class MapDatabase {
 
 			// check if the way has a name
 			if (featureName) {
-				// TODO delete
-				String name = readUTF8EncodedString();
-				Logger.debug("name: " + name);
-				tags.add(new Tag(TAG_KEY_NAME, name));
-				// tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
+				tags.add(new Tag(TAG_KEY_NAME, readUTF8EncodedString()));
 			}
 
 			// check if the way has a reference
 			if (featureRef) {
-				// TODO delete
-				String ref = readUTF8EncodedString();
-				Logger.debug("ref: " + ref);
-				tags.add(new Tag(TAG_KEY_REF, ref));
-				// tags.add(new Tag(TAG_KEY_REF, readUTF8EncodedString));
+				tags.add(new Tag(TAG_KEY_REF, readUTF8EncodedString()));
 			}
 
 			// check if the way has a label position
@@ -1343,7 +1343,6 @@ public class MapDatabase {
 			for (byte wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
 				float[][] wayNodes = processWayDataBlock();
 				if (wayNodes == null) {
-					logDebugSignatures();
 					return false;
 				}
 				mapDatabaseCallback.renderWay(layer, labelPosition, tags, wayNodes);
@@ -1378,6 +1377,7 @@ public class MapDatabase {
 		if (this.readBuffer == null || this.readBuffer.length < length) {
 			// ensure that the read buffer is not too large
 			if (length > MAXIMUM_BLOCK_SIZE) {
+				Logger.debug("invalid read length: " + length);
 				return false;
 			}
 			this.readBuffer = new byte[length];
