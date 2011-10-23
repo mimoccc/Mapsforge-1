@@ -78,6 +78,7 @@ class MapFileWriter {
 	private static final short BITMAP_REF = 64;
 	private static final short BITMAP_LABEL = 32;
 	private static final short BITMAP_MULTIPOLYGON = 16;
+	private static final short BITMAP_POLYGON = 8;
 	private static final short BITMAP_HIGHWAY = 128;
 	private static final short BITMAP_RAILWAY = 64;
 	private static final short BITMAP_BUILDING = 32;
@@ -606,7 +607,7 @@ class MapFileWriter {
 							// write a byte with name, label and way type information
 							wayBuffer.put(infoByteWay(way.getName(), way.getRef(),
 									wayNodePreprocessingResult.getLabelPosition() != null,
-									way.getShape() == TDWay.MULTI_POLYGON));
+									way.getShape() == TDWay.MULTI_POLYGON, way.isPolygon()));
 
 							// // if the way has a name, write it to the file
 							if (way.getName() != null && way.getName().length() > 0) {
@@ -910,7 +911,7 @@ class MapFileWriter {
 	}
 
 	private byte infoByteWay(String name, String ref, boolean labelPosition,
-			boolean isMultiPolygon) {
+			boolean isMultiPolygon, boolean isPolygon) {
 		byte infoByte = 0;
 
 		if (name != null && name.length() > 0) {
@@ -924,6 +925,10 @@ class MapFileWriter {
 		}
 		if (isMultiPolygon) {
 			infoByte |= BITMAP_MULTIPOLYGON;
+		}
+
+		if (isPolygon) {
+			infoByte |= BITMAP_POLYGON;
 		}
 
 		return infoByte;

@@ -34,7 +34,9 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.TopologyException;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 /**
  * Provides utility functions for the maps preprocessing.
@@ -74,13 +76,20 @@ final class GeoUtils {
 			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(way.getWayNodes()[i]
 					.getLongitude()),
 					GeoCoordinate.intToDouble(way.getWayNodes()[i].getLatitude()));
+
 		}
 
+		Geometry res = null;
 		// check for closed polygon
 		if (coordinates[0].equals2D(coordinates[coordinates.length - 1]))
-			return gf.createPolygon(gf.createLinearRing(coordinates), null);
+			res = gf.createPolygon(gf.createLinearRing(coordinates), null);
+		else
+			res = gf.createLineString(coordinates);
 
-		return gf.createLineString(coordinates);
+		// tolerate up to 2 meters
+		res = TopologyPreservingSimplifier.simplify(res, 0.0000188);
+
+		return res;
 	}
 
 	static List<GeoCoordinate> toGeoCoordinateList(Geometry jtsGeometry) {
@@ -553,6 +562,23 @@ final class GeoUtils {
 	}
 
 	/**
+	 * Scales a JTS geometry object around its center
+	 * 
+	 * @param object
+	 *            gemoetry object
+	 * @param scaleFactor
+	 *            scale factor to scale
+	 */
+	static void scaleJtsObject(Geometry object, float scaleFactor) {
+
+		Coordinate centre = object.getEnvelopeInternal().centre();
+		AffineTransformation sclaleTransformation = AffineTransformation.scaleInstance(scaleFactor,
+				scaleFactor, centre.x, centre.y);
+
+		object.apply(sclaleTransformation);
+	}
+
+	/**
 	 * Converts a mapsforge way with possible innerWays to a JTS wayBlock.
 	 * 
 	 * @param way
@@ -568,8 +594,14 @@ final class GeoUtils {
 
 		if (innerWays != null) {
 
+			// scale the outer polygon slightly larger
+			// scaleJtsObject(jtsWay, 1.01f);
+
 			for (TDWay innerWay : innerWays) {
-				jtsInnerWays.add(toJTSGeometry(innerWay));
+				Geometry geom = toJTSGeometry(innerWay);
+				scaleJtsObject(geom, 0.98f);
+
+				jtsInnerWays.add(geom);
 
 			}
 		}
@@ -627,8 +659,7 @@ final class GeoUtils {
 				for (Geometry innerWay : wayBlock.innerWays) {
 					if (innerWay.within(wayBlock.way)) {
 						newWayBlock.innerWays.add(innerWay);
-					} else
-						System.out.println("inner polygon does not belong to outer polygon");
+					}
 
 				}
 			}
@@ -725,6 +756,30 @@ final class GeoUtils {
 
 	}
 
+	/**
+	 * Simplifies a way by reducing the amount of nodes. We use the Douglas-Peucker algorithm to archive
+	 * that.
+	 * 
+	 * @param wayBlock
+	 *            Way block to simplify.
+	 * @param distanceTolerance
+	 *            Distance to the next node which will be used to remove nodes.
+	 */
+	static void simplifyWay(JtsWayBlock wayBlock, double distanceTolerance) {
+
+		wayBlock.way = TopologyPreservingSimplifier.simplify(wayBlock.way, distanceTolerance);
+
+		if (wayBlock.innerWays != null) {
+
+			List<Geometry> newInnerWayList = new ArrayList<Geometry>();
+
+			for (Geometry innerWay : wayBlock.innerWays) {
+				newInnerWayList.add(TopologyPreservingSimplifier.simplify(innerWay, distanceTolerance));
+			}
+			wayBlock.innerWays = newInnerWayList;
+		}
+	}
+
 	static List<WayDataBlock> preprocessWay(TDWay way, List<TDWay> innerWays, boolean polygonClipping,
 			boolean wayClipping,
 			final TileCoordinate tile,
@@ -745,17 +800,15 @@ final class GeoUtils {
 		}
 
 		// //check for clipping of simple polygons and ways
-		if ((polygonClipping && way.isPolygon()) ||
-				(wayClipping && !way.isPolygon())) {
+		if ((polygonClipping && way.getShape() == TDWay.SIMPLE_POLYGON) ||
+				(wayClipping && way.getShape() != TDWay.SIMPLE_POLYGON)) {
 			List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
 			List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
 					enlargementInMeters);
 
 			if (segments == null)
 				return null;
-
 			for (List<GeoCoordinate> segment : segments) {
-
 				WayDataBlock wayDataBlock = new WayDataBlock(
 						waynodeAbsoluteCoordinatesToOffsets(segment), null);
 				wayDataBlockList.add(wayDataBlock);
@@ -817,58 +870,6 @@ final class GeoUtils {
 		// }
 
 	}
-
-	// static MultipolygonPreprocessingResult clipMultipolygonToTile(TDWay outerWay,
-	// List<TDWay> innerWays,
-	// final TileCoordinate tile, int enlargementInMeters) {
-	//
-	// Geometry tileBB = tileToJTSGeometry(tile.getX(),
-	// tile.getY(),
-	// tile.getZoomlevel(),
-	// enlargementInMeters);
-	//
-	// Geometry outerWayAsGeometry = toJTSGeometry(outerWay);
-	//
-	// // get intersecting polygons with the tile bounding box
-	// Geometry outerWays = OverlayOp.overlayOp(tileBB, outerWayAsGeometry, OverlayOp.INTERSECTION);
-	//
-	// if (outerWays.getNumGeometries() == 0)
-	// return null;
-	//
-	// MultipolygonPreprocessingResult preprocessingResult = new MultipolygonPreprocessingResult();
-	//
-	// // loop through all outerways and check the innerways against them
-	// for (int i = 0; i < outerWays.getNumGeometries(); i++) {
-	//
-	// Geometry outerWayN = outerWays.getGeometryN(i);
-	//
-	// MultipolygonResult multiPolygonResult = new MultipolygonResult();
-	//
-	// multiPolygonResult.outerWayCoordinates = toGeoCoordinateList(outerWayN);
-	//
-	// // get all polygons which are intersecting the tile bounding box
-	// for (TDWay innerWay : innerWays) {
-	// Geometry innerWayJTS = toJTSGeometry(innerWay);
-	//
-	// Geometry innerWaysJTS = OverlayOp
-	// .overlayOp(tileBB, innerWayJTS, OverlayOp.INTERSECTION);
-	//
-	// // loop through all possible innerways which occurs by the intersection
-	// for (int j = 0; j < innerWaysJTS.getNumGeometries(); j++) {
-	// innerWayJTS = innerWaysJTS.getGeometryN(j);
-	//
-	// if (innerWayJTS.within(outerWayN))
-	// multiPolygonResult.innerWayCoordinates.add(toGeoCoordinateList(innerWayJTS));
-	//
-	// }
-	//
-	// preprocessingResult.multiPolygons.add(multiPolygonResult);
-	//
-	// }
-	// }
-	//
-	// return preprocessingResult;
-	// }
 
 	/**
 	 * Clips a polygon to the bounding box of a tile.
