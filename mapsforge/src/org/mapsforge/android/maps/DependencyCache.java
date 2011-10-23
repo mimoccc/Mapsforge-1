@@ -92,7 +92,6 @@ class DependencyCache {
 	 */
 	private static class DependencySymbol {
 		private final List<Tile> tiles;
-		int depCounter;
 		Bitmap symbol;
 
 		/**
@@ -104,7 +103,6 @@ class DependencyCache {
 		 *            dependency tile.
 		 */
 		DependencySymbol(Bitmap symbol, Tile tile) {
-			this.depCounter = 0;
 			this.symbol = symbol;
 			this.tiles = new LinkedList<Tile>();
 			this.tiles.add(tile);
@@ -202,7 +200,6 @@ class DependencyCache {
 			symbols
 					.add(new SymbolContainer(depSmb.value.symbol, depSmb.point.x,
 							depSmb.point.y));
-			depSmb.value.depCounter++;
 		}
 	}
 
@@ -550,7 +547,6 @@ class DependencyCache {
 				addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
 				this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(addSmb,
 						new ImmutablePoint(symbol.x, symbol.y)));
-				addSmb.depCounter++;
 
 				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
 						new ImmutablePoint(symbol.x, symbol.y + Tile.TILE_SIZE)));
@@ -586,7 +582,6 @@ class DependencyCache {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
 					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
 							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
-					addSmb.depCounter++;
 				}
 
 				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
@@ -622,7 +617,6 @@ class DependencyCache {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
 					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
 							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
-					addSmb.depCounter++;
 				}
 
 				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
@@ -637,7 +631,6 @@ class DependencyCache {
 					addSmb = new DependencySymbol(symbol.symbol, this.currentTile);
 					this.currentDependencyOnTile.addSymbol(new Dependency<DependencySymbol>(
 							addSmb, new ImmutablePoint(symbol.x, symbol.y)));
-					addSmb.depCounter++;
 				}
 
 				linkedDep.addSymbol(new Dependency<DependencySymbol>(addSmb,
@@ -647,7 +640,7 @@ class DependencyCache {
 		}
 	}
 
-	private boolean isDependencyEmpty(DependencyOnTile cache) {
+	private static boolean isDependencyEmpty(DependencyOnTile cache) {
 		if (cache.labels == null) {
 			if (cache.symbols == null) {
 				return true;

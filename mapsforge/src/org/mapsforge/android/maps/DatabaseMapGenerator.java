@@ -149,7 +149,7 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	public void addAreaCaption(String caption, float dy, Paint paint, Paint stroke) {
 		this.centerPosition = calculateCenterOfBoundingBox(this.coordinates[0]);
 		this.areaLabels.add(new PointTextContainer(caption, this.centerPosition[0],
-						this.centerPosition[1], paint, stroke));
+				this.centerPosition[1], paint, stroke));
 	}
 
 	@Override

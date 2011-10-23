@@ -160,7 +160,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		return result;
 	}
 
-	private int clipLatitude(int latitude) {
+	private static int clipLatitude(int latitude) {
 		if (latitude < MapView.LATITUDE_MIN * CONVERSION_FACTOR) {
 			return (int) (MapView.LATITUDE_MIN * CONVERSION_FACTOR);
 		} else if (latitude > MapView.LATITUDE_MAX * CONVERSION_FACTOR) {
@@ -170,7 +170,7 @@ public class GeoPoint implements Comparable<GeoPoint> {
 		}
 	}
 
-	private int clipLongitude(int longitude) {
+	private static int clipLongitude(int longitude) {
 		if (longitude < MapView.LONGITUDE_MIN * CONVERSION_FACTOR) {
 			return (int) (MapView.LONGITUDE_MIN * CONVERSION_FACTOR);
 		} else if (longitude > MapView.LONGITUDE_MAX * CONVERSION_FACTOR) {
