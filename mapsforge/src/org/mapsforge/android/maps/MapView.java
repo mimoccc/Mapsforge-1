@@ -151,7 +151,7 @@ public class MapView extends ViewGroup {
 				this.longPressDetector.pressStart();
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
-				this.mapMoved = false;
+				this.moveThresholdReached = false;
 				// save the ID of the pointer
 				this.activePointerId = event.getPointerId(0);
 				return true;
@@ -166,16 +166,18 @@ public class MapView extends ViewGroup {
 				this.moveX = event.getX(this.pointerIndex) - this.previousPositionX;
 				this.moveY = event.getY(this.pointerIndex) - this.previousPositionY;
 
-				if (!this.mapMoved) {
+				if (!this.moveThresholdReached) {
 					if (Math.abs(this.moveX) > this.mapMoveDelta
 							|| Math.abs(this.moveY) > this.mapMoveDelta) {
-						// the map movement delta has been reached
+						// the map movement threshold has been reached
 						this.longPressDetector.pressStop();
-						this.mapMoved = true;
-					} else {
-						// do nothing
-						return true;
+						this.moveThresholdReached = true;
+
+						// save the position of the event
+						this.previousPositionX = event.getX(this.pointerIndex);
+						this.previousPositionY = event.getY(this.pointerIndex);
 					}
+					return true;
 				}
 
 				// save the position of the event
@@ -190,7 +192,7 @@ public class MapView extends ViewGroup {
 				this.longPressDetector.pressStop();
 				this.pointerIndex = event.findPointerIndex(this.activePointerId);
 				this.activePointerId = INVALID_POINTER_ID;
-				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
+				if (this.moveThresholdReached || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
 					if (this.previousEventTap) {
@@ -338,23 +340,25 @@ public class MapView extends ViewGroup {
 				// save the position of the event
 				this.previousPositionX = event.getX();
 				this.previousPositionY = event.getY();
-				this.mapMoved = false;
+				this.moveThresholdReached = false;
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 				// calculate the distance between previous and current position
 				this.moveX = event.getX() - this.previousPositionX;
 				this.moveY = event.getY() - this.previousPositionY;
 
-				if (!this.mapMoved) {
+				if (!this.moveThresholdReached) {
 					if (Math.abs(this.moveX) > this.mapMoveDelta
 							|| Math.abs(this.moveY) > this.mapMoveDelta) {
-						// the map movement delta has been reached
+						// the map movement threshold has been reached
 						this.longPressDetector.pressStop();
-						this.mapMoved = true;
-					} else {
-						// do nothing
-						return true;
+						this.moveThresholdReached = true;
+
+						// save the position of the event
+						this.previousPositionX = event.getX();
+						this.previousPositionY = event.getY();
 					}
+					return true;
 				}
 
 				// save the position of the event
@@ -367,7 +371,7 @@ public class MapView extends ViewGroup {
 				return true;
 			} else if (event.getAction() == MotionEvent.ACTION_UP) {
 				this.longPressDetector.pressStop();
-				if (this.mapMoved || this.longPressDetector.isEventHandled()) {
+				if (this.moveThresholdReached || this.longPressDetector.isEventHandled()) {
 					this.previousEventTap = false;
 				} else {
 					if (this.previousEventTap) {
@@ -541,14 +545,14 @@ public class MapView extends ViewGroup {
 		final int longPressTimeout;
 
 		/**
-		 * Flag to indicate if the map has been moved.
-		 */
-		boolean mapMoved;
-
-		/**
 		 * Absolute threshold value of a motion event to be interpreted as a move.
 		 */
 		final float mapMoveDelta;
+
+		/**
+		 * Flag to indicate if the map movement threshold has been reached.
+		 */
+		boolean moveThresholdReached;
 
 		/**
 		 * Stores the horizontal length of a map move.
