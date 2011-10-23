@@ -1283,9 +1283,6 @@ public class MapDatabase {
 			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & WAY_NUMBER_OF_TAGS_BITMASK);
 
-			// TODO: delete
-			readByte();
-
 			tags.clear();
 
 			// get the tag IDs (VBE-U)
