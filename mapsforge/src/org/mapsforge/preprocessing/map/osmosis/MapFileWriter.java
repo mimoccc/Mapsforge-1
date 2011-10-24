@@ -590,10 +590,6 @@ class MapFileWriter {
 							wayBuffer.put(infoByteLayerAndTagAmount(way.getLayer(),
 									way.getTags() == null ? 0 : (short) way.getTags().length));
 
-							// write byte with amount of tags which are rendered
-							wayBuffer.put(infoByteWayAmountRenderedTags(
-									way.getTags()));
-
 							// write tag ids
 							if (way.getTags() != null) {
 								for (short tagID : way.getTags()) {
