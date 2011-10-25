@@ -880,36 +880,45 @@ public class MapDatabase {
 			return false;
 		}
 
-		// get and check the top boundary (4 bytes)
-		int boundaryTop = readInt();
-		if (boundaryTop < LATITUDE_MIN || boundaryTop > LATITUDE_MAX) {
-			Logger.debug("invalid top boundary: " + boundaryTop);
+		// get and check the minimum latitude (4 bytes)
+		int latitudeMin = readInt();
+		if (latitudeMin < LATITUDE_MIN || latitudeMin > LATITUDE_MAX) {
+			Logger.debug("invalid minimum latitude: " + latitudeMin);
 			return false;
 		}
 
-		// get and check the left boundary (4 bytes)
-		int boundaryLeft = readInt();
-		if (boundaryLeft < LONGITUDE_MIN || boundaryLeft > LONGITUDE_MAX) {
-			Logger.debug("invalid left boundary: " + boundaryLeft);
+		// get and check the minimum longitude (4 bytes)
+		int longitudeMin = readInt();
+		if (longitudeMin < LONGITUDE_MIN || longitudeMin > LONGITUDE_MAX) {
+			Logger.debug("invalid minimum longitude: " + longitudeMin);
 			return false;
 		}
 
-		// get and check the bottom boundary (4 bytes)
-		int boundaryBottom = readInt();
-		if (boundaryBottom < LATITUDE_MIN || boundaryBottom > LATITUDE_MAX) {
-			Logger.debug("invalid bottom boundary: " + boundaryBottom);
+		// get and check the maximum latitude (4 bytes)
+		int latitudeMax = readInt();
+		if (latitudeMax < LATITUDE_MIN || latitudeMax > LATITUDE_MAX) {
+			Logger.debug("invalid maximum latitude: " + latitudeMax);
 			return false;
 		}
 
-		// get and check the right boundary (4 bytes)
-		int boundaryRight = readInt();
-		if (boundaryRight < LONGITUDE_MIN || boundaryRight > LONGITUDE_MAX) {
-			Logger.debug("invalid right boundary: " + boundaryRight);
+		// get and check the maximum longitude (4 bytes)
+		int longitudeMax = readInt();
+		if (longitudeMax < LONGITUDE_MIN || longitudeMax > LONGITUDE_MAX) {
+			Logger.debug("invalid maximum longitude: " + longitudeMax);
+			return false;
+		}
+
+		// check latitude and longitude range
+		if (latitudeMin > latitudeMax) {
+			Logger.debug("invalid latitude range: " + latitudeMin + " > " + latitudeMax);
+			return false;
+		} else if (longitudeMin > longitudeMax) {
+			Logger.debug("invalid longitude range: " + longitudeMin + " > " + longitudeMax);
 			return false;
 		}
 
 		// create the map boundary rectangle
-		this.mapBoundary = new Rect(boundaryLeft, boundaryBottom, boundaryRight, boundaryTop);
+		this.mapBoundary = new Rect(longitudeMin, latitudeMax, longitudeMax, latitudeMin);
 
 		// get and check the tile pixel size (2 bytes)
 		int tilePixelSize = readShort();
