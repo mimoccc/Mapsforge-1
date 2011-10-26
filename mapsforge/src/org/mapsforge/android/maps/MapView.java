@@ -29,12 +29,12 @@ import org.mapsforge.android.maps.overlay.Overlay;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.Bitmap.CompressFormat;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -1969,7 +1969,6 @@ public class MapView extends ViewGroup {
 	}
 
 	private void stopMapGeneratorThread() {
-		// stop the MapGenerator thread
 		if (this.mapGenerator != null) {
 			this.mapGenerator.interrupt();
 			try {
@@ -1979,7 +1978,6 @@ public class MapView extends ViewGroup {
 				Thread.currentThread().interrupt();
 			}
 			this.mapGenerator.onDetachedFromWindow();
-			this.mapGenerator = null;
 		}
 	}
 
