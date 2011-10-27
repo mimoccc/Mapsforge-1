@@ -94,7 +94,7 @@ class RoutingGraphCreatorTask implements Sink {
 
 	RoutingGraphCreatorTask(String xmlConfigPath, String neededVehicles, String outputPath) {
 
-		System.out.println("initializing routing-graph extraction");
+		System.out.println("[RGC] initializing routing-graph extraction");
 
 		pbfPath = outputPath;
 		String[] limiter = null;
@@ -304,7 +304,7 @@ class RoutingGraphCreatorTask implements Sink {
 
 		int sum = vertices.size() + edges.size() +
 				completeRelations.size();
-		System.out.println("Writing " + sum + " objects fo file: " + pbfPath);
+		System.out.println("[RGC] Writing " + sum + " objects fo file: " + pbfPath);
 		ProtobufSerializer.saveToFile(pbfPath, vertices, edges, completeRelations);
 		//
 		// HashMap<Integer, CompleteVertex> verticesC = new HashMap<Integer, CompleteVertex>();
@@ -320,7 +320,7 @@ class RoutingGraphCreatorTask implements Sink {
 		// for (CompleteEdge edge : edgesC.values()) {
 		// System.out.println(edge.toString());
 		// }
-
+		System.out.println("[RGC] Ready ");
 	}
 
 	/**
