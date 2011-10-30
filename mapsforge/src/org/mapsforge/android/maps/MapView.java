@@ -2414,9 +2414,9 @@ public class MapView extends ViewGroup {
 				|| this.longitude < LONGITUDE_MIN) {
 			return false;
 		} else if (!this.mapViewMode.requiresInternetConnection()
-				&& (this.mapDatabase == null || this.mapDatabase.getMapBoundary() == null || !this.mapDatabase
-						.getMapBoundary().contains(getMapCenter().getLongitudeE6(),
-								getMapCenter().getLatitudeE6()))) {
+				&& (this.mapDatabase == null || this.mapDatabase.getMapFileInfo() == null || !this.mapDatabase
+						.getMapFileInfo().getMapBoundary()
+						.contains(getMapCenter().getLongitudeE6(), getMapCenter().getLatitudeE6()))) {
 			return false;
 		}
 		return true;
@@ -2682,9 +2682,9 @@ public class MapView extends ViewGroup {
 		}
 
 		if (this.mapViewMode.requiresInternetConnection()
-				|| (this.mapDatabase != null && this.mapDatabase.getMapBoundary() != null && this.mapDatabase
-						.getMapBoundary().contains(point.getLongitudeE6(),
-								point.getLatitudeE6()))) {
+				|| (this.mapDatabase != null && this.mapDatabase.getMapFileInfo() != null && this.mapDatabase
+						.getMapFileInfo().getMapBoundary()
+						.contains(point.getLongitudeE6(), point.getLatitudeE6()))) {
 			if (hasValidCenter()) {
 				// calculate the distance between previous and current position
 				synchronized (this) {

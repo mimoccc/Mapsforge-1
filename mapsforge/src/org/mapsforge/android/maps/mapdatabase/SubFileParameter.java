@@ -19,9 +19,9 @@ import org.mapsforge.android.maps.MercatorProjection;
 import android.graphics.Rect;
 
 /**
- * Holds all parameters of a map file.
+ * Holds all parameters of a sub-file.
  */
-class MapFileParameter {
+class SubFileParameter {
 	/**
 	 * Divisor for converting coordinates stored as integers to double values.
 	 */
@@ -55,22 +55,22 @@ class MapFileParameter {
 	/**
 	 * Y number of the tile at the bottom boundary in the grid.
 	 */
-	final long boundaryBottomTile;
+	final long boundaryTileBottom;
 
 	/**
 	 * X number of the tile at the left boundary in the grid.
 	 */
-	final long boundaryLeftTile;
+	final long boundaryTileLeft;
 
 	/**
 	 * X number of the tile at the right boundary in the grid.
 	 */
-	final long boundaryRightTile;
+	final long boundaryTileRight;
 
 	/**
 	 * Y number of the tile at the top boundary in the grid.
 	 */
-	final long boundaryTopTile;
+	final long boundaryTileTop;
 
 	/**
 	 * Absolute start address of the index in the enclosing file.
@@ -78,70 +78,71 @@ class MapFileParameter {
 	final long indexStartAddress;
 
 	/**
-	 * Size of the map file in bytes.
-	 */
-	final long mapFileSize;
-
-	/**
 	 * Total number of blocks in the grid.
 	 */
 	final long numberOfBlocks;
 
 	/**
-	 * Absolute start address of the map file in the enclosing file.
+	 * Absolute start address of the sub-file in the enclosing file.
 	 */
 	final long startAddress;
+
+	/**
+	 * Size of the sub-file in bytes.
+	 */
+	final long subFileSize;
 
 	/**
 	 * Maximum zoom level for which the block entries tables are made.
 	 */
 	final byte zoomLevelMax;
+
 	/**
 	 * Minimum zoom level for which the block entries tables are made.
 	 */
 	final byte zoomLevelMin;
 
 	/**
-	 * Constructs an immutable MapFileParameter with the given values.
+	 * Constructs an immutable SubFileParameter with the given values.
 	 * 
 	 * @param startAddress
-	 *            the start address of the map file.
+	 *            the start address of the sub-file.
 	 * @param indexStartAddress
 	 *            the start address of the index.
-	 * @param mapFileSize
-	 *            the size of the map file.
+	 * @param subFileSize
+	 *            the size of the sub-file.
 	 * @param baseZoomLevel
-	 *            the base zoom level of the map file.
+	 *            the base zoom level of the sub-file.
 	 * @param tileZoomLevelMin
-	 *            the minimum zoom level of the map file.
+	 *            the minimum zoom level of the sub-file.
 	 * @param tileZoomLevelMax
-	 *            the maximum zoom level of the map file.
+	 *            the maximum zoom level of the sub-file.
 	 * @param mapBoundary
-	 *            the boundary of the map file.
+	 *            the boundary of the sub-file.
 	 */
-	MapFileParameter(long startAddress, long indexStartAddress, long mapFileSize,
+	SubFileParameter(long startAddress, long indexStartAddress, long subFileSize,
 			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
 		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
-		this.mapFileSize = mapFileSize;
+		this.subFileSize = subFileSize;
 		this.baseZoomLevel = baseZoomLevel;
 		this.zoomLevelMin = tileZoomLevelMin;
 		this.zoomLevelMax = tileZoomLevelMax;
 		this.hashCode = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTopTile = MercatorProjection.latitudeToTileY(mapBoundary.bottom
+		this.boundaryTileTop = MercatorProjection.latitudeToTileY(mapBoundary.bottom
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryLeftTile = MercatorProjection.longitudeToTileX(mapBoundary.left
+		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(mapBoundary.left
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryBottomTile = MercatorProjection.latitudeToTileY(mapBoundary.top
+		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(mapBoundary.top
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryRightTile = MercatorProjection.longitudeToTileX(mapBoundary.right
+		this.boundaryTileRight = MercatorProjection.longitudeToTileX(mapBoundary.right
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 
 		// calculate the horizontal and vertical amount of blocks in this map file
-		this.blocksWidth = this.boundaryRightTile - this.boundaryLeftTile + 1;
-		this.blocksHeight = this.boundaryBottomTile - this.boundaryTopTile + 1;
+		this.blocksWidth = this.boundaryTileRight - this.boundaryTileLeft + 1;
+		this.blocksHeight = this.boundaryTileBottom - this.boundaryTileTop + 1;
 
 		// calculate the total amount of blocks in this map file
 		this.numberOfBlocks = this.blocksWidth * this.blocksHeight;
@@ -154,13 +155,13 @@ class MapFileParameter {
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (!(obj instanceof MapFileParameter)) {
+		} else if (!(obj instanceof SubFileParameter)) {
 			return false;
 		}
-		MapFileParameter other = (MapFileParameter) obj;
+		SubFileParameter other = (SubFileParameter) obj;
 		if (this.startAddress != other.startAddress) {
 			return false;
-		} else if (this.mapFileSize != other.mapFileSize) {
+		} else if (this.subFileSize != other.subFileSize) {
 			return false;
 		} else if (this.baseZoomLevel != other.baseZoomLevel) {
 			return false;
@@ -181,7 +182,7 @@ class MapFileParameter {
 	private int calculateHashCode() {
 		int result = 7;
 		result = 31 * result + (int) (this.startAddress ^ (this.startAddress >>> 32));
-		result = 31 * result + (int) (this.mapFileSize ^ (this.mapFileSize >>> 32));
+		result = 31 * result + (int) (this.subFileSize ^ (this.subFileSize >>> 32));
 		result = 31 * result + this.baseZoomLevel;
 		return result;
 	}

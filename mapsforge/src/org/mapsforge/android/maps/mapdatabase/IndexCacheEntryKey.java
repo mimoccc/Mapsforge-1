@@ -20,18 +20,18 @@ package org.mapsforge.android.maps.mapdatabase;
 class IndexCacheEntryKey {
 	private final int hashCode;
 	private final long indexBlockNumber;
-	private final MapFileParameter mapFileParameter;
+	private final SubFileParameter subFileParameter;
 
 	/**
 	 * Creates an immutable key to be stored in a map.
 	 * 
-	 * @param mapFileParameter
+	 * @param subFileParameter
 	 *            the parameters of the map file.
 	 * @param indexBlockNumber
 	 *            the number of the index block.
 	 */
-	IndexCacheEntryKey(MapFileParameter mapFileParameter, long indexBlockNumber) {
-		this.mapFileParameter = mapFileParameter;
+	IndexCacheEntryKey(SubFileParameter subFileParameter, long indexBlockNumber) {
+		this.subFileParameter = subFileParameter;
 		this.indexBlockNumber = indexBlockNumber;
 		this.hashCode = calculateHashCode();
 	}
@@ -44,10 +44,10 @@ class IndexCacheEntryKey {
 			return false;
 		}
 		IndexCacheEntryKey other = (IndexCacheEntryKey) obj;
-		if (this.mapFileParameter == null && other.mapFileParameter != null) {
+		if (this.subFileParameter == null && other.subFileParameter != null) {
 			return false;
-		} else if (this.mapFileParameter != null
-				&& !this.mapFileParameter.equals(other.mapFileParameter)) {
+		} else if (this.subFileParameter != null
+				&& !this.subFileParameter.equals(other.subFileParameter)) {
 			return false;
 		} else if (this.indexBlockNumber != other.indexBlockNumber) {
 			return false;
@@ -68,7 +68,7 @@ class IndexCacheEntryKey {
 	private int calculateHashCode() {
 		int result = 7;
 		result = 31 * result
-				+ ((this.mapFileParameter == null) ? 0 : this.mapFileParameter.hashCode());
+				+ ((this.subFileParameter == null) ? 0 : this.subFileParameter.hashCode());
 		result = 31 * result + (int) (this.indexBlockNumber ^ (this.indexBlockNumber >>> 32));
 		return result;
 	}

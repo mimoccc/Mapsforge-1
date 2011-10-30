@@ -25,6 +25,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.mapsforge.android.maps.mapdatabase.MapDatabase;
 import org.mapsforge.android.maps.mapdatabase.MapDatabaseCallback;
+import org.mapsforge.android.maps.mapdatabase.MapFileInfo;
 import org.mapsforge.android.maps.rendertheme.RenderCallback;
 import org.mapsforge.android.maps.rendertheme.RenderTheme;
 import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
@@ -610,10 +611,11 @@ abstract class DatabaseMapGenerator extends MapGenerator implements
 	@Override
 	final GeoPoint getDefaultStartPoint() {
 		if (this.mapDatabase != null) {
-			if (this.mapDatabase.getStartPosition() != null) {
-				return this.mapDatabase.getStartPosition();
-			} else if (this.mapDatabase.getMapCenter() != null) {
-				return this.mapDatabase.getMapCenter();
+			MapFileInfo mapFileInfo = this.mapDatabase.getMapFileInfo();
+			if (mapFileInfo.getStartPosition() != null) {
+				return mapFileInfo.getStartPosition();
+			} else if (mapFileInfo.getMapCenter() != null) {
+				return mapFileInfo.getMapCenter();
 			}
 		}
 		return super.getDefaultStartPoint();
