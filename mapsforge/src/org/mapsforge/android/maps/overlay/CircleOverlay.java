@@ -122,7 +122,7 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 
 		synchronized (this.visibleCircles) {
 			// iterate over all visible circles
-			for (int i = this.visibleCircles.size() - 1; i >= 0; ++i) {
+			for (int i = this.visibleCircles.size() - 1; i >= 0; --i) {
 				Integer circleIndex = this.visibleCircles.get(i);
 
 				// get the current circle
@@ -176,11 +176,11 @@ public abstract class CircleOverlay<Circle extends OverlayCircle> extends Overla
 	/**
 	 * Creates a circle in this overlay.
 	 * 
-	 * @param i
+	 * @param index
 	 *            the index of the circle.
 	 * @return the circle.
 	 */
-	protected abstract Circle createCircle(int i);
+	protected abstract Circle createCircle(int index);
 
 	@Override
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
