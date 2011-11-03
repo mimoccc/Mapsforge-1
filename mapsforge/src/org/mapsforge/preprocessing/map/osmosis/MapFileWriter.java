@@ -259,9 +259,9 @@ class MapFileWriter {
 		containerHeaderBuffer.putLong(date);
 
 		// BOUNDING BOX
-		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLatitudeE6);
-		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLongitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLatitudeE6);
+		containerHeaderBuffer.putInt(dataStore.getBoundingBox().minLongitudeE6);
+		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLatitudeE6);
 		containerHeaderBuffer.putInt(dataStore.getBoundingBox().maxLongitudeE6);
 
 		// TILE SIZE
