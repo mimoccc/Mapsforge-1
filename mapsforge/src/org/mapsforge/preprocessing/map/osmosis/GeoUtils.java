@@ -63,7 +63,8 @@ final class GeoUtils {
 	 * JTS. It will care about ways and polygons and will create the right JTS onjects.
 	 * 
 	 * @param way
-	 *            TDway which will be converted.
+	 *            TDway which will be converted. Null if we were not able to convert the way to a
+	 *            Geometry object.
 	 * @return return Converted way as JTS object.
 	 */
 	static Geometry toJTSGeometry(TDWay way) {
@@ -76,19 +77,23 @@ final class GeoUtils {
 			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(way.getWayNodes()[i]
 					.getLongitude()),
 					GeoCoordinate.intToDouble(way.getWayNodes()[i].getLatitude()));
-
 		}
 
 		Geometry res = null;
-		// check for closed polygon
-		if (coordinates[0].equals2D(coordinates[coordinates.length - 1]))
-			res = gf.createPolygon(gf.createLinearRing(coordinates), null);
-		else
-			res = gf.createLineString(coordinates);
 
-		// tolerate up to 2 meters
-		res = TopologyPreservingSimplifier.simplify(res, 0.0000188);
+		try {
+			// check for closed polygon
+			if (way.isPolygon())
+				res = gf.createPolygon(gf.createLinearRing(coordinates), null);
+			else
+				res = gf.createLineString(coordinates);
 
+			// tolerate up to 2 meters
+			res = TopologyPreservingSimplifier.simplify(res, 0.0000188);
+		} catch (TopologyException e) {
+			System.out.println("JTS Error:" + e + "\nOn Way" + way);
+			return null;
+		}
 		return res;
 	}
 
@@ -532,6 +537,8 @@ final class GeoUtils {
 				enlargementInMeters);
 
 		Geometry wayAsGeometryJTS = toJTSGeometry(way);
+		if (wayAsGeometryJTS == null)
+			return null;
 
 		Geometry intersectingWaysJTS = null;
 
@@ -540,25 +547,22 @@ final class GeoUtils {
 			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
 					OverlayOp.INTERSECTION);
 		} catch (TopologyException e) {
-			System.out.println("JTS Error:" + e);
+			System.out.println("JTS Error:" + e + "\nOn Way" + way);
 			return null;
 		}
 
 		if (intersectingWaysJTS.getNumGeometries() == 0)
 			return null;
 
-		// convert JTS coords to geocoords
+		// convert JTS coordinates to GEO coordinates
 		List<List<GeoCoordinate>> list = new ArrayList<List<GeoCoordinate>>();
 
 		// loop through all arising new ways
 		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
 			Geometry lineStringJTS = intersectingWaysJTS.getGeometryN(i);
-
 			list.add(toGeoCoordinateList(lineStringJTS));
 		}
-
 		return list;
-
 	}
 
 	/**
@@ -590,23 +594,26 @@ final class GeoUtils {
 	static JtsWayBlock toJtsWayBlock(TDWay way, List<TDWay> innerWays) {
 
 		Geometry jtsWay = toJTSGeometry(way);
+
+		if (jtsWay == null)
+			return null;
+
 		List<Geometry> jtsInnerWays = new ArrayList<Geometry>();
 
 		if (innerWays != null) {
-
 			// scale the outer polygon slightly larger
 			// scaleJtsObject(jtsWay, 1.01f);
 
 			for (TDWay innerWay : innerWays) {
 				Geometry geom = toJTSGeometry(innerWay);
+				if (geom == null)
+					continue;
 				scaleJtsObject(geom, 0.98f);
-
 				jtsInnerWays.add(geom);
-
 			}
 		}
 
-		return new JtsWayBlock(jtsWay, jtsInnerWays);
+		return new JtsWayBlock(jtsWay, jtsInnerWays, way, innerWays);
 	}
 
 	/**
@@ -624,18 +631,16 @@ final class GeoUtils {
 
 		for (JtsWayBlock wayBlock : jtsWayBlockList) {
 
-			List<Integer> way = waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(wayBlock.way));
+			List<Integer> way = waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(wayBlock.jtsWay));
 
 			List<List<Integer>> innerWays = new ArrayList<List<Integer>>();
 
-			for (Geometry jtsInnerWay : wayBlock.innerWays) {
+			for (Geometry jtsInnerWay : wayBlock.jtsInnerWays) {
 				innerWays.add(waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(jtsInnerWay)));
 
 			}
 			wayDataBlockList.add(new WayDataBlock(way, innerWays));
-
 		}
-
 		return wayDataBlockList;
 
 	}
@@ -653,12 +658,14 @@ final class GeoUtils {
 
 		for (JtsWayBlock wayBlock : wayBlocks) {
 
-			JtsWayBlock newWayBlock = new JtsWayBlock(wayBlock.way, new ArrayList<Geometry>());
+			JtsWayBlock newWayBlock = new JtsWayBlock(wayBlock.jtsWay, new ArrayList<Geometry>(),
+					wayBlock.getWay(),
+					null);
 
-			if (wayBlock.innerWays != null) {
-				for (Geometry innerWay : wayBlock.innerWays) {
-					if (innerWay.within(wayBlock.way)) {
-						newWayBlock.innerWays.add(innerWay);
+			if (wayBlock.jtsInnerWays != null) {
+				for (Geometry innerWay : wayBlock.jtsInnerWays) {
+					if (innerWay.within(wayBlock.jtsWay)) {
+						newWayBlock.jtsInnerWays.add(innerWay);
 					}
 
 				}
@@ -698,11 +705,11 @@ final class GeoUtils {
 
 		try {
 			// find all intersecting ways
-			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.way,
+			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.jtsWay,
 					OverlayOp.INTERSECTION);
 
 		} catch (TopologyException e) {
-			System.out.println("JTS Error:" + e);
+			System.out.println("JTS Error:" + e + "\nOn " + wayBlock.getWay());
 			return null;
 		}
 		// find all intersecting ways
@@ -716,16 +723,17 @@ final class GeoUtils {
 				tile.getZoomlevel(),
 				enlargementInMeters - 1);
 
-		// clip all innerways and collect the occuring clipped innerways. A innerway can be divded in to
-		// multiple innerways due to clipping.
-		for (Geometry innerway : wayBlock.innerWays) {
+		// clip all inner ways and collect the occuring clipped inner ways. A inner way can be divided
+		// into
+		// multiple inner ways due to clipping.
+		for (Geometry innerway : wayBlock.jtsInnerWays) {
 			Geometry intersectingInnerWaysJTS = null;
 
 			try {
 				intersectingInnerWaysJTS = OverlayOp.overlayOp(tileBBJTS, innerway,
 						OverlayOp.INTERSECTION);
 			} catch (TopologyException e) {
-				System.out.println("JTS Error: " + e);
+				// System.out.println("JTS Error: " + e "\nOn way "+ innerway.ge
 				continue;
 			}
 
@@ -735,8 +743,8 @@ final class GeoUtils {
 
 		}
 
-		// loop through all outerways which can be occur due to the clipping operation and assign all
-		// clipped innerways.
+		// loop through all outer ways which can be occur due to the clipping operation and assign all
+		// clipped inner ways.
 		//
 		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
 			Geometry outerWay = intersectingWaysJTS.getGeometryN(i);
@@ -745,13 +753,9 @@ final class GeoUtils {
 
 			for (Geometry clippedInnerWay : clippedInnerWays) {
 				innerWays.add(clippedInnerWay);
-
 			}
-
-			res.add(new JtsWayBlock(outerWay, innerWays));
-
+			res.add(new JtsWayBlock(outerWay, innerWays, null, null));
 		}
-
 		return res;
 
 	}
@@ -767,16 +771,16 @@ final class GeoUtils {
 	 */
 	static void simplifyWay(JtsWayBlock wayBlock, double distanceTolerance) {
 
-		wayBlock.way = TopologyPreservingSimplifier.simplify(wayBlock.way, distanceTolerance);
+		wayBlock.jtsWay = TopologyPreservingSimplifier.simplify(wayBlock.jtsWay, distanceTolerance);
 
-		if (wayBlock.innerWays != null) {
+		if (wayBlock.jtsInnerWays != null) {
 
 			List<Geometry> newInnerWayList = new ArrayList<Geometry>();
 
-			for (Geometry innerWay : wayBlock.innerWays) {
+			for (Geometry innerWay : wayBlock.jtsInnerWays) {
 				newInnerWayList.add(TopologyPreservingSimplifier.simplify(innerWay, distanceTolerance));
 			}
-			wayBlock.innerWays = newInnerWayList;
+			wayBlock.jtsInnerWays = newInnerWayList;
 		}
 	}
 
@@ -785,7 +789,7 @@ final class GeoUtils {
 			final TileCoordinate tile,
 			int enlargementInMeters) {
 
-		// Check for Multipolygon and clip when clipping is enabled
+		// Check for a multipolygon and clip when clipping is enabled
 		if (way.getShape() == TDWay.MULTI_POLYGON) {
 			List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
 			jtsWayBlockList.add(toJtsWayBlock(way, innerWays));

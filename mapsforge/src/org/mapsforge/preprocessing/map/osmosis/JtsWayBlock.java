@@ -16,23 +16,64 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import java.util.List;
 
+import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
+
 import com.vividsolutions.jts.geom.Geometry;
 
+/**
+ * A simple wrapper class which holds ways as JTS objects.
+ * 
+ * @author sahin
+ * 
+ */
 public class JtsWayBlock {
+	Geometry jtsWay;
+	List<Geometry> jtsInnerWays;
 
-	JtsWayBlock(Geometry way, List<Geometry> innerWays) {
+	TDWay way;
+	List<TDWay> innerWays;
+
+	JtsWayBlock(Geometry jtsWay, List<Geometry> jtsInnerWays, TDWay way, List<TDWay> innerWays) {
+		this.jtsWay = jtsWay;
+		this.jtsInnerWays = jtsInnerWays;
 		this.way = way;
 		this.innerWays = innerWays;
 	}
 
-	public Geometry getWay() {
+	/**
+	 * Returns the outer way of this way block.
+	 * 
+	 * @return The Geometry object which represents this way.
+	 */
+	public Geometry getJtsWay() {
+		return jtsWay;
+	}
+
+	/**
+	 * Returns a list of inner ways of this block.
+	 * 
+	 * @return A list of Geometry objects which represents the inner ways.
+	 */
+	public List<Geometry> getJtsInnerways() {
+		return jtsInnerWays;
+	}
+
+	/**
+	 * Returns the TDWay which is associated with this JTS object.
+	 * 
+	 * @return The TDWay which is associated with this JTS object.
+	 */
+	public TDWay getWay() {
 		return way;
 	}
 
-	public List<Geometry> getInnerways() {
+	/**
+	 * Returns a list of inner ways which are associated with this JTS object.
+	 * 
+	 * @return A list of inner ways which are associated with this JTS object.
+	 */
+	public List<TDWay> getInnerWays() {
 		return innerWays;
 	}
 
-	Geometry way;
-	List<Geometry> innerWays;
 }
