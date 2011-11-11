@@ -794,9 +794,14 @@ final class GeoUtils {
 			List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
 			jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
 
-			if (polygonClipping)
+			if (polygonClipping) {
 				jtsWayBlockList = clipMultiPolygonToTile(jtsWayBlockList.get(0), tile,
 						enlargementInMeters);
+
+				// the polygon can disappear due to clipping
+				if (jtsWayBlockList == null)
+					return null;
+			}
 
 			jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
 			return toWayDataBlockList(jtsWayBlockList);
