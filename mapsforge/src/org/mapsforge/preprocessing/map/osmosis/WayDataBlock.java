@@ -16,21 +16,36 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import java.util.List;
 
+import org.mapsforge.preprocessing.map.osmosis.DeltaEncoder.Encoding;
+
 /**
- * Class to store a WayDataBlock. Each WayDataBlock can store one way and a list of corrospndenting
- * innerways. So it is possible to store simple ways and simple polygons which have zero innerways or
- * multipolyogns with serval innerways.
+ * Class to store a WayDataBlock. Each WayDataBlock can store one way and a list of corresponding inner
+ * ways. Simple ways and simple polygons have zero inner ways while multi polygons have one or more
+ * inner ways.
  * 
  * @author sahin
  * 
  */
-public class WayDataBlock {
-	List<Integer> outerWay;
-	List<List<Integer>> innerWays;
+class WayDataBlock {
+	private final List<Integer> outerWay;
+	private final List<List<Integer>> innerWays;
+	private final Encoding encoding;
 
 	WayDataBlock(List<Integer> outerWay, List<List<Integer>> innerWays) {
 		this.outerWay = outerWay;
 		this.innerWays = innerWays;
+		encoding = Encoding.NONE;
+	}
+
+	WayDataBlock(List<Integer> outerWay, List<List<Integer>> innerWays, Encoding encoding) {
+		super();
+		this.outerWay = outerWay;
+		this.innerWays = innerWays;
+		this.encoding = encoding;
+	}
+
+	public Encoding getEncoding() {
+		return encoding;
 	}
 
 	public List<Integer> getOuterWay() {

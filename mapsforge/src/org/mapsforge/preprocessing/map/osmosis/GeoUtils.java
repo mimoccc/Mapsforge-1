@@ -18,11 +18,11 @@ import gnu.trove.list.array.TDoubleArrayList;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
@@ -33,6 +33,11 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.TopologyException;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
@@ -44,6 +49,9 @@ import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
  * @author bross
  */
 final class GeoUtils {
+	private static final float INNER_WAY_SCALE_FACTOR = 0.98f;
+	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.0000188;
+	private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.00002;
 	static final int MIN_NODES_POLYGON = 4;
 	static final int MIN_COORDINATES_POLYGON = 8;
 	private static final byte SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;
@@ -65,47 +73,69 @@ final class GeoUtils {
 	 * @param way
 	 *            TDway which will be converted. Null if we were not able to convert the way to a
 	 *            Geometry object.
+	 * @param area
+	 *            true, if the way represents an area, i.e. a polygon instead of a linear ring
 	 * @return return Converted way as JTS object.
 	 */
-	static Geometry toJTSGeometry(TDWay way) {
+	private static Geometry toJTSGeometry(TDWay way, boolean area) {
 		if (way.getWayNodes().length < 2) {
-			throw new IllegalArgumentException("way has fewer than 2 nodes");
+			LOGGER.fine("way has fewer than 2 nodes: " + way.getId());
+			return null;
 		}
 
 		Coordinate[] coordinates = new Coordinate[way.getWayNodes().length];
-		for (int i = 0; i < way.getWayNodes().length; i++) {
-			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(way.getWayNodes()[i]
-					.getLongitude()),
-					GeoCoordinate.intToDouble(way.getWayNodes()[i].getLatitude()));
+		for (int i = 0; i < coordinates.length; i++) {
+			TDNode currentNode = way.getWayNodes()[i];
+			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(currentNode.getLongitude()),
+					GeoCoordinate.intToDouble(currentNode.getLatitude()));
 		}
 
 		Geometry res = null;
 
 		try {
 			// check for closed polygon
-			if (way.isPolygon())
-				res = gf.createPolygon(gf.createLinearRing(coordinates), null);
+			if (way.isPolygon()) {
+				if (area)
+					// polygon
+					res = gf.createPolygon(gf.createLinearRing(coordinates), null);
+				else
+					// linear ring
+					res = gf.createLinearRing(coordinates);
+			}
 			else
 				res = gf.createLineString(coordinates);
-
-			// tolerate up to 2 meters
-			res = TopologyPreservingSimplifier.simplify(res, 0.0000188);
 		} catch (TopologyException e) {
-			System.out.println("JTS Error:" + e + "\nOn Way" + way);
+			LOGGER.log(Level.FINE, "error creating JTS geometry from way: " + way.getId(), e);
 			return null;
 		}
 		return res;
 	}
 
-	static List<GeoCoordinate> toGeoCoordinateList(Geometry jtsGeometry) {
+	// private static List<GeoCoordinate> toGeoCoordinateList(Geometry jtsGeometry) {
+	//
+	// Coordinate[] jtsCoords = jtsGeometry.getCoordinates();
+	//
+	// ArrayList<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
+	//
+	// for (int j = 0; j < jtsCoords.length; j++) {
+	// GeoCoordinate geoCoord = new GeoCoordinate(jtsCoords[j].y, jtsCoords[j].x);
+	// result.add(geoCoord);
+	// }
+	//
+	// return result;
+	//
+	// }
+
+	private static List<Integer> toCoordinateList(Geometry jtsGeometry) {
 
 		Coordinate[] jtsCoords = jtsGeometry.getCoordinates();
 
-		ArrayList<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
+		ArrayList<Integer> result = new ArrayList<Integer>();
 
 		for (int j = 0; j < jtsCoords.length; j++) {
 			GeoCoordinate geoCoord = new GeoCoordinate(jtsCoords[j].y, jtsCoords[j].x);
-			result.add(geoCoord);
+			result.add(Integer.valueOf(geoCoord.getLatitudeE6()));
+			result.add(Integer.valueOf(geoCoord.getLongitudeE6()));
 		}
 
 		return result;
@@ -247,104 +277,73 @@ final class GeoUtils {
 		return bitmask;
 	}
 
-	/**
-	 * On coarse zoom levels way nodes maybe mapped to the same or an adjacent pixel, so that they
-	 * cannot be distinguished anymore by the human eye. We can therefore eliminate way nodes that are
-	 * mapped on the same or adjacent (see parameter delta) pixels.
-	 * 
-	 * @param waynodes
-	 *            the list of way nodes
-	 * @param zoom
-	 *            the zoom level which is used to do the computation
-	 * @param delta
-	 *            the minimum distance in pixels that separates two way nodes
-	 * @param checkOrientation
-	 *            filtering pixels of concave polygons may reverse its orientation, set this flag if it
-	 *            is important that the orientation is preserved
-	 * @return a new list of way nodes that includes only those way nodes that do not fall onto the same
-	 *         or adjacent pixels
-	 */
-	static List<GeoCoordinate> filterWaynodesOnSamePixel(
-			final List<GeoCoordinate> waynodes,
-			byte zoom, float delta, boolean checkOrientation) {
-		if (waynodes == null)
-			throw new IllegalArgumentException("parameter waynodes is null");
-
-		double originalOrientation = 0;
-		if (checkOrientation) {
-			originalOrientation = Math.signum(computePolygonArea(waynodes));
-		}
-
-		List<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
-		double pixelXPrev;
-		double pixelYPrev;
-
-		pixelXPrev = MercatorProjection.longitudeToPixelX(waynodes.get(0).getLongitude(), zoom);
-		pixelYPrev = MercatorProjection.latitudeToPixelY(waynodes.get(0).getLatitude(), zoom);
-
-		// add the first way node to the result list
-		result.add(waynodes.get(0));
-
-		for (GeoCoordinate waynode : waynodes.subList(1, waynodes.size() - 1)) {
-			double pixelX = MercatorProjection.longitudeToPixelX(waynode.getLongitude(), zoom);
-			double pixelY = MercatorProjection.latitudeToPixelY(waynode.getLatitude(), zoom);
-
-			// if one of the pixel coordinates is more than delta pixels away from the way
-			// node which was most recently added to the result list, add the current way node
-			// to the result list
-			if (Math.abs(pixelX - pixelXPrev) >= delta
-					|| Math.abs(pixelY - pixelYPrev) >= delta) {
-				pixelXPrev = pixelX;
-				pixelYPrev = pixelY;
-				result.add(waynode);
-			}
-		}
-		result.add(waynodes.get(waynodes.size() - 1));
-
-		// filtering pixels of concave polygons may reverse the orientation
-		// of the polygon
-		// the orientation can be computed by looking at the sign of the area of a polygon
-		if (checkOrientation) {
-			if (originalOrientation != Math.signum(computePolygonArea(result))) {
-				// we need to reverse the order of the result polygon
-				Collections.reverse(result);
-			}
-		}
-
-		return result;
-	}
-
-	/**
-	 * Transforms a list of absolute way node coordinates to a list of offsets between the coordinates.
-	 * The first coordinate of the way is represented as an absolute coordinate, all following
-	 * coordinates are represented as offsets to their previous coordinate in the way.
-	 * 
-	 * @param waynodes
-	 *            the list of absolute way node coordinates
-	 * @return A list of offsets, where the first coordinate is absolute and all following are offsets
-	 *         to their predecessor. For each way node first latitude (offset) and second longitude
-	 *         (offset) is added.
-	 */
-	static List<Integer> waynodeAbsoluteCoordinatesToOffsets(
-			final List<GeoCoordinate> waynodes) {
-		ArrayList<Integer> result = new ArrayList<Integer>();
-
-		if (waynodes.isEmpty())
-			return result;
-
-		// add the first way node to the result list
-		result.add(waynodes.get(0).getLatitudeE6());
-		result.add(waynodes.get(0).getLongitudeE6());
-
-		GeoCoordinate prevWaynode = waynodes.get(0);
-		for (GeoCoordinate waynode : waynodes.subList(1, waynodes.size())) {
-			result.add(waynode.getLatitudeE6() - prevWaynode.getLatitudeE6());
-			result.add(waynode.getLongitudeE6() - prevWaynode.getLongitudeE6());
-			prevWaynode = waynode;
-		}
-
-		return result;
-	}
+	// /**
+	// * On coarse zoom levels way nodes maybe mapped to the same or an adjacent pixel, so that they
+	// * cannot be distinguished anymore by the human eye. We can therefore eliminate way nodes that are
+	// * mapped on the same or adjacent (see parameter delta) pixels.
+	// *
+	// * @param waynodes
+	// * the list of way nodes
+	// * @param zoom
+	// * the zoom level which is used to do the computation
+	// * @param delta
+	// * the minimum distance in pixels that separates two way nodes
+	// * @param checkOrientation
+	// * filtering pixels of concave polygons may reverse its orientation, set this flag if it
+	// * is important that the orientation is preserved
+	// * @return a new list of way nodes that includes only those way nodes that do not fall onto the
+	// same
+	// * or adjacent pixels
+	// */
+	// static List<GeoCoordinate> filterWaynodesOnSamePixel(
+	// final List<GeoCoordinate> waynodes,
+	// byte zoom, float delta, boolean checkOrientation) {
+	// if (waynodes == null)
+	// throw new IllegalArgumentException("parameter waynodes is null");
+	//
+	// double originalOrientation = 0;
+	// if (checkOrientation) {
+	// originalOrientation = Math.signum(computePolygonArea(waynodes));
+	// }
+	//
+	// List<GeoCoordinate> result = new ArrayList<GeoCoordinate>();
+	// double pixelXPrev;
+	// double pixelYPrev;
+	//
+	// pixelXPrev = MercatorProjection.longitudeToPixelX(waynodes.get(0).getLongitude(), zoom);
+	// pixelYPrev = MercatorProjection.latitudeToPixelY(waynodes.get(0).getLatitude(), zoom);
+	//
+	// // add the first way node to the result list
+	// result.add(waynodes.get(0));
+	//
+	// for (GeoCoordinate waynode : waynodes.subList(1, waynodes.size() - 1)) {
+	// double pixelX = MercatorProjection.longitudeToPixelX(waynode.getLongitude(), zoom);
+	// double pixelY = MercatorProjection.latitudeToPixelY(waynode.getLatitude(), zoom);
+	//
+	// // if one of the pixel coordinates is more than delta pixels away from the way
+	// // node which was most recently added to the result list, add the current way node
+	// // to the result list
+	// if (Math.abs(pixelX - pixelXPrev) >= delta
+	// || Math.abs(pixelY - pixelYPrev) >= delta) {
+	// pixelXPrev = pixelX;
+	// pixelYPrev = pixelY;
+	// result.add(waynode);
+	// }
+	// }
+	// result.add(waynodes.get(waynodes.size() - 1));
+	//
+	// // filtering pixels of concave polygons may reverse the orientation
+	// // of the polygon
+	// // the orientation can be computed by looking at the sign of the area of a polygon
+	// if (checkOrientation) {
+	// if (originalOrientation != Math.signum(computePolygonArea(result))) {
+	// // we need to reverse the order of the result polygon
+	// Collections.reverse(result);
+	// }
+	// }
+	//
+	// return result;
+	// }
 
 	/**
 	 * Checks whether the given way is a closed polygon.
@@ -444,27 +443,164 @@ final class GeoUtils {
 				&& point.getLongitudeE6() >= lon1 && point.getLongitudeE6() <= lon2;
 	}
 
-	// TODO clarify the semantic of a line segment
-	static List<GeoCoordinate> clipLineToTile(final List<GeoCoordinate> line,
-			final TileCoordinate tile, int enlargementInMeters) {
-		if (line == null) {
-			throw new IllegalArgumentException("line is null");
+	static List<WayDataBlock> preprocessWay(final TDWay way, final List<TDWay> innerWays,
+			boolean clipPolygons, boolean clipWays, boolean simplify, final TileCoordinate tile,
+			int enlargementInMeters) {
+
+		Geometry geometry = toJtsGeometry(way, innerWays, simplify);
+		if (geometry == null) {
+			return null;
 		}
 
-		if (line.size() < 2)
-			throw new IllegalArgumentException(
-					"a valid line must have at least 2 points");
+		// clip geometry?
+		Geometry tileBBJTS = null;
+		if ((geometry instanceof Polygon || geometry instanceof LinearRing) && clipPolygons
+				|| geometry instanceof LineString && clipWays) {
 
-		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
-				enlargementInMeters);
-		double[] lineArray = geocoordinatesAsArray(line);
-		double[] clippedLine = CohenSutherlandClipping.clipLine(lineArray, bbox);
-		if (clippedLine == null || clippedLine.length == 0) {
-			LOGGER.finer("clipped polygon is empty: " + line);
-			return Collections.emptyList();
+			// create tile bounding box
+			tileBBJTS = tileToJTSGeometry(tile.getX(),
+					tile.getY(), tile.getZoomlevel(), enlargementInMeters);
+
+			// clip the polygon/ring by intersection with the bounding box of the tile
+			// may throw a TopologyException
+			try {
+				geometry = OverlayOp.overlayOp(tileBBJTS, geometry, OverlayOp.INTERSECTION);
+			} catch (TopologyException e) {
+				LOGGER.log(Level.FINE, "JTS cannot clip outer way: " + way.getId(), e);
+				return null;
+			}
+
 		}
 
-		return arrayAsGeoCoordinates(clippedLine);
+		List<WayDataBlock> blocks = toWayDataBlockList(geometry);
+		return blocks;
+
+	}
+
+	/**
+	 * Convert a JTS Geometry to a WayDataBlock list.
+	 * 
+	 * @param geometry
+	 *            a geometry object which should be converted
+	 * 
+	 * 
+	 * @return a list of WayBlocks which you can use to save the way.
+	 */
+	private static List<WayDataBlock> toWayDataBlockList(Geometry geometry) {
+		List<WayDataBlock> res = new ArrayList<WayDataBlock>();
+		if (geometry instanceof MultiPolygon) {
+			MultiPolygon mp = (MultiPolygon) geometry;
+			for (int i = 0; i < mp.getNumGeometries(); i++) {
+				Polygon p = (Polygon) mp.getGeometryN(i);
+				List<Integer> outer = toCoordinateList(p);
+				List<List<Integer>> inner = new ArrayList<List<Integer>>();
+				for (int j = 0; j < p.getNumInteriorRing(); j++) {
+					inner.add(toCoordinateList(p.getInteriorRingN(j)));
+				}
+				res.add(new WayDataBlock(outer, inner));
+			}
+		}
+		else if (geometry instanceof Polygon) {
+			Polygon p = (Polygon) geometry;
+			List<Integer> outer = toCoordinateList(p);
+			List<List<Integer>> inner = new ArrayList<List<Integer>>();
+			for (int i = 0; i < p.getNumInteriorRing(); i++) {
+				inner.add(toCoordinateList(p.getInteriorRingN(i)));
+			}
+			res.add(new WayDataBlock(outer, inner));
+		}
+		else if (geometry instanceof MultiLineString) {
+			MultiLineString ml = (MultiLineString) geometry;
+			for (int i = 0; i < ml.getNumGeometries(); i++) {
+				LineString l = (LineString) ml.getGeometryN(i);
+				res.add(new WayDataBlock(toCoordinateList(l), null));
+			}
+		}
+		else if (geometry instanceof LinearRing || geometry instanceof LineString) {
+			res.add(new WayDataBlock(toCoordinateList(geometry), null));
+		}
+
+		return res;
+	}
+
+	/**
+	 * Scales a JTS geometry object around its center
+	 * 
+	 * @param object
+	 *            gemoetry object
+	 * @param scaleFactor
+	 *            scale factor to scale
+	 */
+	private static void scaleJtsObject(Geometry object, float scaleFactor) {
+
+		Coordinate centre = object.getEnvelopeInternal().centre();
+		AffineTransformation sclaleTransformation = AffineTransformation.scaleInstance(scaleFactor,
+				scaleFactor, centre.x, centre.y);
+
+		object.apply(sclaleTransformation);
+	}
+
+	private static Geometry toJtsGeometry(TDWay way, List<TDWay> innerWays, boolean simplify) {
+
+		Geometry wayGeometry = toJTSGeometry(way, true);
+		if (wayGeometry == null)
+			return null;
+
+		if (innerWays != null) {
+			List<LinearRing> innerWayGeometries = new ArrayList<LinearRing>();
+			if (!(wayGeometry instanceof LinearRing)) {
+				LOGGER.fine("outer way of multi polygon is not a polygon, skipping it: " + way.getId());
+				return null;
+			}
+			Polygon outerPolygon = (Polygon) wayGeometry;
+
+			for (TDWay innerWay : innerWays) {
+				// in order to build the polygon with holes, we want to create
+				// linear rings of the inner ways
+				Geometry innerWayGeometry = toJTSGeometry(innerWay, false);
+				if (innerWayGeometry == null)
+					continue;
+
+				if (!(innerWayGeometry instanceof LinearRing)) {
+					LOGGER.fine("inner way of multi polygon is not a polygon, skipping it, inner id: "
+							+ innerWay.getId() + ", outer id: " + way.getId());
+					continue;
+				}
+
+				LinearRing innerRing = (LinearRing) innerWayGeometry;
+
+				// TODO scaling must be configurable
+				scaleJtsObject(innerRing, INNER_WAY_SCALE_FACTOR);
+
+				// check if inner way is completely contained in outer way
+				if (outerPolygon.covers(innerRing)) {
+					innerWayGeometries.add(innerRing);
+				}
+				else {
+					LOGGER.fine("inner way is not contained in outer way, skipping inner way, inner id: "
+							+ innerWay.getId() + ", outer id: " + way.getId());
+				}
+			}
+
+			if (!innerWayGeometries.isEmpty()) {
+				// make wayGeometry a new Polygon that contains inner ways as holes
+				LinearRing[] holes = innerWayGeometries.toArray(new LinearRing[innerWayGeometries
+						.size()]);
+				LinearRing exterior = gf.createLinearRing(outerPolygon.getExteriorRing()
+						.getCoordinates());
+				wayGeometry = new Polygon(exterior, holes, gf);
+			}
+
+		}
+
+		if (simplify) {
+			// TODO is this the right place to simplify, is better after clipping?
+			// tolerate up to 2 meters
+			wayGeometry = TopologyPreservingSimplifier.simplify(wayGeometry,
+					DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
+		}
+
+		return wayGeometry;
 	}
 
 	private static double[] bufferInDegrees(long tileY, byte zoom,
@@ -480,20 +616,7 @@ final class GeoUtils {
 		return epsilons;
 	}
 
-	private static double[] bufferInDegrees(double lat, int enlargementInMeter) {
-
-		if (enlargementInMeter == 0)
-			return EPSILON_ZERO;
-
-		double[] epsilons = new double[2];
-
-		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInMeter);
-		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInMeter, lat);
-
-		return epsilons;
-	}
-
-	static Geometry tileToJTSGeometry(long tileX, long tileY, byte zoom,
+	private static Geometry tileToJTSGeometry(long tileX, long tileY, byte zoom,
 			int enlargementInMeter) {
 		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
 		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
@@ -511,420 +634,6 @@ final class GeoUtils {
 		Coordinate topRight = new Coordinate(maxLon, maxLat);
 
 		return gf.createLineString(new Coordinate[] { bottomLeft, topRight }).getEnvelope();
-	}
-
-	/**
-	 * Clips a way to the bounding box of a tile.
-	 * 
-	 * @param way
-	 *            the way which will be clipped
-	 * @param tile
-	 *            the tile which represents the clipping area
-	 * @param enlargementInMeters
-	 *            the enlargement of bounding boxes in meters
-	 * @return a list of one way when the way is complete in the bounding box of the tile. a list of one
-	 *         ore more ways if the way intersects the tile multiple times.
-	 * 
-	 */
-	static List<List<GeoCoordinate>> clipSimpleWayOrSimplePolygonToTile(TDWay way,
-			final TileCoordinate tile,
-			int enlargementInMeters) {
-
-		// create tile bounding box
-		Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
-				tile.getY(),
-				tile.getZoomlevel(),
-				enlargementInMeters);
-
-		Geometry wayAsGeometryJTS = toJTSGeometry(way);
-		if (wayAsGeometryJTS == null)
-			return null;
-
-		Geometry intersectingWaysJTS = null;
-
-		try {
-			// find all intersecting ways
-			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
-					OverlayOp.INTERSECTION);
-		} catch (TopologyException e) {
-			System.out.println("JTS Error:" + e + "\nOn Way" + way);
-			return null;
-		}
-
-		if (intersectingWaysJTS.getNumGeometries() == 0)
-			return null;
-
-		// convert JTS coordinates to GEO coordinates
-		List<List<GeoCoordinate>> list = new ArrayList<List<GeoCoordinate>>();
-
-		// loop through all arising new ways
-		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
-			Geometry lineStringJTS = intersectingWaysJTS.getGeometryN(i);
-			list.add(toGeoCoordinateList(lineStringJTS));
-		}
-		return list;
-	}
-
-	/**
-	 * Scales a JTS geometry object around its center
-	 * 
-	 * @param object
-	 *            gemoetry object
-	 * @param scaleFactor
-	 *            scale factor to scale
-	 */
-	static void scaleJtsObject(Geometry object, float scaleFactor) {
-
-		Coordinate centre = object.getEnvelopeInternal().centre();
-		AffineTransformation sclaleTransformation = AffineTransformation.scaleInstance(scaleFactor,
-				scaleFactor, centre.x, centre.y);
-
-		object.apply(sclaleTransformation);
-	}
-
-	/**
-	 * Converts a mapsforge way with possible innerWays to a JTS wayBlock.
-	 * 
-	 * @param way
-	 *            outer way.
-	 * @param innerWays
-	 *            list of innerways belonging to this way.
-	 * @return a JtsWayBlock which contains the way as JTS Geometry objects.
-	 */
-	static JtsWayBlock toJtsWayBlock(TDWay way, List<TDWay> innerWays) {
-
-		Geometry jtsWay = toJTSGeometry(way);
-
-		if (jtsWay == null)
-			return null;
-
-		List<Geometry> jtsInnerWays = new ArrayList<Geometry>();
-
-		if (innerWays != null) {
-			// scale the outer polygon slightly larger
-			// scaleJtsObject(jtsWay, 1.01f);
-
-			for (TDWay innerWay : innerWays) {
-				Geometry geom = toJTSGeometry(innerWay);
-				if (geom == null)
-					continue;
-				scaleJtsObject(geom, 0.98f);
-				jtsInnerWays.add(geom);
-			}
-		}
-
-		return new JtsWayBlock(jtsWay, jtsInnerWays, way, innerWays);
-	}
-
-	/**
-	 * Convert a JtsWayBlock list to a WayDataBlock list with delta compressed waynode coordinates.
-	 * 
-	 * @param jtsWayBlockList
-	 *            a list of way blocks which are in stored as JTS objects.
-	 * @return a list of WayBlocks which you can use tp save the way.
-	 */
-	static List<WayDataBlock> toWayDataBlockList(List<JtsWayBlock> jtsWayBlockList) {
-		if (jtsWayBlockList == null)
-			return null;
-
-		List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
-
-		for (JtsWayBlock wayBlock : jtsWayBlockList) {
-
-			List<Integer> way = waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(wayBlock.jtsWay));
-
-			List<List<Integer>> innerWays = new ArrayList<List<Integer>>();
-
-			for (Geometry jtsInnerWay : wayBlock.jtsInnerWays) {
-				innerWays.add(waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(jtsInnerWay)));
-
-			}
-			wayDataBlockList.add(new WayDataBlock(way, innerWays));
-		}
-		return wayDataBlockList;
-
-	}
-
-	/**
-	 * This method will check all outerway polygons against its innerway polygons.
-	 * 
-	 * @param wayBlocks
-	 *            List of multipolygons with innerways.
-	 * @return a list of JtsWayBlocks with matching innerways.
-	 */
-	static List<JtsWayBlock> matchInnerwaysToOuterWays(List<JtsWayBlock> wayBlocks) {
-
-		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-
-		for (JtsWayBlock wayBlock : wayBlocks) {
-
-			JtsWayBlock newWayBlock = new JtsWayBlock(wayBlock.jtsWay, new ArrayList<Geometry>(),
-					wayBlock.getWay(),
-					null);
-
-			if (wayBlock.jtsInnerWays != null) {
-				for (Geometry innerWay : wayBlock.jtsInnerWays) {
-					if (innerWay.within(wayBlock.jtsWay)) {
-						newWayBlock.jtsInnerWays.add(innerWay);
-					}
-
-				}
-			}
-			jtsWayBlockList.add(newWayBlock);
-
-		}
-
-		return jtsWayBlockList;
-	}
-
-	/**
-	 * Clips a given multipolygon to the bounding box of a tile
-	 * 
-	 * @param wayBlock
-	 *            a way block which represents one multipolygon with one outerpolygon and one to many
-	 *            innerpolygons.
-	 * @param tile
-	 *            the tile which represents the clipping area
-	 * @param enlargementInMeters
-	 *            the enlargement of bounding boxes in meters
-	 * @return returns a list of multipolygons. It is possible that a multipolygon with one outerpolygon
-	 *         can result many outerpolygons due to the clipping operation.
-	 */
-	static List<JtsWayBlock> clipMultiPolygonToTile(JtsWayBlock wayBlock, final TileCoordinate tile,
-			int enlargementInMeters) {
-
-		List<JtsWayBlock> res = new ArrayList<JtsWayBlock>();
-
-		// create tile bounding box
-		Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
-				tile.getY(),
-				tile.getZoomlevel(),
-				enlargementInMeters);
-
-		Geometry intersectingWaysJTS = null;
-
-		try {
-			// find all intersecting ways
-			intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayBlock.jtsWay,
-					OverlayOp.INTERSECTION);
-
-		} catch (TopologyException e) {
-			System.out.println("JTS Error:" + e + "\nOn " + wayBlock.getWay());
-			return null;
-		}
-		// find all intersecting ways
-
-		List<Geometry> clippedInnerWays = new ArrayList<Geometry>();
-
-		// create slightly smaller bounding box to prevent inner polygons on the same bound as the
-		// outerpolygon
-		tileBBJTS = tileToJTSGeometry(tile.getX(),
-				tile.getY(),
-				tile.getZoomlevel(),
-				enlargementInMeters - 1);
-
-		// clip all inner ways and collect the occuring clipped inner ways. A inner way can be divided
-		// into
-		// multiple inner ways due to clipping.
-		for (Geometry innerway : wayBlock.jtsInnerWays) {
-			Geometry intersectingInnerWaysJTS = null;
-
-			try {
-				intersectingInnerWaysJTS = OverlayOp.overlayOp(tileBBJTS, innerway,
-						OverlayOp.INTERSECTION);
-			} catch (TopologyException e) {
-				// System.out.println("JTS Error: " + e "\nOn way "+ innerway.ge
-				continue;
-			}
-
-			for (int i = 0; i < intersectingInnerWaysJTS.getNumGeometries(); i++) {
-				clippedInnerWays.add(intersectingInnerWaysJTS.getGeometryN(i));
-			}
-
-		}
-
-		// loop through all outer ways which can be occur due to the clipping operation and assign all
-		// clipped inner ways.
-		//
-		for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
-			Geometry outerWay = intersectingWaysJTS.getGeometryN(i);
-
-			List<Geometry> innerWays = new ArrayList<Geometry>();
-
-			for (Geometry clippedInnerWay : clippedInnerWays) {
-				innerWays.add(clippedInnerWay);
-			}
-			res.add(new JtsWayBlock(outerWay, innerWays, null, null));
-		}
-		return res;
-
-	}
-
-	/**
-	 * Simplifies a way by reducing the amount of nodes. We use the Douglas-Peucker algorithm to archive
-	 * that.
-	 * 
-	 * @param wayBlock
-	 *            Way block to simplify.
-	 * @param distanceTolerance
-	 *            Distance to the next node which will be used to remove nodes.
-	 */
-	static void simplifyWay(JtsWayBlock wayBlock, double distanceTolerance) {
-
-		wayBlock.jtsWay = TopologyPreservingSimplifier.simplify(wayBlock.jtsWay, distanceTolerance);
-
-		if (wayBlock.jtsInnerWays != null) {
-
-			List<Geometry> newInnerWayList = new ArrayList<Geometry>();
-
-			for (Geometry innerWay : wayBlock.jtsInnerWays) {
-				newInnerWayList.add(TopologyPreservingSimplifier.simplify(innerWay, distanceTolerance));
-			}
-			wayBlock.jtsInnerWays = newInnerWayList;
-		}
-	}
-
-	static List<WayDataBlock> preprocessWay(TDWay way, List<TDWay> innerWays, boolean polygonClipping,
-			boolean wayClipping,
-			final TileCoordinate tile,
-			int enlargementInMeters) {
-
-		// Check for a multipolygon and clip when clipping is enabled
-		if (way.getShape() == TDWay.MULTI_POLYGON) {
-			List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-			jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
-
-			if (polygonClipping) {
-				jtsWayBlockList = clipMultiPolygonToTile(jtsWayBlockList.get(0), tile,
-						enlargementInMeters);
-
-				// the polygon can disappear due to clipping
-				if (jtsWayBlockList == null)
-					return null;
-			}
-
-			jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
-			return toWayDataBlockList(jtsWayBlockList);
-
-		}
-
-		// //check for clipping of simple polygons and ways
-		if ((polygonClipping && way.getShape() == TDWay.SIMPLE_POLYGON) ||
-				(wayClipping && way.getShape() != TDWay.SIMPLE_POLYGON)) {
-			List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
-			List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
-					enlargementInMeters);
-
-			if (segments == null)
-				return null;
-			for (List<GeoCoordinate> segment : segments) {
-				WayDataBlock wayDataBlock = new WayDataBlock(
-						waynodeAbsoluteCoordinatesToOffsets(segment), null);
-				wayDataBlockList.add(wayDataBlock);
-
-			}
-			return wayDataBlockList;
-
-		}
-
-		List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-		jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
-
-		return toWayDataBlockList(jtsWayBlockList);
-
-		// if (!polygonClipping) {
-		// List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
-		// // do no clipping and match the innerways to this way
-		// if (way.getShape() == TDWay.MULTI_POLYGON) {
-		//
-		// jtsWayBlockList.add(toJtsWayBlock(way, innerWays));
-		// jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
-		//
-		// } else {
-		// jtsWayBlockList.add(toJtsWayBlock(way, null));
-		//
-		// }
-		// return toWayDataBlockList(jtsWayBlockList);
-		//
-		// }
-		// else {
-		// // do clipping to the outer and innerways of a multipolygon and match the innerways
-		// if (way.getShape() == TDWay.MULTI_POLYGON) {
-		//
-		// List<JtsWayBlock> jtsWayBlockList = clipMultiPolygonToTile(
-		// toJtsWayBlock(way, innerWays), tile, enlargementInMeters);
-		//
-		// jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
-		// return toWayDataBlockList(jtsWayBlockList);
-		// }
-		// // clip a simple polygon or way
-		// else {
-		//
-		// List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
-		// List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
-		// enlargementInMeters);
-		//
-		// if (segments == null)
-		// return null;
-		//
-		// for (List<GeoCoordinate> segment : segments) {
-		//
-		// WayDataBlock wayDataBlock = new WayDataBlock(
-		// waynodeAbsoluteCoordinatesToOffsets(segment), null);
-		// wayDataBlockList.add(wayDataBlock);
-		//
-		// }
-		// return wayDataBlockList;
-		// }
-		// }
-
-	}
-
-	/**
-	 * Clips a polygon to the bounding box of a tile.
-	 * 
-	 * @param polygon
-	 *            the polygon which is to be clipped
-	 * @param tile
-	 *            the tile which represents the clipping area
-	 * @param enlargementInMeters
-	 *            the enlargement of bounding boxes in meters
-	 * @param coordinateSystemOriginUpperLeft
-	 *            set flag if the origin of the coordinate system is in the upper left, otherwise the
-	 *            origin is assumed to be in the bottom left
-	 * @return the clipped polygon, null if the polygon is not valid or if the intersection between
-	 *         polygon and the tile's bounding box is empty
-	 */
-	static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
-			final TileCoordinate tile, int enlargementInMeters,
-			boolean coordinateSystemOriginUpperLeft) {
-		if (polygon == null) {
-			throw new IllegalArgumentException("polygon is null");
-		}
-
-		if (polygon.size() < MIN_NODES_POLYGON)
-			throw new IllegalArgumentException(
-					"a valid closed polygon must have at least 4 points");
-
-		double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
-				enlargementInMeters);
-		double[] polygonArray = geocoordinatesAsArray(polygon);
-
-		double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox,
-				coordinateSystemOriginUpperLeft);
-
-		if (clippedPolygon == null || clippedPolygon.length == 0) {
-			LOGGER.finer("clipped polygon is empty: " + polygon);
-			return Collections.emptyList();
-		}
-
-		List<GeoCoordinate> ret = arrayAsGeoCoordinates(clippedPolygon);
-
-		// for us a valid closed polygon must have the same start and end point
-		if (!ret.get(0).equals(ret.get(ret.size() - 1)))
-			ret.add(ret.get(0));
-
-		return ret;
 	}
 
 	static boolean intersects(float[] polygon, boolean coordinateSystemUpperLeft) {
@@ -958,6 +667,125 @@ final class GeoUtils {
 		return true;
 
 	}
+
+	private static double[] getBoundingBoxAsArray(long tileX, long tileY, byte zoom,
+			int enlargementInMeter) {
+		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
+		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
+		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
+		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+
+		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInMeter);
+
+		return new double[] {
+				minLon - epsilons[1],
+				minLat - epsilons[0],
+				maxLon + epsilons[1],
+				maxLat + epsilons[0] };
+	}
+
+	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel,
+			int enlargementInPixel) {
+		double maxx = Double.NEGATIVE_INFINITY, maxy = Double.NEGATIVE_INFINITY, minx = Double.POSITIVE_INFINITY, miny = Double.POSITIVE_INFINITY;
+		for (TDNode coordinate : way.getWayNodes()) {
+			maxy = Math.max(maxy, GeoCoordinate.intToDouble(coordinate.getLatitude()));
+			miny = Math.min(miny, GeoCoordinate.intToDouble(coordinate.getLatitude()));
+			maxx = Math.max(maxx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
+			minx = Math.min(minx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
+		}
+
+		double[] epsilonsTopLeft = computeTileEnlargement(maxy, enlargementInPixel);
+		double[] epsilonsBottomRight = computeTileEnlargement(miny, enlargementInPixel);
+
+		TileCoordinate[] bbox = new TileCoordinate[2];
+		bbox[0] = new TileCoordinate(
+				(int) MercatorProjection.longitudeToTileX(minx - epsilonsTopLeft[1], zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(maxy + epsilonsTopLeft[0], zoomlevel),
+				zoomlevel);
+		bbox[1] = new TileCoordinate(
+				(int) MercatorProjection.longitudeToTileX(maxx + epsilonsBottomRight[1],
+						zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0],
+						zoomlevel), zoomlevel);
+
+		return bbox;
+	}
+
+	// /**
+	// * Transforms a list of absolute way node coordinates to a list of offsets between the
+	// coordinates.
+	// * The first coordinate of the way is represented as an absolute coordinate, all following
+	// * coordinates are represented as offsets to their previous coordinate in the way.
+	// *
+	// * @param waynodes
+	// * the list of absolute way node coordinates
+	// * @return A list of offsets, where the first coordinate is absolute and all following are offsets
+	// * to their predecessor. For each way node first latitude (offset) and second longitude
+	// * (offset) is added.
+	// */
+	// private static List<Integer> waynodeAbsoluteCoordinatesToOffsets(
+	// final List<GeoCoordinate> waynodes) {
+	// ArrayList<Integer> result = new ArrayList<Integer>();
+	//
+	// if (waynodes.isEmpty())
+	// return result;
+	//
+	// // add the first way node to the result list
+	// result.add(waynodes.get(0).getLatitudeE6());
+	// result.add(waynodes.get(0).getLongitudeE6());
+	//
+	// GeoCoordinate prevWaynode = waynodes.get(0);
+	// for (GeoCoordinate waynode : waynodes.subList(1, waynodes.size())) {
+	// result.add(waynode.getLatitudeE6() - prevWaynode.getLatitudeE6());
+	// result.add(waynode.getLongitudeE6() - prevWaynode.getLongitudeE6());
+	// prevWaynode = waynode;
+	// }
+	//
+	// return result;
+	// }
+
+	// private static double[] geocoordinatesAsArray(List<GeoCoordinate> coordinates) {
+	// double[] ret = new double[coordinates.size() * 2];
+	// int i = 0;
+	// for (GeoCoordinate c : coordinates) {
+	// ret[i++] = c.getLongitude();
+	// ret[i++] = c.getLatitude();
+	// }
+	//
+	// return ret;
+	// }
+	//
+	// private static List<GeoCoordinate> arrayAsGeoCoordinates(double[] coordinates) {
+	// List<GeoCoordinate> ret = new ArrayList<GeoCoordinate>();
+	// for (int i = 0; i < coordinates.length - 1; i += 2) {
+	// ret.add(new GeoCoordinate(coordinates[i + 1], coordinates[i]));
+	// }
+	//
+	// return ret;
+	// }
+
+	// // TODO clarify the semantic of a line segment
+	// static List<GeoCoordinate> clipLineToTile(final List<GeoCoordinate> line,
+	// final TileCoordinate tile, int enlargementInMeters) {
+	// if (line == null) {
+	// throw new IllegalArgumentException("line is null");
+	// }
+	//
+	// if (line.size() < 2)
+	// throw new IllegalArgumentException(
+	// "a valid line must have at least 2 points");
+	//
+	// double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
+	// enlargementInMeters);
+	// double[] lineArray = geocoordinatesAsArray(line);
+	// double[] clippedLine = CohenSutherlandClipping.clipLine(lineArray, bbox);
+	// if (clippedLine == null || clippedLine.length == 0) {
+	// LOGGER.finer("clipped polygon is empty: " + line);
+	// return Collections.emptyList();
+	// }
+	//
+	// return arrayAsGeoCoordinates(clippedLine);
+	// }
 
 	static boolean covers(float[] polygon, boolean coordinateSystemOriginUpperLeft) {
 		if (polygon == null) {
@@ -1009,68 +837,399 @@ final class GeoUtils {
 		return true;
 	}
 
-	private static double[] getBoundingBoxAsArray(long tileX, long tileY, byte zoom,
-			int enlargementInMeter) {
-		double minLat = MercatorProjection.tileYToLatitude(tileY + 1, zoom);
-		double maxLat = MercatorProjection.tileYToLatitude(tileY, zoom);
-		double minLon = MercatorProjection.tileXToLongitude(tileX, zoom);
-		double maxLon = MercatorProjection.tileXToLongitude(tileX + 1, zoom);
+	// /**
+	// * Clips a way to the bounding box of a tile.
+	// *
+	// * @param way
+	// * the way which will be clipped
+	// * @param tile
+	// * the tile which represents the clipping area
+	// * @param enlargementInMeters
+	// * the enlargement of bounding boxes in meters
+	// * @return a list of one way when the way is complete in the bounding box of the tile. a list of
+	// one
+	// * ore more ways if the way intersects the tile multiple times.
+	// *
+	// */
+	// static List<List<GeoCoordinate>> clipSimpleWayOrSimplePolygonToTile(TDWay way,
+	// final TileCoordinate tile,
+	// int enlargementInMeters) {
+	//
+	// // create tile bounding box
+	// Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
+	// tile.getY(),
+	// tile.getZoomlevel(),
+	// enlargementInMeters);
+	//
+	// Geometry wayAsGeometryJTS = toJTSGeometry(way);
+	// if (wayAsGeometryJTS == null)
+	// return null;
+	//
+	// Geometry intersectingWaysJTS = null;
+	//
+	// try {
+	// // find all intersecting ways
+	// intersectingWaysJTS = OverlayOp.overlayOp(tileBBJTS, wayAsGeometryJTS,
+	// OverlayOp.INTERSECTION);
+	// } catch (TopologyException e) {
+	// System.out.println("JTS Error:" + e + "\nOn Way" + way);
+	// return null;
+	// }
+	//
+	// if (intersectingWaysJTS.getNumGeometries() == 0)
+	// return null;
+	//
+	// // convert JTS coordinates to GEO coordinates
+	// List<List<GeoCoordinate>> list = new ArrayList<List<GeoCoordinate>>();
+	//
+	// // loop through all arising new ways
+	// for (int i = 0; i < intersectingWaysJTS.getNumGeometries(); i++) {
+	// Geometry lineStringJTS = intersectingWaysJTS.getGeometryN(i);
+	// list.add(toGeoCoordinateList(lineStringJTS));
+	// }
+	// return list;
+	// }
 
-		double[] epsilons = computeTileEnlargement(tileY, zoom, enlargementInMeter);
+	// /**
+	// * Converts a way object along with possible inner ways to a JTSWayBlock object.
+	// *
+	// * @param way
+	// * outer way.
+	// * @param innerWays
+	// * list of inner ways belonging to this way.
+	// * @param simplify
+	// * simplify the geometries using the Douglas Peucker algorithm
+	// * @return a JtsWayBlock which contains the way as JTS Geometry objects.
+	// */
+	// static JtsWayBlock toJtsWayBlock(TDWay way, List<TDWay> innerWays, boolean simplify) {
+	//
+	// Geometry wayGeometry = toJTSGeometry(way);
+	// if (wayGeometry == null)
+	// return null;
+	//
+	// List<Geometry> innerWayGeometries = new ArrayList<Geometry>();
+	//
+	// if (innerWays != null) {
+	// if (!(wayGeometry instanceof Polygon)) {
+	// LOGGER.fine("outer way of multi polygon is not a polygon, skipping it: " + way.getId());
+	// return null;
+	// }
+	//
+	// // scale the outer polygon slightly larger
+	// // scaleJtsObject(jtsWay, 1.01f);
+	//
+	// for (TDWay innerWay : innerWays) {
+	// Geometry innerWayGeometry = toJTSGeometry(innerWay);
+	// if (innerWayGeometry == null)
+	// continue;
+	//
+	// if (!(innerWayGeometry instanceof Polygon)) {
+	// LOGGER.fine("inner way of multi polygon is not a polygon, skipping it, inner id: "
+	// + innerWay.getId() + ", outer id: " + way.getId());
+	// continue;
+	// }
+	//
+	// // TODO scaling must be configurable
+	// scaleJtsObject(innerWayGeometry, INNER_WAY_SCALE_FACTOR);
+	// if (simplify) {
+	// // TODO is this the right place to simplify, is better after creating a multi
+	// // polygon?
+	// // tolerate up to 2 meters
+	// innerWayGeometry = TopologyPreservingSimplifier.simplify(innerWayGeometry,
+	// DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
+	// }
+	//
+	// // check if inner way is completely contained in outer way
+	// if (wayGeometry.covers(innerWayGeometry)) {
+	// innerWayGeometries.add(innerWayGeometry);
+	// }
+	// else {
+	// LOGGER.fine("inner way is not contained in outer way, skipping inner way, inner id: "
+	// + innerWay.getId() + ", outer id: " + way.getId());
+	// }
+	// }
+	// }
+	//
+	// if (simplify) {
+	// // TODO where does constant 0.0000188 come from?
+	// // TODO is this the right place to simplify, is better after creating a multi polygon?
+	// // tolerate up to 2 meters
+	// wayGeometry = TopologyPreservingSimplifier.simplify(wayGeometry,
+	// DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
+	// }
+	//
+	// return new JtsWayBlock(wayGeometry, innerWayGeometries, way, innerWays);
+	// }
 
-		return new double[] {
-				minLon - epsilons[1],
-				minLat - epsilons[0],
-				maxLon + epsilons[1],
-				maxLat + epsilons[0] };
-	}
+	// /**
+	// * Convert a JtsWayBlock list to a WayDataBlock list with delta compressed waynode coordinates.
+	// *
+	// * @param jtsWayBlockList
+	// * a list of way blocks which are in stored as JTS objects.
+	// * @return a list of WayBlocks which you can use tp save the way.
+	// */
+	// static List<WayDataBlock> toWayDataBlockList(List<JtsWayBlock> jtsWayBlockList) {
+	// if (jtsWayBlockList == null)
+	// return null;
+	//
+	// List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+	//
+	// for (JtsWayBlock wayBlock : jtsWayBlockList) {
+	//
+	// List<Integer> way = waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(wayBlock.jtsWay));
+	//
+	// List<List<Integer>> innerWays = new ArrayList<List<Integer>>();
+	//
+	// for (Geometry jtsInnerWay : wayBlock.jtsInnerWays) {
+	// innerWays.add(waynodeAbsoluteCoordinatesToOffsets(toGeoCoordinateList(jtsInnerWay)));
+	//
+	// }
+	// wayDataBlockList.add(new WayDataBlock(way, innerWays));
+	// }
+	// return wayDataBlockList;
+	//
+	// }
 
-	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel,
-			int enlargementInPixel) {
-		double maxx = Double.NEGATIVE_INFINITY, maxy = Double.NEGATIVE_INFINITY, minx = Double.POSITIVE_INFINITY, miny = Double.POSITIVE_INFINITY;
-		for (TDNode coordinate : way.getWayNodes()) {
-			maxy = Math.max(maxy, GeoCoordinate.intToDouble(coordinate.getLatitude()));
-			miny = Math.min(miny, GeoCoordinate.intToDouble(coordinate.getLatitude()));
-			maxx = Math.max(maxx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
-			minx = Math.min(minx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
-		}
+	// /**
+	// * This method will check all outer way polygons against its inner way polygons.
+	// *
+	// * @param wayBlocks
+	// * List of multipolygons with innerways.
+	// * @return a list of JtsWayBlocks with matching innerways.
+	// */
+	// static List<JtsWayBlock> matchInnerwaysToOuterWays(List<JtsWayBlock> wayBlocks) {
+	//
+	// List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+	//
+	// for (JtsWayBlock wayBlock : wayBlocks) {
+	//
+	// JtsWayBlock newWayBlock = new JtsWayBlock(wayBlock.jtsWay, new ArrayList<Geometry>(),
+	// wayBlock.getWay(),
+	// null);
+	//
+	// if (wayBlock.jtsInnerWays != null) {
+	// for (Geometry innerWay : wayBlock.jtsInnerWays) {
+	// if (innerWay.within(wayBlock.jtsWay)) {
+	// newWayBlock.jtsInnerWays.add(innerWay);
+	// }
+	//
+	// }
+	// }
+	// jtsWayBlockList.add(newWayBlock);
+	//
+	// }
+	//
+	// return jtsWayBlockList;
+	// }
 
-		double[] epsilonsTopLeft = computeTileEnlargement(maxy, enlargementInPixel);
-		double[] epsilonsBottomRight = computeTileEnlargement(miny, enlargementInPixel);
+	// /**
+	// * Clips a given multipolygon to the bounding box of a tile
+	// *
+	// * @param wayBlock
+	// * a way block which represents one multi polygon with one outer polygon and one to many
+	// * inner polygons.
+	// * @param tile
+	// * the tile which represents the clipping area
+	// * @param enlargementInMeters
+	// * the enlargement of bounding boxes in meters
+	// * @return returns a list of multi polygons. It is possible that a mult ipolygon with one outer
+	// * polygon can result many outer polygons due to the clipping operation.
+	// * @throws TopologyException
+	// * thrown if JTS encounters an error
+	// */
+	// static List<JtsWayBlock> clipMultiPolygonToTile(JtsWayBlock wayBlock, final TileCoordinate tile,
+	// int enlargementInMeters) {
+	//
+	// List<JtsWayBlock> res = new ArrayList<JtsWayBlock>();
+	//
+	// // create tile bounding box
+	// Geometry tileBBJTS = tileToJTSGeometry(tile.getX(),
+	// tile.getY(),
+	// tile.getZoomlevel(),
+	// enlargementInMeters);
+	//
+	// // clip the outer way by intersection with the bounding box of the tile
+	// // may throw a TopologyException
+	// Geometry clippedOuter;
+	// try {
+	// clippedOuter = OverlayOp.overlayOp(tileBBJTS, wayBlock.jtsWay,
+	// OverlayOp.INTERSECTION);
+	// } catch (TopologyException e) {
+	// LOGGER.log(Level.FINE, "JTS cannot clip outer way: " + wayBlock.getWay().getId(), e);
+	// return null;
+	// }
+	//
+	// List<Geometry> clippedInnerWays = new ArrayList<Geometry>();
+	//
+	// // TODO is this really necessary
+	// // create slightly smaller bounding box to prevent inner polygons on the same bound as the
+	// // outerpolygon
+	// // tileBBJTS = tileToJTSGeometry(tile.getX(),
+	// // tile.getY(),
+	// // tile.getZoomlevel(),
+	// // enlargementInMeters - 1);
+	//
+	// // clip all inner ways and collect the occuring clipped inner ways. A inner way can be divided
+	// // into multiple inner ways due to clipping.
+	// int indexInner = 0;
+	// for (Geometry innerway : wayBlock.jtsInnerWays) {
+	// Geometry clippedInner = null;
+	//
+	// try {
+	// clippedInner = OverlayOp.overlayOp(tileBBJTS, innerway, OverlayOp.INTERSECTION);
+	// } catch (TopologyException e) {
+	// LOGGER.log(
+	// Level.FINE,
+	// "JTS cannot clip inner way: " + wayBlock.getInnerWays().get(indexInner).getId(),
+	// e);
+	// ++indexInner;
+	// continue;
+	// }
+	//
+	// // clipping may result in multiple parts, add all parts to list of inner ways
+	// for (int i = 0; i < clippedInner.getNumGeometries(); i++) {
+	// clippedInnerWays.add(clippedInner.getGeometryN(i));
+	// }
+	// ++indexInner;
+	// }
+	//
+	// // match inner ways to outer ways using nested loop join
+	// // an inner way must be completely covered by
+	// for (int i = 0; i < clippedOuter.getNumGeometries(); i++) {
+	// Geometry outerWay = clippedOuter.getGeometryN(i);
+	//
+	// List<Geometry> innerWays = new ArrayList<Geometry>();
+	//
+	// for (Geometry clippedInnerWay : clippedInnerWays) {
+	// innerWays.add(clippedInnerWay);
+	// }
+	// res.add(new JtsWayBlock(outerWay, innerWays, null, null));
+	// }
+	// return res;
+	//
+	// }
 
-		TileCoordinate[] bbox = new TileCoordinate[2];
-		bbox[0] = new TileCoordinate(
-				(int) MercatorProjection.longitudeToTileX(minx - epsilonsTopLeft[1], zoomlevel),
-				(int) MercatorProjection.latitudeToTileY(maxy + epsilonsTopLeft[0], zoomlevel),
-				zoomlevel);
-		bbox[1] = new TileCoordinate(
-				(int) MercatorProjection.longitudeToTileX(maxx + epsilonsBottomRight[1],
-						zoomlevel),
-				(int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0],
-						zoomlevel), zoomlevel);
+	// /**
+	// * Simplifies a way by reducing the amount of nodes. We use the Douglas-Peucker algorithm to
+	// archive
+	// * that.
+	// *
+	// * @param wayBlock
+	// * Way block to simplify.
+	// * @param distanceTolerance
+	// * Distance to the next node which will be used to remove nodes.
+	// */
+	// static void simplifyWay(JtsWayBlock wayBlock, double distanceTolerance) {
+	//
+	// wayBlock.jtsWay = TopologyPreservingSimplifier.simplify(wayBlock.jtsWay, distanceTolerance);
+	//
+	// if (wayBlock.jtsInnerWays != null) {
+	//
+	// List<Geometry> newInnerWayList = new ArrayList<Geometry>();
+	//
+	// for (Geometry innerWay : wayBlock.jtsInnerWays) {
+	// newInnerWayList.add(TopologyPreservingSimplifier.simplify(innerWay, distanceTolerance));
+	// }
+	// wayBlock.jtsInnerWays = newInnerWayList;
+	// }
+	// }
 
-		return bbox;
-	}
+	// static List<WayDataBlock> preprocessWay(final TDWay way, final List<TDWay> innerWays,
+	// boolean clipPolygons, boolean clipWays, boolean simplify, final TileCoordinate tile,
+	// int enlargementInMeters) {
+	//
+	// // Check for a multi polygon and clip when clipping is enabled
+	// if (way.getShape() == TDWay.MULTI_POLYGON) {
+	//
+	// JtsWayBlock jtsWayBlock = toJtsWayBlock(way, innerWays, simplify);
+	// List<JtsWayBlock> jtsWayBlockList = null;
+	//
+	// if (clipPolygons) {
+	// jtsWayBlockList = clipMultiPolygonToTile(jtsWayBlock, tile, enlargementInMeters);
+	// // the polygon can disappear due to clipping
+	// if (jtsWayBlockList == null) {
+	// LOGGER.fine("multi polygon could not be clipped to tile: " + way.getId());
+	// return null;
+	// }
+	// }
+	//
+	// jtsWayBlockList = matchInnerwaysToOuterWays(jtsWayBlockList);
+	// return toWayDataBlockList(jtsWayBlockList);
+	//
+	// }
+	//
+	// // //check for clipping of simple polygons and ways
+	// if ((clipPolygons && way.getShape() == TDWay.SIMPLE_POLYGON) ||
+	// (clipWays && way.getShape() != TDWay.SIMPLE_POLYGON)) {
+	// List<WayDataBlock> wayDataBlockList = new ArrayList<WayDataBlock>();
+	// List<List<GeoCoordinate>> segments = clipSimpleWayOrSimplePolygonToTile(way, tile,
+	// enlargementInMeters);
+	//
+	// if (segments == null)
+	// return null;
+	// for (List<GeoCoordinate> segment : segments) {
+	// WayDataBlock wayDataBlock = new WayDataBlock(
+	// waynodeAbsoluteCoordinatesToOffsets(segment), null);
+	// wayDataBlockList.add(wayDataBlock);
+	//
+	// }
+	// return wayDataBlockList;
+	//
+	// }
+	//
+	// List<JtsWayBlock> jtsWayBlockList = new ArrayList<JtsWayBlock>();
+	// jtsWayBlockList.add(toJtsWayBlock(way, innerWays, simplify));
+	//
+	// return toWayDataBlockList(jtsWayBlockList);
+	//
+	// }
 
-	private static double[] geocoordinatesAsArray(List<GeoCoordinate> coordinates) {
-		double[] ret = new double[coordinates.size() * 2];
-		int i = 0;
-		for (GeoCoordinate c : coordinates) {
-			ret[i++] = c.getLongitude();
-			ret[i++] = c.getLatitude();
-		}
-
-		return ret;
-	}
-
-	private static List<GeoCoordinate> arrayAsGeoCoordinates(double[] coordinates) {
-		List<GeoCoordinate> ret = new ArrayList<GeoCoordinate>();
-		for (int i = 0; i < coordinates.length - 1; i += 2) {
-			ret.add(new GeoCoordinate(coordinates[i + 1], coordinates[i]));
-		}
-
-		return ret;
-	}
+	// /**
+	// * Clips a polygon to the bounding box of a tile.
+	// *
+	// * @param polygon
+	// * the polygon which is to be clipped
+	// * @param tile
+	// * the tile which represents the clipping area
+	// * @param enlargementInMeters
+	// * the enlargement of bounding boxes in meters
+	// * @param coordinateSystemOriginUpperLeft
+	// * set flag if the origin of the coordinate system is in the upper left, otherwise the
+	// * origin is assumed to be in the bottom left
+	// * @return the clipped polygon, null if the polygon is not valid or if the intersection between
+	// * polygon and the tile's bounding box is empty
+	// */
+	// static List<GeoCoordinate> clipPolygonToTile(final List<GeoCoordinate> polygon,
+	// final TileCoordinate tile, int enlargementInMeters,
+	// boolean coordinateSystemOriginUpperLeft) {
+	// if (polygon == null) {
+	// throw new IllegalArgumentException("polygon is null");
+	// }
+	//
+	// if (polygon.size() < MIN_NODES_POLYGON)
+	// throw new IllegalArgumentException(
+	// "a valid closed polygon must have at least 4 points");
+	//
+	// double[] bbox = getBoundingBoxAsArray(tile.getX(), tile.getY(), tile.getZoomlevel(),
+	// enlargementInMeters);
+	// double[] polygonArray = geocoordinatesAsArray(polygon);
+	//
+	// double[] clippedPolygon = SutherlandHodgmanClipping.clipPolygon(polygonArray, bbox,
+	// coordinateSystemOriginUpperLeft);
+	//
+	// if (clippedPolygon == null || clippedPolygon.length == 0) {
+	// LOGGER.finer("clipped polygon is empty: " + polygon);
+	// return Collections.emptyList();
+	// }
+	//
+	// List<GeoCoordinate> ret = arrayAsGeoCoordinates(clippedPolygon);
+	//
+	// // for us a valid closed polygon must have the same start and end point
+	// if (!ret.get(0).equals(ret.get(ret.size() - 1)))
+	// ret.add(ret.get(0));
+	//
+	// return ret;
+	// }
 
 	static String toGPX(final List<GeoCoordinate> g) {
 		StringBuilder sb = new StringBuilder();
@@ -1282,34 +1441,34 @@ final class GeoUtils {
 		private static final byte BOTTOM = 4;
 		private static final byte TOP = 8;
 
-		// TODO clarify the semantic of a line segment
-		/**
-		 * 
-		 * @param line
-		 *            A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
-		 * @param rectangle
-		 *            A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
-		 *            xmax, ymax]
-		 * @return All line segments that can be clipped to the clipping region.
-		 */
-		static double[] clipLine(final double[] line, final double[] rectangle) {
-			if (line.length < MIN_COORDINATES_LINE)
-				throw new IllegalArgumentException("line must have at least 2 points");
-			if (rectangle.length != 4)
-				throw new IllegalArgumentException(
-						"clipping rectangle must be defined by exactly 2 points");
-
-			TDoubleArrayList clippedSegments = new TDoubleArrayList();
-			double[] clippedSegment;
-			for (int i = 0; i < line.length - 2; i += 2) {
-				clippedSegment = clipLine(line[i], line[i + 1], line[i + 2], line[i + 3],
-						rectangle);
-				if (clippedSegment != null)
-					clippedSegments.add(clippedSegment);
-			}
-
-			return clippedSegments.toArray();
-		}
+		// // TODO clarify the semantic of a line segment
+		// /**
+		// *
+		// * @param line
+		// * A line as a double array in the form [x1,y1,x2,y2,x3,y3,...,xn,yn]
+		// * @param rectangle
+		// * A rectangle defined by the bottom/left and top/right point, i.e. [xmin, ymin,
+		// * xmax, ymax]
+		// * @return All line segments that can be clipped to the clipping region.
+		// */
+		// private static double[] clipLine(final double[] line, final double[] rectangle) {
+		// if (line.length < MIN_COORDINATES_LINE)
+		// throw new IllegalArgumentException("line must have at least 2 points");
+		// if (rectangle.length != 4)
+		// throw new IllegalArgumentException(
+		// "clipping rectangle must be defined by exactly 2 points");
+		//
+		// TDoubleArrayList clippedSegments = new TDoubleArrayList();
+		// double[] clippedSegment;
+		// for (int i = 0; i < line.length - 2; i += 2) {
+		// clippedSegment = clipLine(line[i], line[i + 1], line[i + 2], line[i + 3],
+		// rectangle);
+		// if (clippedSegment != null)
+		// clippedSegments.add(clippedSegment);
+		// }
+		//
+		// return clippedSegments.toArray();
+		// }
 
 		/**
 		 * Checks whether a given line intersects the given clipping region.

@@ -39,7 +39,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_COMMENT = "comment";
 	private static final String PARAM_MAP_START_POSITION = "map-start-position";
 	private static final String PARAM_DEBUG_INFO = "debug-file";
-	private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
+	// private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
 	private static final String PARAM_WAY_CLIPPING = "way-clipping";
@@ -58,8 +58,8 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		String zoomConf = getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null);
 		String comment = getStringArgument(taskConfig, PARAM_COMMENT, null);
 		boolean debug = getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false);
-		boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
-				true);
+		// boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
+		// true);
 		boolean pixelFilter = getBooleanArgument(taskConfig, PARAM_PIXEL_FILTER, true);
 		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
 		boolean wayClipping = getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, false);
@@ -72,7 +72,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
-				comment, zoomConf, debug, waynodeCompression, pixelFilter, polygonClipping,
+				comment, zoomConf, debug, pixelFilter, polygonClipping,
 				wayClipping,
 				threadpoolSize, type, bboxEnlargement, tagConfFile, preferredLanguage);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());

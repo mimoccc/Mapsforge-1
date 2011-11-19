@@ -70,7 +70,7 @@ public class MapFileWriterTask implements Sink {
 	private File outFile;
 	private GeoCoordinate mapStartPosition;
 	private boolean debugInfo;
-	private boolean waynodeCompression;
+	// private boolean waynodeCompression;
 	private boolean pixelFilter;
 	private boolean polygonClipping;
 	private boolean wayClipping;
@@ -84,7 +84,7 @@ public class MapFileWriterTask implements Sink {
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition,
 			String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo,
-			boolean waynodeCompression, boolean pixelFilter, boolean polygonClipping,
+			boolean pixelFilter, boolean polygonClipping,
 			boolean wayClipping,
 			int threadpoolSize, String type, int bboxEnlargement, String tagConfFile,
 			String preferredLanguage) {
@@ -99,7 +99,7 @@ public class MapFileWriterTask implements Sink {
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate
 				.fromString(mapStartPosition);
 		this.debugInfo = debugInfo;
-		this.waynodeCompression = waynodeCompression;
+		// this.waynodeCompression = waynodeCompression;
 		this.pixelFilter = pixelFilter;
 		this.polygonClipping = polygonClipping;
 		this.wayClipping = wayClipping;
@@ -176,7 +176,7 @@ public class MapFileWriterTask implements Sink {
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
 			mfw.writeFile(System.currentTimeMillis(), VERSION_BINARY_FORMAT, (short) 256, comment,
 					debugInfo,
-					waynodeCompression, polygonClipping, wayClipping, pixelFilter, mapStartPosition,
+					polygonClipping, wayClipping, pixelFilter, mapStartPosition,
 					preferredLanguage);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
@@ -283,7 +283,7 @@ public class MapFileWriterTask implements Sink {
 					// currentRelation.get
 					for (RelationMember member : currentRelation.getMembers()) {
 						if ("outer".equals(member.getMemberRole()))
-							outerMemberIDs.add(member.getMemberId());
+							outerMemberIDs.add(Long.valueOf(member.getMemberId()));
 						else if ("inner".equals(member.getMemberRole()))
 							innerMemberIDs.add(member.getMemberId());
 					}
@@ -291,7 +291,7 @@ public class MapFileWriterTask implements Sink {
 					if (innerMemberIDs.size() > 0) {
 						long[] innerMemberIDsArray = innerMemberIDs.toArray();
 						for (Long outerID : outerMemberIDs) {
-							if (tileBasedGeoObjectStore.addWayMultipolygon(outerID,
+							if (tileBasedGeoObjectStore.addWayMultipolygon(outerID.longValue(),
 									innerMemberIDsArray, relationTags, currentRelation.getId(),
 									relationName))
 								amountOfMultipolygons++;

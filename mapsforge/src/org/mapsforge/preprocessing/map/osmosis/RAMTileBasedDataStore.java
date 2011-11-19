@@ -112,6 +112,8 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	@Override
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
 		TLongArrayList innerwayIDs = multipolygons.get(outerWayID);
+		if (innerwayIDs == null)
+			return null;
 		return getInnerWaysOfMultipolygon(innerwayIDs.toArray());
 	}
 

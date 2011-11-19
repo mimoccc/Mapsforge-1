@@ -41,6 +41,16 @@ public class JtsWayBlock {
 	}
 
 	/**
+	 * @param jtsWay
+	 * @param jtsInnerWays
+	 */
+	JtsWayBlock(Geometry jtsWay, List<Geometry> jtsInnerWays) {
+		super();
+		this.jtsWay = jtsWay;
+		this.jtsInnerWays = jtsInnerWays;
+	}
+
+	/**
 	 * Returns the outer way of this way block.
 	 * 
 	 * @return The Geometry object which represents this way.

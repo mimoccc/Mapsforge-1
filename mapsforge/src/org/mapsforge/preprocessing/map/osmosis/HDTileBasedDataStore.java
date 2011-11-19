@@ -167,6 +167,8 @@ final class HDTileBasedDataStore extends BaseTileBasedDataStore {
 	@Override
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
 		TLongHashSet innerwayIDs = multipolygons.get(outerWayID);
+		if (innerwayIDs == null)
+			return null;
 		List<TDWay> innerways = new ArrayList<TileData.TDWay>();
 		TLongIterator it = innerwayIDs.iterator();
 		while (it.hasNext()) {
