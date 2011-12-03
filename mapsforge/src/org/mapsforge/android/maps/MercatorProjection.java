@@ -14,16 +14,34 @@
  */
 package org.mapsforge.android.maps;
 
-import android.graphics.Point;
-
 /**
  * An implementation of the spherical Mercator projection.
  */
-public class MercatorProjection implements Projection {
+public final class MercatorProjection {
 	/**
 	 * The circumference of the earth at the equator in meters.
 	 */
 	public static final double EARTH_CIRCUMFERENCE = 40075016.686;
+
+	/**
+	 * Maximum possible latitude coordinate of the map.
+	 */
+	public static final double LATITUDE_MAX = 85.05113;
+
+	/**
+	 * Minimum possible latitude coordinate of the map.
+	 */
+	public static final double LATITUDE_MIN = -85.05113;
+
+	/**
+	 * Maximum possible longitude coordinate of the map.
+	 */
+	public static final double LONGITUDE_MAX = 180;
+
+	/**
+	 * Minimum possible longitude coordinate of the map.
+	 */
+	public static final double LONGITUDE_MIN = -180;
 
 	/**
 	 * Calculates the distance on the ground that is represented by a single pixel on the map.
@@ -35,8 +53,7 @@ public class MercatorProjection implements Projection {
 	 * @return the ground resolution at the given latitude and zoom level.
 	 */
 	public static double calculateGroundResolution(double latitude, byte zoom) {
-		return Math.cos(latitude * (Math.PI / 180)) * EARTH_CIRCUMFERENCE
-				/ ((long) Tile.TILE_SIZE << zoom);
+		return Math.cos(latitude * (Math.PI / 180)) * EARTH_CIRCUMFERENCE / ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
@@ -65,6 +82,24 @@ public class MercatorProjection implements Projection {
 	 */
 	public static long latitudeToTileY(double latitude, byte zoom) {
 		return pixelYToTileY(latitudeToPixelY(latitude, zoom), zoom);
+	}
+
+	/**
+	 * @param latitude
+	 *            the latitude value which should be checked.
+	 * @return the given latitude value, limited to the possible latitude range.
+	 */
+	public static double limitLatitude(double latitude) {
+		return Math.max(Math.min(latitude, LATITUDE_MAX), LATITUDE_MIN);
+	}
+
+	/**
+	 * @param longitude
+	 *            the longitude value which should be checked.
+	 * @return the given longitude value, limited to the possible longitude range.
+	 */
+	public static double limitLongitude(double longitude) {
+		return Math.max(Math.min(longitude, LONGITUDE_MAX), LONGITUDE_MIN);
 	}
 
 	/**
@@ -172,91 +207,7 @@ public class MercatorProjection implements Projection {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoom);
 	}
 
-	private final MapView mapView;
-
-	/**
-	 * Constructs a new MercatorProjection that uses the parameters of the given MapView.
-	 * 
-	 * @param mapView
-	 *            the MapView on which this instance should operate.
-	 */
-	MercatorProjection(MapView mapView) {
-		this.mapView = mapView;
-	}
-
-	@Override
-	public GeoPoint fromPixels(int x, int y) {
-		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
-			// the MapView has no valid dimensions
-			return null;
-		}
-
-		// save the current position and zoom level of the map
-		GeoPoint mapCenter = this.mapView.getMapCenter();
-		byte mapZoomLevel = this.mapView.getZoomLevel();
-
-		// calculate the pixel coordinates of the top left corner
-		double pixelX = longitudeToPixelX(mapCenter.getLongitude(), mapZoomLevel)
-				- (this.mapView.getWidth() >> 1);
-		double pixelY = latitudeToPixelY(mapCenter.getLatitude(), mapZoomLevel)
-				- (this.mapView.getHeight() >> 1);
-
-		// convert the pixel coordinates to a GeoPoint and return it
-		return new GeoPoint(pixelYToLatitude(pixelY + y, mapZoomLevel), pixelXToLongitude(
-				pixelX + x, mapZoomLevel));
-	}
-
-	@Override
-	public float metersToPixels(float meters) {
-		return (float) (meters * (1 / calculateGroundResolution(this.mapView.getMapCenter()
-				.getLatitude(), this.mapView.getZoomLevel())));
-	}
-
-	@Override
-	public float metersToPixels(float meters, byte zoom) {
-		return (float) (meters * (1 / calculateGroundResolution(this.mapView.getMapCenter()
-				.getLatitude(), zoom)));
-	}
-
-	@Override
-	public Point toPixels(GeoPoint in, Point out) {
-		if (this.mapView.getWidth() <= 0 || this.mapView.getHeight() <= 0) {
-			// the MapView has no valid dimensions
-			return null;
-		}
-
-		// save the current position and zoom level of the map
-		GeoPoint mapCenter = this.mapView.getMapCenter();
-		byte mapZoomLevel = this.mapView.getZoomLevel();
-
-		// calculate the pixel coordinates of the top left corner
-		double pixelX = longitudeToPixelX(mapCenter.getLongitude(), mapZoomLevel)
-				- (this.mapView.getWidth() >> 1);
-		double pixelY = latitudeToPixelY(mapCenter.getLatitude(), mapZoomLevel)
-				- (this.mapView.getHeight() >> 1);
-
-		if (out == null) {
-			// create a new point object and return it
-			return new Point(
-					(int) (longitudeToPixelX(in.getLongitude(), mapZoomLevel) - pixelX),
-					(int) (latitudeToPixelY(in.getLatitude(), mapZoomLevel) - pixelY));
-		}
-		// reuse the existing point object
-		out.x = (int) (longitudeToPixelX(in.getLongitude(), mapZoomLevel) - pixelX);
-		out.y = (int) (latitudeToPixelY(in.getLatitude(), mapZoomLevel) - pixelY);
-		return out;
-	}
-
-	@Override
-	public Point toPoint(GeoPoint in, Point out, byte zoom) {
-		if (out == null) {
-			// create a new point object and return it
-			return new Point((int) longitudeToPixelX(in.getLongitude(), zoom),
-					(int) latitudeToPixelY(in.getLatitude(), zoom));
-		}
-		// reuse the existing point object
-		out.x = (int) longitudeToPixelX(in.getLongitude(), zoom);
-		out.y = (int) latitudeToPixelY(in.getLatitude(), zoom);
-		return out;
+	private MercatorProjection() {
+		throw new IllegalStateException();
 	}
 }

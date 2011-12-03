@@ -27,16 +27,16 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
 /**
- * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The class
- * defines some methods to access the backing data structure of deriving subclasses. Besides organizing
- * the redrawing process it handles long press and tap events and calls {@link #onLongPress(int)} and
- * {@link #onTap(int)} respectively.
+ * ItemizedOverlay is an abstract base class to display {@link OverlayItem OverlayItems}. The class defines some
+ * methods to access the backing data structure of deriving subclasses. Besides organizing the redrawing process
+ * it handles long press and tap events and calls {@link #onLongPress(int)} and {@link #onTap(int)}
+ * respectively.
  * 
  * @param <Item>
  *            the type of items handled by this overlay.
  */
 public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay {
-	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+	private static final int INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ItemizedOverlay";
 
 	/**
@@ -85,8 +85,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 		super();
 		this.defaultMarker = defaultMarker;
 		this.itemPosition = new Point();
-		this.visibleItems = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
-		this.visibleItemsRedraw = new ArrayList<Integer>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.visibleItems = new ArrayList<Integer>(INITIAL_CAPACITY);
+		this.visibleItemsRedraw = new ArrayList<Integer>(INITIAL_CAPACITY);
 	}
 
 	/**
@@ -106,8 +106,6 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	}
 
 	/**
-	 * Returns the numbers of items in this overlay.
-	 * 
 	 * @return the numbers of items in this overlay.
 	 */
 	public abstract int size();
@@ -203,11 +201,11 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	/**
 	 * Creates an item in this overlay.
 	 * 
-	 * @param i
+	 * @param index
 	 *            the index of the item.
 	 * @return the item.
 	 */
-	protected abstract Item createItem(int i);
+	protected abstract Item createItem(int index);
 
 	@Override
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
@@ -216,8 +214,6 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 		this.visibleItemsRedraw.clear();
 
 		int numberOfItems = size();
-		Item overlayItem;
-		Rect markerBounds;
 		for (int itemIndex = 0; itemIndex < numberOfItems; ++itemIndex) {
 			if (isInterrupted() || sizeHasChanged()) {
 				// stop working
@@ -225,7 +221,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 			}
 
 			// get the current item
-			overlayItem = createItem(itemIndex);
+			Item overlayItem = createItem(itemIndex);
 			if (overlayItem == null) {
 				continue;
 			}
@@ -238,8 +234,8 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 
 				// make sure that the cached item position is valid
 				if (drawZoomLevel != overlayItem.cachedZoomLevel) {
-					overlayItem.cachedMapPosition = projection.toPoint(overlayItem
-							.getPoint(), overlayItem.cachedMapPosition, drawZoomLevel);
+					overlayItem.cachedMapPosition = projection.toPoint(overlayItem.getPoint(),
+							overlayItem.cachedMapPosition, drawZoomLevel);
 					overlayItem.cachedZoomLevel = drawZoomLevel;
 				}
 
@@ -259,7 +255,7 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 				}
 
 				// get the position of the marker
-				markerBounds = this.itemMarker.copyBounds();
+				Rect markerBounds = this.itemMarker.copyBounds();
 
 				// calculate the bounding box of the marker
 				this.left = this.itemPosition.x + markerBounds.left;

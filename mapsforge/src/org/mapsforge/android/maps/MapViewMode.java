@@ -15,12 +15,12 @@
 package org.mapsforge.android.maps;
 
 /**
- * The MapViewMode enumeration lists all possible {@link MapView} operating modes. To check if a
- * MapViewMode requires an Internet connection, use the {@link #requiresInternetConnection()} method.
+ * The MapViewMode enumeration lists all possible {@link MapView} operating modes. To check if a MapViewMode
+ * requires an Internet connection, use the {@link #requiresInternetConnection()} method.
  */
 public enum MapViewMode {
 	/**
-	 * Map tiles are rendered using the <code>android.graphics</code> package (Skia library).
+	 * Map tiles are rendered using the {@link android.graphics} package (Skia library).
 	 * 
 	 * @see <a href="http://code.google.com/p/skia/">Skia Graphics Engine</a>
 	 */
@@ -48,14 +48,10 @@ public enum MapViewMode {
 	OSMARENDER_TILE_DOWNLOAD;
 
 	/**
-	 * This method checks, if an Internet connection is required for the given MapViewMode.
-	 * 
-	 * @param mapViewMode
-	 *            the MapViewMode to check.
-	 * @return true if the MapViewMode requires an Internet connection, false otherwise.
+	 * @return true if this MapViewMode requires an Internet connection, false otherwise.
 	 */
-	public static boolean requiresInternetConnection(MapViewMode mapViewMode) {
-		switch (mapViewMode) {
+	public boolean requiresInternetConnection() {
+		switch (this) {
 			case CANVAS_RENDERER:
 				return false;
 			case MAPNIK_TILE_DOWNLOAD:
@@ -65,15 +61,6 @@ public enum MapViewMode {
 			case OSMARENDER_TILE_DOWNLOAD:
 				return true;
 		}
-		return false;
-	}
-
-	/**
-	 * Convenience method to check if this MapViewMode requires an Internet connection.
-	 * 
-	 * @return true if this MapViewMode requires an Internet connection, false otherwise.
-	 */
-	public boolean requiresInternetConnection() {
-		return requiresInternetConnection(this);
+		throw new IllegalStateException();
 	}
 }

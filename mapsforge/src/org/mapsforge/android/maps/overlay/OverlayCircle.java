@@ -20,11 +20,10 @@ import android.graphics.Paint;
 import android.graphics.Point;
 
 /**
- * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All rendering
- * parameters like color, stroke width, pattern and transparency can be configured via two {@link Paint}
- * objects. Each circle is drawn twice - once with each paint object - to allow for different outlines
- * and fillings. The drawing quality can be improved by enabling {@link Paint#setAntiAlias(boolean)
- * anti-aliasing}.
+ * OverlayCircle holds all parameters of a single circle on a {@link CircleOverlay}. All rendering parameters
+ * like color, stroke width, pattern and transparency can be configured via two {@link Paint} objects. Each
+ * circle is drawn twice - once with each paint object - to allow for different outlines and fillings. The
+ * drawing quality can be improved by enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
  */
 public class OverlayCircle {
 	/**
@@ -76,8 +75,7 @@ public class OverlayCircle {
 	 * Constructs a new OverlayCircle.
 	 */
 	public OverlayCircle() {
-		this.cachedCenterPosition = new Point();
-		this.cachedZoomLevel = Byte.MIN_VALUE;
+		this(null, 0, null, null, null);
 	}
 
 	/**
@@ -94,13 +92,12 @@ public class OverlayCircle {
 	 * @param title
 	 *            the title of the circle (may be null).
 	 */
-	public OverlayCircle(GeoPoint center, float radius, Paint paintFill, Paint paintOutline,
-			String title) {
+	public OverlayCircle(GeoPoint center, float radius, Paint paintFill, Paint paintOutline, String title) {
 		this.title = title;
 		this.cachedCenterPosition = new Point();
 		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setCircleData(center, radius);
-		setPaint(paintFill, paintOutline);
+		setCircleDataInternal(center, radius);
+		setPaintInternal(paintFill, paintOutline);
 	}
 
 	/**
@@ -114,10 +111,7 @@ public class OverlayCircle {
 	 *            the title of the circle (may be null).
 	 */
 	public OverlayCircle(GeoPoint center, float radius, String title) {
-		this.title = title;
-		this.cachedCenterPosition = new Point();
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setCircleData(center, radius);
+		this(center, radius, null, null, title);
 	}
 
 	/**
@@ -129,14 +123,10 @@ public class OverlayCircle {
 	 *            the paint which will be used to draw the circle outline (may be null).
 	 */
 	public OverlayCircle(Paint paintFill, Paint paintOutline) {
-		this.cachedCenterPosition = new Point();
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setPaint(paintFill, paintOutline);
+		this(null, 0, paintFill, paintOutline, null);
 	}
 
 	/**
-	 * Returns the title of this circle.
-	 * 
 	 * @return the title of this circle (may be null).
 	 */
 	public synchronized String getTitle() {
@@ -154,9 +144,7 @@ public class OverlayCircle {
 	 *            the radius of the circle in meters.
 	 */
 	public synchronized void setCircleData(GeoPoint center, float radius) {
-		this.center = center;
-		this.radius = radius;
-		this.cachedZoomLevel = Byte.MIN_VALUE;
+		setCircleDataInternal(center, radius);
 	}
 
 	/**
@@ -170,9 +158,7 @@ public class OverlayCircle {
 	 *            the paint which will be used to draw the circle outline (may be null).
 	 */
 	public synchronized void setPaint(Paint paintFill, Paint paintOutline) {
-		this.paintFill = paintFill;
-		this.paintOutline = paintOutline;
-		this.hasPaint = paintFill != null || paintOutline != null;
+		setPaintInternal(paintFill, paintOutline);
 	}
 
 	/**
@@ -183,5 +169,17 @@ public class OverlayCircle {
 	 */
 	public synchronized void setTitle(String title) {
 		this.title = title;
+	}
+
+	private void setCircleDataInternal(GeoPoint center, float radius) {
+		this.center = center;
+		this.radius = radius;
+		this.cachedZoomLevel = Byte.MIN_VALUE;
+	}
+
+	private void setPaintInternal(Paint paintFill, Paint paintOutline) {
+		this.paintFill = paintFill;
+		this.paintOutline = paintOutline;
+		this.hasPaint = paintFill != null || paintOutline != null;
 	}
 }

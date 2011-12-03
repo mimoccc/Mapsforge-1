@@ -18,74 +18,49 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
-import android.graphics.Rect;
-
 /**
- * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y
- * number together with their zoom level. The actual area that a tile covers on a map depends on the
- * underlying map projection.
+ * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y number
+ * together with their zoom level. The actual area that a tile covers on a map depends on the underlying map
+ * projection.
  */
 public class Tile implements Serializable {
+	/**
+	 * Bytes per pixel required in a map tile bitmap.
+	 */
+	public static final byte TILE_BYTES_PER_PIXEL = 2;
+
 	/**
 	 * Width and height of a map tile in pixel.
 	 */
 	public static final int TILE_SIZE = 256;
 
+	/**
+	 * Size of a single uncompressed map tile bitmap in bytes.
+	 */
+	public static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
+
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * Amount of bytes per pixel of a map tile.
-	 */
-	static final byte TILE_BYTES_PER_PIXEL = 2;
-
-	/**
-	 * Size of a single map tile in bytes.
-	 */
-	static final int TILE_SIZE_IN_BYTES = TILE_SIZE * TILE_SIZE * TILE_BYTES_PER_PIXEL;
-
-	/**
-	 * X number of this tile.
-	 */
-	public final long x;
-
-	/**
-	 * Y number of this tile.
-	 */
-	public final long y;
-
-	/**
-	 * Zoom level of this tile.
-	 */
-	public final byte zoomLevel;
-
-	/**
-	 * Stores the hash value of this object.
-	 */
-	private transient int hashCode;
-
-	/**
-	 * Pixel X coordinate of the upper left corner of this tile on the world map.
-	 */
-	transient long pixelX;
-
-	/**
-	 * Pixel Y coordinate of the upper left corner of this tile on the world map.
-	 */
-	transient long pixelY;
+	private transient int hashCodeValue;
+	private transient long pixelX;
+	private transient long pixelY;
+	private final long tileX;
+	private final long tileY;
+	private final byte zoomLevel;
 
 	/**
 	 * Constructs an immutable tile instance with the specified XY number and zoom level.
 	 * 
-	 * @param x
+	 * @param tileX
 	 *            the X number of the tile.
-	 * @param y
+	 * @param tileY
 	 *            the Y number of the tile.
 	 * @param zoomLevel
 	 *            the zoom level of the tile.
 	 */
-	public Tile(long x, long y, byte zoomLevel) {
-		this.x = x;
-		this.y = y;
+	public Tile(long tileX, long tileY, byte zoomLevel) {
+		this.tileX = tileX;
+		this.tileY = tileY;
 		this.zoomLevel = zoomLevel;
 		calculateTransientValues();
 	}
@@ -98,9 +73,9 @@ public class Tile implements Serializable {
 			return false;
 		}
 		Tile other = (Tile) obj;
-		if (this.x != other.x) {
+		if (this.tileX != other.tileX) {
 			return false;
-		} else if (this.y != other.y) {
+		} else if (this.tileY != other.tileY) {
 			return false;
 		} else if (this.zoomLevel != other.zoomLevel) {
 			return false;
@@ -108,25 +83,68 @@ public class Tile implements Serializable {
 		return true;
 	}
 
+	/**
+	 * @return the pixel X coordinate of the upper left corner of this tile.
+	 */
+	public long getPixelX() {
+		return this.pixelX;
+	}
+
+	/**
+	 * @return the pixel Y coordinate of the upper left corner of this tile.
+	 */
+	public long getPixelY() {
+		return this.pixelY;
+	}
+
+	/**
+	 * @return the X number of this tile.
+	 */
+	public long getTileX() {
+		return this.tileX;
+	}
+
+	/**
+	 * @return the Y number of this tile.
+	 */
+	public long getTileY() {
+		return this.tileY;
+	}
+
+	/**
+	 * @return the Zoom level of this tile.
+	 */
+	public byte getZoomLevel() {
+		return this.zoomLevel;
+	}
+
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.hashCodeValue;
 	}
 
 	@Override
 	public String toString() {
-		return this.zoomLevel + "/" + this.x + "/" + this.y;
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Tile [tileX=");
+		stringBuilder.append(this.tileX);
+		stringBuilder.append(", tileY=");
+		stringBuilder.append(this.tileY);
+		stringBuilder.append(", zoomLevel=");
+		stringBuilder.append(this.zoomLevel);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
 	}
 
 	/**
-	 * Calculates the hash value of this object.
+	 * Calculates the hash code of this object.
 	 * 
-	 * @return the hash value of this object.
+	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;
-		result = 31 * result + (int) (this.x ^ (this.x >>> 32));
-		result = 31 * result + (int) (this.y ^ (this.y >>> 32));
+		result = 31 * result + (int) (this.tileX ^ (this.tileX >>> 32));
+		result = 31 * result + (int) (this.tileY ^ (this.tileY >>> 32));
 		result = 31 * result + this.zoomLevel;
 		return result;
 	}
@@ -135,28 +153,13 @@ public class Tile implements Serializable {
 	 * Calculates the values of some transient variables.
 	 */
 	private void calculateTransientValues() {
-		this.pixelX = this.x * TILE_SIZE;
-		this.pixelY = this.y * TILE_SIZE;
-		this.hashCode = calculateHashCode();
+		this.pixelX = this.tileX * TILE_SIZE;
+		this.pixelY = this.tileY * TILE_SIZE;
+		this.hashCodeValue = calculateHashCode();
 	}
 
-	private void readObject(ObjectInputStream objectInputStream) throws IOException,
-			ClassNotFoundException {
+	private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
 		objectInputStream.defaultReadObject();
 		calculateTransientValues();
-	}
-
-	/**
-	 * Calculates the bounding box of this tile.
-	 * 
-	 * @return the bounding box of this tile.
-	 */
-	Rect getBoundingBox() {
-		return new Rect(
-				(int) (MercatorProjection.pixelXToLongitude(this.pixelX, this.zoomLevel) * 1000000),
-				(int) (MercatorProjection.pixelYToLatitude(this.pixelY, this.zoomLevel) * 1000000),
-				(int) (MercatorProjection.pixelXToLongitude(this.pixelX + TILE_SIZE,
-						this.zoomLevel) * 1000000), (int) (MercatorProjection.pixelYToLatitude(
-						this.pixelY + TILE_SIZE, this.zoomLevel) * 1000000));
 	}
 }

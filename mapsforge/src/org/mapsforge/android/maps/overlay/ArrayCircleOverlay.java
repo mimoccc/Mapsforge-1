@@ -26,7 +26,7 @@ import android.graphics.Paint;
  * OverlayCircles} without individual paints can be defined via the constructor.
  */
 public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
-	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+	private static final int INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayCircleOverlay";
 
 	private final List<OverlayCircle> overlayCircles;
@@ -41,7 +41,7 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	 */
 	public ArrayCircleOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		super(defaultPaintFill, defaultPaintOutline);
-		this.overlayCircles = new ArrayList<OverlayCircle>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.overlayCircles = new ArrayList<OverlayCircle>(INITIAL_CAPACITY);
 	}
 
 	/**
@@ -106,12 +106,12 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	}
 
 	@Override
-	protected OverlayCircle createCircle(int i) {
+	protected OverlayCircle createCircle(int index) {
 		synchronized (this.overlayCircles) {
-			if (i >= this.overlayCircles.size()) {
+			if (index >= this.overlayCircles.size()) {
 				return null;
 			}
-			return this.overlayCircles.get(i);
+			return this.overlayCircles.get(index);
 		}
 	}
 }

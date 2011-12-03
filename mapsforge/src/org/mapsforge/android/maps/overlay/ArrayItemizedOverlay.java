@@ -26,7 +26,7 @@ import android.graphics.drawable.Drawable;
  * OverlayItems} without an individual marker can be defined via the constructor.
  */
 public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
-	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+	private static final int INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayItemizedOverlay";
 
 	private final List<OverlayItem> overlayItems;
@@ -54,7 +54,7 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	public ArrayItemizedOverlay(Drawable defaultMarker, boolean alignMarker) {
 		super(defaultMarker != null && alignMarker ? ItemizedOverlay.boundCenterBottom(defaultMarker)
 				: defaultMarker);
-		this.overlayItems = new ArrayList<OverlayItem>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.overlayItems = new ArrayList<OverlayItem>(INITIAL_CAPACITY);
 	}
 
 	/**
@@ -119,12 +119,12 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	@Override
-	protected OverlayItem createItem(int i) {
+	protected OverlayItem createItem(int index) {
 		synchronized (this.overlayItems) {
-			if (i >= this.overlayItems.size()) {
+			if (index >= this.overlayItems.size()) {
 				return null;
 			}
-			return this.overlayItems.get(i);
+			return this.overlayItems.get(index);
 		}
 	}
 }

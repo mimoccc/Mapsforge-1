@@ -20,14 +20,14 @@ import android.graphics.Paint;
 import android.graphics.Point;
 
 /**
- * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering parameters
- * like color, stroke width, pattern and transparency can be configured via two {@link Paint} objects.
- * Each way is drawn twice - once with each paint object - to allow for different outlines and fillings.
- * The drawing quality can be improved by enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
+ * OverlayWay holds all parameters of a single way on a {@link WayOverlay}. All rendering parameters like color,
+ * stroke width, pattern and transparency can be configured via two {@link Paint} objects. Each way is drawn
+ * twice - once with each paint object - to allow for different outlines and fillings. The drawing quality can
+ * be improved by enabling {@link Paint#setAntiAlias(boolean) anti-aliasing}.
  * <p>
- * The way data is represented as a two-dimensional array in order to support multi-polygons. A
- * multi-polygon consists of several polygons and can for example be used to draw a polygon with holes.
- * Each array element on the first level stores on the second level the coordinates of one polygon.
+ * The way data is represented as a two-dimensional array in order to support multi-polygons. A multi-polygon
+ * consists of several polygons and can for example be used to draw a polygon with holes. Each array element on
+ * the first level stores on the second level the coordinates of one polygon.
  */
 public class OverlayWay {
 	/**
@@ -106,8 +106,7 @@ public class OverlayWay {
 	 * Constructs a new OverlayWay.
 	 */
 	public OverlayWay() {
-		this.cachedWayPositions = new Point[0][0];
-		this.cachedZoomLevel = Byte.MIN_VALUE;
+		this(null, null, null);
 	}
 
 	/**
@@ -119,9 +118,7 @@ public class OverlayWay {
 	 *             if the way nodes contain at least one null element.
 	 */
 	public OverlayWay(GeoPoint[][] wayNodes) {
-		this.cachedWayPositions = new Point[0][0];
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setWayData(wayNodes);
+		this(wayNodes, null, null);
 	}
 
 	/**
@@ -139,8 +136,8 @@ public class OverlayWay {
 	public OverlayWay(GeoPoint[][] wayNodes, Paint paintFill, Paint paintOutline) {
 		this.cachedWayPositions = new Point[0][0];
 		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setWayData(wayNodes);
-		setPaint(paintFill, paintOutline);
+		setWayNodesInternal(wayNodes);
+		setPaintInternal(paintFill, paintOutline);
 	}
 
 	/**
@@ -154,17 +151,13 @@ public class OverlayWay {
 	 *             if the way nodes contain at least one null element.
 	 */
 	public OverlayWay(Paint paintFill, Paint paintOutline) {
-		this.cachedWayPositions = new Point[0][0];
-		this.cachedZoomLevel = Byte.MIN_VALUE;
-		setPaint(paintFill, paintOutline);
+		this(null, paintFill, paintOutline);
 	}
 
 	/**
-	 * Returns a copy of the way nodes of this way.
-	 * 
 	 * @return a copy of the way nodes of this way.
 	 */
-	public synchronized GeoPoint[][] getWayData() {
+	public synchronized GeoPoint[][] getWayNodes() {
 		return this.wayNodes.clone();
 	}
 
@@ -179,25 +172,12 @@ public class OverlayWay {
 	 *            the paint which will be used to draw the way outline (may be null).
 	 */
 	public synchronized void setPaint(Paint paintFill, Paint paintOutline) {
-		this.paintFill = paintFill;
-		this.paintOutline = paintOutline;
-		this.hasPaint = paintFill != null || paintOutline != null;
+		setPaintInternal(paintFill, paintOutline);
 	}
 
-	/**
-	 * Sets the way nodes of this way.
-	 * <p>
-	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
-	 * 
-	 * @param wayNodes
-	 *            the geographical coordinates of the way nodes, must not contain null elements.
-	 * @throws IllegalArgumentException
-	 *             if the way nodes contain at least one null element.
-	 */
-	public synchronized void setWayData(GeoPoint[][] wayNodes) {
-		// check for illegal null elements
+	private void setWayNodesInternal(GeoPoint[][] wayNodes) {
 		if (wayNodes == null) {
-			this.wayNodes = null;
+			this.wayNodes = wayNodes;
 		} else if (containsNullElements(wayNodes)) {
 			throw new IllegalArgumentException("way nodes must not contain null elements");
 		} else {
@@ -213,5 +193,25 @@ public class OverlayWay {
 			}
 		}
 		this.cachedZoomLevel = Byte.MIN_VALUE;
+	}
+
+	/**
+	 * Sets the way nodes of this way.
+	 * <p>
+	 * Changes might not become visible until {@link Overlay#requestRedraw()} is called.
+	 * 
+	 * @param wayNodes
+	 *            the geographical coordinates of the way nodes, must not contain null elements.
+	 * @throws IllegalArgumentException
+	 *             if the way nodes contain at least one null element.
+	 */
+	public synchronized void setWayNodes(GeoPoint[][] wayNodes) {
+		setWayNodesInternal(wayNodes);
+	}
+
+	private void setPaintInternal(Paint paintFill, Paint paintOutline) {
+		this.paintFill = paintFill;
+		this.paintOutline = paintOutline;
+		this.hasPaint = paintFill != null || paintOutline != null;
 	}
 }

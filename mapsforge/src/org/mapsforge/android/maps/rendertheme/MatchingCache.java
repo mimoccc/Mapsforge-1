@@ -18,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.mapsforge.android.maps.rendertheme.renderinstruction.RenderInstruction;
+
 /**
  * A cache with a fixed size and LRU policy to speed up matching of ways against the render theme.
  * <p>

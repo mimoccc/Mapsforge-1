@@ -32,7 +32,7 @@ class SingleKeyMatcher implements AttributeMatcher {
 	@Override
 	public boolean matches(List<Tag> tags) {
 		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.key.equals(tags.get(i).key)) {
+			if (this.key.equals(tags.get(i).getKey())) {
 				return true;
 			}
 		}

@@ -15,8 +15,7 @@
 package org.mapsforge.android.maps.mapdatabase;
 
 import org.mapsforge.android.maps.GeoPoint;
-
-import android.graphics.Rect;
+import org.mapsforge.android.maps.rendertheme.Tag;
 
 /**
  * Contains the immutable metadata of a map file.
@@ -24,33 +23,39 @@ import android.graphics.Rect;
  * @see MapDatabase#getMapFileInfo()
  */
 public class MapFileInfo {
-	private final String commentText;
-	private final boolean debugFile;
-	private final long fileSize;
-	private final int fileVersion;
-	private final String languagePreference;
-	private final Rect mapBoundary;
-	private final GeoPoint mapCenter;
-	private final long mapDate;
-	private final String projectionName;
-	private final GeoPoint startPosition;
+	final String commentText;
+	final boolean debugFile;
+	final long fileSize;
+	final int fileVersion;
+	final String languagePreference;
+	final BoundingBox boundingBox;
+	final GeoPoint mapCenter;
+	final long mapDate;
+	final byte numberOfSubFiles;
+	final Tag[] poiTags;
+	final String projectionName;
+	final GeoPoint startPosition;
+	final int tilePixelSize;
+	final Tag[] wayTags;
 
 	MapFileInfo(MapFileInfoBuilder mapFileInfoBuilder) {
-		this.commentText = mapFileInfoBuilder.getCommentText();
-		this.debugFile = mapFileInfoBuilder.isDebugFile();
-		this.fileSize = mapFileInfoBuilder.getFileSize();
-		this.fileVersion = mapFileInfoBuilder.getFileVersion();
-		this.languagePreference = mapFileInfoBuilder.getLanguagePreference();
-		this.mapBoundary = mapFileInfoBuilder.getMapBoundary();
-		this.mapCenter = new GeoPoint(this.mapBoundary.centerY(), this.mapBoundary.centerX());
-		this.mapDate = mapFileInfoBuilder.getMapDate();
-		this.projectionName = mapFileInfoBuilder.getProjectionName();
-		this.startPosition = mapFileInfoBuilder.getStartPosition();
+		this.commentText = mapFileInfoBuilder.commentText;
+		this.debugFile = mapFileInfoBuilder.isDebugFile;
+		this.fileSize = mapFileInfoBuilder.fileSize;
+		this.fileVersion = mapFileInfoBuilder.fileVersion;
+		this.languagePreference = mapFileInfoBuilder.languagePreference;
+		this.boundingBox = mapFileInfoBuilder.boundingBox;
+		this.mapCenter = this.boundingBox.getCenterPoint();
+		this.mapDate = mapFileInfoBuilder.mapDate;
+		this.numberOfSubFiles = mapFileInfoBuilder.numberOfSubFiles;
+		this.poiTags = mapFileInfoBuilder.poiTags;
+		this.projectionName = mapFileInfoBuilder.projectionName;
+		this.startPosition = mapFileInfoBuilder.startPosition;
+		this.tilePixelSize = mapFileInfoBuilder.tilePixelSize;
+		this.wayTags = mapFileInfoBuilder.wayTags;
 	}
 
 	/**
-	 * Returns the comment text of the map file (may be null).
-	 * 
 	 * @return the comment text of the map file (may be null).
 	 */
 	public String getCommentText() {
@@ -58,8 +63,6 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Returns the size of the map file, measured in bytes.
-	 * 
 	 * @return the size of the map file, measured in bytes.
 	 */
 	public long getFileSize() {
@@ -67,18 +70,13 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Returns the file version number of the map file.
-	 * 
 	 * @return the file version number of the map file.
-	 * @see MapDatabase#SUPPORTED_FILE_VERSION
 	 */
 	public int getFileVersion() {
 		return this.fileVersion;
 	}
 
 	/**
-	 * Returns the preferred language for names as defined in ISO 3166-1 (may be null).
-	 * 
 	 * @return the preferred language for names as defined in ISO 3166-1 (may be null).
 	 */
 	public String getLanguagePreference() {
@@ -86,17 +84,13 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Returns the area coordinates of the map file in microdegrees.
-	 * 
-	 * @return the area coordinates of the map file in microdegrees.
+	 * @return the bounding box of the map file.
 	 */
-	public Rect getMapBoundary() {
-		return this.mapBoundary;
+	public BoundingBox getBoundingBox() {
+		return this.boundingBox;
 	}
 
 	/**
-	 * Returns the center point of the map file.
-	 * 
 	 * @return the center point of the map file.
 	 */
 	public GeoPoint getMapCenter() {
@@ -104,8 +98,6 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Returns the date of the map data in milliseconds since January 1, 1970.
-	 * 
 	 * @return the date of the map data in milliseconds since January 1, 1970.
 	 */
 	public long getMapDate() {
@@ -113,17 +105,27 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Returns the projection name of the map file.
-	 * 
-	 * @return the projection name of the map file.
+	 * @return the number of sub-files in the map file.
 	 */
-	public String getProjection() {
+	public byte getNumberOfSubFiles() {
+		return this.numberOfSubFiles;
+	}
+
+	/**
+	 * @return the POI tags.
+	 */
+	public Tag[] getPoiTags() {
+		return this.poiTags.clone();
+	}
+
+	/**
+	 * @return the name of the projection used in the map file.
+	 */
+	public String getProjectionName() {
 		return this.projectionName;
 	}
 
 	/**
-	 * Returns the map start position from the file header (may be null).
-	 * 
 	 * @return the map start position from the file header (may be null).
 	 */
 	public GeoPoint getStartPosition() {
@@ -131,8 +133,20 @@ public class MapFileInfo {
 	}
 
 	/**
-	 * Informs about the existence of debug information in the map file.
-	 * 
+	 * @return the size of the tiles in pixels.
+	 */
+	public int getTilePixelSize() {
+		return this.tilePixelSize;
+	}
+
+	/**
+	 * @return the way tags.
+	 */
+	public Tag[] getWayTags() {
+		return this.wayTags.clone();
+	}
+
+	/**
 	 * @return true if the map file includes debug information, false otherwise.
 	 */
 	public boolean isDebugFile() {

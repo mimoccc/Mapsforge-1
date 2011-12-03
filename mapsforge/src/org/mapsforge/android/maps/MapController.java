@@ -18,31 +18,31 @@ import android.view.KeyEvent;
 import android.view.View;
 
 /**
- * A MapController is used to programmatically modify the position and zoom level of a map. Each
- * MapController is assigned to a single MapView instance. To retrieve a MapController for a given
- * MapView, call the {@link MapView#getController()} method.
+ * A MapController is used to programmatically modify the position and zoom level of a MapView. Each
+ * MapController is assigned to a single MapView instance. To retrieve a MapController for a given MapView, use
+ * the {@link MapView#getController()} method.
  */
-public final class MapController implements android.view.View.OnKeyListener {
+public final class MapController implements View.OnKeyListener {
 	private final MapView mapView;
 
 	/**
-	 * Constructs a new MapController for interacting with the given MapView.
+	 * Constructs a new MapController to modify the given MapView.
 	 * 
 	 * @param mapView
-	 *            the MapView that should be controlled with this MapController.
+	 *            the MapView which should be controlled by this MapController.
 	 */
 	MapController(MapView mapView) {
 		this.mapView = mapView;
 	}
 
 	@Override
-	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		if (event.getAction() == KeyEvent.ACTION_DOWN) {
+	public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
+		if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
 			// forward the event to the MapView
-			return this.mapView.onKeyDown(keyCode, event);
-		} else if (event.getAction() == KeyEvent.ACTION_UP) {
+			return this.mapView.onKeyDown(keyCode, keyEvent);
+		} else if (keyEvent.getAction() == KeyEvent.ACTION_UP) {
 			// forward the event to the MapView
-			return this.mapView.onKeyUp(keyCode, event);
+			return this.mapView.onKeyUp(keyCode, keyEvent);
 		}
 		return false;
 	}
@@ -50,24 +50,23 @@ public final class MapController implements android.view.View.OnKeyListener {
 	/**
 	 * Sets the center of the MapView without an animation to the given point.
 	 * 
-	 * @param point
+	 * @param geoPoint
 	 *            the new center point of the map.
 	 */
-	public void setCenter(GeoPoint point) {
-		this.mapView.setCenter(point);
+	public void setCenter(GeoPoint geoPoint) {
+		this.mapView.setCenter(geoPoint);
 	}
 
 	/**
 	 * Sets the zoom level of the MapView.
 	 * 
 	 * @param zoomLevel
-	 *            the new zoom level. This value will be limited by the maximum and minimum possible
-	 *            zoom level.
+	 *            the new zoom level, will be limited by the maximum and minimum possible zoom level.
 	 * @return the new zoom level.
 	 */
 	public int setZoom(int zoomLevel) {
-		this.mapView.zoom((byte) (zoomLevel - this.mapView.getZoomLevel()), 1);
-		return this.mapView.getZoomLevel();
+		this.mapView.zoom((byte) (zoomLevel - this.mapView.getMapPosition().getZoomLevel()), 1);
+		return this.mapView.getMapPosition().getZoomLevel();
 	}
 
 	/**

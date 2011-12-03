@@ -22,12 +22,12 @@ import android.graphics.Path;
 import android.graphics.Point;
 
 /**
- * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class defines
- * some methods to access the backing data structure of deriving subclasses.
+ * WayOverlay is an abstract base class to display {@link OverlayWay OverlayWays}. The class defines some
+ * methods to access the backing data structure of deriving subclasses.
  * <p>
- * The overlay may be used to show additional ways such as calculated routes. Closed polygons, for
- * example buildings or areas, are also supported. A way node sequence is considered as a closed polygon
- * if the first and the last way node are equal.
+ * The overlay may be used to show additional ways such as calculated routes. Closed polygons, for example
+ * buildings or areas, are also supported. A way node sequence is considered as a closed polygon if the first
+ * and the last way node are equal.
  * 
  * @param <Way>
  *            the type of ways handled by this overlay.
@@ -57,20 +57,50 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 	}
 
 	/**
-	 * Returns the numbers of ways in this overlay.
-	 * 
 	 * @return the numbers of ways in this overlay.
 	 */
 	public abstract int size();
 
+	private void assemblePath(Point drawPosition, Way overlayWay) {
+		this.path.reset();
+		for (int i = 0; i < overlayWay.cachedWayPositions.length; ++i) {
+			this.path.moveTo(overlayWay.cachedWayPositions[i][0].x - drawPosition.x,
+					overlayWay.cachedWayPositions[i][0].y - drawPosition.y);
+			for (int j = 1; j < overlayWay.cachedWayPositions[i].length; ++j) {
+				this.path.lineTo(overlayWay.cachedWayPositions[i][j].x - drawPosition.x,
+						overlayWay.cachedWayPositions[i][j].y - drawPosition.y);
+			}
+		}
+	}
+
+	private void drawPathOnCanvas(Canvas canvas, Way overlayWay) {
+		if (overlayWay.hasPaint) {
+			// use the paints from the current way
+			if (overlayWay.paintOutline != null) {
+				canvas.drawPath(this.path, overlayWay.paintOutline);
+			}
+			if (overlayWay.paintFill != null) {
+				canvas.drawPath(this.path, overlayWay.paintFill);
+			}
+		} else {
+			// use the default paint objects
+			if (this.defaultPaintOutline != null) {
+				canvas.drawPath(this.path, this.defaultPaintOutline);
+			}
+			if (this.defaultPaintFill != null) {
+				canvas.drawPath(this.path, this.defaultPaintFill);
+			}
+		}
+	}
+
 	/**
 	 * Creates a way in this overlay.
 	 * 
-	 * @param i
+	 * @param index
 	 *            the index of the way.
 	 * @return the way.
 	 */
-	protected abstract Way createWay(int i);
+	protected abstract Way createWay(int index);
 
 	@Override
 	protected void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
@@ -98,43 +128,15 @@ public abstract class WayOverlay<Way extends OverlayWay> extends Overlay {
 				if (drawZoomLevel != overlayWay.cachedZoomLevel) {
 					for (int i = 0; i < overlayWay.cachedWayPositions.length; ++i) {
 						for (int j = 0; j < overlayWay.cachedWayPositions[i].length; ++j) {
-							overlayWay.cachedWayPositions[i][j] = projection.toPoint(
-									overlayWay.wayNodes[i][j], overlayWay.cachedWayPositions[i][j],
-									drawZoomLevel);
+							overlayWay.cachedWayPositions[i][j] = projection.toPoint(overlayWay.wayNodes[i][j],
+									overlayWay.cachedWayPositions[i][j], drawZoomLevel);
 						}
 					}
 					overlayWay.cachedZoomLevel = drawZoomLevel;
 				}
 
-				// assemble the path
-				this.path.reset();
-				for (int i = 0; i < overlayWay.cachedWayPositions.length; ++i) {
-					this.path.moveTo(overlayWay.cachedWayPositions[i][0].x - drawPosition.x,
-							overlayWay.cachedWayPositions[i][0].y - drawPosition.y);
-					for (int j = 1; j < overlayWay.cachedWayPositions[i].length; ++j) {
-						this.path.lineTo(overlayWay.cachedWayPositions[i][j].x - drawPosition.x,
-								overlayWay.cachedWayPositions[i][j].y - drawPosition.y);
-					}
-				}
-
-				// draw the path on the canvas
-				if (overlayWay.hasPaint) {
-					// use the paints from the current way
-					if (overlayWay.paintOutline != null) {
-						canvas.drawPath(this.path, overlayWay.paintOutline);
-					}
-					if (overlayWay.paintFill != null) {
-						canvas.drawPath(this.path, overlayWay.paintFill);
-					}
-				} else {
-					// use the default paint objects
-					if (this.defaultPaintOutline != null) {
-						canvas.drawPath(this.path, this.defaultPaintOutline);
-					}
-					if (this.defaultPaintFill != null) {
-						canvas.drawPath(this.path, this.defaultPaintFill);
-					}
-				}
+				assemblePath(drawPosition, overlayWay);
+				drawPathOnCanvas(canvas, overlayWay);
 			}
 		}
 	}

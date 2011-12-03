@@ -18,7 +18,7 @@ import java.util.List;
 
 class MatchingCacheKey {
 	private final Closed closed;
-	private final int hashCode;
+	private final int hashCodeValue;
 	private final List<Tag> tags;
 	private final byte zoomLevel;
 
@@ -26,7 +26,7 @@ class MatchingCacheKey {
 		this.tags = tags;
 		this.zoomLevel = zoomLevel;
 		this.closed = closed;
-		this.hashCode = calculateHashCode();
+		this.hashCodeValue = calculateHashCode();
 	}
 
 	@Override
@@ -53,13 +53,13 @@ class MatchingCacheKey {
 
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.hashCodeValue;
 	}
 
 	/**
-	 * Calculates the hash value of this object.
+	 * Calculates the hash code of this object.
 	 * 
-	 * @return the hash value of this object.
+	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;

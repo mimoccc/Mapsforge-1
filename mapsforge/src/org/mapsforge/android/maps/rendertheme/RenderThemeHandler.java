@@ -15,23 +15,69 @@
 package org.mapsforge.android.maps.rendertheme;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Stack;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.mapsforge.android.maps.Logger;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.Area;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.Caption;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.Circle;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.Line;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.LineSymbol;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.PathText;
+import org.mapsforge.android.maps.rendertheme.renderinstruction.Symbol;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * SAX2 handler to parse XML render theme files.
  */
 public class RenderThemeHandler extends DefaultHandler {
+
 	private static enum Element {
 		RENDERING_INSTRUCTION, RULE, RULES;
 	}
 
-	static void logUnknownAttribute(String element, String name, String value, int attributeIndex) {
+	/**
+	 * @param inputStream
+	 *            an input stream containing valid render theme XML data.
+	 * @return a new RenderTheme which is created by parsing the XML data from the input stream.
+	 * @throws SAXException
+	 *             if an error occurs while parsing the render theme XML.
+	 * @throws ParserConfigurationException
+	 *             if an error occurs while creating the XML parser.
+	 * @throws IOException
+	 *             if an I/O error occurs while reading from the input stream.
+	 */
+	public static RenderTheme getRenderTheme(InputStream inputStream) throws SAXException,
+			ParserConfigurationException, IOException {
+		RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
+		XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+		xmlReader.setContentHandler(renderThemeHandler);
+		xmlReader.parse(new InputSource(inputStream));
+		return renderThemeHandler.renderTheme;
+	}
+
+	/**
+	 * Logs the given information about an unknown XML attribute.
+	 * 
+	 * @param element
+	 *            the XML element name.
+	 * @param name
+	 *            the XML attribute name.
+	 * @param value
+	 *            the XML attribute value.
+	 * @param attributeIndex
+	 *            the XML attribute index position.
+	 */
+	public static void logUnknownAttribute(String element, String name, String value, int attributeIndex) {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("unknown attribute in element ");
 		stringBuilder.append(element);
@@ -68,7 +114,6 @@ public class RenderThemeHandler extends DefaultHandler {
 			this.ruleStack.pop();
 			if (this.ruleStack.empty()) {
 				this.renderTheme.addRule(this.currentRule);
-				this.currentRule = null;
 			} else {
 				this.currentRule = this.ruleStack.peek();
 			}
@@ -76,17 +121,8 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	@Override
-	public void error(SAXParseException e) {
-		Logger.exception(e);
-	}
-
-	/**
-	 * Returns the RenderTheme which has been parsed from the XML file.
-	 * 
-	 * @return the RenderTheme.
-	 */
-	public RenderTheme getRenderTheme() {
-		return this.renderTheme;
+	public void error(SAXParseException exception) {
+		Logger.exception(exception);
 	}
 
 	@Override
@@ -101,7 +137,7 @@ public class RenderThemeHandler extends DefaultHandler {
 			else if ("rule".equals(localName)) {
 				checkState(localName, Element.RULE);
 				Rule rule = Rule.create(localName, attributes, this.ruleStack);
-				if (this.currentRule != null) {
+				if (!this.ruleStack.empty()) {
 					this.currentRule.addSubRule(rule);
 				}
 				this.currentRule = rule;
@@ -161,8 +197,8 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	@Override
-	public void warning(SAXParseException e) {
-		Logger.exception(e);
+	public void warning(SAXParseException exception) {
+		Logger.exception(exception);
 	}
 
 	private void checkState(String elementName, Element element) throws SAXException {

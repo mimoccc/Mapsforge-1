@@ -18,57 +18,57 @@ import android.graphics.Bitmap;
 import android.graphics.Paint;
 
 /**
- * Callback methods which can be triggered by a {@link RenderInstruction}.
+ * Callback methods for rendering areas, ways and points of interest (POIs).
  */
 public interface RenderCallback {
 	/**
-	 * Renders the current area with the given parameters.
+	 * Renders an area with the given parameters.
 	 * 
 	 * @param paint
 	 *            the paint to be used for rendering the area.
 	 * @param level
 	 *            the drawing level on which the area should be rendered.
 	 */
-	void addArea(Paint paint, int level);
+	void renderArea(Paint paint, int level);
 
 	/**
-	 * Renders the given caption for the current area.
+	 * Renders an area caption with the given text.
 	 * 
 	 * @param caption
 	 *            the text to be rendered.
-	 * @param dy
-	 *            vertical offset.
+	 * @param verticalOffset
+	 *            the vertical offset of the caption.
 	 * @param paint
-	 *            the paint to be used for rendering the name.
+	 *            the paint to be used for rendering the text.
 	 * @param stroke
-	 *            an optional paint for the name casing (may be null).
+	 *            an optional paint for the text casing (may be null).
 	 */
-	void addAreaCaption(String caption, float dy, Paint paint, Paint stroke);
+	void renderAreaCaption(String caption, float verticalOffset, Paint paint, Paint stroke);
 
 	/**
-	 * Renders the given symbol at the center position of the current area.
+	 * Renders an area symbol with the given bitmap.
 	 * 
 	 * @param symbol
 	 *            the symbol to be rendered.
 	 */
-	void addAreaSymbol(Bitmap symbol);
+	void renderAreaSymbol(Bitmap symbol);
 
 	/**
-	 * Renders the given caption for the current node.
+	 * Renders a point of interest caption with the given text.
 	 * 
 	 * @param caption
 	 *            the text to be rendered.
-	 * @param dy
-	 *            vertical offset.
+	 * @param verticalOffset
+	 *            the vertical offset of the caption.
 	 * @param paint
-	 *            the paint to be used for rendering the name.
+	 *            the paint to be used for rendering the text.
 	 * @param stroke
-	 *            an optional paint for the name casing (may be null).
+	 *            an optional paint for the text casing (may be null).
 	 */
-	void addNodeCaption(String caption, float dy, Paint paint, Paint stroke);
+	void renderPointOfInterestCaption(String caption, float verticalOffset, Paint paint, Paint stroke);
 
 	/**
-	 * Renders a circle with the given parameters at the position of the current node.
+	 * Renders a point of interest circle with the given parameters.
 	 * 
 	 * @param radius
 	 *            the radius of the circle.
@@ -77,28 +77,28 @@ public interface RenderCallback {
 	 * @param level
 	 *            the drawing level on which the circle should be rendered.
 	 */
-	void addNodeCircle(float radius, Paint fill, int level);
+	void renderPointOfInterestCircle(float radius, Paint fill, int level);
 
 	/**
-	 * Renders the given symbol at the position of the current node.
+	 * Renders a point of interest symbol with the given bitmap.
 	 * 
 	 * @param symbol
 	 *            the symbol to be rendered.
 	 */
-	void addNodeSymbol(Bitmap symbol);
+	void renderPointOfInterestSymbol(Bitmap symbol);
 
 	/**
-	 * Renders the current way with the given parameters.
+	 * Renders a way with the given parameters.
 	 * 
 	 * @param paint
 	 *            the paint to be used for rendering the way.
 	 * @param level
 	 *            the drawing level on which the way should be rendered.
 	 */
-	void addWay(Paint paint, int level);
+	void renderWay(Paint paint, int level);
 
 	/**
-	 * Renders the given symbol along the current way.
+	 * Renders a way with the given symbol along the way path.
 	 * 
 	 * @param symbol
 	 *            the symbol to be rendered.
@@ -107,17 +107,17 @@ public interface RenderCallback {
 	 * @param repeat
 	 *            true if the symbol should be repeated, false otherwise.
 	 */
-	void addWaySymbol(Bitmap symbol, boolean alignCenter, boolean repeat);
+	void renderWaySymbol(Bitmap symbol, boolean alignCenter, boolean repeat);
 
 	/**
-	 * Renders the given text along the current way.
+	 * Renders a way with the given text along the way path.
 	 * 
 	 * @param text
 	 *            the text to be rendered.
 	 * @param paint
-	 *            the paint to be used for rendering the name.
+	 *            the paint to be used for rendering the text.
 	 * @param stroke
-	 *            an optional paint for the name casing (may be null).
+	 *            an optional paint for the text casing (may be null).
 	 */
-	void addWayText(String text, Paint paint, Paint stroke);
+	void renderWayText(String text, Paint paint, Paint stroke);
 }

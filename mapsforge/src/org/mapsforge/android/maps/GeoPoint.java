@@ -15,19 +15,19 @@
 package org.mapsforge.android.maps;
 
 /**
- * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values are
- * internally stored as integer numbers.
+ * A GeoPoint represents an immutable pair of latitude and longitude coordinates. Both values are internally
+ * stored as integer numbers.
  */
 public class GeoPoint implements Comparable<GeoPoint> {
 	/**
 	 * Conversion factor from degrees to microdegrees.
 	 */
-	private static final int CONVERSION_FACTOR = 1000000;
+	private static final double CONVERSION_FACTOR = 1000000d;
 
 	/**
-	 * Stores the hash value of this object.
+	 * Stores the hash code of this object.
 	 */
-	private final int hashCode;
+	private final int hashCodeValue;
 
 	/**
 	 * Stores the latitude value in microdegrees.
@@ -43,33 +43,31 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	 * Constructs a new GeoPoint with the given latitude and longitude, measured in degrees.
 	 * 
 	 * @param latitude
-	 *            the latitude of the point. This will be limited by the minimum and maximum possible
-	 *            latitude value.
+	 *            the latitude of the point, will be limited to the possible latitude range.
 	 * @param longitude
-	 *            the longitude of the point. This will be limited by the minimum and maximum possible
-	 *            longitude value.
+	 *            the longitude of the point, will be limited to the possible longitude range.
 	 */
 	public GeoPoint(double latitude, double longitude) {
-		this.latitudeE6 = clipLatitude((int) (latitude * CONVERSION_FACTOR));
-		this.longitudeE6 = clipLongitude((int) (longitude * CONVERSION_FACTOR));
-		this.hashCode = calculateHashCode();
+		double limitLatitude = MercatorProjection.limitLatitude(latitude);
+		this.latitudeE6 = (int) (limitLatitude * CONVERSION_FACTOR);
+
+		double limitLongitude = MercatorProjection.limitLongitude(longitude);
+		this.longitudeE6 = (int) (limitLongitude * CONVERSION_FACTOR);
+
+		this.hashCodeValue = calculateHashCode();
 	}
 
 	/**
-	 * Constructs a new GeoPoint with the given latitude and longitude, measured in microdegrees
-	 * (degrees * 10^6).
+	 * Constructs a new GeoPoint with the given latitude and longitude, measured in microdegrees (degrees *
+	 * 10^6).
 	 * 
 	 * @param latitudeE6
-	 *            the latitude of the point in microdegrees. This will be limited by the minimum and
-	 *            maximum possible latitude value.
+	 *            the latitude of the point in microdegrees, will be limited to the possible latitude range.
 	 * @param longitudeE6
-	 *            the longitude of the point in microdegrees. This will be limited by the minimum and
-	 *            maximum possible longitude value.
+	 *            the longitude of the point in microdegrees, will be limited to the possible longitude range.
 	 */
 	public GeoPoint(int latitudeE6, int longitudeE6) {
-		this.latitudeE6 = clipLatitude(latitudeE6);
-		this.longitudeE6 = clipLongitude(longitudeE6);
-		this.hashCode = calculateHashCode();
+		this(latitudeE6 / CONVERSION_FACTOR, longitudeE6 / CONVERSION_FACTOR);
 	}
 
 	@Override
@@ -103,36 +101,28 @@ public class GeoPoint implements Comparable<GeoPoint> {
 	}
 
 	/**
-	 * Returns the latitude value of this GeoPoint in degrees.
-	 * 
-	 * @return the latitude value in degrees.
+	 * @return the latitude value of this GeoPoint in degrees.
 	 */
 	public double getLatitude() {
-		return this.latitudeE6 / (double) CONVERSION_FACTOR;
+		return this.latitudeE6 / CONVERSION_FACTOR;
 	}
 
 	/**
-	 * Returns the latitude value of this GeoPoint in microdegrees (degrees * 10^6).
-	 * 
-	 * @return the latitude value in microdegrees.
+	 * @return the latitude value of this GeoPoint in microdegrees (degrees * 10^6).
 	 */
 	public int getLatitudeE6() {
 		return this.latitudeE6;
 	}
 
 	/**
-	 * Returns the longitude value of this GeoPoint in degrees.
-	 * 
-	 * @return the longitude value in degrees.
+	 * @return the longitude value of this GeoPoint in degrees.
 	 */
 	public double getLongitude() {
-		return this.longitudeE6 / (double) CONVERSION_FACTOR;
+		return this.longitudeE6 / CONVERSION_FACTOR;
 	}
 
 	/**
-	 * Returns the longitude value of this GeoPoint in microdegrees (degrees * 10^6).
-	 * 
-	 * @return the longitude value in microdegrees.
+	 * @return the longitude value of this GeoPoint in microdegrees (degrees * 10^6).
 	 */
 	public int getLongitudeE6() {
 		return this.longitudeE6;
@@ -140,43 +130,29 @@ public class GeoPoint implements Comparable<GeoPoint> {
 
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.hashCodeValue;
 	}
 
 	@Override
 	public String toString() {
-		return this.latitudeE6 + "," + this.longitudeE6;
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("GeoPoint [latitudeE6=");
+		stringBuilder.append(this.latitudeE6);
+		stringBuilder.append(", longitudeE6=");
+		stringBuilder.append(this.longitudeE6);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
 	}
 
 	/**
-	 * Calculates the hash value of this object.
+	 * Calculates the hash code of this object.
 	 * 
-	 * @return the hash value of this object.
+	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;
 		result = 31 * result + this.latitudeE6;
 		result = 31 * result + this.longitudeE6;
 		return result;
-	}
-
-	private static int clipLatitude(int latitude) {
-		if (latitude < MapView.LATITUDE_MIN * CONVERSION_FACTOR) {
-			return (int) (MapView.LATITUDE_MIN * CONVERSION_FACTOR);
-		} else if (latitude > MapView.LATITUDE_MAX * CONVERSION_FACTOR) {
-			return (int) (MapView.LATITUDE_MAX * CONVERSION_FACTOR);
-		} else {
-			return latitude;
-		}
-	}
-
-	private static int clipLongitude(int longitude) {
-		if (longitude < MapView.LONGITUDE_MIN * CONVERSION_FACTOR) {
-			return (int) (MapView.LONGITUDE_MIN * CONVERSION_FACTOR);
-		} else if (longitude > MapView.LONGITUDE_MAX * CONVERSION_FACTOR) {
-			return (int) (MapView.LONGITUDE_MAX * CONVERSION_FACTOR);
-		} else {
-			return longitude;
-		}
 	}
 }

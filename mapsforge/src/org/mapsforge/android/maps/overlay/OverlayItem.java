@@ -20,8 +20,8 @@ import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 
 /**
- * OverlayItem holds all parameters of a single element on an {@link ItemizedOverlay}, such as position,
- * marker, title and textual description.
+ * OverlayItem holds all parameters of a single element on an {@link ItemizedOverlay}, such as position, marker,
+ * title and textual description.
  */
 public class OverlayItem {
 	/**
@@ -79,8 +79,8 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Constructs a new OverlayItem which will be drawn with the given marker. If the marker is null,
-	 * the default marker of the overlay will be drawn instead.
+	 * Constructs a new OverlayItem which will be drawn with the given marker. If the marker is null, the
+	 * default marker of the overlay will be drawn instead.
 	 * <p>
 	 * The bounds of the marker must already have been set properly, for example by calling
 	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.
@@ -103,8 +103,6 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Returns the marker used to indicate this item.
-	 * 
 	 * @return the marker used to indicate this item (may be null).
 	 */
 	public synchronized Drawable getMarker() {
@@ -112,8 +110,6 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Returns the position of this item.
-	 * 
 	 * @return the position of this item (may be null).
 	 */
 	public synchronized GeoPoint getPoint() {
@@ -121,8 +117,6 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Returns the short description of this item.
-	 * 
 	 * @return the short description of this item (may be null).
 	 */
 	public synchronized String getSnippet() {
@@ -130,8 +124,6 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Returns the title of this item.
-	 * 
 	 * @return the title of this item (may be null).
 	 */
 	public synchronized String getTitle() {
@@ -139,8 +131,8 @@ public class OverlayItem {
 	}
 
 	/**
-	 * Sets the marker that is drawn for this item. If the marker is null, the default marker of the
-	 * overlay will be drawn instead.
+	 * Sets the marker that is drawn for this item. If the marker is null, the default marker of the overlay
+	 * will be drawn instead.
 	 * <p>
 	 * The bounds of the marker must already have been set properly, for example by calling
 	 * {@link ItemizedOverlay#boundCenterBottom(Drawable)}.

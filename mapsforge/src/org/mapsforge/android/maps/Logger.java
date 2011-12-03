@@ -17,7 +17,7 @@ package org.mapsforge.android.maps;
 import android.util.Log;
 
 /**
- * Class used for logging text to the console.
+ * Thread-safe class for logging text to the Android LogCat console.
  */
 public final class Logger {
 	private static final String LOG_TAG = "osm";
@@ -28,7 +28,7 @@ public final class Logger {
 	 * @param message
 	 *            the message which should be logged.
 	 */
-	public static void debug(String message) {
+	public static synchronized void debug(String message) {
 		Log.d(LOG_TAG, Thread.currentThread().getName() + ": " + message);
 	}
 
@@ -38,21 +38,21 @@ public final class Logger {
 	 * @param exception
 	 *            the exception which should be logged.
 	 */
-	public static void exception(Exception exception) {
+	public static synchronized void exception(Exception exception) {
 		StringBuilder stringBuilder = new StringBuilder(512);
 		stringBuilder.append(exception.getClass().getName());
 		stringBuilder.append(" in thread \"");
 		stringBuilder.append(Thread.currentThread().getName());
 		stringBuilder.append("\" ");
 		stringBuilder.append(exception.toString());
-		StackTraceElement[] stack = exception.getStackTrace();
-		for (int i = 0; i < stack.length; ++i) {
-			stringBuilder.append("\n\tat ");
-			stringBuilder.append(stack[i].getMethodName());
+		StackTraceElement[] stackTraceElements = exception.getStackTrace();
+		for (int i = 0; i < stackTraceElements.length; ++i) {
+			stringBuilder.append("\n    at ");
+			stringBuilder.append(stackTraceElements[i].getMethodName());
 			stringBuilder.append('(');
-			stringBuilder.append(stack[i].getFileName());
+			stringBuilder.append(stackTraceElements[i].getFileName());
 			stringBuilder.append(':');
-			stringBuilder.append(stack[i].getLineNumber());
+			stringBuilder.append(stackTraceElements[i].getLineNumber());
 			stringBuilder.append(')');
 		}
 		Log.e(LOG_TAG, stringBuilder.toString());

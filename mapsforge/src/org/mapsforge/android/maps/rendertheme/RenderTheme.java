@@ -17,6 +17,7 @@ package org.mapsforge.android.maps.rendertheme;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mapsforge.android.maps.rendertheme.renderinstruction.RenderInstruction;
 import org.xml.sax.Attributes;
 
 import android.graphics.Color;
@@ -27,20 +28,18 @@ import android.graphics.Color;
 public class RenderTheme {
 	private static final int MATCHING_CACHE_SIZE = 512;
 
-	private static void validate(float scaleStrokeWidth, float scaleTextWidth) {
-		if (scaleStrokeWidth < 0) {
-			throw new IllegalArgumentException("scale-stroke-width must not be negative: "
-					+ scaleStrokeWidth);
-		} else if (scaleTextWidth < 0) {
-			throw new IllegalArgumentException("scale-text-width must not be negative: "
-					+ scaleTextWidth);
+	private static void validate(float baseStrokeWidth, float baseTextSize) {
+		if (baseStrokeWidth < 0) {
+			throw new IllegalArgumentException("base-stroke-width must not be negative: " + baseStrokeWidth);
+		} else if (baseTextSize < 0) {
+			throw new IllegalArgumentException("base-text-size must not be negative: " + baseTextSize);
 		}
 	}
 
 	static RenderTheme create(String elementName, Attributes attributes) {
 		int mapBackground = Color.WHITE;
-		float scaleStrokeWidth = 1;
-		float scaleTextWidth = 1;
+		float baseStrokeWidth = 1;
+		float baseTextSize = 1;
 
 		for (int i = 0; i < attributes.getLength(); ++i) {
 			String name = attributes.getLocalName(i);
@@ -50,30 +49,30 @@ public class RenderTheme {
 				continue;
 			} else if ("map-background".equals(name)) {
 				mapBackground = Color.parseColor(value);
-			} else if ("scale-stroke-width".equals(name)) {
-				scaleStrokeWidth = Float.parseFloat(value);
-			} else if ("scale-text-width".equals(name)) {
-				scaleTextWidth = Float.parseFloat(value);
+			} else if ("base-stroke-width".equals(name)) {
+				baseStrokeWidth = Float.parseFloat(value);
+			} else if ("base-text-size".equals(name)) {
+				baseTextSize = Float.parseFloat(value);
 			} else {
 				RenderThemeHandler.logUnknownAttribute(elementName, name, value, i);
 			}
 		}
 
-		validate(scaleStrokeWidth, scaleTextWidth);
-		return new RenderTheme(mapBackground, scaleStrokeWidth, scaleTextWidth);
+		validate(baseStrokeWidth, baseTextSize);
+		return new RenderTheme(mapBackground, baseStrokeWidth, baseTextSize);
 	}
 
+	private final float baseStrokeWidth;
+	private final float baseTextSize;
 	private int levels;
 	private final int mapBackground;
 	private final MatchingCache matchingCache;
 	private final ArrayList<Rule> rulesList;
-	private final float scaleStrokeWidth;
-	private final float scaleTextWidth;
 
-	RenderTheme(int mapBackground, float scaleStrokeWidth, float scaleTextWidth) {
+	RenderTheme(int mapBackground, float baseStrokeWidth, float baseTextSize) {
 		this.mapBackground = mapBackground;
-		this.scaleStrokeWidth = scaleStrokeWidth;
-		this.scaleTextWidth = scaleTextWidth;
+		this.baseStrokeWidth = baseStrokeWidth;
+		this.baseTextSize = baseTextSize;
 		this.rulesList = new ArrayList<Rule>();
 		this.matchingCache = new MatchingCache(MATCHING_CACHE_SIZE);
 	}
@@ -89,8 +88,6 @@ public class RenderTheme {
 	}
 
 	/**
-	 * Returns the number of distinct drawing levels required by this RenderTheme.
-	 * 
 	 * @return the number of distinct drawing levels required by this RenderTheme.
 	 */
 	public int getLevels() {
@@ -98,8 +95,6 @@ public class RenderTheme {
 	}
 
 	/**
-	 * Returns the map background color of this RenderTheme.
-	 * 
 	 * @return the map background color of this RenderTheme.
 	 * @see Color
 	 */
@@ -159,7 +154,7 @@ public class RenderTheme {
 	 */
 	public void scaleStrokeWidth(float scaleFactor) {
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).scaleStrokeWidth(scaleFactor * this.scaleStrokeWidth);
+			this.rulesList.get(i).scaleStrokeWidth(scaleFactor * this.baseStrokeWidth);
 		}
 	}
 
@@ -171,7 +166,7 @@ public class RenderTheme {
 	 */
 	public void scaleTextSize(float scaleFactor) {
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
-			this.rulesList.get(i).scaleTextSize(scaleFactor * this.scaleTextWidth);
+			this.rulesList.get(i).scaleTextSize(scaleFactor * this.baseTextSize);
 		}
 	}
 

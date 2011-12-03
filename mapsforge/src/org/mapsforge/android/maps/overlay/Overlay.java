@@ -25,13 +25,13 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 
 /**
- * Overlay is the abstract base class for all types of overlays. It handles the lifecycle of the overlay
- * thread and implements those parts of the redrawing process which all overlays have in common.
+ * Overlay is the abstract base class for all types of overlays. It handles the lifecycle of the overlay thread
+ * and implements those parts of the redrawing process which all overlays have in common.
  * <p>
- * To add an overlay to a <code>MapView</code>, create a subclass of this class and add an instance to
- * the list returned by {@link MapView#getOverlays()}. When an overlay gets removed from the list, the
- * corresponding thread is automatically interrupted and all its resources are freed. Re-adding a
- * previously removed overlay to the list will therefore cause an {@link IllegalThreadStateException}.
+ * To add an overlay to a <code>MapView</code>, create a subclass of this class and add an instance to the list
+ * returned by {@link MapView#getOverlays()}. When an overlay gets removed from the list, the corresponding
+ * thread is automatically interrupted and all its resources are freed. Re-adding a previously removed overlay
+ * to the list will therefore cause an {@link IllegalThreadStateException}.
  */
 public abstract class Overlay extends Thread {
 	/**
@@ -58,17 +58,12 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Flag which is set whenever the MapView dimensions have been changed.
 	 */
-	private boolean changeSize;
+	private boolean changedSize;
 
 	/**
 	 * Flag to indicate if the overlay has a positive width and height.
 	 */
 	private boolean hasValidDimensions;
-
-	/**
-	 * A cached reference to the MapView projection.
-	 */
-	private Projection mapViewProjection;
 
 	/**
 	 * Transformation matrix for the overlay.
@@ -93,7 +88,7 @@ public abstract class Overlay extends Thread {
 	/**
 	 * Canvas that is used in the overlay for drawing.
 	 */
-	private Canvas overlayCanvas;
+	private final Canvas overlayCanvas;
 
 	/**
 	 * Stores the top-left map position at which the redraw should happen.
@@ -133,9 +128,9 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles a long press event. A long press event is only triggered if the map was not moved. A
-	 * return value of true indicates that the long press event has been handled by this overlay and
-	 * stops its propagation to other overlays.
+	 * Handles a long press event. A long press event is only triggered if the map was not moved. A return value
+	 * of true indicates that the long press event has been handled by this overlay and stops its propagation to
+	 * other overlays.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
@@ -150,9 +145,9 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Handles a tap event. A tap event is only triggered if the map was not moved and no long press
-	 * event was handled within the same gesture. A return value of true indicates that the tap event
-	 * has been handled by this overlay and stops its propagation to other overlays.
+	 * Handles a tap event. A tap event is only triggered if the map was not moved and no long press event was
+	 * handled within the same gesture. A return value of true indicates that the tap event has been handled by
+	 * this overlay and stops its propagation to other overlays.
 	 * <p>
 	 * The default implementation of this method does nothing and returns false.
 	 * 
@@ -182,7 +177,7 @@ public abstract class Overlay extends Thread {
 
 		while (!isInterrupted()) {
 			synchronized (this) {
-				while (!isInterrupted() && !this.changeSize && !this.redraw) {
+				while (!isInterrupted() && !this.changedSize && !this.redraw) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
@@ -196,36 +191,26 @@ public abstract class Overlay extends Thread {
 				break;
 			}
 
-			if (this.changeSize) {
+			if (this.changedSize) {
 				changeSize();
 			}
 
 			if (this.redraw) {
-				redraw();
+				redrawOverlay();
 			}
 		}
 
 		// free the overlay bitmaps memory
 		if (this.overlayBitmap1 != null) {
 			this.overlayBitmap1.recycle();
-			this.overlayBitmap1 = null;
 		}
 
 		if (this.overlayBitmap2 != null) {
 			this.overlayBitmap2.recycle();
-			this.overlayBitmap2 = null;
 		}
-
-		// set some fields to null to avoid memory leaks
-		this.internalMapView = null;
-		this.mapViewProjection = null;
-		this.overlayCanvas = null;
 	}
 
-	/**
-	 * Redraws the overlay.
-	 */
-	private void redraw() {
+	private void redrawOverlay() {
 		this.redraw = false;
 
 		if (!this.hasValidDimensions) {
@@ -233,7 +218,7 @@ public abstract class Overlay extends Thread {
 			return;
 		}
 
-		this.mapViewProjection = this.internalMapView.getProjection();
+		Projection mapViewProjection = this.internalMapView.getProjection();
 
 		// clear the second bitmap and make the canvas use it
 		this.overlayBitmap2.eraseColor(Color.TRANSPARENT);
@@ -242,8 +227,8 @@ public abstract class Overlay extends Thread {
 		// save the zoom level and map position before drawing
 		byte zoomLevelBeforeDraw;
 		synchronized (this.internalMapView) {
-			zoomLevelBeforeDraw = this.internalMapView.getZoomLevel();
-			this.positionBeforeDraw = this.mapViewProjection.toPoint(this.internalMapView
+			zoomLevelBeforeDraw = this.internalMapView.getMapPosition().getZoomLevel();
+			this.positionBeforeDraw = mapViewProjection.toPoint(this.internalMapView.getMapPosition()
 					.getMapCenter(), this.positionBeforeDraw, zoomLevelBeforeDraw);
 		}
 
@@ -257,7 +242,7 @@ public abstract class Overlay extends Thread {
 		}
 
 		// call the draw implementation of the subclass
-		drawOverlayBitmap(this.overlayCanvas, this.point, this.mapViewProjection, zoomLevelBeforeDraw);
+		drawOverlayBitmap(this.overlayCanvas, this.point, mapViewProjection, zoomLevelBeforeDraw);
 
 		if (isInterrupted() || sizeHasChanged()) {
 			// stop working
@@ -267,8 +252,8 @@ public abstract class Overlay extends Thread {
 		// save the zoom level and map position after drawing
 		byte zoomLevelAfterDraw;
 		synchronized (this.internalMapView) {
-			zoomLevelAfterDraw = this.internalMapView.getZoomLevel();
-			this.positionAfterDraw = this.mapViewProjection.toPoint(this.internalMapView
+			zoomLevelAfterDraw = this.internalMapView.getMapPosition().getZoomLevel();
+			this.positionAfterDraw = mapViewProjection.toPoint(this.internalMapView.getMapPosition()
 					.getMapCenter(), this.positionAfterDraw, zoomLevelBeforeDraw);
 		}
 
@@ -287,17 +272,13 @@ public abstract class Overlay extends Thread {
 			if (zoomLevelDiff > 0) {
 				// zoom level has increased
 				this.matrixScaleFactor = 1 << zoomLevelDiff;
-				this.matrix
-						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
-								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
-										.getHeight() >> 1);
+				this.matrix.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
+						this.overlayCanvas.getWidth() >> 1, this.overlayCanvas.getHeight() >> 1);
 			} else if (zoomLevelDiff < 0) {
 				// zoom level has decreased
 				this.matrixScaleFactor = 1.0f / (1 << -zoomLevelDiff);
-				this.matrix
-						.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
-								this.overlayCanvas.getWidth() >> 1, this.overlayCanvas
-										.getHeight() >> 1);
+				this.matrix.postScale(this.matrixScaleFactor, this.matrixScaleFactor,
+						this.overlayCanvas.getWidth() >> 1, this.overlayCanvas.getHeight() >> 1);
 			}
 
 			// swap the two overlay bitmaps
@@ -327,12 +308,12 @@ public abstract class Overlay extends Thread {
 	 * @param drawZoomLevel
 	 *            the zoom level of the map.
 	 */
-	protected abstract void drawOverlayBitmap(Canvas canvas, Point drawPosition,
-			Projection projection, byte drawZoomLevel);
+	protected abstract void drawOverlayBitmap(Canvas canvas, Point drawPosition, Projection projection,
+			byte drawZoomLevel);
 
 	/**
-	 * Returns the name of the overlay implementation. It will be used as the name for the overlay
-	 * thread. Subclasses should override this method to provide a more specific name.
+	 * Returns the name of the overlay implementation. It will be used as the name for the overlay thread.
+	 * Subclasses should override this method to provide a more specific name.
 	 * 
 	 * @return the name of the overlay implementation.
 	 */
@@ -344,7 +325,7 @@ public abstract class Overlay extends Thread {
 	 * Changes the size of the overlay according to the MapView dimensions.
 	 */
 	final void changeSize() {
-		this.changeSize = false;
+		this.changedSize = false;
 
 		// check if the previous overlay bitmaps must be recycled
 		if (this.overlayBitmap1 != null) {
@@ -383,30 +364,30 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * @param sx
+	 * @param scaleX
 	 *            the horizontal scale.
-	 * @param sy
+	 * @param scaleY
 	 *            the vertical scale.
-	 * @param px
+	 * @param pivotX
 	 *            the horizontal pivot point.
-	 * @param py
+	 * @param pivotY
 	 *            the vertical pivot point.
 	 */
-	public final void matrixPostScale(float sx, float sy, float px, float py) {
+	public final void matrixPostScale(float scaleX, float scaleY, float pivotX, float pivotY) {
 		synchronized (this.matrix) {
-			this.matrix.postScale(sx, sy, px, py);
+			this.matrix.postScale(scaleX, scaleY, pivotX, pivotY);
 		}
 	}
 
 	/**
-	 * @param dx
+	 * @param translateX
 	 *            the horizontal translation.
-	 * @param dy
+	 * @param translateY
 	 *            the vertical translation.
 	 */
-	public final void matrixPostTranslate(float dx, float dy) {
+	public final void matrixPostTranslate(float translateX, float translateY) {
 		synchronized (this.matrix) {
-			this.matrix.postTranslate(dx, dy);
+			this.matrix.postTranslate(translateX, translateY);
 		}
 	}
 
@@ -415,7 +396,7 @@ public abstract class Overlay extends Thread {
 	 */
 	public final void onSizeChanged() {
 		synchronized (this) {
-			this.changeSize = true;
+			this.changedSize = true;
 			notify();
 		}
 	}
@@ -435,11 +416,9 @@ public abstract class Overlay extends Thread {
 	}
 
 	/**
-	 * Returns if the dimensions of the overlay have changed.
-	 * 
 	 * @return true if the dimensions of the overlay have changed, false otherwise.
 	 */
 	boolean sizeHasChanged() {
-		return this.changeSize;
+		return this.changedSize;
 	}
 }

@@ -26,7 +26,7 @@ import android.graphics.Paint;
  * without individual paints can be defined via the constructor.
  */
 public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
-	private static final int ARRAY_LIST_INITIAL_CAPACITY = 8;
+	private static final int INITIAL_CAPACITY = 8;
 	private static final String THREAD_NAME = "ArrayWayOverlay";
 
 	private final List<OverlayWay> overlayWays;
@@ -41,7 +41,7 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	 */
 	public ArrayWayOverlay(Paint defaultPaintFill, Paint defaultPaintOutline) {
 		super(defaultPaintFill, defaultPaintOutline);
-		this.overlayWays = new ArrayList<OverlayWay>(ARRAY_LIST_INITIAL_CAPACITY);
+		this.overlayWays = new ArrayList<OverlayWay>(INITIAL_CAPACITY);
 	}
 
 	/**
@@ -106,12 +106,12 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	}
 
 	@Override
-	protected OverlayWay createWay(int i) {
+	protected OverlayWay createWay(int index) {
 		synchronized (this.overlayWays) {
-			if (i >= this.overlayWays.size()) {
+			if (index >= this.overlayWays.size()) {
 				return null;
 			}
-			return this.overlayWays.get(i);
+			return this.overlayWays.get(index);
 		}
 	}
 }

@@ -13,20 +13,19 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /**
- * This package allows Android applications to render and display a map without Internet connection. It
- * can be used on all Android devices running version 1.5 or higher. An application needs to extend the
+ * This package allows Android applications to render and display a map without Internet connection. It can be
+ * used on all Android devices running version 1.5 or higher. An application needs to extend the
  * {@link org.mapsforge.android.maps.MapActivity} class in order to use a
- * {@link org.mapsforge.android.maps.MapView}. More than one MapView instance may be used simultaneously
- * as each MapView handles its own threads and caches.
+ * {@link org.mapsforge.android.maps.MapView}. More than one MapView instance may be used simultaneously.
  * <p>
- * All important classes and methods from the <a
- * href="http://code.google.com/android/add-ons/google-apis/" target="_top">Google APIs Add-On</a> are
- * implemented. However, no API key is required and no abstract methods must be overridden.
+ * The most important classes and methods from the <a href="http://code.google.com/android/add-ons/google-apis/"
+ * target="_top">Google APIs Add-On</a> are implemented. However, no API key is required and no abstract methods
+ * must be overridden.
  * <p>
- * This software is a part of the <a href="http://mapsforge.org/" target="_top">mapsforge</a> project
- * and distributed under the <a href="http://www.gnu.org/licenses/lgpl.html" target="_top">LGPL3
- * license</a>. All map data (c) <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a>
- * contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA
- * license</a>.
+ * This software is a part of the <a href="http://mapsforge.org/" target="_top">mapsforge</a> project and
+ * distributed under the <a href="http://www.gnu.org/licenses/lgpl.html" target="_top">LGPL3 license</a>. All
+ * map data (c) <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a> contributors, <a
+ * href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA license</a>.
  */
 package org.mapsforge.android.maps;
+

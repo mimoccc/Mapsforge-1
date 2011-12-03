@@ -40,7 +40,7 @@ class MultiKeyMatcher implements AttributeMatcher {
 	@Override
 	public boolean matches(List<Tag> tags) {
 		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.keys.contains(tags.get(i).key)) {
+			if (this.keys.contains(tags.get(i).getKey())) {
 				return true;
 			}
 		}

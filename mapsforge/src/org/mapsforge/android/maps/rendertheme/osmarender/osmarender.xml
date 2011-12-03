@@ -7,7 +7,8 @@
 		<!-- landuse -->
 		<rule e="way" k="landuse" v="*">
 			<rule e="way" k="landuse" v="military">
-				<area src="jar:osmarender/patterns/military.png" stroke="#e4e4e4" stroke-width="0.2" />
+				<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/military.png" stroke="#e4e4e4"
+					stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="landuse" v="residential|farmyard">
 				<area fill="#e4e4e4" />
@@ -106,7 +107,8 @@
 				<area fill="#e9dd72" stroke="#556b2f" stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="landuse" v="cemetery">
-				<area src="jar:osmarender/patterns/cemetery.png" stroke="#e4e4e4" stroke-width="0.2" />
+				<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/cemetery.png" stroke="#e4e4e4"
+					stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="landuse" v="field|farm|farmland|meadow|grass">
 				<area fill="#ebfff2" stroke="#9ee673" stroke-width="0.1" />
@@ -127,13 +129,13 @@
 		<rule e="way" k="natural|landuse" v="forest|wood|scrub">
 			<rule e="way" k="wood" v="*">
 				<rule e="way" k="wood" v="coniferous">
-					<area src="jar:osmarender/patterns/wood-coniferous.png" />
+					<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/wood-coniferous.png" />
 				</rule>
 				<rule e="way" k="wood" v="deciduous">
-					<area src="jar:osmarender/patterns/wood-deciduous.png" />
+					<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/wood-deciduous.png" />
 				</rule>
 				<rule e="way" k="wood" v="mixed">
-					<area src="jar:osmarender/patterns/wood-mixed.png" />
+					<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/wood-mixed.png" />
 				</rule>
 			</rule>
 			<rule e="way" k="wood" v="~">
@@ -152,31 +154,32 @@
 				<area fill="#cdabde" stroke="#e9dd72" stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="amenity" v="grave_yard">
-				<area src="jar:osmarender/patterns/cemetery.png" stroke="#e4e4e4" stroke-width="0.2" />
+				<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/cemetery.png" stroke="#e4e4e4"
+					stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="amenity" v="parking">
 				<area fill="#ffffc0" stroke="#e9dd72" stroke-width="0.2" />
 				<rule e="way" k="access" v="private" zoom-min="15">
-					<area src="jar:osmarender/patterns/access-private.png" />
+					<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/access-private.png" />
 				</rule>
 				<rule e="way" k="*" v="*" zoom-min="17">
-					<symbol src="jar:osmarender/symbols/parking.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/parking.png" />
 				</rule>
 			</rule>
 			<rule e="way" k="amenity" v="fountain" closed="yes">
 				<area fill="#b5d6f1" stroke="#000080" stroke-width="0.15" />
 				<rule e="way" k="*" v="*" zoom-min="17">
-					<symbol src="jar:osmarender/symbols/fountain.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/fountain.png" />
 				</rule>
 			</rule>
 			<rule e="way" k="amenity" v="hospital" zoom-min="15">
-				<symbol src="jar:osmarender/symbols/hospital.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/hospital.png" />
 			</rule>
 			<rule e="way" k="amenity" v="theatre" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/theatre.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/theatre.png" />
 			</rule>
 			<rule e="way" k="amenity" v="toilets" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/toilets.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/toilets.png" />
 			</rule>
 
 			<rule e="way" k="*" v="*" zoom-min="17">
@@ -208,7 +211,7 @@
 				<area fill="#ffffc0" stroke="#ffff90" stroke-width="0.2" />
 			</rule>
 			<rule e="way" k="natural" v="marsh|wetland">
-				<area src="jar:osmarender/patterns/marsh.png" />
+				<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/marsh.png" />
 			</rule>
 
 			<rule e="way" k="*" v="*" zoom-min="16">
@@ -225,11 +228,12 @@
 			<rule e="way" k="leisure" v="playground|playing_fields|pitch|dog_park">
 				<area fill="#c7f1a3" stroke="#6fc18e" stroke-width="0.2" />
 				<rule e="way" k="*" v="playground" zoom-min="17">
-					<symbol src="jar:osmarender/symbols/playground.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/playground.png" />
 				</rule>
 			</rule>
 			<rule e="way" k="leisure" v="nature_reserve">
-				<area src="jar:osmarender/patterns/nature-reserve.png" stroke="#6fc18e" stroke-width="0.2" />
+				<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/nature-reserve.png" stroke="#6fc18e"
+					stroke-width="0.2" />
 			</rule>
 
 			<rule e="way" k="leisure" v="stadium|sports_centre|water_park">
@@ -302,14 +306,15 @@
 
 		<!-- military -->
 		<rule e="way" k="military" v="*">
-			<area src="jar:osmarender/patterns/military.png" stroke="#e4e4e4" stroke-width="0.2" />
+			<area src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/military.png" stroke="#e4e4e4"
+				stroke-width="0.2" />
 		</rule>
 
 
 		<!-- sport -->
 		<rule e="way" k="sport" v="*">
 			<rule e="way" k="sport" v="soccer" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/soccer-borderless.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/soccer-borderless.png" />
 			</rule>
 			<rule e="way" k="sport" v="swimming|canoe|diving|scuba_diving">
 				<area fill="#b5d6f1" stroke="#6060ff" stroke-width="0.2" />
@@ -317,7 +322,7 @@
 			<rule e="way" k="sport" v="tennis">
 				<area fill="#d18a6a" stroke="#b36c4c" stroke-width="0.2" />
 				<rule e="way" k="*" v="*" zoom-min="17">
-					<symbol src="jar:osmarender/symbols/tennis.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/tennis.png" />
 				</rule>
 			</rule>
 		</rule>
@@ -628,10 +633,11 @@
 
 					<rule e="way" k="highway" v="*" zoom-min="16">
 						<rule e="way" k="access" v="destination">
-							<line src="jar:osmarender/patterns/access-destination.png" stroke-width="1.5" />
+							<line src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/access-destination.png"
+								stroke-width="1.5" />
 						</rule>
 						<rule e="way" k="access" v="private">
-							<line src="jar:osmarender/patterns/access-private.png" stroke-width="1.5" />
+							<line src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/patterns/access-private.png" stroke-width="1.5" />
 						</rule>
 					</rule>
 				</rule>
@@ -684,7 +690,8 @@
 			<rule e="way" k="area" v="~|false|no">
 				<rule e="way" k="highway" v="*">
 					<rule e="way" k="oneway" v="yes|true" zoom-min="16">
-						<lineSymbol src="jar:osmarender/symbols/oneway.png" align-center="true" repeat="true" />
+						<lineSymbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/oneway.png"
+							align-center="true" repeat="true" />
 					</rule>
 				</rule>
 			</rule>
@@ -763,13 +770,13 @@
 			<line stroke="#202020" stroke-width="0.4" stroke-linecap="butt" />
 			<line stroke="#202020" stroke-width="4.0" stroke-dasharray="2,200" stroke-linecap="butt" />
 			<rule e="way" k="aerialway" v="cable_car">
-				<lineSymbol src="jar:osmarender/symbols/cable_car.png" />
+				<lineSymbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/cable_car.png" />
 			</rule>
 			<rule e="way" k="aerialway" v="chair_lift">
-				<lineSymbol src="jar:osmarender/symbols/chair_lift_2.png" />
+				<lineSymbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/chair_lift_2.png" />
 			</rule>
 			<rule e="way" k="aerialway" v="gondola">
-				<lineSymbol src="jar:osmarender/symbols/gondola.png" />
+				<lineSymbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/gondola.png" />
 			</rule>
 			<rule e="way" k="*" v="*" zoom-min="14">
 				<pathText k="name" font-style="bold" font-size="10" fill="#606060" stroke="#ffffff" stroke-width="2.0" />
@@ -890,10 +897,10 @@
 		<!-- aeroway -->
 		<rule e="node" k="aeroway" v="*">
 			<rule e="node" k="aeroway" v="helipad" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/helipad.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/helipad.png" />
 			</rule>
 			<rule e="node" k="aeroway" v="aerodrome|airport" zoom-max="13">
-				<symbol src="jar:osmarender/symbols/airport.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/airport.png" />
 			</rule>
 		</rule>
 
@@ -901,96 +908,96 @@
 		<!-- amenity -->
 		<rule e="node" k="amenity" v="*">
 			<rule e="node" k="amenity" v="atm" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/atm.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/atm.png" />
 			</rule>
 			<rule e="node" k="amenity" v="bank" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/bank.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bank.png" />
 			</rule>
 			<rule e="node" k="amenity" v="bench" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/bench.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bench.png" />
 			</rule>
 			<rule e="node" k="amenity" v="bicycle_rental" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/bicycle_rental.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bicycle_rental.png" />
 			</rule>
 			<rule e="node" k="amenity" v="bus_station" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/bus_sta.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bus_sta.png" />
 			</rule>
 			<rule e="node" k="amenity" v="cafe" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/cafe.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/cafe.png" />
 			</rule>
 			<rule e="node" k="amenity" v="cinema" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/cinema.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/cinema.png" />
 			</rule>
 			<rule e="node" k="amenity" v="fast_food" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/fastfood.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/fastfood.png" />
 			</rule>
 			<rule e="node" k="amenity" v="fire_station" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/firebrigade.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/firebrigade.png" />
 			</rule>
 			<rule e="node" k="amenity" v="fountain" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/fountain.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/fountain.png" />
 			</rule>
 			<rule e="node" k="amenity" v="fuel" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/petrolStation.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/petrolStation.png" />
 			</rule>
 			<rule e="node" k="amenity" v="hospital" zoom-min="15">
-				<symbol src="jar:osmarender/symbols/hospital.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/hospital.png" />
 			</rule>
 			<rule e="node" k="amenity" v="kindergarten" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/kindergarten.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/kindergarten.png" />
 			</rule>
 			<rule e="node" k="amenity" v="library" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/library.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/library.png" />
 			</rule>
 			<rule e="node" k="amenity" v="parking" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/parking.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/parking.png" />
 			</rule>
 			<rule e="node" k="amenity" v="pharmacy" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/pharmacy.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/pharmacy.png" />
 			</rule>
 			<rule e="node" k="amenity" v="place_of_worship" zoom-min="17">
 				<rule e="node" k="denomination|religion" v="jewish">
-					<symbol src="jar:osmarender/symbols/synagogue.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/synagogue.png" />
 				</rule>
 				<rule e="node" k="denomination|religion" v="muslim|moslem">
-					<symbol src="jar:osmarender/symbols/mosque.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/mosque.png" />
 				</rule>
 				<rule e="node" k="denomination|religion" v="christian">
-					<symbol src="jar:osmarender/symbols/church.png" />
+					<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/church.png" />
 				</rule>
 			</rule>
 			<rule e="node" k="amenity" v="post_box" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/postbox.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/postbox.png" />
 			</rule>
 			<rule e="node" k="amenity" v="post_office" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/postoffice.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/postoffice.png" />
 			</rule>
 			<rule e="node" k="amenity" v="pub|bar" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/pub.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/pub.png" />
 			</rule>
 			<rule e="node" k="amenity" v="recycling" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/recycling.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/recycling.png" />
 			</rule>
 			<rule e="node" k="amenity" v="restaurant" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/restaurant.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/restaurant.png" />
 			</rule>
 			<rule e="node" k="amenity" v="school" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/school.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/school.png" />
 			</rule>
 			<rule e="node" k="amenity" v="shelter" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/shelter.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/shelter.png" />
 			</rule>
 			<rule e="node" k="amenity" v="telephone" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/telephone.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/telephone.png" />
 			</rule>
 			<rule e="node" k="amenity" v="theatre" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/theatre.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/theatre.png" />
 			</rule>
 			<rule e="node" k="amenity" v="toilets" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/toilets.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/toilets.png" />
 			</rule>
 			<rule e="node" k="amenity" v="university|college" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/university.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/university.png" />
 			</rule>
 
 			<rule e="node" k="*" v="*" zoom-min="17">
@@ -1008,10 +1015,10 @@
 		<!-- highway -->
 		<rule e="node" k="highway" v="*">
 			<rule e="node" k="highway" v="bus_stop" zoom-min="16">
-				<symbol src="jar:osmarender/symbols/bus.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bus.png" />
 			</rule>
 			<rule e="node" k="highway" v="traffic_signals" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/traffic_signal.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/traffic_signal.png" />
 			</rule>
 			<rule e="node" k="highway" v="turning_circle">
 				<circle r="1.4" scale-radius="true" fill="#ffffff" />
@@ -1037,30 +1044,30 @@
 
 		<!-- leisure -->
 		<rule e="node" k="leisure" v="playground" zoom-min="17">
-			<symbol src="jar:osmarender/symbols/playground.png" />
+			<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/playground.png" />
 		</rule>
 
 
 		<!-- man_made -->
 		<rule e="node" k="man_made" v="windmill" zoom-min="17">
-			<symbol src="jar:osmarender/symbols/windmill.png" />
+			<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/windmill.png" />
 		</rule>
 
 
 		<!-- natural -->
 		<rule e="node" k="natural" v="*">
 			<rule e="node" k="natural" v="cave_entrance" zoom-min="15">
-				<symbol src="jar:osmarender/symbols/cave_entrance.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/cave_entrance.png" />
 			</rule>
 			<rule e="node" k="natural" v="peak" zoom-min="12">
-				<symbol src="jar:osmarender/symbols/peak.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/peak.png" />
 				<caption k="ele" dy="20" font-style="bold" font-size="10" fill="#000000" stroke="#ffffff" stroke-width="2.0" />
 			</rule>
 			<rule e="node" k="natural" v="tree" zoom-min="16">
-				<symbol src="jar:osmarender/symbols/tree.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/tree.png" />
 			</rule>
 			<rule e="node" k="natural" v="volcano" zoom-min="12">
-				<symbol src="jar:osmarender/symbols/vulcan.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/vulcan.png" />
 			</rule>
 
 			<rule e="node" k="*" v="*" zoom-min="17">
@@ -1089,10 +1096,10 @@
 		<!-- railway -->
 		<rule e="node" k="railway" v="*">
 			<rule e="node" k="railway" v="crossing" zoom-min="16">
-				<symbol src="jar:osmarender/symbols/railway-crossing-small.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/railway-crossing-small.png" />
 			</rule>
 			<rule e="node" k="railway" v="level_crossing" zoom-min="16">
-				<symbol src="jar:osmarender/symbols/railway-crossing.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/railway-crossing.png" />
 			</rule>
 			<rule e="node" k="railway" v="station" zoom-min="14">
 				<circle r="6" fill="#ec2d2d" stroke="#606060" stroke-width="1.5" />
@@ -1108,13 +1115,13 @@
 		<!-- shop -->
 		<rule e="node" k="shop" v="*">
 			<rule e="node" k="shop" v="bakery" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/bakery.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/bakery.png" />
 			</rule>
 			<rule e="node" k="shop" v="florist" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/florist.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/florist.png" />
 			</rule>
 			<rule e="node" k="shop" v="supermarket|organic" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/supermarket.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/supermarket.png" />
 			</rule>
 
 			<rule e="node" k="*" v="*" zoom-min="17">
@@ -1126,19 +1133,19 @@
 		<!-- tourism -->
 		<rule e="node" k="tourism" v="*">
 			<rule e="node" k="tourism" v="camp_site" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/campSite.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/campSite.png" />
 			</rule>
 			<rule e="node" k="tourism" v="hostel" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/hostel.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/hostel.png" />
 			</rule>
 			<rule e="node" k="tourism" v="hotel" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/hotel.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/hotel.png" />
 			</rule>
 			<rule e="node" k="tourism" v="information" zoom-min="17">
-				<symbol src="jar:osmarender/symbols/information.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/information.png" />
 			</rule>
 			<rule e="node" k="tourism" v="viewpoint" zoom-min="15">
-				<symbol src="jar:osmarender/symbols/viewpoint.png" />
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/viewpoint.png" />
 			</rule>
 
 			<rule e="node" k="*" v="*" zoom-min="17">

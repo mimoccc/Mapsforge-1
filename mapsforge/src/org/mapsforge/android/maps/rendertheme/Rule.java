@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
+import org.mapsforge.android.maps.rendertheme.renderinstruction.RenderInstruction;
 import org.xml.sax.Attributes;
 
 abstract class Rule {
@@ -234,7 +235,7 @@ abstract class Rule {
 
 	void onDestroy() {
 		for (int i = 0, n = this.renderInstructions.size(); i < n; ++i) {
-			this.renderInstructions.get(i).onDestroy();
+			this.renderInstructions.get(i).destroy();
 		}
 		for (int i = 0, n = this.subRules.size(); i < n; ++i) {
 			this.subRules.get(i).onDestroy();

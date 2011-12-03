@@ -15,18 +15,14 @@
 package org.mapsforge.android.maps.rendertheme;
 
 /**
- * A tag represents a <code>key-value</code> string.
+ * A tag represents a key-value pair.
  */
 public class Tag {
 	private static final char KEY_VALUE_SEPARATOR = '=';
 
-	/**
-	 * Stores the hash value of this object.
-	 */
-	private final int hashCode;
-
-	final String key;
-	final String value;
+	private final int hashCodeValue;
+	private final String key;
+	private final String value;
 
 	/**
 	 * Constructs a new tag from the given string.
@@ -38,7 +34,7 @@ public class Tag {
 		int splitPosition = tag.indexOf(KEY_VALUE_SEPARATOR);
 		this.key = tag.substring(0, splitPosition);
 		this.value = tag.substring(splitPosition + 1);
-		this.hashCode = calculateHashCode();
+		this.hashCodeValue = calculateHashCode();
 	}
 
 	/**
@@ -52,7 +48,7 @@ public class Tag {
 	public Tag(String key, String value) {
 		this.key = key;
 		this.value = value;
-		this.hashCode = calculateHashCode();
+		this.hashCodeValue = calculateHashCode();
 	}
 
 	@Override
@@ -75,20 +71,40 @@ public class Tag {
 		return true;
 	}
 
+	/**
+	 * @return the key of this tag.
+	 */
+	public String getKey() {
+		return this.key;
+	}
+
+	/**
+	 * @return the value of this tag.
+	 */
+	public String getValue() {
+		return this.value;
+	}
+
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.hashCodeValue;
 	}
 
 	@Override
 	public String toString() {
-		return "Tag [key=" + this.key + ", value=" + this.value + "]";
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Tag [key=");
+		stringBuilder.append(this.key);
+		stringBuilder.append(", value=");
+		stringBuilder.append(this.value);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
 	}
 
 	/**
-	 * Calculates the hash value of this object.
+	 * Calculates the hash code of this object.
 	 * 
-	 * @return the hash value of this object.
+	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;

@@ -16,8 +16,6 @@ package org.mapsforge.android.maps.mapdatabase;
 
 import org.mapsforge.android.maps.MercatorProjection;
 
-import android.graphics.Rect;
-
 /**
  * Holds all parameters of a sub-file.
  */
@@ -28,9 +26,9 @@ class SubFileParameter {
 	private static final double COORDINATES_DIVISOR = 1000000d;
 
 	/**
-	 * Stores the hash value of this object.
+	 * Stores the hash code of this object.
 	 */
-	private final int hashCode;
+	private final int hashCodeValue;
 
 	/**
 	 * Base zoom level of the map file, which equals to one block.
@@ -117,27 +115,27 @@ class SubFileParameter {
 	 *            the minimum zoom level of the sub-file.
 	 * @param tileZoomLevelMax
 	 *            the maximum zoom level of the sub-file.
-	 * @param mapBoundary
+	 * @param boundingBox
 	 *            the boundary of the sub-file.
 	 */
 	SubFileParameter(long startAddress, long indexStartAddress, long subFileSize,
-			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, Rect mapBoundary) {
+			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, BoundingBox boundingBox) {
 		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
 		this.subFileSize = subFileSize;
 		this.baseZoomLevel = baseZoomLevel;
 		this.zoomLevelMin = tileZoomLevelMin;
 		this.zoomLevelMax = tileZoomLevelMax;
-		this.hashCode = calculateHashCode();
+		this.hashCodeValue = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTileTop = MercatorProjection.latitudeToTileY(mapBoundary.bottom
+		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(boundingBox.getMinLatitudeE6()
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(mapBoundary.left
+		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(boundingBox.getMinLongitudeE6()
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(mapBoundary.top
+		this.boundaryTileTop = MercatorProjection.latitudeToTileY(boundingBox.getMaxLatitudeE6()
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileRight = MercatorProjection.longitudeToTileX(mapBoundary.right
+		this.boundaryTileRight = MercatorProjection.longitudeToTileX(boundingBox.getMaxLongitudeE6()
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 
 		// calculate the horizontal and vertical amount of blocks in this map file
@@ -171,13 +169,48 @@ class SubFileParameter {
 
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.hashCodeValue;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("SubFileParameter [baseZoomLevel=");
+		stringBuilder.append(this.baseZoomLevel);
+		stringBuilder.append(", blockEntriesTableSize=");
+		stringBuilder.append(this.blockEntriesTableSize);
+		stringBuilder.append(", blocksHeight=");
+		stringBuilder.append(this.blocksHeight);
+		stringBuilder.append(", blocksWidth=");
+		stringBuilder.append(this.blocksWidth);
+		stringBuilder.append(", boundaryTileBottom=");
+		stringBuilder.append(this.boundaryTileBottom);
+		stringBuilder.append(", boundaryTileLeft=");
+		stringBuilder.append(this.boundaryTileLeft);
+		stringBuilder.append(", boundaryTileRight=");
+		stringBuilder.append(this.boundaryTileRight);
+		stringBuilder.append(", boundaryTileTop=");
+		stringBuilder.append(this.boundaryTileTop);
+		stringBuilder.append(", indexStartAddress=");
+		stringBuilder.append(this.indexStartAddress);
+		stringBuilder.append(", numberOfBlocks=");
+		stringBuilder.append(this.numberOfBlocks);
+		stringBuilder.append(", startAddress=");
+		stringBuilder.append(this.startAddress);
+		stringBuilder.append(", subFileSize=");
+		stringBuilder.append(this.subFileSize);
+		stringBuilder.append(", zoomLevelMax=");
+		stringBuilder.append(this.zoomLevelMax);
+		stringBuilder.append(", zoomLevelMin=");
+		stringBuilder.append(this.zoomLevelMin);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
 	}
 
 	/**
-	 * Calculates the hash value of this object.
+	 * Calculates the hash code of this object.
 	 * 
-	 * @return the hash value of this object.
+	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
 		int result = 7;
