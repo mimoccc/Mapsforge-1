@@ -14,7 +14,7 @@
  */
 package org.mapsforge.applications.android.advancedmapviewer;
 
-import org.mapsforge.android.maps.MapView;
+import org.mapsforge.android.maps.Tile;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -45,6 +45,6 @@ public class CacheSizePreference extends SeekBarPreference {
 	@Override
 	String getCurrentValueText(int progress) {
 		return String.format(getContext().getString(R.string.preferences_cache_size_value),
-				Double.valueOf(MapView.getTileSizeInBytes() * progress / 1000000d));
+				Double.valueOf(Tile.TILE_BYTES_PER_PIXEL * progress / 1000000d));
 	}
 }

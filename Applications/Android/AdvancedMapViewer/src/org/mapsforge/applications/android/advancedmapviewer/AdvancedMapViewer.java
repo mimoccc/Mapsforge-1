@@ -27,19 +27,24 @@ import java.util.Date;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.mapsforge.android.maps.DebugSettings;
 import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
+import org.mapsforge.android.maps.MapScaleBar;
+import org.mapsforge.android.maps.MapScaleBar.TextField;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.MapViewMode;
-import org.mapsforge.android.maps.MapView.InternalRenderTheme;
-import org.mapsforge.android.maps.MapView.TextField;
+import org.mapsforge.android.maps.mapdatabase.BoundingBox;
+import org.mapsforge.android.maps.mapdatabase.FileOpenResult;
 import org.mapsforge.android.maps.mapdatabase.MapDatabase;
+import org.mapsforge.android.maps.mapdatabase.MapFileInfo;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
 import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.overlay.ItemizedOverlay;
 import org.mapsforge.android.maps.overlay.OverlayCircle;
 import org.mapsforge.android.maps.overlay.OverlayItem;
+import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
 import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -51,10 +56,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Bitmap.CompressFormat;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -69,8 +73,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -78,10 +82,10 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 /**
- * A map application which uses the features from the mapsforge map library. The map can be
- * centered to the current location. A simple file browser for selecting the map file is also
- * included. Some preferences can be adjusted via the {@link EditPreferences} activity and
- * screenshots of the map may be taken in different image formats.
+ * A map application which uses the features from the mapsforge map library. The map can be centered to the
+ * current location. A simple file browser for selecting the map file is also included. Some preferences can be
+ * adjusted via the {@link EditPreferences} activity and screenshots of the map may be taken in different image
+ * formats.
  */
 public class AdvancedMapViewer extends MapActivity {
 	private class MyLocationListener implements LocationListener {
@@ -188,7 +192,10 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final FileFilter FILE_FILTER_VALID_MAP = new FileFilter() {
 		@Override
 		public boolean accept(File file) {
-			return MapDatabase.isValidMapFile(file.getAbsolutePath());
+			MapDatabase mapDatabase = new MapDatabase();
+			FileOpenResult fileOpenResult = mapDatabase.openFile(file.getAbsolutePath());
+			mapDatabase.closeFile();
+			return fileOpenResult.isSuccess();
 		}
 	};
 
@@ -203,8 +210,7 @@ public class AdvancedMapViewer extends MapActivity {
 			try {
 				inputStream = new FileInputStream(file);
 				RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
-				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser()
-						.getXMLReader();
+				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
 				xmlReader.setContentHandler(renderThemeHandler);
 				xmlReader.parse(new InputSource(inputStream));
 			} catch (ParserConfigurationException e) {
@@ -254,7 +260,6 @@ public class AdvancedMapViewer extends MapActivity {
 	private Paint circleOverlayFill;
 	private Paint circleOverlayOutline;
 	private LocationManager locationManager;
-	private MapViewMode mapViewMode;
 	private MyLocationListener myLocationListener;
 	private boolean showMyLocation;
 	private boolean snapToLocation;
@@ -310,7 +315,7 @@ public class AdvancedMapViewer extends MapActivity {
 			case R.id.menu_position_map_center:
 				// disable GPS follow mode if it is enabled
 				disableSnapToLocation(true);
-				this.mapController.setCenter(this.mapView.getMapDatabase().getMapCenter());
+				this.mapController.setCenter(this.mapView.getMapDatabase().getMapFileInfo().getMapCenter());
 				return true;
 
 			case R.id.menu_screenshot:
@@ -350,7 +355,9 @@ public class AdvancedMapViewer extends MapActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+		MapViewMode mapViewMode = this.mapView.getMapViewMode();
+
+		if (mapViewMode.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_info_map_file).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_info_map_file).setEnabled(true);
@@ -368,19 +375,19 @@ public class AdvancedMapViewer extends MapActivity {
 			menu.findItem(R.id.menu_position_my_location_disable).setEnabled(false);
 		}
 
-		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+		if (mapViewMode.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(true);
 		}
 
-		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+		if (mapViewMode.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_render_theme).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_render_theme).setEnabled(true);
 		}
 
-		if (this.mapView.getMapViewMode().requiresInternetConnection()) {
+		if (mapViewMode.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_mapfile).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_mapfile).setEnabled(true);
@@ -400,8 +407,7 @@ public class AdvancedMapViewer extends MapActivity {
 			@Override
 			public void run() {
 				try {
-					File path = new File(Environment.getExternalStorageDirectory(),
-							SCREENSHOT_DIRECTORY);
+					File path = new File(Environment.getExternalStorageDirectory(), SCREENSHOT_DIRECTORY);
 					// make sure the Pictures directory exists
 					if (!path.exists() && !path.mkdirs()) {
 						showToastOnUiThread("Could not create target directory");
@@ -409,11 +415,10 @@ public class AdvancedMapViewer extends MapActivity {
 					}
 
 					// assemble the complete name for the screenshot file
-					String fileName = path.getAbsolutePath() + File.separatorChar
-							+ SCREENSHOT_FILE_NAME + "." + format.name().toLowerCase();
+					String fileName = path.getAbsolutePath() + File.separatorChar + SCREENSHOT_FILE_NAME + "."
+							+ format.name().toLowerCase();
 
-					if (AdvancedMapViewer.this.mapView.makeScreenshot(format,
-							SCREENSHOT_QUALITY, fileName)) {
+					if (AdvancedMapViewer.this.mapView.takeScreenshot(format, SCREENSHOT_QUALITY, fileName)) {
 						// success
 						showToastOnUiThread(fileName);
 					} else {
@@ -443,8 +448,9 @@ public class AdvancedMapViewer extends MapActivity {
 		this.mapView.setFocusable(true);
 
 		// set the localized text fields
-		this.mapView.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));
-		this.mapView.setText(TextField.METER, getString(R.string.unit_symbol_meter));
+		MapScaleBar mapScaleBar = this.mapView.getMapScaleBar();
+		mapScaleBar.setText(TextField.KILOMETER, getString(R.string.unit_symbol_kilometer));
+		mapScaleBar.setText(TextField.METER, getString(R.string.unit_symbol_meter));
 
 		// get the map controller for this MapView
 		this.mapController = this.mapView.getController();
@@ -468,8 +474,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			this.showMyLocation = true;
 
-			this.circleOverlay = new ArrayCircleOverlay(this.circleOverlayFill,
-					this.circleOverlayOutline);
+			this.circleOverlay = new ArrayCircleOverlay(this.circleOverlayFill, this.circleOverlayOutline);
 			this.overlayCircle = new OverlayCircle();
 			this.circleOverlay.addCircle(this.overlayCircle);
 			this.mapView.getOverlays().add(this.circleOverlay);
@@ -482,8 +487,7 @@ public class AdvancedMapViewer extends MapActivity {
 			this.mapView.getOverlays().add(this.itemizedOverlay);
 
 			this.myLocationListener.setCenterAtFirstFix(centerAtFirstFix);
-			this.locationManager.requestLocationUpdates(bestProvider, 1000, 0,
-					this.myLocationListener);
+			this.locationManager.requestLocationUpdates(bestProvider, 1000, 0, this.myLocationListener);
 			this.snapToLocationView.setVisibility(View.VISIBLE);
 		}
 	}
@@ -510,36 +514,31 @@ public class AdvancedMapViewer extends MapActivity {
 		} else {
 			DecimalFormat decimalFormat = new DecimalFormat("#.0 ");
 			if (fileSize < 1000000) { // less than 1 MB
-				return decimalFormat.format(fileSize / 1000d)
-						+ getString(R.string.file_size_kb);
+				return decimalFormat.format(fileSize / 1000d) + getString(R.string.file_size_kb);
 			} else if (fileSize < 1000000000) { // less than 1 GB
-				return decimalFormat.format(fileSize / 1000000d)
-						+ getString(R.string.file_size_mb);
+				return decimalFormat.format(fileSize / 1000000d) + getString(R.string.file_size_mb);
 			}
-			return decimalFormat.format(fileSize / 1000000000d)
-					+ getString(R.string.file_size_gb);
+			return decimalFormat.format(fileSize / 1000000000d) + getString(R.string.file_size_gb);
 		}
 	}
 
 	/**
-	 * Centers the map to the last known position as reported by the most accurate location
-	 * provider. If the last location is unknown, a toast message is displayed instead.
+	 * Centers the map to the last known position as reported by the most accurate location provider. If the
+	 * last location is unknown, a toast message is displayed instead.
 	 */
 	private void gotoLastKnownPosition() {
 		Location currentLocation;
 		Location bestLocation = null;
 		for (String provider : this.locationManager.getProviders(true)) {
 			currentLocation = this.locationManager.getLastKnownLocation(provider);
-			if (bestLocation == null
-					|| currentLocation.getAccuracy() < bestLocation.getAccuracy()) {
+			if (bestLocation == null || currentLocation.getAccuracy() < bestLocation.getAccuracy()) {
 				bestLocation = currentLocation;
 			}
 		}
 
 		// check if a location has been found
 		if (bestLocation != null) {
-			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation
-					.getLongitude());
+			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation.getLongitude());
 			this.mapController.setCenter(point);
 		} else {
 			showToast(getString(R.string.error_last_location_unknown));
@@ -572,13 +571,15 @@ public class AdvancedMapViewer extends MapActivity {
 				if (data != null && data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
 					this.mapView.setMapFile(data.getStringExtra(FilePicker.SELECTED_FILE));
 				}
-			} else if (resultCode == RESULT_CANCELED
-					&& !this.mapView.getMapViewMode().requiresInternetConnection()
-					&& !this.mapView.hasValidMapFile()) {
-				finish();
+			} else {
+				if (resultCode == RESULT_CANCELED
+						&& !this.mapView.getMapViewMode().requiresInternetConnection()
+						&& this.mapView.getMapFile() == null) {
+					finish();
+				}
 			}
-		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK
-				&& data != null && data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
+		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK && data != null
+				&& data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
 			try {
 				this.mapView.setRenderTheme(data.getStringExtra(FilePicker.SELECTED_FILE));
 			} catch (FileNotFoundException e) {
@@ -594,6 +595,7 @@ public class AdvancedMapViewer extends MapActivity {
 		// set up the layout views
 		setContentView(R.layout.activity_advanced_map_viewer);
 		this.mapView = (MapView) findViewById(R.id.mapView);
+		configureMapView();
 
 		this.snapToLocationView = (ToggleButton) findViewById(R.id.snapToLocationView);
 		this.snapToLocationView.setOnClickListener(new OnClickListener() {
@@ -606,8 +608,6 @@ public class AdvancedMapViewer extends MapActivity {
 				}
 			}
 		});
-
-		configureMapView();
 
 		// get the pointers to different system services
 		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -627,8 +627,7 @@ public class AdvancedMapViewer extends MapActivity {
 		this.circleOverlayOutline.setAlpha(128);
 		this.circleOverlayOutline.setStrokeWidth(2);
 
-		if (savedInstanceState != null
-				&& savedInstanceState.getBoolean(BUNDLE_SHOW_MY_LOCATION)) {
+		if (savedInstanceState != null && savedInstanceState.getBoolean(BUNDLE_SHOW_MY_LOCATION)) {
 			enableShowMyLocation(savedInstanceState.getBoolean(BUNDLE_CENTER_AT_FIRST_FIX));
 			if (savedInstanceState.getBoolean(BUNDLE_SNAP_TO_LOCATION)) {
 				enableSnapToLocation(false);
@@ -645,23 +644,21 @@ public class AdvancedMapViewer extends MapActivity {
 			LayoutInflater factory = LayoutInflater.from(this);
 			final View view = factory.inflate(R.layout.dialog_enter_coordinates, null);
 			builder.setView(view);
-			builder.setPositiveButton(R.string.go_to_position,
-					new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							// disable GPS follow mode if it is enabled
-							disableSnapToLocation(true);
+			builder.setPositiveButton(R.string.go_to_position, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// disable GPS follow mode if it is enabled
+					disableSnapToLocation(true);
 
-							// set the map center and zoom level
-							AdvancedMapViewer.this.mapController.setCenter(new GeoPoint(Double
-									.parseDouble(((EditText) view.findViewById(R.id.latitude))
-											.getText().toString()), Double
-									.parseDouble(((EditText) view.findViewById(R.id.longitude))
-											.getText().toString())));
-							AdvancedMapViewer.this.mapController.setZoom(((SeekBar) view
-									.findViewById(R.id.zoomlevel)).getProgress());
-						}
-					});
+					// set the map center and zoom level
+					AdvancedMapViewer.this.mapController.setCenter(new GeoPoint(Double
+							.parseDouble(((EditText) view.findViewById(R.id.latitude)).getText().toString()),
+							Double.parseDouble(((EditText) view.findViewById(R.id.longitude)).getText()
+									.toString())));
+					AdvancedMapViewer.this.mapController.setZoom(((SeekBar) view.findViewById(R.id.zoomlevel))
+							.getProgress());
+				}
+			});
 			builder.setNegativeButton(R.string.cancel, null);
 			return builder.create();
 		} else if (id == DIALOG_LOCATION_PROVIDER_DISABLED) {
@@ -709,7 +706,7 @@ public class AdvancedMapViewer extends MapActivity {
 		if (id == DIALOG_ENTER_COORDINATES) {
 			// latitude
 			EditText editText = (EditText) dialog.findViewById(R.id.latitude);
-			GeoPoint mapCenter = this.mapView.getMapCenter();
+			GeoPoint mapCenter = this.mapView.getMapPosition().getMapCenter();
 			editText.setText(Double.toString(mapCenter.getLatitude()));
 
 			// longitude
@@ -718,8 +715,8 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// zoom level
 			SeekBar zoomlevel = (SeekBar) dialog.findViewById(R.id.zoomlevel);
-			zoomlevel.setMax(this.mapView.getMaxZoomLevel());
-			zoomlevel.setProgress(this.mapView.getZoomLevel());
+			zoomlevel.setMax(this.mapView.getMapGenerator().getZoomLevelMax());
+			zoomlevel.setProgress(this.mapView.getMapPosition().getZoomLevel());
 
 			// zoom level value
 			final TextView textView = (TextView) dialog.findViewById(R.id.zoomlevelValue);
@@ -741,7 +738,7 @@ public class AdvancedMapViewer extends MapActivity {
 				}
 			});
 		} else if (id == DIALOG_INFO_MAP_FILE) {
-			MapDatabase mapDatabase = this.mapView.getMapDatabase();
+			MapFileInfo mapFileInfo = this.mapView.getMapDatabase().getMapFileInfo();
 
 			// map file name
 			TextView textView = (TextView) dialog.findViewById(R.id.infoMapFileViewName);
@@ -749,15 +746,15 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file size
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewSize);
-			textView.setText(formatFileSize(mapDatabase.getFileSize()));
+			textView.setText(formatFileSize(mapFileInfo.getFileSize()));
 
 			// map file version
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewVersion);
-			textView.setText(String.valueOf(mapDatabase.getFileVersion()));
+			textView.setText(String.valueOf(mapFileInfo.getFileVersion()));
 
 			// map file debug
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewDebug);
-			if (mapDatabase.isDebugFile()) {
+			if (mapFileInfo.isDebugFile()) {
 				textView.setText(R.string.info_map_file_debug_yes);
 			} else {
 				textView.setText(R.string.info_map_file_debug_no);
@@ -765,28 +762,27 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file date
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewDate);
-			Date date = new Date(mapDatabase.getMapDate());
+			Date date = new Date(mapFileInfo.getMapDate());
 			textView.setText(DateFormat.getDateTimeInstance().format(date));
 
 			// map file area
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewArea);
-			Rect mapArea = mapDatabase.getMapBoundary();
-			textView.setText(mapArea.top / 1000000d + ", " + mapArea.left / 1000000d + " – \n"
-					+ mapArea.bottom / 1000000d + ", " + mapArea.right / 1000000d);
+			BoundingBox boundingBox = mapFileInfo.getBoundingBox();
+			textView.setText(boundingBox.getMinLatitude() + ", " + boundingBox.getMinLongitude() + " – \n"
+					+ boundingBox.getMaxLatitude() + ", " + boundingBox.getMaxLongitude());
 
 			// map file start position
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStart);
-			GeoPoint startPosition = mapDatabase.getStartPosition();
+			GeoPoint startPosition = mapFileInfo.getStartPosition();
 			if (startPosition == null) {
 				textView.setText(null);
 			} else {
-				textView.setText(startPosition.getLatitude() + ", "
-						+ startPosition.getLongitude());
+				textView.setText(startPosition.getLatitude() + ", " + startPosition.getLongitude());
 			}
 
 			// map file comment text
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewComment);
-			textView.setText(mapDatabase.getCommentText());
+			textView.setText(mapFileInfo.getCommentText());
 		} else {
 			super.onPrepareDialog(id, dialog);
 		}
@@ -800,15 +796,14 @@ public class AdvancedMapViewer extends MapActivity {
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// set the map settings
-		this.mapView.setScaleBar(preferences.getBoolean("showScaleBar", false));
+		this.mapView.getMapScaleBar().setShowMapScaleBar(preferences.getBoolean("showScaleBar", false));
 		if (preferences.contains("mapViewMode")) {
-			this.mapViewMode = Enum.valueOf(MapViewMode.class, preferences.getString(
-					"mapViewMode", MapView.getDefaultMapViewMode().name()));
-			this.mapView.setMapViewMode(this.mapViewMode);
+			MapViewMode mapViewMode = Enum.valueOf(MapViewMode.class,
+					preferences.getString("mapViewMode", MapView.DEFAULT_MAP_VIEW_MODE.name()));
+			this.mapView.setMapViewMode(mapViewMode);
 		}
 		try {
-			this.mapView
-					.setTextScale(Float.parseFloat(preferences.getString("textScale", "1")));
+			this.mapView.setTextScale(Float.parseFloat(preferences.getString("textScale", "1")));
 		} catch (NumberFormatException e) {
 			this.mapView.setTextScale(1);
 		}
@@ -824,22 +819,23 @@ public class AdvancedMapViewer extends MapActivity {
 		if (preferences.getBoolean("wakeLock", false) && !this.wakeLock.isHeld()) {
 			this.wakeLock.acquire();
 		}
-		this.mapView.setMemoryCardCachePersistence(preferences.getBoolean("cachePersistence",
-				false));
-		this.mapView.setMemoryCardCacheSize(Math.min(preferences.getInt("cacheSize",
-				MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
-		this.mapView.setMoveSpeed(Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT),
-				MOVE_SPEED_MAX) / 10f);
+
+		this.mapView.getFileSystemTileCache().setPersistent(preferences.getBoolean("cachePersistence", false));
+		this.mapView.setMemoryCardCacheSize(Math.min(
+				preferences.getInt("cacheSize", MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
+		this.mapView.getMapMover().setMoveSpeed(
+				Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f);
 
 		// set the debug settings
-		this.mapView.setFpsCounter(preferences.getBoolean("showFpsCounter", false));
-		this.mapView.setTileFrames(preferences.getBoolean("showTileFrames", false));
-		this.mapView.setTileCoordinates(preferences.getBoolean("showTileCoordinates", false));
-		this.mapView.setWaterTiles(preferences.getBoolean("showWaterTiles", false));
+		this.mapView.getFpsCounter().setFpsCounter(preferences.getBoolean("showFpsCounter", false));
+
+		DebugSettings debugSettings = this.mapView.getDebugSettings();
+		debugSettings.setDrawTileFrames(preferences.getBoolean("drawTileFrames", false));
+		debugSettings.setDrawTileCoordinates(preferences.getBoolean("drawTileCoordinates", false));
+		debugSettings.setHighlightWaterTiles(preferences.getBoolean("highlightWaterTiles", false));
 
 		// check if the file browser needs to be displayed
-		if (!this.mapView.getMapViewMode().requiresInternetConnection()
-				&& !this.mapView.hasValidMapFile()) {
+		if (!this.mapView.getMapViewMode().requiresInternetConnection() && this.mapView.getMapFile() == null) {
 			startMapFilePicker();
 		}
 	}
@@ -848,8 +844,7 @@ public class AdvancedMapViewer extends MapActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putBoolean(BUNDLE_SHOW_MY_LOCATION, isShowMyLocationEnabled());
-		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener
-				.isCenterAtFirstFix());
+		outState.putBoolean(BUNDLE_CENTER_AT_FIRST_FIX, this.myLocationListener.isCenterAtFirstFix());
 		outState.putBoolean(BUNDLE_SNAP_TO_LOCATION, this.snapToLocation);
 	}
 
@@ -923,8 +918,8 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Displays a text message via the toast notification system. If a previous message is still
-	 * visible, the previous message is first removed.
+	 * Displays a text message via the toast notification system. If a previous message is still visible, the
+	 * previous message is first removed.
 	 * 
 	 * @param text
 	 *            the text message to display
