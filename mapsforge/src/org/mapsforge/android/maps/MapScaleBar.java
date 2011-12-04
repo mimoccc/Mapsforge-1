@@ -52,14 +52,19 @@ public class MapScaleBar {
 		MILE;
 	}
 
-	private static final int BITMAP_HEIGHT = 35;
-	private static final int BITMAP_WIDTH = 130;
+	private static final int BITMAP_HEIGHT = 50;
+	private static final int BITMAP_WIDTH = 150;
 	private static final double LATITUDE_REDRAW_THRESHOLD = 0.2;
 	private static final int MARGIN_BOTTOM = 5;
 	private static final int MARGIN_LEFT = 5;
+	private static final double METER_FOOT_RATIO = 0.3048;
+	private static final int ONE_KILOMETER = 1000;
+	private static final int ONE_MILE = 5280;
 	private static final Paint SCALE_BAR = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint SCALE_BAR_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private static final int[] SCALE_BAR_VALUES = { 10000000, 5000000, 2000000, 1000000, 500000, 200000,
+	private static final int[] SCALE_BAR_VALUES_IMPERIAL = { 26400000, 10560000, 5280000, 2640000, 1056000,
+			528000, 264000, 105600, 52800, 26400, 10560, 5280, 2000, 1000, 500, 200, 100, 50, 20, 10, 5, 2, 1 };
+	private static final int[] SCALE_BAR_VALUES_METRIC = { 10000000, 5000000, 2000000, 1000000, 500000, 200000,
 			100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20, 10, 5, 2, 1 };
 	private static final Paint SCALE_TEXT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final Paint SCALE_TEXT_STROKE = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -73,15 +78,16 @@ public class MapScaleBar {
 		SCALE_BAR_STROKE.setColor(Color.WHITE);
 
 		SCALE_TEXT.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-		SCALE_TEXT.setTextSize(14);
+		SCALE_TEXT.setTextSize(17);
 		SCALE_TEXT.setColor(Color.BLACK);
 		SCALE_TEXT_STROKE.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 		SCALE_TEXT_STROKE.setStyle(Paint.Style.STROKE);
 		SCALE_TEXT_STROKE.setColor(Color.WHITE);
-		SCALE_TEXT_STROKE.setStrokeWidth(3);
-		SCALE_TEXT_STROKE.setTextSize(14);
+		SCALE_TEXT_STROKE.setStrokeWidth(2);
+		SCALE_TEXT_STROKE.setTextSize(17);
 	}
 
+	private boolean imperialUnits;
 	private MapPositionFix mapPositionFix;
 	private final Bitmap mapScaleBitmap;
 	private final Canvas mapScaleCanvas;
@@ -99,10 +105,25 @@ public class MapScaleBar {
 	}
 
 	/**
+	 * @return true if imperial units are used, false otherwise.
+	 */
+	public boolean isImperialUnits() {
+		return this.imperialUnits;
+	}
+
+	/**
 	 * @return true if this map scale bar is visible, false otherwise.
 	 */
 	public boolean isShowMapScaleBar() {
 		return this.showMapScaleBar;
+	}
+
+	/**
+	 * @param imperialUnits
+	 *            true if imperial units should be used rather than metric units.
+	 */
+	public void setImperialUnits(boolean imperialUnits) {
+		this.imperialUnits = imperialUnits;
 	}
 
 	/**
@@ -123,6 +144,16 @@ public class MapScaleBar {
 	 */
 	public void setText(TextField textField, String value) {
 		this.textFields.put(textField, value);
+	}
+
+	private void drawScaleBar(float scaleBarLength, Paint paint) {
+		this.mapScaleCanvas.drawLine(7, 25, scaleBarLength + 3, 25, paint);
+		this.mapScaleCanvas.drawLine(5, 10, 5, 40, paint);
+		this.mapScaleCanvas.drawLine(scaleBarLength + 5, 10, scaleBarLength + 5, 40, paint);
+	}
+
+	private void drawScaleText(int scaleValue, String unitSymbol, Paint paint) {
+		this.mapScaleCanvas.drawText(scaleValue + unitSymbol, 12, 18, paint);
 	}
 
 	private boolean isRedrawNecessary() {
@@ -156,24 +187,32 @@ public class MapScaleBar {
 		this.mapScaleBitmap.eraseColor(Color.TRANSPARENT);
 
 		// draw the scale bar
-		this.mapScaleCanvas.drawLine(7, 20, scaleBarLength + 3, 20, SCALE_BAR_STROKE);
-		this.mapScaleCanvas.drawLine(5, 10, 5, 30, SCALE_BAR_STROKE);
-		this.mapScaleCanvas.drawLine(scaleBarLength + 5, 10, scaleBarLength + 5, 30, SCALE_BAR_STROKE);
-		this.mapScaleCanvas.drawLine(7, 20, scaleBarLength + 3, 20, SCALE_BAR);
-		this.mapScaleCanvas.drawLine(5, 10, 5, 30, SCALE_BAR);
-		this.mapScaleCanvas.drawLine(scaleBarLength + 5, 10, scaleBarLength + 5, 30, SCALE_BAR);
+		drawScaleBar(scaleBarLength, SCALE_BAR_STROKE);
+		drawScaleBar(scaleBarLength, SCALE_BAR);
+
+		int scaleValue;
+		String unitSymbol;
+		if (this.imperialUnits) {
+			if (mapScaleValue < ONE_MILE) {
+				scaleValue = mapScaleValue;
+				unitSymbol = this.textFields.get(TextField.FOOT);
+			} else {
+				scaleValue = mapScaleValue / ONE_MILE;
+				unitSymbol = this.textFields.get(TextField.MILE);
+			}
+		} else {
+			if (mapScaleValue < ONE_KILOMETER) {
+				scaleValue = mapScaleValue;
+				unitSymbol = this.textFields.get(TextField.METER);
+			} else {
+				scaleValue = mapScaleValue / ONE_KILOMETER;
+				unitSymbol = this.textFields.get(TextField.KILOMETER);
+			}
+		}
 
 		// draw the scale text
-		if (mapScaleValue < 1000) {
-			String unitSymbol = this.textFields.get(TextField.METER);
-			this.mapScaleCanvas.drawText(mapScaleValue + unitSymbol, 10, 15, SCALE_TEXT_STROKE);
-			this.mapScaleCanvas.drawText(mapScaleValue + unitSymbol, 10, 15, SCALE_TEXT);
-		} else {
-			int kmValue = mapScaleValue / 1000;
-			String unitSymbol = this.textFields.get(TextField.KILOMETER);
-			this.mapScaleCanvas.drawText(kmValue + unitSymbol, 10, 15, SCALE_TEXT_STROKE);
-			this.mapScaleCanvas.drawText(kmValue + unitSymbol, 10, 15, SCALE_TEXT);
-		}
+		drawScaleText(scaleValue, unitSymbol, SCALE_TEXT_STROKE);
+		drawScaleText(scaleValue, unitSymbol, SCALE_TEXT);
 	}
 
 	private void setDefaultTexts() {
@@ -199,14 +238,23 @@ public class MapScaleBar {
 		}
 
 		this.mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		double meterPerPixel = MercatorProjection.calculateGroundResolution(this.mapPositionFix.getLatitude(),
-				this.mapPositionFix.getZoomLevel());
+		double groundResolution = MercatorProjection.calculateGroundResolution(
+				this.mapPositionFix.getLatitude(), this.mapPositionFix.getZoomLevel());
+
+		int[] scaleBarValues;
+		if (this.imperialUnits) {
+			groundResolution = groundResolution / METER_FOOT_RATIO;
+			scaleBarValues = SCALE_BAR_VALUES_IMPERIAL;
+		} else {
+			scaleBarValues = SCALE_BAR_VALUES_METRIC;
+		}
 
 		float scaleBarLength = 0;
 		int mapScaleValue = 0;
-		for (int i = 0; i < SCALE_BAR_VALUES.length; ++i) {
-			mapScaleValue = SCALE_BAR_VALUES[i];
-			scaleBarLength = mapScaleValue / (float) meterPerPixel;
+
+		for (int i = 0; i < scaleBarValues.length; ++i) {
+			mapScaleValue = scaleBarValues[i];
+			scaleBarLength = mapScaleValue / (float) groundResolution;
 			if (scaleBarLength < (BITMAP_WIDTH - 10)) {
 				break;
 			}
