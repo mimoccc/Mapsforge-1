@@ -18,6 +18,9 @@ import java.util.PriorityQueue;
 
 import org.mapsforge.android.maps.MapView;
 
+/**
+ * A JobQueue keeps the list of pending jobs for a MapView and prioritizes them.
+ */
 public class JobQueue {
 	private static final int INITIAL_CAPACITY = 128;
 
@@ -25,6 +28,12 @@ public class JobQueue {
 	private PriorityQueue<MapGeneratorJob> priorityQueue;
 	private boolean scheduleNeeded;
 
+	/**
+	 * Constructs a new JobQueue for the jobs of the given MapView.
+	 * 
+	 * @param mapView
+	 *            the MapView whose jobs should be organized.
+	 */
 	public JobQueue(MapView mapView) {
 		this.mapView = mapView;
 		this.priorityQueue = new PriorityQueue<MapGeneratorJob>(INITIAL_CAPACITY);

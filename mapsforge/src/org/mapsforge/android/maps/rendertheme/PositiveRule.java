@@ -20,8 +20,8 @@ class PositiveRule extends Rule {
 	final AttributeMatcher keyMatcher;
 	final AttributeMatcher valueMatcher;
 
-	PositiveRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin,
-			byte zoomMax, AttributeMatcher keyMatcher, AttributeMatcher valueMatcher) {
+	PositiveRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin, byte zoomMax,
+			AttributeMatcher keyMatcher, AttributeMatcher valueMatcher) {
 		super(elementMatcher, closedMatcher, zoomMin, zoomMax);
 
 		this.keyMatcher = keyMatcher;

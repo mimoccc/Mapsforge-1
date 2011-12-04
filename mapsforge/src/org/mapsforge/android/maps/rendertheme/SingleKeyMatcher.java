@@ -26,7 +26,7 @@ class SingleKeyMatcher implements AttributeMatcher {
 
 	@Override
 	public boolean isCoveredBy(AttributeMatcher attributeMatcher) {
-		return attributeMatcher == this || attributeMatcher.matches(Arrays.asList(new Tag(key, null)));
+		return attributeMatcher == this || attributeMatcher.matches(Arrays.asList(new Tag(this.key, null)));
 	}
 
 	@Override

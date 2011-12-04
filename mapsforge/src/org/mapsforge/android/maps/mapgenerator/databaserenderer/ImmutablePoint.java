@@ -28,8 +28,7 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 	 * @return a new Point object.
 	 */
 	static ImmutablePoint substract(ImmutablePoint minuend, ImmutablePoint subtrahend) {
-		return new ImmutablePoint(minuend.pointX - subtrahend.pointX, minuend.pointY
-				- subtrahend.pointY);
+		return new ImmutablePoint(minuend.pointX - subtrahend.pointX, minuend.pointY - subtrahend.pointY);
 	}
 
 	/**

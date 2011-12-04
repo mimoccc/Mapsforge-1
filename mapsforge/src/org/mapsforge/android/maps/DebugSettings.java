@@ -15,7 +15,7 @@
 package org.mapsforge.android.maps;
 
 /**
- * 
+ * Carries flags which can be activated in order to debug rendered map tiles.
  */
 public class DebugSettings {
 	private boolean drawTileCoordinates;

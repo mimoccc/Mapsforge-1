@@ -35,8 +35,8 @@ enum FontFamily {
 				return Typeface.SANS_SERIF;
 			case SERIF:
 				return Typeface.SERIF;
-			default:
-				throw new IllegalArgumentException("unknown enum: " + this);
 		}
+
+		throw new IllegalArgumentException("unknown enum value: " + this);
 	}
 }

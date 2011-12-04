@@ -52,10 +52,10 @@ class LongPressDetector extends Thread {
 				// calculate the elapsed time since the press has started
 				long timeElapsed = SystemClock.uptimeMillis() - this.pressStartTime;
 				while (!isInterrupted() && this.pressStartTime > 0
-						&& timeElapsed < touchEventHandler.longPressTimeout) {
+						&& timeElapsed < this.touchEventHandler.longPressTimeout) {
 					try {
 						// wait for the remaining time of the whole timeout
-						wait(touchEventHandler.longPressTimeout - timeElapsed);
+						wait(this.touchEventHandler.longPressTimeout - timeElapsed);
 						timeElapsed = SystemClock.uptimeMillis() - this.pressStartTime;
 					} catch (InterruptedException e) {
 						// restore the interrupted status

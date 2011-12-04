@@ -46,8 +46,7 @@ class MatchingCache {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected boolean removeEldestEntry(
-					Map.Entry<MatchingCacheKey, List<RenderInstruction>> eldest) {
+			protected boolean removeEldestEntry(Map.Entry<MatchingCacheKey, List<RenderInstruction>> eldest) {
 				return size() > initialCapacity;
 			}
 		};

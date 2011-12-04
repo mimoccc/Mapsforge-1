@@ -155,8 +155,8 @@ public abstract class TouchEventHandler {
 	 * @return true if the long press event has been handled, false otherwise.
 	 */
 	final boolean forwardLongPressEvent() {
-		GeoPoint longPressPoint = this.mapView.getProjection().fromPixels((int) previousPositionX,
-				(int) previousPositionY);
+		GeoPoint longPressPoint = this.mapView.getProjection().fromPixels((int) this.previousPositionX,
+				(int) this.previousPositionY);
 		if (longPressPoint != null) {
 			synchronized (this.mapView.getOverlays()) {
 				for (int i = this.mapView.getOverlays().size() - 1; i >= 0; --i) {

@@ -85,6 +85,11 @@ class MapFileHeader {
 	private static final byte SIGNATURE_LENGTH_INDEX = 16;
 
 	/**
+	 * A single whitespace character.
+	 */
+	private static final char SPACE = ' ';
+
+	/**
 	 * Version of the map file format which is supported by this implementation.
 	 */
 	private static final int SUPPORTED_FILE_VERSION = 3;
@@ -116,9 +121,9 @@ class MapFileHeader {
 
 		// check latitude and longitude range
 		if (minLatitude > maxLatitude) {
-			return new FileOpenResult("invalid latitude range: " + minLatitude + " > " + maxLatitude);
+			return new FileOpenResult("invalid latitude range: " + minLatitude + SPACE + maxLatitude);
 		} else if (minLongitude > maxLongitude) {
-			return new FileOpenResult("invalid longitude range: " + minLongitude + " > " + maxLongitude);
+			return new FileOpenResult("invalid longitude range: " + minLongitude + SPACE + maxLongitude);
 		}
 
 		mapFileInfoBuilder.boundingBox = new BoundingBox(minLatitude, minLongitude, maxLatitude, maxLongitude);
@@ -308,7 +313,7 @@ class MapFileHeader {
 
 			// check for valid zoom level range
 			if (zoomLevelMin > zoomLevelMax) {
-				return new FileOpenResult("invalid zoom level range: " + zoomLevelMin + " > " + zoomLevelMax);
+				return new FileOpenResult("invalid zoom level range: " + zoomLevelMin + SPACE + zoomLevelMax);
 			}
 
 			// get and check the start address of the sub-file (8 bytes)

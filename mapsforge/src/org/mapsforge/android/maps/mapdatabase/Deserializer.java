@@ -47,8 +47,8 @@ final class Deserializer {
 	 * @return the int value.
 	 */
 	static int getInt(byte[] buffer, int offset) {
-		return buffer[offset] << 24 | (buffer[offset + 1] & 0xff) << 16
-				| (buffer[offset + 2] & 0xff) << 8 | (buffer[offset + 3] & 0xff);
+		return buffer[offset] << 24 | (buffer[offset + 1] & 0xff) << 16 | (buffer[offset + 2] & 0xff) << 8
+				| (buffer[offset + 3] & 0xff);
 	}
 
 	/**

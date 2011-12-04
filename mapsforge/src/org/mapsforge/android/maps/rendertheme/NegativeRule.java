@@ -19,8 +19,8 @@ import java.util.List;
 class NegativeRule extends Rule {
 	final AttributeMatcher attributeMatcher;
 
-	NegativeRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin,
-			byte zoomMax, AttributeMatcher attributeMatcher) {
+	NegativeRule(ElementMatcher elementMatcher, ClosedMatcher closedMatcher, byte zoomMin, byte zoomMax,
+			AttributeMatcher attributeMatcher) {
 		super(elementMatcher, closedMatcher, zoomMin, zoomMax);
 
 		this.attributeMatcher = attributeMatcher;

@@ -198,29 +198,35 @@ public class MapZoomControls {
 	}
 
 	private int calculatePositionLeft(int left, int right, int zoomControlsWidth) {
-		switch (this.zoomControlsGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+		int gravity = this.zoomControlsGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+		switch (gravity) {
 			case Gravity.LEFT:
 				return ZOOM_CONTROLS_HORIZONTAL_PADDING;
 
 			case Gravity.CENTER_HORIZONTAL:
 				return (right - left - zoomControlsWidth) / 2;
 
-			default:
+			case Gravity.RIGHT:
 				return right - left - zoomControlsWidth - ZOOM_CONTROLS_HORIZONTAL_PADDING;
 		}
+
+		throw new IllegalArgumentException("unknown horizontal gravity: " + gravity);
 	}
 
 	private int calculatePositionTop(int top, int bottom, int zoomControlsHeight) {
-		switch (this.zoomControlsGravity & Gravity.VERTICAL_GRAVITY_MASK) {
+		int gravity = this.zoomControlsGravity & Gravity.VERTICAL_GRAVITY_MASK;
+		switch (gravity) {
 			case Gravity.TOP:
 				return 0;
 
 			case Gravity.CENTER_VERTICAL:
 				return (bottom - top - zoomControlsHeight) / 2;
 
-			default:
+			case Gravity.BOTTOM:
 				return bottom - top - zoomControlsHeight;
 		}
+
+		throw new IllegalArgumentException("unknown vertical gravity: " + gravity);
 	}
 
 	private void showZoomControls() {

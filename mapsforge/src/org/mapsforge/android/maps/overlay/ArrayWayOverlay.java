@@ -21,9 +21,9 @@ import java.util.List;
 import android.graphics.Paint;
 
 /**
- * ArrayWayOverlay is a thread-safe implementation of the {@link WayOverlay} class using an
- * {@link ArrayList} as internal data structure. Default paints for all {@link OverlayWay OverlayWays}
- * without individual paints can be defined via the constructor.
+ * ArrayWayOverlay is a thread-safe implementation of the {@link WayOverlay} class using an {@link ArrayList} as
+ * internal data structure. Default paints for all {@link OverlayWay OverlayWays} without individual paints can
+ * be defined via the constructor.
  */
 public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	private static final int INITIAL_CAPACITY = 8;

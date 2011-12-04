@@ -18,6 +18,14 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+/**
+ * A JobTheme defines the render theme which is used for a {@link MapGeneratorJob}.
+ */
 public interface JobTheme extends Serializable {
+	/**
+	 * @return an InputStream to read the render theme data from.
+	 * @throws FileNotFoundException
+	 *             if the render theme file cannot be found.
+	 */
 	InputStream getRenderThemeAsStream() throws FileNotFoundException;
 }

@@ -23,8 +23,8 @@ import org.mapsforge.android.maps.MapViewMode;
 import org.mapsforge.android.maps.Tile;
 
 /**
- * A container class that holds all immutable rendering parameters for a single map image together with a
- * mutable priority field, which indicates the importance of this task.
+ * A MapGeneratorJob holds all immutable rendering parameters for a single map image together with a mutable
+ * priority field, which indicates the importance of this job.
  */
 public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -48,8 +48,8 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
-		this.jobTheme = jobParameters.jobTheme;
-		this.textScale = jobParameters.textScale;
+		this.jobTheme = jobParameters.getJobTheme();
+		this.textScale = jobParameters.getTextScale();
 		this.drawTileFrames = debugSettings.isDrawTileFrames();
 		this.drawTileCoordinates = debugSettings.isDrawTileCoordinates();
 		this.highlightWater = debugSettings.isHighlightWaterTiles();
@@ -111,7 +111,7 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 	}
 
 	public double getPriority() {
-		return priority;
+		return this.priority;
 	}
 
 	public float getTextScale() {

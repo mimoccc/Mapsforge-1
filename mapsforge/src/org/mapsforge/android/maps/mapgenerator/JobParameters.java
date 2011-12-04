@@ -15,11 +15,19 @@
 package org.mapsforge.android.maps.mapgenerator;
 
 public class JobParameters {
-	public final JobTheme jobTheme;
-	public final float textScale;
+	private final JobTheme jobTheme;
+	private final float textScale;
 
 	public JobParameters(JobTheme jobTheme, float textScale) {
 		this.jobTheme = jobTheme;
 		this.textScale = textScale;
+	}
+
+	public JobTheme getJobTheme() {
+		return this.jobTheme;
+	}
+
+	public float getTextScale() {
+		return this.textScale;
 	}
 }

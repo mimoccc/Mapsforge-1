@@ -118,8 +118,8 @@ class SubFileParameter {
 	 * @param boundingBox
 	 *            the boundary of the sub-file.
 	 */
-	SubFileParameter(long startAddress, long indexStartAddress, long subFileSize,
-			byte baseZoomLevel, byte tileZoomLevelMin, byte tileZoomLevelMax, BoundingBox boundingBox) {
+	SubFileParameter(long startAddress, long indexStartAddress, long subFileSize, byte baseZoomLevel,
+			byte tileZoomLevelMin, byte tileZoomLevelMax, BoundingBox boundingBox) {
 		this.startAddress = startAddress;
 		this.indexStartAddress = indexStartAddress;
 		this.subFileSize = subFileSize;

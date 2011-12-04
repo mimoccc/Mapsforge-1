@@ -31,8 +31,8 @@ enum FontStyle {
 				return 2;
 			case NORMAL:
 				return 0;
-			default:
-				throw new IllegalArgumentException("unknown enum: " + this);
 		}
+
+		throw new IllegalArgumentException("unknown enum value: " + this);
 	}
 }

@@ -64,6 +64,11 @@ public class MapDatabase {
 	private static final int INDEX_CACHE_SIZE = 64;
 
 	/**
+	 * Error message for an invalid first way offset.
+	 */
+	private static final String INVALID_FIRST_WAY_OFFSET = "invalid first way offset: ";
+
+	/**
 	 * Maximum way nodes sequence length which is considered as valid.
 	 */
 	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
@@ -307,9 +312,6 @@ public class MapDatabase {
 		}
 	}
 
-	/**
-	 * Prepares and sets up the internal data structures and caches.
-	 */
 	private void prepareExecution() {
 		if (this.databaseIndexCache == null) {
 			this.databaseIndexCache = new IndexCache(this.inputFile, INDEX_CACHE_SIZE);
@@ -346,7 +348,7 @@ public class MapDatabase {
 		// get the relative offset to the first stored way in the block
 		int firstWayOffset = this.readBuffer.readUnsignedInt();
 		if (firstWayOffset < 0) {
-			Logger.debug("invalid first way offset: " + firstWayOffset);
+			Logger.debug(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
 			if (this.debugFile) {
 				Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
@@ -356,7 +358,7 @@ public class MapDatabase {
 		// add the current buffer position to the relative first way offset
 		firstWayOffset += this.readBuffer.getBufferPosition();
 		if (firstWayOffset > this.readBuffer.getBufferSize()) {
-			Logger.debug("invalid first way offset: " + firstWayOffset);
+			Logger.debug(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
 			if (this.debugFile) {
 				Logger.debug(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
@@ -434,7 +436,7 @@ public class MapDatabase {
 				// calculate the size of the current block
 				int currentBlockSize = (int) (nextBlockPointer - currentBlockPointer);
 				if (currentBlockSize < 0) {
-					Logger.debug("invalid current block size: " + currentBlockSize);
+					Logger.debug("current block size must not be negative: " + currentBlockSize);
 					return;
 				} else if (currentBlockSize == 0) {
 					// the current block is empty, continue with the next block
@@ -444,7 +446,7 @@ public class MapDatabase {
 					Logger.debug("current block size too large: " + currentBlockSize);
 					continue;
 				} else if (currentBlockPointer + currentBlockSize > this.fileSize) {
-					Logger.debug("invalid current block size: " + currentBlockSize);
+					Logger.debug("current block largher than file size: " + currentBlockSize);
 					return;
 				}
 

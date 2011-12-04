@@ -17,6 +17,8 @@ package org.mapsforge.android.maps;
 import android.graphics.Point;
 
 class MapViewProjection implements Projection {
+	private static final String INVALID_MAP_VIEW_DIMENSIONS = "invalid MapView dimensions";
+
 	private final MapView mapView;
 
 	MapViewProjection(MapView mapView) {
@@ -32,15 +34,16 @@ class MapViewProjection implements Projection {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
 
 		// calculate the pixel coordinates of the top left corner
-		double pixelX = MercatorProjection
-				.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
-		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		double pixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
+				mapPositionFix.getZoomLevel());
+		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
+				mapPositionFix.getZoomLevel());
 		pixelX -= this.mapView.getWidth() >> 1;
 		pixelY -= this.mapView.getHeight() >> 1;
 
 		// convert the pixel coordinates to a GeoPoint and return it
-		return new GeoPoint(MercatorProjection.pixelYToLatitude(pixelY + y, mapPositionFix.zoomLevel),
-				MercatorProjection.pixelXToLongitude(pixelX + x, mapPositionFix.zoomLevel));
+		return new GeoPoint(MercatorProjection.pixelYToLatitude(pixelY + y, mapPositionFix.getZoomLevel()),
+				MercatorProjection.pixelXToLongitude(pixelX + x, mapPositionFix.getZoomLevel()));
 	}
 
 	@Override
@@ -50,7 +53,7 @@ class MapViewProjection implements Projection {
 			GeoPoint bottom = fromPixels(0, this.mapView.getHeight());
 			return Math.abs(top.getLatitudeE6() - bottom.getLatitudeE6());
 		}
-		throw new IllegalStateException("MapView dimensions are invalid");
+		throw new IllegalStateException(INVALID_MAP_VIEW_DIMENSIONS);
 	}
 
 	@Override
@@ -60,7 +63,7 @@ class MapViewProjection implements Projection {
 			GeoPoint right = fromPixels(this.mapView.getWidth(), 0);
 			return Math.abs(left.getLongitudeE6() - right.getLongitudeE6());
 		}
-		throw new IllegalStateException("MapView dimensions are invalid");
+		throw new IllegalStateException(INVALID_MAP_VIEW_DIMENSIONS);
 	}
 
 	@Override
@@ -79,22 +82,23 @@ class MapViewProjection implements Projection {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
 
 		// calculate the pixel coordinates of the top left corner
-		double pixelX = MercatorProjection
-				.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
-		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		double pixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
+				mapPositionFix.getZoomLevel());
+		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
+				mapPositionFix.getZoomLevel());
 		pixelX -= this.mapView.getWidth() >> 1;
 		pixelY -= this.mapView.getHeight() >> 1;
 
 		if (out == null) {
 			// create a new point and return it
 			return new Point((int) (MercatorProjection.longitudeToPixelX(in.getLongitude(),
-					mapPositionFix.zoomLevel) - pixelX), (int) (MercatorProjection.latitudeToPixelY(
-					in.getLatitude(), mapPositionFix.zoomLevel) - pixelY));
+					mapPositionFix.getZoomLevel()) - pixelX), (int) (MercatorProjection.latitudeToPixelY(
+					in.getLatitude(), mapPositionFix.getZoomLevel()) - pixelY));
 		}
 
 		// reuse the existing point
-		out.x = (int) (MercatorProjection.longitudeToPixelX(in.getLongitude(), mapPositionFix.zoomLevel) - pixelX);
-		out.y = (int) (MercatorProjection.latitudeToPixelY(in.getLatitude(), mapPositionFix.zoomLevel) - pixelY);
+		out.x = (int) (MercatorProjection.longitudeToPixelX(in.getLongitude(), mapPositionFix.getZoomLevel()) - pixelX);
+		out.y = (int) (MercatorProjection.latitudeToPixelY(in.getLatitude(), mapPositionFix.getZoomLevel()) - pixelY);
 		return out;
 	}
 

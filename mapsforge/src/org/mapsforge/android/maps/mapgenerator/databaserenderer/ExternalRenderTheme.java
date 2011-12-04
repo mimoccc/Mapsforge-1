@@ -23,6 +23,9 @@ import java.io.ObjectInputStream;
 
 import org.mapsforge.android.maps.mapgenerator.JobTheme;
 
+/**
+ * An ExternalRenderTheme allows for customizing the rendering style of the map via an XML file.
+ */
 public class ExternalRenderTheme implements JobTheme {
 	private static final long serialVersionUID = 1L;
 
@@ -30,6 +33,14 @@ public class ExternalRenderTheme implements JobTheme {
 	private transient int hashCodeValue;
 	private final String renderThemePath;
 
+	/**
+	 * Constructs a new ExternalRenderTheme by reading the given XML file.
+	 * 
+	 * @param renderThemePath
+	 *            the path to the XML render theme file.
+	 * @throws FileNotFoundException
+	 *             if the file does not exist or cannot be read.
+	 */
 	public ExternalRenderTheme(String renderThemePath) throws FileNotFoundException {
 		File renderThemeFile = new File(renderThemePath);
 		if (!renderThemeFile.exists()) {

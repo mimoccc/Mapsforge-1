@@ -32,6 +32,7 @@ abstract class Rule {
 	private static final Pattern SPLIT_PATTERN = Pattern.compile("\\|");
 	private static final String STRING_NEGATION = "~";
 	private static final String STRING_WILDCARD = "*";
+	private static final String UNKNOWN_ENUM_VALUE = "unknown enum value: ";
 
 	private static Rule createRule(Stack<Rule> ruleStack, Element element, String keys, String values,
 			Closed closed, byte zoomMin, byte zoomMax) {
@@ -54,8 +55,7 @@ abstract class Rule {
 		keyMatcher = RuleOptimizer.optimize(keyMatcher, ruleStack);
 		valueMatcher = RuleOptimizer.optimize(valueMatcher, ruleStack);
 
-		return new PositiveRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher,
-				valueMatcher);
+		return new PositiveRule(elementMatcher, closedMatcher, zoomMin, zoomMax, keyMatcher, valueMatcher);
 	}
 
 	private static ClosedMatcher getClosedMatcher(Closed closed) {
@@ -66,9 +66,9 @@ abstract class Rule {
 				return LinearWayMatcher.getInstance();
 			case ANY:
 				return AnyMatcher.getInstance();
-			default:
-				throw new IllegalArgumentException("unknown enum value: " + closed);
 		}
+
+		throw new IllegalArgumentException(UNKNOWN_ENUM_VALUE + closed);
 	}
 
 	private static ElementMatcher getElementMatcher(Element element) {
@@ -79,9 +79,9 @@ abstract class Rule {
 				return ElementWayMatcher.getInstance();
 			case ANY:
 				return AnyMatcher.getInstance();
-			default:
-				throw new IllegalArgumentException("unknown enum value: " + element);
 		}
+
+		throw new IllegalArgumentException(UNKNOWN_ENUM_VALUE + element);
 	}
 
 	private static AttributeMatcher getKeyMatcher(List<String> keyList) {
@@ -118,8 +118,8 @@ abstract class Rule {
 		return attributeMatcher;
 	}
 
-	private static void validate(String elementName, Element element, String keys, String values,
-			byte zoomMin, byte zoomMax) {
+	private static void validate(String elementName, Element element, String keys, String values, byte zoomMin,
+			byte zoomMax) {
 		if (element == null) {
 			throw new IllegalArgumentException("missing attribute e for element: " + elementName);
 		} else if (keys == null) {

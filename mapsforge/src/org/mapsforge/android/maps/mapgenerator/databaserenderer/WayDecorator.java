@@ -35,7 +35,7 @@ final class WayDecorator {
 	 */
 	private static final int SEGMENT_SAFETY_DISTANCE = 30;
 
-	static void renderWaySymbol(Bitmap symbolBitmap, boolean alignCenter, boolean repeatSymbol,
+	static void renderSymbol(Bitmap symbolBitmap, boolean alignCenter, boolean repeatSymbol,
 			float[][] coordinates, List<SymbolContainer> waySymbols) {
 		int skipPixels = SEGMENT_SAFETY_DISTANCE;
 
@@ -97,7 +97,7 @@ final class WayDecorator {
 		}
 	}
 
-	static void renderWayText(String textKey, Paint paint, Paint outline, float[][] coordinates,
+	static void renderText(String textKey, Paint paint, Paint outline, float[][] coordinates,
 			List<WayTextContainer> wayNames) {
 		// calculate the way name length plus some margin of safety
 		float wayNameWidth = paint.measureText(textKey) + 10;

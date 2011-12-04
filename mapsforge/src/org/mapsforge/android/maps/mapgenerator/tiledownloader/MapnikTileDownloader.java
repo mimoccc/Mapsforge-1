@@ -57,6 +57,6 @@ public class MapnikTileDownloader extends TileDownloader {
 		this.stringBuilder.append(tile.getTileY());
 		this.stringBuilder.append(".png");
 
-		return stringBuilder.toString();
+		return this.stringBuilder.toString();
 	}
 }

@@ -22,6 +22,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 
+/**
+ * A FrameBuffer uses two separate memory buffers to display the current and build up the next frame.
+ */
 public class FrameBuffer {
 	static final int MAP_VIEW_BACKGROUND = Color.rgb(238, 238, 238);
 
@@ -49,7 +52,7 @@ public class FrameBuffer {
 	 */
 	public synchronized void drawBitmap(Tile tile, Bitmap bitmap) {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		if (tile.getZoomLevel() != mapPositionFix.zoomLevel) {
+		if (tile.getZoomLevel() != mapPositionFix.getZoomLevel()) {
 			// the tile doesn't fit to the current zoom level
 			return;
 		} else if (this.mapView.isZoomAnimatorRunning()) {
@@ -57,10 +60,10 @@ public class FrameBuffer {
 			return;
 		}
 
-		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
-				mapPositionFix.zoomLevel);
-		double pixelTop = MercatorProjection
-				.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
+				mapPositionFix.getZoomLevel());
+		double pixelTop = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
+				mapPositionFix.getZoomLevel());
 		pixelLeft -= this.width >> 1;
 		pixelTop -= this.height >> 1;
 

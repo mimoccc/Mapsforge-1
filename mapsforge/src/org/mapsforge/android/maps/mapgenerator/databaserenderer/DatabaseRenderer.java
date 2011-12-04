@@ -41,6 +41,9 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+/**
+ * A DatabaseRenderer renders map tiles by reading from a {@link MapDatabase}.
+ */
 public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDatabaseCallback {
 	private static final byte LAYERS = 11;
 
@@ -170,10 +173,10 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 			this.previousTextScale = textScale;
 		}
 
-		this.mapDatabase.executeQuery(currentTile, this);
+		this.mapDatabase.executeQuery(this.currentTile, this);
 
 		this.nodes = this.labelPlacement.placeLabels(this.nodes, this.pointSymbols, this.areaLabels,
-				currentTile);
+				this.currentTile);
 
 		this.canvasRasterer.setCanvasBitmap(bitmap);
 		this.canvasRasterer.fill(this.renderTheme.getMapBackground());
@@ -189,7 +192,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		}
 
 		if (mapGeneratorJob.isDrawTileCoordinates()) {
-			this.canvasRasterer.drawTileCoordinates(currentTile);
+			this.canvasRasterer.drawTileCoordinates(this.currentTile);
 		}
 
 		clearLists();
@@ -301,13 +304,12 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 
 	@Override
 	public void renderWaySymbol(Bitmap symbolBitmap, boolean alignCenter, boolean repeatSymbol) {
-		WayDecorator
-				.renderWaySymbol(symbolBitmap, alignCenter, repeatSymbol, this.coordinates, this.waySymbols);
+		WayDecorator.renderSymbol(symbolBitmap, alignCenter, repeatSymbol, this.coordinates, this.waySymbols);
 	}
 
 	@Override
 	public void renderWayText(String textKey, Paint paint, Paint outline) {
-		WayDecorator.renderWayText(textKey, paint, outline, this.coordinates, this.wayNames);
+		WayDecorator.renderText(textKey, paint, outline, this.coordinates, this.wayNames);
 	}
 
 	private void clearLists() {
@@ -359,7 +361,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	 */
 	private float scaleLongitude(float longitude) {
 		return (float) (MercatorProjection.longitudeToPixelX(longitude / (double) 1000000,
-				currentTile.getZoomLevel()) - currentTile.getPixelX());
+				this.currentTile.getZoomLevel()) - this.currentTile.getPixelX());
 	}
 
 	/**

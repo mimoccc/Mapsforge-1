@@ -40,10 +40,13 @@ import org.xml.sax.helpers.DefaultHandler;
  * SAX2 handler to parse XML render theme files.
  */
 public class RenderThemeHandler extends DefaultHandler {
-
 	private static enum Element {
 		RENDERING_INSTRUCTION, RULE, RULES;
 	}
+
+	private static final String ELEMENT_NAME_RULE = "rule";
+	private static final String ELEMENT_NAME_RULES = "rules";
+	private static final String UNEXPECTED_ELEMENT = "unexpected element: ";
 
 	/**
 	 * @param inputStream
@@ -110,7 +113,7 @@ public class RenderThemeHandler extends DefaultHandler {
 	public void endElement(String uri, String localName, String qName) {
 		this.elementStack.pop();
 
-		if ("rule".equals(localName)) {
+		if (ELEMENT_NAME_RULE.equals(localName)) {
 			this.ruleStack.pop();
 			if (this.ruleStack.empty()) {
 				this.renderTheme.addRule(this.currentRule);
@@ -129,12 +132,12 @@ public class RenderThemeHandler extends DefaultHandler {
 	public void startElement(String uri, String localName, String qName, Attributes attributes)
 			throws SAXException {
 		try {
-			if ("rules".equals(localName)) {
+			if (ELEMENT_NAME_RULES.equals(localName)) {
 				checkState(localName, Element.RULES);
 				this.renderTheme = RenderTheme.create(localName, attributes);
 			}
 
-			else if ("rule".equals(localName)) {
+			else if (ELEMENT_NAME_RULE.equals(localName)) {
 				checkState(localName, Element.RULE);
 				Rule rule = Rule.create(localName, attributes, this.ruleStack);
 				if (!this.ruleStack.empty()) {
@@ -202,27 +205,32 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	private void checkState(String elementName, Element element) throws SAXException {
+		foo(elementName, element);
+		this.elementStack.push(element);
+	}
+
+	private void foo(String elementName, Element element) throws SAXException {
 		switch (element) {
 			case RULES:
 				if (!this.elementStack.empty()) {
-					throw new SAXException("unexpected element: " + elementName);
+					throw new SAXException(UNEXPECTED_ELEMENT + elementName);
 				}
-				break;
+				return;
+
 			case RULE:
 				Element parentElement = this.elementStack.peek();
 				if (parentElement != Element.RULES && parentElement != Element.RULE) {
-					throw new SAXException("unexpected element: " + elementName);
+					throw new SAXException(UNEXPECTED_ELEMENT + elementName);
 				}
-				break;
+				return;
+
 			case RENDERING_INSTRUCTION:
 				if (this.elementStack.peek() != Element.RULE) {
-					throw new SAXException("unexpected element: " + elementName);
+					throw new SAXException(UNEXPECTED_ELEMENT + elementName);
 				}
-				break;
-			default:
-				throw new SAXException("unknown enum value: " + element);
+				return;
 		}
 
-		this.elementStack.push(element);
+		throw new SAXException("unknown enum value: " + element);
 	}
 }

@@ -44,19 +44,19 @@ final class TileScheduler {
 
 		// calculate the Euclidian distance from the MapView center to the tile center
 		MapPositionFix mapPositionFix = mapView.getMapPosition().getMapPositionFix();
-		double longitudeDiff = mapPositionFix.longitude - tileCenterLongitude;
-		double latitudeDiff = mapPositionFix.latitude - tileCenterLatitude;
+		double longitudeDiff = mapPositionFix.getLongitude() - tileCenterLongitude;
+		double latitudeDiff = mapPositionFix.getLatitude() - tileCenterLatitude;
 		double euclidianDistance = Math.sqrt(longitudeDiff * longitudeDiff + latitudeDiff * latitudeDiff);
 
-		if (mapPositionFix.zoomLevel == tileZoomLevel) {
+		if (mapPositionFix.getZoomLevel() == tileZoomLevel) {
 			return euclidianDistance;
 		}
 
-		int zoomLevelDiff = Math.abs(mapPositionFix.zoomLevel - tileZoomLevel);
+		int zoomLevelDiff = Math.abs(mapPositionFix.getZoomLevel() - tileZoomLevel);
 		double scaleFactor = Math.pow(2, zoomLevelDiff);
 
 		double scaledEuclidianDistance;
-		if (mapPositionFix.zoomLevel < tileZoomLevel) {
+		if (mapPositionFix.getZoomLevel() < tileZoomLevel) {
 			scaledEuclidianDistance = euclidianDistance * scaleFactor;
 		} else {
 			scaledEuclidianDistance = euclidianDistance / scaleFactor;

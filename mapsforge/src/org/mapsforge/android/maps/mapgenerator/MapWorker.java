@@ -21,7 +21,8 @@ import org.mapsforge.android.maps.Tile;
 import android.graphics.Bitmap;
 
 /**
- * A MapWorker controls a {@link MapGenerator}. It runs in a separate thread to avoid blocking the UI thread.
+ * A MapWorker uses a {@link MapGenerator} to generate map tiles. It runs in a separate thread to avoid blocking
+ * the UI thread.
  */
 public class MapWorker extends PausableThread {
 	private static final String THREAD_NAME = "MapWorker";
@@ -33,6 +34,12 @@ public class MapWorker extends PausableThread {
 	private final MapView mapView;
 	private final Bitmap tileBitmap;
 
+	/**
+	 * Constructs a new MapWorker for the given MapView.
+	 * 
+	 * @param mapView
+	 *            the MapView for which this MapWorker generates map tiles.
+	 */
 	public MapWorker(MapView mapView) {
 		super();
 		this.mapView = mapView;
@@ -42,6 +49,10 @@ public class MapWorker extends PausableThread {
 		this.tileBitmap = Bitmap.createBitmap(Tile.TILE_SIZE, Tile.TILE_SIZE, Bitmap.Config.RGB_565);
 	}
 
+	/**
+	 * @param mapGenerator
+	 *            the MapGenerator which this MapWorker should use.
+	 */
 	public synchronized void setMapGenerator(MapGenerator mapGenerator) {
 		this.mapGenerator = mapGenerator;
 	}

@@ -192,7 +192,6 @@ public class MapView extends ViewGroup {
 		this.zoomAnimator.start();
 
 		setMapViewModeInternal(mapViewMode);
-
 		mapActivity.registerMapView(this);
 	}
 
@@ -204,14 +203,14 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * @return the DebugSettings used in this MapView.
+	 * @return the debug settings container which is used in this MapView.
 	 */
 	public DebugSettings getDebugSettings() {
 		return this.debugSettings;
 	}
 
 	/**
-	 * @return the file system tile cache which this MapView uses.
+	 * @return the file system tile cache which is used in this MapView.
 	 */
 	public TileCache getFileSystemTileCache() {
 		return this.fileSystemTileCache;
@@ -231,10 +230,16 @@ public class MapView extends ViewGroup {
 		return this.frameBuffer;
 	}
 
+	/**
+	 * @return the in-memory tile cache which is used in this MapView.
+	 */
 	public TileCache getInMemoryTileCache() {
 		return this.inMemoryTileCache;
 	}
 
+	/**
+	 * @return the job queue which is used in this MapView.
+	 */
 	public JobQueue getJobQueue() {
 		return this.jobQueue;
 	}
@@ -370,21 +375,23 @@ public class MapView extends ViewGroup {
 		}
 
 		MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();
-		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
-				mapPositionFix.zoomLevel);
-		double pixelTop = MercatorProjection
-				.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
+				mapPositionFix.getZoomLevel());
+		double pixelTop = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
+				mapPositionFix.getZoomLevel());
 		pixelLeft -= getWidth() >> 1;
 		pixelTop -= getHeight() >> 1;
 
-		long tileLeft = MercatorProjection.pixelXToTileX(pixelLeft, mapPositionFix.zoomLevel);
-		long tileTop = MercatorProjection.pixelYToTileY(pixelTop, mapPositionFix.zoomLevel);
-		long tileRight = MercatorProjection.pixelXToTileX(pixelLeft + getWidth(), mapPositionFix.zoomLevel);
-		long tileBottom = MercatorProjection.pixelYToTileY(pixelTop + getHeight(), mapPositionFix.zoomLevel);
+		long tileLeft = MercatorProjection.pixelXToTileX(pixelLeft, mapPositionFix.getZoomLevel());
+		long tileTop = MercatorProjection.pixelYToTileY(pixelTop, mapPositionFix.getZoomLevel());
+		long tileRight = MercatorProjection
+				.pixelXToTileX(pixelLeft + getWidth(), mapPositionFix.getZoomLevel());
+		long tileBottom = MercatorProjection.pixelYToTileY(pixelTop + getHeight(),
+				mapPositionFix.getZoomLevel());
 
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
-				Tile tile = new Tile(tileX, tileY, mapPositionFix.zoomLevel);
+				Tile tile = new Tile(tileX, tileY, mapPositionFix.getZoomLevel());
 				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapViewMode, this.mapFile,
 						this.jobParameters, this.debugSettings);
 
@@ -502,18 +509,6 @@ public class MapView extends ViewGroup {
 		}
 	}
 
-	private void setMapViewModeInternal(MapViewMode mapViewMode) {
-		this.mapViewMode = mapViewMode;
-
-		this.mapGenerator = MapGeneratorFactory.createMapGenerator(this);
-		this.mapWorker.setMapGenerator(this.mapGenerator);
-
-		GeoPoint startPoint = this.mapGenerator.getStartPoint();
-		if (startPoint != null) {
-			this.mapPosition.setMapCenterAndZoomLevel(startPoint, this.mapGenerator.getZoomLevelDefault());
-		}
-	}
-
 	/**
 	 * Sets the new size of the memory card cache. If the cache already contains more items than the new
 	 * capacity allows, items are discarded based on the cache policy.
@@ -547,7 +542,7 @@ public class MapView extends ViewGroup {
 			throw new UnsupportedOperationException();
 		}
 
-		this.jobParameters = new JobParameters(internalRenderTheme, this.jobParameters.textScale);
+		this.jobParameters = new JobParameters(internalRenderTheme, this.jobParameters.getTextScale());
 		clearAndRedrawMapView();
 	}
 
@@ -571,7 +566,7 @@ public class MapView extends ViewGroup {
 		}
 
 		JobTheme jobTheme = new ExternalRenderTheme(renderThemePath);
-		this.jobParameters = new JobParameters(jobTheme, this.jobParameters.textScale);
+		this.jobParameters = new JobParameters(jobTheme, this.jobParameters.getTextScale());
 		clearAndRedrawMapView();
 	}
 
@@ -582,7 +577,7 @@ public class MapView extends ViewGroup {
 	 *            the new text scale for the map rendering.
 	 */
 	public void setTextScale(float textScale) {
-		this.jobParameters = new JobParameters(this.jobParameters.jobTheme, textScale);
+		this.jobParameters = new JobParameters(this.jobParameters.getJobTheme(), textScale);
 		clearAndRedrawMapView();
 	}
 
@@ -642,6 +637,18 @@ public class MapView extends ViewGroup {
 		this.zoomAnimator.setParameters(zoomStart, matrixScaleFactor, getWidth() >> 1, getHeight() >> 1);
 		this.zoomAnimator.startAnimation();
 		return true;
+	}
+
+	private void setMapViewModeInternal(MapViewMode mapViewMode) {
+		this.mapViewMode = mapViewMode;
+
+		this.mapGenerator = MapGeneratorFactory.createMapGenerator(this);
+		this.mapWorker.setMapGenerator(this.mapGenerator);
+
+		GeoPoint startPoint = this.mapGenerator.getStartPoint();
+		if (startPoint != null) {
+			this.mapPosition.setMapCenterAndZoomLevel(startPoint, this.mapGenerator.getZoomLevelDefault());
+		}
 	}
 
 	@Override
@@ -777,11 +784,11 @@ public class MapView extends ViewGroup {
 				// calculate the distance between previous and current position
 				MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();
 				float matrixTranslateX = (float) (MercatorProjection.longitudeToPixelX(
-						mapPositionFix.longitude, mapPositionFix.zoomLevel) - MercatorProjection
-						.longitudeToPixelX(geoPoint.getLongitude(), mapPositionFix.zoomLevel));
-				float matrixTranslateY = (float) (MercatorProjection.latitudeToPixelY(mapPositionFix.latitude,
-						mapPositionFix.zoomLevel) - MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
-						mapPositionFix.zoomLevel));
+						mapPositionFix.getLongitude(), mapPositionFix.getZoomLevel()) - MercatorProjection
+						.longitudeToPixelX(geoPoint.getLongitude(), mapPositionFix.getZoomLevel()));
+				float matrixTranslateY = (float) (MercatorProjection.latitudeToPixelY(
+						mapPositionFix.getLatitude(), mapPositionFix.getZoomLevel()) - MercatorProjection
+						.latitudeToPixelY(geoPoint.getLatitude(), mapPositionFix.getZoomLevel()));
 				this.frameBuffer.matrixPostTranslate(matrixTranslateX, matrixTranslateY);
 			}
 
