@@ -45,6 +45,8 @@ import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
  */
 public class ProtobufSerializer {
 
+	static int processCounter = 0;
+
 	/**
 	 * This methods loads data from a pbf-file.
 	 * 
@@ -99,12 +101,16 @@ public class ProtobufSerializer {
 
 		AllGraphDataPBF.Builder allGraphData = AllGraphDataPBF.newBuilder();
 
+		System.out.println("[RGC] Creating PBF edges");
 		writeEdges(allGraphData, edges);
 
+		System.out.println("[RGC] Creating PBF vertices");
 		writeVertices(allGraphData, vertices);
 
+		System.out.println("[RGC] Creating PBF relations");
 		writeRelations(allGraphData, relations);
 
+		System.out.println("[RGC] Writing...");
 		FileOutputStream output;
 		try {
 			output = new FileOutputStream(path);
@@ -240,16 +246,25 @@ public class ProtobufSerializer {
 			THashMap<Integer, CompleteEdge> edges) {
 
 		edges.forEachValue(new TObjectProcedure<CompleteEdge>() {
+
 			@Override
-			public boolean execute(CompleteEdge arg0) {
-				allGraphData.addAllEdges(writeSingleEdge(arg0));
+			public boolean execute(CompleteEdge ce) {
+				processCounter++;
+				if (processCounter % 10000 == 0)
+					System.out.println("[RGC] edges process: " + processCounter);
+
+				// Prevent crash if OSM-Data is corrupt
+				if ((ce.source != null) && (ce.target != null)) {
+					allGraphData.addAllEdges(writeSingleEdge(ce));
+				}
 				return true;
 			}
 		});
 
 		// Old version remove final in arguments
+
 		/*
-		 * (CompleteEdge ce : edges.values()) { allGraphData.addAllEdges(writeSingleEdge(ce)); }
+		 * for (CompleteEdge ce : edges.values()) { allGraphData.addAllEdges(writeSingleEdge(ce)); }
 		 */
 
 	}
@@ -257,7 +272,12 @@ public class ProtobufSerializer {
 	static CompleteEdgePBF.Builder writeSingleEdge(CompleteEdge ce) {
 		CompleteEdgePBF.Builder ce_PBF = CompleteEdgePBF.newBuilder();
 
+		System.out.println("writing: " + ce.id);
 		ce_PBF.setId(ce.id);
+
+		if (ce.source == null)
+			System.out.println(ce);
+
 		ce_PBF.setSourceID(ce.source.getId());
 		ce_PBF.setTargetID(ce.target.getId());
 		if (ce.name != null)

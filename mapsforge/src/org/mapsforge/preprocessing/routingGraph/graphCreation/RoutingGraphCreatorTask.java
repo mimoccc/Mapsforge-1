@@ -127,7 +127,7 @@ class RoutingGraphCreatorTask implements Sink {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		System.out.println("[RGC] processing data...");
 	}
 
 	@Override
