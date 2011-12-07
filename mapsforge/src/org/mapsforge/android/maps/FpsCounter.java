@@ -69,7 +69,7 @@ public class FpsCounter {
 		long currentTime = SystemClock.uptimeMillis();
 		long elapsedTime = currentTime - this.previousTime;
 		if (elapsedTime > ONE_SECOND) {
-			this.fps = Math.round((this.frameCounter * 1000) / elapsedTime);
+			this.fps = Math.round((this.frameCounter * 1000f) / elapsedTime);
 			this.previousTime = currentTime;
 			this.frameCounter = 0;
 		}
