@@ -36,7 +36,7 @@ import org.mapsforge.android.maps.mapgenerator.MapWorker;
 import org.mapsforge.android.maps.mapgenerator.TileCache;
 import org.mapsforge.android.maps.mapgenerator.databaserenderer.ExternalRenderTheme;
 import org.mapsforge.android.maps.overlay.Overlay;
-import org.mapsforge.android.maps.overlay.OverlayArrayList;
+import org.mapsforge.android.maps.overlay.OverlayList;
 import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
 
 import android.content.Context;
@@ -178,7 +178,7 @@ public class MapView extends ViewGroup {
 		this.mapPosition = new MapPosition(this);
 		this.mapScaleBar = new MapScaleBar(this);
 		this.mapZoomControls = new MapZoomControls(mapActivity, this);
-		this.overlays = new OverlayArrayList(this);
+		this.overlays = new OverlayList(this);
 		this.projection = new MapViewProjection(this);
 		this.touchEventHandler = TouchEventHandler.getInstance(mapActivity, this);
 
