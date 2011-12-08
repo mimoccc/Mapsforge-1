@@ -177,7 +177,7 @@ public class OverlayWay {
 
 	private void setWayNodesInternal(GeoPoint[][] wayNodes) {
 		if (wayNodes == null) {
-			this.wayNodes = wayNodes;
+			this.wayNodes = null;
 		} else if (containsNullElements(wayNodes)) {
 			throw new IllegalArgumentException("way nodes must not contain null elements");
 		} else {
