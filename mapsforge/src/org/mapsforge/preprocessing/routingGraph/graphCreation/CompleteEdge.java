@@ -295,9 +295,14 @@ public class CompleteEdge implements Edge {
 	@Override
 	public String toString() {
 		String s = "[Way " + this.id;
-		s += " source-ID: " + this.source.getId();
-		s += " target-ID: " + this.target.getId();
-		s += " type: " + this.type;
+		if (source != null)
+			s += " source-ID: " + this.source.getId();
+		if (target != null)
+			s += " target-ID: " + this.target.getId();
+		if (type != null)
+			s += " type: " + this.type;
+		if (name != null)
+			s += " name: " + this.name;
 		s += " WAYPOINTS ";
 		for (GeoCoordinate geo : this.allWaypoints)
 			s += geo.getLatitude() + " " + geo.getLongitude() + ", ";

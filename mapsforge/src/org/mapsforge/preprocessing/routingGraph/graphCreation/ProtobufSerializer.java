@@ -250,7 +250,7 @@ public class ProtobufSerializer {
 			@Override
 			public boolean execute(CompleteEdge ce) {
 				processCounter++;
-				if (processCounter % 10000 == 0)
+				if (processCounter % 50000 == 0)
 					System.out.println("[RGC] edges process: " + processCounter);
 
 				// Prevent crash if OSM-Data is corrupt
@@ -271,8 +271,6 @@ public class ProtobufSerializer {
 
 	static CompleteEdgePBF.Builder writeSingleEdge(CompleteEdge ce) {
 		CompleteEdgePBF.Builder ce_PBF = CompleteEdgePBF.newBuilder();
-
-		System.out.println("writing: " + ce.id);
 		ce_PBF.setId(ce.id);
 
 		if (ce.source == null)
