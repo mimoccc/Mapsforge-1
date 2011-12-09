@@ -16,10 +16,10 @@ purpose.
 	<property name="eclipse.workspace" value="/home/bross/dev/mapsforge/workspace" />
 
 	<property name="mapsforge.advancemapviewer.lib.dir"
-	          value="${eclipse.workspace}/AdvancedMapViewer/lib" />
-	<property name="mapsforge.samples.lib.dir" value="${eclipse.workspace}/Samples/lib" />
+	          value="${basedir}/../AdvancedMapViewer/lib" />
+	<property name="mapsforge.samples.lib.dir" value="${basedir}/../Samples/lib" />
 	<property name="mapsforge.routingservlet.lib.dir"
-	          value="${eclipse.workspace}/HHRoutingWebservice/WebContent/WEB-INF/lib" />
+	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
 
 	<!-- Path to the properties file that includes the keystore parameters -->
 	<property file="../mapsforge-keystore.properties" />
