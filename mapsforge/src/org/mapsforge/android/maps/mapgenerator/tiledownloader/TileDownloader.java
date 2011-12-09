@@ -52,7 +52,7 @@ public abstract class TileDownloader implements MapGenerator {
 	@Override
 	public final boolean executeJob(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		try {
-			Tile tile = mapGeneratorJob.getTile();
+			Tile tile = mapGeneratorJob.tile;
 			URL url = new URL(getProtocol(), getHostName(), getTilePath(tile));
 			InputStream inputStream = url.openStream();
 			Bitmap decodedBitmap = BitmapFactory.decodeStream(inputStream);

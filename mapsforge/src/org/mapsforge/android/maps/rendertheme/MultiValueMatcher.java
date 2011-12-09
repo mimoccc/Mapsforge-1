@@ -40,7 +40,7 @@ class MultiValueMatcher implements AttributeMatcher {
 	@Override
 	public boolean matches(List<Tag> tags) {
 		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.values.contains(tags.get(i).getValue())) {
+			if (this.values.contains(tags.get(i).value)) {
 				return true;
 			}
 		}

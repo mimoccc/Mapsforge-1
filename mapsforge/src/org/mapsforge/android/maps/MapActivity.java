@@ -108,7 +108,7 @@ public abstract class MapActivity extends Activity {
 			MapPositionFix mapPositionFix = mapView.getMapPosition().getMapPositionFix();
 			editor.putInt(KEY_LATITUDE, mapPositionFix.getLatitudeE6());
 			editor.putInt(KEY_LONGITUDE, mapPositionFix.getLongitudeE6());
-			editor.putInt(KEY_ZOOM_LEVEL, mapPositionFix.getZoomLevel());
+			editor.putInt(KEY_ZOOM_LEVEL, mapPositionFix.zoomLevel);
 
 			if (!mapView.getMapViewMode().requiresInternetConnection() && mapView.getMapFile() != null) {
 				// save the map file

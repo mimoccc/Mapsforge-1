@@ -34,7 +34,7 @@ final class TileScheduler {
 	 * @return the current priority of the tile. A smaller number means a higher priority.
 	 */
 	static double getPriority(Tile tile, MapView mapView) {
-		byte tileZoomLevel = tile.getZoomLevel();
+		byte tileZoomLevel = tile.zoomLevel;
 
 		// calculate the center coordinates of the tile
 		long tileCenterPixelX = tile.getPixelX() + (Tile.TILE_SIZE >> 1);
@@ -44,19 +44,19 @@ final class TileScheduler {
 
 		// calculate the Euclidian distance from the MapView center to the tile center
 		MapPositionFix mapPositionFix = mapView.getMapPosition().getMapPositionFix();
-		double longitudeDiff = mapPositionFix.getLongitude() - tileCenterLongitude;
-		double latitudeDiff = mapPositionFix.getLatitude() - tileCenterLatitude;
+		double longitudeDiff = mapPositionFix.longitude - tileCenterLongitude;
+		double latitudeDiff = mapPositionFix.latitude - tileCenterLatitude;
 		double euclidianDistance = Math.sqrt(longitudeDiff * longitudeDiff + latitudeDiff * latitudeDiff);
 
-		if (mapPositionFix.getZoomLevel() == tileZoomLevel) {
+		if (mapPositionFix.zoomLevel == tileZoomLevel) {
 			return euclidianDistance;
 		}
 
-		int zoomLevelDiff = Math.abs(mapPositionFix.getZoomLevel() - tileZoomLevel);
+		int zoomLevelDiff = Math.abs(mapPositionFix.zoomLevel - tileZoomLevel);
 		double scaleFactor = Math.pow(2, zoomLevelDiff);
 
 		double scaledEuclidianDistance;
-		if (mapPositionFix.getZoomLevel() < tileZoomLevel) {
+		if (mapPositionFix.zoomLevel < tileZoomLevel) {
 			scaledEuclidianDistance = euclidianDistance * scaleFactor;
 		} else {
 			scaledEuclidianDistance = euclidianDistance / scaleFactor;

@@ -59,8 +59,8 @@ public class InMemoryTileCache extends TileCache {
 	}
 
 	private final List<Bitmap> bitmapPool;
-	private final Map<MapGeneratorJob, Bitmap> map;
 	private final ByteBuffer byteBuffer;
+	private final Map<MapGeneratorJob, Bitmap> map;
 
 	/**
 	 * @param cacheCapacity
@@ -87,9 +87,7 @@ public class InMemoryTileCache extends TileCache {
 				bitmap.recycle();
 			}
 			this.map.clear();
-		}
 
-		synchronized (this.bitmapPool) {
 			for (Bitmap bitmap : this.bitmapPool) {
 				bitmap.recycle();
 			}
@@ -115,18 +113,13 @@ public class InMemoryTileCache extends TileCache {
 			return;
 		}
 
-		Bitmap pooledBitmap;
-		synchronized (this.bitmapPool) {
-			pooledBitmap = this.bitmapPool.remove(this.bitmapPool.size() - 1);
-		}
+		synchronized (this.map) {
+			Bitmap pooledBitmap = this.bitmapPool.remove(this.bitmapPool.size() - 1);
 
-		synchronized (this.byteBuffer) {
 			bitmap.copyPixelsToBuffer(this.byteBuffer);
 			this.byteBuffer.rewind();
 			pooledBitmap.copyPixelsFromBuffer(this.byteBuffer);
-		}
 
-		synchronized (this.map) {
 			this.map.put(mapGeneratorJob, pooledBitmap);
 		}
 	}

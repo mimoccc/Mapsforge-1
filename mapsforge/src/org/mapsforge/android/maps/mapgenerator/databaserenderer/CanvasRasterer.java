@@ -100,9 +100,9 @@ class CanvasRasterer {
 	}
 
 	void drawTileCoordinates(Tile tile) {
-		drawTileCoordinate("X: " + tile.getTileX(), 30);
-		drawTileCoordinate("Y: " + tile.getTileY(), 60);
-		drawTileCoordinate("Z: " + tile.getZoomLevel(), 90);
+		drawTileCoordinate("X: " + tile.tileX, 30);
+		drawTileCoordinate("Y: " + tile.tileY, 60);
+		drawTileCoordinate("Z: " + tile.zoomLevel, 90);
 	}
 
 	void drawTileFrame() {

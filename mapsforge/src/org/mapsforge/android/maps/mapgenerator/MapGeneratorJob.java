@@ -29,16 +29,17 @@ import org.mapsforge.android.maps.Tile;
 public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final boolean drawTileCoordinates;
-	private final boolean drawTileFrames;
+	public final boolean drawTileCoordinates;
+	public final boolean drawTileFrames;
+	public final JobTheme jobTheme;
+	public final float textScale;
+	public final Tile tile;
+
 	private transient int hashCodeValue;
-	private final boolean highlightWater;
-	private final JobTheme jobTheme;
-	private final String mapFile;
-	private final MapViewMode mapViewMode;
 	private transient double priority;
-	private final float textScale;
-	private final Tile tile;
+	final boolean highlightWater;
+	final String mapFile;
+	final MapViewMode mapViewMode;
 
 	/**
 	 * Creates a new job for a MapGenerator with the given parameters.
@@ -48,8 +49,8 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
-		this.jobTheme = jobParameters.getJobTheme();
-		this.textScale = jobParameters.getTextScale();
+		this.jobTheme = jobParameters.jobTheme;
+		this.textScale = jobParameters.textScale;
 		this.drawTileFrames = debugSettings.isDrawTileFrames();
 		this.drawTileCoordinates = debugSettings.isDrawTileCoordinates();
 		this.highlightWater = debugSettings.isHighlightWaterTiles();
@@ -98,49 +99,9 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		return true;
 	}
 
-	public String getMapFile() {
-		return this.mapFile;
-	}
-
-	public JobTheme getJobTheme() {
-		return this.jobTheme;
-	}
-
-	public MapViewMode getMapViewMode() {
-		return this.mapViewMode;
-	}
-
-	public double getPriority() {
-		return this.priority;
-	}
-
-	public float getTextScale() {
-		return this.textScale;
-	}
-
-	public Tile getTile() {
-		return this.tile;
-	}
-
 	@Override
 	public int hashCode() {
 		return this.hashCodeValue;
-	}
-
-	public boolean isDrawTileCoordinates() {
-		return this.drawTileCoordinates;
-	}
-
-	public boolean isDrawTileFrames() {
-		return this.drawTileFrames;
-	}
-
-	public boolean isHighlightWater() {
-		return this.highlightWater;
-	}
-
-	public void setPriority(double priority) {
-		this.priority = priority;
 	}
 
 	/**
@@ -171,5 +132,9 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 	private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
 		objectInputStream.defaultReadObject();
 		calculateTransientValues();
+	}
+
+	void setPriority(double priority) {
+		this.priority = priority;
 	}
 }

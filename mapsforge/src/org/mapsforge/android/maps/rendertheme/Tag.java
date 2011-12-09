@@ -20,9 +20,17 @@ package org.mapsforge.android.maps.rendertheme;
 public class Tag {
 	private static final char KEY_VALUE_SEPARATOR = '=';
 
+	/**
+	 * The key of this tag.
+	 */
+	public final String key;
+
+	/**
+	 * The value of this tag.
+	 */
+	public final String value;
+
 	private final int hashCodeValue;
-	private final String key;
-	private final String value;
 
 	/**
 	 * Constructs a new tag from the given string.
@@ -69,20 +77,6 @@ public class Tag {
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * @return the key of this tag.
-	 */
-	public String getKey() {
-		return this.key;
-	}
-
-	/**
-	 * @return the value of this tag.
-	 */
-	public String getValue() {
-		return this.value;
 	}
 
 	@Override

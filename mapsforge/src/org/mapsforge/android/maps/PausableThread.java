@@ -69,6 +69,7 @@ public abstract class PausableThread extends Thread {
 	@Override
 	public final void run() {
 		setName(getThreadName());
+		setPriority(getThreadPriority());
 
 		while (!isInterrupted()) {
 			synchronized (this) {
@@ -126,6 +127,13 @@ public abstract class PausableThread extends Thread {
 	 * @return the name of this thread.
 	 */
 	protected abstract String getThreadName();
+
+	/**
+	 * @return the priority of this thread. The default value is {@link Thread#NORM_PRIORITY}.
+	 */
+	protected int getThreadPriority() {
+		return NORM_PRIORITY;
+	}
 
 	/**
 	 * @return true if this thread has some work to do, false otherwise.

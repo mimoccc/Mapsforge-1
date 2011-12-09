@@ -147,9 +147,9 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 
 	@Override
 	public boolean executeJob(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
-		this.currentTile = mapGeneratorJob.getTile();
+		this.currentTile = mapGeneratorJob.tile;
 
-		JobTheme jobTheme = mapGeneratorJob.getJobTheme();
+		JobTheme jobTheme = mapGeneratorJob.jobTheme;
 		if (!jobTheme.equals(this.previousJobTheme)) {
 			this.renderTheme = getRenderTheme(jobTheme);
 			if (this.renderTheme == null) {
@@ -161,13 +161,13 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 			this.previousZoomLevel = Byte.MIN_VALUE;
 		}
 
-		byte zoomLevel = this.currentTile.getZoomLevel();
+		byte zoomLevel = this.currentTile.zoomLevel;
 		if (zoomLevel != this.previousZoomLevel) {
 			setScaleStrokeWidth(zoomLevel);
 			this.previousZoomLevel = zoomLevel;
 		}
 
-		float textScale = mapGeneratorJob.getTextScale();
+		float textScale = mapGeneratorJob.textScale;
 		if (textScale != this.previousTextScale) {
 			this.renderTheme.scaleTextSize(textScale);
 			this.previousTextScale = textScale;
@@ -187,11 +187,11 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		this.canvasRasterer.drawNodes(this.nodes);
 		this.canvasRasterer.drawNodes(this.areaLabels);
 
-		if (mapGeneratorJob.isDrawTileFrames()) {
+		if (mapGeneratorJob.drawTileFrames) {
 			this.canvasRasterer.drawTileFrame();
 		}
 
-		if (mapGeneratorJob.isDrawTileCoordinates()) {
+		if (mapGeneratorJob.drawTileCoordinates) {
 			this.canvasRasterer.drawTileCoordinates(this.currentTile);
 		}
 
@@ -248,7 +248,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		this.drawingLayer = this.ways.get(getValidLayer(layer));
 		this.poiX = scaleLongitude(longitude);
 		this.poiY = scaleLatitude(latitude);
-		this.renderTheme.matchNode(this, tags, this.currentTile.getZoomLevel());
+		this.renderTheme.matchNode(this, tags, this.currentTile.zoomLevel);
 	}
 
 	@Override
@@ -273,7 +273,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		this.tagList.clear();
 		this.tagList.add(TAG_NATURAL_WATER);
 		this.coordinates = WATER_TILE_COORDINATES;
-		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.getZoomLevel());
+		this.renderTheme.matchClosedWay(this, this.tagList, this.currentTile.zoomLevel);
 	}
 
 	@Override
@@ -291,9 +291,9 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		this.shapeContainer = new WayContainer(this.coordinates);
 
 		if (GeometryUtils.isClosedWay(this.coordinates[0])) {
-			this.renderTheme.matchClosedWay(this, tags, this.currentTile.getZoomLevel());
+			this.renderTheme.matchClosedWay(this, tags, this.currentTile.zoomLevel);
 		} else {
-			this.renderTheme.matchLinearWay(this, tags, this.currentTile.getZoomLevel());
+			this.renderTheme.matchLinearWay(this, tags, this.currentTile.zoomLevel);
 		}
 	}
 
@@ -349,7 +349,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	 */
 	private float scaleLatitude(float latitude) {
 		return (float) (MercatorProjection.latitudeToPixelY(latitude / (double) 1000000,
-				this.currentTile.getZoomLevel()) - this.currentTile.getPixelY());
+				this.currentTile.zoomLevel) - this.currentTile.getPixelY());
 	}
 
 	/**
@@ -361,7 +361,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	 */
 	private float scaleLongitude(float longitude) {
 		return (float) (MercatorProjection.longitudeToPixelX(longitude / (double) 1000000,
-				this.currentTile.getZoomLevel()) - this.currentTile.getPixelX());
+				this.currentTile.zoomLevel) - this.currentTile.getPixelX());
 	}
 
 	/**

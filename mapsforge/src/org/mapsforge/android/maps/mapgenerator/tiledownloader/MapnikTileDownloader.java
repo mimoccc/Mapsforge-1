@@ -52,9 +52,9 @@ public class MapnikTileDownloader extends TileDownloader {
 	@Override
 	public String getTilePath(Tile tile) {
 		this.stringBuilder.setLength(0);
-		this.stringBuilder.append(tile.getTileX());
+		this.stringBuilder.append(tile.tileX);
 		this.stringBuilder.append("/");
-		this.stringBuilder.append(tile.getTileY());
+		this.stringBuilder.append(tile.tileY);
 		this.stringBuilder.append(".png");
 
 		return this.stringBuilder.toString();

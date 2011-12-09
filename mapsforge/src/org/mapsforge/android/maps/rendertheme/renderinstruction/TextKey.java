@@ -50,8 +50,8 @@ final class TextKey {
 
 	String getValue(List<Tag> tags) {
 		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.key.equals(tags.get(i).getKey())) {
-				return tags.get(i).getValue();
+			if (this.key.equals(tags.get(i).key)) {
+				return tags.get(i).value;
 			}
 		}
 		return null;

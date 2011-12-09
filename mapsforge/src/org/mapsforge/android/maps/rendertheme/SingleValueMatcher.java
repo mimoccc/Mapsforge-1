@@ -32,7 +32,7 @@ class SingleValueMatcher implements AttributeMatcher {
 	@Override
 	public boolean matches(List<Tag> tags) {
 		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.value.equals(tags.get(i).getValue())) {
+			if (this.value.equals(tags.get(i).value)) {
 				return true;
 			}
 		}

@@ -41,12 +41,22 @@ public class Tile implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * The X number of this tile.
+	 */
+	public final long tileX;
+	/**
+	 * The Y number of this tile.
+	 */
+	public final long tileY;
+	/**
+	 * The Zoom level of this tile.
+	 */
+	public final byte zoomLevel;
+
 	private transient int hashCodeValue;
 	private transient long pixelX;
 	private transient long pixelY;
-	private final long tileX;
-	private final long tileY;
-	private final byte zoomLevel;
 
 	/**
 	 * Constructs an immutable tile instance with the specified XY number and zoom level.
@@ -95,27 +105,6 @@ public class Tile implements Serializable {
 	 */
 	public long getPixelY() {
 		return this.pixelY;
-	}
-
-	/**
-	 * @return the X number of this tile.
-	 */
-	public long getTileX() {
-		return this.tileX;
-	}
-
-	/**
-	 * @return the Y number of this tile.
-	 */
-	public long getTileY() {
-		return this.tileY;
-	}
-
-	/**
-	 * @return the Zoom level of this tile.
-	 */
-	public byte getZoomLevel() {
-		return this.zoomLevel;
 	}
 
 	@Override

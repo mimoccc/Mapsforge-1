@@ -91,7 +91,7 @@ public class JobQueue {
 
 		while (!this.priorityQueue.isEmpty()) {
 			MapGeneratorJob mapGeneratorJob = this.priorityQueue.poll();
-			double priority = TileScheduler.getPriority(mapGeneratorJob.getTile(), this.mapView);
+			double priority = TileScheduler.getPriority(mapGeneratorJob.tile, this.mapView);
 			mapGeneratorJob.setPriority(priority);
 			tempJobQueue.offer(mapGeneratorJob);
 		}

@@ -26,17 +26,17 @@ public class MapPositionFix {
 	/**
 	 * The latitude coordinate in degrees.
 	 */
-	private final double latitude;
+	public final double latitude;
 
 	/**
 	 * The longitude coordinate in degrees.
 	 */
-	private final double longitude;
+	public final double longitude;
 
 	/**
 	 * The zoom level.
 	 */
-	private final byte zoomLevel;
+	public final byte zoomLevel;
 
 	/**
 	 * Constructs an immutable MapPositionFix with the given parameters.
@@ -55,13 +55,6 @@ public class MapPositionFix {
 	}
 
 	/**
-	 * @return the latitude value of this MapPositionFix in degrees.
-	 */
-	public double getLatitude() {
-		return this.latitude;
-	}
-
-	/**
 	 * @return the latitude coordinate in microdegrees (degrees * 10^6).
 	 */
 	public int getLatitudeE6() {
@@ -69,23 +62,9 @@ public class MapPositionFix {
 	}
 
 	/**
-	 * @return the longitude value of this MapPositionFix in degrees.
-	 */
-	public double getLongitude() {
-		return this.longitude;
-	}
-
-	/**
 	 * @return the longitude coordinate in microdegrees (degrees * 10^6).
 	 */
 	public int getLongitudeE6() {
 		return (int) (this.longitude * CONVERSION_FACTOR);
-	}
-
-	/**
-	 * @return the zoom level of this MapPositionFix.
-	 */
-	public byte getZoomLevel() {
-		return this.zoomLevel;
 	}
 }

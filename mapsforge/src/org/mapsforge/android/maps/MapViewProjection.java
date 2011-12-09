@@ -34,16 +34,15 @@ class MapViewProjection implements Projection {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
 
 		// calculate the pixel coordinates of the top left corner
-		double pixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
-				mapPositionFix.getZoomLevel());
-		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
-				mapPositionFix.getZoomLevel());
+		double pixelX = MercatorProjection
+				.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
+		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
 		pixelX -= this.mapView.getWidth() >> 1;
 		pixelY -= this.mapView.getHeight() >> 1;
 
 		// convert the pixel coordinates to a GeoPoint and return it
-		return new GeoPoint(MercatorProjection.pixelYToLatitude(pixelY + y, mapPositionFix.getZoomLevel()),
-				MercatorProjection.pixelXToLongitude(pixelX + x, mapPositionFix.getZoomLevel()));
+		return new GeoPoint(MercatorProjection.pixelYToLatitude(pixelY + y, mapPositionFix.zoomLevel),
+				MercatorProjection.pixelXToLongitude(pixelX + x, mapPositionFix.zoomLevel));
 	}
 
 	@Override
@@ -82,23 +81,22 @@ class MapViewProjection implements Projection {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
 
 		// calculate the pixel coordinates of the top left corner
-		double pixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
-				mapPositionFix.getZoomLevel());
-		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
-				mapPositionFix.getZoomLevel());
+		double pixelX = MercatorProjection
+				.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
+		double pixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
 		pixelX -= this.mapView.getWidth() >> 1;
 		pixelY -= this.mapView.getHeight() >> 1;
 
 		if (out == null) {
 			// create a new point and return it
 			return new Point((int) (MercatorProjection.longitudeToPixelX(in.getLongitude(),
-					mapPositionFix.getZoomLevel()) - pixelX), (int) (MercatorProjection.latitudeToPixelY(
-					in.getLatitude(), mapPositionFix.getZoomLevel()) - pixelY));
+					mapPositionFix.zoomLevel) - pixelX), (int) (MercatorProjection.latitudeToPixelY(
+					in.getLatitude(), mapPositionFix.zoomLevel) - pixelY));
 		}
 
 		// reuse the existing point
-		out.x = (int) (MercatorProjection.longitudeToPixelX(in.getLongitude(), mapPositionFix.getZoomLevel()) - pixelX);
-		out.y = (int) (MercatorProjection.latitudeToPixelY(in.getLatitude(), mapPositionFix.getZoomLevel()) - pixelY);
+		out.x = (int) (MercatorProjection.longitudeToPixelX(in.getLongitude(), mapPositionFix.zoomLevel) - pixelX);
+		out.y = (int) (MercatorProjection.latitudeToPixelY(in.getLatitude(), mapPositionFix.zoomLevel) - pixelY);
 		return out;
 	}
 

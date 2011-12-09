@@ -163,11 +163,11 @@ public class MapScaleBar {
 
 		MapPositionFix currentMapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
 
-		if (currentMapPositionFix.getZoomLevel() != this.mapPositionFix.getZoomLevel()) {
+		if (currentMapPositionFix.zoomLevel != this.mapPositionFix.zoomLevel) {
 			return true;
 		}
 
-		double latitudeDiff = Math.abs(currentMapPositionFix.getLatitude() - this.mapPositionFix.getLatitude());
+		double latitudeDiff = Math.abs(currentMapPositionFix.latitude - this.mapPositionFix.latitude);
 		if (latitudeDiff > LATITUDE_REDRAW_THRESHOLD) {
 			return true;
 		}
@@ -238,8 +238,8 @@ public class MapScaleBar {
 		}
 
 		this.mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		double groundResolution = MercatorProjection.calculateGroundResolution(
-				this.mapPositionFix.getLatitude(), this.mapPositionFix.getZoomLevel());
+		double groundResolution = MercatorProjection.calculateGroundResolution(this.mapPositionFix.latitude,
+				this.mapPositionFix.zoomLevel);
 
 		int[] scaleBarValues;
 		if (this.imperialUnits) {

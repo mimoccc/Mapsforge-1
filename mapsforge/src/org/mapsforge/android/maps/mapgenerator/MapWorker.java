@@ -78,7 +78,9 @@ public class MapWorker extends PausableThread {
 		}
 
 		if (success) {
-			this.mapView.getFrameBuffer().drawBitmap(mapGeneratorJob.getTile(), this.tileBitmap);
+			if (this.mapView.getFrameBuffer().drawBitmap(mapGeneratorJob.tile, this.tileBitmap)) {
+				this.inMemoryTileCache.put(mapGeneratorJob, this.tileBitmap);
+			}
 			this.mapView.postInvalidate();
 			this.fileSystemTileCache.put(mapGeneratorJob, this.tileBitmap);
 		}
@@ -87,6 +89,11 @@ public class MapWorker extends PausableThread {
 	@Override
 	protected String getThreadName() {
 		return THREAD_NAME;
+	}
+
+	@Override
+	protected int getThreadPriority() {
+		return MIN_PRIORITY;
 	}
 
 	@Override

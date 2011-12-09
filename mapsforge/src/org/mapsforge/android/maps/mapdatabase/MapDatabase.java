@@ -215,7 +215,7 @@ public class MapDatabase {
 		try {
 			prepareExecution();
 			QueryParameters queryParameters = new QueryParameters();
-			queryParameters.queryZoomLevel = this.mapFileHeader.getQueryZoomLevel(tile.getZoomLevel());
+			queryParameters.queryZoomLevel = this.mapFileHeader.getQueryZoomLevel(tile.zoomLevel);
 
 			// get and check the sub-file for the query zoom level
 			SubFileParameter subFileParameter = this.mapFileHeader

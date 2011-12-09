@@ -49,30 +49,31 @@ public class FrameBuffer {
 	 *            the corresponding tile for the bitmap.
 	 * @param bitmap
 	 *            the bitmap to be drawn.
+	 * @return true if the tile is visible and the bitmap was drawn, false otherwise.
 	 */
-	public synchronized void drawBitmap(Tile tile, Bitmap bitmap) {
+	public synchronized boolean drawBitmap(Tile tile, Bitmap bitmap) {
 		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		if (tile.getZoomLevel() != mapPositionFix.getZoomLevel()) {
+		if (tile.zoomLevel != mapPositionFix.zoomLevel) {
 			// the tile doesn't fit to the current zoom level
-			return;
+			return false;
 		} else if (this.mapView.isZoomAnimatorRunning()) {
 			// do not disturb the ongoing animation
-			return;
+			return false;
 		}
 
-		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.getLongitude(),
-				mapPositionFix.getZoomLevel());
-		double pixelTop = MercatorProjection.latitudeToPixelY(mapPositionFix.getLatitude(),
-				mapPositionFix.getZoomLevel());
+		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
+				mapPositionFix.zoomLevel);
+		double pixelTop = MercatorProjection
+				.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
 		pixelLeft -= this.width >> 1;
 		pixelTop -= this.height >> 1;
 
 		if (pixelLeft - tile.getPixelX() > Tile.TILE_SIZE || pixelLeft + this.width < tile.getPixelX()) {
 			// no horizontal intersection
-			return;
+			return false;
 		} else if (pixelTop - tile.getPixelY() > Tile.TILE_SIZE || pixelTop + this.height < tile.getPixelY()) {
 			// no vertical intersection
-			return;
+			return false;
 		}
 
 		if (!this.matrix.isIdentity()) {
@@ -96,6 +97,7 @@ public class FrameBuffer {
 		float left = (float) (tile.getPixelX() - pixelLeft);
 		float top = (float) (tile.getPixelY() - pixelTop);
 		this.mapViewCanvas.drawBitmap(bitmap, left, top, null);
+		return true;
 	}
 
 	/**
