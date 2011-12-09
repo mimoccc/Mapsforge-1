@@ -4,7 +4,7 @@ Use this Ant script for convenience with creating a distribution of mapsforge.
 The script in not intended for building the project. Use Eclipse for this
 purpose.
 -->
-<project name="mapsforge">
+<project name="mapsforge">	
 	<property name="mapsforge.version" value="0.2.4" />
 
 	<property name="mapsforge.bin" value="bin" />
@@ -12,12 +12,14 @@ purpose.
 	<property name="mapsforge.src" value="src" />
 	<property name="mapsforge.dist" value="dist" />
 	<property name="mapsforge.doc" value="doc" />
+	
+	<property name="eclipse.workspace" value="/home/bross/dev/mapsforge/workspace" />
 
 	<property name="mapsforge.advancemapviewer.lib.dir"
-	          value="${basedir}/../AdvancedMapViewer/lib" />
-	<property name="mapsforge.samples.lib.dir" value="${basedir}/../Samples/lib" />
+	          value="${eclipse.workspace}/AdvancedMapViewer/lib" />
+	<property name="mapsforge.samples.lib.dir" value="${eclipse.workspace}/Samples/lib" />
 	<property name="mapsforge.routingservlet.lib.dir"
-	          value="${basedir}/../HHRoutingWebservice/WebContent/WEB-INF/lib" />
+	          value="${eclipse.workspace}/HHRoutingWebservice/WebContent/WEB-INF/lib" />
 
 	<!-- Path to the properties file that includes the keystore parameters -->
 	<property file="../mapsforge-keystore.properties" />
