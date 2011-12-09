@@ -48,8 +48,7 @@ import org.xml.sax.SAXParseException;
 
 final class OSMTagMapping {
 
-	private static final Logger LOGGER =
-			Logger.getLogger(OSMTagMapping.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OSMTagMapping.class.getName());
 
 	// we use LinkedHashMaps as they guarantee to uphold the
 	// insertion order when iterating over the key or value "set"
@@ -70,18 +69,15 @@ final class OSMTagMapping {
 
 	private byte defaultZoomAppear;
 
-	private static final String XPATH_EXPRESSION_DEFAULT_ZOOM =
-			"/tag-mapping/@default-zoom-appear";
+	private static final String XPATH_EXPRESSION_DEFAULT_ZOOM = "/tag-mapping/@default-zoom-appear";
 
-	private static final String XPATH_EXPRESSION_POIS =
-			"//pois/osm-tag["
-					+ "(../@enabled='true' or not(../@enabled)) and (./@enabled='true' or not(./@enabled)) "
-					+ "or (../@enabled='false' and ./@enabled='true')]";
+	private static final String XPATH_EXPRESSION_POIS = "//pois/osm-tag["
+			+ "(../@enabled='true' or not(../@enabled)) and (./@enabled='true' or not(./@enabled)) "
+			+ "or (../@enabled='false' and ./@enabled='true')]";
 
-	private static final String XPATH_EXPRESSION_WAYS =
-			"//ways/osm-tag["
-					+ "(../@enabled='true' or not(../@enabled)) and (./@enabled='true' or not(./@enabled)) "
-					+ "or (../@enabled='false' and ./@enabled='true')]";
+	private static final String XPATH_EXPRESSION_WAYS = "//ways/osm-tag["
+			+ "(../@enabled='true' or not(../@enabled)) and (./@enabled='true' or not(./@enabled)) "
+			+ "or (../@enabled='false' and ./@enabled='true')]";
 
 	OSMTagMapping(URL tagConf) throws IllegalStateException {
 		try {
@@ -93,8 +89,7 @@ final class OSMTagMapping {
 			XPath xpath = XPathFactory.newInstance().newXPath();
 
 			XPathExpression xe = xpath.compile(XPATH_EXPRESSION_DEFAULT_ZOOM);
-			defaultZoomAppear = Byte.parseByte((String) xe.evaluate(document,
-					XPathConstants.STRING));
+			defaultZoomAppear = Byte.parseByte((String) xe.evaluate(document, XPathConstants.STRING));
 
 			final HashMap<Short, Set<String>> tmpPoiZoomOverrides = new HashMap<Short, Set<String>>();
 			final HashMap<Short, Set<String>> tmpWayZoomOverrides = new HashMap<Short, Set<String>>();
@@ -110,23 +105,18 @@ final class OSMTagMapping {
 
 				String[] equivalentValues = null;
 				if (attributes.getNamedItem("equivalent-values") != null) {
-					equivalentValues = attributes.getNamedItem("equivalent-values")
-							.getTextContent().split(",");
+					equivalentValues = attributes.getNamedItem("equivalent-values").getTextContent().split(",");
 				}
 
-				Byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear
-						: Byte.parseByte(attributes.getNamedItem("zoom-appear")
-								.getTextContent());
+				byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear : Byte
+						.parseByte(attributes.getNamedItem("zoom-appear").getTextContent());
 
-				boolean renderable = attributes.getNamedItem("renderable") == null ? true
-						: Boolean.parseBoolean(attributes.getNamedItem("renderable")
-								.getTextContent());
+				boolean renderable = attributes.getNamedItem("renderable") == null ? true : Boolean
+						.parseBoolean(attributes.getNamedItem("renderable").getTextContent());
 
 				OSMTag osmTag = new OSMTag(poiID, key, value, zoom, renderable);
 				if (stringToPoiTag.containsKey(osmTag.tagKey())) {
-					LOGGER
-							.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
-									+ osmTag);
+					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): " + osmTag);
 					continue;
 				}
 				LOGGER.finest("adding poi: " + osmTag);
@@ -136,10 +126,10 @@ final class OSMTagMapping {
 						stringToPoiTag.put(OSMTag.tagKey(key, equivalentValue), osmTag);
 					}
 				}
-				idToPoiTag.put(poiID, osmTag);
+				idToPoiTag.put(Short.valueOf(poiID), osmTag);
 
 				// also fill optimization mapping with identity
-				optimizedPoiIds.put(poiID, poiID);
+				optimizedPoiIds.put(Short.valueOf(poiID), Short.valueOf(poiID));
 
 				// check if this tag overrides the zoom level spec of another tag
 				NodeList zoomOverrideNodes = pois.item(i).getChildNodes();
@@ -150,10 +140,10 @@ final class OSMTagMapping {
 								.getTextContent();
 						String valueOverridden = overriddenNode.getAttributes().getNamedItem("value")
 								.getTextContent();
-						Set<String> s = tmpPoiZoomOverrides.get(poiID);
+						Set<String> s = tmpPoiZoomOverrides.get(Short.valueOf(poiID));
 						if (s == null) {
 							s = new HashSet<String>();
-							tmpPoiZoomOverrides.put(poiID, s);
+							tmpPoiZoomOverrides.put(Short.valueOf(poiID), s);
 						}
 						s.add(OSMTag.tagKey(keyOverridden, valueOverridden));
 					}
@@ -173,23 +163,18 @@ final class OSMTagMapping {
 
 				String[] equivalentValues = null;
 				if (attributes.getNamedItem("equivalent-values") != null) {
-					equivalentValues = attributes.getNamedItem("equivalent-values")
-							.getTextContent().split(",");
+					equivalentValues = attributes.getNamedItem("equivalent-values").getTextContent().split(",");
 				}
 
-				Byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear
-						: Byte.parseByte(attributes.getNamedItem("zoom-appear")
-								.getTextContent());
+				byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear : Byte
+						.parseByte(attributes.getNamedItem("zoom-appear").getTextContent());
 
-				boolean renderable = attributes.getNamedItem("renderable") == null ? true
-						: Boolean.parseBoolean(attributes.getNamedItem("renderable")
-								.getTextContent());
+				boolean renderable = attributes.getNamedItem("renderable") == null ? true : Boolean
+						.parseBoolean(attributes.getNamedItem("renderable").getTextContent());
 
 				OSMTag osmTag = new OSMTag(wayID, key, value, zoom, renderable);
 				if (stringToWayTag.containsKey(osmTag.tagKey())) {
-					LOGGER
-							.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): "
-									+ osmTag);
+					LOGGER.warning("duplicate osm-tag found in tag-mapping configuration (ignoring): " + osmTag);
 					continue;
 				}
 				LOGGER.finest("adding way: " + osmTag);
@@ -199,10 +184,10 @@ final class OSMTagMapping {
 						stringToWayTag.put(OSMTag.tagKey(key, equivalentValue), osmTag);
 					}
 				}
-				idToWayTag.put(wayID, osmTag);
+				idToWayTag.put(Short.valueOf(wayID), osmTag);
 
 				// also fill optimization mapping with identity
-				optimizedWayIds.put(wayID, wayID);
+				optimizedWayIds.put(Short.valueOf(wayID), Short.valueOf(wayID));
 
 				// check if this tag overrides the zoom level spec of another tag
 				NodeList zoomOverrideNodes = ways.item(i).getChildNodes();
@@ -213,10 +198,10 @@ final class OSMTagMapping {
 								.getTextContent();
 						String valueOverridden = overriddenNode.getAttributes().getNamedItem("value")
 								.getTextContent();
-						Set<String> s = tmpWayZoomOverrides.get(wayID);
+						Set<String> s = tmpWayZoomOverrides.get(Short.valueOf(wayID));
 						if (s == null) {
 							s = new HashSet<String>();
-							tmpWayZoomOverrides.put(wayID, s);
+							tmpWayZoomOverrides.put(Short.valueOf(wayID), s);
 						}
 						s.add(OSMTag.tagKey(keyOverridden, valueOverridden));
 					}
@@ -250,8 +235,8 @@ final class OSMTagMapping {
 
 			// ---- Error handling ----
 		} catch (SAXParseException spe) {
-			System.out.println("\n** Parsing error, line " + spe.getLineNumber()
-													+ ", uri " + spe.getSystemId());
+			System.out
+					.println("\n** Parsing error, line " + spe.getLineNumber() + ", uri " + spe.getSystemId());
 			System.out.println("   " + spe.getMessage());
 			throw new IllegalStateException(spe);
 		} catch (SAXException sxe) {
@@ -273,7 +258,7 @@ final class OSMTagMapping {
 
 		if (!poiZoomOverrides.isEmpty()) {
 			for (short s : tagSet) {
-				Set<OSMTag> overriddenTags = poiZoomOverrides.get(s);
+				Set<OSMTag> overriddenTags = poiZoomOverrides.get(Short.valueOf(s));
 				if (overriddenTags != null) {
 					for (OSMTag osmTag : overriddenTags) {
 						tmp.remove(osmTag.getId());
@@ -284,7 +269,7 @@ final class OSMTagMapping {
 			if (tmp.isEmpty()) {
 				StringBuilder sb = new StringBuilder();
 				for (short s : tagSet) {
-					sb.append(idToPoiTag.get(s).tagKey() + "; ");
+					sb.append(idToPoiTag.get(Short.valueOf(s)).tagKey() + "; ");
 				}
 				LOGGER.severe("ERROR: You have a cycle in your zoom-override definitions. Look for these tags: "
 						+ sb.toString());
@@ -293,7 +278,7 @@ final class OSMTagMapping {
 
 		byte zoomAppear = Byte.MAX_VALUE;
 		for (short s : tmp.toArray()) {
-			OSMTag tag = idToPoiTag.get(s);
+			OSMTag tag = idToPoiTag.get(Short.valueOf(s));
 			if (tag.isRenderable())
 				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
 		}
@@ -309,7 +294,7 @@ final class OSMTagMapping {
 
 		if (!wayZoomOverrides.isEmpty()) {
 			for (short s : tagSet) {
-				Set<OSMTag> overriddenTags = wayZoomOverrides.get(s);
+				Set<OSMTag> overriddenTags = wayZoomOverrides.get(Short.valueOf(s));
 				if (overriddenTags != null) {
 					for (OSMTag osmTag : overriddenTags) {
 						tmp.remove(osmTag.getId());
@@ -320,7 +305,7 @@ final class OSMTagMapping {
 			if (tmp.isEmpty()) {
 				StringBuilder sb = new StringBuilder();
 				for (short s : tagSet) {
-					sb.append(idToWayTag.get(s).tagKey() + "; ");
+					sb.append(idToWayTag.get(Short.valueOf(s)).tagKey() + "; ");
 				}
 				LOGGER.severe("ERROR: You have a cycle in your zoom-override definitions. Look for these tags: "
 						+ sb.toString());
@@ -328,7 +313,7 @@ final class OSMTagMapping {
 		}
 		byte zoomAppear = Byte.MAX_VALUE;
 		for (short s : tmp.toArray()) {
-			OSMTag tag = idToWayTag.get(s);
+			OSMTag tag = idToWayTag.get(Short.valueOf(s));
 			if (tag.isRenderable())
 				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
 		}
@@ -345,14 +330,14 @@ final class OSMTagMapping {
 	}
 
 	OSMTag getWayTag(short id) {
-		return idToWayTag.get(id);
+		return idToWayTag.get(Short.valueOf(id));
 	}
 
 	OSMTag getPoiTag(short id) {
-		return idToPoiTag.get(id);
+		return idToPoiTag.get(Short.valueOf(id));
 	}
 
-	short[] tagIDsFromList(List<OSMTag> tags) {
+	static short[] tagIDsFromList(List<OSMTag> tags) {
 		short[] tagIDs = new short[tags.size()];
 		int i = 0;
 		for (OSMTag tag : tags) {
@@ -386,10 +371,9 @@ final class OSMTagMapping {
 
 		OSMTag currentTag = null;
 		for (HistogramEntry histogramEntry : poiOrdering.descendingSet()) {
-			currentTag = idToPoiTag.get(histogramEntry.id);
-			optimizedPoiIds.put(histogramEntry.id, tmpPoiID);
-			LOGGER.finer("adding poi tag: " + currentTag.tagKey() + " id:" + tmpPoiID
-					+ " amount: "
+			currentTag = idToPoiTag.get(Short.valueOf(histogramEntry.id));
+			optimizedPoiIds.put(Short.valueOf(histogramEntry.id), Short.valueOf(tmpPoiID));
+			LOGGER.finer("adding poi tag: " + currentTag.tagKey() + " id:" + tmpPoiID + " amount: "
 					+ histogramEntry.amount);
 			tmpPoiID++;
 		}
@@ -410,10 +394,9 @@ final class OSMTagMapping {
 
 		OSMTag currentTag = null;
 		for (HistogramEntry histogramEntry : wayOrdering.descendingSet()) {
-			currentTag = idToWayTag.get(histogramEntry.id);
-			optimizedWayIds.put(histogramEntry.id, tmpWayID);
-			LOGGER.finer("adding way tag: " + currentTag.tagKey() + " id:" + tmpWayID
-					+ " amount: "
+			currentTag = idToWayTag.get(Short.valueOf(histogramEntry.id));
+			optimizedWayIds.put(Short.valueOf(histogramEntry.id), Short.valueOf(tmpWayID));
+			LOGGER.finer("adding way tag: " + currentTag.tagKey() + " id:" + tmpWayID + " amount: "
 					+ histogramEntry.amount);
 			tmpWayID++;
 		}

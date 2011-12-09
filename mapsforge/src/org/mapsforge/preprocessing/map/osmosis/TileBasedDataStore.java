@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.mapsforge.core.Rect;
-import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 /**
@@ -30,7 +30,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way;
  * @author bross
  * 
  */
-interface TileBasedDataStore extends EntityResolver<TDNode> {
+interface TileBasedDataStore {
 
 	/**
 	 * Get the bounding box that describes this TileBasedDataStore.
@@ -66,6 +66,8 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 */
 	boolean addWay(Way way);
 
+	void addRelation(Relation relation);
+
 	/**
 	 * Retrieve the all the inner ways that are associated with an outer way that represents a
 	 * multipolygon.
@@ -75,20 +77,6 @@ interface TileBasedDataStore extends EntityResolver<TDNode> {
 	 * @return all associated inner ways
 	 */
 	List<TDWay> getInnerWaysOfMultipolygon(long outerWayID);
-
-	/**
-	 * Adds a multipolygon consisting of ways to the tile data store.
-	 * 
-	 * @param outerWayID
-	 *            id of the outer way
-	 * @param innerWayIDs
-	 *            ids of all inner ways
-	 * @param relationTags
-	 *            all supported tags that are attached to the relation
-	 * @return true if the multipolygon has been successfully added
-	 */
-	boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			List<OSMTag> relationTags, long relationID, String name);
 
 	/**
 	 * Retrieves all the data that is associated with a tile.

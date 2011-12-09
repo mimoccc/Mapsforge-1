@@ -25,23 +25,18 @@ import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 
 class CoastlineHandler implements ClosedPolygonHandler {
-	private final CoastlineAlgorithm coastlineAlgorithm =
-						new CoastlineAlgorithm();
+	private final CoastlineAlgorithm coastlineAlgorithm = new CoastlineAlgorithm();
 	private boolean isWaterTile = false;
 	private final List<float[]> islandPolygons = new ArrayList<float[]>();
 
 	boolean isWaterTile(TileCoordinate tc, Set<TDWay> coastlines) {
 
-		TileCoordinate coordinateOnTileInfoZoomlevel = tc.translateToZoomLevel(
-								TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
+		TileCoordinate coordinateOnTileInfoZoomlevel = tc.translateToZoomLevel(TileInfo.TILE_INFO_ZOOMLEVEL)
+				.get(0);
 		coastlineAlgorithm.clearCoastlineSegments();
-		coastlineAlgorithm.setTiles(
-								new Tile(coordinateOnTileInfoZoomlevel.getX(),
-										coordinateOnTileInfoZoomlevel
-												.getY(), coordinateOnTileInfoZoomlevel
-												.getZoomlevel()),
-								new Tile(tc.getX(), tc.getY(),
-												tc.getZoomlevel()));
+		coastlineAlgorithm.setTiles(new Tile(coordinateOnTileInfoZoomlevel.getX(),
+				coordinateOnTileInfoZoomlevel.getY(), coordinateOnTileInfoZoomlevel.getZoomlevel()), new Tile(
+				tc.getX(), tc.getY(), tc.getZoomlevel()));
 
 		islandPolygons.clear();
 		isWaterTile = false;
@@ -51,8 +46,7 @@ class CoastlineHandler implements ClosedPolygonHandler {
 
 		float[] segment = null;
 		for (TDWay coastline : coastlines) {
-			segment = convertToCoastlineSegmentRelativeToTile(pixelX, pixelY,
-										tc.getZoomlevel(), coastline);
+			segment = convertToCoastlineSegmentRelativeToTile(pixelX, pixelY, tc.getZoomlevel(), coastline);
 			if (segment != null)
 				coastlineAlgorithm.addCoastlineSegment(segment);
 		}
@@ -70,8 +64,8 @@ class CoastlineHandler implements ClosedPolygonHandler {
 		return isWaterTile;
 	}
 
-	private float[] convertToCoastlineSegmentRelativeToTile(double tilePixelX,
-						double tilePixelY, byte zoom, TDWay coastline) {
+	private static float[] convertToCoastlineSegmentRelativeToTile(double tilePixelX, double tilePixelY,
+			byte zoom, TDWay coastline) {
 		TDNode[] waynodes = coastline.getWayNodes();
 		if (waynodes == null || waynodes.length < 2)
 			return null;
@@ -79,11 +73,9 @@ class CoastlineHandler implements ClosedPolygonHandler {
 		int i = 0;
 		for (TDNode waynode : waynodes) {
 			segment[i] = (float) (MercatorProjection.longitudeToPixelX(
-										GeoCoordinate.intToDouble(waynode.getLongitude()),
-										zoom) - tilePixelX);
+					GeoCoordinate.intToDouble(waynode.getLongitude()), zoom) - tilePixelX);
 			segment[i + 1] = (float) (MercatorProjection.latitudeToPixelY(
-										GeoCoordinate.intToDouble(waynode.getLatitude()),
-										zoom) - tilePixelY);
+					GeoCoordinate.intToDouble(waynode.getLatitude()), zoom) - tilePixelY);
 			i += 2;
 		}
 

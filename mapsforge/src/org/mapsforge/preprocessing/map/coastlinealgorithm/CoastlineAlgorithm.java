@@ -25,8 +25,8 @@ import java.util.TreeMap;
 import org.mapsforge.android.maps.Tile;
 
 /**
- * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The algorithm is
- * based on the close-areas.pl script, written by Frederik Ramm for the Osmarender program.
+ * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The algorithm is based on
+ * the close-areas.pl script, written by Frederik Ramm for the Osmarender program.
  */
 class CoastlineAlgorithm {
 	/**
@@ -54,13 +54,14 @@ class CoastlineAlgorithm {
 	private float[] matchPath;
 	private boolean needHelperPoint;
 	private float[] newPath;
-	private int relativeX1;
-	private int relativeX2;
-	private int relativeY1;
-	private int relativeY2;
+	// private int relativeX1;
+	// private int relativeX2;
+	// private int relativeY1;
+	// private int relativeY2;
 	private final int[] virtualTileBoundaries;
 	private int virtualTileSize;
-	private int zoomLevelDifference;
+
+	// private int zoomLevelDifference;
 
 	/**
 	 * Constructs a new CoastlineAlgorithm instance to generate closed polygons.
@@ -86,9 +87,9 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Adds a coastline segment to the internal data structures. Coastline segments are automatically
-	 * merged into longer parts when they share the same start or end point. Adding the same coastline
-	 * segment more than once has no effect.
+	 * Adds a coastline segment to the internal data structures. Coastline segments are automatically merged
+	 * into longer parts when they share the same start or end point. Adding the same coastline segment more
+	 * than once has no effect.
 	 * 
 	 * @param coastline
 	 *            the coordinates of the coastline segment.
@@ -115,8 +116,7 @@ class CoastlineAlgorithm {
 		// check to avoid duplicate coastline segments
 		if (!this.handledCoastlineSegments.contains(endPoints)) {
 			// update the set of handled coastline segments
-			this.handledCoastlineSegments.add(new EndPoints(coastlineStartPoint,
-					coastlineEndPoint));
+			this.handledCoastlineSegments.add(new EndPoints(coastlineStartPoint, coastlineEndPoint));
 
 			// check if a data way starts with the last point of the current way
 			if (this.coastlineStarts.containsKey(coastlineEndPoint)) {
@@ -137,8 +137,7 @@ class CoastlineAlgorithm {
 				// check if the merged way is already a circle
 				if (!coastlineStartPoint.equals(coastlineEndPoint)) {
 					// merge both way segments
-					this.newPath = new float[nodesSequence.length + this.matchPath.length
-							- 2];
+					this.newPath = new float[nodesSequence.length + this.matchPath.length - 2];
 					System.arraycopy(this.matchPath, 0, this.newPath, 0, this.matchPath.length - 2);
 					System.arraycopy(nodesSequence, 0, this.newPath, this.matchPath.length - 2,
 							nodesSequence.length);
@@ -164,8 +163,8 @@ class CoastlineAlgorithm {
 	}
 
 	/**
-	 * Generates closed water and land polygons from unconnected coastline segments. Closed segments are
-	 * handled either as water or islands, depending on their orientation.
+	 * Generates closed water and land polygons from unconnected coastline segments. Closed segments are handled
+	 * either as water or islands, depending on their orientation.
 	 * 
 	 * @param closedPolygonHandler
 	 *            the implementation which will be called to handle the generated polygons.
@@ -195,11 +194,10 @@ class CoastlineAlgorithm {
 					closedPolygonHandler.onIslandPolygon(coastline);
 				}
 			} else if (CoastlineWay.isValid(coastline, this.virtualTileBoundaries)) {
-				coastline = SutherlandHodgmanClipping.clipPolyline(coastline,
-						this.virtualTileBoundaries);
+				coastline = SutherlandHodgmanClipping.clipPolyline(coastline, this.virtualTileBoundaries);
 				if (coastline != null) {
-					this.coastlineWays.add(new CoastlineWay(coastline,
-							this.virtualTileBoundaries, this.virtualTileSize));
+					this.coastlineWays.add(new CoastlineWay(coastline, this.virtualTileBoundaries,
+							this.virtualTileSize));
 				}
 			} else {
 				invalidCoastline = true;
@@ -269,18 +267,15 @@ class CoastlineAlgorithm {
 			if (coastlineStart.equals(coastlineEnd)) {
 				// calculate the length of the new way
 				this.coastlineStartLength = coastlineStart.data.length;
-				this.coordinates = new float[this.coastlineStartLength
-						+ this.additionalCoastlinePoints.size() * 2 + 2];
+				this.coordinates = new float[this.coastlineStartLength + this.additionalCoastlinePoints.size()
+						* 2 + 2];
 
 				// copy the start segment
-				System
-						.arraycopy(coastlineStart.data, 0, this.coordinates, 0,
-								this.coastlineStartLength);
+				System.arraycopy(coastlineStart.data, 0, this.coordinates, 0, this.coastlineStartLength);
 
 				// copy the additional points
 				for (int i = 0; i < this.additionalCoastlinePoints.size(); ++i) {
-					this.coordinates[this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints
-							.get(i).x;
+					this.coordinates[this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints.get(i).x;
 					this.coordinates[this.coastlineStartLength + 2 * i + 1] = this.additionalCoastlinePoints
 							.get(i).y;
 				}
@@ -303,24 +298,20 @@ class CoastlineAlgorithm {
 
 				// copy the additional points
 				for (int i = 0; i < this.additionalCoastlinePoints.size(); ++i) {
-					newSegment[this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints
-							.get(i).x;
-					newSegment[this.coastlineStartLength + 2 * i + 1] = this.additionalCoastlinePoints
-							.get(i).y;
+					newSegment[this.coastlineStartLength + 2 * i] = this.additionalCoastlinePoints.get(i).x;
+					newSegment[this.coastlineStartLength + 2 * i + 1] = this.additionalCoastlinePoints.get(i).y;
 				}
 
 				// copy the end segment
-				System.arraycopy(coastlineEnd.data, 0, newSegment,
-						this.coastlineStartLength + this.additionalCoastlinePoints.size() * 2,
-						this.coastlineEndLength);
+				System.arraycopy(coastlineEnd.data, 0, newSegment, this.coastlineStartLength
+						+ this.additionalCoastlinePoints.size() * 2, this.coastlineEndLength);
 
 				// replace the end segment in the list with the new segment
 				this.coastlineWays.remove(coastlineEnd);
-				newSegment = SutherlandHodgmanClipping.clipPolyline(newSegment,
-						this.virtualTileBoundaries);
+				newSegment = SutherlandHodgmanClipping.clipPolyline(newSegment, this.virtualTileBoundaries);
 				if (newSegment != null) {
-					this.coastlineWays.add(new CoastlineWay(newSegment,
-							this.virtualTileBoundaries, this.virtualTileSize));
+					this.coastlineWays.add(new CoastlineWay(newSegment, this.virtualTileBoundaries,
+							this.virtualTileSize));
 					Collections.sort(this.coastlineWays, CoastlineWayComparator.INSTANCE);
 				}
 			}
@@ -336,45 +327,46 @@ class CoastlineAlgorithm {
 	 *            the tile for which the coastline coordinates are relative to.
 	 */
 	void setTiles(Tile readCoastlineTile, Tile currentTile) {
-		if (readCoastlineTile.getZoomLevel() < currentTile.getZoomLevel()) {
-			// calculate the virtual tile dimensions
-			this.zoomLevelDifference = currentTile.getZoomLevel() - readCoastlineTile.getZoomLevel();
-			this.virtualTileSize = Tile.TILE_SIZE << this.zoomLevelDifference;
-			this.relativeX1 = (int) ((readCoastlineTile.getPixelX() << this.zoomLevelDifference) - currentTile
-					.getPixelX());
-			this.relativeY1 = (int) ((readCoastlineTile.getPixelY() << this.zoomLevelDifference) - currentTile
-					.getPixelY());
-			this.relativeX2 = this.relativeX1 + this.virtualTileSize;
-			this.relativeY2 = this.relativeY1 + this.virtualTileSize;
-
-			this.virtualTileBoundaries[0] = this.relativeX1;
-			this.virtualTileBoundaries[1] = this.relativeY1;
-			this.virtualTileBoundaries[2] = this.relativeX2;
-			this.virtualTileBoundaries[3] = this.relativeY2;
-		} else {
-			// use the standard tile dimensions
-			this.virtualTileSize = Tile.TILE_SIZE;
-
-			this.virtualTileBoundaries[0] = 0;
-			this.virtualTileBoundaries[1] = 0;
-			this.virtualTileBoundaries[2] = Tile.TILE_SIZE;
-			this.virtualTileBoundaries[3] = Tile.TILE_SIZE;
-		}
-
-		// bottom-right
-		this.helperPoints[0].x = this.virtualTileBoundaries[2];
-		this.helperPoints[0].y = this.virtualTileBoundaries[3];
-
-		// bottom-left
-		this.helperPoints[1].x = this.virtualTileBoundaries[0];
-		this.helperPoints[1].y = this.virtualTileBoundaries[3];
-
-		// top-left
-		this.helperPoints[2].x = this.virtualTileBoundaries[0];
-		this.helperPoints[2].y = this.virtualTileBoundaries[1];
-
-		// top-right
-		this.helperPoints[3].x = this.virtualTileBoundaries[2];
-		this.helperPoints[3].y = this.virtualTileBoundaries[1];
+		// TODO Tile has changed API in r1558, reimplemnt, when coastlines are tackled
+		// if (readCoastlineTile.getZoomLevel() < currentTile.getZoomLevel()) {
+		// // calculate the virtual tile dimensions
+		// this.zoomLevelDifference = currentTile.getZoomLevel() - readCoastlineTile.getZoomLevel();
+		// this.virtualTileSize = Tile.TILE_SIZE << this.zoomLevelDifference;
+		// this.relativeX1 = (int) ((readCoastlineTile.getPixelX() << this.zoomLevelDifference) - currentTile
+		// .getPixelX());
+		// this.relativeY1 = (int) ((readCoastlineTile.getPixelY() << this.zoomLevelDifference) - currentTile
+		// .getPixelY());
+		// this.relativeX2 = this.relativeX1 + this.virtualTileSize;
+		// this.relativeY2 = this.relativeY1 + this.virtualTileSize;
+		//
+		// this.virtualTileBoundaries[0] = this.relativeX1;
+		// this.virtualTileBoundaries[1] = this.relativeY1;
+		// this.virtualTileBoundaries[2] = this.relativeX2;
+		// this.virtualTileBoundaries[3] = this.relativeY2;
+		// } else {
+		// // use the standard tile dimensions
+		// this.virtualTileSize = Tile.TILE_SIZE;
+		//
+		// this.virtualTileBoundaries[0] = 0;
+		// this.virtualTileBoundaries[1] = 0;
+		// this.virtualTileBoundaries[2] = Tile.TILE_SIZE;
+		// this.virtualTileBoundaries[3] = Tile.TILE_SIZE;
+		// }
+		//
+		// // bottom-right
+		// this.helperPoints[0].x = this.virtualTileBoundaries[2];
+		// this.helperPoints[0].y = this.virtualTileBoundaries[3];
+		//
+		// // bottom-left
+		// this.helperPoints[1].x = this.virtualTileBoundaries[0];
+		// this.helperPoints[1].y = this.virtualTileBoundaries[3];
+		//
+		// // top-left
+		// this.helperPoints[2].x = this.virtualTileBoundaries[0];
+		// this.helperPoints[2].y = this.virtualTileBoundaries[1];
+		//
+		// // top-right
+		// this.helperPoints[3].x = this.virtualTileBoundaries[2];
+		// this.helperPoints[3].y = this.virtualTileBoundaries[1];
 	}
 }

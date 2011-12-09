@@ -59,8 +59,8 @@ class DeltaEncoder {
 		while (it.hasNext()) {
 			Integer currentLat = it.next();
 			Integer currentLon = it.next();
-			result.add((currentLat - prevLat));
-			result.add(currentLon - prevLon);
+			result.add(Integer.valueOf((currentLat.intValue() - prevLat.intValue())));
+			result.add(Integer.valueOf(currentLon.intValue() - prevLon.intValue()));
 
 			prevLat = currentLat;
 			prevLon = currentLon;

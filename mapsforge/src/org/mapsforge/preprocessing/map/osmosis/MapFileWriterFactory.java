@@ -23,13 +23,10 @@ import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
  * Factory for the mapfile writer osmosis plugin.
  * 
  * @author bross
- * 
  */
 class MapFileWriterFactory extends TaskManagerFactory {
 
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
-	private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime()
-			.availableProcessors();
 	private static final String DEFAULT_PARAM_TYPE = "ram";
 	private static final int DEFAULT_PARAM_BBOX_ENLARGEMENT = 20;
 
@@ -43,7 +40,6 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
 	private static final String PARAM_WAY_CLIPPING = "way-clipping";
-	private static final String PARAM_THREAD_POOL_SIZE = "thread-pool-size";
 	private static final String PARAM_TYPE = "type";
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
@@ -63,18 +59,14 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		boolean pixelFilter = getBooleanArgument(taskConfig, PARAM_PIXEL_FILTER, true);
 		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
 		boolean wayClipping = getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, false);
-
-		int threadpoolSize = getIntegerArgument(taskConfig, PARAM_THREAD_POOL_SIZE,
-				DEFAULT_THREAD_POOL_SIZE);
 		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
 		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
 				DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
-		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition,
-				comment, zoomConf, debug, pixelFilter, polygonClipping,
-				wayClipping,
-				threadpoolSize, type, bboxEnlargement, tagConfFile, preferredLanguage);
+		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition, comment, zoomConf,
+				debug, pixelFilter, polygonClipping, wayClipping, type, bboxEnlargement, tagConfFile,
+				preferredLanguage);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

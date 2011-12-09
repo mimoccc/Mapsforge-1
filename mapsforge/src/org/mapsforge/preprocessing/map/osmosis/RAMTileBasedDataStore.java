@@ -16,87 +16,80 @@ package org.mapsforge.preprocessing.map.osmosis;
 
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.procedure.TLongProcedure;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
-import org.mapsforge.core.GeoCoordinate;
-import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Rect;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDNode;
+import org.mapsforge.preprocessing.map.osmosis.TileData.TDRelation;
 import org.mapsforge.preprocessing.map.osmosis.TileData.TDWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 /**
  * A TileBasedDataStore that uses the RAM as storage device for temporary data structures.
  * 
  * @author bross
- * 
  */
 final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
-	private static final Logger LOGGER =
-			Logger.getLogger(TileBasedDataStore.class.getName());
+	private final TLongObjectHashMap<TDNode> nodes;
+	protected final TLongObjectHashMap<TDWay> ways;
+	protected final TLongObjectHashMap<TDRelation> multipolygons;
 
-	private TLongObjectHashMap<TDNode> nodes;
-	protected TLongObjectHashMap<TDWay> ways;
-	protected TLongObjectHashMap<TLongArrayList> multipolygons;
-	protected TileData[][][] tileData;
-	private final HashMap<TileCoordinate, Set<TDWay>> tilesToCoastlines;
+	private final RAMTileData[][][] tileData;
 
-	private RAMTileBasedDataStore(
-			double minLat, double maxLat,
-			double minLon, double maxLon,
+	private RAMTileBasedDataStore(double minLat, double maxLat, double minLon, double maxLon,
 			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration,
-				bboxEnlargement);
+		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement);
 	}
 
-	private RAMTileBasedDataStore(Rect bbox,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+	private RAMTileBasedDataStore(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int bboxEnlargement) {
 		super(bbox, zoomIntervalConfiguration, bboxEnlargement);
 		this.nodes = new TLongObjectHashMap<TDNode>();
 		this.ways = new TLongObjectHashMap<TDWay>();
-		this.multipolygons = new TLongObjectHashMap<TLongArrayList>();
-		this.tileData = new TileData[zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
+		this.multipolygons = new TLongObjectHashMap<TDRelation>();
+		this.tileData = new RAMTileData[zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
 		// compute number of tiles needed on each base zoom level
 		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			this.tileData[i] = new TileData[tileGridLayouts[i].getAmountTilesHorizontal()][tileGridLayouts[i]
+			this.tileData[i] = new RAMTileData[tileGridLayouts[i].getAmountTilesHorizontal()][tileGridLayouts[i]
 					.getAmountTilesVertical()];
 		}
-		this.tilesToCoastlines = new HashMap<TileCoordinate, Set<TDWay>>();
 	}
 
-	static RAMTileBasedDataStore newInstance(Rect bbox,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+	static RAMTileBasedDataStore newInstance(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int bboxEnlargement) {
 		return new RAMTileBasedDataStore(bbox, zoomIntervalConfiguration, bboxEnlargement);
 	}
 
-	static RAMTileBasedDataStore newInstance(double minLat, double maxLat,
-			double minLon, double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement) {
-		return new RAMTileBasedDataStore(minLat, maxLat, minLon, maxLon,
-				zoomIntervalConfiguration, bboxEnlargement);
+	static RAMTileBasedDataStore newInstance(double minLat, double maxLat, double minLon, double maxLon,
+			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement) {
+		return new RAMTileBasedDataStore(minLat, maxLat, minLon, maxLon, zoomIntervalConfiguration,
+				bboxEnlargement);
 	}
 
-	static RAMTileBasedDataStore getStandardInstance(
-			double minLat, double maxLat,
-			double minLon, double maxLon, int bboxEnlargement) {
+	static RAMTileBasedDataStore getStandardInstance(double minLat, double maxLat, double minLon,
+			double maxLon, int bboxEnlargement) {
 
-		return new RAMTileBasedDataStore(
-				minLat, maxLat, minLon, maxLon,
+		return new RAMTileBasedDataStore(minLat, maxLat, minLon, maxLon,
 				ZoomIntervalConfiguration.getStandardConfiguration(), bboxEnlargement);
 	}
 
 	@Override
-	public TDNode getEntity(long id) {
+	public TDNode getNode(long id) {
 		return nodes.get(id);
+	}
+
+	@Override
+	public TDWay getWay(long id) {
+		return ways.get(id);
 	}
 
 	@Override
@@ -110,8 +103,114 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
+	public boolean addNode(Node node) {
+		TDNode tdNode = TDNode.fromNode(node);
+		nodes.put(tdNode.getId(), tdNode);
+		addPOI(tdNode);
+		return true;
+	}
+
+	@Override
+	public boolean addWay(Way way) {
+		TDWay tdWay = TDWay.fromWay(way, this);
+		if (tdWay == null)
+			return false;
+		ways.put(tdWay.getId(), tdWay);
+		maxWayID = Math.max(maxWayID, way.getId());
+
+		if (tdWay.isCoastline()) {
+			// find matching tiles on zoom level 12
+			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(tdWay, TileInfo.TILE_INFO_ZOOMLEVEL, 0);
+			for (TileCoordinate tileCoordinate : coastLineTiles) {
+				TLongHashSet coastlines = tilesToCoastlines.get(tileCoordinate);
+				if (coastlines == null) {
+					coastlines = new TLongHashSet();
+					tilesToCoastlines.put(tileCoordinate, coastlines);
+				}
+				coastlines.add(tdWay.getId());
+			}
+		}
+
+		return true;
+	}
+
+	@Override
+	public void addRelation(Relation relation) {
+		TDRelation tdRelation = TDRelation.fromRelation(relation, this);
+		if (tdRelation != null) {
+			multipolygons.put(relation.getId(), tdRelation);
+		}
+	}
+
+	@Override
+	public void complete() {
+		// Polygonize multipolygon
+		RelationHandler relationHandler = new RelationHandler();
+		multipolygons.forEachValue(relationHandler);
+
+		WayHandler wayHandler = new WayHandler();
+		ways.forEachValue(wayHandler);
+
+		MapFileWriterTask.TAG_MAPPING.optimizePoiOrdering(histogramPoiTags);
+		MapFileWriterTask.TAG_MAPPING.optimizeWayOrdering(histogramWayTags);
+	}
+
+	@Override
+	public TileData getTile(int zoom, int tileX, int tileY) {
+		return getTileImpl(zoom, tileX, tileY);
+	}
+
+	@Override
+	protected RAMTileData getTileImpl(int zoom, int tileX, int tileY) {
+		int tileCoordinateXIndex = tileX - tileGridLayouts[zoom].getUpperLeft().getX();
+		int tileCoordinateYIndex = tileY - tileGridLayouts[zoom].getUpperLeft().getY();
+		// check for valid range
+		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
+				|| tileData[zoom].length <= tileCoordinateXIndex
+				|| tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex)
+			return null;
+
+		RAMTileData td = tileData[zoom][tileCoordinateXIndex][tileCoordinateYIndex];
+		if (td == null) {
+			td = new RAMTileData();
+			tileData[zoom][tileCoordinateXIndex][tileCoordinateYIndex] = td;
+		}
+
+		return td;
+	}
+
+	@Override
+	public Set<TDWay> getCoastLines(TileCoordinate tc) {
+		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
+			return Collections.emptySet();
+		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
+		TLongHashSet coastlines = tilesToCoastlines.get(correspondingOceanTile);
+		if (coastlines == null)
+			return Collections.emptySet();
+
+		final Set<TDWay> res = new HashSet<TileData.TDWay>();
+		coastlines.forEach(new TLongProcedure() {
+			@Override
+			public boolean execute(long id) {
+				TDWay way = ways.get(id);
+				if (way != null) {
+					res.add(way);
+					return true;
+				}
+				return false;
+			}
+		});
+		return res;
+	}
+
+	@Override
+	public void release() {
+		// nothing to do here
+	}
+
+	@Override
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
-		TLongArrayList innerwayIDs = multipolygons.get(outerWayID);
+		TLongArrayList innerwayIDs = outerToInnerMapping.get(outerWayID);
 		if (innerwayIDs == null)
 			return null;
 		return getInnerWaysOfMultipolygon(innerwayIDs.toArray());
@@ -120,7 +219,7 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	private List<TDWay> getInnerWaysOfMultipolygon(long[] innerWayIDs) {
 		if (innerWayIDs == null)
 			return Collections.emptyList();
-		List<TDWay> res = new ArrayList<TileData.TDWay>();
+		List<TDWay> res = new ArrayList<RAMTileData.TDWay>();
 		for (long id : innerWayIDs) {
 			TDWay current = ways.get(id);
 			if (current == null)
@@ -132,224 +231,18 @@ final class RAMTileBasedDataStore extends BaseTileBasedDataStore {
 	}
 
 	@Override
-	public boolean addNode(Node node) {
-		TDNode tdNode = TDNode.fromNode(node);
-		nodes.put(tdNode.getId(), tdNode);
-		if (tdNode.isPOI()) {
-			byte minZoomLevel = tdNode.getZoomAppear();
-			for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-
-				// is poi seen in a zoom interval?
-				if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
-					long tileCoordinateX = MercatorProjection.longitudeToTileX(
-							GeoCoordinate.intToDouble(tdNode.getLongitude()),
-							zoomIntervalConfiguration.getBaseZoom(i));
-					long tileCoordinateY = MercatorProjection.latitudeToTileY(
-							GeoCoordinate.intToDouble(tdNode.getLatitude()),
-							zoomIntervalConfiguration.getBaseZoom(i));
-					TileData td = getTile(i, (int) tileCoordinateX, (int) tileCoordinateY);
-					if (td != null) {
-						td.addPOI(tdNode);
-						countPoiTags(tdNode);
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean addWay(Way way) {
-		TDWay tdWay = TDWay.fromWay(way, this);
-		if (tdWay == null)
-			return false;
-		this.ways.put(tdWay.getId(), tdWay);
-
-		int bboxEnlargementLocal = bboxEnlargement;
-
-		if (tdWay.getTags() != null && tdWay.isCoastline()) {
-			bboxEnlargementLocal = 0;
-			// find matching tiles on zoom level 12
-			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(tdWay,
-					TileInfo.TILE_INFO_ZOOMLEVEL, bboxEnlargementLocal);
-			for (TileCoordinate tileCoordinate : coastLineTiles) {
-				Set<TDWay> coastlines = tilesToCoastlines.get(tileCoordinate);
-				if (coastlines == null) {
-					coastlines = new HashSet<TDWay>();
-					tilesToCoastlines.put(tileCoordinate, coastlines);
-				}
-				coastlines.add(tdWay);
-			}
-		}
-
-		addWayToTiles(tdWay, bboxEnlargementLocal);
-
-		return true;
-	}
-
-	private void addWayToTiles(TDWay tdWay, int bboxEnlargementLocal) {
-		byte minZoomLevel = tdWay.getMinimumZoomLevel();
-		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-			// is way seen in a zoom interval?
-			if (minZoomLevel <= zoomIntervalConfiguration.getMaxZoom(i)) {
-				Set<TileCoordinate> matchedTiles = GeoUtils.mapWayToTiles(tdWay,
-						zoomIntervalConfiguration.getBaseZoom(i),
-						bboxEnlargementLocal);
-				boolean added = false;
-				for (TileCoordinate matchedTile : matchedTiles) {
-					TileData td = getTile(i, matchedTile.getX(), matchedTile.getY());
-					if (td != null) {
-						countWayTags(tdWay);
-						countWayTileFactor[i]++;
-						added = true;
-						td.addWay(tdWay);
-					}
-				}
-				if (added)
-					countWays[i]++;
-			}
-		}
-	}
-
-	@Override
-	public boolean addWayMultipolygon(long outerWayID, long[] innerWayIDs,
-			List<OSMTag> relationTags, long relationID, String relationName) {
-
-		TDWay outerWay = ways.get(outerWayID);
-		// check if outer way exists
-		if (outerWay == null) {
-			LOGGER.finer("outer way with id " + outerWayID + " not existent in relation");
-			return false;
-		}
-		// check if outer way is polygon
-		if (!GeoUtils.isClosedPolygon(outerWay)) {
-			LOGGER.finer("outer way is not a polygon, id: " + outerWayID);
-			return false;
-		}
-
-		// check if all inner ways exist
-		List<TDWay> innerWays = getInnerWaysOfMultipolygon(innerWayIDs);
-		if (innerWays.size() < innerWayIDs.length) {
-			LOGGER.finer("some inner ways are missing for outer way with id " + outerWayID);
-			return false;
-		}
-
-		// add relation tags to outer way
-		short[] additionalTags = MapFileWriterTask.TAG_MAPPING.tagIDsFromList(relationTags);
-		// if the outer way had no tags and thus has not yet been associated with corresponding tiles
-		if ((outerWay.getTags() == null || outerWay.getTags().length == 0) && additionalTags.length > 0) {
-			outerWay.addTags(additionalTags);
-			addWayToTiles(outerWay, bboxEnlargement);
-		} else {
-			outerWay.addTags(additionalTags);
-		}
-		// if the outer way had not a name, it gets the name of the relation (if existent)
-		if (relationName != null && (outerWay.getName() == null || outerWay.getName().length() == 0)) {
-			outerWay.setName(relationName);
-		}
-		countWayTags(additionalTags);
-
-		for (Iterator<TDWay> innerWaysIterator = innerWays.iterator(); innerWaysIterator
-				.hasNext();) {
-			TDWay innerWay = innerWaysIterator.next();
-			// remove all tags from the inner way that are already present in the outer way
-			if (outerWay.getTags() != null && innerWay.getTags() != null) {
-				innerWay.removeTags(outerWay.getTags());
-			}
-			// only remove from normal ways, if the inner way has no tags other than the
-			// outer way
-			if (innerWay.getTags() == null || innerWay.getTags().length == 0) {
-				for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
-					Set<TileCoordinate> associatedTiles = GeoUtils.mapWayToTiles(innerWay,
-							zoomIntervalConfiguration.getBaseZoom(i), bboxEnlargement);
-					if (associatedTiles == null)
-						continue;
-					for (TileCoordinate associatedTile : associatedTiles) {
-						TileData td = getTile(i, associatedTile.getX(), associatedTile.getY());
-						if (td != null)
-							td.removeWay(innerWay);
-					}
-				}
-			}
-			// TODO semantic changed in new renderer?
-			// the inner way has tags other than the outer way --> must be rendered as normal
-			// way, remove it from list of inner ways
-			// else {
-			// innerWaysIterator.remove();
-			// }
-		}
-
-		// add inner ways to multipolygon
-		if (innerWays.size() > 0) {
-			TLongArrayList innerWayIDList = multipolygons.get(outerWayID);
-			if (innerWayIDList == null) {
-				innerWayIDList = new TLongArrayList();
-			}
-			innerWayIDList.add(innerWayIDs);
-			multipolygons.put(outerWayID, innerWayIDList);
-			outerWay.setShape(TDWay.MULTI_POLYGON);
-		}
-
-		return true;
-	}
-
-	@Override
-	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {
-		int tileCoordinateXIndex = tileCoordinateX - tileGridLayouts[baseZoomIndex]
-				.getUpperLeft()
-				.getX();
-		int tileCoordinateYIndex = tileCoordinateY - tileGridLayouts[baseZoomIndex]
-				.getUpperLeft()
-				.getY();
-		// check for valid range
-		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
-				|| tileData[baseZoomIndex].length <= tileCoordinateXIndex
-				|| tileData[baseZoomIndex][0].length <= tileCoordinateYIndex)
-			return null;
-
-		TileData td = tileData[baseZoomIndex][tileCoordinateXIndex][tileCoordinateYIndex];
-		if (td == null) {
-			td = tileData[baseZoomIndex][tileCoordinateXIndex][tileCoordinateYIndex] = new TileData();
-		}
-
-		return td;
-	}
-
-	@Override
-	public Set<TDWay> getCoastLines(TileCoordinate tc) {
-		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
-			return Collections.emptySet();
-		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(
-				TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
-		Set<TDWay> coastlines = tilesToCoastlines.get(correspondingOceanTile);
-		if (coastlines == null)
-			coastlines = Collections.emptySet();
-		return coastlines;
-	}
-
-	@Override
-	public void complete() {
-		MapFileWriterTask.TAG_MAPPING.optimizePoiOrdering(histogramPoiTags);
-		MapFileWriterTask.TAG_MAPPING.optimizeWayOrdering(histogramWayTags);
-
-		int count = 0;
-		for (Set<TDWay> coastlines : tilesToCoastlines.values()) {
-			count += coastlines.size();
-		}
-
-		LOGGER.fine("number of coastlines: " + count);
-		for (int i = 0; i < countWays.length; i++) {
-			LOGGER.fine("zoom-interval " + i + ", added ways: " + countWays[i]);
-			LOGGER.fine("zoom-interval " + i + ", average tiles per way: "
-					+ (countWayTileFactor[i] / countWays[i]));
-		}
-
-	}
-
-	@Override
-	public void release() {
+	protected void handleVirtualOuterWay(TDWay virtualWay) {
 		// nothing to do here
+	}
 
+	@Override
+	protected void handleAdditionalRelationTags(TDWay virtualWay, TDRelation relation) {
+		// nothing to do here
+	}
+
+	@Override
+	protected void handleVirtualInnerWay(TDWay virtualWay) {
+		ways.put(virtualWay.getId(), virtualWay);
 	}
 
 }

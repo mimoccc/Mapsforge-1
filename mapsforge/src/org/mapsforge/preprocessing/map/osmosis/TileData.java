@@ -19,80 +19,31 @@ import gnu.trove.set.TShortSet;
 import gnu.trove.set.hash.TShortHashSet;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.GeoCoordinate;
+import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
+import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
-class TileData {
+abstract class TileData {
 
-	static final Logger LOGGER =
-			Logger.getLogger(TileData.class.getName());
+	protected static final Logger LOGGER = Logger.getLogger(TileData.class.getName());
 
-	private Set<TDNode> pois;
-	private Set<TDWay> ways;
+	abstract void addPOI(TDNode poi);
 
-	TileData() {
-		this.pois = new HashSet<TDNode>();
-		this.ways = new HashSet<TDWay>();
-	}
+	abstract void addWay(TDWay way);
 
-	void addPOI(TDNode poi) {
-		pois.add(poi);
-	}
+	abstract Map<Byte, List<TDNode>> poisByZoomlevel(byte minValidZoomlevel, byte maxValidZoomlevel);
 
-	void addWay(TDWay way) {
-		ways.add(way);
-	}
-
-	void removeWay(TDWay way) {
-		ways.remove(way);
-	}
-
-	Map<Byte, List<TDNode>> poisByZoomlevel(byte minValidZoomlevel,
-			byte maxValidZoomlevel) {
-		HashMap<Byte, List<TDNode>> poisByZoomlevel = new HashMap<Byte, List<TDNode>>();
-		for (TDNode poi : pois) {
-			byte zoomlevel = poi.getZoomAppear();
-			if (zoomlevel > maxValidZoomlevel)
-				continue;
-			if (zoomlevel < minValidZoomlevel)
-				zoomlevel = minValidZoomlevel;
-			List<TDNode> group = poisByZoomlevel.get(zoomlevel);
-			if (group == null)
-				group = new ArrayList<TDNode>();
-			group.add(poi);
-			poisByZoomlevel.put(zoomlevel, group);
-		}
-
-		return poisByZoomlevel;
-	}
-
-	Map<Byte, List<TDWay>> waysByZoomlevel(byte minValidZoomlevel, byte maxValidZoomlevel) {
-		HashMap<Byte, List<TDWay>> waysByZoomlevel = new HashMap<Byte, List<TDWay>>();
-		for (TDWay way : ways) {
-			byte zoomlevel = way.getMinimumZoomLevel();
-			if (zoomlevel > maxValidZoomlevel)
-				continue;
-			if (zoomlevel < minValidZoomlevel)
-				zoomlevel = minValidZoomlevel;
-			List<TDWay> group = waysByZoomlevel.get(zoomlevel);
-			if (group == null)
-				group = new ArrayList<TDWay>();
-			group.add(way);
-			waysByZoomlevel.put(zoomlevel, group);
-		}
-
-		return waysByZoomlevel;
-	}
+	abstract Map<Byte, List<TDWay>> waysByZoomlevel(byte minValidZoomlevel, byte maxValidZoomlevel);
 
 	static class TDNode {
 
@@ -127,8 +78,7 @@ class TileData {
 					try {
 						elevation = (short) Double.parseDouble(tag.getValue());
 						if (elevation > MAX_ELEVATION) {
-							LOGGER.finer("invalid elevation " + elevation + " for node "
-									+ node.getId());
+							LOGGER.finer("invalid elevation " + elevation + " for node " + node.getId());
 							elevation = 0;
 						}
 
@@ -147,19 +97,17 @@ class TileData {
 					} catch (NumberFormatException e) {
 						// nothing to do here as layer is initialized with 5
 					}
-				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tag.getKey(),
-						tag.getValue())) != null) {
+				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getPoiTag(tag.getKey(), tag.getValue())) != null) {
 					currentTags.add(currentTag.getId());
 				}
 			}
-			return new TDNode(node.getId(),
-					GeoCoordinate.doubleToInt(node.getLatitude()),
-					GeoCoordinate.doubleToInt(node.getLongitude()), elevation,
-					layer, housenumber, name, currentTags.toArray());
+			return new TDNode(node.getId(), GeoCoordinate.doubleToInt(node.getLatitude()),
+					GeoCoordinate.doubleToInt(node.getLongitude()), elevation, layer, housenumber, name,
+					currentTags.toArray());
 		}
 
-		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
-				String houseNumber, String name) {
+		TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber,
+				String name) {
 			this.id = id;
 			this.latitude = latitude;
 			this.longitude = longitude;
@@ -169,8 +117,8 @@ class TileData {
 			this.name = name;
 		}
 
-		TDNode(long id, int latitude, int longitude, short elevation, byte layer,
-				String houseNumber, String name, short[] tags) {
+		TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber,
+				String name, short[] tags) {
 			this.id = id;
 			this.latitude = latitude;
 			this.longitude = longitude;
@@ -254,8 +202,8 @@ class TileData {
 
 		@Override
 		public String toString() {
-			return "TDNode [id=" + id + ", latitude=" + latitude + ", longitude=" + longitude
-					+ ", name=" + name + ", tags=" + tags + "]";
+			return "TDNode [id=" + id + ", latitude=" + latitude + ", longitude=" + longitude + ", name="
+					+ name + ", tags=" + tags + "]";
 		}
 
 	}
@@ -268,12 +216,13 @@ class TileData {
 		private final long id;
 		private final byte layer;
 		private String name;
-		private final String ref;
+		private String ref;
 		private short[] tags;
 		private byte shape;
 		private final TDNode[] wayNodes;
+		private boolean reversedInRelation;
 
-		static TDWay fromWay(Way way, EntityResolver<TDNode> er) {
+		static TDWay fromWay(Way way, NodeResolver resolver) {
 			if (way == null)
 				return null;
 
@@ -300,8 +249,7 @@ class TileData {
 					}
 				} else if (tag.getKey().equalsIgnoreCase("ref")) {
 					ref = tag.getValue();
-				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getWayTag(tag.getKey(),
-						tag.getValue())) != null) {
+				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getWayTag(tag.getKey(), tag.getValue())) != null) {
 					currentTags.add(currentTag.getId());
 				}
 			}
@@ -315,11 +263,10 @@ class TileData {
 				int i = 0;
 				for (WayNode waynode : way.getWayNodes()) {
 					// TODO adjust interface to support a method getWayNodes()
-					waynodes[i] = er.getEntity(waynode.getNodeId());
+					waynodes[i] = resolver.getNode(waynode.getNodeId());
 					if (waynodes[i] == null) {
 						validWay = false;
-						LOGGER.finer("unknown way node: " + waynode.getNodeId()
-								+ " in way " + way.getId());
+						LOGGER.finer("unknown way node: " + waynode.getNodeId() + " in way " + way.getId());
 					}
 					i++;
 				}
@@ -334,15 +281,13 @@ class TileData {
 						if (waynodes.length >= GeoUtils.MIN_NODES_POLYGON) {
 							shape = SIMPLE_POLYGON;
 						} else {
-							LOGGER
-									.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
-											+ way.getId());
+							LOGGER.finer("Found closed polygon with fewer than 4 way nodes. Way-id: "
+									+ way.getId());
 							return null;
 						}
 					}
 
-					return new TDWay(way.getId(), layer, name,
-							ref, currentTags.toArray(), shape, waynodes);
+					return new TDWay(way.getId(), layer, name, ref, currentTags.toArray(), shape, waynodes);
 				}
 			}
 
@@ -357,8 +302,7 @@ class TileData {
 			this.wayNodes = wayNodes;
 		}
 
-		TDWay(long id, byte layer, String name, String ref, short[] tags,
-				byte shape, TDNode[] wayNodes) {
+		TDWay(long id, byte layer, String name, String ref, short[] tags, byte shape, TDNode[] wayNodes) {
 			this.id = id;
 			this.layer = layer;
 			this.name = name;
@@ -381,11 +325,19 @@ class TileData {
 			return ret;
 		}
 
+		void mergeRelationInformation(TDRelation relation) {
+			if (relation.hasTags())
+				addTags(relation.getTags());
+			if (getName() == null && relation.getName() != null)
+				setName(relation.getName());
+			if (getRef() == null && relation.getRef() != null)
+				setRef(relation.getRef());
+		}
+
 		List<GeoCoordinate> wayNodesAsCoordinateList() {
 			List<GeoCoordinate> waynodeCoordinates = new ArrayList<GeoCoordinate>();
 			for (TDNode waynode : wayNodes) {
-				waynodeCoordinates.add(new GeoCoordinate(waynode.getLatitude(),
-						waynode.getLongitude()));
+				waynodeCoordinates.add(new GeoCoordinate(waynode.getLatitude(), waynode.getLongitude()));
 			}
 
 			return waynodeCoordinates;
@@ -415,20 +367,33 @@ class TileData {
 			return ref;
 		}
 
+		public void setRef(String ref) {
+			this.ref = ref;
+		}
+
 		short[] getTags() {
 			return tags;
 		}
 
-		public byte getShape() {
+		byte getShape() {
 			return shape;
 		}
 
-		public void setShape(byte shape) {
+		void setShape(byte shape) {
 			this.shape = shape;
 		}
 
 		void setTags(short[] tags) {
 			this.tags = tags;
+		}
+
+		boolean hasTags() {
+			return tags != null && tags.length > 0;
+		}
+
+		boolean isRenderRelevant() {
+			return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null
+					&& !getRef().isEmpty();
 		}
 
 		void addTags(short[] addendum) {
@@ -451,7 +416,8 @@ class TileData {
 		}
 
 		boolean isPolygon() {
-			return shape == SIMPLE_POLYGON || shape == MULTI_POLYGON;
+			return wayNodes != null && wayNodes.length >= GeoUtils.MIN_NODES_POLYGON
+					&& wayNodes[0].getId() == wayNodes[wayNodes.length - 1].getId();
 		}
 
 		boolean isCoastline() {
@@ -469,6 +435,14 @@ class TileData {
 
 		TDNode[] getWayNodes() {
 			return wayNodes;
+		}
+
+		public boolean isReversedInRelation() {
+			return reversedInRelation;
+		}
+
+		public void setReversedInRelation(boolean reversedInRelation) {
+			this.reversedInRelation = reversedInRelation;
 		}
 
 		@Override
@@ -495,9 +469,173 @@ class TileData {
 
 		@Override
 		public String toString() {
-			return "TDWay [id=" + id + ", name=" + name + ", tags=" + tags + ", polygon="
-					+ shape + "]";
+			return "TDWay [id=" + id + ", name=" + name + ", tags=" + tags + ", polygon=" + shape + "]";
 		}
 
 	}
+
+	// TODO adjust if more relations should be supported
+	static boolean knownRelationType(String type) {
+		return type != null && type.equals("multipolygon");
+	}
+
+	static class TDRelation {
+		private final long id;
+		private final byte layer;
+		private final String name;
+		private final String ref;
+		private final short[] tags;
+		private final TDWay[] memberWays;
+
+		static TDRelation fromRelation(Relation way, WayResolver resolver) {
+			if (way == null)
+				return null;
+
+			if (way.getMembers().size() == 0)
+				return null;
+
+			// special tags
+			// TODO what about the layer of relations?
+			byte layer = 5;
+			String name = null;
+			String ref = null;
+
+			TShortArrayList currentTags = new TShortArrayList();
+			OSMTag currentTag = null;
+			String relationType = null;
+
+			// Process Tags
+			for (Tag tag : way.getTags()) {
+				// test for special tags
+				if (tag.getKey().equalsIgnoreCase("name")) {
+					name = tag.getValue();
+				} else if (tag.getKey().equals("boundary")) {
+					return null;
+				} else if (tag.getKey().equalsIgnoreCase("layer")) {
+					try {
+						layer = Byte.parseByte(tag.getValue());
+						if (layer >= -5 && layer <= 5)
+							layer += 5;
+					} catch (NumberFormatException e) {
+						// nothing to do here as layer is initialized with 5
+					}
+				} else if (tag.getKey().equalsIgnoreCase("ref")) {
+					ref = tag.getValue();
+				} else if (tag.getKey().equalsIgnoreCase("type")) {
+					relationType = tag.getValue();
+				} else if ((currentTag = MapFileWriterTask.TAG_MAPPING.getWayTag(tag.getKey(), tag.getValue())) != null) {
+					currentTags.add(currentTag.getId());
+				}
+			}
+
+			if (!knownRelationType(relationType))
+				return null;
+
+			List<RelationMember> members = way.getMembers();
+			List<TDWay> wayMembers = new ArrayList<RAMTileData.TDWay>();
+			for (RelationMember relationMember : members) {
+				if (relationMember.getMemberType() != EntityType.Way)
+					continue;
+				TDWay member = resolver.getWay(relationMember.getMemberId());
+				if (member == null) {
+					// TODO logging
+					continue;
+				}
+				wayMembers.add(member);
+			}
+
+			if (wayMembers.isEmpty()) {
+				// TODO logging
+				return null;
+			}
+
+			return new TDRelation(way.getId(), layer, name, ref, currentTags.toArray(),
+					wayMembers.toArray(new TDWay[wayMembers.size()]));
+		}
+
+		TDRelation(long id, byte layer, String name, String ref, short[] tags, TDWay[] memberWays) {
+			this.id = id;
+			this.layer = layer;
+			this.name = name;
+			this.ref = ref;
+			this.tags = tags;
+			this.memberWays = memberWays;
+		}
+
+		long getId() {
+			return id;
+		}
+
+		byte getLayer() {
+			return layer;
+		}
+
+		String getName() {
+			return name;
+		}
+
+		String getRef() {
+			return ref;
+		}
+
+		short[] getTags() {
+			return tags;
+		}
+
+		boolean hasTags() {
+			return tags != null && tags.length > 0;
+		}
+
+		boolean isRenderRelevant() {
+			return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null
+					&& !getRef().isEmpty();
+		}
+
+		TDWay[] getMemberWays() {
+			return memberWays;
+		}
+
+		boolean isCoastline() {
+			if (tags == null)
+				return false;
+			OSMTag tag;
+			for (short tagID : tags) {
+				tag = MapFileWriterTask.TAG_MAPPING.getWayTag(tagID);
+				if (tag.isCoastline())
+					return true;
+			}
+
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (int) (id ^ (id >>> 32));
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			TDRelation other = (TDRelation) obj;
+			if (id != other.id)
+				return false;
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return "TDRelation [id=" + id + ", layer=" + layer + ", name=" + name + ", ref=" + ref + ", tags="
+					+ Arrays.toString(tags) + "]";
+		}
+
+	}
+
 }
