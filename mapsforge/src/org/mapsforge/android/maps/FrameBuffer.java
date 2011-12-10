@@ -82,10 +82,8 @@ public class FrameBuffer {
 			this.mapViewCanvas.setBitmap(this.mapViewBitmap2);
 
 			// draw the previous MapView bitmap on the current MapView bitmap
-			synchronized (this.matrix) {
-				this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
-				this.matrix.reset();
-			}
+			this.mapViewCanvas.drawBitmap(this.mapViewBitmap1, this.matrix, null);
+			this.matrix.reset();
 
 			// swap the two MapView bitmaps
 			Bitmap mapViewBitmapSwap = this.mapViewBitmap1;
@@ -113,7 +111,7 @@ public class FrameBuffer {
 	 *            the vertical pivot point.
 	 */
 	public void matrixPostScale(float scaleX, float scaleY, float pivotX, float pivotY) {
-		synchronized (this.matrix) {
+		synchronized (this) {
 			this.matrix.postScale(scaleX, scaleY, pivotX, pivotY);
 			synchronized (this.mapView.getOverlays()) {
 				for (int i = 0, n = this.mapView.getOverlays().size(); i < n; ++i) {
@@ -132,7 +130,7 @@ public class FrameBuffer {
 	 *            the vertical translation.
 	 */
 	public void matrixPostTranslate(float translateX, float translateY) {
-		synchronized (this.matrix) {
+		synchronized (this) {
 			this.matrix.postTranslate(translateX, translateY);
 			synchronized (this.mapView.getOverlays()) {
 				for (int i = 0, n = this.mapView.getOverlays().size(); i < n; ++i) {
