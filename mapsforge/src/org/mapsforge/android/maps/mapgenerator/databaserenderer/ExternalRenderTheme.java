@@ -88,8 +88,6 @@ public class ExternalRenderTheme implements JobTheme {
 	}
 
 	/**
-	 * Calculates the hash code of this object.
-	 * 
 	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {

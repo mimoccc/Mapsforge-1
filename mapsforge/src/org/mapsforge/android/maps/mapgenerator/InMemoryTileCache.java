@@ -114,6 +114,10 @@ public class InMemoryTileCache extends TileCache {
 		}
 
 		synchronized (this.map) {
+			if (this.bitmapPool.isEmpty()) {
+				return;
+			}
+
 			Bitmap pooledBitmap = this.bitmapPool.remove(this.bitmapPool.size() - 1);
 
 			bitmap.copyPixelsToBuffer(this.byteBuffer);

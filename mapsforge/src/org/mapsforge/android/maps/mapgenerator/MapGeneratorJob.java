@@ -31,8 +31,11 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 
 	public final boolean drawTileCoordinates;
 	public final boolean drawTileFrames;
-	public final JobTheme jobTheme;
-	public final float textScale;
+	public final JobParameters jobParameters;
+
+	/**
+	 * The tile which should be generated.
+	 */
 	public final Tile tile;
 
 	private transient int hashCodeValue;
@@ -49,8 +52,7 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
 		this.mapFile = mapFile;
-		this.jobTheme = jobParameters.jobTheme;
-		this.textScale = jobParameters.textScale;
+		this.jobParameters = jobParameters;
 		this.drawTileFrames = debugSettings.isDrawTileFrames();
 		this.drawTileCoordinates = debugSettings.isDrawTileCoordinates();
 		this.highlightWater = debugSettings.isHighlightWaterTiles();
@@ -83,11 +85,9 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 			return false;
 		} else if (this.mapFile != null && !this.mapFile.equals(other.mapFile)) {
 			return false;
-		} else if (this.jobTheme == null && other.jobTheme != null) {
+		} else if (this.jobParameters == null && other.jobParameters != null) {
 			return false;
-		} else if (this.jobTheme != null && !this.jobTheme.equals(other.jobTheme)) {
-			return false;
-		} else if (this.textScale != other.textScale) {
+		} else if (this.jobParameters != null && !this.jobParameters.equals(other.jobParameters)) {
 			return false;
 		} else if (this.drawTileFrames != other.drawTileFrames) {
 			return false;
@@ -105,8 +105,6 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 	}
 
 	/**
-	 * Calculates the hash code of this object.
-	 * 
 	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
@@ -114,8 +112,7 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		result = 31 * result + ((this.tile == null) ? 0 : this.tile.hashCode());
 		result = 31 * result + ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
 		result = 31 * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
-		result = 31 * result + ((this.jobTheme == null) ? 0 : this.jobTheme.hashCode());
-		result = 31 * result + Float.floatToIntBits(this.textScale);
+		result = 31 * result + ((this.jobParameters == null) ? 0 : this.jobParameters.hashCode());
 		result = 31 * result + (this.drawTileFrames ? 1231 : 1237);
 		result = 31 * result + (this.drawTileCoordinates ? 1231 : 1237);
 		result = 31 * result + (this.highlightWater ? 1231 : 1237);

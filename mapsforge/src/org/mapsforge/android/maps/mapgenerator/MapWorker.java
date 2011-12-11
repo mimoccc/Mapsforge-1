@@ -77,7 +77,7 @@ public class MapWorker extends PausableThread {
 			success = this.mapGenerator.executeJob(mapGeneratorJob, this.tileBitmap);
 		}
 
-		if (success) {
+		if (!isInterrupted() && success) {
 			if (this.mapView.getFrameBuffer().drawBitmap(mapGeneratorJob.tile, this.tileBitmap)) {
 				this.inMemoryTileCache.put(mapGeneratorJob, this.tileBitmap);
 			}

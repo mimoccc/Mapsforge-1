@@ -96,8 +96,6 @@ public class Tag {
 	}
 
 	/**
-	 * Calculates the hash code of this object.
-	 * 
 	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {

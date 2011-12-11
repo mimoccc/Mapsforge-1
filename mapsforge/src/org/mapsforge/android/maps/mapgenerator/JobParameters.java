@@ -14,12 +14,73 @@
  */
 package org.mapsforge.android.maps.mapgenerator;
 
+/**
+ * A JobParameters instance is a simple DTO to store the rendering parameters for a job.
+ */
 public class JobParameters {
+	/**
+	 * The render theme which should be used.
+	 */
 	public final JobTheme jobTheme;
+
+	/**
+	 * The text scale factor which should applied to the render theme.
+	 */
 	public final float textScale;
 
+	private int hashCodeValue;
+
+	/**
+	 * Constructs a new JobParameters to store the rendering parameters for a job.
+	 * 
+	 * @param jobTheme
+	 *            render theme which should be used.
+	 * @param textScale
+	 *            the text scale factor which should applied to the render theme.
+	 */
 	public JobParameters(JobTheme jobTheme, float textScale) {
 		this.jobTheme = jobTheme;
 		this.textScale = textScale;
+		this.hashCodeValue = calculateHashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof JobParameters)) {
+			return false;
+		}
+		JobParameters other = (JobParameters) obj;
+		if (this.jobTheme == null) {
+			if (other.jobTheme != null) {
+				return false;
+			}
+		} else if (!this.jobTheme.equals(other.jobTheme)) {
+			return false;
+		}
+		if (Float.floatToIntBits(this.textScale) != Float.floatToIntBits(other.textScale)) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCodeValue;
+	}
+
+	/**
+	 * @return the hash code of this object.
+	 */
+	private int calculateHashCode() {
+		int result = 7;
+		result = 31 * result + ((this.jobTheme == null) ? 0 : this.jobTheme.hashCode());
+		result = 31 * result + Float.floatToIntBits(this.textScale);
+		return result;
 	}
 }

@@ -149,7 +149,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	public boolean executeJob(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
 		this.currentTile = mapGeneratorJob.tile;
 
-		JobTheme jobTheme = mapGeneratorJob.jobTheme;
+		JobTheme jobTheme = mapGeneratorJob.jobParameters.jobTheme;
 		if (!jobTheme.equals(this.previousJobTheme)) {
 			this.renderTheme = getRenderTheme(jobTheme);
 			if (this.renderTheme == null) {
@@ -167,7 +167,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 			this.previousZoomLevel = zoomLevel;
 		}
 
-		float textScale = mapGeneratorJob.textScale;
+		float textScale = mapGeneratorJob.jobParameters.textScale;
 		if (textScale != this.previousTextScale) {
 			this.renderTheme.scaleTextSize(textScale);
 			this.previousTextScale = textScale;
