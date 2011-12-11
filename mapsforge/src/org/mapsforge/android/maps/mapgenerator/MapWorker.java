@@ -53,7 +53,7 @@ public class MapWorker extends PausableThread {
 	 * @param mapGenerator
 	 *            the MapGenerator which this MapWorker should use.
 	 */
-	public synchronized void setMapGenerator(MapGenerator mapGenerator) {
+	public void setMapGenerator(MapGenerator mapGenerator) {
 		this.mapGenerator = mapGenerator;
 	}
 
@@ -72,10 +72,7 @@ public class MapWorker extends PausableThread {
 			return;
 		}
 
-		boolean success;
-		synchronized (this) {
-			success = this.mapGenerator.executeJob(mapGeneratorJob, this.tileBitmap);
-		}
+		boolean success = this.mapGenerator.executeJob(mapGeneratorJob, this.tileBitmap);
 
 		if (!isInterrupted() && success) {
 			if (this.mapView.getFrameBuffer().drawBitmap(mapGeneratorJob.tile, this.tileBitmap)) {
@@ -93,7 +90,7 @@ public class MapWorker extends PausableThread {
 
 	@Override
 	protected int getThreadPriority() {
-		return MIN_PRIORITY;
+		return NORM_PRIORITY;
 	}
 
 	@Override
