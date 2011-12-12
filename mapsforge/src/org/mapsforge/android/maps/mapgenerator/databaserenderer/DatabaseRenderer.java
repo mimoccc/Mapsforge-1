@@ -187,11 +187,11 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		this.canvasRasterer.drawNodes(this.nodes);
 		this.canvasRasterer.drawNodes(this.areaLabels);
 
-		if (mapGeneratorJob.drawTileFrames) {
+		if (mapGeneratorJob.debugSettings.drawTileFrames) {
 			this.canvasRasterer.drawTileFrame();
 		}
 
-		if (mapGeneratorJob.drawTileCoordinates) {
+		if (mapGeneratorJob.debugSettings.drawTileCoordinates) {
 			this.canvasRasterer.drawTileCoordinates(this.currentTile);
 		}
 

@@ -14,64 +14,82 @@
  */
 package org.mapsforge.android.maps;
 
+import java.io.Serializable;
+
 /**
- * Carries flags which can be activated in order to debug rendered map tiles.
+ * A simple DTO to stores flags for debugging rendered map tiles.
  */
-public class DebugSettings {
-	private boolean drawTileCoordinates;
-	private boolean drawTileFrames;
-	private boolean highlightWaterTiles;
-	private final MapView mapView;
-
-	DebugSettings(MapView mapView) {
-		this.mapView = mapView;
-	}
+public class DebugSettings implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	/**
-	 * @return true if drawing of tile coordinates is enabled, false otherwise.
+	 * True if drawing of tile coordinates is enabled, false otherwise.
 	 */
-	public boolean isDrawTileCoordinates() {
-		return this.drawTileCoordinates;
-	}
+	public final boolean drawTileCoordinates;
 
 	/**
-	 * @return true if drawing of tile frames is enabled, false otherwise.
+	 * True if drawing of tile frames is enabled, false otherwise.
 	 */
-	public boolean isDrawTileFrames() {
-		return this.drawTileFrames;
-	}
+	public final boolean drawTileFrames;
 
 	/**
-	 * @return true if highlighting of water tiles is enabled, false otherwise.
+	 * True if highlighting of water tiles is enabled, false otherwise.
 	 */
-	public boolean isHighlightWaterTiles() {
-		return this.highlightWaterTiles;
-	}
+	public final boolean highlightWaterTiles;
+
+	private final int hashCodeValue;
 
 	/**
+	 * Constructs a new DebugSettings with the given parameters.
+	 * 
 	 * @param drawTileCoordinates
-	 *            true if tile coordinates should be drawn, false otherwise. Has no effect in downloading mode.
-	 */
-	public void setDrawTileCoordinates(boolean drawTileCoordinates) {
-		this.drawTileCoordinates = drawTileCoordinates;
-		this.mapView.clearAndRedrawMapView();
-	}
-
-	/**
+	 *            if drawing of tile coordinates is enabled.
 	 * @param drawTileFrames
-	 *            true if tile frames should be drawn, false otherwise. Has no effect in downloading mode.
+	 *            if drawing of tile frames is enabled.
+	 * @param highlightWaterTiles
+	 *            if highlighting of water tiles is enabled.
 	 */
-	public void setDrawTileFrames(boolean drawTileFrames) {
+	public DebugSettings(boolean drawTileCoordinates, boolean drawTileFrames, boolean highlightWaterTiles) {
+		this.drawTileCoordinates = drawTileCoordinates;
 		this.drawTileFrames = drawTileFrames;
-		this.mapView.clearAndRedrawMapView();
+		this.highlightWaterTiles = highlightWaterTiles;
+		this.hashCodeValue = calculateHashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof DebugSettings)) {
+			return false;
+		}
+		DebugSettings other = (DebugSettings) obj;
+		if (this.drawTileCoordinates != other.drawTileCoordinates) {
+			return false;
+		}
+		if (this.drawTileFrames != other.drawTileFrames) {
+			return false;
+		}
+		if (this.highlightWaterTiles != other.highlightWaterTiles) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCodeValue;
 	}
 
 	/**
-	 * @param highlightWaterTiles
-	 *            true if water tiles should be highlighted, false otherwise. Has no effect in downloading mode.
+	 * @return the hash code of this object.
 	 */
-	public void setHighlightWaterTiles(boolean highlightWaterTiles) {
-		this.highlightWaterTiles = highlightWaterTiles;
-		this.mapView.clearAndRedrawMapView();
+	private int calculateHashCode() {
+		int result = 1;
+		result = 31 * result + (this.drawTileCoordinates ? 1231 : 1237);
+		result = 31 * result + (this.drawTileFrames ? 1231 : 1237);
+		result = 31 * result + (this.highlightWaterTiles ? 1231 : 1237);
+		return result;
 	}
 }

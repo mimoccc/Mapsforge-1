@@ -90,7 +90,7 @@ public class MapView extends ViewGroup {
 		return MapViewMode.valueOf(mapViewModeString);
 	}
 
-	private final DebugSettings debugSettings;
+	private DebugSettings debugSettings;
 	private final TileCache fileSystemTileCache;
 	private final FpsCounter fpsCounter;
 	private final FrameBuffer frameBuffer;
@@ -165,7 +165,7 @@ public class MapView extends ViewGroup {
 		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
 		setWillNotDraw(false);
 
-		this.debugSettings = new DebugSettings(this);
+		this.debugSettings = new DebugSettings(false, false, false);
 		this.fileSystemTileCache = new FileSystemTileCache(mapActivity.getMapViewId(),
 				DEFAULT_TILE_CACHE_SIZE_FILE_SYSTEM);
 		this.fpsCounter = new FpsCounter();
@@ -203,7 +203,7 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * @return the debug settings container which is used in this MapView.
+	 * @return the debug settings which are used in this MapView.
 	 */
 	public DebugSettings getDebugSettings() {
 		return this.debugSettings;
@@ -390,7 +390,7 @@ public class MapView extends ViewGroup {
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
 				Tile tile = new Tile(tileX, tileY, mapPositionFix.zoomLevel);
-				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapViewMode, this.mapFile,
+				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapViewMode,
 						this.jobParameters, this.debugSettings);
 
 				if (this.inMemoryTileCache.containsKey(mapGeneratorJob)) {
@@ -443,6 +443,15 @@ public class MapView extends ViewGroup {
 	 */
 	public void setCenter(GeoPoint point) {
 		setCenterAndZoom(point, this.mapPosition.getZoomLevel());
+	}
+
+	/**
+	 * @param debugSettings
+	 *            the new DebugSettings for this MapView.
+	 */
+	public void setDebugSettings(DebugSettings debugSettings) {
+		this.debugSettings = debugSettings;
+		clearAndRedrawMapView();
 	}
 
 	/**

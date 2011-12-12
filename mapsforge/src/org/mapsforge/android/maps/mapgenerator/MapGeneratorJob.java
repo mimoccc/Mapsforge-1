@@ -29,8 +29,14 @@ import org.mapsforge.android.maps.Tile;
 public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public final boolean drawTileCoordinates;
-	public final boolean drawTileFrames;
+	/**
+	 * The debug settings for this job.
+	 */
+	public final DebugSettings debugSettings;
+
+	/**
+	 * The rendering parameters for this job.
+	 */
 	public final JobParameters jobParameters;
 
 	/**
@@ -40,22 +46,26 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 
 	private transient int hashCodeValue;
 	private transient double priority;
-	final boolean highlightWater;
-	final String mapFile;
 	final MapViewMode mapViewMode;
 
 	/**
 	 * Creates a new job for a MapGenerator with the given parameters.
+	 * 
+	 * @param tile
+	 *            the tile which should be generated.
+	 * @param mapViewMode
+	 *            the MapViewMode for this job.
+	 * @param jobParameters
+	 *            the rendering parameters for this job.
+	 * @param debugSettings
+	 *            the debug settings for this job.
 	 */
-	public MapGeneratorJob(Tile tile, MapViewMode mapViewMode, String mapFile, JobParameters jobParameters,
+	public MapGeneratorJob(Tile tile, MapViewMode mapViewMode, JobParameters jobParameters,
 			DebugSettings debugSettings) {
 		this.tile = tile;
 		this.mapViewMode = mapViewMode;
-		this.mapFile = mapFile;
 		this.jobParameters = jobParameters;
-		this.drawTileFrames = debugSettings.isDrawTileFrames();
-		this.drawTileCoordinates = debugSettings.isDrawTileCoordinates();
-		this.highlightWater = debugSettings.isHighlightWaterTiles();
+		this.debugSettings = debugSettings;
 		calculateTransientValues();
 	}
 
@@ -73,27 +83,33 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (!(obj instanceof MapGeneratorJob)) {
+		}
+		if (!(obj instanceof MapGeneratorJob)) {
 			return false;
 		}
 		MapGeneratorJob other = (MapGeneratorJob) obj;
-		if (!this.tile.equals(other.tile)) {
+		if (this.debugSettings == null) {
+			if (other.debugSettings != null) {
+				return false;
+			}
+		} else if (!this.debugSettings.equals(other.debugSettings)) {
 			return false;
-		} else if (this.mapViewMode != other.mapViewMode) {
+		}
+		if (this.jobParameters == null) {
+			if (other.jobParameters != null) {
+				return false;
+			}
+		} else if (!this.jobParameters.equals(other.jobParameters)) {
 			return false;
-		} else if (this.mapFile == null && other.mapFile != null) {
+		}
+		if (this.mapViewMode != other.mapViewMode) {
 			return false;
-		} else if (this.mapFile != null && !this.mapFile.equals(other.mapFile)) {
-			return false;
-		} else if (this.jobParameters == null && other.jobParameters != null) {
-			return false;
-		} else if (this.jobParameters != null && !this.jobParameters.equals(other.jobParameters)) {
-			return false;
-		} else if (this.drawTileFrames != other.drawTileFrames) {
-			return false;
-		} else if (this.drawTileCoordinates != other.drawTileCoordinates) {
-			return false;
-		} else if (this.highlightWater != other.highlightWater) {
+		}
+		if (this.tile == null) {
+			if (other.tile != null) {
+				return false;
+			}
+		} else if (!this.tile.equals(other.tile)) {
 			return false;
 		}
 		return true;
@@ -108,14 +124,11 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 	 * @return the hash code of this object.
 	 */
 	private int calculateHashCode() {
-		int result = 7;
-		result = 31 * result + ((this.tile == null) ? 0 : this.tile.hashCode());
-		result = 31 * result + ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
-		result = 31 * result + ((this.mapFile == null) ? 0 : this.mapFile.hashCode());
+		int result = 1;
+		result = 31 * result + ((this.debugSettings == null) ? 0 : this.debugSettings.hashCode());
 		result = 31 * result + ((this.jobParameters == null) ? 0 : this.jobParameters.hashCode());
-		result = 31 * result + (this.drawTileFrames ? 1231 : 1237);
-		result = 31 * result + (this.drawTileCoordinates ? 1231 : 1237);
-		result = 31 * result + (this.highlightWater ? 1231 : 1237);
+		result = 31 * result + ((this.mapViewMode == null) ? 0 : this.mapViewMode.hashCode());
+		result = 31 * result + ((this.tile == null) ? 0 : this.tile.hashCode());
 		return result;
 	}
 
