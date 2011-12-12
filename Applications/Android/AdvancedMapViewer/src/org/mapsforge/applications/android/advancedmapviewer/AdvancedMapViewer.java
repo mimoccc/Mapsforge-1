@@ -829,10 +829,12 @@ public class AdvancedMapViewer extends MapActivity {
 		// set the debug settings
 		this.mapView.getFpsCounter().setFpsCounter(preferences.getBoolean("showFpsCounter", false));
 
-		DebugSettings debugSettings = this.mapView.getDebugSettings();
-		debugSettings.setDrawTileFrames(preferences.getBoolean("drawTileFrames", false));
-		debugSettings.setDrawTileCoordinates(preferences.getBoolean("drawTileCoordinates", false));
-		debugSettings.setHighlightWaterTiles(preferences.getBoolean("highlightWaterTiles", false));
+		boolean drawTileFrames = preferences.getBoolean("drawTileFrames", false);
+		boolean drawTileCoordinates = preferences.getBoolean("drawTileCoordinates", false);
+		boolean highlightWaterTiles = preferences.getBoolean("highlightWaterTiles", false);
+		DebugSettings debugSettings = new DebugSettings(drawTileCoordinates, drawTileFrames,
+				highlightWaterTiles);
+		this.mapView.setDebugSettings(debugSettings);
 
 		// check if the file browser needs to be displayed
 		if (!this.mapView.getMapViewMode().requiresInternetConnection() && this.mapView.getMapFile() == null) {
