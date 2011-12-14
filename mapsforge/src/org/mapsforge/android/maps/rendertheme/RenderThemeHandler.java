@@ -41,11 +41,11 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class RenderThemeHandler extends DefaultHandler {
 	private static enum Element {
-		RENDERING_INSTRUCTION, RULE, RULES;
+		RENDER_THEME, RENDERING_INSTRUCTION, RULE;
 	}
 
+	private static final String ELEMENT_NAME_RENDER_THEME = "rendertheme";
 	private static final String ELEMENT_NAME_RULE = "rule";
-	private static final String ELEMENT_NAME_RULES = "rules";
 	private static final String UNEXPECTED_ELEMENT = "unexpected element: ";
 
 	/**
@@ -132,8 +132,8 @@ public class RenderThemeHandler extends DefaultHandler {
 	public void startElement(String uri, String localName, String qName, Attributes attributes)
 			throws SAXException {
 		try {
-			if (ELEMENT_NAME_RULES.equals(localName)) {
-				checkState(localName, Element.RULES);
+			if (ELEMENT_NAME_RENDER_THEME.equals(localName)) {
+				checkState(localName, Element.RENDER_THEME);
 				this.renderTheme = RenderTheme.create(localName, attributes);
 			}
 
@@ -211,7 +211,7 @@ public class RenderThemeHandler extends DefaultHandler {
 
 	private void foo(String elementName, Element element) throws SAXException {
 		switch (element) {
-			case RULES:
+			case RENDER_THEME:
 				if (!this.elementStack.empty()) {
 					throw new SAXException(UNEXPECTED_ELEMENT + elementName);
 				}
@@ -219,7 +219,7 @@ public class RenderThemeHandler extends DefaultHandler {
 
 			case RULE:
 				Element parentElement = this.elementStack.peek();
-				if (parentElement != Element.RULES && parentElement != Element.RULE) {
+				if (parentElement != Element.RENDER_THEME && parentElement != Element.RULE) {
 					throw new SAXException(UNEXPECTED_ELEMENT + elementName);
 				}
 				return;

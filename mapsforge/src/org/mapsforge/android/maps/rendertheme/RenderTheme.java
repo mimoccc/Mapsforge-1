@@ -27,9 +27,14 @@ import android.graphics.Color;
  */
 public class RenderTheme {
 	private static final int MATCHING_CACHE_SIZE = 512;
+	private static final int RENDER_THEME_VERSION = 1;
 
-	private static void validate(float baseStrokeWidth, float baseTextSize) {
-		if (baseStrokeWidth < 0) {
+	private static void validate(String elementName, Integer version, float baseStrokeWidth, float baseTextSize) {
+		if (version == null) {
+			throw new IllegalArgumentException("missing attribute version for element:" + elementName);
+		} else if (version.intValue() != RENDER_THEME_VERSION) {
+			throw new IllegalArgumentException("invalid render theme version:" + version);
+		} else if (baseStrokeWidth < 0) {
 			throw new IllegalArgumentException("base-stroke-width must not be negative: " + baseStrokeWidth);
 		} else if (baseTextSize < 0) {
 			throw new IllegalArgumentException("base-text-size must not be negative: " + baseTextSize);
@@ -37,6 +42,7 @@ public class RenderTheme {
 	}
 
 	static RenderTheme create(String elementName, Attributes attributes) {
+		Integer version = null;
 		int mapBackground = Color.WHITE;
 		float baseStrokeWidth = 1;
 		float baseTextSize = 1;
@@ -47,6 +53,8 @@ public class RenderTheme {
 
 			if ("schemaLocation".equals(name)) {
 				continue;
+			} else if ("version".equals(name)) {
+				version = Integer.valueOf(Integer.parseInt(value));
 			} else if ("map-background".equals(name)) {
 				mapBackground = Color.parseColor(value);
 			} else if ("base-stroke-width".equals(name)) {
@@ -58,7 +66,7 @@ public class RenderTheme {
 			}
 		}
 
-		validate(baseStrokeWidth, baseTextSize);
+		validate(elementName, version, baseStrokeWidth, baseTextSize);
 		return new RenderTheme(mapBackground, baseStrokeWidth, baseTextSize);
 	}
 

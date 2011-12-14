@@ -32,6 +32,8 @@ public final class Circle implements RenderInstruction {
 	private static void validate(String elementName, Float radius, float strokeWidth) {
 		if (radius == null) {
 			throw new IllegalArgumentException("missing attribute r for element: " + elementName);
+		} else if (radius.floatValue() < 0) {
+			throw new IllegalArgumentException("radius must not be negative: " + radius);
 		} else if (strokeWidth < 0) {
 			throw new IllegalArgumentException("stroke-width must not be negative: " + strokeWidth);
 		}
