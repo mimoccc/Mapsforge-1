@@ -28,7 +28,11 @@ import android.graphics.Bitmap.Config;
 /**
  * A thread-safe cache for tile images with a fixed size and LRU policy.
  */
-public class InMemoryTileCache extends TileCache {
+public class InMemoryTileCache implements TileCache {
+	/**
+	 * Load factor of the internal HashMap.
+	 */
+	private static final float LOAD_FACTOR = 0.6f;
 
 	private static List<Bitmap> createBitmapPool(int poolSize) {
 		List<Bitmap> bitmaps = new ArrayList<Bitmap>();
@@ -58,18 +62,28 @@ public class InMemoryTileCache extends TileCache {
 		};
 	}
 
+	private static int getCapacity(int capacity) {
+		if (capacity < 0) {
+			throw new IllegalArgumentException("capacity must not be negative: " + capacity);
+		}
+		return capacity;
+	}
+
 	private final List<Bitmap> bitmapPool;
 	private final ByteBuffer byteBuffer;
+	private final int capacity;
 	private final Map<MapGeneratorJob, Bitmap> map;
 
 	/**
-	 * @param cacheCapacity
-	 *            the maximum number of entries in the cache.
+	 * @param capacity
+	 *            the maximum number of entries in this cache.
+	 * @throws IllegalArgumentException
+	 *             if the capacity is negative.
 	 */
-	public InMemoryTileCache(int cacheCapacity) {
-		super(cacheCapacity);
-		this.bitmapPool = createBitmapPool(this.cacheCapacity + 1);
-		this.map = createMap(this.cacheCapacity, this.bitmapPool);
+	public InMemoryTileCache(int capacity) {
+		this.capacity = getCapacity(capacity);
+		this.bitmapPool = createBitmapPool(this.capacity + 1);
+		this.map = createMap(this.capacity, this.bitmapPool);
 		this.byteBuffer = ByteBuffer.allocate(Tile.TILE_SIZE_IN_BYTES);
 	}
 
@@ -103,13 +117,18 @@ public class InMemoryTileCache extends TileCache {
 	}
 
 	@Override
+	public int getCapacity() {
+		return this.capacity;
+	}
+
+	@Override
 	public boolean isPersistent() {
 		return false;
 	}
 
 	@Override
 	public void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
-		if (this.cacheCapacity == 0) {
+		if (this.capacity == 0) {
 			return;
 		}
 
@@ -126,6 +145,11 @@ public class InMemoryTileCache extends TileCache {
 
 			this.map.put(mapGeneratorJob, pooledBitmap);
 		}
+	}
+
+	@Override
+	public void setCapacity(int capacity) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

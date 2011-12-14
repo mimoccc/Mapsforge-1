@@ -238,23 +238,9 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final int SELECT_MAP_FILE = 0;
 	private static final int SELECT_RENDER_THEME_FILE = 1;
 
-	/**
-	 * The default size of the memory card cache.
-	 */
-	static final int MEMORY_CARD_CACHE_SIZE_DEFAULT = 250;
-
-	/**
-	 * The maximum size of the memory card cache.
-	 */
-	static final int MEMORY_CARD_CACHE_SIZE_MAX = 500;
-
-	/**
-	 * The default move speed of the map.
-	 */
+	static final int FILE_SYSTEM_CACHE_SIZE_DEFAULT = 250;
+	static final int FILE_SYSTEM_CACHE_SIZE_MAX = 500;
 	static final int MOVE_SPEED_DEFAULT = 10;
-	/**
-	 * The maximum move speed of the map.
-	 */
 	static final int MOVE_SPEED_MAX = 30;
 
 	private Paint circleOverlayFill;
@@ -820,11 +806,14 @@ public class AdvancedMapViewer extends MapActivity {
 			this.wakeLock.acquire();
 		}
 
-		this.mapView.getFileSystemTileCache().setPersistent(preferences.getBoolean("cachePersistence", false));
-		this.mapView.setMemoryCardCacheSize(Math.min(
-				preferences.getInt("cacheSize", MEMORY_CARD_CACHE_SIZE_DEFAULT), MEMORY_CARD_CACHE_SIZE_MAX));
-		this.mapView.getMapMover().setMoveSpeed(
-				Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f);
+		boolean persistent = preferences.getBoolean("cachePersistence", false);
+		int capacity = Math.min(preferences.getInt("cacheSize", FILE_SYSTEM_CACHE_SIZE_DEFAULT),
+				FILE_SYSTEM_CACHE_SIZE_MAX);
+		this.mapView.getFileSystemTileCache().setPersistent(persistent);
+		this.mapView.getFileSystemTileCache().setCapacity(capacity);
+
+		float moveSpeedFactor = Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f;
+		this.mapView.getMapMover().setMoveSpeedFactor(moveSpeedFactor);
 
 		// set the debug settings
 		this.mapView.getFpsCounter().setFpsCounter(preferences.getBoolean("showFpsCounter", false));

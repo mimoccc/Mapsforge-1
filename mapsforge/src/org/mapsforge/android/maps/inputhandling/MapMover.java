@@ -129,14 +129,14 @@ public class MapMover extends PausableThread implements KeyEvent.Callback {
 	}
 
 	/**
-	 * Sets the move speed of the map, used for trackball and keyboard events.
+	 * Sets the move speed factor of the map, used for trackball and keyboard events.
 	 * 
 	 * @param moveSpeedFactor
 	 *            the factor by which the move speed of the map will be multiplied.
 	 * @throws IllegalArgumentException
-	 *             if the new moveSpeedFactor is negative.
+	 *             if the new move speed factor is negative.
 	 */
-	public void setMoveSpeed(float moveSpeedFactor) {
+	public void setMoveSpeedFactor(float moveSpeedFactor) {
 		if (moveSpeedFactor < 0) {
 			throw new IllegalArgumentException();
 		}

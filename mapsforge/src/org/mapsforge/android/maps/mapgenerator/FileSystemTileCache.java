@@ -35,9 +35,9 @@ import android.os.Build;
 import android.os.Environment;
 
 /**
- * A thread-safe cache for image files with a fixed size and LRU policy.
+ * A thread-safe cache for image files with a variable size and LRU policy.
  */
-public class FileSystemTileCache extends TileCache {
+public class FileSystemTileCache implements TileCache {
 	private static final class ImageFileNameFilter implements FilenameFilter {
 		static final FilenameFilter INSTANCE = new ImageFileNameFilter();
 
@@ -67,13 +67,16 @@ public class FileSystemTileCache extends TileCache {
 	private static final String IMAGE_FILE_NAME_EXTENSION = ".tile";
 
 	/**
+	 * Load factor of the internal HashMap.
+	 */
+	private static final float LOAD_FACTOR = 0.6f;
+
+	/**
 	 * Name of the file used for serialization of the cache map.
 	 */
 	private static final String SERIALIZATION_FILE_NAME = "cache.ser";
 
 	/**
-	 * Detects if the application is running on the Android emulator.
-	 * 
 	 * @return true if the application is running on the Android emulator, false otherwise.
 	 */
 	private static boolean applicationRunsOnAndroidEmulator() {
@@ -159,6 +162,15 @@ public class FileSystemTileCache extends TileCache {
 		}
 	}
 
+	private static int getCapacity(int capacity) {
+		if (capacity < 0) {
+			throw new IllegalArgumentException("capacity must not be negative: " + capacity);
+		} else if (applicationRunsOnAndroidEmulator()) {
+			return 0;
+		}
+		return capacity;
+	}
+
 	/**
 	 * Serializes the cache map.
 	 * 
@@ -188,22 +200,25 @@ public class FileSystemTileCache extends TileCache {
 		}
 	}
 
+	private final Bitmap bitmapGet;
 	private final ByteBuffer byteBufferGet;
 	private final ByteBuffer byteBufferPut;
 	private final File cacheDirectory;
 	private long cacheId;
-	private final Map<MapGeneratorJob, File> map;
+	private int capacity;
+	private Map<MapGeneratorJob, File> map;
 	private boolean persistent;
-	private final Bitmap bitmapGet;
 
 	/**
+	 * @param capacity
+	 *            the maximum number of entries in this cache.
 	 * @param mapViewId
 	 *            the ID of the MapView to separate caches for different MapViews.
-	 * @param cacheCapacity
-	 *            the maximum number of entries in the cache.
+	 * @throws IllegalArgumentException
+	 *             if the capacity is negative.
 	 */
-	public FileSystemTileCache(int mapViewId, int cacheCapacity) {
-		super(applicationRunsOnAndroidEmulator() ? 0 : cacheCapacity);
+	public FileSystemTileCache(int capacity, int mapViewId) {
+		this.capacity = getCapacity(capacity);
 
 		String externalStorageDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 		String cacheDirectoryPath = externalStorageDirectory + CACHE_DIRECTORY + mapViewId;
@@ -211,7 +226,7 @@ public class FileSystemTileCache extends TileCache {
 
 		Map<MapGeneratorJob, File> deserializedMap = deserializeMap(this.cacheDirectory);
 		if (deserializedMap == null) {
-			this.map = createMap(this.cacheCapacity);
+			this.map = createMap(this.capacity);
 		} else {
 			this.map = deserializedMap;
 		}
@@ -221,67 +236,54 @@ public class FileSystemTileCache extends TileCache {
 	}
 
 	@Override
-	public boolean containsKey(MapGeneratorJob mapGeneratorJob) {
-		synchronized (this.map) {
-			return this.map.containsKey(mapGeneratorJob);
-		}
+	public synchronized boolean containsKey(MapGeneratorJob mapGeneratorJob) {
+		return this.map.containsKey(mapGeneratorJob);
 	}
 
 	@Override
-	public void destroy() {
-		synchronized (this.map) {
-			if (!this.persistent || !serializeMap(this.cacheDirectory, this.map)) {
-				for (File file : this.map.values()) {
-					if (!file.delete()) {
-						file.deleteOnExit();
-					}
+	public synchronized void destroy() {
+		if (!this.persistent || !serializeMap(this.cacheDirectory, this.map)) {
+			for (File file : this.map.values()) {
+				if (!file.delete()) {
+					file.deleteOnExit();
 				}
-				this.map.clear();
+			}
+			this.map.clear();
 
-				synchronized (this.cacheDirectory) {
-					for (File file : this.cacheDirectory.listFiles(ImageFileNameFilter.INSTANCE)) {
-						if (!file.delete()) {
-							file.deleteOnExit();
-						}
-					}
-
-					if (!this.cacheDirectory.delete()) {
-						this.cacheDirectory.deleteOnExit();
-					}
+			for (File file : this.cacheDirectory.listFiles(ImageFileNameFilter.INSTANCE)) {
+				if (!file.delete()) {
+					file.deleteOnExit();
 				}
+			}
+
+			if (!this.cacheDirectory.delete()) {
+				this.cacheDirectory.deleteOnExit();
 			}
 		}
 	}
 
 	@Override
-	public Bitmap get(MapGeneratorJob mapGeneratorJob) {
-		if (this.cacheCapacity == 0) {
+	public synchronized Bitmap get(MapGeneratorJob mapGeneratorJob) {
+		if (this.capacity == 0) {
 			return null;
 		}
 
 		try {
-			File inputFile;
-			synchronized (this.map) {
-				inputFile = this.map.get(mapGeneratorJob);
-			}
+			File inputFile = this.map.get(mapGeneratorJob);
 
 			FileInputStream fileInputStream = new FileInputStream(inputFile);
-			synchronized (this.byteBufferGet) {
-				byte[] array = this.byteBufferGet.array();
-				int bytesRead = fileInputStream.read(array);
-				fileInputStream.close();
+			byte[] array = this.byteBufferGet.array();
+			int bytesRead = fileInputStream.read(array);
+			fileInputStream.close();
 
-				if (bytesRead == array.length) {
-					this.bitmapGet.copyPixelsFromBuffer(this.byteBufferGet);
-					return this.bitmapGet;
-				}
+			if (bytesRead == array.length) {
+				this.bitmapGet.copyPixelsFromBuffer(this.byteBufferGet);
+				return this.bitmapGet;
 			}
 
 			return null;
 		} catch (FileNotFoundException e) {
-			synchronized (this.map) {
-				this.map.remove(mapGeneratorJob);
-			}
+			this.map.remove(mapGeneratorJob);
 			return null;
 		} catch (IOException e) {
 			Logger.exception(e);
@@ -290,44 +292,56 @@ public class FileSystemTileCache extends TileCache {
 	}
 
 	@Override
-	public boolean isPersistent() {
+	public synchronized int getCapacity() {
+		return this.capacity;
+	}
+
+	@Override
+	public synchronized boolean isPersistent() {
 		return this.persistent;
 	}
 
 	@Override
-	public void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
-		if (this.cacheCapacity == 0) {
+	public synchronized void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap) {
+		if (this.capacity == 0) {
 			return;
 		}
 
 		try {
 			File outputFile;
-			synchronized (this.cacheDirectory) {
-				do {
-					++this.cacheId;
-					outputFile = new File(this.cacheDirectory, this.cacheId + IMAGE_FILE_NAME_EXTENSION);
-				} while (outputFile.exists());
-			}
+			do {
+				++this.cacheId;
+				outputFile = new File(this.cacheDirectory, this.cacheId + IMAGE_FILE_NAME_EXTENSION);
+			} while (outputFile.exists());
+
+			this.byteBufferPut.rewind();
+			bitmap.copyPixelsToBuffer(this.byteBufferPut);
+			byte[] array = this.byteBufferPut.array();
 
 			FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-			synchronized (this.byteBufferPut) {
-				this.byteBufferPut.rewind();
-				bitmap.copyPixelsToBuffer(this.byteBufferPut);
-				byte[] array = this.byteBufferPut.array();
-				fileOutputStream.write(array, 0, array.length);
-			}
+			fileOutputStream.write(array, 0, array.length);
 			fileOutputStream.close();
 
-			synchronized (this.map) {
-				this.map.put(mapGeneratorJob, outputFile);
-			}
+			this.map.put(mapGeneratorJob, outputFile);
 		} catch (IOException e) {
 			Logger.exception(e);
 		}
 	}
 
 	@Override
-	public void setPersistent(boolean persistent) {
+	public synchronized void setCapacity(int capacity) {
+		if (this.capacity == capacity) {
+			return;
+		}
+
+		this.capacity = getCapacity(capacity);
+		Map<MapGeneratorJob, File> newMap = createMap(this.capacity);
+		newMap.putAll(this.map);
+		this.map = newMap;
+	}
+
+	@Override
+	public synchronized void setPersistent(boolean persistent) {
 		this.persistent = persistent;
 	}
 }

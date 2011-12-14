@@ -166,8 +166,8 @@ public class MapView extends ViewGroup {
 		setWillNotDraw(false);
 
 		this.debugSettings = new DebugSettings(false, false, false);
-		this.fileSystemTileCache = new FileSystemTileCache(mapActivity.getMapViewId(),
-				DEFAULT_TILE_CACHE_SIZE_FILE_SYSTEM);
+		this.fileSystemTileCache = new FileSystemTileCache(DEFAULT_TILE_CACHE_SIZE_FILE_SYSTEM,
+				mapActivity.getMapViewId());
 		this.fpsCounter = new FpsCounter();
 		this.frameBuffer = new FrameBuffer(this);
 		this.inMemoryTileCache = new InMemoryTileCache(DEFAULT_TILE_CACHE_SIZE_IN_MEMORY);
@@ -514,22 +514,6 @@ public class MapView extends ViewGroup {
 			setMapViewModeInternal(mapViewMode);
 			clearAndRedrawMapView();
 		}
-	}
-
-	/**
-	 * Sets the new size of the memory card cache. If the cache already contains more items than the new
-	 * capacity allows, items are discarded based on the cache policy.
-	 * 
-	 * @param newCacheSize
-	 *            the new capacity of the memory card cache.
-	 * @throws IllegalArgumentException
-	 *             if the new capacity is negative.
-	 */
-	public void setMemoryCardCacheSize(int newCacheSize) {
-		if (newCacheSize < 0) {
-			throw new IllegalArgumentException();
-		}
-		// TODO implement
 	}
 
 	/**

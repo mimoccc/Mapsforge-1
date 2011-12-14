@@ -23,6 +23,8 @@ import android.util.AttributeSet;
  * Preferences class for adjusting the cache size.
  */
 public class CacheSizePreference extends SeekBarPreference {
+	private static final double ONE_MEGABYTE = 1000000d;
+
 	/**
 	 * Construct a new cache size preference seek bar.
 	 * 
@@ -38,13 +40,14 @@ public class CacheSizePreference extends SeekBarPreference {
 
 		// define the current and maximum value of the seek bar
 		this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
-				AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_DEFAULT);
-		this.max = AdvancedMapViewer.MEMORY_CARD_CACHE_SIZE_MAX;
+				AdvancedMapViewer.FILE_SYSTEM_CACHE_SIZE_DEFAULT);
+		this.max = AdvancedMapViewer.FILE_SYSTEM_CACHE_SIZE_MAX;
 	}
 
 	@Override
 	String getCurrentValueText(int progress) {
-		return String.format(getContext().getString(R.string.preferences_cache_size_value),
-				Double.valueOf(Tile.TILE_BYTES_PER_PIXEL * progress / 1000000d));
+		String format = getContext().getString(R.string.preferences_cache_size_value);
+		Double value = Double.valueOf(Tile.TILE_SIZE_IN_BYTES * progress / ONE_MEGABYTE);
+		return String.format(format, value);
 	}
 }

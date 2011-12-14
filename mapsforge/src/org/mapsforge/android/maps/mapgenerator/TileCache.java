@@ -17,55 +17,37 @@ package org.mapsforge.android.maps.mapgenerator;
 import android.graphics.Bitmap;
 
 /**
- * Abstract base class for tile image caches with a fixed size and LRU policy.
+ * Interface for tile image caches.
  */
-public abstract class TileCache {
-	/**
-	 * Load factor of the internal HashMap.
-	 */
-	static final float LOAD_FACTOR = 0.6f;
-
-	final int cacheCapacity;
-
-	/**
-	 * Constructs a new cache with a fixed size and LRU policy.
-	 * 
-	 * @param cacheCapacity
-	 *            the maximum number of tile images in this cache.
-	 * @throws IllegalArgumentException
-	 *             if the cache capacity is negative.
-	 */
-	TileCache(int cacheCapacity) {
-		if (cacheCapacity < 0) {
-			throw new IllegalArgumentException("capacity must not be negative: " + cacheCapacity);
-		}
-
-		this.cacheCapacity = cacheCapacity;
-	}
-
+public interface TileCache {
 	/**
 	 * @param mapGeneratorJob
 	 *            the key of the image.
 	 * @return true if this cache contains a tile image for the given key, false otherwise.
 	 */
-	public abstract boolean containsKey(MapGeneratorJob mapGeneratorJob);
+	boolean containsKey(MapGeneratorJob mapGeneratorJob);
 
 	/**
 	 * Destroys this cache.
 	 */
-	public abstract void destroy();
+	void destroy();
 
 	/**
 	 * @param mapGeneratorJob
 	 *            the key of the tile image.
 	 * @return the tile image for the given key or null, if this cache contains no tile image for the key.
 	 */
-	public abstract Bitmap get(MapGeneratorJob mapGeneratorJob);
+	Bitmap get(MapGeneratorJob mapGeneratorJob);
+
+	/**
+	 * @return the current capacity of this cache.
+	 */
+	int getCapacity();
 
 	/**
 	 * @return true if this cache is persistent, false otherwise.
 	 */
-	public abstract boolean isPersistent();
+	boolean isPersistent();
 
 	/**
 	 * Adds another tile image to this cache.
@@ -75,7 +57,20 @@ public abstract class TileCache {
 	 * @param bitmap
 	 *            the tile image.
 	 */
-	public abstract void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap);
+	void put(MapGeneratorJob mapGeneratorJob, Bitmap bitmap);
+
+	/**
+	 * Sets the new size of this cache. If this cache already contains more items than the new capacity allows,
+	 * items are discarded based on the cache policy.
+	 * 
+	 * @param capacity
+	 *            the maximum number of entries in this cache.
+	 * @throws IllegalArgumentException
+	 *             if the capacity is negative.
+	 * @throws UnsupportedOperationException
+	 *             if this cache has a fixed size and does not support changing its capacity.
+	 */
+	void setCapacity(int capacity);
 
 	/**
 	 * Sets the persistence of this cache.
@@ -85,5 +80,5 @@ public abstract class TileCache {
 	 * @throws UnsupportedOperationException
 	 *             if this cache does not support persistence.
 	 */
-	public abstract void setPersistent(boolean persistent);
+	void setPersistent(boolean persistent);
 }
