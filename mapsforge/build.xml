@@ -204,4 +204,25 @@ purpose.
 		      file="${mapsforge.dist}/mapsforge-mapfile-writer-${mapsforge.version}.jar"
 		      todir="${user.home}/.openstreetmap/osmosis/plugins" />
 	</target>
+
+	<!-- ################## mapsforge-poidb-writer-jar ################## -->
+	<target name="mapsforge-poidb-writer-jar-create">
+		<mkdir dir="${mapsforge.dist}" />
+		<delete file="${mapsforge.dist}/mapsforge-poidb-writer-${mapsforge.version}-experimental.jar" />
+		<jar destfile="${mapsforge.dist}/mapsforge-poidb-writer-${mapsforge.version}-experimental.jar" duplicate="preserve">
+			<fileset dir="src/" excludes="org/mapsforge/preprocessing/poi/osmosis/plugin.xml" includes="org/mapsforge/preprocessing/poi/osmosis/" />
+			<fileset dir="src/" excludes="org/mapsforge/storage/poi/AndroidPoiCategoryManager.java" includes="org/mapsforge/storage/poi/" />
+
+			<fileset dir="bin/" includes="org/mapsforge/preprocessing/poi/osmosis/" />
+			<fileset dir="bin/" excludes="org/mapsforge/storage/poi/AndroidPoiCategoryManager.class" includes="org/mapsforge/storage/poi/" />
+			<fileset dir="src/org/mapsforge/preprocessing/poi/osmosis/" includes="plugin.xml"/>
+			<fileset dir="src/" includes="osmosis-plugin.conf" />
+		</jar>
+
+	</target>
+
+	<target name="mapsforge-poidb-writer-jar-copy" depends="mapsforge-poidb-writer-jar-create">
+		<copy file="${mapsforge.dist}/mapsforge-poidb-writer-${mapsforge.version}-experimental.jar" todir="${user.home}/.openstreetmap/osmosis/plugins/" />
+	</target>
+	
 </project>
