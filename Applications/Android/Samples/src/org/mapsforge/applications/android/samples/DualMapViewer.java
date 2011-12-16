@@ -62,13 +62,13 @@ public class DualMapViewer extends MapActivity {
 		this.mapView1.setClickable(true);
 		this.mapView1.setBuiltInZoomControls(true);
 		this.mapView1.setMapFile("/sdcard/germany.map");
-		this.mapView1.setMoveSpeed(3);
+		// this.mapView1.setMoveSpeed(3);
 
 		this.mapView2 = new MapView(this, MapViewMode.CANVAS_RENDERER);
 		this.mapView2.setClickable(true);
 		this.mapView2.setBuiltInZoomControls(true);
 		this.mapView2.setMapFile("/sdcard/berlin.map");
-		this.mapView2.setMoveSpeed(3);
+		// this.mapView2.setMoveSpeed(3);
 
 		// create a LineaLayout that holds both MapViews
 		LinearLayout linearLayout = new LinearLayout(this);

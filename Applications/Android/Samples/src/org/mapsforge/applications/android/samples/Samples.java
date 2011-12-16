@@ -33,6 +33,7 @@ public class Samples extends Activity {
 		Button button1 = new Button(this);
 		button1.setText("BasicMapViewer");
 		button1.setOnClickListener(new OnClickListener() {
+			@Override
 			public void onClick(View view) {
 				startActivity(new Intent(Samples.this, BasicMapViewer.class));
 			}
@@ -41,6 +42,7 @@ public class Samples extends Activity {
 		Button button2 = new Button(this);
 		button2.setText("DualMapViewer");
 		button2.setOnClickListener(new OnClickListener() {
+			@Override
 			public void onClick(View view) {
 				startActivity(new Intent(Samples.this, DualMapViewer.class));
 			}
@@ -49,6 +51,7 @@ public class Samples extends Activity {
 		Button button3 = new Button(this);
 		button3.setText("DownloadMapViewer");
 		button3.setOnClickListener(new OnClickListener() {
+			@Override
 			public void onClick(View view) {
 				startActivity(new Intent(Samples.this, DownloadMapViewer.class));
 			}
@@ -57,8 +60,18 @@ public class Samples extends Activity {
 		Button button4 = new Button(this);
 		button4.setText("OverlayMapViewer");
 		button4.setOnClickListener(new OnClickListener() {
+			@Override
 			public void onClick(View view) {
 				startActivity(new Intent(Samples.this, OverlayMapViewer.class));
+			}
+		});
+
+		Button button5 = new Button(this);
+		button5.setText("POI Viewer");
+		button5.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				startActivity(new Intent(Samples.this, POIViewer.class));
 			}
 		});
 
@@ -68,5 +81,6 @@ public class Samples extends Activity {
 		linearLayout.addView(button2);
 		linearLayout.addView(button3);
 		linearLayout.addView(button4);
+		linearLayout.addView(button5);
 	}
 }
