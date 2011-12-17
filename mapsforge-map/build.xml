@@ -53,8 +53,8 @@
 		<mkdir dir="${mapsforge.dist}" />
 		<!-- Include source code and generated class files, avoid duplicates -->
 		<jar destfile="${mapsforge.dist}/mapsforge-map-${mapsforge.version}.jar" duplicate="preserve">
-			<fileset dir="${mapsforge.bin}" includes="org/mapsforge/android/maps/" />
-			<fileset dir="${mapsforge.src}" includes="org/mapsforge/android/maps/" />
+			<fileset dir="${mapsforge.bin}" excludes="test/"/>
+			<fileset dir="${mapsforge.src}" />
 			<fileset refid="info" />
 		</jar>
 		<antcall target="eclipse-refresh">
