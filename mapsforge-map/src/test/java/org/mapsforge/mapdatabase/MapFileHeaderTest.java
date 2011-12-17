@@ -24,6 +24,8 @@ import org.junit.Test;
  * Tests the {@link MapFileHeader} class.
  */
 public class MapFileHeaderTest {
+	private static final String FILE_NAME = "src/test/resources/empty_map_file_version_3.map";
+
 	/**
 	 * Tests the {@link MapFileHeader#readHeader} method.
 	 * 
@@ -32,7 +34,7 @@ public class MapFileHeaderTest {
 	 */
 	@Test
 	public void readHeaderTest() throws IOException {
-		RandomAccessFile randomAccessFile = new RandomAccessFile("test/resources/file_header.map", "r");
+		RandomAccessFile randomAccessFile = new RandomAccessFile(FILE_NAME, "r");
 		long length = randomAccessFile.length();
 		ReadBuffer readBuffer = new ReadBuffer(randomAccessFile);
 		MapFileHeader mapFileHeader = new MapFileHeader();
