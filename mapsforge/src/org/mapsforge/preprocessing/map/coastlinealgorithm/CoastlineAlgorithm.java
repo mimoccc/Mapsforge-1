@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.mapsforge.android.maps.Tile;
+import org.mapsforge.preprocessing.map.osmosis.Tile;
 
 /**
  * The CoastlineAlgorithm generates closed polygons from disjoint coastline segments. The algorithm is based on
