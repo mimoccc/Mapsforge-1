@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mapsforge.android.maps.rendertheme.renderinstruction.RenderInstruction;
+import org.mapsforge.core.LRUCache;
 import org.mapsforge.core.Tag;
 import org.xml.sax.Attributes;
 
@@ -75,7 +76,7 @@ public class RenderTheme {
 	private final float baseTextSize;
 	private int levels;
 	private final int mapBackground;
-	private final MatchingCache matchingCache;
+	private final LRUCache<MatchingCacheKey, List<RenderInstruction>> matchingCache;
 	private final ArrayList<Rule> rulesList;
 
 	RenderTheme(int mapBackground, float baseStrokeWidth, float baseTextSize) {
@@ -83,14 +84,14 @@ public class RenderTheme {
 		this.baseStrokeWidth = baseStrokeWidth;
 		this.baseTextSize = baseTextSize;
 		this.rulesList = new ArrayList<Rule>();
-		this.matchingCache = new MatchingCache(MATCHING_CACHE_SIZE);
+		this.matchingCache = new LRUCache<MatchingCacheKey, List<RenderInstruction>>(MATCHING_CACHE_SIZE);
 	}
 
 	/**
 	 * Must be called when this RenderTheme gets destroyed to clean up and free resources.
 	 */
 	public void destroy() {
-		this.matchingCache.destroy();
+		this.matchingCache.clear();
 		for (int i = 0, n = this.rulesList.size(); i < n; ++i) {
 			this.rulesList.get(i).onDestroy();
 		}

@@ -28,7 +28,7 @@ import android.widget.ZoomControls;
  * A MapZoomControls instance displays buttons for zooming in and out in a map.
  */
 public class MapZoomControls {
-	private static final class ZoomControlsHideHandler extends Handler {
+	private static class ZoomControlsHideHandler extends Handler {
 		private final ZoomControls zoomControls;
 
 		ZoomControlsHideHandler(ZoomControls zoomControls) {
@@ -42,10 +42,34 @@ public class MapZoomControls {
 		}
 	}
 
+	private static class ZoomInClickListener implements View.OnClickListener {
+		private final MapView mapView;
+
+		ZoomInClickListener(MapView mapView) {
+			this.mapView = mapView;
+		}
+
+		@Override
+		public void onClick(View view) {
+			this.mapView.zoom((byte) 1, 1);
+		}
+	}
+
+	private static class ZoomOutClickListener implements View.OnClickListener {
+		private final MapView mapView;
+
+		ZoomOutClickListener(MapView mapView) {
+			this.mapView = mapView;
+		}
+
+		@Override
+		public void onClick(View view) {
+			this.mapView.zoom((byte) -1, 1);
+		}
+	}
+
 	/**
-	 * Default gravity of the zoom controls.
-	 * 
-	 * @see Gravity
+	 * Default {@link Gravity} of the zoom controls.
 	 */
 	private static final int DEFAULT_ZOOM_CONTROLS_GRAVITY = Gravity.BOTTOM | Gravity.RIGHT;
 
@@ -90,20 +114,8 @@ public class MapZoomControls {
 		this.zoomControls.setVisibility(View.GONE);
 		this.zoomControlsGravity = DEFAULT_ZOOM_CONTROLS_GRAVITY;
 
-		this.zoomControls.setOnZoomInClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				mapView.zoom((byte) 1, 1);
-			}
-		});
-
-		this.zoomControls.setOnZoomOutClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				mapView.zoom((byte) -1, 1);
-			}
-		});
-
+		this.zoomControls.setOnZoomInClickListener(new ZoomInClickListener(mapView));
+		this.zoomControls.setOnZoomOutClickListener(new ZoomOutClickListener(mapView));
 		this.zoomControlsHideHandler = new ZoomControlsHideHandler(this.zoomControls);
 
 		int wrapContent = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;

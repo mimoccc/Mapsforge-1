@@ -16,10 +16,11 @@ package org.mapsforge.mapdatabase;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.mapsforge.core.LRUCache;
 
 /**
  * A cache for database index blocks with a fixed size and LRU policy.
@@ -34,11 +35,6 @@ class IndexCache {
 	 * Number of index entries that one index block consists of.
 	 */
 	private static final int INDEX_ENTRIES_PER_BLOCK = 128;
-
-	/**
-	 * Load factor of the internal HashMap.
-	 */
-	private static final float LOAD_FACTOR = 0.6f;
 
 	private static final Logger LOG = Logger.getLogger(IndexCache.class.getName());
 
@@ -61,23 +57,8 @@ class IndexCache {
 	 *             if the capacity is negative.
 	 */
 	IndexCache(RandomAccessFile inputFile, int capacity) {
-		if (capacity < 0) {
-			throw new IllegalArgumentException();
-		}
 		this.inputFile = inputFile;
-		this.map = createMap(capacity);
-	}
-
-	private Map<IndexCacheEntryKey, byte[]> createMap(final int initialCapacity) {
-		return new LinkedHashMap<IndexCacheEntryKey, byte[]>((int) (initialCapacity / LOAD_FACTOR) + 2,
-				LOAD_FACTOR, true) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			protected boolean removeEldestEntry(Map.Entry<IndexCacheEntryKey, byte[]> eldest) {
-				return size() > initialCapacity;
-			}
-		};
+		this.map = new LRUCache<IndexCacheEntryKey, byte[]>(capacity);
 	}
 
 	/**

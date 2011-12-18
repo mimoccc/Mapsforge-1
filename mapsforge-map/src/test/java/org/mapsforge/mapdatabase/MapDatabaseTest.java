@@ -14,38 +14,29 @@
  */
 package org.mapsforge.mapdatabase;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests the {@link MapFileHeader} class.
+ * Tests the {@link MapDatabase} class.
  */
-public class MapFileHeaderTest {
+public class MapDatabaseTest {
 	private static final String FILE_NAME = "src/test/resources/empty_map_file_version_3.map";
 
 	/**
-	 * Tests the {@link MapFileHeader#readHeader} method.
-	 * 
-	 * @throws IOException
-	 *             see {@link RandomAccessFile#read}
+	 * Tests the {@link MapDatabase#getMapFileInfo} method.
 	 */
 	@Test
-	public void readHeaderTest() throws IOException {
-		RandomAccessFile randomAccessFile = new RandomAccessFile(FILE_NAME, "r");
-		long length = randomAccessFile.length();
-		ReadBuffer readBuffer = new ReadBuffer(randomAccessFile);
-		MapFileHeader mapFileHeader = new MapFileHeader();
-		FileOpenResult fileOpenResult = mapFileHeader.readHeader(readBuffer, length);
-		randomAccessFile.close();
+	public void getMapFileInfoTest() {
+		MapDatabase mapDatabase = new MapDatabase();
+		FileOpenResult fileOpenResult = mapDatabase.openFile(FILE_NAME);
+		MapFileInfo mapFileInfo = mapDatabase.getMapFileInfo();
+		mapDatabase.closeFile();
 
 		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());
+		Assert.assertNull(fileOpenResult.getErrorMessage());
 
-		MapFileInfo mapFileInfo = mapFileHeader.getMapFileInfo();
-
-		Assert.assertEquals(length, mapFileInfo.fileSize);
+		Assert.assertEquals(127, mapFileInfo.fileSize);
 		Assert.assertEquals(3, mapFileInfo.fileVersion);
 		Assert.assertEquals(1324124730145L, mapFileInfo.mapDate);
 		Assert.assertEquals(2, mapFileInfo.numberOfSubFiles);

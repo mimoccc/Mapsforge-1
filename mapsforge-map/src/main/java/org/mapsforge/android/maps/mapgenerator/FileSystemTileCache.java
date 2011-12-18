@@ -268,13 +268,13 @@ public class FileSystemTileCache implements TileCache {
 			return null;
 		}
 
+		FileInputStream fileInputStream = null;
 		try {
 			File inputFile = this.map.get(mapGeneratorJob);
 
-			FileInputStream fileInputStream = new FileInputStream(inputFile);
+			fileInputStream = new FileInputStream(inputFile);
 			byte[] array = this.byteBufferGet.array();
 			int bytesRead = fileInputStream.read(array);
-			fileInputStream.close();
 
 			if (bytesRead == array.length) {
 				this.bitmapGet.copyPixelsFromBuffer(this.byteBufferGet);
@@ -288,6 +288,14 @@ public class FileSystemTileCache implements TileCache {
 		} catch (IOException e) {
 			Logger.exception(e);
 			return null;
+		} finally {
+			try {
+				if (fileInputStream != null) {
+					fileInputStream.close();
+				}
+			} catch (IOException e) {
+				Logger.exception(e);
+			}
 		}
 	}
 
@@ -307,6 +315,7 @@ public class FileSystemTileCache implements TileCache {
 			return;
 		}
 
+		FileOutputStream fileOutputStream = null;
 		try {
 			File outputFile;
 			do {
@@ -318,13 +327,20 @@ public class FileSystemTileCache implements TileCache {
 			bitmap.copyPixelsToBuffer(this.byteBufferPut);
 			byte[] array = this.byteBufferPut.array();
 
-			FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+			fileOutputStream = new FileOutputStream(outputFile);
 			fileOutputStream.write(array, 0, array.length);
-			fileOutputStream.close();
 
 			this.map.put(mapGeneratorJob, outputFile);
 		} catch (IOException e) {
 			Logger.exception(e);
+		} finally {
+			try {
+				if (fileOutputStream != null) {
+					fileOutputStream.close();
+				}
+			} catch (IOException e) {
+				Logger.exception(e);
+			}
 		}
 	}
 
