@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:title="@string/menu_preferences">
 	<PreferenceCategory android:title="@string/preferences_map">
 		<CheckBoxPreference android:title="@string/preferences_show_scale_bar" android:summary="@string/preferences_show_scale_bar_desc"
