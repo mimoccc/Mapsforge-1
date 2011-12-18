@@ -50,16 +50,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
-		<resources>
-			<resource>
-				<directory>${basedir}</directory>
-				<includes>
-					<include>COPYING</include>
-					<include>COPYING.LESSER</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 
 	<properties>
@@ -87,11 +77,6 @@
 				<exclusion>
 					<groupId>org.json</groupId>
 					<artifactId>json</artifactId>
-				</exclusion>
-
-				<exclusion>
-					<groupId>org.khronos</groupId>
-					<artifactId>opengl-api</artifactId>
 				</exclusion>
 
 				<exclusion>
