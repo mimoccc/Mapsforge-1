@@ -12,12 +12,14 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.advancedmapviewer;
+package org.mapsforge.applications.android.advancedmapviewer.filepicker;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.Comparator;
+
+import org.mapsforge.applications.android.advancedmapviewer.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -33,19 +35,21 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 /**
- * A FilePicker displays the contents of directories. The user can navigate within the file
- * system and select a single file whose path is then returned to the calling activity. The
- * ordering of directory contents can be specified via {@link #setFileComparator(Comparator)}.
- * By default subfolders and files are grouped and each group is ordered alphabetically.
+ * A FilePicker displays the contents of directories. The user can navigate within the file system and select a
+ * single file whose path is then returned to the calling activity. The ordering of directory contents can be
+ * specified via {@link #setFileComparator(Comparator)}. By default subfolders and files are grouped and each
+ * group is ordered alphabetically.
  * <p>
- * A {@link FileFilter} can be activated via {@link #setFileDisplayFilter(FileFilter)} to
- * restrict the displayed files and folders. By default all files and folders are visible.
+ * A {@link FileFilter} can be activated via {@link #setFileDisplayFilter(FileFilter)} to restrict the displayed
+ * files and folders. By default all files and folders are visible.
  * <p>
- * Another <code>FileFilter</code> can be applied via {@link #setFileSelectFilter(FileFilter)}
- * to check if a selected file is valid before its path is returned. By default all files are
- * considered as valid and can be selected by the user.
+ * Another <code>FileFilter</code> can be applied via {@link #setFileSelectFilter(FileFilter)} to check if a
+ * selected file is valid before its path is returned. By default all files are considered as valid and can be
+ * selected by the user.
  */
 public class FilePicker extends Activity implements AdapterView.OnItemClickListener {
+	public static final String SELECTED_FILE = "selectedFile";
+	private static final String CURRENT_DIRECTORY = "currentDirectory";
 	private static final String DEFAULT_DIRECTORY = "/";
 	private static final int DIALOG_FILE_INVALID = 0;
 	private static final int DIALOG_FILE_SELECT = 1;
@@ -53,11 +57,10 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	private static FileFilter fileDisplayFilter;
 	private static FileFilter fileSelectFilter;
 	private static final String PREFERENCES_FILE = "FilePicker";
-	static final String SELECTED_FILE = "selectedFile";
 
 	/**
-	 * Sets the file comparator which is used to order the contents of all directories before
-	 * displaying them. If set to null, subfolders and files will not be ordered.
+	 * Sets the file comparator which is used to order the contents of all directories before displaying them.
+	 * If set to null, subfolders and files will not be ordered.
 	 * 
 	 * @param fileComparator
 	 *            the file comparator (may be null).
@@ -67,8 +70,8 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	}
 
 	/**
-	 * Sets the file display filter. This filter is used to determine which files and subfolders
-	 * of directories will be displayed. If set to null, all files and subfolders are shown.
+	 * Sets the file display filter. This filter is used to determine which files and subfolders of directories
+	 * will be displayed. If set to null, all files and subfolders are shown.
 	 * 
 	 * @param fileDisplayFilter
 	 *            the file display filter (may be null).
@@ -78,8 +81,8 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	}
 
 	/**
-	 * Sets the file select filter. This filter is used when the user selects a file to
-	 * determine if it is valid. If set to null, all files are considered as valid.
+	 * Sets the file select filter. This filter is used when the user selects a file to determine if it is
+	 * valid. If set to null, all files are considered as valid.
 	 * 
 	 * @param fileSelectFilter
 	 *            the file selection filter (may be null).
@@ -121,8 +124,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 			this.currentDirectory = selectedFile;
 			browseToCurrentDirectory();
 		} else if (fileSelectFilter == null || fileSelectFilter.accept(selectedFile)) {
-			setResult(RESULT_OK, new Intent().putExtra(SELECTED_FILE, selectedFile
-					.getAbsolutePath()));
+			setResult(RESULT_OK, new Intent().putExtra(SELECTED_FILE, selectedFile.getAbsolutePath()));
 			finish();
 		} else {
 			showDialog(DIALOG_FILE_INVALID);
@@ -205,7 +207,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 		Editor editor = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE).edit();
 		editor.clear();
 		if (this.currentDirectory != null) {
-			editor.putString("currentDirectory", this.currentDirectory.getAbsolutePath());
+			editor.putString(CURRENT_DIRECTORY, this.currentDirectory.getAbsolutePath());
 		}
 		editor.commit();
 	}
@@ -224,8 +226,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 
 		// restore the current directory
 		SharedPreferences preferences = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
-		this.currentDirectory = new File(preferences.getString("currentDirectory",
-				DEFAULT_DIRECTORY));
+		this.currentDirectory = new File(preferences.getString(CURRENT_DIRECTORY, DEFAULT_DIRECTORY));
 		if (!this.currentDirectory.exists() || !this.currentDirectory.canRead()) {
 			this.currentDirectory = new File(DEFAULT_DIRECTORY);
 		}

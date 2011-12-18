@@ -18,9 +18,9 @@
 			android:key="wakeLock" />
 		<CheckBoxPreference android:title="@string/preferences_cache_persistence" android:summary="@string/preferences_cache_persistence_desc"
 			android:key="cachePersistence" />
-		<org.mapsforge.applications.android.advancedmapviewer.CacheSizePreference
+		<org.mapsforge.applications.android.advancedmapviewer.preferences.CacheSizePreference
 			android:title="@string/preferences_cache_size" android:summary="@string/preferences_cache_size_desc" android:key="cacheSize" />
-		<org.mapsforge.applications.android.advancedmapviewer.MoveSpeedPreference
+		<org.mapsforge.applications.android.advancedmapviewer.preferences.MoveSpeedPreference
 			android:title="@string/preferences_move_speed" android:summary="@string/preferences_move_speed_desc" android:key="moveSpeed" />
 	</PreferenceCategory>
 

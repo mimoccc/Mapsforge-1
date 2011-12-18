@@ -12,37 +12,44 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.advancedmapviewer;
+package org.mapsforge.applications.android.advancedmapviewer.preferences;
+
+import org.mapsforge.applications.android.advancedmapviewer.AdvancedMapViewer;
+import org.mapsforge.applications.android.advancedmapviewer.R;
+import org.mapsforge.core.Tile;
 
 import android.content.Context;
 import android.util.AttributeSet;
 
 /**
- * Preferences class for adjusting the move speed.
+ * Preferences class for adjusting the cache size.
  */
-public class MoveSpeedPreference extends SeekBarPreference {
+public class CacheSizePreference extends SeekBarPreference {
+	private static final double ONE_MEGABYTE = 1000000d;
+
 	/**
-	 * Construct a new move speed preference seek bar.
+	 * Construct a new cache size preference seek bar.
 	 * 
 	 * @param context
 	 *            the context activity.
 	 * @param attrs
 	 *            A set of attributes (currently ignored).
 	 */
-	public MoveSpeedPreference(Context context, AttributeSet attrs) {
+	public CacheSizePreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		// define the text message
-		this.messageText = getContext().getString(R.string.preferences_move_speed_desc);
+		this.messageText = getContext().getString(R.string.preferences_cache_size_desc);
 
 		// define the current and maximum value of the seek bar
 		this.seekBarCurrentValue = this.preferencesDefault.getInt(this.getKey(),
-				AdvancedMapViewer.MOVE_SPEED_DEFAULT);
-		this.max = AdvancedMapViewer.MOVE_SPEED_MAX;
+				AdvancedMapViewer.FILE_SYSTEM_CACHE_SIZE_DEFAULT);
+		this.max = AdvancedMapViewer.FILE_SYSTEM_CACHE_SIZE_MAX;
 	}
 
 	@Override
 	String getCurrentValueText(int progress) {
-		return String.format(getContext().getString(R.string.preferences_move_speed_value),
-				Integer.valueOf(progress * 10));
+		String format = getContext().getString(R.string.preferences_cache_size_value);
+		Double value = Double.valueOf(Tile.TILE_SIZE_IN_BYTES * progress / ONE_MEGABYTE);
+		return String.format(format, value);
 	}
 }

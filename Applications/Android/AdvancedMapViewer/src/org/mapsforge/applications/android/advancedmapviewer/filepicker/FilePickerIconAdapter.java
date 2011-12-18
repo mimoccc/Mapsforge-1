@@ -12,9 +12,11 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.advancedmapviewer;
+package org.mapsforge.applications.android.advancedmapviewer.filepicker;
 
 import java.io.File;
+
+import org.mapsforge.applications.android.advancedmapviewer.R;
 
 import android.content.Context;
 import android.view.Gravity;
@@ -77,17 +79,14 @@ class FilePickerIconAdapter extends BaseAdapter {
 
 		if (index == 0 && this.hasParentFolder) {
 			// the parent directory of the current folder
-			this.textView.setCompoundDrawablesWithIntrinsicBounds(0,
-					R.drawable.file_picker_back, 0, 0);
+			this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.file_picker_back, 0, 0);
 			this.textView.setText("..");
 		} else {
 			this.currentFile = this.files[index];
 			if (this.currentFile.isDirectory()) {
-				this.textView.setCompoundDrawablesWithIntrinsicBounds(0,
-						R.drawable.file_picker_folder, 0, 0);
+				this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.file_picker_folder, 0, 0);
 			} else {
-				this.textView.setCompoundDrawablesWithIntrinsicBounds(0,
-						R.drawable.file_picker_file, 0, 0);
+				this.textView.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.file_picker_file, 0, 0);
 			}
 			this.textView.setText(this.currentFile.getName());
 		}

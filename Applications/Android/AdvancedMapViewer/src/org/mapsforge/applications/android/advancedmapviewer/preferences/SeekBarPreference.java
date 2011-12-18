@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.advancedmapviewer;
+package org.mapsforge.applications.android.advancedmapviewer.preferences;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,13 +25,13 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 
 /**
- * This abstract class provides all code for a seek bar preference. Deriving classes only need
- * to set the current and maximum value of the seek bar. An optional text message above the seek
- * bar is also supported as well as an optional current value message below the seek bar.
+ * This abstract class provides all code for a seek bar preference. Deriving classes only need to set the
+ * current and maximum value of the seek bar. An optional text message above the seek bar is also supported as
+ * well as an optional current value message below the seek bar.
  */
 abstract class SeekBarPreference extends DialogPreference implements OnSeekBarChangeListener {
 	private TextView currentValueTextView;
@@ -135,8 +135,7 @@ abstract class SeekBarPreference extends DialogPreference implements OnSeekBarCh
 
 		// create the text view for the current value below the seek bar
 		this.currentValueTextView = new TextView(getContext());
-		this.currentValueTextView.setText(getCurrentValueText(this.preferenceSeekBar
-				.getProgress()));
+		this.currentValueTextView.setText(getCurrentValueText(this.preferenceSeekBar.getProgress()));
 		this.currentValueTextView.setGravity(Gravity.CENTER_HORIZONTAL);
 		// add the current value text view to the layout
 		linearLayout.addView(this.currentValueTextView);

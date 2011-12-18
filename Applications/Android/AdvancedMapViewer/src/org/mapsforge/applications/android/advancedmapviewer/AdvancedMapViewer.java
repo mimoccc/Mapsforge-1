@@ -16,39 +16,33 @@ package org.mapsforge.applications.android.advancedmapviewer;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Date;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-
 import org.mapsforge.android.maps.DebugSettings;
-import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapScaleBar;
 import org.mapsforge.android.maps.MapScaleBar.TextField;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.MapViewMode;
-import org.mapsforge.android.maps.mapdatabase.BoundingBox;
-import org.mapsforge.android.maps.mapdatabase.FileOpenResult;
-import org.mapsforge.android.maps.mapdatabase.MapDatabase;
-import org.mapsforge.android.maps.mapdatabase.MapFileInfo;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
 import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.overlay.ItemizedOverlay;
 import org.mapsforge.android.maps.overlay.OverlayCircle;
 import org.mapsforge.android.maps.overlay.OverlayItem;
 import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
-import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.mapsforge.applications.android.advancedmapviewer.filefilter.FilterByFileExtension;
+import org.mapsforge.applications.android.advancedmapviewer.filefilter.ValidMapFile;
+import org.mapsforge.applications.android.advancedmapviewer.filefilter.ValidRenderTheme;
+import org.mapsforge.applications.android.advancedmapviewer.filepicker.FilePicker;
+import org.mapsforge.applications.android.advancedmapviewer.preferences.EditPreferences;
+import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.GeoPoint;
+import org.mapsforge.mapdatabase.MapFileInfo;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -61,7 +55,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -88,160 +81,23 @@ import android.widget.ToggleButton;
  * formats.
  */
 public class AdvancedMapViewer extends MapActivity {
-	private class MyLocationListener implements LocationListener {
-		private boolean centerAtFirstFix;
-
-		/**
-		 * Empty constructor with default visibility to avoid a synthetic method.
-		 */
-		MyLocationListener() {
-			// do nothing
-		}
-
-		@Override
-		public void onLocationChanged(Location location) {
-			if (!isShowMyLocationEnabled()) {
-				return;
-			}
-
-			GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
-			AdvancedMapViewer.this.overlayCircle.setCircleData(point, location.getAccuracy());
-			AdvancedMapViewer.this.overlayItem.setPoint(point);
-			AdvancedMapViewer.this.circleOverlay.requestRedraw();
-			AdvancedMapViewer.this.itemizedOverlay.requestRedraw();
-			if (this.centerAtFirstFix || isSnapToLocationEnabled()) {
-				this.centerAtFirstFix = false;
-				AdvancedMapViewer.this.mapController.setCenter(point);
-			}
-		}
-
-		@Override
-		public void onProviderDisabled(String provider) {
-			// do nothing
-		}
-
-		@Override
-		public void onProviderEnabled(String provider) {
-			// do nothing
-		}
-
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-			// do nothing
-		}
-
-		boolean isCenterAtFirstFix() {
-			return this.centerAtFirstFix;
-		}
-
-		void setCenterAtFirstFix(boolean centerAtFirstFix) {
-			this.centerAtFirstFix = centerAtFirstFix;
-		}
-	}
-
+	public static final int FILE_SYSTEM_CACHE_SIZE_DEFAULT = 250;
+	public static final int FILE_SYSTEM_CACHE_SIZE_MAX = 500;
+	public static final int MOVE_SPEED_DEFAULT = 10;
+	public static final int MOVE_SPEED_MAX = 30;
 	private static final String BUNDLE_CENTER_AT_FIRST_FIX = "centerAtFirstFix";
 	private static final String BUNDLE_SHOW_MY_LOCATION = "showMyLocation";
 	private static final String BUNDLE_SNAP_TO_LOCATION = "snapToLocation";
 	private static final int DIALOG_ENTER_COORDINATES = 0;
 	private static final int DIALOG_INFO_MAP_FILE = 1;
 	private static final int DIALOG_LOCATION_PROVIDER_DISABLED = 2;
-
-	/**
-	 * Accepts all readable files with a ".map" extension.
-	 */
-	private static final FileFilter FILE_FILTER_EXTENSION_MAP = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			// accept only readable files
-			if (file.canRead()) {
-				if (file.isDirectory()) {
-					// accept all directories
-					return true;
-				} else if (file.isFile() && file.getName().endsWith(".map")) {
-					// accept all files with a ".map" extension
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-
-	/**
-	 * Accepts all readable files with a ".xml" extension.
-	 */
-	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			// accept only readable files
-			if (file.canRead()) {
-				if (file.isDirectory()) {
-					// accept all directories
-					return true;
-				} else if (file.isFile() && file.getName().endsWith(".xml")) {
-					// accept all files with a ".xml" extension
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-
-	/**
-	 * Accepts all valid map files.
-	 */
-	private static final FileFilter FILE_FILTER_VALID_MAP = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			MapDatabase mapDatabase = new MapDatabase();
-			FileOpenResult fileOpenResult = mapDatabase.openFile(file.getAbsolutePath());
-			mapDatabase.closeFile();
-			return fileOpenResult.isSuccess();
-		}
-	};
-
-	/**
-	 * Accepts all valid render theme XML files.
-	 */
-	private static final FileFilter FILE_FILTER_VALID_RENDER_THEME = new FileFilter() {
-		@Override
-		public boolean accept(File file) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new FileInputStream(file);
-				RenderThemeHandler renderThemeHandler = new RenderThemeHandler();
-				XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-				xmlReader.setContentHandler(renderThemeHandler);
-				xmlReader.parse(new InputSource(inputStream));
-			} catch (ParserConfigurationException e) {
-				return false;
-			} catch (SAXException e) {
-				return false;
-			} catch (IOException e) {
-				return false;
-			} finally {
-				try {
-					if (inputStream != null) {
-						inputStream.close();
-					}
-				} catch (IOException e) {
-					return false;
-				}
-			}
-			return true;
-		}
-	};
-
+	private static final FileFilter FILE_FILTER_EXTENSION_MAP = new FilterByFileExtension(".map");
+	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FilterByFileExtension(".xml");
 	private static final String SCREENSHOT_DIRECTORY = "Pictures";
 	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
 	private static final int SCREENSHOT_QUALITY = 90;
 	private static final int SELECT_MAP_FILE = 0;
 	private static final int SELECT_RENDER_THEME_FILE = 1;
-
-	static final int FILE_SYSTEM_CACHE_SIZE_DEFAULT = 250;
-	static final int FILE_SYSTEM_CACHE_SIZE_MAX = 500;
-	static final int MOVE_SPEED_DEFAULT = 10;
-	static final int MOVE_SPEED_MAX = 30;
 
 	private Paint circleOverlayFill;
 	private Paint circleOverlayOutline;
@@ -536,7 +392,7 @@ public class AdvancedMapViewer extends MapActivity {
 	 */
 	private void startMapFilePicker() {
 		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_MAP);
-		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_MAP);
+		FilePicker.setFileSelectFilter(ValidMapFile.INSTANCE);
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
 	}
 
@@ -545,7 +401,7 @@ public class AdvancedMapViewer extends MapActivity {
 	 */
 	private void startRenderThemePicker() {
 		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
-		FilePicker.setFileSelectFilter(FILE_FILTER_VALID_RENDER_THEME);
+		FilePicker.setFileSelectFilter(ValidRenderTheme.INSTANCE);
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
 	}
 
@@ -597,7 +453,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 		// get the pointers to different system services
 		this.locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		this.myLocationListener = new MyLocationListener();
+		this.myLocationListener = new MyLocationListener(this);
 		PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		this.wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "AMV");
 
@@ -707,22 +563,7 @@ public class AdvancedMapViewer extends MapActivity {
 			// zoom level value
 			final TextView textView = (TextView) dialog.findViewById(R.id.zoomlevelValue);
 			textView.setText(String.valueOf(zoomlevel.getProgress()));
-			zoomlevel.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-				@Override
-				public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-					textView.setText(String.valueOf(progress));
-				}
-
-				@Override
-				public void onStartTrackingTouch(SeekBar seekBar) {
-					// do nothing
-				}
-
-				@Override
-				public void onStopTrackingTouch(SeekBar seekBar) {
-					// do nothing
-				}
-			});
+			zoomlevel.setOnSeekBarChangeListener(new SeekBarChangeListener(textView));
 		} else if (id == DIALOG_INFO_MAP_FILE) {
 			MapFileInfo mapFileInfo = this.mapView.getMapDatabase().getMapFileInfo();
 

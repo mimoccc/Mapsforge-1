@@ -12,7 +12,9 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.applications.android.advancedmapviewer;
+package org.mapsforge.applications.android.advancedmapviewer.preferences;
+
+import org.mapsforge.applications.android.advancedmapviewer.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
