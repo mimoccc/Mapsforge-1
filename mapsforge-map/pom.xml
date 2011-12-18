@@ -18,6 +18,11 @@
 		</license>
 	</licenses>
 
+	<scm>
+		<connection>https://mapsforge.googlecode.com/svn/trunk/</connection>
+		<url>https://mapsforge.googlecode.com/svn/trunk/</url>
+	</scm>
+
 	<developers>
 		<developer>
 			<id>Thilo</id>
