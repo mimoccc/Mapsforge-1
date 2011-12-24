@@ -8,6 +8,7 @@
 	<version>0.3.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>mapsforge-map</name>
+	<description>A library to render and display a map without Internet connection.</description>
 	<url>http://mapsforge.org</url>
 
 	<licenses>
@@ -19,17 +20,9 @@
 	</licenses>
 
 	<scm>
+		<url>scm:svn:https://mapsforge.googlecode.com/svn/trunk/</url>
 		<connection>https://mapsforge.googlecode.com/svn/trunk/</connection>
-		<url>https://mapsforge.googlecode.com/svn/trunk/</url>
 	</scm>
-
-	<developers>
-		<developer>
-			<id>Thilo</id>
-			<name>Thilo Mühlberg</name>
-			<email>thilo.muehlberg@gmail.com</email>
-		</developer>
-	</developers>
 
 	<build>
 		<plugins>
@@ -101,6 +94,12 @@
 			<artifactId>junit</artifactId>
 			<version>4.10</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,12 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.mapsforge</groupId>
 	<artifactId>mapsforge-map-writer</artifactId>
 	<version>0.3.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>mapsforge-map-writer</name>
+	<description>An osmosis plugin to create binary map files.</description>
+	<url>http://mapsforge.org</url>
 
 	<licenses>
 		<license>
@@ -16,6 +19,11 @@
 		</license>
 	</licenses>
 
+	<scm>
+		<url>scm:svn:https://mapsforge.googlecode.com/svn/trunk/</url>
+		<connection>https://mapsforge.googlecode.com/svn/trunk/</connection>
+	</scm>
+
 	<repositories>
 		<repository>
 			<id>mapsforge-mvn2-repo</id>
@@ -24,7 +32,6 @@
 	</repositories>
 
 	<build>
-
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -66,6 +73,7 @@
 					<downloadJavadocs>true</downloadJavadocs>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.7</version>
@@ -76,9 +84,7 @@
 						<configuration>
 							<target>
 								<echo message="Copying jar file to osmosis plugin dir" />
-								<copy overwrite="true"
-									file="${project.build.directory}/${project.build.finalName}.jar"
-									todir="${osmosis.plugin.dir}" />
+								<copy overwrite="true" file="${project.build.directory}/${project.build.finalName}.jar" todir="${osmosis.plugin.dir}" />
 							</target>
 						</configuration>
 						<goals>
@@ -102,11 +108,14 @@
 			<groupId>net.sf.trove4j</groupId>
 			<artifactId>trove4j</artifactId>
 			<version>3.0.2</version>
+			<scope>compile</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>com.vividsolutions</groupId>
 			<artifactId>jts</artifactId>
 			<version>1.12</version>
+			<scope>compile</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>xerces</groupId>
@@ -114,12 +123,14 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>osmosis</groupId>
 			<artifactId>osmosis-core</artifactId>
-			<version>0.40</version>
+			<version>0.40.1</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -133,8 +144,4 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
-
-
-	<url>http://mapsforge.org</url>
-	<description>Provides a tool to create .map files. The tool is implemented as an osmosis plugin.</description>
 </project>
