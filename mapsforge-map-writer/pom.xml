@@ -73,6 +73,14 @@
 					<downloadJavadocs>true</downloadJavadocs>
 					<additionalConfig>
 						<file>
+							<name>.checkstyle</name>
+							<location>../eclipse-config/.checkstyle</location>
+						</file>
+						<file>
+							<name>.checkstyle_rules.xml</name>
+							<location>../eclipse-config/.checkstyle_rules.xml</location>
+						</file>
+						<file>
 							<name>.pmd</name>
 							<location>../eclipse-config/.pmd</location>
 						</file>
