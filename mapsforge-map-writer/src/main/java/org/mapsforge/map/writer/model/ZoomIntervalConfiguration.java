@@ -37,19 +37,23 @@ final public class ZoomIntervalConfiguration {
 		int i = 0;
 		for (byte[] interval : intervals) {
 			i++;
-			if (interval.length != 3)
+			if (interval.length != 3) {
 				throw new IllegalArgumentException("invalid interval configuration, found only "
 						+ interval.length + "parameters for interval " + i);
-			if (interval[0] <= interval[1] || interval[0] >= interval[2])
+			}
+			if (interval[0] <= interval[1] || interval[0] >= interval[2]) {
 				throw new IllegalArgumentException("invalid configuration for interval " + i
 						+ ", make sure that minZoom < baseZoom < maxZoom");
+			}
 			if (i > 1) {
-				if (interval[0] < this.baseZoom[i - 2])
+				if (interval[0] < this.baseZoom[i - 2]) {
 					throw new IllegalArgumentException(
 							"interval configurations must follow an increasing order");
-				if (interval[1] != ((this.maxZoom[i - 2]) + 1))
+				}
+				if (interval[1] != ((this.maxZoom[i - 2]) + 1)) {
 					throw new IllegalArgumentException("minZoom of interval " + i
 							+ " not adjacent to maxZoom of interval " + (i - 1));
+				}
 			}
 			this.baseZoom[i - 1] = interval[0];
 			this.minZoom[i - 1] = interval[1];
@@ -119,8 +123,9 @@ final public class ZoomIntervalConfiguration {
 	 * @return the number of zoom intervals
 	 */
 	public int getNumberOfZoomIntervals() {
-		if (this.baseZoom == null)
+		if (this.baseZoom == null) {
 			return 0;
+		}
 		return this.baseZoom.length;
 	}
 
@@ -135,8 +140,9 @@ final public class ZoomIntervalConfiguration {
 	}
 
 	private void checkValidIndex(int index) {
-		if (index < 0 || index >= this.baseZoom.length)
+		if (index < 0 || index >= this.baseZoom.length) {
 			throw new IllegalArgumentException("illegal zoom interval index: " + index);
+		}
 	}
 
 	/**

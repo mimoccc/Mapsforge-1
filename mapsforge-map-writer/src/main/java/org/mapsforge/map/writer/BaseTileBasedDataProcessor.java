@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -55,7 +56,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	protected final String preferredLanguage;
 
 	protected final TLongObjectHashMap<TLongArrayList> outerToInnerMapping;
-	protected final HashMap<TileCoordinate, TLongHashSet> tilesToCoastlines;
+	protected final Map<TileCoordinate, TLongHashSet> tilesToCoastlines;
 
 	// accounting
 	protected float[] countWays;
@@ -129,32 +130,36 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	}
 
 	protected void countPoiTags(TDNode poi) {
-		if (poi == null || poi.getTags() == null)
+		if (poi == null || poi.getTags() == null) {
 			return;
-		for (short tag : poi.getTags()) {
+		}
+		for (short tag : poi.getTags()) { // NOPMD by bross on 25.12.11 13:48
 			this.histogramPoiTags.adjustOrPutValue(tag, 1, 1);
 		}
 	}
 
 	protected void countWayTags(TDWay way) {
-		if (way == null || way.getTags() == null)
+		if (way == null || way.getTags() == null) {
 			return;
-		for (short tag : way.getTags()) {
+		}
+		for (short tag : way.getTags()) { // NOPMD by bross on 25.12.11 13:48
 			this.histogramWayTags.adjustOrPutValue(tag, 1, 1);
 		}
 	}
 
-	protected void countWayTags(short[] tags) {
-		if (tags == null)
+	protected void countWayTags(short[] tags) { // NOPMD by bross on 25.12.11 13:49
+		if (tags == null) {
 			return;
-		for (short tag : tags) {
+		}
+		for (short tag : tags) { // NOPMD by bross on 25.12.11 13:49
 			this.histogramWayTags.adjustOrPutValue(tag, 1, 1);
 		}
 	}
 
 	protected void addPOI(TDNode poi) {
-		if (!poi.isPOI())
+		if (!poi.isPOI()) {
 			return;
+		}
 
 		byte minZoomLevel = poi.getZoomAppear();
 		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
@@ -210,19 +215,20 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 						td.addWay(way);
 					}
 				}
-				if (added)
+				if (added) {
 					this.countWays[i]++;
+				}
 			}
 		}
 	}
 
-	abstract protected TileData getTileImpl(int zoom, int tileX, int tileY);
+	protected abstract TileData getTileImpl(int zoom, int tileX, int tileY);
 
-	abstract protected void handleVirtualOuterWay(TDWay virtualWay);
+	protected abstract void handleVirtualOuterWay(TDWay virtualWay);
 
-	abstract protected void handleAdditionalRelationTags(TDWay virtualWay, TDRelation relation);
+	protected abstract void handleAdditionalRelationTags(TDWay virtualWay, TDRelation relation);
 
-	abstract protected void handleVirtualInnerWay(TDWay virtualWay);
+	protected abstract void handleVirtualInnerWay(TDWay virtualWay);
 
 	private int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {
 		long tileCoordinateLeft = MercatorProjection.longitudeToTileX(
@@ -267,12 +273,13 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 		private List<Integer> inner;
 		private List<Deque<TDWay>> extractedPolygons;
-		private HashMap<Integer, List<Integer>> outerToInner;
+		private Map<Integer, List<Integer>> outerToInner;
 
 		@Override
 		public boolean execute(TDRelation relation) {
-			if (relation == null)
+			if (relation == null) {
 				return false;
+			}
 
 			this.extractedPolygons = null;
 			this.outerToInner = null;
@@ -300,8 +307,9 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 				this.inner = entry.getValue();
 				byte shape = TDWay.SIMPLE_POLYGON;
 				// does it contain inner ways?
-				if (this.inner != null && !this.inner.isEmpty())
+				if (this.inner != null && !this.inner.isEmpty()) {
 					shape = TDWay.MULTI_POLYGON;
+				}
 
 				TDWay outerWay = null;
 				if (outerPolygon.size() > 1) {
@@ -376,7 +384,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 		private void addInnerWays(TDWay outer) {
 			if (this.inner != null && !this.inner.isEmpty()) {
 
-				TLongArrayList innerList = BaseTileBasedDataProcessor.this.outerToInnerMapping.get(outer.getId());
+				TLongArrayList innerList = BaseTileBasedDataProcessor.this.outerToInnerMapping.get(outer
+						.getId());
 				if (innerList == null) {
 					innerList = new TLongArrayList();
 					BaseTileBasedDataProcessor.this.outerToInnerMapping.put(outer.getId(), innerList);

@@ -31,11 +31,14 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
  * 
  * @author bross
  */
-public abstract class OSMUtils {
+public final class OSMUtils {
 
-	private static Logger LOGGER = Logger.getLogger(OSMUtils.class.getName());
+	private OSMUtils() {
+	}
 
-	private static Pattern NAME_LANGUAGE_PATTERN = Pattern.compile("(name)(:)([a-z]{2})");
+	private static final Logger LOGGER = Logger.getLogger(OSMUtils.class.getName());
+
+	private static final Pattern NAME_LANGUAGE_PATTERN = Pattern.compile("(name)(:)([a-z]{2})");
 	private static final int MAX_ELEVATION = 9000;
 
 	/**
@@ -54,19 +57,19 @@ public abstract class OSMUtils {
 		String ref = null;
 		String housenumber = null;
 		byte layer = 5;
-		short elevation = 0;
+		short elevation = 0; // NOPMD by bross on 25.12.11 13:27
 		String relationType = null;
 
 		if (entity.getTags() != null) {
 			for (Tag tag : entity.getTags()) {
 				String key = tag.getKey().toLowerCase();
-				if ((key.equals("name") || key.equals("piste:name")) && !foundPreferredLanguageName) {
+				if (("name".equals(key) || "piste:name".equals(key)) && !foundPreferredLanguageName) {
 					name = tag.getValue();
-				} else if (key.equals("addr:housenumber")) {
+				} else if ("addr:housenumber".equals(key)) {
 					housenumber = tag.getValue();
-				} else if (key.equals("ref")) {
+				} else if ("ref".equals(key)) {
 					ref = tag.getValue();
-				} else if (key.equals("layer")) {
+				} else if ("layer".equals(key)) {
 					String l = tag.getValue();
 					try {
 						byte testLayer = Byte.parseByte(l);
@@ -77,17 +80,17 @@ public abstract class OSMUtils {
 					} catch (NumberFormatException e) {
 						LOGGER.finest("could not parse layer information to byte type: " + entity.getId());
 					}
-				} else if (key.equals("ele")) {
+				} else if ("ele".equals(key)) {
 					try {
 						double testElevation = Double.parseDouble(tag.getValue());
 						if (testElevation < MAX_ELEVATION) {
-							elevation = (short) testElevation;
+							elevation = (short) testElevation; // NOPMD by bross on 25.12.11 13:27
 						}
 					} catch (NumberFormatException e) {
 						LOGGER.finest("could not parse elevation information to double type: " + entity.getId());
 					}
 
-				} else if (key.equals("type")) {
+				} else if ("type".equals(key)) {
 					relationType = tag.getValue();
 				} else if (preferredLanguage != null && !foundPreferredLanguageName) {
 					Matcher matcher = NAME_LANGUAGE_PATTERN.matcher(key);
@@ -112,7 +115,7 @@ public abstract class OSMUtils {
 	 *            the way
 	 * @return the ids of the identified tags
 	 */
-	public static short[] extractKnownWayTags(Entity entity) {
+	public static short[] extractKnownWayTags(Entity entity) { // NOPMD by bross on 25.12.11 13:27
 		TShortArrayList currentTags = new TShortArrayList();
 		OSMTagMapping mapping = OSMTagMapping.getInstance();
 		if (entity.getTags() != null) {
@@ -133,7 +136,7 @@ public abstract class OSMUtils {
 	 *            the node
 	 * @return the ids of the identified tags
 	 */
-	public static short[] extractKnownPOITags(Entity entity) {
+	public static short[] extractKnownPOITags(Entity entity) { // NOPMD by bross on 25.12.11 13:27
 		TShortArrayList currentTags = new TShortArrayList();
 		OSMTagMapping mapping = OSMTagMapping.getInstance();
 		if (entity.getTags() != null) {

@@ -45,8 +45,12 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 public class MapFileWriter {
 
+	private static final long DUMMY_LONG = 0xf0f0f0f0f0f0f0f0L;
+
+	private static final int DUMMY_INT = 0xf0f0f0f0;
+
 	private static final int BYTES_SHORT = 2;
-	// private static final int BYTES_INTEGER = 4;
+	private static final int BYTES_INT = 4;
 
 	private static final int DEBUG_BLOCK_SIZE = 32;
 
@@ -74,21 +78,21 @@ public class MapFileWriter {
 	private static final String DEBUG_STRING_WAY_TAIL = "---";
 
 	// bitmap flags for pois and ways
-	private static final short BITMAP_NAME = 128;
+	private static final short BITMAP_NAME = 128; // NOPMD by bross on 25.12.11 13:52
 
 	// bitmap flags for pois
-	private static final short BITMAP_ELEVATION = 64;
-	private static final short BITMAP_HOUSENUMBER = 32;
+	private static final short BITMAP_ELEVATION = 64; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_HOUSENUMBER = 32; // NOPMD by bross on 25.12.11 13:52
 
 	// bitmap flags for ways
-	private static final short BITMAP_REF = 64;
-	private static final short BITMAP_LABEL = 32;
+	private static final short BITMAP_REF = 64; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_LABEL = 32; // NOPMD by bross on 25.12.11 13:52
 	// private static final short BITMAP_MULTIPOLYGON = 16;
 	// private static final short BITMAP_POLYGON = 8;
 
 	// bitmap flags for file features
-	private static final short BITMAP_DEBUG = 128;
-	private static final short BITMAP_MAP_START_POSITION = 64;
+	private static final short BITMAP_DEBUG = 128; // NOPMD by bross on 25.12.11 13:53
+	private static final short BITMAP_MAP_START_POSITION = 64; // NOPMD by bross on 25.12.11 13:53
 
 	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
 
@@ -105,7 +109,7 @@ public class MapFileWriter {
 	private static final float PROGRESS_PERCENT_STEP = 10f;
 
 	// data
-	private TileBasedDataProcessor dataStore;
+	private final TileBasedDataProcessor dataStore;
 
 	private static final TileInfo TILE_INFO = TileInfo.getInstance();
 	// private static final CoastlineHandler COASTLINE_HANDLER = new
@@ -124,7 +128,7 @@ public class MapFileWriter {
 
 	// accounting
 	private double tilesProcessed = 0;
-	private double amountOfTilesInPercentStep;
+	private final double amountOfTilesInPercentStep;
 	private long emptyTiles = 0;
 	private long maxTileSize = 0;
 	private long cumulatedTileSizeOfNonEmptyTiles = 0;
@@ -135,8 +139,6 @@ public class MapFileWriter {
 	final int bboxEnlargement;
 
 	/**
-	 * Constructor
-	 * 
 	 * @param dataStore
 	 *            the data store
 	 * @param file
@@ -178,7 +180,7 @@ public class MapFileWriter {
 	 * @throws IOException
 	 *             thrown if any IO exception occurred during the writing process
 	 */
-	final public void writeFile(long date, int version, short tilePixel, String comment, boolean debugStrings,
+	public final void writeFile(long date, int version, short tilePixel, String comment, boolean debugStrings,
 			boolean polygonClipping, boolean wayClipping, boolean pixelCompression,
 			GeoCoordinate mapStartPosition, String preferredLanguage) throws IOException {
 
@@ -238,7 +240,9 @@ public class MapFileWriter {
 		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
-	private long writeContainerHeader(long date, int version, short tilePixel, String comment,
+	private long writeContainerHeader(long date, int version, short tilePixel, String comment, // NOPMD by bross
+																								// on 25.12.11
+																								// 13:53
 			boolean debugStrings, GeoCoordinate mapStartPosition, String preferredLanguage) throws IOException {
 
 		// get metadata for the map file
@@ -260,14 +264,14 @@ public class MapFileWriter {
 		// HEADER SIZE: Write dummy pattern as header size. It will be replaced
 		// later in time
 		int headerSizePosition = containerHeaderBuffer.position();
-		containerHeaderBuffer.putInt(0xf0f0f0f0);
+		containerHeaderBuffer.putInt(DUMMY_INT);
 
 		// FILE VERSION
 		containerHeaderBuffer.putInt(version);
 
 		// FILE SIZE: Write dummy pattern as file size. It will be replaced
 		// later in time
-		containerHeaderBuffer.putLong(0xf0f0f0f0f0f0f0f0L);
+		containerHeaderBuffer.putLong(DUMMY_LONG);
 		// DATE OF CREATION
 		containerHeaderBuffer.putLong(date);
 
@@ -286,10 +290,11 @@ public class MapFileWriter {
 		// PREFERRED LANGUAGE
 		// TODO leads to zero length string, but according to specification this
 		// is correct
-		if (preferredLanguage == null)
+		if (preferredLanguage == null) {
 			writeUTF8("", containerHeaderBuffer);
-		else
+		} else {
 			writeUTF8(preferredLanguage, containerHeaderBuffer);
+		}
 
 		// FLAGS
 		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings, mapStartPosition != null));
@@ -301,19 +306,19 @@ public class MapFileWriter {
 		}
 
 		// AMOUNT POI TAGS
-		containerHeaderBuffer.putShort((short) OSMTagMapping.getInstance().optimizedPoiIds().size());
+		containerHeaderBuffer.putShort((short) OSMTagMapping.getInstance().getOptimizedPoiIds().size());
 		// POI TAGS
 		// retrieves tag ids in order of frequency, most frequent come first
-		for (short tagId : OSMTagMapping.getInstance().optimizedPoiIds().keySet()) {
+		for (short tagId : OSMTagMapping.getInstance().getOptimizedPoiIds().keySet()) {
 			OSMTag tag = OSMTagMapping.getInstance().getPoiTag(tagId);
 			writeUTF8(tag.tagKey(), containerHeaderBuffer);
 		}
 
 		// AMOUNT OF WAY TAGS
-		containerHeaderBuffer.putShort((short) OSMTagMapping.getInstance().optimizedWayIds().size());
+		containerHeaderBuffer.putShort((short) OSMTagMapping.getInstance().getOptimizedWayIds().size());
 
 		// WAY TAGS
-		for (short tagId : OSMTagMapping.getInstance().optimizedWayIds().keySet()) {
+		for (short tagId : OSMTagMapping.getInstance().getOptimizedWayIds().keySet()) {
 			OSMTag tag = OSMTagMapping.getInstance().getWayTag(tagId);
 			writeUTF8(tag.tagKey(), containerHeaderBuffer);
 		}
@@ -338,12 +343,17 @@ public class MapFileWriter {
 
 		// now write header size
 		// -4 bytes of header size variable itself
-		int headerSize = containerHeaderBuffer.position() - headerSizePosition - 4;
+		int headerSize = containerHeaderBuffer.position() - headerSizePosition - BYTES_INT;
 		containerHeaderBuffer.putInt(headerSizePosition, headerSize);
 
 		if (!containerHeaderBuffer.hasArray()) {
 			this.randomAccessFile.close();
-			throw new RuntimeException("unsupported operating system, byte buffer not backed by array");
+			throw new RuntimeException("unsupported operating system, byte buffer not backed by array"); // NOPMD
+																											// by
+																											// bross
+																											// on
+																											// 25.12.11
+																											// 14:06
 		}
 		this.randomAccessFile.write(containerHeaderBuffer.array(), 0, containerHeaderBuffer.position());
 
@@ -395,8 +405,9 @@ public class MapFileWriter {
 		ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
 
 		// write debug strings for tile index segment if necessary
-		if (debugStrings)
+		if (debugStrings) {
 			indexBuffer.put(DEBUG_INDEX_START_STRING.getBytes());
+		}
 
 		long currentSubfileOffset = indexBufferSize;
 		this.randomAccessFile.seek(startPositionSubfile + indexBufferSize);
@@ -454,7 +465,7 @@ public class MapFileWriter {
 				Map<Byte, List<TDWay>> waysByZoomlevel = currentTile.waysByZoomlevel(minZoomCurrentInterval,
 						maxZoomCurrentInterval);
 
-				if (poisByZoomlevel.size() > 0 || waysByZoomlevel.size() > 0) {
+				if (!poisByZoomlevel.isEmpty() || !waysByZoomlevel.isEmpty()) {
 					if (debugStrings) {
 						// write tile header
 						StringBuilder sb = new StringBuilder();
@@ -483,8 +494,9 @@ public class MapFileWriter {
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
 						int indexEntitiesPerZoomLevelTable = zoomlevel - minZoomCurrentInterval;
 						List<TDNode> pois = poisByZoomlevel.get(Byte.valueOf(zoomlevel));
-						if (pois == null)
+						if (pois == null) {
 							continue;
+						}
 						for (TDNode poi : pois) {
 							if (debugStrings) {
 								StringBuilder sb = new StringBuilder();
@@ -507,7 +519,7 @@ public class MapFileWriter {
 							if (poi.getTags() != null) {
 								for (short tagID : poi.getTags()) {
 									poiBuffer.put(Serializer.getVariableByteUnsigned(OSMTagMapping
-											.getInstance().optimizedPoiIds().get(Short.valueOf(tagID))
+											.getInstance().getOptimizedPoiIds().get(Short.valueOf(tagID))
 											.intValue()));
 								}
 							}
@@ -543,8 +555,9 @@ public class MapFileWriter {
 					for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
 						int indexEntitiesPerZoomLevelTable = zoomlevel - minZoomCurrentInterval;
 						List<TDWay> ways = waysByZoomlevel.get(Byte.valueOf(zoomlevel));
-						if (ways == null)
+						if (ways == null) {
 							continue;
+						}
 
 						for (TDWay way : ways) {
 							wayBuffer.clear();
@@ -623,22 +636,25 @@ public class MapFileWriter {
 								// interpreted as outer way) and
 								// possible blocks for inner ways
 								if (wayDataBlock.getInnerWays() != null
-										&& !wayDataBlock.getInnerWays().isEmpty())
+										&& !wayDataBlock.getInnerWays().isEmpty()) {
 									// multi polygon: outer way + number of
 									// inner ways
 									wayBuffer.put((byte) (1 + wayDataBlock.getInnerWays().size()));
-								else
+								} else {
 									// simply a single way (not a multi polygon)
 									wayBuffer.put((byte) 1);
+								}
 
 								// write block for (outer/simple) way
 								writeWay(wayDataBlock.getOuterWay(), currentTileLat, currentTileLon, wayBuffer);
 
 								// write blocks for inner ways
 								if (wayDataBlock.getInnerWays() != null
-										&& !wayDataBlock.getInnerWays().isEmpty())
-									for (List<Integer> innerWayCoordinates : wayDataBlock.getInnerWays())
+										&& !wayDataBlock.getInnerWays().isEmpty()) {
+									for (List<Integer> innerWayCoordinates : wayDataBlock.getInnerWays()) {
 										writeWay(innerWayCoordinates, currentTileLat, currentTileLon, wayBuffer);
+									}
+								}
 
 							}
 
@@ -666,8 +682,9 @@ public class MapFileWriter {
 						tileBuffer.putShort(cumulatedCounts[1]);
 					}
 
-					if (this.maxWaysPerTile < cumulatedCounts[1])
+					if (this.maxWaysPerTile < cumulatedCounts[1]) {
 						this.maxWaysPerTile = cumulatedCounts[1];
+					}
 					this.cumulatedNumberOfWaysInTiles += cumulatedCounts[1];
 
 					tileBuffer.position(tileSize);
@@ -675,10 +692,12 @@ public class MapFileWriter {
 					currentSubfileOffset += tileBuffer.position();
 
 					// accounting
-					if (this.maxTileSize < tileSize)
+					if (this.maxTileSize < tileSize) {
 						this.maxTileSize = tileSize;
-					if (tileSize > 0)
+					}
+					if (tileSize > 0) {
 						this.cumulatedTileSizeOfNonEmptyTiles += tileSize;
+					}
 
 					// add tile to tiles buffer
 					compressedTilesBuffer.put(tileBuffer.array(), 0, tileSize);
@@ -689,7 +708,6 @@ public class MapFileWriter {
 								compressedTilesBuffer.position());
 						compressedTilesBuffer.clear();
 					}
-
 				} // end if clause checking if tile is empty or not
 				else {
 					this.emptyTiles++;
@@ -807,7 +825,7 @@ public class MapFileWriter {
 	}
 
 	private static int mappedWayTagID(short original) {
-		return OSMTagMapping.getInstance().optimizedWayIds().get(Short.valueOf(original)).intValue();
+		return OSMTagMapping.getInstance().getOptimizedWayIds().get(Short.valueOf(original)).intValue();
 	}
 
 	private static byte infoBytePoiLayerAndTagAmount(TDNode node) {
@@ -816,7 +834,7 @@ public class MapFileWriter {
 		layer = layer < 0 ? 0 : layer > 10 ? 10 : layer;
 		short tagAmount = node.getTags() == null ? 0 : (short) node.getTags().length;
 
-		return (byte) (layer << 4 | tagAmount);
+		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
 	private static byte infoByteWayLayerAndTagAmount(TDWay way) {
@@ -825,16 +843,18 @@ public class MapFileWriter {
 		layer = layer < 0 ? 0 : layer > 10 ? 10 : layer;
 		short tagAmount = way.getTags() == null ? 0 : (short) way.getTags().length;
 
-		return (byte) (layer << 4 | tagAmount);
+		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
 	private static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition) {
 		byte infoByte = 0;
 
-		if (debug)
+		if (debug) {
 			infoByte |= BITMAP_DEBUG;
-		if (mapStartPosition)
+		}
+		if (mapStartPosition) {
 			infoByte |= BITMAP_MAP_START_POSITION;
+		}
 
 		return infoByte;
 	}

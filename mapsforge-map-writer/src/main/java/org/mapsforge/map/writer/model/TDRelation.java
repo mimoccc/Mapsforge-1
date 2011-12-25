@@ -38,7 +38,7 @@ public class TDRelation {
 	private final byte layer;
 	private final String name;
 	private final String ref;
-	private final short[] tags;
+	private final short[] tags; // NOPMD by bross on 25.12.11 13:13
 	private final TDWay[] memberWays;
 
 	/**
@@ -53,28 +53,32 @@ public class TDRelation {
 	 * @return a new TDRelation if all members are valid and the relation is of a known type, null otherwise
 	 */
 	public static TDRelation fromRelation(Relation relation, WayResolver resolver, String preferredLanguage) {
-		if (relation == null)
+		if (relation == null) {
 			return null;
+		}
 
-		if (relation.getMembers().size() == 0)
+		if (relation.getMembers().size() == 0) {
 			return null;
+		}
 
 		SpecialTagExtractionResult ster = OSMUtils.extractSpecialFields(relation, preferredLanguage);
-		short[] knownWayTags = OSMUtils.extractKnownWayTags(relation);
+		short[] knownWayTags = OSMUtils.extractKnownWayTags(relation); // NOPMD by bross on 25.12.11 13:13
 
 		// special tags
 		// TODO what about the layer of relations?
 
 		// TODO exclude boundaries
 
-		if (!knownRelationType(ster.getType()))
+		if (!knownRelationType(ster.getType())) {
 			return null;
+		}
 
 		List<RelationMember> members = relation.getMembers();
 		List<TDWay> wayMembers = new ArrayList<TDWay>();
 		for (RelationMember relationMember : members) {
-			if (relationMember.getMemberType() != EntityType.Way)
+			if (relationMember.getMemberType() != EntityType.Way) {
 				continue;
+			}
 			TDWay member = resolver.getWay(relationMember.getMemberId());
 			if (member == null) {
 				LOGGER.finest("relation is missing a member, rel-id: " + relation.getId() + " member id: "
@@ -109,7 +113,10 @@ public class TDRelation {
 	 * @param memberWays
 	 *            the member ways
 	 */
-	TDRelation(long id, byte layer, String name, String ref, short[] tags, TDWay[] memberWays) {
+	TDRelation(long id, byte layer, String name, String ref, short[] tags, TDWay[] memberWays) { // NOPMD by
+																									// bross on
+																									// 25.12.11
+																									// 13:13
 		this.id = id;
 		this.layer = layer;
 		this.name = name;
@@ -149,8 +156,8 @@ public class TDRelation {
 	/**
 	 * @return the tags
 	 */
-	public short[] getTags() {
-		return this.tags;
+	public short[] getTags() { // NOPMD by bross on 25.12.11 13:13
+		return this.tags; // NOPMD by bross on 25.12.11 13:13
 	}
 
 	/**
@@ -172,20 +179,22 @@ public class TDRelation {
 	 * @return the member ways
 	 */
 	public TDWay[] getMemberWays() {
-		return this.memberWays;
+		return this.memberWays; // NOPMD by bross on 25.12.11 13:14
 	}
 
 	/**
 	 * @return true if the relation represents a coastline
 	 */
 	public boolean isCoastline() {
-		if (this.tags == null)
+		if (this.tags == null) {
 			return false;
+		}
 		OSMTag tag;
-		for (short tagID : this.tags) {
+		for (short tagID : this.tags) { // NOPMD by bross on 25.12.11 13:13
 			tag = OSMTagMapping.getInstance().getWayTag(tagID);
-			if (tag.isCoastline())
+			if (tag.isCoastline()) {
 				return true;
+			}
 		}
 
 		return false;
@@ -211,15 +220,19 @@ public class TDRelation {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		TDRelation other = (TDRelation) obj;
-		if (this.id != other.id)
+		if (this.id != other.id) {
 			return false;
+		}
 		return true;
 	}
 

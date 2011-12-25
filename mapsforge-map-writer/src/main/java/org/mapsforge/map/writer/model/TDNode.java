@@ -32,11 +32,11 @@ public class TDNode {
 	private final int latitude;
 	private final int longitude;
 
-	private final short elevation;
+	private final short elevation; // NOPMD by bross on 25.12.11 12:55
 	private final String houseNumber;
 	private final byte layer;
 	private final String name;
-	private short[] tags;
+	private short[] tags; // NOPMD by bross on 25.12.11 12:55
 
 	/**
 	 * Constructs a new TDNode from a given osmosis node entity. Checks the validity of the entity.
@@ -49,7 +49,7 @@ public class TDNode {
 	 */
 	public static TDNode fromNode(Node node, String preferredLanguage) {
 		SpecialTagExtractionResult ster = OSMUtils.extractSpecialFields(node, preferredLanguage);
-		short[] knownWayTags = OSMUtils.extractKnownPOITags(node);
+		short[] knownWayTags = OSMUtils.extractKnownPOITags(node); // NOPMD by bross on 25.12.11 12:55
 
 		return new TDNode(node.getId(), GeoCoordinate.doubleToInt(node.getLatitude()),
 				GeoCoordinate.doubleToInt(node.getLongitude()), ster.getElevation(), ster.getLayer(),
@@ -57,8 +57,6 @@ public class TDNode {
 	}
 
 	/**
-	 * Constructor
-	 * 
 	 * @param id
 	 *            the OSM id
 	 * @param latitude
@@ -74,7 +72,12 @@ public class TDNode {
 	 * @param name
 	 *            the name if existent
 	 */
-	public TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber,
+	public TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber, // NOPMD
+																											// by
+																											// bross
+																											// on
+																											// 25.12.11
+																											// 12:55
 			String name) {
 		this.id = id;
 		this.latitude = latitude;
@@ -86,8 +89,6 @@ public class TDNode {
 	}
 
 	/**
-	 * Constructor
-	 * 
 	 * @param id
 	 *            the OSM id
 	 * @param latitude
@@ -105,8 +106,13 @@ public class TDNode {
 	 * @param tags
 	 *            the
 	 */
-	public TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber,
-			String name, short[] tags) {
+	public TDNode(long id, int latitude, int longitude, short elevation, byte layer, String houseNumber, // NOPMD
+																											// by
+																											// bross
+																											// on
+																											// 25.12.11
+																											// 12:55
+			String name, short[] tags) { // NOPMD by bross on 25.12.11 12:58
 		this.id = id;
 		this.latitude = latitude;
 		this.longitude = longitude;
@@ -129,8 +135,9 @@ public class TDNode {
 	 */
 	public byte getZoomAppear() {
 		if (this.tags == null || this.tags.length == 0) {
-			if (this.houseNumber != null)
+			if (this.houseNumber != null) {
 				return ZOOM_HOUSENUMBER;
+			}
 			return Byte.MAX_VALUE;
 		}
 		return OSMTagMapping.getInstance().getZoomAppearPOI(this.tags);
@@ -146,15 +153,15 @@ public class TDNode {
 	/**
 	 * @return the tags
 	 */
-	public short[] getTags() {
-		return this.tags;
+	public short[] getTags() { // NOPMD by bross on 25.12.11 12:58
+		return this.tags; // NOPMD by bross on 25.12.11 12:56
 	}
 
 	/**
 	 * @param tags
 	 *            the tags to set
 	 */
-	public void setTags(short[] tags) {
+	public void setTags(short[] tags) { // NOPMD by bross on 25.12.11 12:58
 		this.tags = tags;
 	}
 
@@ -175,7 +182,7 @@ public class TDNode {
 	/**
 	 * @return the elevation
 	 */
-	public short getElevation() {
+	public short getElevation() { // NOPMD by bross on 25.12.11 12:58
 		return this.elevation;
 	}
 
@@ -202,7 +209,7 @@ public class TDNode {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
+		final int prime = 31; // NOPMD by bross on 25.12.11 12:56
 		int result = 1;
 		result = prime * result + (int) (this.id ^ (this.id >>> 32));
 		return result;
@@ -210,20 +217,24 @@ public class TDNode {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		TDNode other = (TDNode) obj;
-		if (this.id != other.id)
+		if (this.id != other.id) {
 			return false;
+		}
 		return true;
 	}
 
 	@Override
-	public String toString() {
+	public final String toString() {
 		return "TDNode [id=" + this.id + ", latitude=" + this.latitude + ", longitude=" + this.longitude
 				+ ", name=" + this.name + ", tags=" + this.tags + "]";
 	}

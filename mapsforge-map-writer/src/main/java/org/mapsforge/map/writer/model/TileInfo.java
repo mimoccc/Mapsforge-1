@@ -97,8 +97,9 @@ final public class TileInfo {
 	public boolean isWaterTile(TileCoordinate tc) {
 		List<TileCoordinate> tiles = tc.translateToZoomLevel(TILE_INFO_ZOOMLEVEL);
 		for (TileCoordinate tile : tiles) {
-			if (!this.seaTileInfo.get(tile.getY() * 4096 + tile.getX()))
+			if (!this.seaTileInfo.get(tile.getY() * 4096 + tile.getX())) {
 				return false;
+			}
 		}
 		return true;
 	}

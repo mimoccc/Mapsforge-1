@@ -33,8 +33,6 @@ public class OSMTag {
 	private final boolean forcePolygonLine;
 
 	/**
-	 * Constructor
-	 * 
 	 * @param id
 	 *            the internal id of the tag
 	 * @param key
@@ -60,7 +58,7 @@ public class OSMTag {
 	}
 
 	/**
-	 * Convenience method that constructs a new OSMTag with a new id from another OSMTag
+	 * Convenience method that constructs a new OSMTag with a new id from another OSMTag.
 	 * 
 	 * @param otherTag
 	 *            the OSMTag to copy
@@ -76,61 +74,61 @@ public class OSMTag {
 	/**
 	 * @return the id
 	 */
-	public short getId() {
+	public final short getId() {
 		return this.id;
 	}
 
 	/**
 	 * @return the key
 	 */
-	public String getKey() {
+	public final String getKey() {
 		return this.key;
 	}
 
 	/**
 	 * @return the value
 	 */
-	public String getValue() {
+	public final String getValue() {
 		return this.value;
 	}
 
 	/**
 	 * @return the zoomAppear
 	 */
-	public byte getZoomAppear() {
+	public final byte getZoomAppear() {
 		return this.zoomAppear;
 	}
 
 	/**
 	 * @return the renderable
 	 */
-	public boolean isRenderable() {
+	public final boolean isRenderable() {
 		return this.renderable;
 	}
 
 	/**
 	 * @return whether the tag represents a coastline
 	 */
-	public boolean isCoastline() {
+	public final boolean isCoastline() {
 		return this.key.equals("natural") && this.value.equals("coastline");
 	}
 
 	/**
 	 * @return the string representation of the OSMTag
 	 */
-	public String tagKey() {
+	public final String tagKey() {
 		return this.key + KEY_VALUE_SEPARATOR + this.value;
 	}
 
 	/**
 	 * @return the forcePolygonLine
 	 */
-	public boolean isForcePolygonLine() {
+	public final boolean isForcePolygonLine() {
 		return this.forcePolygonLine;
 	}
 
 	/**
-	 * Convenience method for generating a string representation of a key/value pair
+	 * Convenience method for generating a string representation of a key/value pair.
 	 * 
 	 * @param key
 	 *            the key of the tag
@@ -143,7 +141,7 @@ public class OSMTag {
 	}
 
 	@Override
-	public int hashCode() {
+	public final int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + this.id;
@@ -151,7 +149,7 @@ public class OSMTag {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public final boolean equals(Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)
@@ -165,7 +163,7 @@ public class OSMTag {
 	}
 
 	@Override
-	public String toString() {
+	public final String toString() {
 		return "OSMTag [id=" + this.id + ", key=" + this.key + ", value=" + this.value + ", zoomAppear="
 				+ this.zoomAppear + ", renderable=" + this.renderable + "]";
 	}

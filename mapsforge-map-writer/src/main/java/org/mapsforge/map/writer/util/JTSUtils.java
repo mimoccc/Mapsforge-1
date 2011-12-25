@@ -23,7 +23,10 @@ import com.vividsolutions.jts.geom.Coordinate;
 /**
  * @author bross
  */
-public abstract class JTSUtils {
+public final class JTSUtils {
+
+	private JTSUtils() {
+	}
 
 	private static Coordinate toCoordinate(int latitude, int longitude) {
 		return new Coordinate(GeoCoordinate.intToDouble(longitude), GeoCoordinate.intToDouble(latitude));

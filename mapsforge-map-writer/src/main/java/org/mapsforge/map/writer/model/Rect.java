@@ -41,8 +41,7 @@ public class Rect {
 	 */
 	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1, int minLon2,
 			int maxLon2, int minLat2, int maxLat2) {
-		boolean noOverlap = minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2 || minLat2 > maxLat1;
-		return !noOverlap;
+		return minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2 || minLat2 > maxLat1;
 	}
 
 	/**
@@ -156,10 +155,12 @@ public class Rect {
 	}
 
 	private void validate() {
-		if (this.minLatitudeE6 > this.maxLatitudeE6)
+		if (this.minLatitudeE6 > this.maxLatitudeE6) {
 			throw new IllegalArgumentException("minLat is greater than maxLat");
-		if (this.minLongitudeE6 > this.maxLongitudeE6)
+		}
+		if (this.minLongitudeE6 > this.maxLongitudeE6) {
 			throw new IllegalArgumentException("minLon is greater than maxLon");
+		}
 	}
 
 	/**
@@ -210,8 +211,9 @@ public class Rect {
 	 * @return the distance between this rectangle and the given one
 	 */
 	public double distance(Rect otherRect) {
-		if (overlaps(otherRect))
+		if (overlaps(otherRect)) {
 			return 0;
+		}
 
 		int dLat1, dLat2;
 		int dLon1, dLon2;

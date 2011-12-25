@@ -47,7 +47,11 @@ import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
  * 
  * @author bross
  */
-public abstract class GeoUtils {
+public final class GeoUtils {
+
+	private GeoUtils() {
+	}
+
 	private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.0000188;
 	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.00003;
 	/**
@@ -67,7 +71,7 @@ public abstract class GeoUtils {
 			256, 128, 64, 32, 16, 8, 4, 2, 1 };
 
 	// JTS
-	private static final GeometryFactory gf = new GeometryFactory();
+	private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
 	// **************** WAY OR POI IN TILE *****************
 	/**
@@ -119,8 +123,9 @@ public abstract class GeoUtils {
 	 * @return true if the point is located in the given tile
 	 */
 	public static boolean pointInTile(GeoCoordinate point, TileCoordinate tile) {
-		if (point == null || tile == null)
+		if (point == null || tile == null) {
 			return false;
+		}
 
 		int lon1 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(),
 				tile.getZoomlevel()));
@@ -208,12 +213,13 @@ public abstract class GeoUtils {
 	 * @return a 16 bit short value that represents the information which of the sub tiles needs to include the
 	 *         way
 	 */
-	public static short computeBitmask(final Geometry geometry, final TileCoordinate tile,
+	public static short computeBitmask(final Geometry geometry, final TileCoordinate tile, // NOPMD by bross on
+																							// 25.12.11 13:30
 			final int enlargementInMeter) {
 		List<TileCoordinate> subtiles = tile
 				.translateToZoomLevel((byte) (tile.getZoomlevel() + SUBTILE_ZOOMLEVEL_DIFFERENCE));
 
-		short bitmask = 0;
+		short bitmask = 0; // NOPMD by bross on 25.12.11 13:30
 		int tileCounter = 0;
 		for (TileCoordinate subtile : subtiles) {
 			Geometry bbox = tileToJTSGeometry(subtile.getX(), subtile.getY(), subtile.getZoomlevel(),
@@ -252,8 +258,9 @@ public abstract class GeoUtils {
 	 */
 	public static GeoCoordinate computeCentroid(Geometry geometry) {
 		Point centroid = geometry.getCentroid();
-		if (centroid != null)
+		if (centroid != null) {
 			return new GeoCoordinate(centroid.getCoordinate().y, centroid.getCoordinate().x);
+		}
 
 		return null;
 	}
@@ -312,8 +319,9 @@ public abstract class GeoUtils {
 	private static Geometry toJtsGeometry(TDWay way, List<TDWay> innerWays) {
 
 		Geometry wayGeometry = toJTSGeometry(way, !way.isForcePolygonLine());
-		if (wayGeometry == null)
+		if (wayGeometry == null) {
 			return null;
+		}
 
 		if (innerWays != null) {
 			List<LinearRing> innerWayGeometries = new ArrayList<LinearRing>();
@@ -327,8 +335,9 @@ public abstract class GeoUtils {
 				// in order to build the polygon with holes, we want to create
 				// linear rings of the inner ways
 				Geometry innerWayGeometry = toJTSGeometry(innerWay, false);
-				if (innerWayGeometry == null)
+				if (innerWayGeometry == null) {
 					continue;
+				}
 
 				if (!(innerWayGeometry instanceof LinearRing)) {
 					LOGGER.warning("inner way of multi polygon is not a polygon, skipping it, inner id: "
@@ -350,8 +359,9 @@ public abstract class GeoUtils {
 			if (!innerWayGeometries.isEmpty()) {
 				// make wayGeometry a new Polygon that contains inner ways as holes
 				LinearRing[] holes = innerWayGeometries.toArray(new LinearRing[innerWayGeometries.size()]);
-				LinearRing exterior = gf.createLinearRing(outerPolygon.getExteriorRing().getCoordinates());
-				wayGeometry = new Polygon(exterior, holes, gf);
+				LinearRing exterior = GEOMETRY_FACTORY.createLinearRing(outerPolygon.getExteriorRing()
+						.getCoordinates());
+				wayGeometry = new Polygon(exterior, holes, GEOMETRY_FACTORY);
 			}
 
 		}
@@ -388,14 +398,16 @@ public abstract class GeoUtils {
 		try {
 			// check for closed polygon
 			if (way.isPolygon()) {
-				if (area)
+				if (area) {
 					// polygon
-					res = gf.createPolygon(gf.createLinearRing(coordinates), null);
-				else
+					res = GEOMETRY_FACTORY.createPolygon(GEOMETRY_FACTORY.createLinearRing(coordinates), null);
+				} else {
 					// linear ring
-					res = gf.createLinearRing(coordinates);
-			} else
-				res = gf.createLineString(coordinates);
+					res = GEOMETRY_FACTORY.createLinearRing(coordinates);
+				}
+			} else {
+				res = GEOMETRY_FACTORY.createLineString(coordinates);
+			}
 		} catch (TopologyException e) {
 			LOGGER.log(Level.FINE, "error creating JTS geometry from way: " + way.getId(), e);
 			return null;
@@ -421,8 +433,9 @@ public abstract class GeoUtils {
 
 	private static double[] computeTileEnlargement(double lat, int enlargementInPixel) {
 
-		if (enlargementInPixel == 0)
-			return EPSILON_ZERO;
+		if (enlargementInPixel == 0) {
+			return EPSILON_ZERO; // NOPMD by bross on 25.12.11 13:32
+		}
 
 		double[] epsilons = new double[2];
 
@@ -433,8 +446,9 @@ public abstract class GeoUtils {
 	}
 
 	private static double[] bufferInDegrees(long tileY, byte zoom, int enlargementInMeter) {
-		if (enlargementInMeter == 0)
-			return EPSILON_ZERO;
+		if (enlargementInMeter == 0) {
+			return EPSILON_ZERO; // NOPMD by bross on 25.12.11 13:32
+		}
 
 		double[] epsilons = new double[2];
 		double lat = MercatorProjection.tileYToLatitude(tileY, zoom);
@@ -460,7 +474,7 @@ public abstract class GeoUtils {
 		Coordinate bottomLeft = new Coordinate(minLon, minLat);
 		Coordinate topRight = new Coordinate(maxLon, maxLat);
 
-		return gf.createLineString(new Coordinate[] { bottomLeft, topRight }).getEnvelope();
+		return GEOMETRY_FACTORY.createLineString(new Coordinate[] { bottomLeft, topRight }).getEnvelope();
 	}
 
 	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel, int enlargementInPixel) {

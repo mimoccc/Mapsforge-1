@@ -19,7 +19,10 @@ package org.mapsforge.map.writer.util;
  * 
  * @author bross
  */
-public interface Constants {
+public final class Constants {
+
+	private Constants() {
+	}
 
 	/**
 	 * The name of the property that refers to the version of the map file specification.

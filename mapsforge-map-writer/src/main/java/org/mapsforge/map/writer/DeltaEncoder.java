@@ -28,6 +28,9 @@ import org.mapsforge.map.writer.model.WayDataBlock;
  */
 public class DeltaEncoder {
 
+	private DeltaEncoder() {
+	}
+
 	/**
 	 * Encodes a list of WayDataBlock objects with the given encoding scheme.
 	 * 
@@ -39,11 +42,13 @@ public class DeltaEncoder {
 	 *         returned in case the encoding equals NONE.
 	 */
 	public static List<WayDataBlock> encode(List<WayDataBlock> blocks, Encoding encoding) {
-		if (blocks == null)
+		if (blocks == null) {
 			return null;
+		}
 
-		if (encoding == Encoding.NONE)
+		if (encoding == Encoding.NONE) {
 			return blocks;
+		}
 
 		List<WayDataBlock> results = new ArrayList<WayDataBlock>();
 
@@ -104,12 +109,14 @@ public class DeltaEncoder {
 	}
 
 	static List<Integer> deltaEncode(List<Integer> list) {
-		if (list == null)
+		if (list == null) {
 			return null;
+		}
 		ArrayList<Integer> result = new ArrayList<Integer>();
 
-		if (list.isEmpty())
+		if (list.isEmpty()) {
 			return result;
+		}
 
 		Iterator<Integer> it = list.iterator();
 		// add the first way node to the result list
@@ -122,7 +129,7 @@ public class DeltaEncoder {
 		while (it.hasNext()) {
 			Integer currentLat = it.next();
 			Integer currentLon = it.next();
-			result.add(Integer.valueOf((currentLat.intValue() - prevLat.intValue())));
+			result.add(Integer.valueOf(currentLat.intValue() - prevLat.intValue()));
 			result.add(Integer.valueOf(currentLon.intValue() - prevLon.intValue()));
 
 			prevLat = currentLat;
@@ -133,12 +140,14 @@ public class DeltaEncoder {
 	}
 
 	static List<Integer> doubleDeltaEncode(List<Integer> list) {
-		if (list == null)
+		if (list == null) {
 			return null;
+		}
 
 		ArrayList<Integer> result = new ArrayList<Integer>();
-		if (list.isEmpty())
+		if (list.isEmpty()) {
 			return result;
+		}
 
 		Iterator<Integer> it = list.iterator();
 		// add the first way node to the result list

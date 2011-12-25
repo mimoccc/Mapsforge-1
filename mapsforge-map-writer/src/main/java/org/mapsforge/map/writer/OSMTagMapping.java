@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
@@ -53,7 +54,7 @@ import org.xml.sax.SAXParseException;
  * 
  * @author bross
  */
-final public class OSMTagMapping {
+public final class OSMTagMapping {
 
 	private static OSMTagMapping mapping;
 
@@ -61,22 +62,20 @@ final public class OSMTagMapping {
 
 	// we use LinkedHashMaps as they guarantee to uphold the
 	// insertion order when iterating over the key or value "set"
-	private LinkedHashMap<String, OSMTag> stringToPoiTag = new LinkedHashMap<String, OSMTag>();
-	private LinkedHashMap<String, OSMTag> stringToWayTag = new LinkedHashMap<String, OSMTag>();
+	private final Map<String, OSMTag> stringToPoiTag = new LinkedHashMap<String, OSMTag>();
+	private final Map<String, OSMTag> stringToWayTag = new LinkedHashMap<String, OSMTag>();
 
-	private LinkedHashMap<Short, OSMTag> idToPoiTag = new LinkedHashMap<Short, OSMTag>();
-	private LinkedHashMap<Short, OSMTag> idToWayTag = new LinkedHashMap<Short, OSMTag>();
+	private final Map<Short, OSMTag> idToPoiTag = new LinkedHashMap<Short, OSMTag>();
+	private final Map<Short, OSMTag> idToWayTag = new LinkedHashMap<Short, OSMTag>();
 
-	private LinkedHashMap<Short, Set<OSMTag>> poiZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
-	private LinkedHashMap<Short, Set<OSMTag>> wayZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
+	private final Map<Short, Set<OSMTag>> poiZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
+	private final Map<Short, Set<OSMTag>> wayZoomOverrides = new LinkedHashMap<Short, Set<OSMTag>>();
 
-	private LinkedHashMap<Short, Short> optimizedPoiIds = new LinkedHashMap<Short, Short>();
-	private LinkedHashMap<Short, Short> optimizedWayIds = new LinkedHashMap<Short, Short>();
+	private final Map<Short, Short> optimizedPoiIds = new LinkedHashMap<Short, Short>();
+	private final Map<Short, Short> optimizedWayIds = new LinkedHashMap<Short, Short>();
 
-	private short poiID = 0;
-	private short wayID = 0;
-
-	private byte defaultZoomAppear;
+	private short poiID = 0; // NOPMD by bross on 25.12.11 14:06
+	private short wayID = 0; // NOPMD by bross on 25.12.11 14:06
 
 	private static final String XPATH_EXPRESSION_DEFAULT_ZOOM = "/tag-mapping/@default-zoom-appear";
 
@@ -91,7 +90,7 @@ final public class OSMTagMapping {
 	/**
 	 * @return a new instance
 	 */
-	public static OSMTagMapping getInstance() {
+	public static synchronized OSMTagMapping getInstance() {
 		if (mapping == null) {
 			mapping = getInstance(MapFileWriterTask.class.getClassLoader().getResource("tag-mapping.xml"));
 		}
@@ -113,8 +112,10 @@ final public class OSMTagMapping {
 		return mapping;
 	}
 
-	private OSMTagMapping(URL tagConf) throws IllegalStateException {
+	private OSMTagMapping(URL tagConf) {
 		try {
+			byte defaultZoomAppear;
+
 			// ---- Parse XML file ----
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -123,7 +124,7 @@ final public class OSMTagMapping {
 			XPath xpath = XPathFactory.newInstance().newXPath();
 
 			XPathExpression xe = xpath.compile(XPATH_EXPRESSION_DEFAULT_ZOOM);
-			this.defaultZoomAppear = Byte.parseByte((String) xe.evaluate(document, XPathConstants.STRING));
+			defaultZoomAppear = Byte.parseByte((String) xe.evaluate(document, XPathConstants.STRING));
 
 			final HashMap<Short, Set<String>> tmpPoiZoomOverrides = new HashMap<Short, Set<String>>();
 			final HashMap<Short, Set<String>> tmpWayZoomOverrides = new HashMap<Short, Set<String>>();
@@ -142,7 +143,7 @@ final public class OSMTagMapping {
 					equivalentValues = attributes.getNamedItem("equivalent-values").getTextContent().split(",");
 				}
 
-				byte zoom = attributes.getNamedItem("zoom-appear") == null ? this.defaultZoomAppear : Byte
+				byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear : Byte
 						.parseByte(attributes.getNamedItem("zoom-appear").getTextContent());
 
 				boolean renderable = attributes.getNamedItem("renderable") == null ? true : Boolean
@@ -203,7 +204,7 @@ final public class OSMTagMapping {
 					equivalentValues = attributes.getNamedItem("equivalent-values").getTextContent().split(",");
 				}
 
-				byte zoom = attributes.getNamedItem("zoom-appear") == null ? this.defaultZoomAppear : Byte
+				byte zoom = attributes.getNamedItem("zoom-appear") == null ? defaultZoomAppear : Byte
 						.parseByte(attributes.getNamedItem("zoom-appear").getTextContent());
 
 				boolean renderable = attributes.getNamedItem("renderable") == null ? true : Boolean
@@ -255,29 +256,31 @@ final public class OSMTagMapping {
 				Set<OSMTag> overriddenTags = new HashSet<OSMTag>();
 				for (String tagString : entry.getValue()) {
 					OSMTag tag = this.stringToPoiTag.get(tagString);
-					if (tag != null)
+					if (tag != null) {
 						overriddenTags.add(tag);
+					}
 				}
-				if (!overriddenTags.isEmpty())
+				if (!overriddenTags.isEmpty()) {
 					this.poiZoomOverrides.put(entry.getKey(), overriddenTags);
+				}
 			}
 
 			for (Entry<Short, Set<String>> entry : tmpWayZoomOverrides.entrySet()) {
 				Set<OSMTag> overriddenTags = new HashSet<OSMTag>();
 				for (String tagString : entry.getValue()) {
 					OSMTag tag = this.stringToWayTag.get(tagString);
-					if (tag != null)
+					if (tag != null) {
 						overriddenTags.add(tag);
+					}
 				}
-				if (!overriddenTags.isEmpty())
+				if (!overriddenTags.isEmpty()) {
 					this.wayZoomOverrides.put(entry.getKey(), overriddenTags);
+				}
 			}
 
 			// ---- Error handling ----
 		} catch (SAXParseException spe) {
-			System.out
-					.println("\n** Parsing error, line " + spe.getLineNumber() + ", uri " + spe.getSystemId());
-			System.out.println("   " + spe.getMessage());
+			LOGGER.severe("\n** Parsing error, line " + spe.getLineNumber() + ", uri " + spe.getSystemId());
 			throw new IllegalStateException(spe);
 		} catch (SAXException sxe) {
 			throw new IllegalStateException(sxe);
@@ -296,8 +299,9 @@ final public class OSMTagMapping {
 	 * @return the minimum zoom level of all tags in the tag set
 	 */
 	public byte getZoomAppearPOI(short[] tagSet) {
-		if (tagSet == null || tagSet.length == 0)
+		if (tagSet == null || tagSet.length == 0) {
 			return Byte.MAX_VALUE;
+		}
 
 		TShortHashSet tmp = new TShortHashSet(tagSet);
 
@@ -324,8 +328,9 @@ final public class OSMTagMapping {
 		byte zoomAppear = Byte.MAX_VALUE;
 		for (short s : tmp.toArray()) {
 			OSMTag tag = this.idToPoiTag.get(Short.valueOf(s));
-			if (tag.isRenderable())
+			if (tag.isRenderable()) {
 				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
+			}
 		}
 
 		return zoomAppear;
@@ -337,8 +342,9 @@ final public class OSMTagMapping {
 	 * @return the minimum zoom level of all the tags in the set
 	 */
 	public byte getZoomAppearWay(short[] tagSet) {
-		if (tagSet == null || tagSet.length == 0)
+		if (tagSet == null || tagSet.length == 0) {
 			return Byte.MAX_VALUE;
+		}
 
 		TShortHashSet tmp = new TShortHashSet(tagSet);
 
@@ -364,8 +370,9 @@ final public class OSMTagMapping {
 		byte zoomAppear = Byte.MAX_VALUE;
 		for (short s : tmp.toArray()) {
 			OSMTag tag = this.idToWayTag.get(Short.valueOf(s));
-			if (tag.isRenderable())
+			if (tag.isRenderable()) {
 				zoomAppear = (byte) Math.min(zoomAppear, tag.getZoomAppear());
+			}
 		}
 
 		return zoomAppear;
@@ -429,14 +436,14 @@ final public class OSMTagMapping {
 	/**
 	 * @return a mapping that maps original tag ids to the optimized ones
 	 */
-	public LinkedHashMap<Short, Short> optimizedPoiIds() {
+	public Map<Short, Short> getOptimizedPoiIds() {
 		return this.optimizedPoiIds;
 	}
 
 	/**
 	 * @return a mapping that maps original tag ids to the optimized ones
 	 */
-	public LinkedHashMap<Short, Short> optimizedWayIds() {
+	public Map<Short, Short> getOptimizedWayIds() {
 		return this.optimizedWayIds;
 	}
 
@@ -538,19 +545,25 @@ final public class OSMTagMapping {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj)
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+			if (getClass() != obj.getClass()) {
 				return false;
+			}
 			HistogramEntry other = (HistogramEntry) obj;
-			if (!getOuterType().equals(other.getOuterType()))
+			if (!getOuterType().equals(other.getOuterType())) {
 				return false;
-			if (this.amount != other.amount)
+			}
+			if (this.amount != other.amount) {
 				return false;
-			if (this.id != other.id)
+			}
+			if (this.id != other.id) {
 				return false;
+			}
 			return true;
 		}
 

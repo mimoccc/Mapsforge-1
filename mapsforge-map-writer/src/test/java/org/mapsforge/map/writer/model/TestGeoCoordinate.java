@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.writer.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -39,9 +41,9 @@ public class TestGeoCoordinate {
 		assertTrue(bundestag.getLongitude() == 13.3754);
 
 		GeoCoordinate bundestag2 = new GeoCoordinate(52.518590, 13.3754);
-		assertTrue(bundestag.equals(bundestag));
-		assertTrue(bundestag.equals(bundestag2));
-		assertTrue(!bundestag.equals(alex));
+		assertEquals(bundestag, bundestag);
+		assertEquals(bundestag, bundestag2);
+		assertFalse(bundestag.equals(alex));
 	}
 
 	/**
@@ -60,8 +62,6 @@ public class TestGeoCoordinate {
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLongitudeTest() {
 		GeoCoordinate invalidCoordinate = new GeoCoordinate(0d, 181d);
-		System.out.println(invalidCoordinate);
-
 	}
 
 	/**
@@ -70,7 +70,6 @@ public class TestGeoCoordinate {
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLatitudeTest() {
 		GeoCoordinate invalidCoordinate = new GeoCoordinate(91d, 0d);
-		System.out.println(invalidCoordinate);
 	}
 
 	/**

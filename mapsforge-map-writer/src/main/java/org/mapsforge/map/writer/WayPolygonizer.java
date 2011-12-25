@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
@@ -41,7 +42,7 @@ class WayPolygonizer {
 	private List<Deque<TDWay>> polygons;
 	private List<TDWay> dangling;
 	private List<TDWay> illegal;
-	private HashMap<Integer, List<Integer>> outerToInner;
+	private Map<Integer, List<Integer>> outerToInner;
 
 	/**
 	 * Tries to merge ways to closed polygons. The ordering of waynodes is preserved during the merge process.
@@ -64,20 +65,22 @@ class WayPolygonizer {
 
 			// first extract all way that are closed polygons in their own right
 			if (isClosedPolygon(tdWay)) {
-				if (tdWay.getWayNodes().length < MIN_NODES_POLYGON)
+				if (tdWay.getWayNodes().length < MIN_NODES_POLYGON) {
 					this.illegal.add(tdWay);
-				else {
+				} else {
 					Deque<TDWay> cluster = new ArrayDeque<TDWay>();
 					cluster.add(tdWay);
 					this.polygons.add(cluster);
 				}
-			} else
+			} else {
 				ungroupedWays.add(tdWay);
+			}
 		}
 
 		// all ways have been polygons, nice!
-		if (ungroupedWays.isEmpty())
+		if (ungroupedWays.isEmpty()) {
 			return;
+		}
 
 		if (ungroupedWays.size() == 1) {
 			this.dangling.add(ungroupedWays.getFirst());
@@ -125,7 +128,6 @@ class WayPolygonizer {
 					it.remove();
 					// add way to start of current polygon
 					currentPolygonSegments.offerFirst(current);
-
 				}
 				// // current way start connects to the start of the current polygon (reversed
 				// direction)
@@ -141,7 +143,6 @@ class WayPolygonizer {
 					it.remove();
 					// add way to end of current polygon
 					currentPolygonSegments.offerLast(current);
-
 				}
 				// // current way end connects to the end of the current polygon (reversed direction)
 				else if (endLast == currentLast) {
@@ -183,8 +184,9 @@ class WayPolygonizer {
 
 	void relatePolygons() {
 		this.outerToInner = new HashMap<Integer, List<Integer>>();
-		if (this.polygons.isEmpty())
+		if (this.polygons.isEmpty()) {
 			return;
+		}
 
 		Polygon[] polygonGeometries = new Polygon[this.polygons.size()];
 		int i = 0;
@@ -196,11 +198,13 @@ class WayPolygonizer {
 		this.outerToInner = new HashMap<Integer, List<Integer>>();
 		HashSet<Integer> inner = new HashSet<Integer>();
 		for (int k = 0; k < polygonGeometries.length; k++) {
-			if (inner.contains(Integer.valueOf(k)))
+			if (inner.contains(Integer.valueOf(k))) {
 				continue;
+			}
 			for (int l = k + 1; l < polygonGeometries.length; l++) {
-				if (inner.contains(Integer.valueOf(l)))
+				if (inner.contains(Integer.valueOf(l))) {
 					continue;
+				}
 
 				if (polygonGeometries[k].covers(polygonGeometries[l])) {
 					List<Integer> inners = this.outerToInner.get(Integer.valueOf(k));
@@ -223,8 +227,9 @@ class WayPolygonizer {
 			}
 
 			// single polygon without any inner polygons
-			if (!this.outerToInner.containsKey(Integer.valueOf(k)) && !inner.contains(Integer.valueOf(k)))
+			if (!this.outerToInner.containsKey(Integer.valueOf(k)) && !inner.contains(Integer.valueOf(k))) {
 				this.outerToInner.put(Integer.valueOf(k), null);
+			}
 
 		}
 	}
@@ -246,7 +251,7 @@ class WayPolygonizer {
 		return this.illegal;
 	}
 
-	HashMap<Integer, List<Integer>> getOuterToInner() {
+	Map<Integer, List<Integer>> getOuterToInner() {
 		return this.outerToInner;
 	}
 

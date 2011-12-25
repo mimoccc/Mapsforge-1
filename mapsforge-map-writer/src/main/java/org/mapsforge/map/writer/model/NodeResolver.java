@@ -22,7 +22,7 @@ package org.mapsforge.map.writer.model;
 public interface NodeResolver {
 
 	/**
-	 * resolves the node entity with the given id
+	 * Resolves the node entity with the given id.
 	 * 
 	 * @param id
 	 *            the id of the node entity

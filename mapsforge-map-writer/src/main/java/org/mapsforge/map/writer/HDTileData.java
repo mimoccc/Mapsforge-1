@@ -31,25 +31,26 @@ public class HDTileData extends TileData {
 	private final TLongArrayList ways;
 
 	HDTileData() {
+		super();
 		this.pois = new TLongArrayList();
 		this.ways = new TLongArrayList();
 	}
 
-	TLongArrayList getPois() {
+	final TLongArrayList getPois() {
 		return this.pois;
 	}
 
-	TLongArrayList getWays() {
+	final TLongArrayList getWays() {
 		return this.ways;
 	}
 
 	@Override
-	public void addPOI(TDNode poi) {
+	public final void addPOI(TDNode poi) {
 		this.pois.add(poi.getId());
 	}
 
 	@Override
-	public void addWay(TDWay way) {
+	public final void addWay(TDWay way) {
 		this.ways.add(way.getId());
 	}
 

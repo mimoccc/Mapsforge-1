@@ -15,17 +15,15 @@
 package org.mapsforge.map.writer.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.mapsforge.map.writer.model.GeoCoordinate;
-import org.mapsforge.map.writer.model.Rect;
 
 /**
  * Junit tests for the rectangle functions.
  * 
  * @author bross
- * 
  */
 public class TestRect {
 
@@ -125,12 +123,9 @@ public class TestRect {
 		assertEquals(0, r1.distance(r3), 0);
 		assertEquals(0, r1.distance(r4), 0);
 
-		assertEquals(GeoCoordinate.sphericalDistance(1000000, 51000000, 2000000, 52000000),
-				r1.distance(r5), 0);
-		assertEquals(GeoCoordinate.sphericalDistance(0, 50000000, -1000000, 49000000),
-				r1.distance(r6), 0);
-		assertEquals(GeoCoordinate.sphericalDistance(0, 50000000, 0, 49000000),
-				r1.distance(r7), 0);
+		assertEquals(GeoCoordinate.sphericalDistance(1000000, 51000000, 2000000, 52000000), r1.distance(r5), 0);
+		assertEquals(GeoCoordinate.sphericalDistance(0, 50000000, -1000000, 49000000), r1.distance(r6), 0);
+		assertEquals(GeoCoordinate.sphericalDistance(0, 50000000, 0, 49000000), r1.distance(r7), 0);
 	}
 
 	/**
@@ -152,7 +147,7 @@ public class TestRect {
 		assertTrue(r1.overlaps(r2));
 		assertTrue(r1.overlaps(r3));
 		assertTrue(r1.overlaps(r4));
-		assertTrue(!r1.overlaps(r5));
+		assertFalse(r1.overlaps(r5));
 
 	}
 

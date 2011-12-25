@@ -44,7 +44,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way;
  * 
  * @author bross
  */
-final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor {
+public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	private final TLongObjectHashMap<TDNode> nodes;
 	final TLongObjectHashMap<TDWay> ways;
 	private final TLongObjectHashMap<TDRelation> multipolygons;
@@ -72,7 +72,7 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	}
 
 	/**
-	 * Creates a new instance of a {@link RAMTileBasedDataProcessor}
+	 * Creates a new instance of a {@link RAMTileBasedDataProcessor}.
 	 * 
 	 * @param bbox
 	 *            the bounding box
@@ -86,7 +86,8 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	 */
 	public static RAMTileBasedDataProcessor newInstance(Rect bbox,
 			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement,
+				preferredLanguage);
 	}
 
 	/**
@@ -109,7 +110,8 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	public static TileBasedDataProcessor newInstance(double bottom, double top, double left, double right,
 			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
 		Rect bbox = new Rect(left, right, bottom, top);
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement,
+				preferredLanguage);
 	}
 
 	@Override
@@ -142,8 +144,9 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	@Override
 	public void addWay(Way way) {
 		TDWay tdWay = TDWay.fromWay(way, this, this.preferredLanguage);
-		if (tdWay == null)
+		if (tdWay == null) {
 			return;
+		}
 		this.ways.put(tdWay.getId(), tdWay);
 		this.maxWayID = Math.max(this.maxWayID, way.getId());
 
@@ -194,8 +197,9 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 		// check for valid range
 		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
 				|| this.tileData[zoom].length <= tileCoordinateXIndex
-				|| this.tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex)
+				|| this.tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex) {
 			return null;
+		}
 
 		RAMTileData td = this.tileData[zoom][tileCoordinateXIndex][tileCoordinateYIndex];
 		if (td == null) {
@@ -208,12 +212,14 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 
 	@Override
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
-		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
+		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL) {
 			return Collections.emptySet();
+		}
 		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
 		TLongHashSet coastlines = this.tilesToCoastlines.get(correspondingOceanTile);
-		if (coastlines == null)
+		if (coastlines == null) {
 			return Collections.emptySet();
+		}
 
 		final Set<TDWay> res = new HashSet<TDWay>();
 		coastlines.forEach(new TLongProcedure() {
@@ -238,19 +244,22 @@ final public class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	@Override
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
 		TLongArrayList innerwayIDs = this.outerToInnerMapping.get(outerWayID);
-		if (innerwayIDs == null)
+		if (innerwayIDs == null) {
 			return null;
+		}
 		return getInnerWaysOfMultipolygon(innerwayIDs.toArray());
 	}
 
 	private List<TDWay> getInnerWaysOfMultipolygon(long[] innerWayIDs) {
-		if (innerWayIDs == null)
+		if (innerWayIDs == null) {
 			return Collections.emptyList();
+		}
 		List<TDWay> res = new ArrayList<TDWay>();
 		for (long id : innerWayIDs) {
 			TDWay current = this.ways.get(id);
-			if (current == null)
+			if (current == null) {
 				continue;
+			}
 			res.add(current);
 		}
 

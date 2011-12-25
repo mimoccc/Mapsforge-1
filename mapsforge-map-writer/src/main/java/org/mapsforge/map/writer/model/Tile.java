@@ -24,8 +24,8 @@ public class Tile implements Comparable<Tile> {
 	/**
 	 * The tile size in pixel.
 	 */
-	public static final short TILE_SIZE = 256;
-	private final int hashCode;
+	public static final short TILE_SIZE = 256; // NOPMD by bross on 25.12.11 13:11
+	private final int mHashCode;
 	final long pixelX;
 	final long pixelY;
 	int renderPriority;
@@ -47,7 +47,7 @@ public class Tile implements Comparable<Tile> {
 		this.x = x;
 		this.y = y;
 		this.zoomLevel = zoomLevel;
-		this.hashCode = calculateHashCode();
+		this.mHashCode = calculateHashCode();
 		this.pixelX = x * TILE_SIZE;
 		this.pixelY = y * TILE_SIZE;
 		this.renderPriority = Integer.MAX_VALUE;
@@ -82,7 +82,7 @@ public class Tile implements Comparable<Tile> {
 
 	@Override
 	public int hashCode() {
-		return this.hashCode;
+		return this.mHashCode;
 	}
 
 	/**

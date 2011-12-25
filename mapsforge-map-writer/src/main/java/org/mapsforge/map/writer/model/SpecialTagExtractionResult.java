@@ -23,7 +23,7 @@ public class SpecialTagExtractionResult {
 	private final String ref;
 	private final String housenumber;
 	private final byte layer;
-	private final short elevation;
+	private final short elevation; // NOPMD by bross on 25.12.11 12:54
 	private final String type;
 
 	/**
@@ -40,7 +40,12 @@ public class SpecialTagExtractionResult {
 	 * @param type
 	 *            the type
 	 */
-	public SpecialTagExtractionResult(String name, String ref, String housenumber, byte layer, short elevation,
+	public SpecialTagExtractionResult(String name, String ref, String housenumber, byte layer, short elevation, // NOPMD
+																												// by
+																												// bross
+																												// on
+																												// 25.12.11
+																												// 12:54
 			String type) {
 		super();
 		this.name = name;
@@ -54,42 +59,42 @@ public class SpecialTagExtractionResult {
 	/**
 	 * @return the name
 	 */
-	public String getName() {
+	public final String getName() {
 		return this.name;
 	}
 
 	/**
 	 * @return the ref
 	 */
-	public String getRef() {
+	public final String getRef() {
 		return this.ref;
 	}
 
 	/**
 	 * @return the housenumber
 	 */
-	public String getHousenumber() {
+	public final String getHousenumber() {
 		return this.housenumber;
 	}
 
 	/**
 	 * @return the layer
 	 */
-	public byte getLayer() {
+	public final byte getLayer() {
 		return this.layer;
 	}
 
 	/**
 	 * @return the elevation
 	 */
-	public short getElevation() {
+	public final short getElevation() { // NOPMD by bross on 25.12.11 12:54
 		return this.elevation;
 	}
 
 	/**
 	 * @return the type
 	 */
-	public String getType() {
+	public final String getType() {
 		return this.type;
 	}
 

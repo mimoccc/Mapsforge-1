@@ -49,7 +49,7 @@ import org.openstreetmap.osmosis.core.store.SingleClassObjectSerializationFactor
  * 
  * @author bross
  */
-final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
+public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 
 	private final IndexedObjectStore<Node> indexedNodeStore;
 	private final IndexedObjectStore<Way> indexedWayStore;
@@ -94,7 +94,7 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	}
 
 	/**
-	 * Creates a new {@link HDTileBasedDataProcessor}
+	 * Creates a new {@link HDTileBasedDataProcessor}.
 	 * 
 	 * @param minLat
 	 *            the min latitude
@@ -112,14 +112,15 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	 *            the preferred language
 	 * @return a new instance of a {@link HDTileBasedDataProcessor}
 	 */
-	public static HDTileBasedDataProcessor newInstance(double minLat, double maxLat, double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
+	public static HDTileBasedDataProcessor newInstance(double minLat, double maxLat, double minLon,
+			double maxLon, ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement,
+			String preferredLanguage) {
 		return new HDTileBasedDataProcessor(minLat, maxLat, minLon, maxLon, zoomIntervalConfiguration,
 				bboxEnlargement, preferredLanguage);
 	}
 
 	/**
-	 * Creates a new {@link HDTileBasedDataProcessor}
+	 * Creates a new {@link HDTileBasedDataProcessor}.
 	 * 
 	 * @param bbox
 	 *            the bounding box
@@ -158,14 +159,16 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	@Override
 	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
 		TLongArrayList innerwayIDs = this.outerToInnerMapping.get(outerWayID);
-		if (innerwayIDs == null)
+		if (innerwayIDs == null) {
 			return null;
+		}
 		return getInnerWaysOfMultipolygon(innerwayIDs.toArray());
 	}
 
 	private List<TDWay> getInnerWaysOfMultipolygon(long[] innerWayIDs) {
-		if (innerWayIDs == null)
+		if (innerWayIDs == null) {
 			return Collections.emptyList();
+		}
 		List<TDWay> res = new ArrayList<TDWay>();
 		for (long id : innerWayIDs) {
 			TDWay current = null;
@@ -189,24 +192,28 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	@Override
 	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY) {
 		HDTileData hdt = getTileImpl(baseZoomIndex, tileCoordinateX, tileCoordinateY);
-		if (hdt == null)
+		if (hdt == null) {
 			return null;
+		}
 
 		return fromHDTileData(hdt);
 	}
 
 	@Override
 	public Set<TDWay> getCoastLines(TileCoordinate tc) {
-		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL)
+		if (tc.getZoomlevel() <= TileInfo.TILE_INFO_ZOOMLEVEL) {
 			return Collections.emptySet();
+		}
 		TileCoordinate correspondingOceanTile = tc.translateToZoomLevel(TileInfo.TILE_INFO_ZOOMLEVEL).get(0);
 
-		if (this.wayIndexReader == null)
+		if (this.wayIndexReader == null) {
 			throw new IllegalStateException("way store not accessible, call complete() first");
+		}
 
 		TLongHashSet coastlines = this.tilesToCoastlines.get(correspondingOceanTile);
-		if (coastlines == null)
+		if (coastlines == null) {
 			return Collections.emptySet();
+		}
 
 		TLongIterator it = coastlines.iterator();
 		HashSet<TDWay> coastlinesAsTDWay = new HashSet<TDWay>(coastlines.size());
@@ -218,8 +225,9 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 			} catch (NoSuchIndexElementException e) {
 				LOGGER.finer("coastline way non-existing" + id);
 			}
-			if (tdWay != null)
+			if (tdWay != null) {
 				coastlinesAsTDWay.add(tdWay);
+			}
 		}
 		return coastlinesAsTDWay;
 	}
@@ -247,8 +255,9 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 		WayHandler wayHandler = new WayHandler();
 		while (wayReader.hasNext()) {
 			TDWay way = TDWay.fromWay(wayReader.next(), this, this.preferredLanguage);
-			if (way == null)
+			if (way == null) {
 				continue;
+			}
 			List<TDRelation> associatedRelations = this.additionalRelationTags.get(way.getId());
 			if (associatedRelations != null) {
 				for (TDRelation tileDataRelation : associatedRelations) {
@@ -294,8 +303,9 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 
 	@Override
 	public TDNode getNode(long id) {
-		if (this.nodeIndexReader == null)
+		if (this.nodeIndexReader == null) {
 			throw new IllegalStateException("node store not accessible, call complete() first");
+		}
 
 		try {
 			return TDNode.fromNode(this.nodeIndexReader.get(id), this.preferredLanguage);
@@ -307,8 +317,9 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 
 	@Override
 	public TDWay getWay(long id) {
-		if (this.wayIndexReader == null)
+		if (this.wayIndexReader == null) {
 			throw new IllegalStateException("way store not accessible, call complete() first");
+		}
 
 		try {
 			return TDWay.fromWay(this.wayIndexReader.get(id), this, this.preferredLanguage);
@@ -325,8 +336,9 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 		// check for valid range
 		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
 				|| this.tileData[zoom].length <= tileCoordinateXIndex
-				|| this.tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex)
+				|| this.tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex) {
 			return null;
+		}
 
 		HDTileData td = this.tileData[zoom][tileCoordinateXIndex][tileCoordinateYIndex];
 		if (td == null) {
@@ -354,15 +366,17 @@ final public class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 			} catch (NoSuchIndexElementException e) {
 				// is it a virtual way?
 				way = this.virtualWays.get(id);
-				if (way != null)
+				if (way != null) {
 					td.addWay(way);
-				else
+				} else {
 					LOGGER.finer("referenced way non-existing" + id);
+				}
 			}
 
 			if (way != null) {
-				if (this.outerToInnerMapping.contains(way.getId()))
+				if (this.outerToInnerMapping.contains(way.getId())) {
 					way.setShape(TDWay.MULTI_POLYGON);
+				}
 
 				List<TDRelation> associatedRelations = this.additionalRelationTags.get(id);
 				if (associatedRelations != null) {

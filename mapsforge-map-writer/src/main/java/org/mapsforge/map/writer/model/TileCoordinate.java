@@ -108,19 +108,25 @@ public class TileCoordinate {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		TileCoordinate other = (TileCoordinate) obj;
-		if (this.x != other.x)
+		if (this.x != other.x) {
 			return false;
-		if (this.y != other.y)
+		}
+		if (this.y != other.y) {
 			return false;
-		if (this.zoomlevel != other.zoomlevel)
+		}
+		if (this.zoomlevel != other.zoomlevel) {
 			return false;
+		}
 		return true;
 	}
 

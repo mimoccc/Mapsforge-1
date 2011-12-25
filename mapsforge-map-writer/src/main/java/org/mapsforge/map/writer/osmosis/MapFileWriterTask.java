@@ -49,33 +49,27 @@ public class MapFileWriterTask implements Sink {
 	private static final Logger LOGGER = Logger.getLogger(MapFileWriterTask.class.getName());
 
 	private TileBasedDataProcessor tileBasedGeoObjectStore;
-	static OSMTagMapping TAG_MAPPING;
-
-	// temporary node data
-	// IndexStore<Long, MapNode> indexStore;
 
 	// Accounting
 	private int amountOfNodesProcessed = 0;
 	private int amountOfWaysProcessed = 0;
 	private int amountOfRelationsProcessed = 0;
-	private int amountOfMultipolygons = 0;
 
 	// configuration parameters
-	private File outFile;
-	private GeoCoordinate mapStartPosition;
-	private boolean debugInfo;
+	private final File outFile;
+	private final GeoCoordinate mapStartPosition;
+	private final boolean debugInfo;
 	// private boolean waynodeCompression;
-	private boolean pixelFilter;
-	private boolean polygonClipping;
-	private boolean wayClipping;
-	private String comment;
-	private ZoomIntervalConfiguration zoomIntervalConfiguration;
-	private String type;
-	private int bboxEnlargement;
-	private String preferredLanguage;
+	private final boolean pixelFilter;
+	private final boolean polygonClipping;
+	private final boolean wayClipping;
+	private final String comment;
+	private final ZoomIntervalConfiguration zoomIntervalConfiguration;
+	private final String type;
+	private final int bboxEnlargement;
+	private final String preferredLanguage;
 
-	private String vWriter;
-	private int vSpecification;
+	private final int vSpecification;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String comment,
 			String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter,
@@ -88,20 +82,23 @@ public class MapFileWriterTask implements Sink {
 
 		Properties properties = new Properties();
 		try {
-			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties"));
+			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties")); // NOPMD by bross on 25.12.11 13:43
 		} catch (IOException e) {
-			throw new RuntimeException("could not find default properties", e);
+			throw new RuntimeException("could not find default properties", e); // NOPMD by bross on 25.12.11
+																				// 13:36
 		}
 
-		this.vWriter = properties.getProperty(Constants.PROPERTY_NAME_WRITER_VERSION);
+		String vWriter = properties.getProperty(Constants.PROPERTY_NAME_WRITER_VERSION);
 		try {
 			this.vSpecification = Integer.parseInt(properties
 					.getProperty(Constants.PROPERTY_NAME_FILE_SPECIFICATION_VERSION));
 		} catch (NumberFormatException e) {
-			throw new RuntimeException("map file specification version is not an integer", e);
+			throw new RuntimeException("map file specification version is not an integer", e); // NOPMD by bross
+																								// on 25.12.11
+																								// 13:36
 		}
 
-		LOGGER.info("mapfile-writer version " + this.vWriter);
+		LOGGER.info("mapfile-writer version " + vWriter);
 		LOGGER.info("mapfile format specification version " + this.vSpecification);
 
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate.fromString(mapStartPosition);
@@ -131,16 +128,18 @@ public class MapFileWriterTask implements Sink {
 				.fromString(zoomIntervalConfigurationString);
 
 		this.type = type;
-		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd"))
+		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd")) {
 			throw new IllegalArgumentException("type argument must equal ram or hd, found: " + type);
+		}
 
 		if (bbox != null) {
-			if (type.equalsIgnoreCase("ram"))
+			if (type.equalsIgnoreCase("ram")) {
 				this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bbox,
 						this.zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
-			else
+			} else {
 				this.tileBasedGeoObjectStore = HDTileBasedDataProcessor.newInstance(bbox,
 						this.zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+			}
 		}
 		this.bboxEnlargement = bboxEnlargement;
 		this.preferredLanguage = preferredLanguage;
@@ -170,7 +169,9 @@ public class MapFileWriterTask implements Sink {
 			RandomAccessFile file = new RandomAccessFile(this.outFile, "rw");
 			MapFileWriter mfw = new MapFileWriter(this.tileBasedGeoObjectStore, file, this.bboxEnlargement);
 			// mfw.writeFileWithDebugInfos(System.currentTimeMillis(), 1, (short) 256);
-			mfw.writeFile(System.currentTimeMillis(), this.vSpecification, (short) 256, this.comment,
+			mfw.writeFile(System.currentTimeMillis(), this.vSpecification,
+					(short) 256, // NOPMD by bross on 25.12.11 13:38
+					this.comment, // NOPMD by bross on 25.12.11 13:36
 					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter,
 					this.mapStartPosition, this.preferredLanguage);
 		} catch (IOException e) {
@@ -181,9 +182,8 @@ public class MapFileWriterTask implements Sink {
 		LOGGER.fine("total processed nodes: " + nfCounts.format(this.amountOfNodesProcessed));
 		LOGGER.fine("total processed ways: " + nfCounts.format(this.amountOfWaysProcessed));
 		LOGGER.fine("total processed relations: " + nfCounts.format(this.amountOfRelationsProcessed));
-		LOGGER.fine("total processed multipolygons: " + this.amountOfMultipolygons);
 
-		System.gc();
+		System.gc(); // NOPMD by bross on 25.12.11 13:37
 		LOGGER.info("estimated memory consumption: "
 				+ nfMegabyte
 						.format(+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Math
@@ -205,14 +205,15 @@ public class MapFileWriterTask implements Sink {
 			case Bound:
 				Bound bound = (Bound) entity;
 				if (this.tileBasedGeoObjectStore == null) {
-					if (this.type.equalsIgnoreCase("ram"))
+					if (this.type.equalsIgnoreCase("ram")) {
 						this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bound.getBottom(),
 								bound.getTop(), bound.getLeft(), bound.getRight(),
 								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
-					else
+					} else {
 						this.tileBasedGeoObjectStore = HDTileBasedDataProcessor.newInstance(bound.getBottom(),
 								bound.getTop(), bound.getLeft(), bound.getRight(),
 								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
+					}
 				}
 				LOGGER.info("start reading data...");
 				break;
@@ -254,8 +255,6 @@ public class MapFileWriterTask implements Sink {
 				this.amountOfRelationsProcessed++;
 				entity = null;
 				break;
-			default:
-				System.out.println(entity.getTags());
 		}
 
 	}

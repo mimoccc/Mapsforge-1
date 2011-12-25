@@ -51,7 +51,7 @@ public class TDWay {
 	private final byte layer;
 	private String name;
 	private String ref;
-	private short[] tags;
+	private short[] tags; // NOPMD by bross on 25.12.11 13:04
 	private byte shape;
 	private final TDNode[] wayNodes;
 	private boolean reversedInRelation;
@@ -72,7 +72,7 @@ public class TDWay {
 			return null;
 
 		SpecialTagExtractionResult ster = OSMUtils.extractSpecialFields(way, preferredLanguage);
-		short[] knownWayTags = OSMUtils.extractKnownWayTags(way);
+		short[] knownWayTags = OSMUtils.extractKnownWayTags(way); // NOPMD by bross on 25.12.11 13:04
 
 		// only ways with at least 2 way nodes are valid ways
 		if (way.getWayNodes().size() >= 2) {
@@ -154,7 +154,12 @@ public class TDWay {
 	 * @param wayNodes
 	 *            the way nodes
 	 */
-	public TDWay(long id, byte layer, String name, String ref, short[] tags, byte shape, TDNode[] wayNodes) {
+	public TDWay(long id, byte layer, String name, String ref, short[] tags, byte shape, TDNode[] wayNodes) { // NOPMD
+																												// by
+																												// bross
+																												// on
+																												// 25.12.11
+																												// 13:04
 		this.id = id;
 		this.layer = layer;
 		this.name = name;
@@ -171,12 +176,15 @@ public class TDWay {
 	 *            the relation
 	 */
 	public void mergeRelationInformation(TDRelation relation) {
-		if (relation.hasTags())
+		if (relation.hasTags()) {
 			addTags(relation.getTags());
-		if (getName() == null && relation.getName() != null)
+		}
+		if (getName() == null && relation.getName() != null) {
 			setName(relation.getName());
-		if (getRef() == null && relation.getRef() != null)
+		}
+		if (getRef() == null && relation.getRef() != null) {
 			setRef(relation.getRef());
+		}
 	}
 
 	/**
@@ -219,15 +227,15 @@ public class TDWay {
 	/**
 	 * @return the tags
 	 */
-	public short[] getTags() {
-		return this.tags;
+	public short[] getTags() { // NOPMD by bross on 25.12.11 13:04
+		return this.tags; // NOPMD by bross on 25.12.11 13:07
 	}
 
 	/**
 	 * @param tags
 	 *            the tags to set
 	 */
-	public void setTags(short[] tags) {
+	public void setTags(short[] tags) { // NOPMD by bross on 25.12.11 13:04
 		this.tags = tags;
 	}
 
@@ -275,10 +283,10 @@ public class TDWay {
 				&& !getRef().isEmpty();
 	}
 
-	private void addTags(short[] addendum) {
-		if (this.tags == null)
+	private void addTags(short[] addendum) { // NOPMD by bross on 25.12.11 13:04
+		if (this.tags == null) {
 			this.tags = addendum;
-		else {
+		} else {
 			TShortSet tags2 = new TShortHashSet();
 			tags2.addAll(this.tags);
 			tags2.addAll(addendum);
@@ -299,13 +307,15 @@ public class TDWay {
 	 * @return true, if the way represents a coastline
 	 */
 	public boolean isCoastline() {
-		if (this.tags == null)
+		if (this.tags == null) {
 			return false;
+		}
 		OSMTag tag;
-		for (short tagID : this.tags) {
+		for (short tagID : this.tags) { // NOPMD by bross on 25.12.11 13:04
 			tag = OSMTagMapping.getInstance().getWayTag(tagID);
-			if (tag.isCoastline())
+			if (tag.isCoastline()) {
 				return true;
+			}
 		}
 
 		return false;
@@ -315,7 +325,7 @@ public class TDWay {
 	 * @return the way nodes
 	 */
 	public TDNode[] getWayNodes() {
-		return this.wayNodes;
+		return this.wayNodes; // NOPMD by bross on 25.12.11 13:07
 	}
 
 	/**
@@ -342,7 +352,7 @@ public class TDWay {
 			return false;
 		}
 		OSMTagMapping mapping = OSMTagMapping.getInstance();
-		for (short tag : this.tags) {
+		for (short tag : this.tags) { // NOPMD by bross on 25.12.11 13:05
 			if (mapping.getWayTag(tag).isForcePolygonLine()) {
 				return true;
 			}
@@ -360,15 +370,19 @@ public class TDWay {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		TDWay other = (TDWay) obj;
-		if (this.id != other.id)
+		if (this.id != other.id) {
 			return false;
+		}
 		return true;
 	}
 
