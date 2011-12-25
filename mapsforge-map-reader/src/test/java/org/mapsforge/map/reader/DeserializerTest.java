@@ -12,11 +12,11 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.mapreader;
+package org.mapsforge.map.reader;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mapsforge.mapreader.Deserializer;
+import org.mapsforge.map.reader.Deserializer;
 
 /**
  * Tests the {@link Deserializer} class.

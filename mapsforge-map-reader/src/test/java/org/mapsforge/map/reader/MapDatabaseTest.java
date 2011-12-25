@@ -12,13 +12,13 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.mapreader;
+package org.mapsforge.map.reader;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mapsforge.mapreader.FileOpenResult;
-import org.mapsforge.mapreader.MapDatabase;
-import org.mapsforge.mapreader.MapFileInfo;
+import org.mapsforge.map.reader.FileOpenResult;
+import org.mapsforge.map.reader.MapDatabase;
+import org.mapsforge.map.reader.MapFileInfo;
 
 /**
  * Tests the {@link MapDatabase} class.
