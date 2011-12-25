@@ -41,7 +41,7 @@ public class Rect {
 	 */
 	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1, int minLon2,
 			int maxLon2, int minLat2, int maxLat2) {
-		return minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2 || minLat2 > maxLat1;
+		return !(minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2 || minLat2 > maxLat1);
 	}
 
 	/**
