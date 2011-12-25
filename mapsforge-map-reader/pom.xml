@@ -51,6 +51,10 @@
 							<location>../eclipse-config/.pmd</location>
 						</file>
 						<file>
+							<name>.pmd_ruleset.xml</name>
+							<location>../eclipse-config/.pmd_ruleset.xml</location>
+						</file>
+						<file>
 							<name>.settings/org.eclipse.core.resources.prefs</name>
 							<location>../eclipse-config/.settings/org.eclipse.core.resources.prefs</location>
 						</file>
