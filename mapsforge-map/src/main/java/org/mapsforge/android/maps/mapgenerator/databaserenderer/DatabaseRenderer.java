@@ -32,9 +32,9 @@ import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
-import org.mapsforge.mapdatabase.MapDatabase;
-import org.mapsforge.mapdatabase.MapDatabaseCallback;
-import org.mapsforge.mapdatabase.MapFileInfo;
+import org.mapsforge.map.reader.MapDatabase;
+import org.mapsforge.map.reader.MapDatabaseCallback;
+import org.mapsforge.map.reader.MapFileInfo;
 import org.xml.sax.SAXException;
 
 import android.graphics.Bitmap;

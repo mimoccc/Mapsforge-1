@@ -16,7 +16,6 @@ package org.mapsforge.map.reader;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mapsforge.map.reader.Deserializer;
 
 /**
  * Tests the {@link Deserializer} class.

@@ -16,9 +16,6 @@ package org.mapsforge.map.reader;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mapsforge.map.reader.FileOpenResult;
-import org.mapsforge.map.reader.MapDatabase;
-import org.mapsforge.map.reader.MapFileInfo;
 
 /**
  * Tests the {@link MapDatabase} class.

@@ -17,8 +17,8 @@ package org.mapsforge.applications.android.advancedmapviewer.filefilter;
 import java.io.File;
 import java.io.FileFilter;
 
-import org.mapsforge.mapdatabase.FileOpenResult;
-import org.mapsforge.mapdatabase.MapDatabase;
+import org.mapsforge.map.reader.FileOpenResult;
+import org.mapsforge.map.reader.MapDatabase;
 
 /**
  * Accepts all valid map files.

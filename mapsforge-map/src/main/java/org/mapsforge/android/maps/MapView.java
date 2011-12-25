@@ -39,8 +39,8 @@ import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
 import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
-import org.mapsforge.mapdatabase.FileOpenResult;
-import org.mapsforge.mapdatabase.MapDatabase;
+import org.mapsforge.map.reader.FileOpenResult;
+import org.mapsforge.map.reader.MapDatabase;
 
 import android.content.Context;
 import android.graphics.Bitmap;

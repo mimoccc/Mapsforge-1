@@ -42,7 +42,7 @@ import org.mapsforge.applications.android.advancedmapviewer.filepicker.FilePicke
 import org.mapsforge.applications.android.advancedmapviewer.preferences.EditPreferences;
 import org.mapsforge.core.BoundingBox;
 import org.mapsforge.core.GeoPoint;
-import org.mapsforge.mapdatabase.MapFileInfo;
+import org.mapsforge.map.reader.MapFileInfo;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
