@@ -95,7 +95,7 @@ public final class OSMUtils {
 				} else if (preferredLanguage != null && !foundPreferredLanguageName) {
 					Matcher matcher = NAME_LANGUAGE_PATTERN.matcher(key);
 					if (matcher.matches()) {
-						String language = matcher.group(2);
+						String language = matcher.group(3);
 						if (language.equalsIgnoreCase(preferredLanguage)) {
 							name = tag.getValue();
 							foundPreferredLanguageName = true;
