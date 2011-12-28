@@ -254,18 +254,19 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 		ReleasableIterator<Way> wayReader = this.wayStore.iterate();
 		WayHandler wayHandler = new WayHandler();
 		while (wayReader.hasNext()) {
-			TDWay way = TDWay.fromWay(wayReader.next(), this, this.preferredLanguage);
-			if (way == null) {
+			Way way = wayReader.next();
+			TDWay tdWay = TDWay.fromWay(way, this, this.preferredLanguage);
+			if (tdWay == null) {
 				continue;
 			}
-			List<TDRelation> associatedRelations = this.additionalRelationTags.get(way.getId());
+			List<TDRelation> associatedRelations = this.additionalRelationTags.get(tdWay.getId());
 			if (associatedRelations != null) {
 				for (TDRelation tileDataRelation : associatedRelations) {
-					way.mergeRelationInformation(tileDataRelation);
+					tdWay.mergeRelationInformation(tileDataRelation);
 				}
 			}
 
-			wayHandler.execute(way);
+			wayHandler.execute(tdWay);
 		}
 
 		OSMTagMapping.getInstance().optimizePoiOrdering(this.histogramPoiTags);

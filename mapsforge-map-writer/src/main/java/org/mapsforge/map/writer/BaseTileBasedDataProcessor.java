@@ -18,6 +18,7 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.map.hash.TShortIntHashMap;
 import gnu.trove.procedure.TObjectProcedure;
+import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	protected final String preferredLanguage;
 
 	protected final TLongObjectHashMap<TLongArrayList> outerToInnerMapping;
+	protected final TLongSet innerWaysWithoutAdditionalTags;
 	protected final Map<TileCoordinate, TLongHashSet> tilesToCoastlines;
 
 	// accounting
@@ -83,6 +85,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 		this.preferredLanguage = preferredLanguage;
 
 		this.outerToInnerMapping = new TLongObjectHashMap<TLongArrayList>();
+		this.innerWaysWithoutAdditionalTags = new TLongHashSet();
 		this.tilesToCoastlines = new HashMap<TileCoordinate, TLongHashSet>();
 
 		this.countWays = new float[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
@@ -397,6 +400,22 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 					if (innerSegments.size() == 1) {
 						innerWay = innerSegments.getFirst();
+						if (innerWay.hasTags() && outer.hasTags()) {
+							short[] iTags = innerWay.getTags();
+							short[] oTags = outer.getTags();
+							int contained = 0;
+							for (short iTagID : iTags) {
+								for (short oTagID : oTags) {
+									if (iTagID == oTagID) {
+										contained++;
+									}
+								}
+							}
+							if (contained == iTags.length) {
+								BaseTileBasedDataProcessor.this.innerWaysWithoutAdditionalTags.add(innerWay
+										.getId());
+							}
+						}
 					} else {
 						List<TDNode> waynodeList = new ArrayList<TDNode>();
 						for (TDWay innerSegment : innerSegments) {
@@ -435,8 +454,11 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 			}
 			// we only consider ways that have tags and which have not already
 			// added as outer way of a relation
+			// inner ways without additional tags are also not considered as they are processed as part of a
+			// multi polygon
 			if (way.isRenderRelevant()
-					&& !BaseTileBasedDataProcessor.this.outerToInnerMapping.contains(way.getId())) {
+					&& !BaseTileBasedDataProcessor.this.outerToInnerMapping.contains(way.getId())
+					&& !BaseTileBasedDataProcessor.this.innerWaysWithoutAdditionalTags.contains(way.getId())) {
 				addWayToTiles(way, BaseTileBasedDataProcessor.this.bboxEnlargement);
 			}
 
