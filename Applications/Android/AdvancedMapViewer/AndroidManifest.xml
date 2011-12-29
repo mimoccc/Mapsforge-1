@@ -7,7 +7,7 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-	<uses-sdk android:minSdkVersion="3" android:targetSdkVersion="10" />
+	<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="10" />
 	<application android:icon="@drawable/globe" android:label="@string/application_name">
 		<activity android:name=".AdvancedMapViewer" android:theme="@android:style/Theme.NoTitleBar">
 			<intent-filter>
