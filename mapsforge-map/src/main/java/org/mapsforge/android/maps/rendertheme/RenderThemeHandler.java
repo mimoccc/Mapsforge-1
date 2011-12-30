@@ -203,12 +203,7 @@ public class RenderThemeHandler extends DefaultHandler {
 		Logger.exception(exception);
 	}
 
-	private void checkState(String elementName, Element element) throws SAXException {
-		foo(elementName, element);
-		this.elementStack.push(element);
-	}
-
-	private void foo(String elementName, Element element) throws SAXException {
+	private void checkElement(String elementName, Element element) throws SAXException {
 		switch (element) {
 			case RENDER_THEME:
 				if (!this.elementStack.empty()) {
@@ -231,5 +226,10 @@ public class RenderThemeHandler extends DefaultHandler {
 		}
 
 		throw new SAXException("unknown enum value: " + element);
+	}
+
+	private void checkState(String elementName, Element element) throws SAXException {
+		checkElement(elementName, element);
+		this.elementStack.push(element);
 	}
 }
