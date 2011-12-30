@@ -127,10 +127,8 @@ final class QueryCalculations {
 
 	static void calculateBlocks(QueryParameters queryParameters, SubFileParameter subFileParameter) {
 		// calculate the blocks in the file which need to be read
-		queryParameters.fromBlockX = Math.max(
-				queryParameters.fromBaseTileX - subFileParameter.boundaryTileLeft, 0);
-		queryParameters.fromBlockY = Math.max(queryParameters.fromBaseTileY - subFileParameter.boundaryTileTop,
-				0);
+		queryParameters.fromBlockX = Math.max(queryParameters.fromBaseTileX - subFileParameter.boundaryTileLeft, 0);
+		queryParameters.fromBlockY = Math.max(queryParameters.fromBaseTileY - subFileParameter.boundaryTileTop, 0);
 		queryParameters.toBlockX = Math.min(queryParameters.toBaseTileX - subFileParameter.boundaryTileLeft,
 				subFileParameter.blocksWidth - 1);
 		queryParameters.toBlockY = Math.min(queryParameters.toBaseTileY - subFileParameter.boundaryTileTop,

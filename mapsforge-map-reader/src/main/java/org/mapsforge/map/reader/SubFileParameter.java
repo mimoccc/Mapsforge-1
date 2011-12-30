@@ -14,7 +14,6 @@
  */
 package org.mapsforge.map.reader;
 
-import org.mapsforge.core.BoundingBox;
 import org.mapsforge.core.MercatorProjection;
 
 /**
@@ -101,42 +100,23 @@ class SubFileParameter {
 	 */
 	final byte zoomLevelMin;
 
-	/**
-	 * Constructs an immutable SubFileParameter with the given values.
-	 * 
-	 * @param startAddress
-	 *            the start address of the sub-file.
-	 * @param indexStartAddress
-	 *            the start address of the index.
-	 * @param subFileSize
-	 *            the size of the sub-file.
-	 * @param baseZoomLevel
-	 *            the base zoom level of the sub-file.
-	 * @param tileZoomLevelMin
-	 *            the minimum zoom level of the sub-file.
-	 * @param tileZoomLevelMax
-	 *            the maximum zoom level of the sub-file.
-	 * @param boundingBox
-	 *            the boundary of the sub-file.
-	 */
-	SubFileParameter(long startAddress, long indexStartAddress, long subFileSize, byte baseZoomLevel,
-			byte tileZoomLevelMin, byte tileZoomLevelMax, BoundingBox boundingBox) {
-		this.startAddress = startAddress;
-		this.indexStartAddress = indexStartAddress;
-		this.subFileSize = subFileSize;
-		this.baseZoomLevel = baseZoomLevel;
-		this.zoomLevelMin = tileZoomLevelMin;
-		this.zoomLevelMax = tileZoomLevelMax;
+	SubFileParameter(SubFileParameterBuilder subFileParameterBuilder) {
+		this.startAddress = subFileParameterBuilder.startAddress;
+		this.indexStartAddress = subFileParameterBuilder.indexStartAddress;
+		this.subFileSize = subFileParameterBuilder.subFileSize;
+		this.baseZoomLevel = subFileParameterBuilder.baseZoomLevel;
+		this.zoomLevelMin = subFileParameterBuilder.zoomLevelMin;
+		this.zoomLevelMax = subFileParameterBuilder.zoomLevelMax;
 		this.hashCodeValue = calculateHashCode();
 
 		// calculate the XY numbers of the boundary tiles in this map file
-		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(boundingBox.minLatitudeE6
+		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(subFileParameterBuilder.boundingBox.minLatitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(boundingBox.minLongitudeE6
+		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(subFileParameterBuilder.boundingBox.minLongitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileTop = MercatorProjection.latitudeToTileY(boundingBox.maxLatitudeE6
+		this.boundaryTileTop = MercatorProjection.latitudeToTileY(subFileParameterBuilder.boundingBox.maxLatitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
-		this.boundaryTileRight = MercatorProjection.longitudeToTileX(boundingBox.maxLongitudeE6
+		this.boundaryTileRight = MercatorProjection.longitudeToTileX(subFileParameterBuilder.boundingBox.maxLongitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 
 		// calculate the horizontal and vertical amount of blocks in this map file

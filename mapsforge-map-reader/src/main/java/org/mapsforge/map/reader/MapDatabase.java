@@ -184,8 +184,8 @@ public class MapDatabase {
 	private int tileLongitude;
 
 	/**
-	 * Closes the map file and destroys all internal caches. This method has no effect if no map file is
-	 * currently opened.
+	 * Closes the map file and destroys all internal caches. This method has no effect if no map file is currently
+	 * opened.
 	 */
 	public void closeFile() {
 		try {
@@ -221,8 +221,7 @@ public class MapDatabase {
 			queryParameters.queryZoomLevel = this.mapFileHeader.getQueryZoomLevel(tile.zoomLevel);
 
 			// get and check the sub-file for the query zoom level
-			SubFileParameter subFileParameter = this.mapFileHeader
-					.getSubFileParameter(queryParameters.queryZoomLevel);
+			SubFileParameter subFileParameter = this.mapFileHeader.getSubFileParameter(queryParameters.queryZoomLevel);
 			if (subFileParameter == null) {
 				LOG.warning("no sub-file for zoom level: " + queryParameters.queryZoomLevel);
 				return;
@@ -402,8 +401,7 @@ public class MapDatabase {
 				long blockNumber = row * subFileParameter.blocksWidth + column;
 
 				// get the current index entry
-				long currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(subFileParameter,
-						blockNumber);
+				long currentBlockIndexEntry = this.databaseIndexCache.getIndexEntry(subFileParameter, blockNumber);
 
 				// check if the current query would still return a water tile
 				if (queryIsWater) {
@@ -464,10 +462,12 @@ public class MapDatabase {
 				}
 
 				// calculate the top-left coordinates of the underlying tile
-				this.tileLatitude = (int) (MercatorProjection.tileYToLatitude(subFileParameter.boundaryTileTop
-						+ row, subFileParameter.baseZoomLevel) * 1000000);
-				this.tileLongitude = (int) (MercatorProjection.tileXToLongitude(
-						subFileParameter.boundaryTileLeft + column, subFileParameter.baseZoomLevel) * 1000000);
+				double tileLatitudeDeg = MercatorProjection.tileYToLatitude(subFileParameter.boundaryTileTop + row,
+						subFileParameter.baseZoomLevel);
+				double tileLongitudeDeg = MercatorProjection.tileXToLongitude(subFileParameter.boundaryTileLeft
+						+ column, subFileParameter.baseZoomLevel);
+				this.tileLatitude = (int) (tileLatitudeDeg * 1000000);
+				this.tileLongitude = (int) (tileLongitudeDeg * 1000000);
 
 				try {
 					processBlock(queryParameters, subFileParameter, mapDatabaseCallback);

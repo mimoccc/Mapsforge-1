@@ -60,8 +60,8 @@ class ReadBuffer {
 	}
 
 	/**
-	 * Reads the given amount of bytes from the file into the read buffer and resets the internal buffer
-	 * position. If the capacity of the read buffer is too small, a larger one is created automatically.
+	 * Reads the given amount of bytes from the file into the read buffer and resets the internal buffer position. If
+	 * the capacity of the read buffer is too small, a larger one is created automatically.
 	 * 
 	 * @param length
 	 *            the amount of bytes to read from the file.
@@ -124,8 +124,8 @@ class ReadBuffer {
 	/**
 	 * Converts a variable amount of bytes from the read buffer to a signed int.
 	 * <p>
-	 * The first bit is for continuation info, the other six (last byte) or seven (all other bytes) bits are for
-	 * data. The second bit in the last byte indicates the sign of the number.
+	 * The first bit is for continuation info, the other six (last byte) or seven (all other bytes) bits are for data.
+	 * The second bit in the last byte indicates the sign of the number.
 	 * 
 	 * @return the int value.
 	 */
@@ -189,8 +189,7 @@ class ReadBuffer {
 		if (stringLength > 0 && this.bufferPosition + stringLength <= this.bufferData.length) {
 			this.bufferPosition += stringLength;
 			try {
-				return new String(this.bufferData, this.bufferPosition - stringLength, stringLength,
-						CHARSET_UTF8);
+				return new String(this.bufferData, this.bufferPosition - stringLength, stringLength, CHARSET_UTF8);
 			} catch (UnsupportedEncodingException e) {
 				throw new IllegalStateException(e);
 			}

@@ -178,8 +178,7 @@ class MapFileHeader {
 		return FileOpenResult.SUCCESS;
 	}
 
-	private static FileOpenResult readMapStartPosition(ReadBuffer readBuffer,
-			MapFileInfoBuilder mapFileInfoBuilder) {
+	private static FileOpenResult readMapStartPosition(ReadBuffer readBuffer, MapFileInfoBuilder mapFileInfoBuilder) {
 		if (mapFileInfoBuilder.hasStartPosition) {
 			// get and check the start position latitude (4 byte)
 			int mapStartLatitude = readBuffer.readInt();
@@ -218,8 +217,7 @@ class MapFileHeader {
 		return FileOpenResult.SUCCESS;
 	}
 
-	private static FileOpenResult readProjectionName(ReadBuffer readBuffer,
-			MapFileInfoBuilder mapFileInfoBuilder) {
+	private static FileOpenResult readProjectionName(ReadBuffer readBuffer, MapFileInfoBuilder mapFileInfoBuilder) {
 		// get and check the projection name
 		String projectionName = readBuffer.readUTF8EncodedString();
 		if (!MERCATOR.equals(projectionName)) {
@@ -294,23 +292,28 @@ class MapFileHeader {
 
 		// get and check the information for each sub-file
 		for (byte currentSubFile = 0; currentSubFile < numberOfSubFiles; ++currentSubFile) {
+			SubFileParameterBuilder subFileParameterBuilder = new SubFileParameterBuilder();
+
 			// get and check the base zoom level (1 byte)
 			byte baseZoomLevel = readBuffer.readByte();
 			if (baseZoomLevel < 0 || baseZoomLevel > BASE_ZOOM_LEVEL_MAX) {
 				return new FileOpenResult("invalid base zooom level: " + baseZoomLevel);
 			}
+			subFileParameterBuilder.baseZoomLevel = baseZoomLevel;
 
 			// get and check the minimum zoom level (1 byte)
 			byte zoomLevelMin = readBuffer.readByte();
 			if (zoomLevelMin < 0 || zoomLevelMin > 22) {
 				return new FileOpenResult("invalid minimum zoom level: " + zoomLevelMin);
 			}
+			subFileParameterBuilder.zoomLevelMin = zoomLevelMin;
 
 			// get and check the maximum zoom level (1 byte)
 			byte zoomLevelMax = readBuffer.readByte();
 			if (zoomLevelMax < 0 || zoomLevelMax > 22) {
 				return new FileOpenResult("invalid maximum zoom level: " + zoomLevelMax);
 			}
+			subFileParameterBuilder.zoomLevelMax = zoomLevelMax;
 
 			// check for valid zoom level range
 			if (zoomLevelMin > zoomLevelMax) {
@@ -322,22 +325,26 @@ class MapFileHeader {
 			if (startAddress < HEADER_SIZE_MIN || startAddress >= fileSize) {
 				return new FileOpenResult("invalid start address: " + startAddress);
 			}
+			subFileParameterBuilder.startAddress = startAddress;
 
 			long indexStartAddress = startAddress;
 			if (mapFileInfoBuilder.isDebugFile) {
 				// the sub-file has an index signature before the index
 				indexStartAddress += SIGNATURE_LENGTH_INDEX;
 			}
+			subFileParameterBuilder.indexStartAddress = indexStartAddress;
 
 			// get and check the size of the sub-file (8 bytes)
 			long subFileSize = readBuffer.readLong();
 			if (subFileSize < 1) {
 				return new FileOpenResult("invalid sub-file size: " + subFileSize);
 			}
+			subFileParameterBuilder.subFileSize = subFileSize;
+
+			subFileParameterBuilder.boundingBox = mapFileInfoBuilder.boundingBox;
 
 			// add the current sub-file to the list of sub-files
-			tempSubFileParameters[currentSubFile] = new SubFileParameter(startAddress, indexStartAddress,
-					subFileSize, baseZoomLevel, zoomLevelMin, zoomLevelMax, mapFileInfoBuilder.boundingBox);
+			tempSubFileParameters[currentSubFile] = subFileParameterBuilder.build();
 
 			updateZoomLevelInformation(tempSubFileParameters[currentSubFile]);
 		}

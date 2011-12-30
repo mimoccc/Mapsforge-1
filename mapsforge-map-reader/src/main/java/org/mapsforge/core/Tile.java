@@ -19,9 +19,8 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
- * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y number
- * together with their zoom level. The actual area that a tile covers on a map depends on the underlying map
- * projection.
+ * A tile represents a rectangular part of the world map. All tiles can be identified by their X and Y number together
+ * with their zoom level. The actual area that a tile covers on a map depends on the underlying map projection.
  */
 public class Tile implements Serializable {
 	/**

@@ -69,8 +69,8 @@ class IndexCache {
 	}
 
 	/**
-	 * Returns the index entry of a block in the given map file. If the required index entry is not cached, it
-	 * will be read from the map file index and put in the cache.
+	 * Returns the index entry of a block in the given map file. If the required index entry is not cached, it will be
+	 * read from the map file index and put in the cache.
 	 * 
 	 * @param subFileParameter
 	 *            the parameters of the map file for which the index entry is needed.
@@ -98,8 +98,7 @@ class IndexCache {
 				indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
 
 				// seek to the correct index block in the file and read it
-				this.inputFile
-						.seek(subFileParameter.indexStartAddress + indexBlockNumber * SIZE_OF_INDEX_BLOCK);
+				this.inputFile.seek(subFileParameter.indexStartAddress + indexBlockNumber * SIZE_OF_INDEX_BLOCK);
 				if (this.inputFile.read(indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
 					LOG.warning("reading the current index block has failed");
 					return -1;
