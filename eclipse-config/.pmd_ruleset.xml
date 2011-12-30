@@ -49,7 +49,11 @@
 	</rule>
 	<rule ref="rulesets/codesize.xml/ExcessiveClassLength" />
 	<rule ref="rulesets/codesize.xml/ExcessiveMethodLength" />
-	<rule ref="rulesets/codesize.xml/ExcessiveParameterList" />
+	<rule ref="rulesets/codesize.xml/ExcessiveParameterList">
+		<properties>
+			<property name="minimum" value="7" />
+		</properties>
+	</rule>
 	<rule ref="rulesets/codesize.xml/ExcessivePublicCount" />
 	<rule ref="rulesets/codesize.xml/NcssConstructorCount" />
 	<rule ref="rulesets/codesize.xml/NcssMethodCount" />
