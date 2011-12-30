@@ -129,8 +129,7 @@ public class RenderThemeHandler extends DefaultHandler {
 	}
 
 	@Override
-	public void startElement(String uri, String localName, String qName, Attributes attributes)
-			throws SAXException {
+	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 		try {
 			if (ELEMENT_NAME_RENDER_THEME.equals(localName)) {
 				checkState(localName, Element.RENDER_THEME);
