@@ -75,10 +75,9 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 /**
- * A map application which uses the features from the mapsforge map library. The map can be centered to the
- * current location. A simple file browser for selecting the map file is also included. Some preferences can be
- * adjusted via the {@link EditPreferences} activity and screenshots of the map may be taken in different image
- * formats.
+ * A map application which uses the features from the mapsforge map library. The map can be centered to the current
+ * location. A simple file browser for selecting the map file is also included. Some preferences can be adjusted via the
+ * {@link EditPreferences} activity and screenshots of the map may be taken in different image formats.
  */
 public class AdvancedMapViewer extends MapActivity {
 	public static final int FILE_SYSTEM_CACHE_SIZE_DEFAULT = 250;
@@ -323,8 +322,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			this.itemizedOverlay = new ArrayItemizedOverlay(null);
 			this.overlayItem = new OverlayItem();
-			this.overlayItem.setMarker(ItemizedOverlay.boundCenter(getResources().getDrawable(
-					R.drawable.my_location)));
+			this.overlayItem.setMarker(ItemizedOverlay.boundCenter(getResources().getDrawable(R.drawable.my_location)));
 			this.itemizedOverlay.addItem(this.overlayItem);
 			this.mapView.getOverlays().add(this.itemizedOverlay);
 
@@ -365,8 +363,8 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Centers the map to the last known position as reported by the most accurate location provider. If the
-	 * last location is unknown, a toast message is displayed instead.
+	 * Centers the map to the last known position as reported by the most accurate location provider. If the last
+	 * location is unknown, a toast message is displayed instead.
 	 */
 	private void gotoLastKnownPosition() {
 		Location currentLocation;
@@ -414,8 +412,7 @@ public class AdvancedMapViewer extends MapActivity {
 					this.mapView.setMapFile(data.getStringExtra(FilePicker.SELECTED_FILE));
 				}
 			} else {
-				if (resultCode == RESULT_CANCELED
-						&& !this.mapView.getMapViewMode().requiresInternetConnection()
+				if (resultCode == RESULT_CANCELED && !this.mapView.getMapViewMode().requiresInternetConnection()
 						&& this.mapView.getMapFile() == null) {
 					finish();
 				}
@@ -493,12 +490,14 @@ public class AdvancedMapViewer extends MapActivity {
 					disableSnapToLocation(true);
 
 					// set the map center and zoom level
-					AdvancedMapViewer.this.mapController.setCenter(new GeoPoint(Double
-							.parseDouble(((EditText) view.findViewById(R.id.latitude)).getText().toString()),
-							Double.parseDouble(((EditText) view.findViewById(R.id.longitude)).getText()
-									.toString())));
-					AdvancedMapViewer.this.mapController.setZoom(((SeekBar) view.findViewById(R.id.zoomlevel))
-							.getProgress());
+					EditText latitudeView = (EditText) view.findViewById(R.id.latitude);
+					EditText longitudeView = (EditText) view.findViewById(R.id.longitude);
+					double latitude = Double.parseDouble(latitudeView.getText().toString());
+					double longitude = Double.parseDouble(longitudeView.getText().toString());
+					GeoPoint geoPoint = new GeoPoint(latitude, longitude);
+					AdvancedMapViewer.this.mapController.setCenter(geoPoint);
+					SeekBar zoomLevelView = (SeekBar) view.findViewById(R.id.zoomLevel);
+					AdvancedMapViewer.this.mapController.setZoom(zoomLevelView.getProgress());
 				}
 			});
 			builder.setNegativeButton(R.string.cancel, null);
@@ -556,7 +555,7 @@ public class AdvancedMapViewer extends MapActivity {
 			editText.setText(Double.toString(mapCenter.getLongitude()));
 
 			// zoom level
-			SeekBar zoomlevel = (SeekBar) dialog.findViewById(R.id.zoomlevel);
+			SeekBar zoomlevel = (SeekBar) dialog.findViewById(R.id.zoomLevel);
 			zoomlevel.setMax(this.mapView.getMapGenerator().getZoomLevelMax());
 			zoomlevel.setProgress(this.mapView.getMapPosition().getZoomLevel());
 
@@ -662,8 +661,7 @@ public class AdvancedMapViewer extends MapActivity {
 		boolean drawTileFrames = preferences.getBoolean("drawTileFrames", false);
 		boolean drawTileCoordinates = preferences.getBoolean("drawTileCoordinates", false);
 		boolean highlightWaterTiles = preferences.getBoolean("highlightWaterTiles", false);
-		DebugSettings debugSettings = new DebugSettings(drawTileCoordinates, drawTileFrames,
-				highlightWaterTiles);
+		DebugSettings debugSettings = new DebugSettings(drawTileCoordinates, drawTileFrames, highlightWaterTiles);
 		this.mapView.setDebugSettings(debugSettings);
 
 		// check if the file browser needs to be displayed
@@ -750,8 +748,8 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Displays a text message via the toast notification system. If a previous message is still visible, the
-	 * previous message is first removed.
+	 * Displays a text message via the toast notification system. If a previous message is still visible, the previous
+	 * message is first removed.
 	 * 
 	 * @param text
 	 *            the text message to display

@@ -29,9 +29,9 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 /**
- * This abstract class provides all code for a seek bar preference. Deriving classes only need to set the
- * current and maximum value of the seek bar. An optional text message above the seek bar is also supported as
- * well as an optional current value message below the seek bar.
+ * This abstract class provides all code for a seek bar preference. Deriving classes only need to set the current and
+ * maximum value of the seek bar. An optional text message above the seek bar is also supported as well as an optional
+ * current value message below the seek bar.
  */
 abstract class SeekBarPreference extends DialogPreference implements OnSeekBarChangeListener {
 	private TextView currentValueTextView;
