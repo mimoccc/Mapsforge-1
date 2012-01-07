@@ -142,6 +142,16 @@ public class MapDatabase {
 	private static final String TAG_KEY_REF = "ref";
 
 	/**
+	 * Bitmask for the optional way data blocks byte.
+	 */
+	private static final int WAY_FEATURE_BITMASK_DATA_BLOCKS_BYTE = 0x10;
+
+	/**
+	 * Bitmask for the optional way double delta encoding.
+	 */
+	private static final int WAY_FEATURE_BITMASK_DOUBLE_DELTA_ENCODING = 0x08;
+
+	/**
 	 * Bitmask for the optional way feature "label position".
 	 */
 	private static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
@@ -301,6 +311,64 @@ public class MapDatabase {
 			// make sure that the file is closed
 			closeFile();
 			return new FileOpenResult(e.getMessage());
+		}
+	}
+
+	private void decodeWayNodesDoubleDelta(float[] waySegment) {
+		// get the first way node latitude offset (VBE-S)
+		int wayNodeLatitude = this.tileLatitude + this.readBuffer.readSignedInt();
+
+		// get the first way node longitude offset (VBE-S)
+		int wayNodeLongitude = this.tileLongitude + this.readBuffer.readSignedInt();
+
+		// store the first way node
+		waySegment[1] = wayNodeLatitude;
+		waySegment[0] = wayNodeLongitude;
+
+		int previousDoubleDeltaLatitude = 0;
+		int previousDoubleDeltaLongitude = 0;
+
+		for (int wayNodesIndex = 2; wayNodesIndex < waySegment.length; wayNodesIndex += 2) {
+			// get the way node latitude double-delta offset (VBE-S)
+			int doubleDeltaLatitude = this.readBuffer.readSignedInt();
+
+			// get the way node longitude double-delta offset (VBE-S)
+			int doubleDeltaLongitude = this.readBuffer.readSignedInt();
+
+			int singleDeltaLatitude = doubleDeltaLatitude + previousDoubleDeltaLatitude;
+			int singleDeltaLongitude = doubleDeltaLongitude + previousDoubleDeltaLongitude;
+
+			wayNodeLatitude = wayNodeLatitude + singleDeltaLatitude;
+			wayNodeLongitude = wayNodeLongitude + singleDeltaLongitude;
+
+			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
+			waySegment[wayNodesIndex] = wayNodeLongitude;
+
+			previousDoubleDeltaLatitude = doubleDeltaLatitude;
+			previousDoubleDeltaLongitude = doubleDeltaLongitude;
+		}
+	}
+
+	private void decodeWayNodesSingleDelta(float[] waySegment) {
+		// get the first way node latitude single-delta offset (VBE-S)
+		int wayNodeLatitude = this.tileLatitude + this.readBuffer.readSignedInt();
+
+		// get the first way node longitude single-delta offset (VBE-S)
+		int wayNodeLongitude = this.tileLongitude + this.readBuffer.readSignedInt();
+
+		// store the first way node
+		waySegment[1] = wayNodeLatitude;
+		waySegment[0] = wayNodeLongitude;
+
+		for (int wayNodesIndex = 2; wayNodesIndex < waySegment.length; wayNodesIndex += 2) {
+			// get the way node latitude offset (VBE-S)
+			wayNodeLatitude = wayNodeLatitude + this.readBuffer.readSignedInt();
+
+			// get the way node longitude offset (VBE-S)
+			wayNodeLongitude = wayNodeLongitude + this.readBuffer.readSignedInt();
+
+			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
+			waySegment[wayNodesIndex] = wayNodeLongitude;
 		}
 	}
 
@@ -583,7 +651,7 @@ public class MapDatabase {
 		return true;
 	}
 
-	private float[][] processWayDataBlock() {
+	private float[][] processWayDataBlock(boolean doubleDeltaEncoding) {
 		// get and check the number of coordinate blocks (1 byte)
 		byte numberOfCoordinateBlocks = this.readBuffer.readByte();
 		if (numberOfCoordinateBlocks < 1) {
@@ -611,26 +679,10 @@ public class MapDatabase {
 			// create the array which will store the current way segment
 			float[] waySegment = new float[wayNodesSequenceLength];
 
-			// get the first way node latitude offset (VBE-S)
-			int wayNodeLatitude = this.tileLatitude + this.readBuffer.readSignedInt();
-
-			// get the first way node longitude offset (VBE-S)
-			int wayNodeLongitude = this.tileLongitude + this.readBuffer.readSignedInt();
-
-			// store the first way node
-			waySegment[1] = wayNodeLatitude;
-			waySegment[0] = wayNodeLongitude;
-
-			// get the remaining way nodes offsets
-			for (int wayNodesIndex = 2; wayNodesIndex < wayNodesSequenceLength; wayNodesIndex += 2) {
-				// get the way node latitude offset (VBE-S)
-				wayNodeLatitude = wayNodeLatitude + this.readBuffer.readSignedInt();
-
-				// get the way node longitude offset (VBE-S)
-				wayNodeLongitude = wayNodeLongitude + this.readBuffer.readSignedInt();
-
-				waySegment[wayNodesIndex + 1] = wayNodeLatitude;
-				waySegment[wayNodesIndex] = wayNodeLongitude;
+			if (doubleDeltaEncoding) {
+				decodeWayNodesDoubleDelta(waySegment);
+			} else {
+				decodeWayNodesSingleDelta(waySegment);
 			}
 
 			wayCoordinates[coordinateBlock] = waySegment;
@@ -717,6 +769,8 @@ public class MapDatabase {
 			boolean featureName = (featureByte & WAY_FEATURE_BITMASK_NAME) != 0;
 			boolean featureRef = (featureByte & WAY_FEATURE_BITMASK_REF) != 0;
 			boolean featureLabelPosition = (featureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
+			boolean featureWayDataBlocksByte = (featureByte & WAY_FEATURE_BITMASK_DATA_BLOCKS_BYTE) != 0;
+			boolean featureWayDoubleDeltaEncoding = (featureByte & WAY_FEATURE_BITMASK_DOUBLE_DELTA_ENCODING) != 0;
 
 			// check if the way has a name
 			if (featureName) {
@@ -730,16 +784,25 @@ public class MapDatabase {
 
 			float[] labelPosition = readOptionalLabelPosition(featureLabelPosition);
 
-			// get and check the number of way data blocks (1 byte)
-			byte wayDataBlocks = this.readBuffer.readByte();
-			if (wayDataBlocks < 1) {
-				LOG.warning("invalid number of way data blocks: " + wayDataBlocks);
-				logDebugSignatures();
-				return false;
+			int wayDataBlocks;
+			if (featureWayDataBlocksByte) {
+				// get and check the number of way data blocks (VBE-U)
+				wayDataBlocks = this.readBuffer.readUnsignedInt();
+				if (wayDataBlocks < 1) {
+					LOG.warning("invalid number of way data blocks: " + wayDataBlocks);
+					logDebugSignatures();
+					return false;
+				} else if (wayDataBlocks == 1) {
+					LOG.info("redundant way data blocks byte with value 1");
+					logDebugSignatures();
+				}
+			} else {
+				// only one way data block exists
+				wayDataBlocks = 1;
 			}
 
-			for (byte wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
-				float[][] wayNodes = processWayDataBlock();
+			for (int wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
+				float[][] wayNodes = processWayDataBlock(featureWayDoubleDeltaEncoding);
 				if (wayNodes == null) {
 					return false;
 				}
