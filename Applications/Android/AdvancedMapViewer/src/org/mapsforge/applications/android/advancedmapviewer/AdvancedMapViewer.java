@@ -92,6 +92,9 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final int DIALOG_LOCATION_PROVIDER_DISABLED = 2;
 	private static final FileFilter FILE_FILTER_EXTENSION_MAP = new FilterByFileExtension(".map");
 	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FilterByFileExtension(".xml");
+	private static final int ONE_GIGABYTE = 1000000000;
+	private static final int ONE_KILOBYTE = 1000;
+	private static final int ONE_MEGABYTE = 1000000;
 	private static final String SCREENSHOT_DIRECTORY = "Pictures";
 	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
 	private static final int SCREENSHOT_QUALITY = 90;
@@ -352,13 +355,13 @@ public class AdvancedMapViewer extends MapActivity {
 			// plural, including zero
 			return fileSize + " " + getString(R.string.file_size_bytes);
 		} else {
-			DecimalFormat decimalFormat = new DecimalFormat("#.0 ");
-			if (fileSize < 1000000) { // less than 1 MB
-				return decimalFormat.format(fileSize / 1000d) + getString(R.string.file_size_kb);
-			} else if (fileSize < 1000000000) { // less than 1 GB
-				return decimalFormat.format(fileSize / 1000000d) + getString(R.string.file_size_mb);
+			DecimalFormat decimalFormat = new DecimalFormat("#.00 ");
+			if (fileSize < ONE_MEGABYTE) { // less than 1 MB
+				return decimalFormat.format(fileSize / (double) ONE_KILOBYTE) + getString(R.string.file_size_kb);
+			} else if (fileSize < ONE_GIGABYTE) { // less than 1 GB
+				return decimalFormat.format(fileSize / (double) ONE_MEGABYTE) + getString(R.string.file_size_mb);
 			}
-			return decimalFormat.format(fileSize / 1000000000d) + getString(R.string.file_size_gb);
+			return decimalFormat.format(fileSize / (double) ONE_GIGABYTE) + getString(R.string.file_size_gb);
 		}
 	}
 
