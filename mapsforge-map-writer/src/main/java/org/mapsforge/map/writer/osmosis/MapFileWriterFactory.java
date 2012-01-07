@@ -29,6 +29,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
 	private static final String DEFAULT_PARAM_TYPE = "ram";
 	private static final int DEFAULT_PARAM_BBOX_ENLARGEMENT = 20;
+	private static final String DEFAULT_PARAM_ENCODING = "single";
 
 	private static final String PARAM_OUTFILE = "file";
 	private static final String PARAM_BBOX = "bbox";
@@ -45,6 +46,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
 	private static final String PARAM_PREFERRED_LANGUAGE = "language-preference";
+	private static final String PARAM_ENCODING = "encoding";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
@@ -66,9 +68,10 @@ class MapFileWriterFactory extends TaskManagerFactory {
 				DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
+		String encoding = getStringArgument(taskConfig, PARAM_ENCODING, DEFAULT_PARAM_ENCODING);
 		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition, mapStartZoom, comment,
 				zoomConf, debug, pixelFilter, polygonClipping, wayClipping, type, bboxEnlargement, tagConfFile,
-				preferredLanguage);
+				preferredLanguage, encoding);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

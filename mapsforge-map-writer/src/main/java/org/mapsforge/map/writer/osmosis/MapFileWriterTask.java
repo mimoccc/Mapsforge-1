@@ -27,6 +27,7 @@ import org.mapsforge.map.writer.HDTileBasedDataProcessor;
 import org.mapsforge.map.writer.MapFileWriter;
 import org.mapsforge.map.writer.OSMTagMapping;
 import org.mapsforge.map.writer.RAMTileBasedDataProcessor;
+import org.mapsforge.map.writer.model.EncodingChoice;
 import org.mapsforge.map.writer.model.GeoCoordinate;
 import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TileBasedDataProcessor;
@@ -69,13 +70,14 @@ public class MapFileWriterTask implements Sink {
 	private final String type;
 	private final int bboxEnlargement;
 	private final String preferredLanguage;
+	private final EncodingChoice encoding;
 
 	private final int vSpecification;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String mapStartZoom,
 			String comment, String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter,
 			boolean polygonClipping, boolean wayClipping, String type, int bboxEnlargement, String tagConfFile,
-			String preferredLanguage) {
+			String preferredLanguage, String encoding) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException("file parameter points to a directory, must be a file");
@@ -163,6 +165,9 @@ public class MapFileWriterTask implements Sink {
 		}
 		this.bboxEnlargement = bboxEnlargement;
 		this.preferredLanguage = preferredLanguage;
+
+		this.encoding = EncodingChoice.fromString(encoding);
+
 	}
 
 	/*
@@ -193,7 +198,7 @@ public class MapFileWriterTask implements Sink {
 					(short) 256, // NOPMD by bross on 25.12.11 13:38
 					this.comment, // NOPMD by bross on 25.12.11 13:36
 					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter,
-					this.mapStartPosition, this.mapStartZoom, this.preferredLanguage);
+					this.mapStartPosition, this.mapStartZoom, this.preferredLanguage, this.encoding);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}

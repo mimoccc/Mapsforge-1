@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.mapsforge.map.writer.model.Encoding;
+import org.mapsforge.map.writer.model.EncodingChoice;
 import org.mapsforge.map.writer.model.GeoCoordinate;
 import org.mapsforge.map.writer.model.MercatorProjection;
 import org.mapsforge.map.writer.model.OSMTag;
@@ -87,8 +88,9 @@ public class MapFileWriter {
 	// bitmap flags for ways
 	private static final short BITMAP_REF = 64; // NOPMD by bross on 25.12.11 13:52
 	private static final short BITMAP_LABEL = 32; // NOPMD by bross on 25.12.11 13:52
-	// private static final short BITMAP_MULTIPOLYGON = 16;
-	// private static final short BITMAP_POLYGON = 8;
+	private static final short BITMAP_MULTIPLE_WAY_BLOCKS = 16;
+	// TODO write encoding bit
+	private static final short BITMAP_ENCODING = 8;
 
 	// bitmap flags for file features
 	private static final short BITMAP_DEBUG = 128; // NOPMD by bross on 25.12.11 13:53
@@ -182,12 +184,15 @@ public class MapFileWriter {
 	 *            the initial zoom level
 	 * @param preferredLanguage
 	 *            a preferred language
+	 * @param encoding
+	 *            the preferred encoding
 	 * @throws IOException
 	 *             thrown if any IO exception occurred during the writing process
 	 */
 	public final void writeFile(long date, int version, short tilePixel, String comment, boolean debugStrings,
 			boolean polygonClipping, boolean wayClipping, boolean pixelCompression,
-			GeoCoordinate mapStartPosition, byte mapStartZoom, String preferredLanguage) throws IOException {
+			GeoCoordinate mapStartPosition, byte mapStartZoom, String preferredLanguage, EncodingChoice encoding)
+			throws IOException {
 
 		// CONTAINER HEADER
 		long totalHeaderSize = writeContainerHeader(date, version, tilePixel, comment, debugStrings,
@@ -201,7 +206,7 @@ public class MapFileWriter {
 		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
 			long subfileSize = writeSubfile(currentFileSize, i, debugStrings, polygonClipping, wayClipping,
-					pixelCompression);
+					pixelCompression, encoding);
 			// SUB FILE META DATA IN CONTAINER HEADER
 			writeSubfileMetaDataToContainerHeader(i, currentFileSize, subfileSize);
 			currentFileSize += subfileSize;
@@ -384,10 +389,11 @@ public class MapFileWriter {
 		this.bufferZoomIntervalConfig.putLong(subfileSize);
 	}
 
-	private long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,
+	private long writeSubfile(final long startPositionSubfile,
+			final int zoomIntervalIndex,
 			final boolean debugStrings, // final boolean waynodeCompression,
-			final boolean polygonClipping, final boolean wayClipping, final boolean pixelCompression)
-			throws IOException {
+			final boolean polygonClipping, final boolean wayClipping, final boolean pixelCompression,
+			EncodingChoice encoding) throws IOException {
 
 		LOGGER.fine("writing data for zoom interval " + zoomIntervalIndex + ", number of tiles: "
 				+ this.dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal()
@@ -572,7 +578,7 @@ public class MapFileWriter {
 							wayBuffer.clear();
 
 							WayPreprocessingResult wpr = preprocessWay(way, pixelCompression, polygonClipping,
-									wayClipping, currentTileCoordinate);
+									wayClipping, currentTileCoordinate, encoding);
 
 							if (wpr == null) {
 								// exclude this way
@@ -602,8 +608,8 @@ public class MapFileWriter {
 							}
 
 							// write a byte with flags for existence of name,
-							// ref and label position
-							wayBuffer.put(infoByteWayFeatures(way, wpr.getLabelPosition() != null));
+							// ref, label position, and multiple blocks
+							wayBuffer.put(infoByteWayFeatures(way, wpr));
 
 							// // if the way has a name, write it to the file
 							if (way.getName() != null && !way.getName().isEmpty()) {
@@ -627,8 +633,11 @@ public class MapFileWriter {
 										.getLongitudeE6() - firstWayStartLon));
 							}
 
-							// write the amount of way data blocks
-							wayBuffer.put((byte) wpr.getWayDataBlocks().size());
+							if (wpr.getWayDataBlocks().size() > 1) {
+								// write the amount of way data blocks
+								wayBuffer
+										.put(Serializer.getVariableByteUnsigned(wpr.getWayDataBlocks().size()));
+							}
 
 							// write the way data blocks
 
@@ -778,7 +787,7 @@ public class MapFileWriter {
 	}
 
 	private WayPreprocessingResult preprocessWay(TDWay way, boolean simplify, boolean clipPolygons,
-			boolean clipWays, TileCoordinate tile) {
+			boolean clipWays, TileCoordinate tile, EncodingChoice encoding) {
 
 		// TODO more sophisticated clipping of polygons needed
 		// we have a problem when clipping polygons which border needs to be
@@ -819,16 +828,25 @@ public class MapFileWriter {
 			centroid = GeoUtils.computeCentroid(geometry);
 		}
 
-		// TODO activate switch for different encodings
-		// check which encoding is more efficient for current data block
-		List<WayDataBlock> blocksDelta = DeltaEncoder.encode(blocks, Encoding.DELTA);
-		// List<WayDataBlock> blocksDoubleDelta = DeltaEncoder.encode(blocks, Encoding.DOUBLE_DELTA);
-		// int simDelta = DeltaEncoder.simulateSerialization(blocksDelta);
-		// int simDoubleDelta = DeltaEncoder.simulateSerialization(blocksDoubleDelta);
-		// if (simDelta <= simDoubleDelta) {
-		// blocks = blocksDelta;
-		// }
-		blocks = blocksDelta;
+		switch (encoding) {
+			case SINGLE:
+				blocks = DeltaEncoder.encode(blocks, Encoding.DELTA);
+				break;
+			case DOUBLE:
+				blocks = DeltaEncoder.encode(blocks, Encoding.DOUBLE_DELTA);
+				break;
+			case AUTO:
+				List<WayDataBlock> blocksDelta = DeltaEncoder.encode(blocks, Encoding.DELTA);
+				List<WayDataBlock> blocksDoubleDelta = DeltaEncoder.encode(blocks, Encoding.DOUBLE_DELTA);
+				int simDelta = DeltaEncoder.simulateSerialization(blocksDelta);
+				int simDoubleDelta = DeltaEncoder.simulateSerialization(blocksDoubleDelta);
+				if (simDelta <= simDoubleDelta) {
+					blocks = blocksDelta;
+				} else {
+					blocks = blocksDoubleDelta;
+				}
+				break;
+		}
 
 		return new WayPreprocessingResult(blocks, centroid, subtileMask);
 	}
@@ -893,7 +911,7 @@ public class MapFileWriter {
 		return infoByte;
 	}
 
-	private static byte infoByteWayFeatures(TDWay way, boolean hasLabelPosition) {
+	private static byte infoByteWayFeatures(TDWay way, WayPreprocessingResult wpr) {
 		byte infoByte = 0;
 
 		if (way.getName() != null && !way.getName().isEmpty()) {
@@ -902,8 +920,18 @@ public class MapFileWriter {
 		if (way.getRef() != null && !way.getRef().isEmpty()) {
 			infoByte |= BITMAP_REF;
 		}
-		if (hasLabelPosition) {
+		if (wpr.getLabelPosition() != null) {
 			infoByte |= BITMAP_LABEL;
+		}
+		if (wpr.getWayDataBlocks().size() > 1) {
+			infoByte |= BITMAP_MULTIPLE_WAY_BLOCKS;
+		}
+
+		if (!wpr.getWayDataBlocks().isEmpty()) {
+			WayDataBlock wayDataBlock = wpr.getWayDataBlocks().get(0);
+			if (wayDataBlock.getEncoding() == Encoding.DOUBLE_DELTA) {
+				infoByte |= BITMAP_ENCODING;
+			}
 		}
 
 		return infoByte;
