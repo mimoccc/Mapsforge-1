@@ -15,6 +15,7 @@
 package org.mapsforge.map.reader;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -26,6 +27,7 @@ public class MapDatabaseTest {
 	/**
 	 * Tests the {@link MapDatabase#getMapFileInfo} method.
 	 */
+	@Ignore
 	@Test
 	public void getMapFileInfoTest() {
 		MapDatabase mapDatabase = new MapDatabase();

@@ -23,7 +23,10 @@ class MapFileInfoBuilder {
 	String commentText;
 	long fileSize;
 	int fileVersion;
+	boolean hasComment;
+	boolean hasLanguagePreference;
 	boolean hasStartPosition;
+	boolean hasStartZoomLevel;
 	boolean isDebugFile;
 	String languagePreference;
 	long mapDate;
@@ -31,6 +34,7 @@ class MapFileInfoBuilder {
 	Tag[] poiTags;
 	String projectionName;
 	GeoPoint startPosition;
+	Byte startZoomLevel;
 	int tilePixelSize;
 	Tag[] wayTags;
 

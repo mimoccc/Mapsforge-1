@@ -36,14 +36,29 @@ class MapFileHeader {
 	private static final String BINARY_OSM_MAGIC_BYTE = "mapsforge binary OSM";
 
 	/**
+	 * Bitmask for the comment in the file header.
+	 */
+	private static final int HEADER_BITMASK_COMMENT = 0x08;
+
+	/**
 	 * Bitmask for the debug flag in the file header.
 	 */
 	private static final int HEADER_BITMASK_DEBUG = 0x80;
 
 	/**
+	 * Bitmask for the language preference in the file header.
+	 */
+	private static final int HEADER_BITMASK_LANGUAGE_PREFERENCE = 0x10;
+
+	/**
 	 * Bitmask for the start position in the file header.
 	 */
 	private static final int HEADER_BITMASK_START_POSITION = 0x40;
+
+	/**
+	 * Bitmask for the start zoom level in the file header.
+	 */
+	private static final int HEADER_BITMASK_START_ZOOM_LEVEL = 0x20;
 
 	/**
 	 * Maximum size of the file header in bytes.
@@ -54,6 +69,11 @@ class MapFileHeader {
 	 * Minimum size of the file header in bytes.
 	 */
 	private static final int HEADER_SIZE_MIN = 70;
+
+	/**
+	 * The length of the language preference string.
+	 */
+	private static final int LANGUAGE_PREFERENCE_LENGTH = 2;
 
 	/**
 	 * The maximum latitude values in microdegrees.
@@ -89,6 +109,11 @@ class MapFileHeader {
 	 * A single whitespace character.
 	 */
 	private static final char SPACE = ' ';
+
+	/**
+	 * Maximum valid start zoom level.
+	 */
+	private static final int START_ZOOM_LEVEL_MAX = 22;
 
 	/**
 	 * Version of the map file format which is supported by this implementation.
@@ -152,6 +177,17 @@ class MapFileHeader {
 		return FileOpenResult.SUCCESS;
 	}
 
+	private static FileOpenResult readLanguagePreference(ReadBuffer readBuffer, MapFileInfoBuilder mapFileInfoBuilder) {
+		if (mapFileInfoBuilder.hasLanguagePreference) {
+			String languagePreference = readBuffer.readUTF8EncodedString();
+			if (languagePreference.length() != LANGUAGE_PREFERENCE_LENGTH) {
+				return new FileOpenResult("invalid language preference: " + languagePreference);
+			}
+			mapFileInfoBuilder.languagePreference = languagePreference;
+		}
+		return FileOpenResult.SUCCESS;
+	}
+
 	private static FileOpenResult readMagicByte(ReadBuffer readBuffer) throws IOException {
 		// read the the magic byte and the file header size into the buffer
 		int magicByteLength = BINARY_OSM_MAGIC_BYTE.length();
@@ -193,6 +229,19 @@ class MapFileHeader {
 			}
 
 			mapFileInfoBuilder.startPosition = new GeoPoint(mapStartLatitude, mapStartLongitude);
+		}
+		return FileOpenResult.SUCCESS;
+	}
+
+	private static FileOpenResult readMapStartZoomLevel(ReadBuffer readBuffer, MapFileInfoBuilder mapFileInfoBuilder) {
+		if (mapFileInfoBuilder.hasStartZoomLevel) {
+			// get and check the start zoom level (1 byte)
+			byte mapStartZoomLevel = readBuffer.readByte();
+			if (mapStartZoomLevel < 0 || mapStartZoomLevel > START_ZOOM_LEVEL_MAX) {
+				return new FileOpenResult("invalid map start zoom level: " + mapStartZoomLevel);
+			}
+
+			mapFileInfoBuilder.startZoomLevel = Byte.valueOf(mapStartZoomLevel);
 		}
 		return FileOpenResult.SUCCESS;
 	}
@@ -441,15 +490,30 @@ class MapFileHeader {
 			return fileOpenResult;
 		}
 
-		mapFileInfoBuilder.languagePreference = readBuffer.readUTF8EncodedString();
-
 		byte metaFlags = readBuffer.readByte();
 		mapFileInfoBuilder.isDebugFile = (metaFlags & HEADER_BITMASK_DEBUG) != 0;
 		mapFileInfoBuilder.hasStartPosition = (metaFlags & HEADER_BITMASK_START_POSITION) != 0;
+		mapFileInfoBuilder.hasStartZoomLevel = (metaFlags & HEADER_BITMASK_START_ZOOM_LEVEL) != 0;
+		mapFileInfoBuilder.hasLanguagePreference = (metaFlags & HEADER_BITMASK_LANGUAGE_PREFERENCE) != 0;
+		mapFileInfoBuilder.hasComment = (metaFlags & HEADER_BITMASK_COMMENT) != 0;
 
 		fileOpenResult = readMapStartPosition(readBuffer, mapFileInfoBuilder);
 		if (!fileOpenResult.isSuccess()) {
 			return fileOpenResult;
+		}
+
+		fileOpenResult = readMapStartZoomLevel(readBuffer, mapFileInfoBuilder);
+		if (!fileOpenResult.isSuccess()) {
+			return fileOpenResult;
+		}
+
+		fileOpenResult = readLanguagePreference(readBuffer, mapFileInfoBuilder);
+		if (!fileOpenResult.isSuccess()) {
+			return fileOpenResult;
+		}
+
+		if (mapFileInfoBuilder.hasComment) {
+			mapFileInfoBuilder.commentText = readBuffer.readUTF8EncodedString();
 		}
 
 		fileOpenResult = readPoiTags(readBuffer, mapFileInfoBuilder);
@@ -466,8 +530,6 @@ class MapFileHeader {
 		if (!fileOpenResult.isSuccess()) {
 			return fileOpenResult;
 		}
-
-		mapFileInfoBuilder.commentText = readBuffer.readUTF8EncodedString();
 
 		this.mapFileInfo = mapFileInfoBuilder.build();
 		return FileOpenResult.SUCCESS;

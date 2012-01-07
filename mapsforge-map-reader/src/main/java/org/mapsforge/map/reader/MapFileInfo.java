@@ -36,6 +36,7 @@ public class MapFileInfo {
 	final Tag[] poiTags;
 	final String projectionName;
 	final GeoPoint startPosition;
+	final Byte startZoomLevel;
 	final int tilePixelSize;
 	final Tag[] wayTags;
 
@@ -52,6 +53,7 @@ public class MapFileInfo {
 		this.poiTags = mapFileInfoBuilder.poiTags;
 		this.projectionName = mapFileInfoBuilder.projectionName;
 		this.startPosition = mapFileInfoBuilder.startPosition;
+		this.startZoomLevel = mapFileInfoBuilder.startZoomLevel;
 		this.tilePixelSize = mapFileInfoBuilder.tilePixelSize;
 		this.wayTags = mapFileInfoBuilder.wayTags;
 	}
@@ -131,6 +133,13 @@ public class MapFileInfo {
 	 */
 	public GeoPoint getStartPosition() {
 		return this.startPosition;
+	}
+
+	/**
+	 * @return the map start zoom level from the file header (may be null).
+	 */
+	public Byte getStartZoomLevel() {
+		return this.startZoomLevel;
 	}
 
 	/**
