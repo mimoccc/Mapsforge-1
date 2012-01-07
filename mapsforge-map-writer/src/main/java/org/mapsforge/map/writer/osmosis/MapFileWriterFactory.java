@@ -35,6 +35,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_ZOOMINTERVAL_CONFIG = "zoom-interval-conf";
 	private static final String PARAM_COMMENT = "comment";
 	private static final String PARAM_MAP_START_POSITION = "map-start-position";
+	private static final String PARAM_MAP_START_ZOOM = "map-start-zoom";
 	private static final String PARAM_DEBUG_INFO = "debug-file";
 	// private static final String PARAM_WAYNODE_COMPRESSION = "waynode-compression";
 	private static final String PARAM_PIXEL_FILTER = "pixel-filter";
@@ -50,6 +51,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 
 		String outfile = getStringArgument(taskConfig, PARAM_OUTFILE, DEFAULT_PARAM_OUTFILE);
 		String mapStartPosition = getStringArgument(taskConfig, PARAM_MAP_START_POSITION, null);
+		String mapStartZoom = getStringArgument(taskConfig, PARAM_MAP_START_ZOOM, null);
 		String bbox = getStringArgument(taskConfig, PARAM_BBOX, null);
 		String zoomConf = getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null);
 		String comment = getStringArgument(taskConfig, PARAM_COMMENT, null);
@@ -64,8 +66,8 @@ class MapFileWriterFactory extends TaskManagerFactory {
 				DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
-		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition, comment, zoomConf,
-				debug, pixelFilter, polygonClipping, wayClipping, type, bboxEnlargement, tagConfFile,
+		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition, mapStartZoom, comment,
+				zoomConf, debug, pixelFilter, polygonClipping, wayClipping, type, bboxEnlargement, tagConfFile,
 				preferredLanguage);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}

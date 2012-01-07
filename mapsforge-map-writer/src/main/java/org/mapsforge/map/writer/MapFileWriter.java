@@ -93,6 +93,9 @@ public class MapFileWriter {
 	// bitmap flags for file features
 	private static final short BITMAP_DEBUG = 128; // NOPMD by bross on 25.12.11 13:53
 	private static final short BITMAP_MAP_START_POSITION = 64; // NOPMD by bross on 25.12.11 13:53
+	private static final short BITMAP_MAP_START_ZOOM = 32; // NOPMD by bross on 25.12.11 13:53
+	private static final short BITMAP_PREFERRED_LANGUAGE = 16; // NOPMD by bross on 25.12.11 13:53
+	private static final short BITMAP_COMMENT = 8; // NOPMD by bross on 25.12.11 13:53
 
 	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
 
@@ -175,6 +178,8 @@ public class MapFileWriter {
 	 *            flag for simplification of geo objects
 	 * @param mapStartPosition
 	 *            a map start position or null
+	 * @param mapStartZoom
+	 *            the initial zoom level
 	 * @param preferredLanguage
 	 *            a preferred language
 	 * @throws IOException
@@ -182,11 +187,11 @@ public class MapFileWriter {
 	 */
 	public final void writeFile(long date, int version, short tilePixel, String comment, boolean debugStrings,
 			boolean polygonClipping, boolean wayClipping, boolean pixelCompression,
-			GeoCoordinate mapStartPosition, String preferredLanguage) throws IOException {
+			GeoCoordinate mapStartPosition, byte mapStartZoom, String preferredLanguage) throws IOException {
 
 		// CONTAINER HEADER
 		long totalHeaderSize = writeContainerHeader(date, version, tilePixel, comment, debugStrings,
-				mapStartPosition, preferredLanguage);
+				mapStartPosition, mapStartZoom, preferredLanguage);
 
 		int amountOfZoomIntervals = this.dataStore.getZoomIntervalConfiguration().getNumberOfZoomIntervals();
 
@@ -243,7 +248,8 @@ public class MapFileWriter {
 	private long writeContainerHeader(long date, int version, short tilePixel, String comment, // NOPMD by bross
 																								// on 25.12.11
 																								// 13:53
-			boolean debugStrings, GeoCoordinate mapStartPosition, String preferredLanguage) throws IOException {
+			boolean debugStrings, GeoCoordinate mapStartPosition, byte mapStartZoom, String preferredLanguage)
+			throws IOException {
 
 		// get metadata for the map file
 		int numberOfZoomIntervals = this.dataStore.getZoomIntervalConfiguration().getNumberOfZoomIntervals();
@@ -287,22 +293,32 @@ public class MapFileWriter {
 		// PROJECTION
 		writeUTF8(PROJECTION, containerHeaderBuffer);
 
-		// PREFERRED LANGUAGE
-		// TODO leads to zero length string, but according to specification this
-		// is correct
-		if (preferredLanguage == null) {
-			writeUTF8("", containerHeaderBuffer);
-		} else {
-			writeUTF8(preferredLanguage, containerHeaderBuffer);
-		}
+		// check whether zoom start is a valid zoom level
 
 		// FLAGS
-		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings, mapStartPosition != null));
+		containerHeaderBuffer.put(infoByteOptmizationParams(debugStrings, mapStartPosition != null,
+				mapStartZoom >= 0, preferredLanguage != null && !preferredLanguage.isEmpty(), comment != null
+						&& !comment.isEmpty()));
 
 		// MAP START POSITION
 		if (mapStartPosition != null) {
 			containerHeaderBuffer.putInt(mapStartPosition.getLatitudeE6());
 			containerHeaderBuffer.putInt(mapStartPosition.getLongitudeE6());
+		}
+
+		// MAP START ZOOM
+		if (mapStartZoom >= 0) {
+			containerHeaderBuffer.put(mapStartZoom);
+		}
+
+		// PREFERRED LANGUAGE
+		if (preferredLanguage != null && !preferredLanguage.isEmpty()) {
+			writeUTF8(preferredLanguage, containerHeaderBuffer);
+		}
+
+		// COMMENT
+		if (comment != null && !comment.equals("")) {
+			writeUTF8(comment, containerHeaderBuffer);
 		}
 
 		// AMOUNT POI TAGS
@@ -333,13 +349,6 @@ public class MapFileWriter {
 
 		containerHeaderBuffer.position(containerHeaderBuffer.position() + SIZE_ZOOMINTERVAL_CONFIGURATION
 				* numberOfZoomIntervals);
-
-		// COMMENT
-		if (comment != null && !comment.equals("")) {
-			writeUTF8(comment, containerHeaderBuffer);
-		} else {
-			writeUTF8("i love mapsforge", containerHeaderBuffer);
-		}
 
 		// now write header size
 		// -4 bytes of header size variable itself
@@ -846,7 +855,8 @@ public class MapFileWriter {
 		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
-	private static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition) {
+	private static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition,
+			boolean mapStartZoom, boolean preferredLanguage, boolean comment) {
 		byte infoByte = 0;
 
 		if (debug) {
@@ -854,6 +864,15 @@ public class MapFileWriter {
 		}
 		if (mapStartPosition) {
 			infoByte |= BITMAP_MAP_START_POSITION;
+		}
+		if (mapStartZoom) {
+			infoByte |= BITMAP_MAP_START_ZOOM;
+		}
+		if (preferredLanguage) {
+			infoByte |= BITMAP_PREFERRED_LANGUAGE;
+		}
+		if (comment) {
+			infoByte |= BITMAP_COMMENT;
 		}
 
 		return infoByte;

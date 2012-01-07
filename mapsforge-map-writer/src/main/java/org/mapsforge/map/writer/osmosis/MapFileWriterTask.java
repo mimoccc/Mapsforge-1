@@ -58,6 +58,7 @@ public class MapFileWriterTask implements Sink {
 	// configuration parameters
 	private final File outFile;
 	private final GeoCoordinate mapStartPosition;
+	private final byte mapStartZoom;
 	private final boolean debugInfo;
 	// private boolean waynodeCompression;
 	private final boolean pixelFilter;
@@ -71,8 +72,8 @@ public class MapFileWriterTask implements Sink {
 
 	private final int vSpecification;
 
-	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String comment,
-			String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter,
+	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String mapStartZoom,
+			String comment, String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter,
 			boolean polygonClipping, boolean wayClipping, String type, int bboxEnlargement, String tagConfFile,
 			String preferredLanguage) {
 		this.outFile = new File(outFile);
@@ -82,7 +83,12 @@ public class MapFileWriterTask implements Sink {
 
 		Properties properties = new Properties();
 		try {
-			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties")); // NOPMD by bross on 25.12.11 13:43
+			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties")); // NOPMD
+																													// by
+																													// bross
+																													// on
+																													// 25.12.11
+																													// 13:43
 		} catch (IOException e) {
 			throw new RuntimeException("could not find default properties", e); // NOPMD by bross on 25.12.11
 																				// 13:36
@@ -102,6 +108,20 @@ public class MapFileWriterTask implements Sink {
 		LOGGER.info("mapfile format specification version " + this.vSpecification);
 
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate.fromString(mapStartPosition);
+		// init with negative value
+		byte startZoom = -1;
+		if (mapStartZoom != null && !mapStartZoom.isEmpty()) {
+			try {
+				startZoom = Byte.parseByte(mapStartZoom);
+				if (startZoom < 0 || startZoom > 22) {
+					LOGGER.warning("map start zoom level is invalid, must be in range [0 - 22], using default of renderer");
+					startZoom = -1;
+				}
+			} catch (NumberFormatException e) {
+				LOGGER.warning("map start zoom level is invalid, must be in range [0 - 22], using default of renderer");
+			}
+		}
+		this.mapStartZoom = startZoom;
 		this.debugInfo = debugInfo;
 		// this.waynodeCompression = waynodeCompression;
 		this.pixelFilter = pixelFilter;
@@ -173,7 +193,7 @@ public class MapFileWriterTask implements Sink {
 					(short) 256, // NOPMD by bross on 25.12.11 13:38
 					this.comment, // NOPMD by bross on 25.12.11 13:36
 					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter,
-					this.mapStartPosition, this.preferredLanguage);
+					this.mapStartPosition, this.mapStartZoom, this.preferredLanguage);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}
