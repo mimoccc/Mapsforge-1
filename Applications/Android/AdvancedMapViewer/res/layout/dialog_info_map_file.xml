@@ -34,10 +34,20 @@
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
 		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
-			android:text="@string/info_map_file_start" android:textStyle="bold" android:textColor="#FFF" />
-		<TextView android:id="@+id/infoMapFileViewStart" android:layout_width="fill_parent"
+			android:text="@string/info_map_file_start_position" android:textStyle="bold" android:textColor="#FFF" />
+		<TextView android:id="@+id/infoMapFileViewStartPosition" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:paddingBottom="10dip" />
+		
+		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:text="@string/info_map_file_start_zoom_level" android:textStyle="bold" android:textColor="#FFF" />
+		<TextView android:id="@+id/infoMapFileViewStartZoomLevel" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:paddingBottom="10dip" />
 
+		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:text="@string/info_map_file_language_preference" android:textStyle="bold" android:textColor="#FFF" />
+		<TextView android:id="@+id/infoMapFileViewLanguagePreference" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:paddingBottom="10dip" />
+		
 		<TextView android:layout_width="fill_parent" android:layout_height="wrap_content"
 			android:text="@string/info_map_file_comment" android:textStyle="bold" android:textColor="#FFF" />
 		<TextView android:id="@+id/infoMapFileViewComment" android:layout_width="fill_parent"

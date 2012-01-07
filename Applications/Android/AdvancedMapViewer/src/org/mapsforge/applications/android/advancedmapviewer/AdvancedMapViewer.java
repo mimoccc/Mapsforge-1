@@ -598,13 +598,26 @@ public class AdvancedMapViewer extends MapActivity {
 					+ boundingBox.getMaxLatitude() + ", " + boundingBox.getMaxLongitude());
 
 			// map file start position
-			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStart);
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStartPosition);
 			GeoPoint startPosition = mapFileInfo.getStartPosition();
 			if (startPosition == null) {
 				textView.setText(null);
 			} else {
 				textView.setText(startPosition.getLatitude() + ", " + startPosition.getLongitude());
 			}
+
+			// map file start zoom level
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStartZoomLevel);
+			Byte startZoomLevel = mapFileInfo.getStartZoomLevel();
+			if (startZoomLevel == null) {
+				textView.setText(null);
+			} else {
+				textView.setText(startZoomLevel.toString());
+			}
+
+			// map file language preference
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewLanguagePreference);
+			textView.setText(mapFileInfo.getLanguagePreference());
 
 			// map file comment text
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewComment);

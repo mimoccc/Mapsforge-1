@@ -33,9 +33,11 @@
 	<string name="info_map_file_debug">Debug information</string>
 	<string name="info_map_file_debug_no">not included</string>
 	<string name="info_map_file_debug_yes">included</string>
+	<string name="info_map_file_language_preference">Language preference</string>
 	<string name="info_map_file_name">File</string>
 	<string name="info_map_file_size">File size</string>
-	<string name="info_map_file_start">Start position</string>
+	<string name="info_map_file_start_position">Start position</string>
+	<string name="info_map_file_start_zoom_level">Start zoom level</string>
 	<string name="info_map_file_version">Version</string>
 	<string name="latitude">Latitude</string>
 	<string name="longitude">Longitude</string>
