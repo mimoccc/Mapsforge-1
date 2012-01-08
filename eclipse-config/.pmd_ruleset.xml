@@ -51,7 +51,7 @@
 	<rule ref="rulesets/codesize.xml/ExcessiveMethodLength" />
 	<rule ref="rulesets/codesize.xml/ExcessiveParameterList">
 		<properties>
-			<property name="minimum" value="7" />
+			<property name="minimum" value="8" />
 		</properties>
 	</rule>
 	<rule ref="rulesets/codesize.xml/ExcessivePublicCount" />
@@ -61,7 +61,7 @@
 	<rule ref="rulesets/codesize.xml/TooManyFields" />
 	<rule ref="rulesets/codesize.xml/TooManyMethods">
 		<properties>
-			<property name="maxmethods" value="15" />
+			<property name="maxmethods" value="20" />
 		</properties>
 	</rule>
 	<rule ref="rulesets/controversial.xml/AssignmentInOperand" />
