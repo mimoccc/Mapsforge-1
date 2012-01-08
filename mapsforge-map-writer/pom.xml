@@ -34,11 +34,13 @@
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
 				<excludes>
 					<exclude>default.properties</exclude>
 					<exclude>plugin.xml</exclude>
 				</excludes>
+			</resource>
+			<resource>
+				<directory>../shared-resources</directory>
 			</resource>
 		</resources>
 
