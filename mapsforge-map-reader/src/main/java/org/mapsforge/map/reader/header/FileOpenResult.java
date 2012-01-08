@@ -12,29 +12,38 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.map.reader;
+package org.mapsforge.map.reader.header;
+
+import org.mapsforge.map.reader.MapDatabase;
 
 /**
  * A FileOpenResult is a simple DTO which is returned by {@link MapDatabase#openFile(String)}.
  */
 public class FileOpenResult {
-	static final FileOpenResult SUCCESS = new FileOpenResult();
+	/**
+	 * Singleton for a FileOpenResult instance with {@code success=true}.
+	 */
+	public static final FileOpenResult SUCCESS = new FileOpenResult();
 
 	private final String errorMessage;
 	private final boolean success;
 
-	private FileOpenResult() {
-		this.success = true;
-		this.errorMessage = null;
-	}
-
-	FileOpenResult(String errorMessage) {
+	/**
+	 * @param errorMessage
+	 *            a textual message describing the error, must not be null.
+	 */
+	public FileOpenResult(String errorMessage) {
 		if (errorMessage == null) {
 			throw new IllegalArgumentException("error message must not be null");
 		}
 
 		this.success = false;
 		this.errorMessage = errorMessage;
+	}
+
+	private FileOpenResult() {
+		this.success = true;
+		this.errorMessage = null;
 	}
 
 	/**

@@ -12,29 +12,20 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.map.reader;
+package org.mapsforge.map.reader.header;
 
 import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.Tag;
 
 class MapFileInfoBuilder {
 	BoundingBox boundingBox;
-	String commentText;
 	long fileSize;
 	int fileVersion;
-	boolean hasComment;
-	boolean hasLanguagePreference;
-	boolean hasStartPosition;
-	boolean hasStartZoomLevel;
-	boolean isDebugFile;
-	String languagePreference;
 	long mapDate;
 	byte numberOfSubFiles;
+	OptionalFields optionalFields;
 	Tag[] poiTags;
 	String projectionName;
-	GeoPoint startPosition;
-	Byte startZoomLevel;
 	int tilePixelSize;
 	Tag[] wayTags;
 

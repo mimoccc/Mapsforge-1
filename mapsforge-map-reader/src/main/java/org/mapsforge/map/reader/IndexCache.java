@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.mapsforge.core.LRUCache;
+import org.mapsforge.map.reader.header.SubFileParameter;
 
 /**
  * A cache for database index blocks with a fixed size and LRU policy.

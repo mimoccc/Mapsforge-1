@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.reader;
 
+import org.mapsforge.map.reader.header.SubFileParameter;
+
 /**
  * An immutable container class which is the key for the index cache.
  */

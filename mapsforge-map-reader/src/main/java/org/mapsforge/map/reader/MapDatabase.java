@@ -25,6 +25,10 @@ import java.util.logging.Logger;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
+import org.mapsforge.map.reader.header.FileOpenResult;
+import org.mapsforge.map.reader.header.MapFileHeader;
+import org.mapsforge.map.reader.header.MapFileInfo;
+import org.mapsforge.map.reader.header.SubFileParameter;
 
 /**
  * A class for reading binary map files.
@@ -79,17 +83,17 @@ public class MapDatabase {
 	/**
 	 * Bitmask for the optional POI feature "elevation".
 	 */
-	private static final int POI_FEATURE_BITMASK_ELEVATION = 0x40;
+	private static final int POI_FEATURE_ELEVATION = 0x40;
 
 	/**
 	 * Bitmask for the optional POI feature "house number".
 	 */
-	private static final int POI_FEATURE_BITMASK_HOUSE_NUMBER = 0x20;
+	private static final int POI_FEATURE_HOUSE_NUMBER = 0x20;
 
 	/**
 	 * Bitmask for the optional POI feature "name".
 	 */
-	private static final int POI_FEATURE_BITMASK_NAME = 0x80;
+	private static final int POI_FEATURE_NAME = 0x80;
 
 	/**
 	 * Bitmask for the POI layer.
@@ -144,27 +148,27 @@ public class MapDatabase {
 	/**
 	 * Bitmask for the optional way data blocks byte.
 	 */
-	private static final int WAY_FEATURE_BITMASK_DATA_BLOCKS_BYTE = 0x10;
+	private static final int WAY_FEATURE_DATA_BLOCKS_BYTE = 0x10;
 
 	/**
 	 * Bitmask for the optional way double delta encoding.
 	 */
-	private static final int WAY_FEATURE_BITMASK_DOUBLE_DELTA_ENCODING = 0x08;
+	private static final int WAY_FEATURE_DOUBLE_DELTA_ENCODING = 0x08;
 
 	/**
 	 * Bitmask for the optional way feature "label position".
 	 */
-	private static final int WAY_FEATURE_BITMASK_LABEL_POSITION = 0x20;
+	private static final int WAY_FEATURE_LABEL_POSITION = 0x20;
 
 	/**
 	 * Bitmask for the optional way feature "name".
 	 */
-	private static final int WAY_FEATURE_BITMASK_NAME = 0x80;
+	private static final int WAY_FEATURE_NAME = 0x80;
 
 	/**
 	 * Bitmask for the optional way feature "reference".
 	 */
-	private static final int WAY_FEATURE_BITMASK_REF = 0x40;
+	private static final int WAY_FEATURE_REF = 0x40;
 
 	/**
 	 * Bitmask for the way layer.
@@ -626,9 +630,9 @@ public class MapDatabase {
 			byte featureByte = this.readBuffer.readByte();
 
 			// bit 1-3 enable optional features
-			boolean featureName = (featureByte & POI_FEATURE_BITMASK_NAME) != 0;
-			boolean featureElevation = (featureByte & POI_FEATURE_BITMASK_ELEVATION) != 0;
-			boolean featureHouseNumber = (featureByte & POI_FEATURE_BITMASK_HOUSE_NUMBER) != 0;
+			boolean featureName = (featureByte & POI_FEATURE_NAME) != 0;
+			boolean featureElevation = (featureByte & POI_FEATURE_ELEVATION) != 0;
+			boolean featureHouseNumber = (featureByte & POI_FEATURE_HOUSE_NUMBER) != 0;
 
 			// check if the POI has a name
 			if (featureName) {
@@ -766,11 +770,11 @@ public class MapDatabase {
 			byte featureByte = this.readBuffer.readByte();
 
 			// bit 1-3 enable optional features
-			boolean featureName = (featureByte & WAY_FEATURE_BITMASK_NAME) != 0;
-			boolean featureRef = (featureByte & WAY_FEATURE_BITMASK_REF) != 0;
-			boolean featureLabelPosition = (featureByte & WAY_FEATURE_BITMASK_LABEL_POSITION) != 0;
-			boolean featureWayDataBlocksByte = (featureByte & WAY_FEATURE_BITMASK_DATA_BLOCKS_BYTE) != 0;
-			boolean featureWayDoubleDeltaEncoding = (featureByte & WAY_FEATURE_BITMASK_DOUBLE_DELTA_ENCODING) != 0;
+			boolean featureName = (featureByte & WAY_FEATURE_NAME) != 0;
+			boolean featureRef = (featureByte & WAY_FEATURE_REF) != 0;
+			boolean featureLabelPosition = (featureByte & WAY_FEATURE_LABEL_POSITION) != 0;
+			boolean featureWayDataBlocksByte = (featureByte & WAY_FEATURE_DATA_BLOCKS_BYTE) != 0;
+			boolean featureWayDoubleDeltaEncoding = (featureByte & WAY_FEATURE_DOUBLE_DELTA_ENCODING) != 0;
 
 			// check if the way has a name
 			if (featureName) {
@@ -784,21 +788,11 @@ public class MapDatabase {
 
 			float[] labelPosition = readOptionalLabelPosition(featureLabelPosition);
 
-			int wayDataBlocks;
-			if (featureWayDataBlocksByte) {
-				// get and check the number of way data blocks (VBE-U)
-				wayDataBlocks = this.readBuffer.readUnsignedInt();
-				if (wayDataBlocks < 1) {
-					LOG.warning("invalid number of way data blocks: " + wayDataBlocks);
-					logDebugSignatures();
-					return false;
-				} else if (wayDataBlocks == 1) {
-					LOG.info("redundant way data blocks byte with value 1");
-					logDebugSignatures();
-				}
-			} else {
-				// only one way data block exists
-				wayDataBlocks = 1;
+			int wayDataBlocks = readOptionalWayDataBlocksByte(featureWayDataBlocksByte);
+			if (wayDataBlocks < 1) {
+				LOG.warning("invalid number of way data blocks: " + wayDataBlocks);
+				logDebugSignatures();
+				return false;
 			}
 
 			for (int wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
@@ -825,5 +819,14 @@ public class MapDatabase {
 			labelPosition[0] = this.tileLongitude + this.readBuffer.readSignedInt();
 		}
 		return labelPosition;
+	}
+
+	private int readOptionalWayDataBlocksByte(boolean featureWayDataBlocksByte) {
+		if (featureWayDataBlocksByte) {
+			// get and check the number of way data blocks (VBE-U)
+			return this.readBuffer.readUnsignedInt();
+		}
+		// only one way data block exists
+		return 1;
 	}
 }

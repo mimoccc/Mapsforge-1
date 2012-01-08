@@ -14,14 +14,20 @@
  */
 package org.mapsforge.core;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 /**
  * A BoundingBox represents an immutable set of two latitude and two longitude coordinates.
  */
-public class BoundingBox {
+public class BoundingBox implements Serializable {
 	/**
 	 * Conversion factor from degrees to microdegrees.
 	 */
 	private static final double CONVERSION_FACTOR = 1000000d;
+
+	private static final long serialVersionUID = 1L;
 
 	private static boolean isBetween(int number, int min, int max) {
 		return min <= number && number <= max;
@@ -48,6 +54,11 @@ public class BoundingBox {
 	public final int minLongitudeE6;
 
 	/**
+	 * The hash code of this object.
+	 */
+	private transient int hashCodeValue;
+
+	/**
 	 * Constructs a new BoundingBox with the given coordinates in microdegrees.
 	 * 
 	 * @param minLatitudeE6
@@ -64,6 +75,7 @@ public class BoundingBox {
 		this.minLongitudeE6 = minLongitudeE6;
 		this.maxLatitudeE6 = maxLatitudeE6;
 		this.maxLongitudeE6 = maxLongitudeE6;
+		this.hashCodeValue = calculateHashCode();
 	}
 
 	/**
@@ -74,6 +86,26 @@ public class BoundingBox {
 	public boolean contains(GeoPoint geoPoint) {
 		return isBetween(geoPoint.latitudeE6, this.minLatitudeE6, this.maxLatitudeE6)
 				&& isBetween(geoPoint.longitudeE6, this.minLongitudeE6, this.maxLongitudeE6);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (!(obj instanceof BoundingBox)) {
+			return false;
+		}
+		BoundingBox other = (BoundingBox) obj;
+		if (this.maxLatitudeE6 != other.maxLatitudeE6) {
+			return false;
+		} else if (this.maxLongitudeE6 != other.maxLongitudeE6) {
+			return false;
+		} else if (this.minLatitudeE6 != other.minLatitudeE6) {
+			return false;
+		} else if (this.minLongitudeE6 != other.minLongitudeE6) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -114,6 +146,11 @@ public class BoundingBox {
 	}
 
 	@Override
+	public int hashCode() {
+		return this.hashCodeValue;
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("BoundingBox [minLatitudeE6=");
@@ -126,5 +163,22 @@ public class BoundingBox {
 		stringBuilder.append(this.maxLongitudeE6);
 		stringBuilder.append("]");
 		return stringBuilder.toString();
+	}
+
+	/**
+	 * @return the hash code of this object.
+	 */
+	private int calculateHashCode() {
+		int result = 7;
+		result = 31 * result + this.maxLatitudeE6;
+		result = 31 * result + this.maxLongitudeE6;
+		result = 31 * result + this.minLatitudeE6;
+		result = 31 * result + this.minLongitudeE6;
+		return result;
+	}
+
+	private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
+		objectInputStream.defaultReadObject();
+		this.hashCodeValue = calculateHashCode();
 	}
 }

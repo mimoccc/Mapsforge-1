@@ -12,93 +12,93 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.map.reader;
+package org.mapsforge.map.reader.header;
 
 import org.mapsforge.core.MercatorProjection;
 
 /**
  * Holds all parameters of a sub-file.
  */
-class SubFileParameter {
+public class SubFileParameter {
 	/**
 	 * Divisor for converting coordinates stored as integers to double values.
 	 */
 	private static final double COORDINATES_DIVISOR = 1000000d;
 
 	/**
-	 * Stores the hash code of this object.
-	 */
-	private final int hashCodeValue;
-
-	/**
 	 * Base zoom level of the map file, which equals to one block.
 	 */
-	final byte baseZoomLevel;
+	public final byte baseZoomLevel;
 
 	/**
 	 * Size of the entries table at the beginning of each block in bytes.
 	 */
-	final int blockEntriesTableSize;
+	public final int blockEntriesTableSize;
 
 	/**
 	 * Vertical amount of blocks in the grid.
 	 */
-	final long blocksHeight;
+	public final long blocksHeight;
 
 	/**
 	 * Horizontal amount of blocks in the grid.
 	 */
-	final long blocksWidth;
+	public final long blocksWidth;
 
 	/**
 	 * Y number of the tile at the bottom boundary in the grid.
 	 */
-	final long boundaryTileBottom;
+	public final long boundaryTileBottom;
 
 	/**
 	 * X number of the tile at the left boundary in the grid.
 	 */
-	final long boundaryTileLeft;
+	public final long boundaryTileLeft;
 
 	/**
 	 * X number of the tile at the right boundary in the grid.
 	 */
-	final long boundaryTileRight;
+	public final long boundaryTileRight;
 
 	/**
 	 * Y number of the tile at the top boundary in the grid.
 	 */
-	final long boundaryTileTop;
+	public final long boundaryTileTop;
 
 	/**
 	 * Absolute start address of the index in the enclosing file.
 	 */
-	final long indexStartAddress;
+	public final long indexStartAddress;
 
 	/**
 	 * Total number of blocks in the grid.
 	 */
-	final long numberOfBlocks;
+	public final long numberOfBlocks;
 
 	/**
 	 * Absolute start address of the sub-file in the enclosing file.
 	 */
-	final long startAddress;
+	public final long startAddress;
 
 	/**
 	 * Size of the sub-file in bytes.
 	 */
-	final long subFileSize;
+	public final long subFileSize;
 
 	/**
 	 * Maximum zoom level for which the block entries tables are made.
 	 */
-	final byte zoomLevelMax;
+	public final byte zoomLevelMax;
 
 	/**
 	 * Minimum zoom level for which the block entries tables are made.
 	 */
-	final byte zoomLevelMin;
+	public final byte zoomLevelMin;
+
+	/**
+	 * Stores the hash code of this object.
+	 */
+	private final int hashCodeValue;
 
 	SubFileParameter(SubFileParameterBuilder subFileParameterBuilder) {
 		this.startAddress = subFileParameterBuilder.startAddress;

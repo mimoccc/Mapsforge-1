@@ -19,7 +19,10 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Logger;
 
-class ReadBuffer {
+/**
+ * Reads from a {@link RandomAccessFile} into a buffer and decodes the data.
+ */
+public class ReadBuffer {
 	private static final String CHARSET_UTF8 = "UTF-8";
 	private static final Logger LOG = Logger.getLogger(ReadBuffer.class.getName());
 
@@ -37,25 +40,11 @@ class ReadBuffer {
 	}
 
 	/**
-	 * @return the current buffer position.
-	 */
-	int getBufferPosition() {
-		return this.bufferPosition;
-	}
-
-	/**
-	 * @return the current size of the read buffer.
-	 */
-	int getBufferSize() {
-		return this.bufferData.length;
-	}
-
-	/**
 	 * Returns one signed byte from the read buffer.
 	 * 
 	 * @return the byte value.
 	 */
-	byte readByte() {
+	public byte readByte() {
 		return this.bufferData[this.bufferPosition++];
 	}
 
@@ -69,7 +58,7 @@ class ReadBuffer {
 	 * @throws IOException
 	 *             if an error occurs while reading the file.
 	 */
-	boolean readFromFile(int length) throws IOException {
+	public boolean readFromFile(int length) throws IOException {
 		// ensure that the read buffer is large enough
 		if (this.bufferData == null || this.bufferData.length < length) {
 			// ensure that the read buffer is not too large
@@ -92,7 +81,7 @@ class ReadBuffer {
 	 * 
 	 * @return the int value.
 	 */
-	int readInt() {
+	public int readInt() {
 		this.bufferPosition += 4;
 		return Deserializer.getInt(this.bufferData, this.bufferPosition - 4);
 	}
@@ -104,7 +93,7 @@ class ReadBuffer {
 	 * 
 	 * @return the long value.
 	 */
-	long readLong() {
+	public long readLong() {
 		this.bufferPosition += 8;
 		return Deserializer.getLong(this.bufferData, this.bufferPosition - 8);
 	}
@@ -116,7 +105,7 @@ class ReadBuffer {
 	 * 
 	 * @return the int value.
 	 */
-	int readShort() {
+	public int readShort() {
 		this.bufferPosition += 2;
 		return Deserializer.getShort(this.bufferData, this.bufferPosition - 2);
 	}
@@ -129,7 +118,7 @@ class ReadBuffer {
 	 * 
 	 * @return the int value.
 	 */
-	int readSignedInt() {
+	public int readSignedInt() {
 		int variableByteDecode = 0;
 		byte variableByteShift = 0;
 
@@ -155,7 +144,7 @@ class ReadBuffer {
 	 * 
 	 * @return the int value.
 	 */
-	int readUnsignedInt() {
+	public int readUnsignedInt() {
 		int variableByteDecode = 0;
 		byte variableByteShift = 0;
 
@@ -174,7 +163,7 @@ class ReadBuffer {
 	 * 
 	 * @return the UTF-8 decoded string (may be null).
 	 */
-	String readUTF8EncodedString() {
+	public String readUTF8EncodedString() {
 		return readUTF8EncodedString(readUnsignedInt());
 	}
 
@@ -185,7 +174,7 @@ class ReadBuffer {
 	 *            the length of the string in bytes.
 	 * @return the UTF-8 decoded string (may be null).
 	 */
-	String readUTF8EncodedString(int stringLength) {
+	public String readUTF8EncodedString(int stringLength) {
 		if (stringLength > 0 && this.bufferPosition + stringLength <= this.bufferData.length) {
 			this.bufferPosition += stringLength;
 			try {
@@ -196,6 +185,20 @@ class ReadBuffer {
 		}
 		LOG.warning("invalid string length: " + stringLength);
 		return null;
+	}
+
+	/**
+	 * @return the current buffer position.
+	 */
+	int getBufferPosition() {
+		return this.bufferPosition;
+	}
+
+	/**
+	 * @return the current size of the read buffer.
+	 */
+	int getBufferSize() {
+		return this.bufferData.length;
 	}
 
 	/**
