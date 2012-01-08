@@ -19,7 +19,7 @@
         <string name="cancel">Peruuta</string>
         <string name="error">Virhe</string>
         <string name="error_last_location_unknown">Viimeinen sijainti ei ole tiedossa</string>
-        <string name="file_invalid">Valittu tiedosto ei ole kelvollinen karttatiedosto. Valitse toinen tiedosto.</string>
+        <string name="file_invalid">Valittu tiedosto ei ole kelvollinen karttatiedosto.</string>
 		<string name="file_select">Valitse karttatiedosto.</string>
         <string name="file_size_byte">tavu</string>
 		<string name="file_size_bytes">tavua</string>

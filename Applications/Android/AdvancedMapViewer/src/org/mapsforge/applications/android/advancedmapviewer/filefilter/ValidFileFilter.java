@@ -14,34 +14,16 @@
  */
 package org.mapsforge.applications.android.advancedmapviewer.filefilter;
 
-import java.io.File;
 import java.io.FileFilter;
 
+import org.mapsforge.map.reader.header.FileOpenResult;
+
 /**
- * Accepts all readable directories and all readable files with a given extension.
+ * An extension of the {@link FileFilter} interface.
  */
-public class FilterByFileExtension implements FileFilter {
-	private final String extension;
-
+public interface ValidFileFilter extends FileFilter {
 	/**
-	 * @param extension
-	 *            the allowed file name extension.
+	 * @return the result of the last {@link #accept} call (might be null).
 	 */
-	public FilterByFileExtension(String extension) {
-		this.extension = extension;
-	}
-
-	@Override
-	public boolean accept(File file) {
-		// accept only readable files
-		if (file.canRead()) {
-			if (file.isDirectory()) {
-				// accept all directories
-				return true;
-			} else if (file.isFile() && file.getName().endsWith(this.extension)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	FileOpenResult getFileOpenResult();
 }

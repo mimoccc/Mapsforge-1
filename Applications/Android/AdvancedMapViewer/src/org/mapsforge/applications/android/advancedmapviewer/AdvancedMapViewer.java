@@ -393,7 +393,7 @@ public class AdvancedMapViewer extends MapActivity {
 	 */
 	private void startMapFilePicker() {
 		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_MAP);
-		FilePicker.setFileSelectFilter(ValidMapFile.INSTANCE);
+		FilePicker.setFileSelectFilter(new ValidMapFile());
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_MAP_FILE);
 	}
 
@@ -402,7 +402,7 @@ public class AdvancedMapViewer extends MapActivity {
 	 */
 	private void startRenderThemePicker() {
 		FilePicker.setFileDisplayFilter(FILE_FILTER_EXTENSION_XML);
-		FilePicker.setFileSelectFilter(ValidRenderTheme.INSTANCE);
+		FilePicker.setFileSelectFilter(new ValidRenderTheme());
 		startActivityForResult(new Intent(this, FilePicker.class), SELECT_RENDER_THEME_FILE);
 	}
 

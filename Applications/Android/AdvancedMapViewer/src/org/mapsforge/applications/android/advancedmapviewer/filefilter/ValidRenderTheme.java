@@ -15,7 +15,6 @@
 package org.mapsforge.applications.android.advancedmapviewer.filefilter;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
+import org.mapsforge.map.reader.header.FileOpenResult;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -31,18 +31,12 @@ import org.xml.sax.XMLReader;
 /**
  * Accepts all valid render theme XML files.
  */
-public final class ValidRenderTheme implements FileFilter {
-	public static final FileFilter INSTANCE = new ValidRenderTheme();
-
-	private ValidRenderTheme() {
-		// do nothing
-	}
+public final class ValidRenderTheme implements ValidFileFilter {
+	private FileOpenResult fileOpenResult;
 
 	@Override
 	public boolean accept(File file) {
 		InputStream inputStream = null;
-
-		boolean acceptFile = true;
 
 		try {
 			inputStream = new FileInputStream(file);
@@ -50,22 +44,28 @@ public final class ValidRenderTheme implements FileFilter {
 			XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
 			xmlReader.setContentHandler(renderThemeHandler);
 			xmlReader.parse(new InputSource(inputStream));
+			this.fileOpenResult = FileOpenResult.SUCCESS;
 		} catch (ParserConfigurationException e) {
-			acceptFile = false;
+			this.fileOpenResult = new FileOpenResult(e.getMessage());
 		} catch (SAXException e) {
-			acceptFile = false;
+			this.fileOpenResult = new FileOpenResult(e.getMessage());
 		} catch (IOException e) {
-			acceptFile = false;
+			this.fileOpenResult = new FileOpenResult(e.getMessage());
 		} finally {
 			try {
 				if (inputStream != null) {
 					inputStream.close();
 				}
 			} catch (IOException e) {
-				acceptFile = false;
+				this.fileOpenResult = new FileOpenResult(e.getMessage());
 			}
 		}
 
-		return acceptFile;
+		return this.fileOpenResult.isSuccess();
+	}
+
+	@Override
+	public FileOpenResult getFileOpenResult() {
+		return this.fileOpenResult;
 	}
 }

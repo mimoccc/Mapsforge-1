@@ -19,7 +19,7 @@
 	<string name="cancel">Annulla</string>
 	<string name="error">Errore</string>
 	<string name="error_last_location_unknown">L\'ultima posizione è sconosciuta</string>
-	<string name="file_invalid">Il file selezionato non è valido. Si prega di scegliene un altro.</string>
+	<string name="file_invalid">Il file selezionato non è valido.</string>
 	<string name="file_select">Si prega di selezionare un file.</string>
 	<string name="file_size_byte">byte</string>
 	<string name="file_size_bytes">bytes</string>

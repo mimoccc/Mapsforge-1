@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import org.mapsforge.applications.android.advancedmapviewer.R;
+import org.mapsforge.applications.android.advancedmapviewer.filefilter.ValidFileFilter;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -43,19 +44,22 @@ import android.widget.GridView;
  * A {@link FileFilter} can be activated via {@link #setFileDisplayFilter(FileFilter)} to restrict the displayed files
  * and folders. By default all files and folders are visible.
  * <p>
- * Another <code>FileFilter</code> can be applied via {@link #setFileSelectFilter(FileFilter)} to check if a selected
- * file is valid before its path is returned. By default all files are considered as valid and can be selected by the
- * user.
+ * Another <code>FileFilter</code> can be applied via {@link #setFileSelectFilter(ValidFileFilter)} to check if a
+ * selected file is valid before its path is returned. By default all files are considered as valid and can be selected.
  */
 public class FilePicker extends Activity implements AdapterView.OnItemClickListener {
+	/**
+	 * The name of the extra data in the result {@link Intent}.
+	 */
 	public static final String SELECTED_FILE = "selectedFile";
+
 	private static final String CURRENT_DIRECTORY = "currentDirectory";
 	private static final String DEFAULT_DIRECTORY = "/";
 	private static final int DIALOG_FILE_INVALID = 0;
 	private static final int DIALOG_FILE_SELECT = 1;
 	private static Comparator<File> fileComparator = getDefaultFileComparator();
 	private static FileFilter fileDisplayFilter;
-	private static FileFilter fileSelectFilter;
+	private static ValidFileFilter fileSelectFilter;
 	private static final String PREFERENCES_FILE = "FilePicker";
 
 	/**
@@ -87,7 +91,7 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 	 * @param fileSelectFilter
 	 *            the file selection filter (may be null).
 	 */
-	public static void setFileSelectFilter(FileFilter fileSelectFilter) {
+	public static void setFileSelectFilter(ValidFileFilter fileSelectFilter) {
 		FilePicker.fileSelectFilter = fileSelectFilter;
 	}
 
@@ -187,7 +191,13 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
 			case DIALOG_FILE_INVALID:
 				builder.setIcon(android.R.drawable.ic_menu_info_details);
 				builder.setTitle(R.string.error);
-				builder.setMessage(R.string.file_invalid);
+
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.append(getString(R.string.file_invalid));
+				stringBuilder.append("\n\n");
+				stringBuilder.append(FilePicker.fileSelectFilter.getFileOpenResult().getErrorMessage());
+
+				builder.setMessage(stringBuilder.toString());
 				builder.setPositiveButton(R.string.ok, null);
 				return builder.create();
 			case DIALOG_FILE_SELECT:

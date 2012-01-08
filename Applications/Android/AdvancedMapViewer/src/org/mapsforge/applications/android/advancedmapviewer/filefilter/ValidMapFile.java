@@ -15,7 +15,6 @@
 package org.mapsforge.applications.android.advancedmapviewer.filefilter;
 
 import java.io.File;
-import java.io.FileFilter;
 
 import org.mapsforge.map.reader.MapDatabase;
 import org.mapsforge.map.reader.header.FileOpenResult;
@@ -23,21 +22,19 @@ import org.mapsforge.map.reader.header.FileOpenResult;
 /**
  * Accepts all valid map files.
  */
-public final class ValidMapFile implements FileFilter {
-	/**
-	 * Singleton for a ValidMapFile instance.
-	 */
-	public static final FileFilter INSTANCE = new ValidMapFile();
-
-	private ValidMapFile() {
-		// do nothing
-	}
+public final class ValidMapFile implements ValidFileFilter {
+	private FileOpenResult fileOpenResult;
 
 	@Override
 	public boolean accept(File file) {
 		MapDatabase mapDatabase = new MapDatabase();
-		FileOpenResult fileOpenResult = mapDatabase.openFile(file.getAbsolutePath());
+		this.fileOpenResult = mapDatabase.openFile(file.getAbsolutePath());
 		mapDatabase.closeFile();
-		return fileOpenResult.isSuccess();
+		return this.fileOpenResult.isSuccess();
+	}
+
+	@Override
+	public FileOpenResult getFileOpenResult() {
+		return this.fileOpenResult;
 	}
 }
