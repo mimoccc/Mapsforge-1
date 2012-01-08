@@ -34,7 +34,7 @@ import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
 import org.mapsforge.map.reader.MapDatabase;
 import org.mapsforge.map.reader.MapDatabaseCallback;
-import org.mapsforge.map.reader.MapFileInfo;
+import org.mapsforge.map.reader.header.MapFileInfo;
 import org.xml.sax.SAXException;
 
 import android.graphics.Bitmap;
@@ -203,10 +203,10 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	public GeoPoint getStartPoint() {
 		if (this.mapDatabase.hasOpenFile()) {
 			MapFileInfo mapFileInfo = this.mapDatabase.getMapFileInfo();
-			if (mapFileInfo.getStartPosition() != null) {
-				return mapFileInfo.getStartPosition();
-			} else if (mapFileInfo.getMapCenter() != null) {
-				return mapFileInfo.getMapCenter();
+			if (mapFileInfo.startPosition != null) {
+				return mapFileInfo.startPosition;
+			} else if (mapFileInfo.mapCenter != null) {
+				return mapFileInfo.mapCenter;
 			}
 		}
 

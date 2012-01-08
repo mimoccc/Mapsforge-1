@@ -39,8 +39,8 @@ import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
 import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
-import org.mapsforge.map.reader.FileOpenResult;
 import org.mapsforge.map.reader.MapDatabase;
+import org.mapsforge.map.reader.header.FileOpenResult;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -736,7 +736,7 @@ public class MapView extends ViewGroup {
 		if (!this.mapPosition.isValid()) {
 			return false;
 		} else if (!this.mapViewMode.requiresInternetConnection()
-				&& (!this.mapDatabase.hasOpenFile() || !this.mapDatabase.getMapFileInfo().getBoundingBox()
+				&& (!this.mapDatabase.hasOpenFile() || !this.mapDatabase.getMapFileInfo().boundingBox
 						.contains(getMapPosition().getMapCenter()))) {
 			return false;
 		}
@@ -774,8 +774,7 @@ public class MapView extends ViewGroup {
 		}
 
 		if (this.mapViewMode.requiresInternetConnection()
-				|| (this.mapDatabase.hasOpenFile() && this.mapDatabase.getMapFileInfo().getBoundingBox()
-						.contains(geoPoint))) {
+				|| (this.mapDatabase.hasOpenFile() && this.mapDatabase.getMapFileInfo().boundingBox.contains(geoPoint))) {
 			if (hasValidCenter()) {
 				// calculate the distance between previous and current position
 				MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();

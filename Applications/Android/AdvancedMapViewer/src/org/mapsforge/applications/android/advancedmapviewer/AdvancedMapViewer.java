@@ -42,7 +42,7 @@ import org.mapsforge.applications.android.advancedmapviewer.filepicker.FilePicke
 import org.mapsforge.applications.android.advancedmapviewer.preferences.EditPreferences;
 import org.mapsforge.core.BoundingBox;
 import org.mapsforge.core.GeoPoint;
-import org.mapsforge.map.reader.MapFileInfo;
+import org.mapsforge.map.reader.header.MapFileInfo;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -159,7 +159,7 @@ public class AdvancedMapViewer extends MapActivity {
 			case R.id.menu_position_map_center:
 				// disable GPS follow mode if it is enabled
 				disableSnapToLocation(true);
-				this.mapController.setCenter(this.mapView.getMapDatabase().getMapFileInfo().getMapCenter());
+				this.mapController.setCenter(this.mapView.getMapDatabase().getMapFileInfo().mapCenter);
 				return true;
 
 			case R.id.menu_screenshot:
@@ -575,15 +575,15 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file size
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewSize);
-			textView.setText(formatFileSize(mapFileInfo.getFileSize()));
+			textView.setText(formatFileSize(mapFileInfo.fileSize));
 
 			// map file version
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewVersion);
-			textView.setText(String.valueOf(mapFileInfo.getFileVersion()));
+			textView.setText(String.valueOf(mapFileInfo.fileVersion));
 
 			// map file debug
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewDebug);
-			if (mapFileInfo.isDebugFile()) {
+			if (mapFileInfo.debugFile) {
 				textView.setText(R.string.info_map_file_debug_yes);
 			} else {
 				textView.setText(R.string.info_map_file_debug_no);
@@ -591,18 +591,18 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file date
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewDate);
-			Date date = new Date(mapFileInfo.getMapDate());
+			Date date = new Date(mapFileInfo.mapDate);
 			textView.setText(DateFormat.getDateTimeInstance().format(date));
 
 			// map file area
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewArea);
-			BoundingBox boundingBox = mapFileInfo.getBoundingBox();
+			BoundingBox boundingBox = mapFileInfo.boundingBox;
 			textView.setText(boundingBox.getMinLatitude() + ", " + boundingBox.getMinLongitude() + " – \n"
 					+ boundingBox.getMaxLatitude() + ", " + boundingBox.getMaxLongitude());
 
 			// map file start position
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStartPosition);
-			GeoPoint startPosition = mapFileInfo.getStartPosition();
+			GeoPoint startPosition = mapFileInfo.startPosition;
 			if (startPosition == null) {
 				textView.setText(null);
 			} else {
@@ -611,7 +611,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file start zoom level
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewStartZoomLevel);
-			Byte startZoomLevel = mapFileInfo.getStartZoomLevel();
+			Byte startZoomLevel = mapFileInfo.startZoomLevel;
 			if (startZoomLevel == null) {
 				textView.setText(null);
 			} else {
@@ -620,11 +620,11 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file language preference
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewLanguagePreference);
-			textView.setText(mapFileInfo.getLanguagePreference());
+			textView.setText(mapFileInfo.languagePreference);
 
 			// map file comment text
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewComment);
-			textView.setText(mapFileInfo.getCommentText());
+			textView.setText(mapFileInfo.comment);
 		} else {
 			super.onPrepareDialog(id, dialog);
 		}

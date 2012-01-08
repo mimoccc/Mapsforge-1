@@ -17,13 +17,16 @@ package org.mapsforge.applications.android.advancedmapviewer.filefilter;
 import java.io.File;
 import java.io.FileFilter;
 
-import org.mapsforge.map.reader.FileOpenResult;
 import org.mapsforge.map.reader.MapDatabase;
+import org.mapsforge.map.reader.header.FileOpenResult;
 
 /**
  * Accepts all valid map files.
  */
 public final class ValidMapFile implements FileFilter {
+	/**
+	 * Singleton for a ValidMapFile instance.
+	 */
 	public static final FileFilter INSTANCE = new ValidMapFile();
 
 	private ValidMapFile() {
