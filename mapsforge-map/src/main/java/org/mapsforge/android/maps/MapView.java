@@ -307,6 +307,13 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
+	 * @return the zoom controls instance which is used in this MapView.
+	 */
+	public MapZoomControls getMapZoomControls() {
+		return this.mapZoomControls;
+	}
+
+	/**
 	 * Returns a thread-safe list of overlays for this MapView. It is necessary to manually synchronize on this list
 	 * when iterating over it.
 	 * 
