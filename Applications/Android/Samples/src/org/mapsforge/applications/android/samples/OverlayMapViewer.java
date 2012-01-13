@@ -14,7 +14,6 @@
  */
 package org.mapsforge.applications.android.samples;
 
-import org.mapsforge.android.maps.GeoPoint;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
@@ -24,6 +23,7 @@ import org.mapsforge.android.maps.overlay.ItemizedOverlay;
 import org.mapsforge.android.maps.overlay.OverlayCircle;
 import org.mapsforge.android.maps.overlay.OverlayItem;
 import org.mapsforge.android.maps.overlay.OverlayWay;
+import org.mapsforge.core.GeoPoint;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;

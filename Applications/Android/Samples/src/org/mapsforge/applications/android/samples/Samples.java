@@ -66,21 +66,11 @@ public class Samples extends Activity {
 			}
 		});
 
-		Button button5 = new Button(this);
-		button5.setText("POI Viewer");
-		button5.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				startActivity(new Intent(Samples.this, POIViewer.class));
-			}
-		});
-
 		setContentView(R.layout.activity_samples);
 		LinearLayout linearLayout = (LinearLayout) findViewById(R.id.samples);
 		linearLayout.addView(button1);
 		linearLayout.addView(button2);
 		linearLayout.addView(button3);
 		linearLayout.addView(button4);
-		linearLayout.addView(button5);
 	}
 }
