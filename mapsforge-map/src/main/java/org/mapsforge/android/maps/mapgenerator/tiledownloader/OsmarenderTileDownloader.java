@@ -49,9 +49,9 @@ public class OsmarenderTileDownloader extends TileDownloader {
 		this.stringBuilder.setLength(0);
 		this.stringBuilder.append("/Tiles/tile/");
 		this.stringBuilder.append(tile.zoomLevel);
-		this.stringBuilder.append("/");
+		this.stringBuilder.append('/');
 		this.stringBuilder.append(tile.tileX);
-		this.stringBuilder.append("/");
+		this.stringBuilder.append('/');
 		this.stringBuilder.append(tile.tileY);
 		this.stringBuilder.append(".png");
 
