@@ -67,8 +67,7 @@
 
 	<properties>
 		<osmosis.plugin.dir>${user.home}/.openstreetmap/osmosis/plugins/</osmosis.plugin.dir>
-		<mapfile.writer.version>0.3.0</mapfile.writer.version>
-		<mapfile.specification.version>3</mapfile.specification.version>
+		<mapfile.writer.version>${project.version}</mapfile.writer.version>
 	</properties>
 
 	<dependencies>
