@@ -39,9 +39,6 @@
 					<exclude>plugin.xml</exclude>
 				</excludes>
 			</resource>
-			<resource>
-				<directory>../shared-resources</directory>
-			</resource>
 		</resources>
 
 		<plugins>
