@@ -14,21 +14,21 @@
  */
 package org.mapsforge.applications.android.advancedmapviewer;
 
-import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.util.Date;
 
+import org.mapsforge.android.AndroidUtils;
 import org.mapsforge.android.maps.DebugSettings;
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapController;
 import org.mapsforge.android.maps.MapScaleBar;
 import org.mapsforge.android.maps.MapScaleBar.TextField;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.MapViewMode;
+import org.mapsforge.android.maps.mapgenerator.MapGenerator;
+import org.mapsforge.android.maps.mapgenerator.MapGeneratorFactory;
+import org.mapsforge.android.maps.mapgenerator.MapGeneratorInternal;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
 import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.overlay.ItemizedOverlay;
@@ -57,7 +57,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
@@ -92,12 +91,6 @@ public class AdvancedMapViewer extends MapActivity {
 	private static final int DIALOG_LOCATION_PROVIDER_DISABLED = 2;
 	private static final FileFilter FILE_FILTER_EXTENSION_MAP = new FilterByFileExtension(".map");
 	private static final FileFilter FILE_FILTER_EXTENSION_XML = new FilterByFileExtension(".xml");
-	private static final int ONE_GIGABYTE = 1000000000;
-	private static final int ONE_KILOBYTE = 1000;
-	private static final int ONE_MEGABYTE = 1000000;
-	private static final String SCREENSHOT_DIRECTORY = "Pictures";
-	private static final String SCREENSHOT_FILE_NAME = "Map screenshot";
-	private static final int SCREENSHOT_QUALITY = 90;
 	private static final int SELECT_MAP_FILE = 0;
 	private static final int SELECT_RENDER_THEME_FILE = 1;
 
@@ -105,10 +98,10 @@ public class AdvancedMapViewer extends MapActivity {
 	private Paint circleOverlayOutline;
 	private LocationManager locationManager;
 	private MyLocationListener myLocationListener;
+	private ScreenshotCapturer screenshotCapturer;
 	private boolean showMyLocation;
 	private boolean snapToLocation;
 	private ToggleButton snapToLocationView;
-	private Toast toast;
 	private WakeLock wakeLock;
 	ArrayCircleOverlay circleOverlay;
 	ArrayItemizedOverlay itemizedOverlay;
@@ -166,11 +159,11 @@ public class AdvancedMapViewer extends MapActivity {
 				return true;
 
 			case R.id.menu_screenshot_jpeg:
-				captureScreenshotAsync(CompressFormat.JPEG);
+				this.screenshotCapturer.captureScreenShot(CompressFormat.JPEG);
 				return true;
 
 			case R.id.menu_screenshot_png:
-				captureScreenshotAsync(CompressFormat.PNG);
+				this.screenshotCapturer.captureScreenShot(CompressFormat.PNG);
 				return true;
 
 			case R.id.menu_preferences:
@@ -199,9 +192,9 @@ public class AdvancedMapViewer extends MapActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		MapViewMode mapViewMode = this.mapView.getMapViewMode();
+		MapGenerator mapGenerator = this.mapView.getMapGenerator();
 
-		if (mapViewMode.requiresInternetConnection()) {
+		if (mapGenerator.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_info_map_file).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_info_map_file).setEnabled(true);
@@ -219,19 +212,19 @@ public class AdvancedMapViewer extends MapActivity {
 			menu.findItem(R.id.menu_position_my_location_disable).setEnabled(false);
 		}
 
-		if (mapViewMode.requiresInternetConnection()) {
+		if (mapGenerator.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_position_map_center).setEnabled(true);
 		}
 
-		if (mapViewMode.requiresInternetConnection()) {
+		if (mapGenerator.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_render_theme).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_render_theme).setEnabled(true);
 		}
 
-		if (mapViewMode.requiresInternetConnection()) {
+		if (mapGenerator.requiresInternetConnection()) {
 			menu.findItem(R.id.menu_mapfile).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_mapfile).setEnabled(true);
@@ -244,45 +237,6 @@ public class AdvancedMapViewer extends MapActivity {
 	public boolean onTrackballEvent(MotionEvent event) {
 		// forward the event to the MapView
 		return this.mapView.onTrackballEvent(event);
-	}
-
-	private void captureScreenshotAsync(final CompressFormat format) {
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					File path = new File(Environment.getExternalStorageDirectory(), SCREENSHOT_DIRECTORY);
-					// make sure the Pictures directory exists
-					if (!path.exists() && !path.mkdirs()) {
-						showToastOnUiThread("Could not create target directory");
-						return;
-					}
-
-					// assemble the complete name for the screenshot file
-					String fileName = path.getAbsolutePath() + File.separatorChar + SCREENSHOT_FILE_NAME + "."
-							+ format.name().toLowerCase();
-
-					if (AdvancedMapViewer.this.mapView.takeScreenshot(format, SCREENSHOT_QUALITY, fileName)) {
-						// success
-						showToastOnUiThread(fileName);
-					} else {
-						// failure
-						showToastOnUiThread("Screenshot could not be saved");
-					}
-				} catch (IOException e) {
-					showToastOnUiThread(e.getLocalizedMessage());
-				}
-			}
-
-			private void showToastOnUiThread(final String message) {
-				AdvancedMapViewer.this.runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						showToast(message);
-					}
-				});
-			}
-		}.start();
 	}
 
 	private void configureMapView() {
@@ -336,36 +290,6 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Formats the given file size as a human readable string, using SI prefixes.
-	 * 
-	 * @param fileSize
-	 *            the file size to be formatted.
-	 * @return a human readable file size.
-	 * @throws IllegalArgumentException
-	 *             if the given file size is negative.
-	 */
-	private String formatFileSize(long fileSize) {
-		if (fileSize < 0) {
-			throw new IllegalArgumentException("invalid file size: " + fileSize);
-		} else if (fileSize < 1000) { // less than 1 kB
-			if (fileSize == 1) {
-				// singular
-				return "1 " + getString(R.string.file_size_byte);
-			}
-			// plural, including zero
-			return fileSize + " " + getString(R.string.file_size_bytes);
-		} else {
-			DecimalFormat decimalFormat = new DecimalFormat("#.00 ");
-			if (fileSize < ONE_MEGABYTE) { // less than 1 MB
-				return decimalFormat.format(fileSize / (double) ONE_KILOBYTE) + getString(R.string.file_size_kb);
-			} else if (fileSize < ONE_GIGABYTE) { // less than 1 GB
-				return decimalFormat.format(fileSize / (double) ONE_MEGABYTE) + getString(R.string.file_size_mb);
-			}
-			return decimalFormat.format(fileSize / (double) ONE_GIGABYTE) + getString(R.string.file_size_gb);
-		}
-	}
-
-	/**
 	 * Centers the map to the last known position as reported by the most accurate location provider. If the last
 	 * location is unknown, a toast message is displayed instead.
 	 */
@@ -384,7 +308,7 @@ public class AdvancedMapViewer extends MapActivity {
 			GeoPoint point = new GeoPoint(bestLocation.getLatitude(), bestLocation.getLongitude());
 			this.mapController.setCenter(point);
 		} else {
-			showToast(getString(R.string.error_last_location_unknown));
+			showToastOnUiThread(getString(R.string.error_last_location_unknown));
 		}
 	}
 
@@ -407,25 +331,23 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == SELECT_MAP_FILE) {
 			if (resultCode == RESULT_OK) {
 				disableSnapToLocation(true);
-				if (data != null && data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
-					this.mapView.setMapFile(data.getStringExtra(FilePicker.SELECTED_FILE));
+				if (intent != null && intent.getStringExtra(FilePicker.SELECTED_FILE) != null) {
+					this.mapView.setMapFile(intent.getStringExtra(FilePicker.SELECTED_FILE));
 				}
-			} else {
-				if (resultCode == RESULT_CANCELED && !this.mapView.getMapViewMode().requiresInternetConnection()
-						&& this.mapView.getMapFile() == null) {
-					finish();
-				}
+			} else if (resultCode == RESULT_CANCELED && !this.mapView.getMapGenerator().requiresInternetConnection()
+					&& this.mapView.getMapFile() == null) {
+				finish();
 			}
-		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK && data != null
-				&& data.getStringExtra(FilePicker.SELECTED_FILE) != null) {
+		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK && intent != null
+				&& intent.getStringExtra(FilePicker.SELECTED_FILE) != null) {
 			try {
-				this.mapView.setRenderTheme(data.getStringExtra(FilePicker.SELECTED_FILE));
+				this.mapView.setRenderTheme(intent.getStringExtra(FilePicker.SELECTED_FILE));
 			} catch (FileNotFoundException e) {
-				showToast(e.getLocalizedMessage());
+				showToastOnUiThread(e.getLocalizedMessage());
 			}
 		}
 	}
@@ -433,6 +355,9 @@ public class AdvancedMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		this.screenshotCapturer = new ScreenshotCapturer(this);
+		this.screenshotCapturer.start();
 
 		// set up the layout views
 		setContentView(R.layout.activity_advanced_map_viewer);
@@ -527,6 +452,7 @@ public class AdvancedMapViewer extends MapActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		this.screenshotCapturer.interrupt();
 		disableShowMyLocation();
 	}
 
@@ -536,12 +462,6 @@ public class AdvancedMapViewer extends MapActivity {
 		// release the wake lock if necessary
 		if (this.wakeLock.isHeld()) {
 			this.wakeLock.release();
-		}
-
-		// remove the toast message if visible
-		if (this.toast != null) {
-			this.toast.cancel();
-			this.toast = null;
 		}
 	}
 
@@ -575,7 +495,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file size
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewSize);
-			textView.setText(formatFileSize(mapFileInfo.fileSize));
+			textView.setText(FileUtils.formatFileSize(mapFileInfo.fileSize, getResources()));
 
 			// map file version
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewVersion);
@@ -634,15 +554,19 @@ public class AdvancedMapViewer extends MapActivity {
 	protected void onResume() {
 		super.onResume();
 
-		// Read the default shared preferences
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-		// set the map settings
 		this.mapView.getMapScaleBar().setShowMapScaleBar(preferences.getBoolean("showScaleBar", false));
-		if (preferences.contains("mapViewMode")) {
-			MapViewMode mapViewMode = Enum.valueOf(MapViewMode.class,
-					preferences.getString("mapViewMode", MapView.DEFAULT_MAP_VIEW_MODE.name()));
-			this.mapView.setMapViewMode(mapViewMode);
+		if (preferences.contains("mapGenerator")) {
+			String name = preferences.getString("mapGenerator", MapGeneratorInternal.DATABASE_RENDERER.name());
+			MapGeneratorInternal mapGeneratorInternal;
+			try {
+				mapGeneratorInternal = MapGeneratorInternal.valueOf(name);
+			} catch (IllegalArgumentException e) {
+				mapGeneratorInternal = MapGeneratorInternal.DATABASE_RENDERER;
+			}
+			MapGenerator mapGenerator = MapGeneratorFactory.createMapGenerator(mapGeneratorInternal);
+			this.mapView.setMapGenerator(mapGenerator);
 		}
 		try {
 			this.mapView.setTextScale(Float.parseFloat(preferences.getString("textScale", "1")));
@@ -650,7 +574,6 @@ public class AdvancedMapViewer extends MapActivity {
 			this.mapView.setTextScale(1);
 		}
 
-		// set the general settings
 		if (preferences.getBoolean("fullscreen", false)) {
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
@@ -671,7 +594,6 @@ public class AdvancedMapViewer extends MapActivity {
 		float moveSpeedFactor = Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f;
 		this.mapView.getMapMover().setMoveSpeedFactor(moveSpeedFactor);
 
-		// set the debug settings
 		this.mapView.getFpsCounter().setFpsCounter(preferences.getBoolean("showFpsCounter", false));
 
 		boolean drawTileFrames = preferences.getBoolean("drawTileFrames", false);
@@ -680,8 +602,7 @@ public class AdvancedMapViewer extends MapActivity {
 		DebugSettings debugSettings = new DebugSettings(drawTileCoordinates, drawTileFrames, highlightWaterTiles);
 		this.mapView.setDebugSettings(debugSettings);
 
-		// check if the file browser needs to be displayed
-		if (!this.mapView.getMapViewMode().requiresInternetConnection() && this.mapView.getMapFile() == null) {
+		if (!this.mapView.getMapGenerator().requiresInternetConnection() && this.mapView.getMapFile() == null) {
 			startMapFilePicker();
 		}
 	}
@@ -724,7 +645,7 @@ public class AdvancedMapViewer extends MapActivity {
 			this.snapToLocationView.setChecked(false);
 			this.mapView.setClickable(true);
 			if (showToast) {
-				showToast(getString(R.string.snap_to_location_disabled));
+				showToastOnUiThread(getString(R.string.snap_to_location_disabled));
 			}
 		}
 	}
@@ -740,7 +661,7 @@ public class AdvancedMapViewer extends MapActivity {
 			this.snapToLocation = true;
 			this.mapView.setClickable(false);
 			if (showToast) {
-				showToast(getString(R.string.snap_to_location_enabled));
+				showToastOnUiThread(getString(R.string.snap_to_location_enabled));
 			}
 		}
 	}
@@ -764,19 +685,24 @@ public class AdvancedMapViewer extends MapActivity {
 	}
 
 	/**
-	 * Displays a text message via the toast notification system. If a previous message is still visible, the previous
-	 * message is first removed.
+	 * Uses the UI thread to display the given text message as toast notification.
 	 * 
 	 * @param text
 	 *            the text message to display
 	 */
-	void showToast(String text) {
-		if (this.toast == null) {
-			this.toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
+	void showToastOnUiThread(final String text) {
+
+		if (AndroidUtils.currentThreadIsUiThread()) {
+			Toast toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
+			toast.show();
 		} else {
-			this.toast.cancel();
-			this.toast.setText(text);
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					Toast toast = Toast.makeText(AdvancedMapViewer.this, text, Toast.LENGTH_LONG);
+					toast.show();
+				}
+			});
 		}
-		this.toast.show();
 	}
 }

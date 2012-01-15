@@ -16,7 +16,6 @@ package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.MapViewMode;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -39,8 +38,7 @@ public class DualMapViewer extends MapActivity {
 			return true;
 		}
 		// forward the event to both MapViews for simultaneous movement
-		return this.mapView1.onKeyDown(keyCode, event)
-				| this.mapView2.onKeyDown(keyCode, event);
+		return this.mapView1.onKeyDown(keyCode, event) | this.mapView2.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -58,13 +56,13 @@ public class DualMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		this.mapView1 = new MapView(this, MapViewMode.CANVAS_RENDERER);
+		this.mapView1 = new MapView(this);
 		this.mapView1.setClickable(true);
 		this.mapView1.setBuiltInZoomControls(true);
 		this.mapView1.setMapFile("/sdcard/germany.map");
 		// this.mapView1.setMoveSpeed(3);
 
-		this.mapView2 = new MapView(this, MapViewMode.CANVAS_RENDERER);
+		this.mapView2 = new MapView(this);
 		this.mapView2.setClickable(true);
 		this.mapView2.setBuiltInZoomControls(true);
 		this.mapView2.setMapFile("/sdcard/berlin.map");
@@ -78,10 +76,10 @@ public class DualMapViewer extends MapActivity {
 			linearLayout.setOrientation(LinearLayout.VERTICAL);
 		}
 
-		this.mapView1.setLayoutParams(new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-		this.mapView2.setLayoutParams(new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+		this.mapView1.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+		this.mapView2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 
 		// add both MapViews to the LinearLayout
 		linearLayout.addView(this.mapView1);

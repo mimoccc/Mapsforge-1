@@ -67,4 +67,17 @@ public class MapPositionFix {
 	public int getLongitudeE6() {
 		return (int) (this.longitude * CONVERSION_FACTOR);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("MapPositionFix [latitude=");
+		stringBuilder.append(this.latitude);
+		stringBuilder.append(", longitude=");
+		stringBuilder.append(this.longitude);
+		stringBuilder.append(", zoomLevel=");
+		stringBuilder.append(this.zoomLevel);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
+	}
 }

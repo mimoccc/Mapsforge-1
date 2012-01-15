@@ -88,7 +88,7 @@ public class MultiTouchHandler extends TouchEventHandler {
 
 		this.mapView.getFrameBuffer().matrixPostTranslate(moveX, moveY);
 		this.mapView.getMapPosition().moveMap(moveX, moveY);
-		this.mapView.redraw();
+		this.mapView.redrawTiles();
 		return true;
 	}
 

@@ -122,7 +122,7 @@ public class MapMover extends PausableThread implements KeyEvent.Callback {
 
 			this.mapView.getFrameBuffer().matrixPostTranslate(mapMoveX, mapMoveY);
 			this.mapView.getMapPosition().moveMap(mapMoveX, mapMoveY);
-			this.mapView.redraw();
+			this.mapView.redrawTiles();
 			return true;
 		}
 		return false;
@@ -224,7 +224,7 @@ public class MapMover extends PausableThread implements KeyEvent.Callback {
 
 		// move the map and the overlays
 		this.mapView.getMapPosition().moveMap(timeElapsed * this.moveX, timeElapsed * this.moveY);
-		this.mapView.redraw();
+		this.mapView.redrawTiles();
 		sleep(FRAME_LENGTH_IN_MS);
 	}
 

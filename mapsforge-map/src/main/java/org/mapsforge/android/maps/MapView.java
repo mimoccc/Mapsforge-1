@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.mapsforge.android.AndroidUtils;
 import org.mapsforge.android.maps.inputhandling.MapMover;
 import org.mapsforge.android.maps.inputhandling.TouchEventHandler;
 import org.mapsforge.android.maps.inputhandling.ZoomAnimator;
@@ -32,6 +33,7 @@ import org.mapsforge.android.maps.mapgenerator.MapGeneratorFactory;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorJob;
 import org.mapsforge.android.maps.mapgenerator.MapWorker;
 import org.mapsforge.android.maps.mapgenerator.TileCache;
+import org.mapsforge.android.maps.mapgenerator.databaserenderer.DatabaseRenderer;
 import org.mapsforge.android.maps.mapgenerator.databaserenderer.ExternalRenderTheme;
 import org.mapsforge.android.maps.overlay.Overlay;
 import org.mapsforge.android.maps.overlay.OverlayList;
@@ -46,7 +48,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -58,9 +59,8 @@ import android.view.ViewGroup;
  * {@link MapController} to programmatically modify the position and zoom level of the map.
  * <p>
  * This implementation supports offline map rendering as well as downloading map images (tiles) over an Internet
- * connection. All possible operation modes are listed in the {@link MapViewMode} enumeration. The operation mode of a
- * MapView can be set in the constructor and changed at runtime with the {@link #setMapViewMode(MapViewMode)} method.
- * Some MapView parameters depend on the selected operation mode.
+ * connection. The operation mode of a MapView can be set in the constructor and changed at runtime with the
+ * {@link #setMapGeneratorInternal(MapGenerator)} method. Some MapView parameters depend on the selected operation mode.
  * <p>
  * In offline rendering mode a special database file is required which contains the map data. Map files can be stored in
  * any folder. The current map file is set by calling {@link #setMapFile(String)}. To retrieve the current
@@ -70,12 +70,6 @@ import android.view.ViewGroup;
  * of the map, add it to the list returned by {@link #getOverlays()}.
  */
 public class MapView extends ViewGroup {
-
-	/**
-	 * The default MapViewMode.
-	 */
-	public static final MapViewMode DEFAULT_MAP_VIEW_MODE = MapViewMode.CANVAS_RENDERER;
-
 	/**
 	 * Default render theme of the MapView.
 	 */
@@ -84,14 +78,6 @@ public class MapView extends ViewGroup {
 	private static final float DEFAULT_TEXT_SCALE = 1;
 	private static final int DEFAULT_TILE_CACHE_SIZE_FILE_SYSTEM = 100;
 	private static final int DEFAULT_TILE_CACHE_SIZE_IN_MEMORY = 20;
-
-	private static MapViewMode extractMapViewMode(AttributeSet attributeSet) {
-		String mapViewModeString = attributeSet.getAttributeValue(null, "mode");
-		if (mapViewModeString == null) {
-			return DEFAULT_MAP_VIEW_MODE;
-		}
-		return MapViewMode.valueOf(mapViewModeString);
-	}
 
 	private DebugSettings debugSettings;
 	private final TileCache fileSystemTileCache;
@@ -107,7 +93,6 @@ public class MapView extends ViewGroup {
 	private final MapMover mapMover;
 	private final MapPosition mapPosition;
 	private final MapScaleBar mapScaleBar;
-	private MapViewMode mapViewMode;
 	private final MapWorker mapWorker;
 	private final MapZoomControls mapZoomControls;
 	private final List<Overlay> overlays;
@@ -116,7 +101,7 @@ public class MapView extends ViewGroup {
 	private final ZoomAnimator zoomAnimator;
 
 	/**
-	 * Constructs a new MapView with the default {@link MapViewMode}.
+	 * Constructs a new MapView with the default {@link MapGenerator}.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
@@ -124,12 +109,12 @@ public class MapView extends ViewGroup {
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
 	public MapView(Context context) {
-		this(context, null, DEFAULT_MAP_VIEW_MODE);
+		this(context, null, new DatabaseRenderer());
 	}
 
 	/**
-	 * Constructs a new MapView. The {@link MapViewMode} can be defined via a {@code mode} attribute in the XML layout
-	 * file. If no mode is specified, the default mode is used.
+	 * Constructs a new MapView. The {@link MapGenerator} can be defined via a {@code mapGenerator} attribute in the XML
+	 * layout file.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
@@ -139,24 +124,24 @@ public class MapView extends ViewGroup {
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
 	public MapView(Context context, AttributeSet attributeSet) {
-		this(context, attributeSet, extractMapViewMode(attributeSet));
+		this(context, attributeSet, MapGeneratorFactory.createMapGenerator(attributeSet));
 	}
 
 	/**
-	 * Constructs a new MapView with the given MapViewMode.
+	 * Constructs a new MapView with the given MapGenerator.
 	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
-	 * @param mapViewMode
-	 *            the mode in which the MapView should operate.
+	 * @param mapGenerator
+	 *            the MapGenerator for this MapView.
 	 * @throws IllegalArgumentException
 	 *             if the context object is not an instance of {@link MapActivity}.
 	 */
-	public MapView(Context context, MapViewMode mapViewMode) {
-		this(context, null, mapViewMode == null ? DEFAULT_MAP_VIEW_MODE : mapViewMode);
+	public MapView(Context context, MapGenerator mapGenerator) {
+		this(context, null, mapGenerator);
 	}
 
-	private MapView(Context context, AttributeSet attributeSet, MapViewMode mapViewMode) {
+	private MapView(Context context, AttributeSet attributeSet, MapGenerator mapGenerator) {
 		super(context, attributeSet);
 
 		if (!(context instanceof MapActivity)) {
@@ -194,7 +179,7 @@ public class MapView extends ViewGroup {
 		this.zoomAnimator = new ZoomAnimator(this);
 		this.zoomAnimator.start();
 
-		setMapViewModeInternal(mapViewMode);
+		setMapGeneratorInternal(mapGenerator);
 		mapActivity.registerMapView(this);
 	}
 
@@ -250,10 +235,10 @@ public class MapView extends ViewGroup {
 	/**
 	 * @return the map database which is used for reading map files.
 	 * @throws UnsupportedOperationException
-	 *             if the MapViewMode works with an Internet connection.
+	 *             if the current MapGenerator works with an Internet connection.
 	 */
 	public MapDatabase getMapDatabase() {
-		if (this.mapViewMode.requiresInternetConnection()) {
+		if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapDatabase;
@@ -262,10 +247,10 @@ public class MapView extends ViewGroup {
 	/**
 	 * @return the currently used map file.
 	 * @throws UnsupportedOperationException
-	 *             if the current MapView mode works with an Internet connection.
+	 *             if the current MapGenerator mode works with an Internet connection.
 	 */
 	public String getMapFile() {
-		if (this.mapViewMode.requiresInternetConnection()) {
+		if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		return this.mapFile;
@@ -300,13 +285,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * @return the current MapViewMode.
-	 */
-	public MapViewMode getMapViewMode() {
-		return this.mapViewMode;
-	}
-
-	/**
 	 * @return the zoom controls instance which is used in this MapView.
 	 */
 	public MapZoomControls getMapZoomControls() {
@@ -334,7 +312,7 @@ public class MapView extends ViewGroup {
 	 * Calls either {@link #invalidate()} or {@link #postInvalidate()}, depending on the current thread.
 	 */
 	public void invalidateOnUiThread() {
-		if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+		if (AndroidUtils.currentThreadIsUiThread()) {
 			invalidate();
 		} else {
 			postInvalidate();
@@ -373,7 +351,7 @@ public class MapView extends ViewGroup {
 	/**
 	 * Calculates all necessary tiles and adds jobs accordingly.
 	 */
-	public void redraw() {
+	public void redrawTiles() {
 		if (this.getWidth() <= 0 || this.getHeight() <= 0) {
 			return;
 		}
@@ -398,7 +376,7 @@ public class MapView extends ViewGroup {
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
 				Tile tile = new Tile(tileX, tileY, mapPositionFix.zoomLevel);
-				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapViewMode, this.jobParameters,
+				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapGenerator, this.jobParameters,
 						this.debugSettings);
 
 				if (this.inMemoryTileCache.containsKey(mapGeneratorJob)) {
@@ -469,10 +447,10 @@ public class MapView extends ViewGroup {
 	 *            the path to the map file.
 	 * @return true if the map file was set correctly, false otherwise.
 	 * @throws UnsupportedOperationException
-	 *             if the current MapView mode works with an Internet connection.
+	 *             if the current MapGenerator mode works with an Internet connection.
 	 */
 	public boolean setMapFile(String mapFile) {
-		if (this.mapViewMode.requiresInternetConnection()) {
+		if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		if (mapFile == null) {
@@ -499,8 +477,8 @@ public class MapView extends ViewGroup {
 		this.mapMover.proceed();
 
 		this.mapDatabase.closeFile();
-		FileOpenResult openFile = this.mapDatabase.openFile(mapFile);
-		if (openFile.isSuccess()) {
+		FileOpenResult fileOpenResult = this.mapDatabase.openFile(mapFile);
+		if (fileOpenResult.isSuccess()) {
 			this.mapFile = mapFile;
 			setCenter(this.mapGenerator.getStartPoint());
 			clearAndRedrawMapView();
@@ -512,14 +490,14 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the MapViewMode for this MapView.
+	 * Sets the MapGenerator for this MapView.
 	 * 
-	 * @param mapViewMode
-	 *            the new MapViewMode.
+	 * @param mapGenerator
+	 *            the new MapGenerator.
 	 */
-	public void setMapViewMode(MapViewMode mapViewMode) {
-		if (this.mapViewMode != mapViewMode) {
-			setMapViewModeInternal(mapViewMode);
+	public void setMapGenerator(MapGenerator mapGenerator) {
+		if (this.mapGenerator != mapGenerator) {
+			setMapGeneratorInternal(mapGenerator);
 			clearAndRedrawMapView();
 		}
 	}
@@ -532,12 +510,12 @@ public class MapView extends ViewGroup {
 	 * @throws IllegalArgumentException
 	 *             if the supplied internalRenderTheme is null.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView currently works in downloading mode.
+	 *             if the current MapGenerator does not support render themes.
 	 */
 	public void setRenderTheme(InternalRenderTheme internalRenderTheme) {
 		if (internalRenderTheme == null) {
 			throw new IllegalArgumentException("render theme must not be null");
-		} else if (this.mapViewMode.requiresInternetConnection()) {
+		} else if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -553,14 +531,14 @@ public class MapView extends ViewGroup {
 	 * @throws IllegalArgumentException
 	 *             if the supplied internalRenderTheme is null.
 	 * @throws UnsupportedOperationException
-	 *             if the MapView currently works in downloading mode.
+	 *             if the current MapGenerator does not support render themes.
 	 * @throws FileNotFoundException
 	 *             if the supplied file does not exist, is a directory or cannot be read.
 	 */
 	public void setRenderTheme(String renderThemePath) throws FileNotFoundException {
 		if (renderThemePath == null) {
 			throw new IllegalArgumentException("render theme path must not be null");
-		} else if (this.mapViewMode.requiresInternetConnection()) {
+		} else if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -637,10 +615,15 @@ public class MapView extends ViewGroup {
 		return true;
 	}
 
-	private void setMapViewModeInternal(MapViewMode mapViewMode) {
-		this.mapViewMode = mapViewMode;
+	private void setMapGeneratorInternal(MapGenerator mapGenerator) {
+		if (mapGenerator == null) {
+			throw new IllegalArgumentException("mapGenerator must not be null");
+		}
 
-		this.mapGenerator = MapGeneratorFactory.createMapGenerator(this);
+		if (mapGenerator instanceof DatabaseRenderer) {
+			((DatabaseRenderer) mapGenerator).setMapDatabase(this.mapDatabase);
+		}
+		this.mapGenerator = mapGenerator;
 		this.mapWorker.setMapGenerator(this.mapGenerator);
 
 		GeoPoint startPoint = this.mapGenerator.getStartPoint();
@@ -690,7 +673,7 @@ public class MapView extends ViewGroup {
 
 		if (width > 0 && height > 0) {
 			this.frameBuffer.onSizeChanged();
-			redraw();
+			redrawTiles();
 
 			synchronized (this.overlays) {
 				for (int i = 0, n = this.overlays.size(); i < n; ++i) {
@@ -703,7 +686,7 @@ public class MapView extends ViewGroup {
 	void clearAndRedrawMapView() {
 		this.jobQueue.clear();
 		this.frameBuffer.clear();
-		redraw();
+		redrawTiles();
 	}
 
 	void destroy() {
@@ -742,7 +725,7 @@ public class MapView extends ViewGroup {
 	boolean hasValidCenter() {
 		if (!this.mapPosition.isValid()) {
 			return false;
-		} else if (!this.mapViewMode.requiresInternetConnection()
+		} else if (!this.mapGenerator.requiresInternetConnection()
 				&& (!this.mapDatabase.hasOpenFile() || !this.mapDatabase.getMapFileInfo().boundingBox
 						.contains(getMapPosition().getMapCenter()))) {
 			return false;
@@ -780,23 +763,30 @@ public class MapView extends ViewGroup {
 			return;
 		}
 
-		if (this.mapViewMode.requiresInternetConnection()
+		if (this.mapGenerator.requiresInternetConnection()
 				|| (this.mapDatabase.hasOpenFile() && this.mapDatabase.getMapFileInfo().boundingBox.contains(geoPoint))) {
 			if (hasValidCenter()) {
 				// calculate the distance between previous and current position
 				MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();
-				float matrixTranslateX = (float) (MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
-						mapPositionFix.zoomLevel) - MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-						mapPositionFix.zoomLevel));
-				float matrixTranslateY = (float) (MercatorProjection.latitudeToPixelY(mapPositionFix.latitude,
-						mapPositionFix.zoomLevel) - MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(),
-						mapPositionFix.zoomLevel));
+
+				double oldPixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
+						mapPositionFix.zoomLevel);
+				double newPixelX = MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
+						mapPositionFix.zoomLevel);
+
+				double oldPixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude,
+						mapPositionFix.zoomLevel);
+				double newPixelY = MercatorProjection
+						.latitudeToPixelY(geoPoint.getLatitude(), mapPositionFix.zoomLevel);
+
+				float matrixTranslateX = (float) (oldPixelX - newPixelX);
+				float matrixTranslateY = (float) (oldPixelY - newPixelY);
 				this.frameBuffer.matrixPostTranslate(matrixTranslateX, matrixTranslateY);
 			}
 
 			this.mapPosition.setMapCenterAndZoomLevel(geoPoint, zoomLevel);
 			this.mapZoomControls.onZoomLevelChange(this.mapPosition.getZoomLevel());
-			redraw();
+			redrawTiles();
 		}
 	}
 }

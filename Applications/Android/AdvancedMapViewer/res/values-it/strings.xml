@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-	<string-array name="preferences_map_view_mode_values">
-		<item>Canvas renderer</item>
+	<string-array name="preferences_map_generator_values">
+		<item>Database renderer</item>
 		<item>Mapnik (in linea)</item>
-		<item>Osmarender (in linea)</item>
 		<item>OpenCycleMap (in linea)</item>
+		<item>Osmarender (in linea)</item>
 	</string-array>
 
 	<string-array name="preferences_text_scale_values">

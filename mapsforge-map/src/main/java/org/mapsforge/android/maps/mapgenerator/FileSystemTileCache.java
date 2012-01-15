@@ -26,12 +26,12 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.mapsforge.android.AndroidUtils;
 import org.mapsforge.android.maps.Logger;
 import org.mapsforge.core.Tile;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.os.Build;
 import android.os.Environment;
 
 /**
@@ -57,11 +57,6 @@ public class FileSystemTileCache implements TileCache {
 	private static final String CACHE_DIRECTORY = "/Android/data/org.mapsforge.android.maps/cache/";
 
 	/**
-	 * Build names to detect the emulator from the Android SDK.
-	 */
-	private static final String[] EMULATOR_NAMES = { "google_sdk", "sdk" };
-
-	/**
 	 * File name extension for cached images.
 	 */
 	private static final String IMAGE_FILE_NAME_EXTENSION = ".tile";
@@ -75,18 +70,6 @@ public class FileSystemTileCache implements TileCache {
 	 * Name of the file used for serialization of the cache map.
 	 */
 	private static final String SERIALIZATION_FILE_NAME = "cache.ser";
-
-	/**
-	 * @return true if the application is running on the Android emulator, false otherwise.
-	 */
-	private static boolean applicationRunsOnAndroidEmulator() {
-		for (int i = 0, n = EMULATOR_NAMES.length; i < n; ++i) {
-			if (Build.PRODUCT.equals(EMULATOR_NAMES[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	private static File createDirectory(String pathName) {
 		File file = new File(pathName);
@@ -165,7 +148,7 @@ public class FileSystemTileCache implements TileCache {
 	private static int getCapacity(int capacity) {
 		if (capacity < 0) {
 			throw new IllegalArgumentException("capacity must not be negative: " + capacity);
-		} else if (applicationRunsOnAndroidEmulator()) {
+		} else if (AndroidUtils.applicationRunsOnAndroidEmulator()) {
 			return 0;
 		}
 		return capacity;

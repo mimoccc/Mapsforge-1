@@ -22,7 +22,6 @@ import android.graphics.Bitmap;
  * A MapGenerator provides map tiles either by downloading or rendering them.
  */
 public interface MapGenerator {
-
 	/**
 	 * Called once at the end of the MapGenerator lifecycle.
 	 */
@@ -53,4 +52,9 @@ public interface MapGenerator {
 	 * @return the maximum zoom level that this MapGenerator supports.
 	 */
 	byte getZoomLevelMax();
+
+	/**
+	 * @return true if this MapGenerator requires an Internet connection, false otherwise.
+	 */
+	boolean requiresInternetConnection();
 }

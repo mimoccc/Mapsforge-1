@@ -14,6 +14,8 @@
  */
 package org.mapsforge.android.maps;
 
+import org.mapsforge.android.maps.mapgenerator.MapGenerator;
+
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -178,7 +180,7 @@ public class MapZoomControls {
 	/**
 	 * Sets the maximum zoom level of the map.
 	 * <p>
-	 * The maximum possible zoom level of the MapView depends also on the current {@link MapViewMode}. For example,
+	 * The maximum possible zoom level of the MapView depends also on the current {@link MapGenerator}. For example,
 	 * downloading map tiles may only be possible up to a certain zoom level. Setting a higher maximum zoom level has no
 	 * effect in this case.
 	 * 

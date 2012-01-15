@@ -16,12 +16,12 @@ package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.MapViewMode;
+import org.mapsforge.android.maps.mapgenerator.tiledownloader.OsmarenderTileDownloader;
 
 import android.os.Bundle;
 
 /**
- * A simple application which demonstrates how to use a MapView in download mode.
+ * A simple application which demonstrates how to use a MapView in tile download mode.
  * <p>
  * Requires the INTERNET permission to be set in the AndroidManifest.xml file.
  */
@@ -29,7 +29,7 @@ public class DownloadMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		MapView mapView = new MapView(this, MapViewMode.OSMARENDER_TILE_DOWNLOAD);
+		MapView mapView = new MapView(this, new OsmarenderTileDownloader());
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
 		setContentView(mapView);

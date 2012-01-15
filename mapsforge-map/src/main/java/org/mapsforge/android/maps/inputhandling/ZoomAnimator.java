@@ -103,7 +103,7 @@ public class ZoomAnimator extends PausableThread {
 		// check if the animation time is over
 		if (timeElapsed >= DEFAULT_DURATION) {
 			this.executeAnimation = false;
-			this.mapView.redraw();
+			this.mapView.redrawTiles();
 		} else {
 			this.mapView.postInvalidate();
 			sleep(FRAME_LENGTH_IN_MS);

@@ -40,7 +40,7 @@ public abstract class TileDownloader implements MapGenerator {
 	/**
 	 * Default constructor that must be called by subclasses.
 	 */
-	TileDownloader() {
+	protected TileDownloader() {
 		this.pixels = new int[Tile.TILE_SIZE * Tile.TILE_SIZE];
 	}
 
@@ -104,5 +104,10 @@ public abstract class TileDownloader implements MapGenerator {
 	@Override
 	public final byte getZoomLevelDefault() {
 		return DEFAULT_ZOOM_LEVEL;
+	}
+
+	@Override
+	public final boolean requiresInternetConnection() {
+		return true;
 	}
 }

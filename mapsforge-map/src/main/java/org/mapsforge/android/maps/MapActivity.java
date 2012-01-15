@@ -66,14 +66,13 @@ public abstract class MapActivity extends Activity {
 	private void restoreMapView(MapView mapView) {
 		SharedPreferences sharedPreferences = getSharedPreferences(PREFERENCES_FILE, MODE_PRIVATE);
 		if (containsMapViewPosition(sharedPreferences)) {
-			MapViewMode mapViewMode = mapView.getMapViewMode();
-			if (!mapViewMode.requiresInternetConnection() && sharedPreferences.contains(KEY_MAP_FILE)) {
+			MapGenerator mapGenerator = mapView.getMapGenerator();
+			if (!mapGenerator.requiresInternetConnection() && sharedPreferences.contains(KEY_MAP_FILE)) {
 				// get and set the map file
 				mapView.setMapFile(sharedPreferences.getString(KEY_MAP_FILE, null));
 			}
 
 			// get and set the map position and zoom level
-			MapGenerator mapGenerator = mapView.getMapGenerator();
 			GeoPoint defaultStartPoint = mapGenerator.getStartPoint();
 			if (defaultStartPoint != null) {
 				int latitudeE6 = sharedPreferences.getInt(KEY_LATITUDE, defaultStartPoint.latitudeE6);
@@ -110,7 +109,7 @@ public abstract class MapActivity extends Activity {
 			editor.putInt(KEY_LONGITUDE, mapPositionFix.getLongitudeE6());
 			editor.putInt(KEY_ZOOM_LEVEL, mapPositionFix.zoomLevel);
 
-			if (!mapView.getMapViewMode().requiresInternetConnection() && mapView.getMapFile() != null) {
+			if (!mapView.getMapGenerator().requiresInternetConnection() && mapView.getMapFile() != null) {
 				// save the map file
 				editor.putString(KEY_MAP_FILE, mapView.getMapFile());
 			}

@@ -181,5 +181,6 @@ public class FrameBuffer {
 		this.mapViewBitmap1 = Bitmap.createBitmap(this.width, this.height, Bitmap.Config.RGB_565);
 		this.mapViewBitmap2 = Bitmap.createBitmap(this.width, this.height, Bitmap.Config.RGB_565);
 		clear();
+		this.mapViewCanvas.setBitmap(this.mapViewBitmap1);
 	}
 }
