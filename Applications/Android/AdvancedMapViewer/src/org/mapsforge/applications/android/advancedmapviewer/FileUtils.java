@@ -19,7 +19,7 @@ import java.text.DecimalFormat;
 import android.content.res.Resources;
 
 final class FileUtils {
-	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.00");
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.00 ");
 	private static final double ONE_GIGABYTE = 1000000000;
 	private static final double ONE_KILOBYTE = 1000;
 	private static final double ONE_MEGABYTE = 1000000;
