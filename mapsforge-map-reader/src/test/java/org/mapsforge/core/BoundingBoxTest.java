@@ -14,9 +14,6 @@
  */
 package org.mapsforge.core;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -30,6 +27,7 @@ import org.junit.Test;
  */
 public class BoundingBoxTest {
 	private static final String BOUNDING_BOX_TO_STRING = "BoundingBox [minLatitudeE6=1, minLongitudeE6=0, maxLatitudeE6=3, maxLongitudeE6=2]";
+	private static final double CONVERSION_FACTOR = 1000000d;
 	private static final int MAX_LATITUDE = 3;
 	private static final int MAX_LONGITUDE = 2;
 	private static final int MIN_LATITUDE = 1;
@@ -57,18 +55,15 @@ public class BoundingBoxTest {
 		BoundingBox boundingBox2 = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
 		BoundingBox boundingBox3 = new BoundingBox(0, 0, 0, 0);
 
-		Assert.assertEquals(boundingBox1.hashCode(), boundingBox2.hashCode());
-		Assert.assertEquals(boundingBox1, boundingBox2);
-		Assert.assertEquals(boundingBox2, boundingBox1);
+		TestUtils.equalsTest(boundingBox1, boundingBox2);
 
 		Assert.assertFalse(boundingBox1.equals(boundingBox3));
 		Assert.assertFalse(boundingBox3.equals(boundingBox1));
-
 		Assert.assertFalse(boundingBox1.equals(new Object()));
 	}
 
 	/**
-	 * Tests the getter-methods.
+	 * Tests the public fields and the getter-methods.
 	 */
 	@Test
 	public void getterTest() {
@@ -78,6 +73,11 @@ public class BoundingBoxTest {
 		Assert.assertEquals(MIN_LONGITUDE, boundingBox.minLongitudeE6);
 		Assert.assertEquals(MAX_LATITUDE, boundingBox.maxLatitudeE6);
 		Assert.assertEquals(MAX_LONGITUDE, boundingBox.maxLongitudeE6);
+
+		Assert.assertEquals(MIN_LATITUDE, boundingBox.getMinLatitude() * CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MIN_LONGITUDE, boundingBox.getMinLongitude() * CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MAX_LATITUDE, boundingBox.getMaxLatitude() * CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MAX_LONGITUDE, boundingBox.getMaxLongitude() * CONVERSION_FACTOR, 0);
 	}
 
 	/**
@@ -90,29 +90,8 @@ public class BoundingBoxTest {
 	 */
 	@Test
 	public void serializeTest() throws IOException, ClassNotFoundException {
-		BoundingBox boundingBox1 = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
-
-		File file = File.createTempFile("bounding_box", ".ser");
-		file.deleteOnExit();
-		Assert.assertTrue(file.exists());
-		Assert.assertEquals(0, file.length());
-
-		FileOutputStream fileOutputStream = new FileOutputStream(file);
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-		objectOutputStream.writeObject(boundingBox1);
-		objectOutputStream.close();
-		fileOutputStream.close();
-
-		FileInputStream fileInputStream = new FileInputStream(file);
-		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-		BoundingBox boundingBox2 = (BoundingBox) objectInputStream.readObject();
-
-		objectInputStream.close();
-		fileInputStream.close();
-
-		Assert.assertEquals(boundingBox1.hashCode(), boundingBox2.hashCode());
-		Assert.assertEquals(boundingBox1, boundingBox2);
-		Assert.assertEquals(boundingBox2, boundingBox1);
+		BoundingBox boundingBox = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
+		TestUtils.serializeTest(boundingBox);
 	}
 
 	/**
