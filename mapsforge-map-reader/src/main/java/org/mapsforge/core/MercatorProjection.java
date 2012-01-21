@@ -26,12 +26,12 @@ public final class MercatorProjection {
 	/**
 	 * Maximum possible latitude coordinate of the map.
 	 */
-	public static final double LATITUDE_MAX = 85.05113;
+	public static final double LATITUDE_MAX = 85.05112877980659;
 
 	/**
 	 * Minimum possible latitude coordinate of the map.
 	 */
-	public static final double LATITUDE_MIN = -85.05113;
+	public static final double LATITUDE_MIN = -LATITUDE_MAX;
 
 	/**
 	 * Maximum possible longitude coordinate of the map.
@@ -41,7 +41,7 @@ public final class MercatorProjection {
 	/**
 	 * Minimum possible longitude coordinate of the map.
 	 */
-	public static final double LONGITUDE_MIN = -180;
+	public static final double LONGITUDE_MIN = -LONGITUDE_MAX;
 
 	/**
 	 * Calculates the distance on the ground that is represented by a single pixel on the map.
