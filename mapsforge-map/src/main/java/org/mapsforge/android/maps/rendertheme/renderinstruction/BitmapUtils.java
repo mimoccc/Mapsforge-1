@@ -69,9 +69,7 @@ final class BitmapUtils {
 			return null;
 		}
 
-		BitmapShader bitmapShader = new BitmapShader(bitmap, TileMode.REPEAT, TileMode.REPEAT);
-		bitmap.recycle();
-		return bitmapShader;
+		return new BitmapShader(bitmap, TileMode.REPEAT, TileMode.REPEAT);
 	}
 
 	private BitmapUtils() {
