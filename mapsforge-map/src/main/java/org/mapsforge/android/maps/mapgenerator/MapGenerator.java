@@ -44,9 +44,9 @@ public interface MapGenerator {
 	GeoPoint getStartPoint();
 
 	/**
-	 * @return the default zoom level of this MapGenerator.
+	 * @return the start zoom level of this MapGenerator (may be null).
 	 */
-	byte getZoomLevelDefault();
+	Byte getStartZoomLevel();
 
 	/**
 	 * @return the maximum zoom level that this MapGenerator supports.

@@ -35,8 +35,6 @@ public class JobParameters implements Serializable {
 	private final int hashCodeValue;
 
 	/**
-	 * Constructs a new JobParameters to store the rendering parameters for a job.
-	 * 
 	 * @param jobTheme
 	 *            render theme which should be used.
 	 * @param textScale

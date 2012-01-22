@@ -60,8 +60,6 @@ public class Tile implements Serializable {
 	private transient long pixelY;
 
 	/**
-	 * Constructs an immutable tile instance with the specified XY number and zoom level.
-	 * 
 	 * @param tileX
 	 *            the X number of the tile.
 	 * @param tileY

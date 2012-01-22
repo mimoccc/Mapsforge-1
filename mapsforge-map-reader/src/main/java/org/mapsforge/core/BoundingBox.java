@@ -59,16 +59,14 @@ public class BoundingBox implements Serializable {
 	private transient int hashCodeValue;
 
 	/**
-	 * Constructs a new BoundingBox with the given coordinates in microdegrees (degrees * 10^6).
-	 * 
 	 * @param minLatitudeE6
-	 *            the minimum latitude in microdegrees.
+	 *            the minimum latitude in microdegrees (degrees * 10^6).
 	 * @param minLongitudeE6
-	 *            the minimum longitude in microdegrees.
+	 *            the minimum longitude in microdegrees (degrees * 10^6).
 	 * @param maxLatitudeE6
-	 *            the maximum latitude in microdegrees.
+	 *            the maximum latitude in microdegrees (degrees * 10^6).
 	 * @param maxLongitudeE6
-	 *            the maximum longitude in microdegrees.
+	 *            the maximum longitude in microdegrees (degrees * 10^6).
 	 */
 	public BoundingBox(int minLatitudeE6, int minLongitudeE6, int maxLatitudeE6, int maxLongitudeE6) {
 		this.minLatitudeE6 = minLatitudeE6;

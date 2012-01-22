@@ -75,8 +75,6 @@ public abstract class ItemizedOverlay<Item extends OverlayItem> extends Overlay 
 	private List<Integer> visibleItemsRedraw;
 
 	/**
-	 * Constructs a new ItemizedOverlay.
-	 * 
 	 * @param defaultMarker
 	 *            the default marker (may be null).
 	 */

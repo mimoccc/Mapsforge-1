@@ -39,8 +39,6 @@ public class ZoomAnimator extends PausableThread {
 	private float zoomStart;
 
 	/**
-	 * Constructs a new ZoomAnimator which handles the transition from one zoom level to another one.
-	 * 
 	 * @param mapView
 	 *            the MapView whose zoom level changes should be animated.
 	 */

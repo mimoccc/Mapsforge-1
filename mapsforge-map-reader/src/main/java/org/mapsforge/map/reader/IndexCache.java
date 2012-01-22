@@ -48,8 +48,6 @@ class IndexCache {
 	private final Map<IndexCacheEntryKey, byte[]> map;
 
 	/**
-	 * Constructs an database index cache with a fixes size and LRU policy.
-	 * 
 	 * @param inputFile
 	 *            the map file from which the index should be read and cached.
 	 * @param capacity

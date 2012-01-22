@@ -39,6 +39,7 @@ import org.mapsforge.android.maps.overlay.Overlay;
 import org.mapsforge.android.maps.overlay.OverlayList;
 import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
 import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.MapPosition;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
 import org.mapsforge.map.reader.MapDatabase;
@@ -91,8 +92,8 @@ public class MapView extends ViewGroup {
 	private String mapFile;
 	private MapGenerator mapGenerator;
 	private final MapMover mapMover;
-	private final MapPosition mapPosition;
 	private final MapScaleBar mapScaleBar;
+	private final MapViewPosition mapViewPosition;
 	private final MapWorker mapWorker;
 	private final MapZoomControls mapZoomControls;
 	private final List<Overlay> overlays;
@@ -101,8 +102,6 @@ public class MapView extends ViewGroup {
 	private final ZoomAnimator zoomAnimator;
 
 	/**
-	 * Constructs a new MapView with the default {@link MapGenerator}.
-	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
 	 * @throws IllegalArgumentException
@@ -113,9 +112,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView. The {@link MapGenerator} can be defined via a {@code mapGenerator} attribute in the XML
-	 * layout file.
-	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
 	 * @param attributeSet
@@ -128,8 +124,6 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Constructs a new MapView with the given MapGenerator.
-	 * 
 	 * @param context
 	 *            the enclosing MapActivity instance.
 	 * @param mapGenerator
@@ -163,7 +157,7 @@ public class MapView extends ViewGroup {
 		this.jobQueue = new JobQueue(this);
 		this.mapController = new MapController(this);
 		this.mapDatabase = new MapDatabase();
-		this.mapPosition = new MapPosition(this);
+		this.mapViewPosition = new MapViewPosition(this);
 		this.mapScaleBar = new MapScaleBar(this);
 		this.mapZoomControls = new MapZoomControls(mapActivity, this);
 		this.overlays = new OverlayList(this);
@@ -180,6 +174,16 @@ public class MapView extends ViewGroup {
 		this.zoomAnimator.start();
 
 		setMapGeneratorInternal(mapGenerator);
+		GeoPoint startPoint = this.mapGenerator.getStartPoint();
+		if (startPoint != null) {
+			this.mapViewPosition.setMapCenter(startPoint);
+		}
+
+		Byte startZoomLevel = this.mapGenerator.getStartZoomLevel();
+		if (startZoomLevel != null) {
+			this.mapViewPosition.setZoomLevel(startZoomLevel.byteValue());
+		}
+
 		mapActivity.registerMapView(this);
 	}
 
@@ -273,8 +277,8 @@ public class MapView extends ViewGroup {
 	/**
 	 * @return the current position and zoom level of this MapView.
 	 */
-	public MapPosition getMapPosition() {
-		return this.mapPosition;
+	public MapViewPosition getMapPosition() {
+		return this.mapViewPosition;
 	}
 
 	/**
@@ -362,20 +366,21 @@ public class MapView extends ViewGroup {
 			}
 		}
 
-		MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();
-		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
-		double pixelTop = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		MapPosition mapPosition = this.mapViewPosition.getMapPosition();
+		GeoPoint geoPoint = mapPosition.geoPoint;
+		double pixelLeft = MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(), mapPosition.zoomLevel);
+		double pixelTop = MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(), mapPosition.zoomLevel);
 		pixelLeft -= getWidth() >> 1;
 		pixelTop -= getHeight() >> 1;
 
-		long tileLeft = MercatorProjection.pixelXToTileX(pixelLeft, mapPositionFix.zoomLevel);
-		long tileTop = MercatorProjection.pixelYToTileY(pixelTop, mapPositionFix.zoomLevel);
-		long tileRight = MercatorProjection.pixelXToTileX(pixelLeft + getWidth(), mapPositionFix.zoomLevel);
-		long tileBottom = MercatorProjection.pixelYToTileY(pixelTop + getHeight(), mapPositionFix.zoomLevel);
+		long tileLeft = MercatorProjection.pixelXToTileX(pixelLeft, mapPosition.zoomLevel);
+		long tileTop = MercatorProjection.pixelYToTileY(pixelTop, mapPosition.zoomLevel);
+		long tileRight = MercatorProjection.pixelXToTileX(pixelLeft + getWidth(), mapPosition.zoomLevel);
+		long tileBottom = MercatorProjection.pixelYToTileY(pixelTop + getHeight(), mapPosition.zoomLevel);
 
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
-				Tile tile = new Tile(tileX, tileY, mapPositionFix.zoomLevel);
+				Tile tile = new Tile(tileX, tileY, mapPosition.zoomLevel);
 				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapGenerator, this.jobParameters,
 						this.debugSettings);
 
@@ -424,11 +429,12 @@ public class MapView extends ViewGroup {
 	/**
 	 * Sets the center of the MapView and triggers a redraw.
 	 * 
-	 * @param point
+	 * @param geoPoint
 	 *            the new center point of the map.
 	 */
-	public void setCenter(GeoPoint point) {
-		setCenterAndZoom(point, this.mapPosition.getZoomLevel());
+	public void setCenter(GeoPoint geoPoint) {
+		MapPosition mapPosition = new MapPosition(geoPoint, this.mapViewPosition.getZoomLevel());
+		setCenterAndZoom(mapPosition);
 	}
 
 	/**
@@ -480,7 +486,17 @@ public class MapView extends ViewGroup {
 		FileOpenResult fileOpenResult = this.mapDatabase.openFile(mapFile);
 		if (fileOpenResult.isSuccess()) {
 			this.mapFile = mapFile;
-			setCenter(this.mapGenerator.getStartPoint());
+
+			GeoPoint startPoint = this.mapGenerator.getStartPoint();
+			if (startPoint != null) {
+				this.mapViewPosition.setMapCenter(startPoint);
+			}
+
+			Byte startZoomLevel = this.mapGenerator.getStartZoomLevel();
+			if (startZoomLevel != null) {
+				this.mapViewPosition.setZoomLevel(startZoomLevel.byteValue());
+			}
+
 			clearAndRedrawMapView();
 			return true;
 		}
@@ -592,13 +608,13 @@ public class MapView extends ViewGroup {
 		float matrixScaleFactor;
 		if (zoomLevelDiff > 0) {
 			// check if zoom in is possible
-			if (this.mapPosition.getZoomLevel() + zoomLevelDiff > getMaximumPossibleZoomLevel()) {
+			if (this.mapViewPosition.getZoomLevel() + zoomLevelDiff > getMaximumPossibleZoomLevel()) {
 				return false;
 			}
 			matrixScaleFactor = 1 << zoomLevelDiff;
 		} else if (zoomLevelDiff < 0) {
 			// check if zoom out is possible
-			if (this.mapPosition.getZoomLevel() + zoomLevelDiff < this.mapZoomControls.getZoomLevelMin()) {
+			if (this.mapViewPosition.getZoomLevel() + zoomLevelDiff < this.mapZoomControls.getZoomLevelMin()) {
 				return false;
 			}
 			matrixScaleFactor = 1.0f / (1 << -zoomLevelDiff);
@@ -607,8 +623,8 @@ public class MapView extends ViewGroup {
 			matrixScaleFactor = 1;
 		}
 
-		this.mapPosition.setZoomLevel((byte) (this.mapPosition.getZoomLevel() + zoomLevelDiff));
-		this.mapZoomControls.onZoomLevelChange(this.mapPosition.getZoomLevel());
+		this.mapViewPosition.setZoomLevel((byte) (this.mapViewPosition.getZoomLevel() + zoomLevelDiff));
+		this.mapZoomControls.onZoomLevelChange(this.mapViewPosition.getZoomLevel());
 
 		this.zoomAnimator.setParameters(zoomStart, matrixScaleFactor, getWidth() >> 1, getHeight() >> 1);
 		this.zoomAnimator.startAnimation();
@@ -625,11 +641,6 @@ public class MapView extends ViewGroup {
 		}
 		this.mapGenerator = mapGenerator;
 		this.mapWorker.setMapGenerator(this.mapGenerator);
-
-		GeoPoint startPoint = this.mapGenerator.getStartPoint();
-		if (startPoint != null) {
-			this.mapPosition.setMapCenterAndZoomLevel(startPoint, this.mapGenerator.getZoomLevelDefault());
-		}
 	}
 
 	@Override
@@ -723,7 +734,7 @@ public class MapView extends ViewGroup {
 	 * @return true if the current center position of this MapView is valid, false otherwise.
 	 */
 	boolean hasValidCenter() {
-		if (!this.mapPosition.isValid()) {
+		if (!this.mapViewPosition.isValid()) {
 			return false;
 		} else if (!this.mapGenerator.requiresInternetConnection()
 				&& (!this.mapDatabase.hasOpenFile() || !this.mapDatabase.getMapFileInfo().boundingBox
@@ -751,42 +762,33 @@ public class MapView extends ViewGroup {
 	}
 
 	/**
-	 * Sets the center and zoom level of the MapView and triggers a redraw.
+	 * Sets the center and zoom level of this MapView and triggers a redraw.
 	 * 
-	 * @param geoPoint
-	 *            the new center point of the map.
-	 * @param zoomLevel
-	 *            the new zoom level. This value will be limited by the maximum and minimum possible zoom level.
+	 * @param mapPosition
+	 *            the new map position of this MapView.
 	 */
-	void setCenterAndZoom(GeoPoint geoPoint, byte zoomLevel) {
-		if (geoPoint == null) {
-			return;
+	void setCenterAndZoom(MapPosition mapPosition) {
+
+		if (hasValidCenter()) {
+			// calculate the distance between previous and current position
+			MapPosition mapPositionOld = this.mapViewPosition.getMapPosition();
+
+			GeoPoint geoPointOld = mapPositionOld.geoPoint;
+			GeoPoint geoPointNew = mapPosition.geoPoint;
+			double oldPixelX = MercatorProjection.longitudeToPixelX(geoPointOld.getLongitude(),
+					mapPositionOld.zoomLevel);
+			double newPixelX = MercatorProjection.longitudeToPixelX(geoPointNew.getLongitude(), mapPosition.zoomLevel);
+
+			double oldPixelY = MercatorProjection.latitudeToPixelY(geoPointOld.getLatitude(), mapPositionOld.zoomLevel);
+			double newPixelY = MercatorProjection.latitudeToPixelY(geoPointNew.getLatitude(), mapPosition.zoomLevel);
+
+			float matrixTranslateX = (float) (oldPixelX - newPixelX);
+			float matrixTranslateY = (float) (oldPixelY - newPixelY);
+			this.frameBuffer.matrixPostTranslate(matrixTranslateX, matrixTranslateY);
 		}
 
-		if (this.mapGenerator.requiresInternetConnection()
-				|| (this.mapDatabase.hasOpenFile() && this.mapDatabase.getMapFileInfo().boundingBox.contains(geoPoint))) {
-			if (hasValidCenter()) {
-				// calculate the distance between previous and current position
-				MapPositionFix mapPositionFix = this.mapPosition.getMapPositionFix();
-
-				double oldPixelX = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude,
-						mapPositionFix.zoomLevel);
-				double newPixelX = MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(),
-						mapPositionFix.zoomLevel);
-
-				double oldPixelY = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude,
-						mapPositionFix.zoomLevel);
-				double newPixelY = MercatorProjection
-						.latitudeToPixelY(geoPoint.getLatitude(), mapPositionFix.zoomLevel);
-
-				float matrixTranslateX = (float) (oldPixelX - newPixelX);
-				float matrixTranslateY = (float) (oldPixelY - newPixelY);
-				this.frameBuffer.matrixPostTranslate(matrixTranslateX, matrixTranslateY);
-			}
-
-			this.mapPosition.setMapCenterAndZoomLevel(geoPoint, zoomLevel);
-			this.mapZoomControls.onZoomLevelChange(this.mapPosition.getZoomLevel());
-			redrawTiles();
-		}
+		this.mapViewPosition.setMapCenterAndZoomLevel(mapPosition);
+		this.mapZoomControls.onZoomLevelChange(this.mapViewPosition.getZoomLevel());
+		redrawTiles();
 	}
 }

@@ -16,6 +16,8 @@ package org.mapsforge.android.maps;
 
 import java.io.OutputStream;
 
+import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.MapPosition;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
 
@@ -55,8 +57,8 @@ public class FrameBuffer {
 	 * @return true if the tile is visible and the bitmap was drawn, false otherwise.
 	 */
 	public synchronized boolean drawBitmap(Tile tile, Bitmap bitmap) {
-		MapPositionFix mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		if (tile.zoomLevel != mapPositionFix.zoomLevel) {
+		MapPosition mapPosition = this.mapView.getMapPosition().getMapPosition();
+		if (tile.zoomLevel != mapPosition.zoomLevel) {
 			// the tile doesn't fit to the current zoom level
 			return false;
 		} else if (this.mapView.isZoomAnimatorRunning()) {
@@ -64,8 +66,9 @@ public class FrameBuffer {
 			return false;
 		}
 
-		double pixelLeft = MercatorProjection.longitudeToPixelX(mapPositionFix.longitude, mapPositionFix.zoomLevel);
-		double pixelTop = MercatorProjection.latitudeToPixelY(mapPositionFix.latitude, mapPositionFix.zoomLevel);
+		GeoPoint geoPoint = mapPosition.geoPoint;
+		double pixelLeft = MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(), mapPosition.zoomLevel);
+		double pixelTop = MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(), mapPosition.zoomLevel);
 		pixelLeft -= this.width >> 1;
 		pixelTop -= this.height >> 1;
 

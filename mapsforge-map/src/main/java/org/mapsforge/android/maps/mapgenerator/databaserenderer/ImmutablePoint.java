@@ -47,8 +47,6 @@ class ImmutablePoint implements Comparable<ImmutablePoint> {
 	final float pointY;
 
 	/**
-	 * Constructs a new ImmutablePoint with the given x and y coordinates.
-	 * 
 	 * @param x
 	 *            the x coordinate of the point.
 	 * @param y

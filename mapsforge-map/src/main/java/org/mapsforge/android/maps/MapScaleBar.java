@@ -17,6 +17,7 @@ package org.mapsforge.android.maps;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mapsforge.core.MapPosition;
 import org.mapsforge.core.MercatorProjection;
 
 import android.graphics.Bitmap;
@@ -90,7 +91,7 @@ public class MapScaleBar {
 	}
 
 	private boolean imperialUnits;
-	private MapPositionFix mapPositionFix;
+	private MapPosition mapPosition;
 	private final Bitmap mapScaleBitmap;
 	private final Canvas mapScaleCanvas;
 	private final MapView mapView;
@@ -159,17 +160,18 @@ public class MapScaleBar {
 	}
 
 	private boolean isRedrawNecessary() {
-		if (this.mapPositionFix == null) {
+		if (this.mapPosition == null) {
 			return true;
 		}
 
-		MapPositionFix currentMapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
+		MapPosition currentMapPosition = this.mapView.getMapPosition().getMapPosition();
 
-		if (currentMapPositionFix.zoomLevel != this.mapPositionFix.zoomLevel) {
+		if (currentMapPosition.zoomLevel != this.mapPosition.zoomLevel) {
 			return true;
 		}
 
-		double latitudeDiff = Math.abs(currentMapPositionFix.latitude - this.mapPositionFix.latitude);
+		double latitudeDiff = Math.abs(currentMapPosition.geoPoint.getLatitude()
+				- this.mapPosition.geoPoint.getLatitude());
 		if (latitudeDiff > LATITUDE_REDRAW_THRESHOLD) {
 			return true;
 		}
@@ -239,9 +241,9 @@ public class MapScaleBar {
 			return;
 		}
 
-		this.mapPositionFix = this.mapView.getMapPosition().getMapPositionFix();
-		double groundResolution = MercatorProjection.calculateGroundResolution(this.mapPositionFix.latitude,
-				this.mapPositionFix.zoomLevel);
+		this.mapPosition = this.mapView.getMapPosition().getMapPosition();
+		double groundResolution = MercatorProjection.calculateGroundResolution(this.mapPosition.geoPoint.getLatitude(),
+				this.mapPosition.zoomLevel);
 
 		int[] scaleBarValues;
 		if (this.imperialUnits) {

@@ -29,8 +29,6 @@ public class JobQueue {
 	private boolean scheduleNeeded;
 
 	/**
-	 * Constructs a new JobQueue for the jobs of the given MapView.
-	 * 
 	 * @param mapView
 	 *            the MapView whose jobs should be organized.
 	 */

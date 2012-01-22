@@ -45,6 +45,7 @@ import android.graphics.Paint;
  * A DatabaseRenderer renders map tiles by reading from a {@link MapDatabase}.
  */
 public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDatabaseCallback {
+	private static final Byte DEFAULT_START_ZOOM_LEVEL = Byte.valueOf((byte) 12);
 	private static final byte LAYERS = 11;
 	private static final Paint PAINT_WATER_TILE_HIGHTLIGHT = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private static final double STROKE_INCREASE = 1.5;
@@ -52,7 +53,6 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	private static final Tag TAG_NATURAL_WATER = new Tag("natural", "water");
 	private static final float[][] WATER_TILE_COORDINATES = new float[][] { { 0, 0, Tile.TILE_SIZE, 0, Tile.TILE_SIZE,
 			Tile.TILE_SIZE, 0, Tile.TILE_SIZE, 0, 0 } };
-	private static final byte ZOOM_DEFAULT = 5;
 	private static final byte ZOOM_MAX = 22;
 
 	private static RenderTheme getRenderTheme(JobTheme jobTheme) {
@@ -206,15 +206,15 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 	}
 
 	@Override
-	public byte getZoomLevelDefault() {
+	public Byte getStartZoomLevel() {
 		if (this.mapDatabase != null && this.mapDatabase.hasOpenFile()) {
 			MapFileInfo mapFileInfo = this.mapDatabase.getMapFileInfo();
 			if (mapFileInfo.startZoomLevel != null) {
-				return mapFileInfo.startZoomLevel.byteValue();
+				return mapFileInfo.startZoomLevel;
 			}
 		}
 
-		return ZOOM_DEFAULT;
+		return DEFAULT_START_ZOOM_LEVEL;
 	}
 
 	@Override

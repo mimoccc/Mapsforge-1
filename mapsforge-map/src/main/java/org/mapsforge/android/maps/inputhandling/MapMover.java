@@ -40,8 +40,6 @@ public class MapMover extends PausableThread implements KeyEvent.Callback {
 	private long timePrevious;
 
 	/**
-	 * Constructs a new MapMover that interacts with the given MapView.
-	 * 
 	 * @param mapView
 	 *            the MapView which should be moved by this MapMover.
 	 */

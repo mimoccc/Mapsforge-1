@@ -45,12 +45,10 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 	private transient int hashCodeValue;
 
 	/**
-	 * Constructs a new GeoPoint with the given coordinates, measured in degrees.
-	 * 
 	 * @param latitude
-	 *            the latitude of the point, will be limited to the possible latitude range.
+	 *            the latitude in degrees, will be limited to the possible latitude range.
 	 * @param longitude
-	 *            the longitude of the point, will be limited to the possible longitude range.
+	 *            the longitude in degrees, will be limited to the possible longitude range.
 	 */
 	public GeoPoint(double latitude, double longitude) {
 		double limitLatitude = MercatorProjection.limitLatitude(latitude);
@@ -63,12 +61,10 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 	}
 
 	/**
-	 * Constructs a new GeoPoint with the given coordinates, measured in microdegrees (degrees * 10^6).
-	 * 
 	 * @param latitudeE6
-	 *            the latitude of the point in microdegrees, will be limited to the possible latitude range.
+	 *            the latitude in microdegrees (degrees * 10^6), will be limited to the possible latitude range.
 	 * @param longitudeE6
-	 *            the longitude of the point in microdegrees, will be limited to the possible longitude range.
+	 *            the longitude in microdegrees (degrees * 10^6), will be limited to the possible longitude range.
 	 */
 	public GeoPoint(int latitudeE6, int longitudeE6) {
 		this(latitudeE6 / CONVERSION_FACTOR, longitudeE6 / CONVERSION_FACTOR);

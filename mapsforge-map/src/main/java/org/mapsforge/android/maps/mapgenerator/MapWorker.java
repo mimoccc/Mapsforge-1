@@ -35,8 +35,6 @@ public class MapWorker extends PausableThread {
 	private final Bitmap tileBitmap;
 
 	/**
-	 * Constructs a new MapWorker for the given MapView.
-	 * 
 	 * @param mapView
 	 *            the MapView for which this MapWorker generates map tiles.
 	 */

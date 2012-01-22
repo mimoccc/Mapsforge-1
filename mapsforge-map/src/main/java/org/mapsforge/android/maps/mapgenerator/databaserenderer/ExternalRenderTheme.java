@@ -34,8 +34,6 @@ public class ExternalRenderTheme implements JobTheme {
 	private final String renderThemePath;
 
 	/**
-	 * Constructs a new ExternalRenderTheme by reading the given XML file.
-	 * 
 	 * @param renderThemePath
 	 *            the path to the XML render theme file.
 	 * @throws FileNotFoundException

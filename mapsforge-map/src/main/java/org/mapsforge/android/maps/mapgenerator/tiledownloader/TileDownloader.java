@@ -32,8 +32,8 @@ import android.graphics.BitmapFactory;
  * Abstract base class for downloading map tiles from a server.
  */
 public abstract class TileDownloader implements MapGenerator {
-	private static final byte DEFAULT_ZOOM_LEVEL = 5;
 	private static final GeoPoint START_POINT = new GeoPoint(51.33, 10.45);
+	private static final Byte START_ZOOM_LEVEL = Byte.valueOf((byte) 5);
 
 	private final int[] pixels;
 
@@ -94,17 +94,17 @@ public abstract class TileDownloader implements MapGenerator {
 		return START_POINT;
 	}
 
+	@Override
+	public final Byte getStartZoomLevel() {
+		return START_ZOOM_LEVEL;
+	}
+
 	/**
 	 * @param tile
 	 *            the tile for which a map image is required.
 	 * @return the absolute path to the map image.
 	 */
 	public abstract String getTilePath(Tile tile);
-
-	@Override
-	public final byte getZoomLevelDefault() {
-		return DEFAULT_ZOOM_LEVEL;
-	}
 
 	@Override
 	public final boolean requiresInternetConnection() {

@@ -32,8 +32,6 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	private final List<OverlayItem> overlayItems;
 
 	/**
-	 * Constructs a new ArrayItemizedOverlay.
-	 * 
 	 * @param defaultMarker
 	 *            the default marker (may be null). This marker is aligned to the center of its bottom line to allow for
 	 *            a conical symbol such as a pin or a needle.
@@ -43,8 +41,6 @@ public class ArrayItemizedOverlay extends ItemizedOverlay<OverlayItem> {
 	}
 
 	/**
-	 * Constructs a new ArrayItemizedOverlay.
-	 * 
 	 * @param defaultMarker
 	 *            the default marker (may be null).
 	 * @param alignMarker

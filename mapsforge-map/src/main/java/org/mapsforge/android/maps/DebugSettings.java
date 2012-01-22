@@ -40,8 +40,6 @@ public class DebugSettings implements Serializable {
 	private final int hashCodeValue;
 
 	/**
-	 * Constructs a new DebugSettings with the given parameters.
-	 * 
 	 * @param drawTileCoordinates
 	 *            if drawing of tile coordinates is enabled.
 	 * @param drawTileFrames

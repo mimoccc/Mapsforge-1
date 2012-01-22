@@ -32,8 +32,6 @@ public class ArrayWayOverlay extends WayOverlay<OverlayWay> {
 	private final List<OverlayWay> overlayWays;
 
 	/**
-	 * Constructs a new ArrayWayOverlay.
-	 * 
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the ways (may be null).
 	 * @param defaultPaintOutline

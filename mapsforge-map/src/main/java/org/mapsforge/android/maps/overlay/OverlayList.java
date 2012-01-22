@@ -34,8 +34,6 @@ public class OverlayList implements List<Overlay>, RandomAccess {
 	private final MapView mapView;
 
 	/**
-	 * Constructs a new OverlayList for the given MapView.
-	 * 
 	 * @param mapView
 	 *            the MapView whose overlays should be handled.
 	 */

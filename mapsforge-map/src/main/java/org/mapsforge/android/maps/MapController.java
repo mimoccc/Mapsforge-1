@@ -28,8 +28,6 @@ public final class MapController implements View.OnKeyListener {
 	private final MapView mapView;
 
 	/**
-	 * Constructs a new MapController to modify the given MapView.
-	 * 
 	 * @param mapView
 	 *            the MapView which should be controlled by this MapController.
 	 */

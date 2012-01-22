@@ -32,8 +32,6 @@ public class ArrayCircleOverlay extends CircleOverlay<OverlayCircle> {
 	private final List<OverlayCircle> overlayCircles;
 
 	/**
-	 * Constructs a new ArrayCircleOverlay.
-	 * 
 	 * @param defaultPaintFill
 	 *            the default paint which will be used to fill the circles (may be null).
 	 * @param defaultPaintOutline

@@ -40,10 +40,8 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 	private final int capacity;
 
 	/**
-	 * Constructs a new LRUCache with the given maximum capacity.
-	 * 
 	 * @param capacity
-	 *            the maximum capacity of this map.
+	 *            the maximum capacity of this cache.
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
