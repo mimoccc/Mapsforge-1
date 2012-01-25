@@ -62,7 +62,7 @@ public class MapFileWriterTask implements Sink {
 	private final byte mapStartZoom;
 	private final boolean debugInfo;
 	// private boolean waynodeCompression;
-	private final boolean pixelFilter;
+	private final double simplificationFactor;
 	private final boolean polygonClipping;
 	private final boolean wayClipping;
 	private final String comment;
@@ -75,9 +75,9 @@ public class MapFileWriterTask implements Sink {
 	private final int vSpecification;
 
 	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String mapStartZoom, String comment,
-			String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter, boolean polygonClipping,
-			boolean wayClipping, String type, int bboxEnlargement, String tagConfFile, String preferredLanguage,
-			String encoding) {
+			String zoomIntervalConfigurationString, boolean debugInfo, double simplificationFactor,
+			boolean polygonClipping, boolean wayClipping, String type, int bboxEnlargement, String tagConfFile,
+			String preferredLanguage, String encoding) {
 
 		Properties properties = new Properties();
 		try {
@@ -105,7 +105,10 @@ public class MapFileWriterTask implements Sink {
 
 		this.debugInfo = debugInfo;
 		// this.waynodeCompression = waynodeCompression;
-		this.pixelFilter = pixelFilter;
+		if (simplificationFactor < 0) {
+			throw new RuntimeException("simplification factor must be >= 0");
+		}
+		this.simplificationFactor = simplificationFactor;
 		this.polygonClipping = polygonClipping;
 		this.wayClipping = wayClipping;
 		this.comment = comment;
@@ -201,8 +204,8 @@ public class MapFileWriterTask implements Sink {
 			mfw.writeFile(System.currentTimeMillis(), this.vSpecification,
 					(short) 256, // NOPMD by bross on 25.12.11 13:38
 					this.comment, // NOPMD by bross on 25.12.11 13:36
-					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter, this.mapStartPosition,
-					this.mapStartZoom, this.preferredLanguage, this.encoding);
+					this.debugInfo, this.polygonClipping, this.wayClipping, this.simplificationFactor,
+					this.mapStartPosition, this.mapStartZoom, this.preferredLanguage, this.encoding);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}

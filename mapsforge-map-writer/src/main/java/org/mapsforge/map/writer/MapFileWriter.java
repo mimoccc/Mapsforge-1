@@ -176,8 +176,8 @@ public class MapFileWriter {
 	 *            flag for polygon clipping
 	 * @param wayClipping
 	 *            flag for way clipping
-	 * @param pixelCompression
-	 *            flag for simplification of geo objects
+	 * @param simplificationFactor
+	 *            factor for simplification of geo objects
 	 * @param mapStartPosition
 	 *            a map start position or null
 	 * @param mapStartZoom
@@ -190,7 +190,7 @@ public class MapFileWriter {
 	 *             thrown if any IO exception occurred during the writing process
 	 */
 	public final void writeFile(long date, int version, short tilePixel, String comment, boolean debugStrings,
-			boolean polygonClipping, boolean wayClipping, boolean pixelCompression, GeoCoordinate mapStartPosition,
+			boolean polygonClipping, boolean wayClipping, double simplificationFactor, GeoCoordinate mapStartPosition,
 			byte mapStartZoom, String preferredLanguage, EncodingChoice encoding) throws IOException {
 
 		// CONTAINER HEADER
@@ -205,7 +205,7 @@ public class MapFileWriter {
 		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
 			long subfileSize = writeSubfile(currentFileSize, i, debugStrings, polygonClipping, wayClipping,
-					pixelCompression, encoding);
+					simplificationFactor, encoding);
 			// SUB FILE META DATA IN CONTAINER HEADER
 			writeSubfileMetaDataToContainerHeader(i, currentFileSize, subfileSize);
 			currentFileSize += subfileSize;
@@ -386,7 +386,7 @@ public class MapFileWriter {
 
 	private long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,
 			final boolean debugStrings, // final boolean waynodeCompression,
-			final boolean polygonClipping, final boolean wayClipping, final boolean pixelCompression,
+			final boolean polygonClipping, final boolean wayClipping, final double simplificationFactor,
 			EncodingChoice encoding) throws IOException {
 
 		LOGGER.fine("writing data for zoom interval " + zoomIntervalIndex + ", number of tiles: "
@@ -564,7 +564,7 @@ public class MapFileWriter {
 						for (TDWay way : ways) {
 							wayBuffer.clear();
 
-							WayPreprocessingResult wpr = preprocessWay(way, pixelCompression, polygonClipping,
+							WayPreprocessingResult wpr = preprocessWay(way, simplificationFactor, polygonClipping,
 									wayClipping, currentTileCoordinate, encoding);
 
 							if (wpr == null) {
@@ -764,8 +764,8 @@ public class MapFileWriter {
 		}
 	}
 
-	private WayPreprocessingResult preprocessWay(TDWay way, boolean simplify, boolean clipPolygons, boolean clipWays,
-			TileCoordinate tile, EncodingChoice encoding) {
+	private WayPreprocessingResult preprocessWay(TDWay way, double simplificationFactor, boolean clipPolygons,
+			boolean clipWays, TileCoordinate tile, EncodingChoice encoding) {
 
 		// TODO more sophisticated clipping of polygons needed
 		// we have a problem when clipping polygons which border needs to be
@@ -785,7 +785,7 @@ public class MapFileWriter {
 		// wayDataBlockList = GeoUtils.preprocessWay(way, null, clipPolygons,
 		// simplify, clipWays, tile,
 		// bboxEnlargement);
-		Geometry geometry = GeoUtils.preprocessWay(way, innerways, clipPolygons, clipWays, simplify, tile,
+		Geometry geometry = GeoUtils.preprocessWay(way, innerways, clipPolygons, clipWays, simplificationFactor, tile,
 				this.bboxEnlargement);
 		List<WayDataBlock> blocks = GeoUtils.toWayDataBlockList(geometry);
 		if (blocks == null) {

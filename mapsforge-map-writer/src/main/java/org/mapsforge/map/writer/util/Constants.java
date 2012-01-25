@@ -32,4 +32,30 @@ public final class Constants {
 	 * The name of the property that refers to the version of the map file writer.
 	 */
 	public static final String PROPERTY_NAME_WRITER_VERSION = "mapfile.writer.version";
+
+	/**
+	 * The maximum base zoom level for which we apply a simplification algorithm to filter way points.
+	 */
+	public static final int MAX_SIMPLIFICATION_BASE_ZOOM = 12;
+
+	/**
+	 * default name for out file
+	 */
+	public static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
+	/**
+	 * default data processor type
+	 */
+	public static final String DEFAULT_PARAM_TYPE = "ram";
+	/**
+	 * default bbox enlargement
+	 */
+	public static final int DEFAULT_PARAM_BBOX_ENLARGEMENT = 20;
+	/**
+	 * default coordinate encoding
+	 */
+	public static final String DEFAULT_PARAM_ENCODING = "single";
+	/**
+	 * default simplification factor
+	 */
+	public static final double DEFAULT_SIMPLIFICATION_FACTOR = 0.0000188;
 }

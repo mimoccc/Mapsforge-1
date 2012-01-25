@@ -52,7 +52,7 @@ public final class GeoUtils {
 	private GeoUtils() {
 	}
 
-	private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.0000188;
+	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.0000188;
 	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.00003;
 	/**
 	 * the minimum amount of nodes required for a valid closed polygon
@@ -148,8 +148,8 @@ public final class GeoUtils {
 	 *            flag whether polygons should be clipped
 	 * @param clipWays
 	 *            flag whether ways should be clipped
-	 * @param simplify
-	 *            flag whether ways should be simplified
+	 * @param simplificationFactor
+	 *            factor for simplification of geo objects
 	 * @param tile
 	 *            the tile
 	 * @param enlargementInMeters
@@ -157,7 +157,7 @@ public final class GeoUtils {
 	 * @return a JTS {@link Geometry} object representing the given way(s)
 	 */
 	public static Geometry preprocessWay(final TDWay way, final List<TDWay> innerWays, boolean clipPolygons,
-			boolean clipWays, boolean simplify, final TileCoordinate tile, int enlargementInMeters) {
+			boolean clipWays, double simplificationFactor, final TileCoordinate tile, int enlargementInMeters) {
 
 		Geometry geometry = toJtsGeometry(way, innerWays);
 		if (geometry == null) {
@@ -184,9 +184,9 @@ public final class GeoUtils {
 
 		}
 
-		if (simplify) {
+		if (simplificationFactor > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
 			// TODO is this the right place to simplify, is better before clipping?
-			geometry = TopologyPreservingSimplifier.simplify(geometry, DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
+			geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
 		}
 
 		return geometry;
