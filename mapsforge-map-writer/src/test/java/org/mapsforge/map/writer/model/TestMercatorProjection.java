@@ -55,18 +55,18 @@ public class TestMercatorProjection {
 	 */
 	@Test
 	public void testInverseFunctions() {
-		assertTrue(java.lang.Math.abs(MercatorProjection.longitudeToMetersX(MercatorProjection
-				.metersXToLongitude(1000)) - 1000) < 0.01);
+		assertTrue(java.lang.Math
+				.abs(MercatorProjection.longitudeToMetersX(MercatorProjection.metersXToLongitude(1000)) - 1000) < 0.01);
 		assertTrue(java.lang.Math.abs(MercatorProjection.longitudeToMetersX(MercatorProjection
 				.metersXToLongitude(123456)) - 123456) < 0.01);
-		assertTrue(java.lang.Math.abs(MercatorProjection.metersXToLongitude(MercatorProjection
-				.longitudeToMetersX(75)) - 75) < 0.01);
+		assertTrue(java.lang.Math
+				.abs(MercatorProjection.metersXToLongitude(MercatorProjection.longitudeToMetersX(75)) - 75) < 0.01);
 		assertTrue(java.lang.Math.abs(MercatorProjection.metersXToLongitude(MercatorProjection
 				.longitudeToMetersX(13.41862)) - 13.41862) < 0.0001);
-		assertTrue(java.lang.Math.abs(MercatorProjection.latitudeToMetersY(MercatorProjection
-				.metersYToLatitude(1000)) - 1000) < 0.01);
-		assertTrue(java.lang.Math.abs(MercatorProjection.metersYToLatitude(MercatorProjection
-				.latitudeToMetersY(75)) - 75) < 0.01);
+		assertTrue(java.lang.Math
+				.abs(MercatorProjection.latitudeToMetersY(MercatorProjection.metersYToLatitude(1000)) - 1000) < 0.01);
+		assertTrue(java.lang.Math
+				.abs(MercatorProjection.metersYToLatitude(MercatorProjection.latitudeToMetersY(75)) - 75) < 0.01);
 		assertTrue(java.lang.Math.abs(MercatorProjection.metersYToLatitude(MercatorProjection
 				.latitudeToMetersY(52.4988)) - 52.4988) < 0.0001);
 	}

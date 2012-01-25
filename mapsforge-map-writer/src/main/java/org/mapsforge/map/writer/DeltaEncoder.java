@@ -38,8 +38,8 @@ public class DeltaEncoder {
 	 *            List of WayDataBlock objects to be encoded.
 	 * @param encoding
 	 *            The Encoding which is used.
-	 * @return A new list of new WayDataBlock objects encoded with the given encoding. The original list is
-	 *         returned in case the encoding equals NONE.
+	 * @return A new list of new WayDataBlock objects encoded with the given encoding. The original list is returned in
+	 *         case the encoding equals NONE.
 	 */
 	public static List<WayDataBlock> encode(List<WayDataBlock> blocks, Encoding encoding) {
 		if (blocks == null) {

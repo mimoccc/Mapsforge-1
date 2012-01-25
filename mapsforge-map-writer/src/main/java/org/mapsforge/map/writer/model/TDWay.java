@@ -106,8 +106,8 @@ public class TDWay {
 					}
 				}
 
-				return new TDWay(way.getId(), ster.getLayer(), ster.getName(), ster.getRef(), knownWayTags,
-						shape, waynodes);
+				return new TDWay(way.getId(), ster.getLayer(), ster.getName(), ster.getRef(), knownWayTags, shape,
+						waynodes);
 			}
 		}
 
@@ -279,8 +279,7 @@ public class TDWay {
 	 * @return true, if the way is relevant for rendering
 	 */
 	public boolean isRenderRelevant() {
-		return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null
-				&& !getRef().isEmpty();
+		return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null && !getRef().isEmpty();
 	}
 
 	private void addTags(short[] addendum) { // NOPMD by bross on 25.12.11 13:04
@@ -337,8 +336,7 @@ public class TDWay {
 
 	/**
 	 * @param reversedInRelation
-	 *            set the flag that indicates whether the order of the way nodes are reversed by a particular
-	 *            relation
+	 *            set the flag that indicates whether the order of the way nodes are reversed by a particular relation
 	 */
 	public void setReversedInRelation(boolean reversedInRelation) {
 		this.reversedInRelation = reversedInRelation;
@@ -388,8 +386,7 @@ public class TDWay {
 
 	@Override
 	public String toString() {
-		return "TDWay [id=" + this.id + ", name=" + this.name + ", tags=" + this.tags + ", polygon="
-				+ this.shape + "]";
+		return "TDWay [id=" + this.id + ", name=" + this.name + ", tags=" + this.tags + ", polygon=" + this.shape + "]";
 	}
 
 }

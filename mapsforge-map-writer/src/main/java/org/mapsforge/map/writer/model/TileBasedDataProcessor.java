@@ -99,8 +99,8 @@ public interface TileBasedDataProcessor {
 	public TileData getTile(int baseZoomIndex, int tileCoordinateX, int tileCoordinateY);
 
 	/**
-	 * Retrieve the total amount of tiles cumulated over all base zoom levels that is needed to represent the
-	 * underlying bounding box of this tile data store.
+	 * Retrieve the total amount of tiles cumulated over all base zoom levels that is needed to represent the underlying
+	 * bounding box of this tile data store.
 	 * 
 	 * @return total amount of tiles
 	 */

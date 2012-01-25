@@ -1,3 +1,17 @@
+/*
+ * Copyright 2010, 2011, 2012 mapsforge.org
+ *
+ * This program is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.mapsforge.map.writer;
 
 import java.util.Deque;
@@ -49,8 +63,7 @@ public class TestWayPolygonizer {
 				new TDNode(5, 52000500, 13000500, (short) 0, (byte) 0, null, "n5") };
 		TDWay w4 = new TDWay(4, (byte) 0, "w4", null, n4);
 
-		TDNode[] nDangling1 = new TDNode[] {
-				new TDNode(12, 52001000, 13001000, (short) 0, (byte) 0, null, "n12"),
+		TDNode[] nDangling1 = new TDNode[] { new TDNode(12, 52001000, 13001000, (short) 0, (byte) 0, null, "n12"),
 				new TDNode(13, 50001000, 13001500, (short) 0, (byte) 0, null, "n13"),
 				new TDNode(14, 52001500, 13001500, (short) 0, (byte) 0, null, "n14"),
 				new TDNode(15, 52001600, 13001500, (short) 0, (byte) 0, null, "n15"),

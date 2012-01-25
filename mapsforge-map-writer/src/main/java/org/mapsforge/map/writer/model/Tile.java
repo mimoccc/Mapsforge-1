@@ -16,7 +16,6 @@ package org.mapsforge.map.writer.model;
 
 /**
  * This class represents a map tile. All mandatory fields are final.
- * 
  */
 public class Tile implements Comparable<Tile> {
 	static final byte TILE_BYTES_PER_PIXEL = 2;

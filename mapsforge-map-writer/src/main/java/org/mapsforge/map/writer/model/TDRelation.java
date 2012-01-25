@@ -171,8 +171,7 @@ public class TDRelation {
 	 * @return true if the relation is relevant for rendering
 	 */
 	public boolean isRenderRelevant() {
-		return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null
-				&& !getRef().isEmpty();
+		return hasTags() || getName() != null && !getName().isEmpty() || getRef() != null && !getRef().isEmpty();
 	}
 
 	/**
@@ -238,8 +237,8 @@ public class TDRelation {
 
 	@Override
 	public String toString() {
-		return "TDRelation [id=" + this.id + ", layer=" + this.layer + ", name=" + this.name + ", ref="
-				+ this.ref + ", tags=" + Arrays.toString(this.tags) + "]";
+		return "TDRelation [id=" + this.id + ", layer=" + this.layer + ", name=" + this.name + ", ref=" + this.ref
+				+ ", tags=" + Arrays.toString(this.tags) + "]";
 	}
 
 }

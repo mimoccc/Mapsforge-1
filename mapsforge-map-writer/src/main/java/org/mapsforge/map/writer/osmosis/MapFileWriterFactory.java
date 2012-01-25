@@ -64,8 +64,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
 		boolean wayClipping = getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, false);
 		String type = getStringArgument(taskConfig, PARAM_TYPE, DEFAULT_PARAM_TYPE);
-		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
-				DEFAULT_PARAM_BBOX_ENLARGEMENT);
+		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT, DEFAULT_PARAM_BBOX_ENLARGEMENT);
 		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
 		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
 		String encoding = getStringArgument(taskConfig, PARAM_ENCODING, DEFAULT_PARAM_ENCODING);

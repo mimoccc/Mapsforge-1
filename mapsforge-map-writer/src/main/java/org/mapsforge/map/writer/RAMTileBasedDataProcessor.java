@@ -53,8 +53,7 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 
 	private RAMTileBasedDataProcessor(double minLat, double maxLat, double minLon, double maxLon,
 			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement,
-				preferredLanguage);
+		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 	}
 
 	private RAMTileBasedDataProcessor(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
@@ -84,10 +83,9 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	 *            the preferred language
 	 * @return a new instance of a {@link RAMTileBasedDataProcessor}
 	 */
-	public static RAMTileBasedDataProcessor newInstance(Rect bbox,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement,
-				preferredLanguage);
+	public static RAMTileBasedDataProcessor newInstance(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int bboxEnlargement, String preferredLanguage) {
+		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 	}
 
 	/**
@@ -110,8 +108,7 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	public static TileBasedDataProcessor newInstance(double bottom, double top, double left, double right,
 			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
 		Rect bbox = new Rect(left, right, bottom, top);
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement,
-				preferredLanguage);
+		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 	}
 
 	@Override
@@ -195,8 +192,7 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 		int tileCoordinateXIndex = tileX - this.tileGridLayouts[zoom].getUpperLeft().getX();
 		int tileCoordinateYIndex = tileY - this.tileGridLayouts[zoom].getUpperLeft().getY();
 		// check for valid range
-		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0
-				|| this.tileData[zoom].length <= tileCoordinateXIndex
+		if (tileCoordinateXIndex < 0 || tileCoordinateYIndex < 0 || this.tileData[zoom].length <= tileCoordinateXIndex
 				|| this.tileData[zoom][tileCoordinateXIndex].length <= tileCoordinateYIndex) {
 			return null;
 		}

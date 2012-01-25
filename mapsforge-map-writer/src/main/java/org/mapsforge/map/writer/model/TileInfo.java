@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Encapsulates the information given in the oceantiles_12.dat file. That is the information whether a given
- * tile on zoom level 12 is completely covered by water, land or is mixed.
+ * Encapsulates the information given in the oceantiles_12.dat file. That is the information whether a given tile on
+ * zoom level 12 is completely covered by water, land or is mixed.
  * 
  * @author bross
  */
@@ -52,8 +52,7 @@ final public class TileInfo {
 	private TileInfo(String strInputFile) {
 		try {
 
-			DataInputStream dis = new DataInputStream(TileInfo.class.getClassLoader().getResourceAsStream(
-					strInputFile));
+			DataInputStream dis = new DataInputStream(TileInfo.class.getClassLoader().getResourceAsStream(strInputFile));
 			byte currentByte;
 
 			long start = System.currentTimeMillis();
@@ -86,13 +85,13 @@ final public class TileInfo {
 	}
 
 	/**
-	 * Checks if a tile is completely covered by water. <b>Important notice:</b> The method may produce false
-	 * negatives on higher zoom levels than 12.
+	 * Checks if a tile is completely covered by water. <b>Important notice:</b> The method may produce false negatives
+	 * on higher zoom levels than 12.
 	 * 
 	 * @param tc
 	 *            tile given as TileCoordinate
-	 * @return true if the tile is completely covered by water, false if the associated tile(s) on zoom level 12
-	 *         is(are) not completely covered by water.
+	 * @return true if the tile is completely covered by water, false if the associated tile(s) on zoom level 12 is(are)
+	 *         not completely covered by water.
 	 */
 	public boolean isWaterTile(TileCoordinate tc) {
 		List<TileCoordinate> tiles = tc.translateToZoomLevel(TILE_INFO_ZOOMLEVEL);

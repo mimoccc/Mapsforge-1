@@ -48,8 +48,7 @@ public final class OSMUtils {
 	 *            the entity
 	 * @param preferredLanguage
 	 *            the preferred language
-	 * @return a string array, [0] = name, [1] = ref, [2} = housenumber, [3] layer, [4] elevation, [5]
-	 *         relationType
+	 * @return a string array, [0] = name, [1] = ref, [2} = housenumber, [3] layer, [4] elevation, [5] relationType
 	 */
 	public static SpecialTagExtractionResult extractSpecialFields(Entity entity, String preferredLanguage) {
 		boolean foundPreferredLanguageName = false;

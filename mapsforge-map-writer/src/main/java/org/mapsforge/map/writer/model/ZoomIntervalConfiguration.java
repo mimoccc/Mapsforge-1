@@ -15,8 +15,8 @@
 package org.mapsforge.map.writer.model;
 
 /**
- * Represents the configuration of zoom intervals. A zoom interval is defined by a base zoom level, a minimum
- * zoom level and a maximum zoom level.
+ * Represents the configuration of zoom intervals. A zoom interval is defined by a base zoom level, a minimum zoom level
+ * and a maximum zoom level.
  * 
  * @author bross
  */
@@ -38,8 +38,8 @@ final public class ZoomIntervalConfiguration {
 		for (byte[] interval : intervals) {
 			i++;
 			if (interval.length != 3) {
-				throw new IllegalArgumentException("invalid interval configuration, found only "
-						+ interval.length + "parameters for interval " + i);
+				throw new IllegalArgumentException("invalid interval configuration, found only " + interval.length
+						+ "parameters for interval " + i);
 			}
 			if (interval[0] <= interval[1] || interval[0] >= interval[2]) {
 				throw new IllegalArgumentException("invalid configuration for interval " + i
@@ -47,8 +47,7 @@ final public class ZoomIntervalConfiguration {
 			}
 			if (i > 1) {
 				if (interval[0] < this.baseZoom[i - 2]) {
-					throw new IllegalArgumentException(
-							"interval configurations must follow an increasing order");
+					throw new IllegalArgumentException("interval configurations must follow an increasing order");
 				}
 				if (interval[1] != ((this.maxZoom[i - 2]) + 1)) {
 					throw new IllegalArgumentException("minZoom of interval " + i
@@ -67,8 +66,7 @@ final public class ZoomIntervalConfiguration {
 	 * @return the standard configuration
 	 */
 	public static ZoomIntervalConfiguration getStandardConfiguration() {
-		return new ZoomIntervalConfiguration(
-				new byte[][] { new byte[] { 8, 0, 11 }, new byte[] { 14, 12, 21 } });
+		return new ZoomIntervalConfiguration(new byte[][] { new byte[] { 8, 0, 11 }, new byte[] { 14, 12, 21 } });
 	}
 
 	/**

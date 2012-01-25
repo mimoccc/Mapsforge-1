@@ -93,12 +93,12 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
-	 * Constructs a new GeoCoordinate from a Well-Known-Text (WKT) representation of a point For example:
-	 * POINT(13.4125 52.52235) WKT is used in PostGIS and other spatial databases
+	 * Constructs a new GeoCoordinate from a Well-Known-Text (WKT) representation of a point For example: POINT(13.4125
+	 * 52.52235) WKT is used in PostGIS and other spatial databases
 	 * 
 	 * @param wellKnownText
-	 *            is the WKT point which describes the new GeoCoordinate, this needs to be in degrees using a
-	 *            WGS84 representation. The coordinate order in the POINT is defined as POINT(long lat)
+	 *            is the WKT point which describes the new GeoCoordinate, this needs to be in degrees using a WGS84
+	 *            representation. The coordinate order in the POINT is defined as POINT(long lat)
 	 */
 	public GeoCoordinate(String wellKnownText) {
 		Matcher m = wktPointPattern.matcher(wellKnownText);
@@ -108,10 +108,9 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
-	 * Constructs a new GeoCoordinate from a comma-separated String containing latitude and longitude values
-	 * (also ';', ':' and whitespace work as separator). First latitude and longitude are interpreted as
-	 * measured in degrees. If the coordinate is invalid, it is tried to interpret values as measured in
-	 * microdegrees.
+	 * Constructs a new GeoCoordinate from a comma-separated String containing latitude and longitude values (also ';',
+	 * ':' and whitespace work as separator). First latitude and longitude are interpreted as measured in degrees. If
+	 * the coordinate is invalid, it is tried to interpret values as measured in microdegrees.
 	 * 
 	 * @param latLonString
 	 *            the String containing the latitude and longitude values
@@ -208,8 +207,8 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
-	 * Calculate the spherical distance from this GeoCoordinate to another Use vincentyDistance for more
-	 * accuracy but less performance
+	 * Calculate the spherical distance from this GeoCoordinate to another Use vincentyDistance for more accuracy but
+	 * less performance
 	 * 
 	 * @param other
 	 *            The GeoCoordinate to calculate the distance to
@@ -221,8 +220,8 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 
 	/**
 	 * Calculate the spherical distance between two GeoCoordinates in meters using the Haversine formula This
-	 * calculation is done using the assumption, that the earth is a sphere, it is not though. If you need a
-	 * higher precision and can afford a longer execution time you might want to use vincentyDistance
+	 * calculation is done using the assumption, that the earth is a sphere, it is not though. If you need a higher
+	 * precision and can afford a longer execution time you might want to use vincentyDistance
 	 * 
 	 * @param gc1
 	 *            first GeoCoordinate
@@ -232,8 +231,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 * @throws IllegalArgumentException
 	 *             if one of the arguments is null
 	 */
-	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2)
-			throws IllegalArgumentException {
+	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2) throws IllegalArgumentException {
 		if (gc1 == null || gc2 == null) {
 			throw new IllegalArgumentException("The GeoCoordinates for distance calculations may not be null.");
 		}
@@ -242,8 +240,8 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 
 	/**
 	 * Calculate the spherical distance between two GeoCoordinates in meters using the Haversine formula. This
-	 * calculation is done using the assumption, that the earth is a sphere, it is not though. If you need a
-	 * higher precision and can afford a longer execution time you might want to use vincentyDistance
+	 * calculation is done using the assumption, that the earth is a sphere, it is not though. If you need a higher
+	 * precision and can afford a longer execution time you might want to use vincentyDistance
 	 * 
 	 * @param lon1
 	 *            longitude of first coordinate
@@ -284,8 +282,8 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
-	 * Calculate the spherical distance from this GeoCoordinate to another Use "distance" for faster computation
-	 * with less accuracy
+	 * Calculate the spherical distance from this GeoCoordinate to another Use "distance" for faster computation with
+	 * less accuracy
 	 * 
 	 * @param other
 	 *            The GeoCoordinate to calculate the distance to
@@ -296,12 +294,11 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	}
 
 	/**
-	 * Calculates geodetic distance between two GeoCoordinates using Vincenty inverse formula for ellipsoids.
-	 * This is very accurate but consumes more resources and time than the sphericalDistance method Adaptation
-	 * of Chriss Veness' JavaScript Code on http://www.movable-type.co.uk/scripts/latlong-vincenty.html Paper:
-	 * Vincenty inverse formula - T Vincenty, "Direct and Inverse Solutions of Geodesics on the Ellipsoid with
-	 * application of nested equations", Survey Review, vol XXII no 176, 1975
-	 * (http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf)
+	 * Calculates geodetic distance between two GeoCoordinates using Vincenty inverse formula for ellipsoids. This is
+	 * very accurate but consumes more resources and time than the sphericalDistance method Adaptation of Chriss Veness'
+	 * JavaScript Code on http://www.movable-type.co.uk/scripts/latlong-vincenty.html Paper: Vincenty inverse formula -
+	 * T Vincenty, "Direct and Inverse Solutions of Geodesics on the Ellipsoid with application of nested equations",
+	 * Survey Review, vol XXII no 176, 1975 (http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf)
 	 * 
 	 * @param gc1
 	 *            first GeoCoordinate
@@ -323,10 +320,8 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 		do {
 			sinLambda = Math.sin(lambda);
 			cosLambda = Math.cos(lambda);
-			sinSigma = Math
-					.sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda)
-							+ (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda)
-							* (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
+			sinSigma = Math.sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda)
+					+ (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
 			if (sinSigma == 0) {
 				return 0; // co-incident points
 			}

@@ -39,8 +39,8 @@ public class Rect {
 	 *            bound of rectangle 2.
 	 * @return true if rectangles overlap.
 	 */
-	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1, int minLon2,
-			int maxLon2, int minLat2, int maxLat2) {
+	public static boolean overlaps(int minLon1, int maxLon1, int minLat1, int maxLat1, int minLon2, int maxLon2,
+			int minLat2, int maxLat2) {
 		return !(minLon1 > maxLon2 || minLon2 > maxLon1 || minLat1 > maxLat2 || minLat2 > maxLat1);
 	}
 
@@ -67,8 +67,8 @@ public class Rect {
 	private Rect other;
 
 	/**
-	 * Constructs a rectangle defined by a single coordinate, i.e. minLongitudeE6 = maxLongitudeE6 and
-	 * minLatitudeE6 = maxLatitudeE6.
+	 * Constructs a rectangle defined by a single coordinate, i.e. minLongitudeE6 = maxLongitudeE6 and minLatitudeE6 =
+	 * maxLatitudeE6.
 	 * 
 	 * @param gc
 	 *            the coordinate to define the rectangle
@@ -132,8 +132,8 @@ public class Rect {
 	}
 
 	/**
-	 * Creates a new rectangle from a String containing comma-separated coordinates in the order minLat, minLon,
-	 * maxLat, maxLon.
+	 * Creates a new rectangle from a String containing comma-separated coordinates in the order minLat, minLon, maxLat,
+	 * maxLon.
 	 * 
 	 * @param rectString
 	 *            the String that describes the rectangle
@@ -145,8 +145,7 @@ public class Rect {
 		String[] splitted = rectString.split(",");
 		if (splitted.length != 4) {
 			throw new IllegalArgumentException(
-					"expects 4 comma-separated values that define a bounding box, only found "
-							+ splitted.length);
+					"expects 4 comma-separated values that define a bounding box, only found " + splitted.length);
 		}
 		GeoCoordinate upperLeft = GeoCoordinate.fromString(splitted[2] + "," + splitted[1]);
 		GeoCoordinate bottomRight = GeoCoordinate.fromString(splitted[0] + "," + splitted[3]);
@@ -203,8 +202,8 @@ public class Rect {
 	}
 
 	/**
-	 * Computes the distance between this and another rectangle. The distance between overlapping rectangles is
-	 * 0. Otherwise, the distance is the spherical distance between the closest points.
+	 * Computes the distance between this and another rectangle. The distance between overlapping rectangles is 0.
+	 * Otherwise, the distance is the spherical distance between the closest points.
 	 * 
 	 * @param otherRect
 	 *            the rectangle to compute the distance
@@ -263,8 +262,8 @@ public class Rect {
 	}
 
 	/**
-	 * Enlarges the boundary of the Rect so that it contains the coordinate. The special case occurring at
-	 * longitude +180° and -180° is not considered.
+	 * Enlarges the boundary of the Rect so that it contains the coordinate. The special case occurring at longitude
+	 * +180° and -180° is not considered.
 	 * 
 	 * @param gc
 	 *            the coordinate which should be included in the rectangle
@@ -274,8 +273,8 @@ public class Rect {
 	}
 
 	/**
-	 * Enlarges the boundary of the Rect so that it contains the coordinate. The special case occurring at
-	 * longitude +180° and -180° is not considered.
+	 * Enlarges the boundary of the Rect so that it contains the coordinate. The special case occurring at longitude
+	 * +180° and -180° is not considered.
 	 * 
 	 * @param latE6
 	 *            the latitude of the coordinate
@@ -290,8 +289,8 @@ public class Rect {
 	}
 
 	/**
-	 * Enlarges the boundary of the Rect so that it contains the rectangle. The special case occurring at
-	 * longitude +180° and -180° is not considered.
+	 * Enlarges the boundary of the Rect so that it contains the rectangle. The special case occurring at longitude
+	 * +180° and -180° is not considered.
 	 * 
 	 * @param otherRect
 	 *            the other rectangle which should be included in the rectangle

@@ -51,9 +51,9 @@ public class TDNode {
 		SpecialTagExtractionResult ster = OSMUtils.extractSpecialFields(node, preferredLanguage);
 		short[] knownWayTags = OSMUtils.extractKnownPOITags(node); // NOPMD by bross on 25.12.11 12:55
 
-		return new TDNode(node.getId(), GeoCoordinate.doubleToInt(node.getLatitude()),
-				GeoCoordinate.doubleToInt(node.getLongitude()), ster.getElevation(), ster.getLayer(),
-				ster.getHousenumber(), ster.getName(), knownWayTags);
+		return new TDNode(node.getId(), GeoCoordinate.doubleToInt(node.getLatitude()), GeoCoordinate.doubleToInt(node
+				.getLongitude()), ster.getElevation(), ster.getLayer(), ster.getHousenumber(), ster.getName(),
+				knownWayTags);
 	}
 
 	/**
@@ -235,8 +235,8 @@ public class TDNode {
 
 	@Override
 	public final String toString() {
-		return "TDNode [id=" + this.id + ", latitude=" + this.latitude + ", longitude=" + this.longitude
-				+ ", name=" + this.name + ", tags=" + this.tags + "]";
+		return "TDNode [id=" + this.id + ", latitude=" + this.latitude + ", longitude=" + this.longitude + ", name="
+				+ this.name + ", tags=" + this.tags + "]";
 	}
 
 }

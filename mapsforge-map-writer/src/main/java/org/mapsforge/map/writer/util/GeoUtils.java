@@ -67,8 +67,8 @@ public final class GeoUtils {
 	private static final double[] EPSILON_ZERO = new double[] { 0, 0 };
 	private static final Logger LOGGER = Logger.getLogger(GeoUtils.class.getName());
 
-	private static final int[] TILE_BITMASK_VALUES = new int[] { 32768, 16384, 8192, 4096, 2048, 1024, 512,
-			256, 128, 64, 32, 16, 8, 4, 2, 1 };
+	private static final int[] TILE_BITMASK_VALUES = new int[] { 32768, 16384, 8192, 4096, 2048, 1024, 512, 256, 128,
+			64, 32, 16, 8, 4, 2, 1 };
 
 	// JTS
 	private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
@@ -82,10 +82,10 @@ public final class GeoUtils {
 	 * @param baseZoomLevel
 	 *            the base zoom level which is used in the mapping
 	 * @param enlargementInMeter
-	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in the
-	 *            mapping process
-	 * @return all tiles on the given base zoom level that need to include the given way, an empty set if no
-	 *         tiles are matched
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in the mapping
+	 *            process
+	 * @return all tiles on the given base zoom level that need to include the given way, an empty set if no tiles are
+	 *         matched
 	 */
 	public static Set<TileCoordinate> mapWayToTiles(final TDWay way, final byte baseZoomLevel,
 			final int enlargementInMeter) {
@@ -127,14 +127,10 @@ public final class GeoUtils {
 			return false;
 		}
 
-		int lon1 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(),
-				tile.getZoomlevel()));
-		int lon2 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX() + 1,
-				tile.getZoomlevel()));
-		int lat1 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(),
-				tile.getZoomlevel()));
-		int lat2 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY() + 1,
-				tile.getZoomlevel()));
+		int lon1 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(), tile.getZoomlevel()));
+		int lon2 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX() + 1, tile.getZoomlevel()));
+		int lat1 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(), tile.getZoomlevel()));
+		int lat2 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY() + 1, tile.getZoomlevel()));
 		return point.getLatitudeE6() <= lat1 && point.getLatitudeE6() >= lat2 && point.getLongitudeE6() >= lon1
 				&& point.getLongitudeE6() <= lon2;
 	}
@@ -190,28 +186,26 @@ public final class GeoUtils {
 
 		if (simplify) {
 			// TODO is this the right place to simplify, is better before clipping?
-			geometry = TopologyPreservingSimplifier
-					.simplify(geometry, DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
+			geometry = TopologyPreservingSimplifier.simplify(geometry, DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE);
 		}
 
 		return geometry;
 	}
 
 	/**
-	 * A tile on zoom level <i>z</i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each of these 16 sub
-	 * tiles it is analyzed if the given way needs to be included. The result is represented as a 16 bit short
-	 * value. Each bit represents one of the 16 sub tiles. A bit is set to 1 if the sub tile needs to include
-	 * the way. Representation is row-wise.
+	 * A tile on zoom level <i>z</i> has exactly 16 sub tiles on zoom level <i>z+2</i>. For each of these 16 sub tiles
+	 * it is analyzed if the given way needs to be included. The result is represented as a 16 bit short value. Each bit
+	 * represents one of the 16 sub tiles. A bit is set to 1 if the sub tile needs to include the way. Representation is
+	 * row-wise.
 	 * 
 	 * @param geometry
 	 *            the geometry which is analyzed
 	 * @param tile
 	 *            the tile which is split into 16 sub tiles
 	 * @param enlargementInMeter
-	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in the
-	 *            mapping process
-	 * @return a 16 bit short value that represents the information which of the sub tiles needs to include the
-	 *         way
+	 *            amount of pixels that is used to enlarge the bounding box of the way and the tiles in the mapping
+	 *            process
+	 * @return a 16 bit short value that represents the information which of the sub tiles needs to include the way
 	 */
 	public static short computeBitmask(final Geometry geometry, final TileCoordinate tile, // NOPMD by bross on
 																							// 25.12.11 13:30
@@ -241,8 +235,7 @@ public final class GeoUtils {
 	 *            the enlargement of the tile in meters
 	 * @return true, if the geometry is covered completely by this tile
 	 */
-	public static boolean coveredByTile(final Geometry geometry, final TileCoordinate tile,
-			final int enlargementInMeter) {
+	public static boolean coveredByTile(final Geometry geometry, final TileCoordinate tile, final int enlargementInMeter) {
 		Geometry bbox = tileToJTSGeometry(tile.getX(), tile.getY(), tile.getZoomlevel(), enlargementInMeter);
 		if (bbox.covers(geometry)) {
 			return true;
@@ -359,8 +352,8 @@ public final class GeoUtils {
 			if (!innerWayGeometries.isEmpty()) {
 				// make wayGeometry a new Polygon that contains inner ways as holes
 				LinearRing[] holes = innerWayGeometries.toArray(new LinearRing[innerWayGeometries.size()]);
-				LinearRing exterior = GEOMETRY_FACTORY.createLinearRing(outerPolygon.getExteriorRing()
-						.getCoordinates());
+				LinearRing exterior = GEOMETRY_FACTORY
+						.createLinearRing(outerPolygon.getExteriorRing().getCoordinates());
 				wayGeometry = new Polygon(exterior, holes, GEOMETRY_FACTORY);
 			}
 
@@ -370,12 +363,11 @@ public final class GeoUtils {
 	}
 
 	/**
-	 * Internal conversion method to convert our internal data structure for ways to geometry objects in JTS. It
-	 * will care about ways and polygons and will create the right JTS onjects.
+	 * Internal conversion method to convert our internal data structure for ways to geometry objects in JTS. It will
+	 * care about ways and polygons and will create the right JTS onjects.
 	 * 
 	 * @param way
-	 *            TDway which will be converted. Null if we were not able to convert the way to a Geometry
-	 *            object.
+	 *            TDway which will be converted. Null if we were not able to convert the way to a Geometry object.
 	 * @param area
 	 *            true, if the way represents an area, i.e. a polygon instead of a linear ring
 	 * @return return Converted way as JTS object.
@@ -490,12 +482,11 @@ public final class GeoUtils {
 		double[] epsilonsBottomRight = computeTileEnlargement(miny, enlargementInPixel);
 
 		TileCoordinate[] bbox = new TileCoordinate[2];
-		bbox[0] = new TileCoordinate((int) MercatorProjection.longitudeToTileX(minx - epsilonsTopLeft[1],
-				zoomlevel), (int) MercatorProjection.latitudeToTileY(maxy + epsilonsTopLeft[0], zoomlevel),
-				zoomlevel);
-		bbox[1] = new TileCoordinate((int) MercatorProjection.longitudeToTileX(maxx + epsilonsBottomRight[1],
-				zoomlevel), (int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0], zoomlevel),
-				zoomlevel);
+		bbox[0] = new TileCoordinate((int) MercatorProjection.longitudeToTileX(minx - epsilonsTopLeft[1], zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(maxy + epsilonsTopLeft[0], zoomlevel), zoomlevel);
+		bbox[1] = new TileCoordinate(
+				(int) MercatorProjection.longitudeToTileX(maxx + epsilonsBottomRight[1], zoomlevel),
+				(int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0], zoomlevel), zoomlevel);
 
 		return bbox;
 	}
@@ -521,8 +512,7 @@ public final class GeoUtils {
 	static String arraysSVG(List<float[]> closedPolygons) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>").append("\n");
-		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" "
-				+ "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
+		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" " + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
 				+ "xmlns:ev=\"http://www.w3.org/2001/xml-events\" "
 				+ "version=\"1.1\" baseProfile=\"full\" width=\"800mm\" height=\"600mm\">");
 

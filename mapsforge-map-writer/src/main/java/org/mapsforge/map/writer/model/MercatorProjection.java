@@ -20,8 +20,7 @@ package org.mapsforge.map.writer.model;
 public class MercatorProjection {
 
 	/**
-	 * Convert a longitude coordinate (in degrees) to a horizontal distance in meters from the
-	 * zero meridian
+	 * Convert a longitude coordinate (in degrees) to a horizontal distance in meters from the zero meridian
 	 * 
 	 * @param longitude
 	 *            in degrees
@@ -50,13 +49,11 @@ public class MercatorProjection {
 	 * @return latitude in degrees in spherical mercator projection
 	 */
 	public static double metersYToLatitude(double y) {
-		return java.lang.Math.toDegrees(java.lang.Math.atan(java.lang.Math.sinh(y
-				/ WGS84.EQUATORIALRADIUS)));
+		return java.lang.Math.toDegrees(java.lang.Math.atan(java.lang.Math.sinh(y / WGS84.EQUATORIALRADIUS)));
 	}
 
 	/**
-	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the
-	 * equator
+	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the equator
 	 * 
 	 * @param latitude
 	 *            in degrees
@@ -78,13 +75,11 @@ public class MercatorProjection {
 	 * @return the ground resolution at the given latitude and zoom level.
 	 */
 	public static double calculateGroundResolution(double latitude, byte zoom) {
-		return Math.cos(latitude * Math.PI / 180) * 40075016.686
-				/ ((long) Tile.TILE_SIZE << zoom);
+		return Math.cos(latitude * Math.PI / 180) * 40075016.686 / ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
-	 * Convert a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom
-	 * level.
+	 * Convert a latitude coordinate (in degrees) to a pixel Y coordinate at a certain zoom level.
 	 * 
 	 * @param latitude
 	 *            the latitude coordinate that should be converted.
@@ -111,8 +106,7 @@ public class MercatorProjection {
 	}
 
 	/**
-	 * Convert a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom
-	 * level.
+	 * Convert a longitude coordinate (in degrees) to a pixel X coordinate at a certain zoom level.
 	 * 
 	 * @param longitude
 	 *            the longitude coordinate that should be converted.

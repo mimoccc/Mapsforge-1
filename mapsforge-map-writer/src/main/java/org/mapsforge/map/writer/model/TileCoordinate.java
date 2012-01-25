@@ -67,8 +67,8 @@ public class TileCoordinate {
 	}
 
 	/**
-	 * Computes which tile on a lower zoom level covers this given tile or which tiles on a higher zoom level
-	 * together cover this tile.
+	 * Computes which tile on a lower zoom level covers this given tile or which tiles on a higher zoom level together
+	 * cover this tile.
 	 * 
 	 * @param zoomlevelNew
 	 *            the zoom level

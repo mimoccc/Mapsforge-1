@@ -74,10 +74,10 @@ public class MapFileWriterTask implements Sink {
 
 	private final int vSpecification;
 
-	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String mapStartZoom,
-			String comment, String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter,
-			boolean polygonClipping, boolean wayClipping, String type, int bboxEnlargement, String tagConfFile,
-			String preferredLanguage, String encoding) {
+	MapFileWriterTask(String outFile, String bboxString, String mapStartPosition, String mapStartZoom, String comment,
+			String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter, boolean polygonClipping,
+			boolean wayClipping, String type, int bboxEnlargement, String tagConfFile, String preferredLanguage,
+			String encoding) {
 		this.outFile = new File(outFile);
 		if (this.outFile.isDirectory()) {
 			throw new IllegalArgumentException("file parameter points to a directory, must be a file");
@@ -146,8 +146,7 @@ public class MapFileWriterTask implements Sink {
 
 		Rect bbox = bboxString == null ? null : Rect.fromString(bboxString);
 		this.zoomIntervalConfiguration = zoomIntervalConfigurationString == null ? ZoomIntervalConfiguration
-				.getStandardConfiguration() : ZoomIntervalConfiguration
-				.fromString(zoomIntervalConfigurationString);
+				.getStandardConfiguration() : ZoomIntervalConfiguration.fromString(zoomIntervalConfigurationString);
 
 		this.type = type;
 		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd")) {
@@ -197,8 +196,8 @@ public class MapFileWriterTask implements Sink {
 			mfw.writeFile(System.currentTimeMillis(), this.vSpecification,
 					(short) 256, // NOPMD by bross on 25.12.11 13:38
 					this.comment, // NOPMD by bross on 25.12.11 13:36
-					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter,
-					this.mapStartPosition, this.mapStartZoom, this.preferredLanguage, this.encoding);
+					this.debugInfo, this.polygonClipping, this.wayClipping, this.pixelFilter, this.mapStartPosition,
+					this.mapStartZoom, this.preferredLanguage, this.encoding);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "error while writing file", e);
 		}
@@ -210,9 +209,8 @@ public class MapFileWriterTask implements Sink {
 
 		System.gc(); // NOPMD by bross on 25.12.11 13:37
 		LOGGER.info("estimated memory consumption: "
-				+ nfMegabyte
-						.format(+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Math
-								.pow(1024, 2))) + "MB");
+				+ nfMegabyte.format(+((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Math
+						.pow(1024, 2))) + "MB");
 	}
 
 	@Override
@@ -232,12 +230,12 @@ public class MapFileWriterTask implements Sink {
 				if (this.tileBasedGeoObjectStore == null) {
 					if (this.type.equalsIgnoreCase("ram")) {
 						this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bound.getBottom(),
-								bound.getTop(), bound.getLeft(), bound.getRight(),
-								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
+								bound.getTop(), bound.getLeft(), bound.getRight(), this.zoomIntervalConfiguration,
+								this.bboxEnlargement, this.preferredLanguage);
 					} else {
 						this.tileBasedGeoObjectStore = HDTileBasedDataProcessor.newInstance(bound.getBottom(),
-								bound.getTop(), bound.getLeft(), bound.getRight(),
-								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
+								bound.getTop(), bound.getLeft(), bound.getRight(), this.zoomIntervalConfiguration,
+								this.bboxEnlargement, this.preferredLanguage);
 					}
 				}
 				LOGGER.info("start reading data...");

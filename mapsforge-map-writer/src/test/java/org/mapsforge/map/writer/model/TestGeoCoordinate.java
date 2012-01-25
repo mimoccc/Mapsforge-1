@@ -93,10 +93,8 @@ public class TestGeoCoordinate {
 
 		// These coordinates are 1/4 Earth circumference from zeroZero on the equator
 		GeoCoordinate nearSriLanka = new GeoCoordinate(0d, 90d);
-		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, nearSriLanka)
-				- (earthEquatorCircumference / 4)) < 0.01);
-		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(zeroZero, nearSriLanka)
-				- (earthEquatorCircumference / 4)) < 1);
+		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, nearSriLanka) - (earthEquatorCircumference / 4)) < 0.01);
+		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(zeroZero, nearSriLanka) - (earthEquatorCircumference / 4)) < 1);
 		// On the equator the result of the different distance calculation methods should be
 		// about the same
 		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, nearSriLanka)
@@ -104,16 +102,14 @@ public class TestGeoCoordinate {
 
 		// These coordinates are also 1/4 Earth circumference from zero on the equator
 		GeoCoordinate islaGenovesa = new GeoCoordinate(0d, -90d);
-		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, islaGenovesa)
-				- (earthEquatorCircumference / 4)) < 0.01);
+		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, islaGenovesa) - (earthEquatorCircumference / 4)) < 0.01);
 		// These points are as far apart as they could be, half way around the earth
 		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(nearSriLanka, islaGenovesa)
 				- (earthEquatorCircumference / 2)) < 0.01);
 
 		// Calculating the distance between the north pole and the equator
 		GeoCoordinate northPole = new GeoCoordinate(90d, 0d);
-		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, northPole)
-				- (earthEquatorCircumference / 4)) < 0.01);
+		assertTrue(Math.abs(GeoCoordinate.sphericalDistance(zeroZero, northPole) - (earthEquatorCircumference / 4)) < 0.01);
 		assertTrue(Math.abs(GeoCoordinate.vincentyDistance(zeroZero, northPole) - distancePoleToEquator) < 1);
 
 		// Check if the distance from pole to pole works as well in the vincentyDistance
