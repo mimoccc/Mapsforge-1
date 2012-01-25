@@ -95,31 +95,6 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	/**
 	 * Creates a new {@link HDTileBasedDataProcessor}.
 	 * 
-	 * @param minLat
-	 *            the min latitude
-	 * @param maxLat
-	 *            the maximum latitude
-	 * @param minLon
-	 *            the minimum longitude
-	 * @param maxLon
-	 *            the maximum longitude
-	 * @param zoomIntervalConfiguration
-	 *            the zoom level configuration
-	 * @param bboxEnlargement
-	 *            the bounding box enlargement
-	 * @param preferredLanguage
-	 *            the preferred language
-	 * @return a new instance of a {@link HDTileBasedDataProcessor}
-	 */
-	public static HDTileBasedDataProcessor newInstance(double minLat, double maxLat, double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		return new HDTileBasedDataProcessor(minLat, maxLat, minLon, maxLon, zoomIntervalConfiguration, bboxEnlargement,
-				preferredLanguage);
-	}
-
-	/**
-	 * Creates a new {@link HDTileBasedDataProcessor}.
-	 * 
 	 * @param bbox
 	 *            the bounding box
 	 * @param zoomIntervalConfiguration

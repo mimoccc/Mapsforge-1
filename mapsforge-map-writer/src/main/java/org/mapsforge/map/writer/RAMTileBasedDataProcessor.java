@@ -29,7 +29,6 @@ import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDRelation;
 import org.mapsforge.map.writer.model.TDWay;
-import org.mapsforge.map.writer.model.TileBasedDataProcessor;
 import org.mapsforge.map.writer.model.TileCoordinate;
 import org.mapsforge.map.writer.model.TileData;
 import org.mapsforge.map.writer.model.TileInfo;
@@ -85,29 +84,6 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	 */
 	public static RAMTileBasedDataProcessor newInstance(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
 			int bboxEnlargement, String preferredLanguage) {
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
-	}
-
-	/**
-	 * @param bottom
-	 *            the min latitude
-	 * @param top
-	 *            the max latitude
-	 * @param left
-	 *            the min longitude
-	 * @param right
-	 *            the max longitude
-	 * @param zoomIntervalConfiguration
-	 *            the {@link ZoomIntervalConfiguration}
-	 * @param bboxEnlargement
-	 *            the bounding box enlargement
-	 * @param preferredLanguage
-	 *            the preferred language
-	 * @return a new instance of a {@link RAMTileBasedDataProcessor}
-	 */
-	public static TileBasedDataProcessor newInstance(double bottom, double top, double left, double right,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		Rect bbox = new Rect(left, right, bottom, top);
 		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 	}
 

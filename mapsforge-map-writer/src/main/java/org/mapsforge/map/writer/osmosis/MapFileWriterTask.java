@@ -78,24 +78,14 @@ public class MapFileWriterTask implements Sink {
 			String zoomIntervalConfigurationString, boolean debugInfo, boolean pixelFilter, boolean polygonClipping,
 			boolean wayClipping, String type, int bboxEnlargement, String tagConfFile, String preferredLanguage,
 			String encoding) {
-		this.outFile = new File(outFile);
-		if (this.outFile.isDirectory()) {
-			throw new IllegalArgumentException("file parameter points to a directory, must be a file");
-		}
 
 		Properties properties = new Properties();
 		try {
-			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties")); // NOPMD
-																													// by
-																													// bross
-																													// on
-																													// 25.12.11
-																													// 13:43
+			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties"));
 		} catch (IOException e) {
 			throw new RuntimeException("could not find default properties", e); // NOPMD by bross on 25.12.11
 																				// 13:36
 		}
-
 		String vWriter = properties.getProperty(Constants.PROPERTY_NAME_WRITER_VERSION);
 		try {
 			this.vSpecification = Integer.parseInt(properties
@@ -105,11 +95,35 @@ public class MapFileWriterTask implements Sink {
 																								// on 25.12.11
 																								// 13:36
 		}
-
 		LOGGER.info("mapfile-writer version " + vWriter);
 		LOGGER.info("mapfile format specification version " + this.vSpecification);
 
+		this.outFile = new File(outFile);
+		if (this.outFile.isDirectory()) {
+			throw new IllegalArgumentException("file parameter points to a directory, must be a file");
+		}
+
+		this.debugInfo = debugInfo;
+		// this.waynodeCompression = waynodeCompression;
+		this.pixelFilter = pixelFilter;
+		this.polygonClipping = polygonClipping;
+		this.wayClipping = wayClipping;
+		this.comment = comment;
+		this.bboxEnlargement = bboxEnlargement;
+		this.preferredLanguage = preferredLanguage;
+		this.encoding = EncodingChoice.fromString(encoding);
+
+		// BOUNDING BOX CONFUGURATION
+		Rect bbox = bboxString == null ? null : Rect.fromString(bboxString);
+
+		// START POSITION AND ZOOM
 		this.mapStartPosition = mapStartPosition == null ? null : GeoCoordinate.fromString(mapStartPosition);
+		if (this.mapStartPosition != null && bbox != null && !validMapStartPosition(bbox, this.mapStartPosition)) {
+			throw new RuntimeException(
+					"map start position is not valid, must be included in bounding box of the map, bbox: "
+							+ bbox.toString() + " - map start position: " + this.mapStartPosition.toString());
+		}
+
 		// init with negative value
 		byte startZoom = -1;
 		if (mapStartZoom != null && !mapStartZoom.isEmpty()) {
@@ -124,12 +138,8 @@ public class MapFileWriterTask implements Sink {
 			}
 		}
 		this.mapStartZoom = startZoom;
-		this.debugInfo = debugInfo;
-		// this.waynodeCompression = waynodeCompression;
-		this.pixelFilter = pixelFilter;
-		this.polygonClipping = polygonClipping;
-		this.wayClipping = wayClipping;
-		this.comment = comment;
+
+		// TAG CONFIGURATION
 		if (tagConfFile == null) {
 			OSMTagMapping.getInstance();
 		} else {
@@ -144,7 +154,6 @@ public class MapFileWriterTask implements Sink {
 			}
 		}
 
-		Rect bbox = bboxString == null ? null : Rect.fromString(bboxString);
 		this.zoomIntervalConfiguration = zoomIntervalConfigurationString == null ? ZoomIntervalConfiguration
 				.getStandardConfiguration() : ZoomIntervalConfiguration.fromString(zoomIntervalConfigurationString);
 
@@ -152,7 +161,7 @@ public class MapFileWriterTask implements Sink {
 		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd")) {
 			throw new IllegalArgumentException("type argument must equal ram or hd, found: " + type);
 		}
-
+		// CREATE DATASTORE IF BBOX IS DEFINED
 		if (bbox != null) {
 			if (type.equalsIgnoreCase("ram")) {
 				this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bbox,
@@ -162,10 +171,6 @@ public class MapFileWriterTask implements Sink {
 						this.zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 			}
 		}
-		this.bboxEnlargement = bboxEnlargement;
-		this.preferredLanguage = preferredLanguage;
-
-		this.encoding = EncodingChoice.fromString(encoding);
 
 	}
 
@@ -228,14 +233,20 @@ public class MapFileWriterTask implements Sink {
 			case Bound:
 				Bound bound = (Bound) entity;
 				if (this.tileBasedGeoObjectStore == null) {
+					Rect bbox = new Rect(bound.getLeft(), bound.getRight(), bound.getBottom(), bound.getTop());
+					if (this.mapStartPosition != null && !validMapStartPosition(bbox, this.mapStartPosition)) {
+						throw new RuntimeException(
+								"map start position is not valid, must be included in bounding box of the map, bbox: "
+										+ bbox.toString() + " - map start position: "
+										+ this.mapStartPosition.toString());
+					}
+
 					if (this.type.equalsIgnoreCase("ram")) {
-						this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bound.getBottom(),
-								bound.getTop(), bound.getLeft(), bound.getRight(), this.zoomIntervalConfiguration,
-								this.bboxEnlargement, this.preferredLanguage);
+						this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bbox,
+								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
 					} else {
-						this.tileBasedGeoObjectStore = HDTileBasedDataProcessor.newInstance(bound.getBottom(),
-								bound.getTop(), bound.getLeft(), bound.getRight(), this.zoomIntervalConfiguration,
-								this.bboxEnlargement, this.preferredLanguage);
+						this.tileBasedGeoObjectStore = HDTileBasedDataProcessor.newInstance(bbox,
+								this.zoomIntervalConfiguration, this.bboxEnlargement, this.preferredLanguage);
 					}
 				}
 				LOGGER.info("start reading data...");
@@ -280,5 +291,9 @@ public class MapFileWriterTask implements Sink {
 				break;
 		}
 
+	}
+
+	private static boolean validMapStartPosition(Rect bbox, GeoCoordinate startPos) {
+		return bbox.includes(startPos);
 	}
 }
