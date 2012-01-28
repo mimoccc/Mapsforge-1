@@ -95,6 +95,7 @@ public class MapScaleBar {
 	private final Bitmap mapScaleBitmap;
 	private final Canvas mapScaleCanvas;
 	private final MapView mapView;
+	private boolean redrawScaleBar;
 	private boolean showMapScaleBar;
 	private final Map<TextField, String> textFields;
 
@@ -127,6 +128,7 @@ public class MapScaleBar {
 	 */
 	public void setImperialUnits(boolean imperialUnits) {
 		this.imperialUnits = imperialUnits;
+		this.redrawScaleBar = true;
 	}
 
 	/**
@@ -147,6 +149,7 @@ public class MapScaleBar {
 	 */
 	public void setText(TextField textField, String value) {
 		this.textFields.put(textField, value);
+		this.redrawScaleBar = true;
 	}
 
 	private void drawScaleBar(float scaleBarLength, Paint paint) {
@@ -160,7 +163,7 @@ public class MapScaleBar {
 	}
 
 	private boolean isRedrawNecessary() {
-		if (this.mapPosition == null) {
+		if (this.redrawScaleBar || this.mapPosition == null) {
 			return true;
 		}
 
@@ -265,5 +268,6 @@ public class MapScaleBar {
 		}
 
 		redrawMapScaleBitmap(scaleBarLength, mapScaleValue);
+		this.redrawScaleBar = false;
 	}
 }
