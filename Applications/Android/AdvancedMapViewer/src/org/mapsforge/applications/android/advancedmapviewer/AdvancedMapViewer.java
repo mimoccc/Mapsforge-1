@@ -556,7 +556,12 @@ public class AdvancedMapViewer extends MapActivity {
 
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-		this.mapView.getMapScaleBar().setShowMapScaleBar(preferences.getBoolean("showScaleBar", false));
+		MapScaleBar mapScaleBar = this.mapView.getMapScaleBar();
+		mapScaleBar.setShowMapScaleBar(preferences.getBoolean("showScaleBar", false));
+		String scaleBarUnitDefault = getString(R.string.preferences_scale_bar_unit_default);
+		String scaleBarUnit = preferences.getString("scaleBarUnit", scaleBarUnitDefault);
+		mapScaleBar.setImperialUnits(scaleBarUnit.equals("imperial"));
+
 		if (preferences.contains("mapGenerator")) {
 			String name = preferences.getString("mapGenerator", MapGeneratorInternal.DATABASE_RENDERER.name());
 			MapGeneratorInternal mapGeneratorInternal;
@@ -569,7 +574,8 @@ public class AdvancedMapViewer extends MapActivity {
 			this.mapView.setMapGenerator(mapGenerator);
 		}
 		try {
-			this.mapView.setTextScale(Float.parseFloat(preferences.getString("textScale", "1")));
+			String textScaleDefault = getString(R.string.preferences_text_scale_default);
+			this.mapView.setTextScale(Float.parseFloat(preferences.getString("textScale", textScaleDefault)));
 		} catch (NumberFormatException e) {
 			this.mapView.setTextScale(1);
 		}

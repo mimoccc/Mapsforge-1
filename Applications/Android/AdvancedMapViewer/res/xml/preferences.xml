@@ -3,6 +3,9 @@
 	<PreferenceCategory android:title="@string/preferences_map">
 		<CheckBoxPreference android:title="@string/preferences_show_scale_bar" android:summary="@string/preferences_show_scale_bar_desc"
 			android:key="showScaleBar" />
+		<ListPreference android:title="@string/preferences_scale_bar_unit" android:summary="@string/preferences_scale_bar_unit_desc"
+			android:entryValues="@array/preferences_scale_bar_unit_keys" android:entries="@array/preferences_scale_bar_unit_values"
+			android:key="scaleBarUnit" android:defaultValue="@string/preferences_scale_bar_unit_default" android:dependency="showScaleBar" />
 		<ListPreference android:title="@string/preferences_map_view_mode" android:summary="@string/preferences_map_view_mode_desc"
 			android:entryValues="@array/preferences_map_generator_keys" android:entries="@array/preferences_map_generator_values"
 			android:key="mapGenerator" android:defaultValue="@string/preferences_map_generator_default" />

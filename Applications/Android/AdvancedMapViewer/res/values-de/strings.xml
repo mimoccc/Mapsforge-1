@@ -7,6 +7,11 @@
 		<item>Osmarender (online)</item>
 	</string-array>
 
+	<string-array name="preferences_scale_bar_unit_values">
+		<item>angloamerikanisch</item>
+		<item>metrisch</item>
+	</string-array>
+
 	<string-array name="preferences_text_scale_values">
 		<item>winzig</item>
 		<item>klein</item>
@@ -76,6 +81,8 @@
 	<string name="preferences_move_speed">Scrollgeschwindigkeit</string>
 	<string name="preferences_move_speed_desc">Scrollgeschwindigkeit der Karte anpassen</string>
 	<string name="preferences_move_speed_value">%d %% Scrollgeschwindigkeit</string>
+	<string name="preferences_scale_bar_unit">Kartenmaßstabs-Einheit</string>
+	<string name="preferences_scale_bar_unit_desc">Einheit des Kartenmaßstabs auswählen</string>
 	<string name="preferences_show_fps_counter">Bildfrequenz</string>
 	<string name="preferences_show_fps_counter_desc">FPS-Zähler anzeigen</string>
 	<string name="preferences_show_scale_bar">Kartenmaßstab</string>

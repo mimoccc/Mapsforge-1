@@ -7,6 +7,11 @@
 		<item>Osmarender (online)</item>
 	</string-array>
 
+	<string-array name="preferences_scale_bar_unit_values">
+		<item>Imperial</item>
+		<item>Metric</item>
+	</string-array>
+
 	<string-array name="preferences_text_scale_values">
 		<item>tiny</item>
 		<item>small</item>
@@ -75,6 +80,8 @@
 	<string name="preferences_move_speed">Move speed</string>
 	<string name="preferences_move_speed_desc">Adjust the move speed of the map</string>
 	<string name="preferences_move_speed_value">%d %% move speed</string>
+	<string name="preferences_scale_bar_unit">Scale bar unit</string>
+	<string name="preferences_scale_bar_unit_desc">Select the unit for the map scale bar</string>
 	<string name="preferences_show_fps_counter">Frame rate</string>
 	<string name="preferences_show_fps_counter_desc">Enable frames per second counter</string>
 	<string name="preferences_show_scale_bar">Map scale bar</string>
