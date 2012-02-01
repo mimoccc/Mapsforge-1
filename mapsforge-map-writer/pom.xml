@@ -101,7 +101,8 @@
 			<groupId>osmosis</groupId>
 			<artifactId>osmosis-core</artifactId>
 			<version>0.40.1</version>
-			<scope>provided</scope>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/osmosis-core-0.40.1.jar</systemPath>
 		</dependency>
 	</dependencies>
 </project>
