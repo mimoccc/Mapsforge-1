@@ -56,6 +56,14 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>osmosis</groupId>
+			<artifactId>osmosis-core</artifactId>
+			<version>0.40.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/osmosis-core-0.40.1.jar</systemPath>
+		</dependency>
+
+		<dependency>
 			<groupId>net.sf.jopt-simple</groupId>
 			<artifactId>jopt-simple</artifactId>
 			<version>4.3</version>
@@ -74,13 +82,6 @@
 			<artifactId>commons-codec</artifactId>
 			<version>1.6</version>
 			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>osmosis</groupId>
-			<artifactId>osmosis-core</artifactId>
-			<version>0.40.1</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>
