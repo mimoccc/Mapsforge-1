@@ -25,9 +25,10 @@ import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.mapsforge.android.AndroidUtils;
-import org.mapsforge.android.maps.Logger;
 import org.mapsforge.core.Tile;
 
 import android.graphics.Bitmap;
@@ -38,6 +39,8 @@ import android.os.Environment;
  * A thread-safe cache for image files with a variable size and LRU policy.
  */
 public class FileSystemTileCache implements TileCache {
+	private static final Logger LOG = Logger.getLogger(FileSystemTileCache.class.getName());
+
 	private static final class ImageFileNameFilter implements FilenameFilter {
 		static final FilenameFilter INSTANCE = new ImageFileNameFilter();
 
@@ -137,10 +140,10 @@ public class FileSystemTileCache implements TileCache {
 
 			return map;
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 			return null;
 		} catch (ClassNotFoundException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 			return null;
 		}
 	}
@@ -178,7 +181,7 @@ public class FileSystemTileCache implements TileCache {
 
 			return true;
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 			return false;
 		}
 	}
@@ -269,7 +272,7 @@ public class FileSystemTileCache implements TileCache {
 			this.map.remove(mapGeneratorJob);
 			return null;
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 			return null;
 		} finally {
 			try {
@@ -277,7 +280,7 @@ public class FileSystemTileCache implements TileCache {
 					fileInputStream.close();
 				}
 			} catch (IOException e) {
-				Logger.exception(e);
+				LOG.log(Level.SEVERE, null, e);
 			}
 		}
 	}
@@ -315,14 +318,14 @@ public class FileSystemTileCache implements TileCache {
 
 			this.map.put(mapGeneratorJob, outputFile);
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 		} finally {
 			try {
 				if (fileOutputStream != null) {
 					fileOutputStream.close();
 				}
 			} catch (IOException e) {
-				Logger.exception(e);
+				LOG.log(Level.SEVERE, null, e);
 			}
 		}
 	}

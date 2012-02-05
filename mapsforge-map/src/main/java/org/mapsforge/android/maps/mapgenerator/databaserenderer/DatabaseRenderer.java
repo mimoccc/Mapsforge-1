@@ -18,10 +18,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.mapsforge.android.maps.Logger;
 import org.mapsforge.android.maps.mapgenerator.JobTheme;
 import org.mapsforge.android.maps.mapgenerator.MapGenerator;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorJob;
@@ -45,6 +46,7 @@ import android.graphics.Paint;
  * A DatabaseRenderer renders map tiles by reading from a {@link MapDatabase}.
  */
 public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDatabaseCallback {
+	private static final Logger LOG = Logger.getLogger(DatabaseRenderer.class.getName());
 	private static final Byte DEFAULT_START_ZOOM_LEVEL = Byte.valueOf((byte) 12);
 	private static final byte LAYERS = 11;
 	private static final Paint PAINT_WATER_TILE_HIGHTLIGHT = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -61,18 +63,18 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 			inputStream = jobTheme.getRenderThemeAsStream();
 			return RenderThemeHandler.getRenderTheme(inputStream);
 		} catch (ParserConfigurationException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 		} catch (SAXException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 		} finally {
 			try {
 				if (inputStream != null) {
 					inputStream.close();
 				}
 			} catch (IOException e) {
-				Logger.exception(e);
+				LOG.log(Level.SEVERE, null, e);
 			}
 		}
 		return null;

@@ -18,8 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.mapsforge.android.maps.Logger;
 import org.mapsforge.android.maps.mapgenerator.MapGenerator;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorJob;
 import org.mapsforge.core.GeoPoint;
@@ -32,6 +33,7 @@ import android.graphics.BitmapFactory;
  * Abstract base class for downloading map tiles from a server.
  */
 public abstract class TileDownloader implements MapGenerator {
+	private static final Logger LOG = Logger.getLogger(TileDownloader.class.getName());
 	private static final GeoPoint START_POINT = new GeoPoint(51.33, 10.45);
 	private static final Byte START_ZOOM_LEVEL = Byte.valueOf((byte) 5);
 
@@ -71,10 +73,10 @@ public abstract class TileDownloader implements MapGenerator {
 			bitmap.setPixels(this.pixels, 0, Tile.TILE_SIZE, 0, 0, Tile.TILE_SIZE, Tile.TILE_SIZE);
 			return true;
 		} catch (UnknownHostException e) {
-			Logger.debug(e.getMessage());
+			LOG.log(Level.SEVERE, null, e);
 			return false;
 		} catch (IOException e) {
-			Logger.exception(e);
+			LOG.log(Level.SEVERE, null, e);
 			return false;
 		}
 	}
