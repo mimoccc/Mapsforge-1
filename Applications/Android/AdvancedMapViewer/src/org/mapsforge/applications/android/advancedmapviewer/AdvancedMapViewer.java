@@ -97,6 +97,7 @@ public class AdvancedMapViewer extends MapActivity {
 	private Paint circleOverlayFill;
 	private Paint circleOverlayOutline;
 	private LocationManager locationManager;
+	private MapGeneratorInternal mapGeneratorInternal;
 	private MyLocationListener myLocationListener;
 	private ScreenshotCapturer screenshotCapturer;
 	private boolean showMyLocation;
@@ -564,14 +565,18 @@ public class AdvancedMapViewer extends MapActivity {
 
 		if (preferences.contains("mapGenerator")) {
 			String name = preferences.getString("mapGenerator", MapGeneratorInternal.DATABASE_RENDERER.name());
-			MapGeneratorInternal mapGeneratorInternal;
+			MapGeneratorInternal mapGeneratorInternalNew;
 			try {
-				mapGeneratorInternal = MapGeneratorInternal.valueOf(name);
+				mapGeneratorInternalNew = MapGeneratorInternal.valueOf(name);
 			} catch (IllegalArgumentException e) {
-				mapGeneratorInternal = MapGeneratorInternal.DATABASE_RENDERER;
+				mapGeneratorInternalNew = MapGeneratorInternal.DATABASE_RENDERER;
 			}
-			MapGenerator mapGenerator = MapGeneratorFactory.createMapGenerator(mapGeneratorInternal);
-			this.mapView.setMapGenerator(mapGenerator);
+
+			if (mapGeneratorInternalNew != this.mapGeneratorInternal) {
+				MapGenerator mapGenerator = MapGeneratorFactory.createMapGenerator(mapGeneratorInternalNew);
+				this.mapView.setMapGenerator(mapGenerator);
+				this.mapGeneratorInternal = mapGeneratorInternalNew;
+			}
 		}
 		try {
 			String textScaleDefault = getString(R.string.preferences_text_scale_default);
