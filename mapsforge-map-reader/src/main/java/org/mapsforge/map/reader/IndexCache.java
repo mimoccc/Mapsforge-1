@@ -28,11 +28,6 @@ import org.mapsforge.map.reader.header.SubFileParameter;
  */
 class IndexCache {
 	/**
-	 * Number of bytes a single index entry consists of.
-	 */
-	private static final byte BYTES_PER_INDEX_ENTRY = 5;
-
-	/**
 	 * Number of index entries that one index block consists of.
 	 */
 	private static final int INDEX_ENTRIES_PER_BLOCK = 128;
@@ -40,9 +35,9 @@ class IndexCache {
 	private static final Logger LOG = Logger.getLogger(IndexCache.class.getName());
 
 	/**
-	 * Real size in bytes of one index block.
+	 * Maximum size in bytes of one index block.
 	 */
-	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_BLOCK * BYTES_PER_INDEX_ENTRY;
+	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_BLOCK * SubFileParameter.BYTES_PER_INDEX_ENTRY;
 
 	private final RandomAccessFile inputFile;
 	private final Map<IndexCacheEntryKey, byte[]> map;
@@ -93,12 +88,15 @@ class IndexCache {
 			// check for cached index block
 			byte[] indexBlock = this.map.get(indexCacheEntryKey);
 			if (indexBlock == null) {
-				// cache miss, create a new index block
-				indexBlock = new byte[SIZE_OF_INDEX_BLOCK];
+				// cache miss, seek to the correct index block in the file and read it
+				long indexBlockPosition = subFileParameter.indexStartAddress + indexBlockNumber * SIZE_OF_INDEX_BLOCK;
 
-				// seek to the correct index block in the file and read it
-				this.inputFile.seek(subFileParameter.indexStartAddress + indexBlockNumber * SIZE_OF_INDEX_BLOCK);
-				if (this.inputFile.read(indexBlock, 0, SIZE_OF_INDEX_BLOCK) != SIZE_OF_INDEX_BLOCK) {
+				int remainingIndexSize = (int) (subFileParameter.indexEndAddress - indexBlockPosition);
+				int indexBlockSize = Math.min(SIZE_OF_INDEX_BLOCK, remainingIndexSize);
+				indexBlock = new byte[indexBlockSize];
+
+				this.inputFile.seek(indexBlockPosition);
+				if (this.inputFile.read(indexBlock, 0, indexBlockSize) != indexBlockSize) {
 					LOG.warning("reading the current index block has failed");
 					return -1;
 				}
@@ -108,7 +106,8 @@ class IndexCache {
 			}
 
 			// calculate the address of the index entry inside the index block
-			int addressInIndexBlock = (int) ((blockNumber % INDEX_ENTRIES_PER_BLOCK) * BYTES_PER_INDEX_ENTRY);
+			long indexEntryInBlock = blockNumber % INDEX_ENTRIES_PER_BLOCK;
+			int addressInIndexBlock = (int) (indexEntryInBlock * SubFileParameter.BYTES_PER_INDEX_ENTRY);
 
 			// return the real index entry
 			return Deserializer.getFiveBytesLong(indexBlock, addressInIndexBlock);

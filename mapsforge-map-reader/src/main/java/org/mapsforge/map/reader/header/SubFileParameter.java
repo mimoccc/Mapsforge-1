@@ -21,12 +21,17 @@ import org.mapsforge.core.MercatorProjection;
  */
 public class SubFileParameter {
 	/**
+	 * Number of bytes a single index entry consists of.
+	 */
+	public static final byte BYTES_PER_INDEX_ENTRY = 5;
+
+	/**
 	 * Divisor for converting coordinates stored as integers to double values.
 	 */
 	private static final double COORDINATES_DIVISOR = 1000000d;
 
 	/**
-	 * Base zoom level of the map file, which equals to one block.
+	 * Base zoom level of the sub-file, which equals to one block.
 	 */
 	public final byte baseZoomLevel;
 
@@ -64,6 +69,11 @@ public class SubFileParameter {
 	 * Y number of the tile at the top boundary in the grid.
 	 */
 	public final long boundaryTileTop;
+
+	/**
+	 * Absolute end address of the index in the enclosing file.
+	 */
+	public final long indexEndAddress;
 
 	/**
 	 * Absolute start address of the index in the enclosing file.
@@ -109,7 +119,7 @@ public class SubFileParameter {
 		this.zoomLevelMax = subFileParameterBuilder.zoomLevelMax;
 		this.hashCodeValue = calculateHashCode();
 
-		// calculate the XY numbers of the boundary tiles in this map file
+		// calculate the XY numbers of the boundary tiles in this sub-file
 		this.boundaryTileBottom = MercatorProjection.latitudeToTileY(subFileParameterBuilder.boundingBox.minLatitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 		this.boundaryTileLeft = MercatorProjection.longitudeToTileX(subFileParameterBuilder.boundingBox.minLongitudeE6
@@ -119,12 +129,14 @@ public class SubFileParameter {
 		this.boundaryTileRight = MercatorProjection.longitudeToTileX(subFileParameterBuilder.boundingBox.maxLongitudeE6
 				/ COORDINATES_DIVISOR, this.baseZoomLevel);
 
-		// calculate the horizontal and vertical amount of blocks in this map file
+		// calculate the horizontal and vertical amount of blocks in this sub-file
 		this.blocksWidth = this.boundaryTileRight - this.boundaryTileLeft + 1;
 		this.blocksHeight = this.boundaryTileBottom - this.boundaryTileTop + 1;
 
-		// calculate the total amount of blocks in this map file
+		// calculate the total amount of blocks in this sub-file
 		this.numberOfBlocks = this.blocksWidth * this.blocksHeight;
+
+		this.indexEndAddress = this.indexStartAddress + this.numberOfBlocks * BYTES_PER_INDEX_ENTRY;
 
 		// calculate the size of the tile entries table
 		this.blockEntriesTableSize = 2 * (this.zoomLevelMax - this.zoomLevelMin + 1) * 2;
