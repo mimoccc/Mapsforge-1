@@ -26,14 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.mapsforge.map.writer.model.Rect;
+import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDRelation;
 import org.mapsforge.map.writer.model.TDWay;
 import org.mapsforge.map.writer.model.TileCoordinate;
 import org.mapsforge.map.writer.model.TileData;
 import org.mapsforge.map.writer.model.TileInfo;
-import org.mapsforge.map.writer.model.ZoomIntervalConfiguration;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
@@ -63,14 +62,8 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	private IndexedObjectStoreReader<Node> nodeIndexReader;
 	private IndexedObjectStoreReader<Way> wayIndexReader;
 
-	private HDTileBasedDataProcessor(double minLat, double maxLat, double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
-	}
-
-	private HDTileBasedDataProcessor(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement, String preferredLanguage) {
-		super(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	private HDTileBasedDataProcessor(MapWriterConfiguration configuration) {
+		super(configuration);
 		this.indexedNodeStore = new IndexedObjectStore<Node>(new SingleClassObjectSerializationFactory(Node.class),
 				"idxNodes");
 		this.indexedWayStore = new IndexedObjectStore<Way>(new SingleClassObjectSerializationFactory(Way.class),
@@ -83,8 +76,8 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 		this.relationStore = new SimpleObjectStore<Relation>(new SingleClassObjectSerializationFactory(Relation.class),
 				"heapRelations", true);
 
-		this.tileData = new HDTileData[zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
-		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
+		this.tileData = new HDTileData[this.zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
+		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			this.tileData[i] = new HDTileData[this.tileGridLayouts[i].getAmountTilesHorizontal()][this.tileGridLayouts[i]
 					.getAmountTilesVertical()];
 		}
@@ -95,19 +88,12 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	/**
 	 * Creates a new {@link HDTileBasedDataProcessor}.
 	 * 
-	 * @param bbox
-	 *            the bounding box
-	 * @param zoomIntervalConfiguration
-	 *            the zoom interval configuration
-	 * @param bboxEnlargement
-	 *            the bounding box enlargement
-	 * @param preferredLanguage
-	 *            the preferred language
+	 * @param configuration
+	 *            the configuration
 	 * @return a new instance of a {@link HDTileBasedDataProcessor}
 	 */
-	public static HDTileBasedDataProcessor newInstance(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement, String preferredLanguage) {
-		return new HDTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	public static HDTileBasedDataProcessor newInstance(MapWriterConfiguration configuration) {
+		return new HDTileBasedDataProcessor(configuration);
 	}
 
 	@Override

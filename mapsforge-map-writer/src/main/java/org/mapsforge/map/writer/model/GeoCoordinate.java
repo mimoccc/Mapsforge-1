@@ -102,7 +102,9 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 */
 	public GeoCoordinate(String wellKnownText) {
 		Matcher m = wktPointPattern.matcher(wellKnownText);
-		m.matches();
+		if (!m.matches()) {
+			throw new IllegalArgumentException("coordinate not in wellknown text format");
+		}
 		this.longitude = validateLongitude(Double.parseDouble(m.group(1)));
 		this.latitude = validateLatitude(Double.parseDouble(m.group(2)));
 	}

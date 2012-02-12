@@ -14,6 +14,7 @@
  */
 package org.mapsforge.map.writer.osmosis;
 
+import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.util.Constants;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskConfiguration;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManager;
@@ -47,28 +48,35 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
 
-		String outfile = getStringArgument(taskConfig, PARAM_OUTFILE, Constants.DEFAULT_PARAM_OUTFILE);
-		String mapStartPosition = getStringArgument(taskConfig, PARAM_MAP_START_POSITION, null);
-		String mapStartZoom = getStringArgument(taskConfig, PARAM_MAP_START_ZOOM, null);
-		String bbox = getStringArgument(taskConfig, PARAM_BBOX, null);
-		String zoomConf = getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null);
-		String comment = getStringArgument(taskConfig, PARAM_COMMENT, null);
-		boolean debug = getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false);
+		MapWriterConfiguration configuration = new MapWriterConfiguration();
+		configuration.addOutputFile(getStringArgument(taskConfig, PARAM_OUTFILE, Constants.DEFAULT_PARAM_OUTFILE));
+		configuration.loadTagMappingFile(getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null));
+
+		configuration.addMapStartPosition(getStringArgument(taskConfig, PARAM_MAP_START_POSITION, null));
+		configuration.addMapStartZoom(getStringArgument(taskConfig, PARAM_MAP_START_ZOOM, null));
+		configuration.addBboxConfiguration(getStringArgument(taskConfig, PARAM_BBOX, null));
+		configuration.addZoomIntervalConfiguration(getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null));
+
+		configuration.setComment(getStringArgument(taskConfig, PARAM_COMMENT, null));
+		configuration.setDebugStrings(getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false));
+		configuration.setPolygonClipping(getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true));
+		configuration.setWayClipping(getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, true));
 		// boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
 		// true);
-		double simplificationFactor = getDoubleArgument(taskConfig, PARAM_SIMPLIFICATION_FACTOR,
-				Constants.DEFAULT_SIMPLIFICATION_FACTOR);
-		boolean polygonClipping = getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true);
-		boolean wayClipping = getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, true);
-		String type = getStringArgument(taskConfig, PARAM_TYPE, Constants.DEFAULT_PARAM_TYPE);
-		int bboxEnlargement = getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
-				Constants.DEFAULT_PARAM_BBOX_ENLARGEMENT);
-		String tagConfFile = getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null);
-		String preferredLanguage = getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null);
-		String encoding = getStringArgument(taskConfig, PARAM_ENCODING, Constants.DEFAULT_PARAM_ENCODING);
-		MapFileWriterTask task = new MapFileWriterTask(outfile, bbox, mapStartPosition, mapStartZoom, comment,
-				zoomConf, debug, simplificationFactor, polygonClipping, wayClipping, type, bboxEnlargement,
-				tagConfFile, preferredLanguage, encoding);
+		configuration.setSimplification(getDoubleArgument(taskConfig, PARAM_SIMPLIFICATION_FACTOR,
+				Constants.DEFAULT_SIMPLIFICATION_FACTOR));
+
+		configuration.setDataProcessorType(getStringArgument(taskConfig, PARAM_TYPE, Constants.DEFAULT_PARAM_TYPE));
+		configuration.setBboxEnlargement(getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
+				Constants.DEFAULT_PARAM_BBOX_ENLARGEMENT));
+
+		configuration.setPreferredLanguage(getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null));
+		configuration
+				.addEncodingChoice(getStringArgument(taskConfig, PARAM_ENCODING, Constants.DEFAULT_PARAM_ENCODING));
+
+		configuration.validate();
+
+		MapFileWriterTask task = new MapFileWriterTask(configuration);
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
 

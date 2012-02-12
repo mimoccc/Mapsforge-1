@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.mapsforge.map.writer.model.GeoCoordinate;
+import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.model.MercatorProjection;
 import org.mapsforge.map.writer.model.NodeResolver;
 import org.mapsforge.map.writer.model.Rect;
@@ -68,39 +69,38 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	protected final TShortIntHashMap histogramWayTags;
 	protected long maxWayID = Long.MIN_VALUE;
 
-	public BaseTileBasedDataProcessor(double minLat, double maxLat, double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	// public BaseTileBasedDataProcessor(double minLat, double maxLat, double minLon, double maxLon,
+	// ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
+	// this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	//
+	// }
 
-	}
-
-	public BaseTileBasedDataProcessor(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement, String preferredLanguage) {
+	public BaseTileBasedDataProcessor(MapWriterConfiguration configuration) {
 		super();
-		this.boundingbox = bbox;
-		this.zoomIntervalConfiguration = zoomIntervalConfiguration;
-		this.tileGridLayouts = new TileGridLayout[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
-		this.bboxEnlargement = bboxEnlargement;
-		this.preferredLanguage = preferredLanguage;
+		this.boundingbox = configuration.getBboxConfiguration();
+		this.zoomIntervalConfiguration = configuration.getZoomIntervalConfiguration();
+		this.tileGridLayouts = new TileGridLayout[this.zoomIntervalConfiguration.getNumberOfZoomIntervals()];
+		this.bboxEnlargement = configuration.getBboxEnlargement();
+		this.preferredLanguage = configuration.getPreferredLanguage();
 
 		this.outerToInnerMapping = new TLongObjectHashMap<TLongArrayList>();
 		this.innerWaysWithoutAdditionalTags = new TLongHashSet();
 		this.tilesToCoastlines = new HashMap<TileCoordinate, TLongHashSet>();
 
-		this.countWays = new float[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
-		this.countWayTileFactor = new float[zoomIntervalConfiguration.getNumberOfZoomIntervals()];
+		this.countWays = new float[this.zoomIntervalConfiguration.getNumberOfZoomIntervals()];
+		this.countWayTileFactor = new float[this.zoomIntervalConfiguration.getNumberOfZoomIntervals()];
 
 		this.histogramPoiTags = new TShortIntHashMap();
 		this.histogramWayTags = new TShortIntHashMap();
 
 		// compute horizontal and vertical tile coordinate offsets for all
 		// base zoom levels
-		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
+		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			TileCoordinate upperLeft = new TileCoordinate((int) MercatorProjection.longitudeToTileX(
 					GeoCoordinate.intToDouble(this.boundingbox.minLongitudeE6),
-					zoomIntervalConfiguration.getBaseZoom(i)),
-					(int) MercatorProjection.latitudeToTileY(GeoCoordinate.intToDouble(this.boundingbox.maxLatitudeE6),
-							zoomIntervalConfiguration.getBaseZoom(i)), zoomIntervalConfiguration.getBaseZoom(i));
+					this.zoomIntervalConfiguration.getBaseZoom(i)), (int) MercatorProjection.latitudeToTileY(
+					GeoCoordinate.intToDouble(this.boundingbox.maxLatitudeE6),
+					this.zoomIntervalConfiguration.getBaseZoom(i)), this.zoomIntervalConfiguration.getBaseZoom(i));
 			this.tileGridLayouts[i] = new TileGridLayout(upperLeft, computeNumberOfHorizontalTiles(i),
 					computeNumberOfVerticalTiles(i));
 		}

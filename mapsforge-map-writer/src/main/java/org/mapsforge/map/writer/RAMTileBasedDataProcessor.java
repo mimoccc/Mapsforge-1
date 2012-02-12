@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDRelation;
@@ -50,20 +51,14 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 
 	private final RAMTileData[][][] tileData;
 
-	private RAMTileBasedDataProcessor(double minLat, double maxLat, double minLon, double maxLon,
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int bboxEnlargement, String preferredLanguage) {
-		this(new Rect(minLon, maxLon, minLat, maxLat), zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
-	}
-
-	private RAMTileBasedDataProcessor(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement, String preferredLanguage) {
-		super(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	private RAMTileBasedDataProcessor(MapWriterConfiguration configuration) {
+		super(configuration);
 		this.nodes = new TLongObjectHashMap<TDNode>();
 		this.ways = new TLongObjectHashMap<TDWay>();
 		this.multipolygons = new TLongObjectHashMap<TDRelation>();
-		this.tileData = new RAMTileData[zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
+		this.tileData = new RAMTileData[this.zoomIntervalConfiguration.getNumberOfZoomIntervals()][][];
 		// compute number of tiles needed on each base zoom level
-		for (int i = 0; i < zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
+		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			this.tileData[i] = new RAMTileData[this.tileGridLayouts[i].getAmountTilesHorizontal()][this.tileGridLayouts[i]
 					.getAmountTilesVertical()];
 		}
@@ -72,19 +67,12 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	/**
 	 * Creates a new instance of a {@link RAMTileBasedDataProcessor}.
 	 * 
-	 * @param bbox
-	 *            the bounding box
-	 * @param zoomIntervalConfiguration
-	 *            the zoom interval configuration
-	 * @param bboxEnlargement
-	 *            the enlargement for bounding box
-	 * @param preferredLanguage
-	 *            the preferred language
+	 * @param configuration
+	 *            the configuration
 	 * @return a new instance of a {@link RAMTileBasedDataProcessor}
 	 */
-	public static RAMTileBasedDataProcessor newInstance(Rect bbox, ZoomIntervalConfiguration zoomIntervalConfiguration,
-			int bboxEnlargement, String preferredLanguage) {
-		return new RAMTileBasedDataProcessor(bbox, zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
+	public static RAMTileBasedDataProcessor newInstance(MapWriterConfiguration configuration) {
+		return new RAMTileBasedDataProcessor(configuration);
 	}
 
 	@Override
