@@ -72,7 +72,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 * @throws IllegalArgumentException
 	 *             if the latitude or longitude value is invalid.
 	 */
-	public GeoCoordinate(double latitude, double longitude) throws IllegalArgumentException {
+	public GeoCoordinate(double latitude, double longitude) {
 		this.latitude = validateLatitude(latitude);
 		this.longitude = validateLongitude(longitude);
 	}
@@ -87,14 +87,14 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 * @throws IllegalArgumentException
 	 *             if the latitude or longitude value is invalid.
 	 */
-	public GeoCoordinate(int latitudeE6, int longitudeE6) throws IllegalArgumentException {
+	public GeoCoordinate(int latitudeE6, int longitudeE6) {
 		this.latitude = validateLatitude(intToDouble(latitudeE6));
 		this.longitude = validateLongitude(intToDouble(longitudeE6));
 	}
 
 	/**
 	 * Constructs a new GeoCoordinate from a Well-Known-Text (WKT) representation of a point For example: POINT(13.4125
-	 * 52.52235) WKT is used in PostGIS and other spatial databases
+	 * 52.52235) WKT is used in PostGIS and other spatial databases.
 	 * 
 	 * @param wellKnownText
 	 *            is the WKT point which describes the new GeoCoordinate, this needs to be in degrees using a WGS84
@@ -208,7 +208,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 
 	/**
 	 * Calculate the spherical distance from this GeoCoordinate to another Use vincentyDistance for more accuracy but
-	 * less performance
+	 * less performance.
 	 * 
 	 * @param other
 	 *            The GeoCoordinate to calculate the distance to
@@ -231,7 +231,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 * @throws IllegalArgumentException
 	 *             if one of the arguments is null
 	 */
-	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2) throws IllegalArgumentException {
+	public static double sphericalDistance(GeoCoordinate gc1, GeoCoordinate gc2) {
 		if (gc1 == null || gc2 == null) {
 			throw new IllegalArgumentException("The GeoCoordinates for distance calculations may not be null.");
 		}
@@ -283,7 +283,7 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 
 	/**
 	 * Calculate the spherical distance from this GeoCoordinate to another Use "distance" for faster computation with
-	 * less accuracy
+	 * less accuracy.
 	 * 
 	 * @param other
 	 *            The GeoCoordinate to calculate the distance to
@@ -308,13 +308,13 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 	 */
 	public static double vincentyDistance(GeoCoordinate gc1, GeoCoordinate gc2) {
 		double f = 1 / WGS84.INVERSEFLATTENING;
-		double L = Math.toRadians(gc2.getLongitude() - gc1.getLongitude());
-		double U1 = Math.atan((1 - f) * Math.tan(Math.toRadians(gc1.getLatitude())));
-		double U2 = Math.atan((1 - f) * Math.tan(Math.toRadians(gc2.getLatitude())));
-		double sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
-		double sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
+		double l = Math.toRadians(gc2.getLongitude() - gc1.getLongitude());
+		double u1 = Math.atan((1 - f) * Math.tan(Math.toRadians(gc1.getLatitude())));
+		double u2 = Math.atan((1 - f) * Math.tan(Math.toRadians(gc2.getLatitude())));
+		double sinU1 = Math.sin(u1), cosU1 = Math.cos(u1);
+		double sinU2 = Math.sin(u2), cosU2 = Math.cos(u2);
 
-		double lambda = L, lambdaP, iterLimit = 100;
+		double lambda = l, lambdaP, iterLimit = 100;
 
 		double cosSqAlpha = 0, sinSigma = 0, cosSigma = 0, cos2SigmaM = 0, sigma = 0, sinLambda = 0, sinAlpha = 0, cosLambda = 0;
 		do {
@@ -334,10 +334,10 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 			} else {
 				cos2SigmaM = 0;
 			}
-			double C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+			double c = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
 			lambdaP = lambda;
-			lambda = L + (1 - C) * f * sinAlpha
-					* (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+			lambda = l + (1 - c) * f * sinAlpha
+					* (sigma + c * sinSigma * (cos2SigmaM + c * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
 		} while (Math.abs(lambda - lambdaP) > 1e-12 && --iterLimit > 0);
 
 		if (iterLimit == 0) {
@@ -346,15 +346,15 @@ public class GeoCoordinate implements Comparable<GeoCoordinate> {
 
 		double uSq = cosSqAlpha * (Math.pow(WGS84.EQUATORIALRADIUS, 2) - Math.pow(WGS84.POLARRADIUS, 2))
 				/ Math.pow(WGS84.POLARRADIUS, 2);
-		double A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
-		double B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
-		double deltaSigma = B
+		double a = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+		double b = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+		double deltaSigma = b
 				* sinSigma
-				* (cos2SigmaM + B
+				* (cos2SigmaM + b
 						/ 4
-						* (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM
+						* (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - b / 6 * cos2SigmaM
 								* (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
-		double s = WGS84.POLARRADIUS * A * (sigma - deltaSigma);
+		double s = WGS84.POLARRADIUS * a * (sigma - deltaSigma);
 
 		return s;
 	}

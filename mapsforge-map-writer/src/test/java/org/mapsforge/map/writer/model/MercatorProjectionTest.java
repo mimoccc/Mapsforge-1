@@ -19,14 +19,14 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**
- * Test the MercatorProjection Class
+ * Test the MercatorProjection Class.
  * 
  * @author Eike
  */
 public class MercatorProjectionTest {
 
 	/**
-	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/
+	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/.
 	 */
 	@Test
 	public void testLongitudeToMetersX() {
@@ -37,7 +37,7 @@ public class MercatorProjectionTest {
 	}
 
 	/**
-	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/
+	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/.
 	 */
 	@Test
 	public void testLatitudeToMetersY() {
@@ -51,7 +51,7 @@ public class MercatorProjectionTest {
 	}
 
 	/**
-	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/
+	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/.
 	 */
 	@Test
 	public void testInverseFunctions() {

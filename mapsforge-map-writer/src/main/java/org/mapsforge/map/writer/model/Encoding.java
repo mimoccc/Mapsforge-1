@@ -22,15 +22,15 @@ package org.mapsforge.map.writer.model;
 public enum Encoding {
 
 	/**
-	 * no encoding
+	 * No encoding.
 	 */
 	NONE,
 	/**
-	 * single delta encoding
+	 * Single delta encoding.
 	 */
 	DELTA,
 	/**
-	 * double delta encoding
+	 * Double delta encoding.
 	 */
 	DOUBLE_DELTA
 }

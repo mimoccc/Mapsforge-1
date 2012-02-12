@@ -15,11 +15,15 @@
 package org.mapsforge.map.writer.model;
 
 /**
- * This class provides methods and constants for dealing with distances on earth using the World Geodatic System 1984
+ * This class provides methods and constants for dealing with distances on earth using the World Geodatic System 1984.
  * 
  * @author Eike
  */
-public class WGS84 {
+public final class WGS84 {
+
+	private WGS84() {
+	}
+
 	/**
 	 * Equatorial radius of earth is required for distance computation.
 	 */

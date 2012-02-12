@@ -35,15 +35,15 @@ public class TDWay {
 
 	// TODO these constants are not necessary anymore
 	/**
-	 * represents a line
+	 * Represents a line.
 	 */
 	public static final byte LINE = 0x0;
 	/**
-	 * a simple closed polygon
+	 * A simple closed polygon.
 	 */
 	public static final byte SIMPLE_POLYGON = 0x1;
 	/**
-	 * a simple closed polygon with holes
+	 * A simple closed polygon with holes.
 	 */
 	public static final byte MULTI_POLYGON = 0x2;
 
@@ -115,7 +115,7 @@ public class TDWay {
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 * 
 	 * @param id
 	 *            the id
@@ -137,7 +137,7 @@ public class TDWay {
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 * 
 	 * @param id
 	 *            the id

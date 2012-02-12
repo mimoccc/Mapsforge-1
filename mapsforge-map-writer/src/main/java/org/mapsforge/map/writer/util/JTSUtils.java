@@ -33,7 +33,7 @@ public final class JTSUtils {
 	}
 
 	/**
-	 * Translates a {@link TDNode} object to a JTS {@link Coordinate}
+	 * Translates a {@link TDNode} object to a JTS {@link Coordinate}.
 	 * 
 	 * @param node
 	 *            the node
@@ -44,7 +44,7 @@ public final class JTSUtils {
 	}
 
 	/**
-	 * Translates a {@link TDWay} object to an array of JTS {@link Coordinate}
+	 * Translates a {@link TDWay} object to an array of JTS {@link Coordinate}.
 	 * 
 	 * @param way
 	 *            the way

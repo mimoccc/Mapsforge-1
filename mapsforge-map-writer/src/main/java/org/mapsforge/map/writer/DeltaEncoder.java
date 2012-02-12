@@ -26,7 +26,7 @@ import org.mapsforge.map.writer.model.WayDataBlock;
  * 
  * @author bross
  */
-public class DeltaEncoder {
+public final class DeltaEncoder {
 
 	private DeltaEncoder() {
 	}

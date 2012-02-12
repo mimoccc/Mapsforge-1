@@ -17,10 +17,13 @@ package org.mapsforge.map.writer.model;
 /**
  * A static class that implements spherical mercator projection.
  */
-public class MercatorProjection {
+public final class MercatorProjection {
+
+	private MercatorProjection() {
+	}
 
 	/**
-	 * Convert a longitude coordinate (in degrees) to a horizontal distance in meters from the zero meridian
+	 * Convert a longitude coordinate (in degrees) to a horizontal distance in meters from the zero meridian.
 	 * 
 	 * @param longitude
 	 *            in degrees
@@ -31,7 +34,7 @@ public class MercatorProjection {
 	}
 
 	/**
-	 * Convert a meter measure to a longitude
+	 * Convert a meter measure to a longitude.
 	 * 
 	 * @param x
 	 *            in meters
@@ -42,7 +45,7 @@ public class MercatorProjection {
 	}
 
 	/**
-	 * Convert a meter measure to a latitude
+	 * Convert a meter measure to a latitude.
 	 * 
 	 * @param y
 	 *            in meters
@@ -53,7 +56,7 @@ public class MercatorProjection {
 	}
 
 	/**
-	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the equator
+	 * Convert a latitude coordinate (in degrees) to a vertical distance in meters from the equator.
 	 * 
 	 * @param latitude
 	 *            in degrees
@@ -89,7 +92,8 @@ public class MercatorProjection {
 	 */
 	public static double latitudeToPixelY(double latitude, byte zoom) {
 		double sinLatitude = Math.sin(latitude * Math.PI / 180);
-		return ((0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * ((long) Tile.TILE_SIZE << zoom));
+		return (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI))
+				* ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
@@ -115,7 +119,7 @@ public class MercatorProjection {
 	 * @return the pixel X coordinate of the longitude value.
 	 */
 	public static double longitudeToPixelX(double longitude, byte zoom) {
-		return ((longitude + 180) / 360 * ((long) Tile.TILE_SIZE << zoom));
+		return (longitude + 180) / 360 * ((long) Tile.TILE_SIZE << zoom);
 	}
 
 	/**
@@ -154,11 +158,11 @@ public class MercatorProjection {
 	 * @return the tile X number.
 	 */
 	public static long pixelXToTileX(double pixelX, byte zoom) {
-		return (long) Math.min(Math.max((pixelX / Tile.TILE_SIZE), 0), Math.pow(2, zoom) - 1);
+		return (long) Math.min(Math.max(pixelX / Tile.TILE_SIZE, 0), Math.pow(2, zoom) - 1);
 	}
 
 	/**
-	 * Convert a tile X number to a pixel X coordinate
+	 * Convert a tile X number to a pixel X coordinate.
 	 * 
 	 * @param tileX
 	 *            the tile X number that should be converted
@@ -169,7 +173,7 @@ public class MercatorProjection {
 	}
 
 	/**
-	 * Convert a tile Y number to a pixel Y coordinate
+	 * Convert a tile Y number to a pixel Y coordinate.
 	 * 
 	 * @param tileY
 	 *            the tile Y number that should be converted
@@ -203,7 +207,7 @@ public class MercatorProjection {
 	 * @return the tile Y number.
 	 */
 	public static long pixelYToTileY(double pixelY, byte zoom) {
-		return (long) Math.min(Math.max((pixelY / Tile.TILE_SIZE), 0), Math.pow(2, zoom) - 1);
+		return (long) Math.min(Math.max(pixelY / Tile.TILE_SIZE, 0), Math.pow(2, zoom) - 1);
 	}
 
 	/**

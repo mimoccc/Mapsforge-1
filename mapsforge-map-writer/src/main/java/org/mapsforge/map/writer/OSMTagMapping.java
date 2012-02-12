@@ -510,7 +510,7 @@ public final class OSMTagMapping {
 		}
 
 		/**
-		 * First order: amount Second order: id (reversed order)
+		 * First order: amount Second order: id (reversed order).
 		 */
 		@Override
 		public int compareTo(HistogramEntry o) {

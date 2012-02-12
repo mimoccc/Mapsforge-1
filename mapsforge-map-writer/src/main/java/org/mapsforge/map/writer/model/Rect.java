@@ -74,8 +74,10 @@ public class Rect {
 	 *            the coordinate to define the rectangle
 	 */
 	public Rect(GeoCoordinate gc) {
-		this.minLatitudeE6 = this.maxLatitudeE6 = gc.getLatitudeE6();
-		this.minLongitudeE6 = this.maxLongitudeE6 = gc.getLongitudeE6();
+		this.minLatitudeE6 = gc.getLatitudeE6();
+		this.maxLatitudeE6 = gc.getLatitudeE6();
+		this.minLongitudeE6 = gc.getLongitudeE6();
+		this.maxLongitudeE6 = gc.getLongitudeE6();
 	}
 
 	/**
@@ -224,7 +226,8 @@ public class Rect {
 			dLat1 = this.minLatitudeE6;
 			dLat2 = otherRect.maxLatitudeE6;
 		} else {
-			dLat1 = dLat2 = Math.min(this.maxLatitudeE6, otherRect.maxLatitudeE6);
+			dLat1 = Math.min(this.maxLatitudeE6, otherRect.maxLatitudeE6);
+			dLat2 = Math.min(this.maxLatitudeE6, otherRect.maxLatitudeE6);
 		}
 
 		if (this.maxLongitudeE6 < otherRect.minLongitudeE6) {
@@ -234,7 +237,8 @@ public class Rect {
 			dLon1 = this.minLongitudeE6;
 			dLon2 = otherRect.maxLongitudeE6;
 		} else {
-			dLon1 = dLon2 = Math.min(this.maxLongitudeE6, otherRect.maxLongitudeE6);
+			dLon1 = Math.min(this.maxLongitudeE6, otherRect.maxLongitudeE6);
+			dLon2 = Math.min(this.maxLongitudeE6, otherRect.maxLongitudeE6);
 		}
 
 		return GeoCoordinate.sphericalDistance(dLon1, dLat1, dLon2, dLat2);

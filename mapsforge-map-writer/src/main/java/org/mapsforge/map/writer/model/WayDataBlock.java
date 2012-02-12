@@ -76,5 +76,4 @@ public class WayDataBlock {
 	public Encoding getEncoding() {
 		return this.encoding;
 	}
-
 }

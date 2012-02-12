@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  * 
  * @author bross
  */
-final public class TileInfo {
+public final class TileInfo {
 
 	private static final Logger LOGGER = Logger.getLogger(TileInfo.class.getName());
 

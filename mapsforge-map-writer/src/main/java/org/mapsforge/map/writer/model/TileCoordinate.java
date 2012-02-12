@@ -29,7 +29,7 @@ public class TileCoordinate {
 	private final byte zoomlevel;
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 * 
 	 * @param x
 	 *            the x value of the tile on the given zoom level

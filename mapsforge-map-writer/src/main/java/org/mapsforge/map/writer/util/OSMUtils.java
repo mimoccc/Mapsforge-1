@@ -62,7 +62,7 @@ public final class OSMUtils {
 		if (entity.getTags() != null) {
 			for (Tag tag : entity.getTags()) {
 				String key = tag.getKey().toLowerCase();
-				if (("name".equals(key) && !foundPreferredLanguageName)) {
+				if ("name".equals(key) && !foundPreferredLanguageName) {
 					name = tag.getValue();
 				} else if ("piste:name".equals(key) && name == null) {
 					name = tag.getValue();

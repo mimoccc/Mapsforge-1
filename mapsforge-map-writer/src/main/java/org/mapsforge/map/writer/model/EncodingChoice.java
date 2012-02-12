@@ -21,15 +21,15 @@ package org.mapsforge.map.writer.model;
  */
 public enum EncodingChoice {
 	/**
-	 * AUTO
+	 * AUTO.
 	 */
 	AUTO,
 	/**
-	 * SINGLE
+	 * SINGLE.
 	 */
 	SINGLE,
 	/**
-	 * DOUBLE
+	 * DOUBLE.
 	 */
 	DOUBLE;
 

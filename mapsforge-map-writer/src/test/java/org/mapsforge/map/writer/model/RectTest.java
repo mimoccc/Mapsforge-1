@@ -37,7 +37,7 @@ public class RectTest {
 	}
 
 	/**
-	 * Tests expansion by inclusion of a coordinate
+	 * Tests expansion by inclusion of a coordinate.
 	 */
 	@Test
 	public void testExpandToIncludeGeoCoordinate() {
@@ -71,7 +71,7 @@ public class RectTest {
 	}
 
 	/**
-	 * Tests expansion by inclusion of a rectangle
+	 * Tests expansion by inclusion of a rectangle.
 	 */
 	@Test
 	public void testExpandToIncludeRect() {
@@ -100,7 +100,7 @@ public class RectTest {
 	}
 
 	/**
-	 * Tests distance function
+	 * Tests distance function.
 	 */
 	@Test
 	public void testDistance() {
@@ -129,7 +129,7 @@ public class RectTest {
 	}
 
 	/**
-	 * Tests overlap function
+	 * Tests overlap function.
 	 */
 	@Test
 	public void testOverlapsRect() {

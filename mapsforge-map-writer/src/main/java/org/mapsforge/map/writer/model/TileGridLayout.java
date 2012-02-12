@@ -24,7 +24,7 @@ public class TileGridLayout {
 	private final int amountTilesVertical;
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 * 
 	 * @param upperLeft
 	 *            the upper left tile coordinate

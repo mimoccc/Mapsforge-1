@@ -39,23 +39,23 @@ public final class Constants {
 	public static final int MAX_SIMPLIFICATION_BASE_ZOOM = 12;
 
 	/**
-	 * default name for out file
+	 * Default name for out file.
 	 */
 	public static final String DEFAULT_PARAM_OUTFILE = "mapsforge.map";
 	/**
-	 * default data processor type
+	 * Default data processor type.
 	 */
 	public static final String DEFAULT_PARAM_TYPE = "ram";
 	/**
-	 * default bbox enlargement
+	 * Default bbox enlargement.
 	 */
 	public static final int DEFAULT_PARAM_BBOX_ENLARGEMENT = 20;
 	/**
-	 * default coordinate encoding
+	 * Default coordinate encoding.
 	 */
 	public static final String DEFAULT_PARAM_ENCODING = "single";
 	/**
-	 * default simplification factor
+	 * Default simplification factor.
 	 */
 	public static final double DEFAULT_SIMPLIFICATION_FACTOR = 0.0000188;
 }

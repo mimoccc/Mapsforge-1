@@ -55,12 +55,12 @@ public final class GeoUtils {
 	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.0000188;
 	// private static final double DOUGLAS_PEUCKER_SIMPLIFICATION_TOLERANCE = 0.00003;
 	/**
-	 * the minimum amount of nodes required for a valid closed polygon
+	 * The minimum amount of nodes required for a valid closed polygon.
 	 */
 	public static final int MIN_NODES_POLYGON = 4;
 
 	/**
-	 * the minimum amount of coordinates (lat/lon counted separately) required for a valid closed polygon
+	 * The minimum amount of coordinates (lat/lon counted separately) required for a valid closed polygon.
 	 */
 	public static final int MIN_COORDINATES_POLYGON = 8;
 	private static final byte SUBTILE_ZOOMLEVEL_DIFFERENCE = 2;

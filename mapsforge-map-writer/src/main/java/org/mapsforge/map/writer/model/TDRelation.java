@@ -98,7 +98,7 @@ public class TDRelation {
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 * 
 	 * @param id
 	 *            the id
@@ -206,7 +206,7 @@ public class TDRelation {
 	 */
 	// TODO adjust if more relations should be supported
 	public static boolean knownRelationType(String type) {
-		return type != null && type.equals("multipolygon");
+		return type != null && "multipolygon".equals(type);
 	}
 
 	@Override

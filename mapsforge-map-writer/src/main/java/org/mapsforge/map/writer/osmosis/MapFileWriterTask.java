@@ -161,12 +161,12 @@ public class MapFileWriterTask implements Sink {
 				.getStandardConfiguration() : ZoomIntervalConfiguration.fromString(zoomIntervalConfigurationString);
 
 		this.type = type;
-		if (!type.equalsIgnoreCase("ram") && !type.equalsIgnoreCase("hd")) {
+		if (!"ram".equalsIgnoreCase(type) && !"hd".equalsIgnoreCase(type)) {
 			throw new IllegalArgumentException("type argument must equal ram or hd, found: " + type);
 		}
 		// CREATE DATASTORE IF BBOX IS DEFINED
 		if (bbox != null) {
-			if (type.equalsIgnoreCase("ram")) {
+			if ("ram".equalsIgnoreCase(type)) {
 				this.tileBasedGeoObjectStore = RAMTileBasedDataProcessor.newInstance(bbox,
 						this.zoomIntervalConfiguration, bboxEnlargement, preferredLanguage);
 			} else {

@@ -22,14 +22,14 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 /**
- * Test GeoCoordinate Class with right and wrong values for the constructor and distance measurement
+ * Test GeoCoordinate Class with right and wrong values for the constructor and distance measurement.
  * 
  * @author Eike
  */
 public class GeoCoordinateTest {
 
 	/**
-	 * See if the GeoCoordinate constructors work and if the equals comparison works
+	 * See if the GeoCoordinate constructors work and if the equals comparison works.
 	 */
 	@Test
 	public void geoCoordinateConstructorsAndEqualsTest() {
@@ -48,7 +48,7 @@ public class GeoCoordinateTest {
 	}
 
 	/**
-	 * Tests if the WKT constructor works as expected
+	 * Tests if the WKT constructor works as expected.
 	 */
 	@Test
 	public void geoCoordinateFromWellKnownTextTest() {
@@ -58,7 +58,7 @@ public class GeoCoordinateTest {
 	}
 
 	/**
-	 * See if an exception is thrown if a invalid longitude is supplied
+	 * See if an exception is thrown if a invalid longitude is supplied.
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLongitudeTest() {
@@ -67,7 +67,7 @@ public class GeoCoordinateTest {
 	}
 
 	/**
-	 * See if an exception is thrown if a invalid latitude is supplied
+	 * See if an exception is thrown if a invalid latitude is supplied.
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLatitudeTest() {
@@ -76,7 +76,7 @@ public class GeoCoordinateTest {
 	}
 
 	/**
-	 * Run tests to see if the distance calculation methods work as expected
+	 * Run tests to see if the distance calculation methods work as expected.
 	 */
 	@Test
 	public void geoCoordinateDistancesTest() {

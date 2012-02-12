@@ -20,7 +20,7 @@ package org.mapsforge.map.writer.model;
  * 
  * @author bross
  */
-final public class ZoomIntervalConfiguration {
+public final class ZoomIntervalConfiguration {
 
 	private final byte[] baseZoom;
 	private final byte[] minZoom;

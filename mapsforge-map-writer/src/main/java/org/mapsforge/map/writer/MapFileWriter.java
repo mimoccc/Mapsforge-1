@@ -318,7 +318,7 @@ public class MapFileWriter {
 		}
 
 		// COMMENT
-		if (comment != null && !comment.equals("")) {
+		if (comment != null && !comment.isEmpty()) {
 			writeUTF8(comment, containerHeaderBuffer);
 		}
 
@@ -732,7 +732,7 @@ public class MapFileWriter {
 
 		// return size of sub file in bytes
 		return currentSubfileOffset;
-	}// end writeSubfile()
+	} // end writeSubfile()
 
 	private static void writeWay(List<Integer> wayNodes, int currentTileLat, int currentTileLon, ByteBuffer buffer) {
 		// write the amount of way nodes to the file
