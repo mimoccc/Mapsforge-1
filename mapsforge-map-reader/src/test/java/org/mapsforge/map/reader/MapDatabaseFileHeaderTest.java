@@ -18,36 +18,35 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.BoundingBox;
 import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.Tag;
 import org.mapsforge.map.reader.header.FileOpenResult;
 import org.mapsforge.map.reader.header.MapFileInfo;
 
 /**
  * Tests the {@link MapDatabase} class.
  */
-public class MapDatabaseTest {
-	private static final BoundingBox BOUNDING_BOX = new BoundingBox(0, 1000000, 2000000, 3000000);
+public class MapDatabaseFileHeaderTest {
+	private static final BoundingBox BOUNDING_BOX = new BoundingBox(1000000, 2000000, 3000000, 4000000);
 	private static final String COMMENT = "testcomment";
-	private static final int FILE_SIZE = 58019;
+	private static final int FILE_SIZE = 42489;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
-	private static final long MAP_DATE = 1326030339356L;
-	private static final String MAP_FILE = "src/test/resources/test.map";
+	private static final long MAP_DATE = 1329057814937L;
+	private static final String MAP_FILE = "src/test/resources/file_header/file_header.map";
 	private static final int NUMBER_OF_SUBFILES = 2;
 	private static final String PROJECTION_NAME = "Mercator";
-	private static final GeoPoint START_POSITION = new GeoPoint(0.5, 2.5);
+	private static final GeoPoint START_POSITION = new GeoPoint(1.5, 2.5);
 	private static final Byte START_ZOOM_LEVEL = Byte.valueOf((byte) 16);
-	private static final Tag TAG_POI = new Tag("amenity", "restaurant");
-	private static final Tag TAG_WAY = new Tag("highway", "motorway");
 	private static final int TILE_PIXEL_SIZE = 256;
 
 	/**
-	 * Tests the {@link MapDatabase#getMapFileInfo} method.
+	 * Tests the {@link MapDatabase#getMapFileInfo()} method.
 	 */
 	@Test
 	public void getMapFileInfoTest() {
 		MapDatabase mapDatabase = new MapDatabase();
 		FileOpenResult fileOpenResult = mapDatabase.openFile(MAP_FILE);
+		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());
+
 		MapFileInfo mapFileInfo = mapDatabase.getMapFileInfo();
 		mapDatabase.closeFile();
 
@@ -62,11 +61,8 @@ public class MapDatabaseTest {
 		Assert.assertEquals(PROJECTION_NAME, mapFileInfo.projectionName);
 		Assert.assertEquals(TILE_PIXEL_SIZE, mapFileInfo.tilePixelSize);
 
-		Assert.assertEquals(1, mapFileInfo.poiTags.length);
-		Assert.assertEquals(TAG_POI, mapFileInfo.poiTags[0]);
-
-		Assert.assertEquals(1, mapFileInfo.wayTags.length);
-		Assert.assertEquals(TAG_WAY, mapFileInfo.wayTags[0]);
+		Assert.assertEquals(0, mapFileInfo.poiTags.length);
+		Assert.assertEquals(0, mapFileInfo.wayTags.length);
 
 		Assert.assertFalse(mapFileInfo.debugFile);
 		Assert.assertEquals(START_POSITION, mapFileInfo.startPosition);

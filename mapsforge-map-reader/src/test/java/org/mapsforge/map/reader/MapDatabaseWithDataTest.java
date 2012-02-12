@@ -23,29 +23,29 @@ import org.mapsforge.map.reader.header.FileOpenResult;
 /**
  * Tests the {@link MapDatabase} class.
  */
-public class SmallAndEmptyTest {
-	private static final String MAP_FILE = "src/test/resources/small_and_empty/small_and_empty.map";
+public class MapDatabaseWithDataTest {
+	private static final String MAP_FILE = "src/test/resources/with_data/with_data.map";
+	private static final byte ZOOM_LEVEL = 11;
 
 	/**
-	 * Tests the {@link MapDatabase#getMapFileInfo} method.
+	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
 	 */
 	@Test
-	public void getMapFileInfoTest() {
+	public void executeQueryTest() {
 		MapDatabase mapDatabase = new MapDatabase();
 		FileOpenResult fileOpenResult = mapDatabase.openFile(MAP_FILE);
 		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());
 
+		long tileX = MercatorProjection.longitudeToTileX(1, ZOOM_LEVEL);
+		long tileY = MercatorProjection.latitudeToTileY(1, ZOOM_LEVEL);
+		Tile tile = new Tile(tileX, tileY, ZOOM_LEVEL);
+
 		DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
-
-		long tileX = MercatorProjection.longitudeToTileX(1, (byte) 14);
-		long tileY = MercatorProjection.latitudeToTileY(1, (byte) 14);
-		Tile tile = new Tile(tileX, tileY, (byte) 14);
-
 		mapDatabase.executeQuery(tile, dummyMapDatabaseCallback);
 		mapDatabase.closeFile();
 
-		Assert.assertEquals(0, dummyMapDatabaseCallback.pointOfInterests);
-		Assert.assertEquals(0, dummyMapDatabaseCallback.ways);
+		Assert.assertEquals(1, dummyMapDatabaseCallback.pointOfInterests);
+		Assert.assertEquals(1, dummyMapDatabaseCallback.ways);
 		Assert.assertEquals(1, dummyMapDatabaseCallback.waterBackground);
 	}
 }
