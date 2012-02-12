@@ -17,6 +17,7 @@ package org.mapsforge.map.writer.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -62,6 +63,7 @@ public class GeoCoordinateTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLongitudeTest() {
 		GeoCoordinate invalidCoordinate = new GeoCoordinate(0d, 181d);
+		fail("invalid coordinate must throw exception: " + invalidCoordinate.toString());
 	}
 
 	/**
@@ -70,6 +72,7 @@ public class GeoCoordinateTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void geoCoordinateIllegalLatitudeTest() {
 		GeoCoordinate invalidCoordinate = new GeoCoordinate(91d, 0d);
+		fail("invalid coordinate must throw exception: " + invalidCoordinate.toString());
 	}
 
 	/**
