@@ -153,7 +153,7 @@ public final class MapFileWriter {
 		long currentFileSize = totalHeaderSize;
 		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
-			long subfileSize = writeSubfile2(currentFileSize, i, dataProcessor, randomAccessFile, configuration);
+			long subfileSize = writeSubfile(currentFileSize, i, dataProcessor, randomAccessFile, configuration);
 			// SUB FILE META DATA IN CONTAINER HEADER
 			writeSubfileMetaDataToContainerHeader(dataProcessor.getZoomIntervalConfiguration(), i, currentFileSize,
 					subfileSize, containerHeaderBuffer);
@@ -297,7 +297,7 @@ public final class MapFileWriter {
 		buffer.putLong(subfileSize);
 	}
 
-	private static long writeSubfile2(final long startPositionSubfile, final int zoomIntervalIndex,
+	private static long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,
 			final TileBasedDataProcessor dataStore, final RandomAccessFile randomAccessFile,
 			final MapWriterConfiguration configuration) throws IOException {
 
@@ -308,6 +308,15 @@ public final class MapFileWriter {
 		final TileCoordinate upperLeft = dataStore.getTileGridLayout(zoomIntervalIndex).getUpperLeft();
 		final int lengthX = dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal();
 		final int lengthY = dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesVertical();
+		final int amountTiles = lengthX * lengthY;
+
+		// used to monitor progress
+		double amountOfTilesInPercentStep = amountTiles;
+		if (amountTiles > PROGRESS_PERCENT_STEP) {
+			amountOfTilesInPercentStep = Math.ceil(amountTiles / PROGRESS_PERCENT_STEP);
+		}
+
+		int processedTiles = 0;
 
 		final byte baseZoomCurrentInterval = dataStore.getZoomIntervalConfiguration().getBaseZoom(zoomIntervalIndex);
 
@@ -340,6 +349,16 @@ public final class MapFileWriter {
 				currentSubfileOffset += tileBuffer.position();
 
 				writeTile(multipleTilesBuffer, tileBuffer, randomAccessFile);
+
+				if (++processedTiles % amountOfTilesInPercentStep == 0) {
+					if (processedTiles == amountTiles) {
+						LOGGER.info("written 100% of sub file for zoom interval index " + zoomIntervalIndex);
+					} else {
+						LOGGER.info("written " + (processedTiles / amountOfTilesInPercentStep) * PROGRESS_PERCENT_STEP
+								+ "% of sub file for zoom interval index " + zoomIntervalIndex);
+					}
+
+				}
 
 				// TODO accounting for progress information
 			} // end for loop over tile columns
