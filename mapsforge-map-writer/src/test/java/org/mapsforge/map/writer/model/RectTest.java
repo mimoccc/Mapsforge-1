@@ -25,7 +25,7 @@ import org.junit.Test;
  * 
  * @author bross
  */
-public class TestRect {
+public class RectTest {
 
 	/**
 	 * Tests the computation of the center of a rectangle.

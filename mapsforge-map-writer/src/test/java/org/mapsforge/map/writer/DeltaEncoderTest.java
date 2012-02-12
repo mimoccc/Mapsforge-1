@@ -25,7 +25,7 @@ import org.junit.Test;
 /**
  * @author bross
  */
-public class TestDeltaEncoder {
+public class DeltaEncoderTest {
 
 	private List<Integer> mockCoordinates;
 

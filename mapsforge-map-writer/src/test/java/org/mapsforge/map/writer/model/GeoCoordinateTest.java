@@ -25,7 +25,7 @@ import org.junit.Test;
  * 
  * @author Eike
  */
-public class TestGeoCoordinate {
+public class GeoCoordinateTest {
 
 	/**
 	 * See if the GeoCoordinate constructors work and if the equals comparison works

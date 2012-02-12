@@ -26,7 +26,7 @@ import org.mapsforge.map.writer.model.TDWay;
 /**
  * @author bross
  */
-public class TestWayPolygonizer {
+public class WayPolygonizerTest {
 
 	private WayPolygonizer polygonizer;
 	private TDWay[] ways;

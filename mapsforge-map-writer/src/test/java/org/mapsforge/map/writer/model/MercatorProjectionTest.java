@@ -23,7 +23,7 @@ import org.junit.Test;
  * 
  * @author Eike
  */
-public class TestMercatorProjection {
+public class MercatorProjectionTest {
 
 	/**
 	 * The hardcoded values have been calculated using the proj4js lib at http://proj4js.org/
