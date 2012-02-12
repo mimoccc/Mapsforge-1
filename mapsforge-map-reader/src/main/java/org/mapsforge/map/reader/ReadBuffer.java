@@ -29,7 +29,7 @@ public class ReadBuffer {
 	/**
 	 * Maximum buffer size which is supported by this implementation.
 	 */
-	static final int MAXIMUM_BUFFER_SIZE = 2000000;
+	static final int MAXIMUM_BUFFER_SIZE = 2500000;
 
 	private byte[] bufferData;
 	private int bufferPosition;
