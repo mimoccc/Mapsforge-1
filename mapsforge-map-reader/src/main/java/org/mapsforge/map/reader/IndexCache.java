@@ -39,19 +39,19 @@ class IndexCache {
 	 */
 	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_BLOCK * SubFileParameter.BYTES_PER_INDEX_ENTRY;
 
-	private final RandomAccessFile inputFile;
+	private final RandomAccessFile randomAccessFile;
 	private final Map<IndexCacheEntryKey, byte[]> map;
 
 	/**
-	 * @param inputFile
+	 * @param randomAccessFile
 	 *            the map file from which the index should be read and cached.
 	 * @param capacity
 	 *            the maximum number of entries in the cache.
 	 * @throws IllegalArgumentException
 	 *             if the capacity is negative.
 	 */
-	IndexCache(RandomAccessFile inputFile, int capacity) {
-		this.inputFile = inputFile;
+	IndexCache(RandomAccessFile randomAccessFile, int capacity) {
+		this.randomAccessFile = randomAccessFile;
 		this.map = new LRUCache<IndexCacheEntryKey, byte[]>(capacity);
 	}
 
@@ -95,8 +95,8 @@ class IndexCache {
 				int indexBlockSize = Math.min(SIZE_OF_INDEX_BLOCK, remainingIndexSize);
 				indexBlock = new byte[indexBlockSize];
 
-				this.inputFile.seek(indexBlockPosition);
-				if (this.inputFile.read(indexBlock, 0, indexBlockSize) != indexBlockSize) {
+				this.randomAccessFile.seek(indexBlockPosition);
+				if (this.randomAccessFile.read(indexBlock, 0, indexBlockSize) != indexBlockSize) {
 					LOG.warning("reading the current index block has failed");
 					return -1;
 				}

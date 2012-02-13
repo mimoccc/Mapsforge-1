@@ -207,6 +207,7 @@ public class MapDatabase {
 
 			if (this.databaseIndexCache != null) {
 				this.databaseIndexCache.destroy();
+				this.databaseIndexCache = null;
 			}
 
 			if (this.inputFile != null) {
