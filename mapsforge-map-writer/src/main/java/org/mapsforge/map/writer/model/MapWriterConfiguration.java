@@ -388,6 +388,7 @@ public class MapWriterConfiguration {
 				if (intZoom < 0 || intZoom > 21) {
 					throw new IllegalArgumentException("not a valid map start zoom: " + zoom);
 				}
+				setMapStartZoomLevel(intZoom);
 			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException("not a valid map start zoom: " + zoom);
 			}

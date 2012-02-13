@@ -338,7 +338,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 					// create new virtual way which represents the outer way
 					// use maxWayID counter to create unique id
 					outerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, relation.getLayer(),
-							relation.getName(), relation.getRef(), relation.getTags(), shape, waynodes);
+							relation.getName(), relation.getHouseNumber(), relation.getRef(), relation.getTags(),
+							shape, waynodes);
 
 					// add the newly created way to matching tiles
 					addWayToTiles(outerWay, BaseTileBasedDataProcessor.this.bboxEnlargement);
@@ -424,7 +425,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 						}
 						TDNode[] waynodes = waynodeList.toArray(new TDNode[waynodeList.size()]);
 						// TODO which layer?
-						innerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, (byte) 0, null, null, waynodes);
+						innerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, (byte) 0, null, null, null,
+								waynodes);
 						handleVirtualInnerWay(innerWay);
 						// does not need to be added to corresponding tiles
 						// virtual inner ways do not have any tags, they are holes in the outer polygon

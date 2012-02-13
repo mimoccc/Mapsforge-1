@@ -45,30 +45,30 @@ public class WayPolygonizerTest {
 				new TDNode(3, 52000100, 13000100, (short) 0, (byte) 0, null, "n3"),
 				new TDNode(4, 52000100, 13000000, (short) 0, (byte) 0, null, "n4"),
 				new TDNode(1, 52000000, 13000000, (short) 0, (byte) 0, null, "n5"), };
-		TDWay w1 = new TDWay(1, (byte) 0, "w1", null, n1);
+		TDWay w1 = new TDWay(1, (byte) 0, "w1", null, null, n1);
 
 		TDNode[] n2 = new TDNode[] { new TDNode(5, 52000500, 13000500, (short) 0, (byte) 0, null, "n5"),
 				new TDNode(6, 52000500, 13000800, (short) 0, (byte) 0, null, "n6"),
 				new TDNode(7, 52000800, 13000800, (short) 0, (byte) 0, null, "n7") };
-		TDWay w2 = new TDWay(2, (byte) 0, "w2", null, n2);
+		TDWay w2 = new TDWay(2, (byte) 0, "w2", null, null, n2);
 
 		TDNode[] n3 = new TDNode[] { new TDNode(7, 52000800, 13000800, (short) 0, (byte) 0, null, "n7"),
 				new TDNode(8, 50001000, 13000800, (short) 0, (byte) 0, null, "n8"),
 				new TDNode(9, 52001000, 13001000, (short) 0, (byte) 0, null, "n9"),
 				new TDNode(10, 52001100, 13001000, (short) 0, (byte) 0, null, "n10") };
-		TDWay w3 = new TDWay(3, (byte) 0, "w3", null, n3);
+		TDWay w3 = new TDWay(3, (byte) 0, "w3", null, null, n3);
 
 		TDNode[] n4 = new TDNode[] { new TDNode(10, 52001100, 13001000, (short) 0, (byte) 0, null, "n11"),
 				new TDNode(11, 50001100, 13000500, (short) 0, (byte) 0, null, "n12"),
 				new TDNode(5, 52000500, 13000500, (short) 0, (byte) 0, null, "n5") };
-		TDWay w4 = new TDWay(4, (byte) 0, "w4", null, n4);
+		TDWay w4 = new TDWay(4, (byte) 0, "w4", null, null, n4);
 
 		TDNode[] nDangling1 = new TDNode[] { new TDNode(12, 52001000, 13001000, (short) 0, (byte) 0, null, "n12"),
 				new TDNode(13, 50001000, 13001500, (short) 0, (byte) 0, null, "n13"),
 				new TDNode(14, 52001500, 13001500, (short) 0, (byte) 0, null, "n14"),
 				new TDNode(15, 52001600, 13001500, (short) 0, (byte) 0, null, "n15"),
 				new TDNode(16, 52001600, 13001600, (short) 0, (byte) 0, null, "n16") };
-		TDWay wDangling1 = new TDWay(5, (byte) 0, "w5", null, nDangling1);
+		TDWay wDangling1 = new TDWay(5, (byte) 0, "w5", null, null, nDangling1);
 
 		this.ways[0] = w1;
 		this.ways[1] = w2;

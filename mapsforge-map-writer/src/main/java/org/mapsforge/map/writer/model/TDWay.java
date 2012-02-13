@@ -51,6 +51,7 @@ public class TDWay {
 	private final byte layer;
 	private String name;
 	private String ref;
+	private final String houseNumber;
 	private short[] tags; // NOPMD by bross on 25.12.11 13:04
 	private byte shape;
 	private final TDNode[] wayNodes;
@@ -106,8 +107,8 @@ public class TDWay {
 					}
 				}
 
-				return new TDWay(way.getId(), ster.getLayer(), ster.getName(), ster.getRef(), knownWayTags, shape,
-						waynodes);
+				return new TDWay(way.getId(), ster.getLayer(), ster.getName(), ster.getHousenumber(), ster.getRef(),
+						knownWayTags, shape, waynodes);
 			}
 		}
 
@@ -123,15 +124,18 @@ public class TDWay {
 	 *            the layer
 	 * @param name
 	 *            the name if existent
+	 * @param houseNumber
+	 *            the house number if existent
 	 * @param ref
 	 *            the ref if existent
 	 * @param wayNodes
 	 *            the way nodes
 	 */
-	public TDWay(long id, byte layer, String name, String ref, TDNode[] wayNodes) {
+	public TDWay(long id, byte layer, String name, String houseNumber, String ref, TDNode[] wayNodes) {
 		this.id = id;
 		this.layer = layer;
 		this.name = name;
+		this.houseNumber = houseNumber;
 		this.ref = ref;
 		this.wayNodes = wayNodes;
 	}
@@ -145,6 +149,8 @@ public class TDWay {
 	 *            the layer
 	 * @param name
 	 *            the name if existent
+	 * @param houseNumber
+	 *            the house number if existent
 	 * @param ref
 	 *            the ref if existent
 	 * @param tags
@@ -154,15 +160,12 @@ public class TDWay {
 	 * @param wayNodes
 	 *            the way nodes
 	 */
-	public TDWay(long id, byte layer, String name, String ref, short[] tags, byte shape, TDNode[] wayNodes) { // NOPMD
-																												// by
-																												// bross
-																												// on
-																												// 25.12.11
-																												// 13:04
+	public TDWay(long id, byte layer, String name, String houseNumber, String ref, short[] tags, byte shape,
+			TDNode[] wayNodes) {
 		this.id = id;
 		this.layer = layer;
 		this.name = name;
+		this.houseNumber = houseNumber;
 		this.ref = ref;
 		this.tags = tags;
 		this.shape = shape;
@@ -207,6 +210,13 @@ public class TDWay {
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/**
+	 * @return the house number
+	 */
+	public String getHouseNumber() {
+		return this.houseNumber;
 	}
 
 	/**
@@ -388,5 +398,4 @@ public class TDWay {
 	public String toString() {
 		return "TDWay [id=" + this.id + ", name=" + this.name + ", tags=" + this.tags + ", polygon=" + this.shape + "]";
 	}
-
 }

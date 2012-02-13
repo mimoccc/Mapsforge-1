@@ -37,6 +37,7 @@ public class TDRelation {
 	private final long id;
 	private final byte layer;
 	private final String name;
+	private final String houseNumber;
 	private final String ref;
 	private final short[] tags; // NOPMD by bross on 25.12.11 13:13
 	private final TDWay[] memberWays;
@@ -93,8 +94,8 @@ public class TDRelation {
 			return null;
 		}
 
-		return new TDRelation(relation.getId(), ster.getLayer(), ster.getName(), ster.getRef(), knownWayTags,
-				wayMembers.toArray(new TDWay[wayMembers.size()]));
+		return new TDRelation(relation.getId(), ster.getLayer(), ster.getName(), ster.getHousenumber(), ster.getRef(),
+				knownWayTags, wayMembers.toArray(new TDWay[wayMembers.size()]));
 	}
 
 	/**
@@ -106,6 +107,8 @@ public class TDRelation {
 	 *            the layer
 	 * @param name
 	 *            the name
+	 * @param houseNumber
+	 *            the house number if existent
 	 * @param ref
 	 *            the ref attribute
 	 * @param tags
@@ -113,13 +116,11 @@ public class TDRelation {
 	 * @param memberWays
 	 *            the member ways
 	 */
-	TDRelation(long id, byte layer, String name, String ref, short[] tags, TDWay[] memberWays) { // NOPMD by
-																									// bross on
-																									// 25.12.11
-																									// 13:13
+	TDRelation(long id, byte layer, String name, String houseNumber, String ref, short[] tags, TDWay[] memberWays) {
 		this.id = id;
 		this.layer = layer;
 		this.name = name;
+		this.houseNumber = houseNumber;
 		this.ref = ref;
 		this.tags = tags;
 		this.memberWays = memberWays;
@@ -144,6 +145,13 @@ public class TDRelation {
 	 */
 	public String getName() {
 		return this.name;
+	}
+
+	/**
+	 * @return the houseNumber
+	 */
+	public String getHouseNumber() {
+		return this.houseNumber;
 	}
 
 	/**

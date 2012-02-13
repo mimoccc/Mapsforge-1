@@ -86,17 +86,16 @@ public final class MapFileWriter {
 
 	// bitmap flags for pois and ways
 	private static final short BITMAP_NAME = 128; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_HOUSENUMBER = 64; // NOPMD by bross on 25.12.11 13:52
 
 	// bitmap flags for pois
-	private static final short BITMAP_ELEVATION = 64; // NOPMD by bross on 25.12.11 13:52
-	private static final short BITMAP_HOUSENUMBER = 32; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_ELEVATION = 32; // NOPMD by bross on 25.12.11 13:52
 
 	// bitmap flags for ways
-	private static final short BITMAP_REF = 64; // NOPMD by bross on 25.12.11 13:52
-	private static final short BITMAP_LABEL = 32; // NOPMD by bross on 25.12.11 13:52
-	private static final short BITMAP_MULTIPLE_WAY_BLOCKS = 16;
-	// TODO write encoding bit
-	private static final short BITMAP_ENCODING = 8;
+	private static final short BITMAP_REF = 32; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_LABEL = 16; // NOPMD by bross on 25.12.11 13:52
+	private static final short BITMAP_MULTIPLE_WAY_BLOCKS = 8;
+	private static final short BITMAP_ENCODING = 4;
 
 	// bitmap flags for file features
 	private static final short BITMAP_DEBUG = 128; // NOPMD by bross on 25.12.11 13:53
@@ -143,7 +142,7 @@ public final class MapFileWriter {
 		int amountOfZoomIntervals = dataProcessor.getZoomIntervalConfiguration().getNumberOfZoomIntervals();
 		ByteBuffer containerHeaderBuffer = ByteBuffer.allocate(HEADER_BUFFER_SIZE);
 		// CONTAINER HEADER
-		int totalHeaderSize = writeContainerHeaderBuffer(configuration, dataProcessor, containerHeaderBuffer);
+		int totalHeaderSize = writeHeaderBuffer(configuration, dataProcessor, containerHeaderBuffer);
 
 		// set to mark where zoomIntervalConfig starts
 		containerHeaderBuffer.reset();
@@ -178,7 +177,7 @@ public final class MapFileWriter {
 		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
-	private static int writeContainerHeaderBuffer(final MapWriterConfiguration configuration,
+	private static int writeHeaderBuffer(final MapWriterConfiguration configuration,
 			final TileBasedDataProcessor dataProcessor, final ByteBuffer containerHeaderBuffer) {
 
 		LOGGER.fine("writing header");
@@ -446,7 +445,7 @@ public final class MapFileWriter {
 				List<TDNode> pois = poisByZoomlevel.get(Byte.valueOf(zoomlevel));
 				if (pois != null) {
 					for (TDNode poi : pois) {
-						writePOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(), poiBuffer);
+						processPOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(), poiBuffer);
 					}
 					// increment count of POIs on this zoom level
 					entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][0] += pois.size();
@@ -473,7 +472,7 @@ public final class MapFileWriter {
 							if (configuration.isDebugStrings()) {
 								writeWaySignature(way, tileBuffer);
 							}
-							writeWay(wpr, way, currentTileLat, currentTileLon, wayBuffer);
+							processWay(wpr, way, currentTileLat, currentTileLon, wayBuffer);
 							// write size of way to tile buffer
 							tileBuffer.put(Serializer.getVariableByteUnsigned(wayBuffer.position()));
 							// write way data to tile buffer
@@ -527,7 +526,7 @@ public final class MapFileWriter {
 		tileBuffer.position(tileSize);
 	}
 
-	private static void writePOI(TDNode poi, int currentTileLat, int currentTileLon, boolean debugStrings,
+	private static void processPOI(TDNode poi, int currentTileLat, int currentTileLon, boolean debugStrings,
 			ByteBuffer poiBuffer) {
 		if (debugStrings) {
 			StringBuilder sb = new StringBuilder();
@@ -555,18 +554,20 @@ public final class MapFileWriter {
 		// write byte with bits set to 1 if the poi has a
 		// name, an elevation
 		// or a housenumber
-		poiBuffer.put(infoBytePOI(poi.getName(), poi.getElevation(), poi.getHouseNumber()));
+		poiBuffer.put(infoBytePOIFeatures(poi.getName(), poi.getElevation(), poi.getHouseNumber()));
 
-		if (poi.getName() != null && poi.getName().length() > 0) {
+		if (poi.getName() != null && !poi.getName().isEmpty()) {
 			writeUTF8(poi.getName(), poiBuffer);
-
 		}
+
+		if (poi.getHouseNumber() != null && !poi.getHouseNumber().isEmpty()) {
+			writeUTF8(poi.getHouseNumber(), poiBuffer);
+		}
+
 		if (poi.getElevation() != 0) {
 			poiBuffer.put(Serializer.getVariableByteSigned(poi.getElevation()));
 		}
-		if (poi.getHouseNumber() != null && poi.getHouseNumber().length() > 0) {
-			writeUTF8(poi.getHouseNumber(), poiBuffer);
-		}
+
 	}
 
 	private static void writeWaySignature(TDWay way, ByteBuffer tileBuffer) {
@@ -577,7 +578,7 @@ public final class MapFileWriter {
 		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length, tileBuffer);
 	}
 
-	private static void writeWay(WayPreprocessingResult wpr, TDWay way, int currentTileLat, int currentTileLon,
+	private static void processWay(WayPreprocessingResult wpr, TDWay way, int currentTileLat, int currentTileLon,
 			ByteBuffer wayBuffer) {
 
 		// write subtile bitmask of way
@@ -597,9 +598,14 @@ public final class MapFileWriter {
 		// ref, label position, and multiple blocks
 		wayBuffer.put(infoByteWayFeatures(way, wpr));
 
-		// // if the way has a name, write it to the file
+		// if the way has a name, write it to the file
 		if (way.getName() != null && !way.getName().isEmpty()) {
 			writeUTF8(way.getName(), wayBuffer);
+		}
+
+		// if the way has a house number, write it to the file
+		if (way.getHouseNumber() != null && !way.getHouseNumber().isEmpty()) {
+			writeUTF8(way.getHouseNumber(), wayBuffer);
 		}
 
 		// if the way has a ref, write it to the file
@@ -796,17 +802,17 @@ public final class MapFileWriter {
 		return infoByte;
 	}
 
-	private static byte infoBytePOI(String name, int elevation, String housenumber) {
+	private static byte infoBytePOIFeatures(String name, int elevation, String housenumber) {
 		byte infoByte = 0;
 
-		if (name != null && name.length() > 0) {
+		if (name != null && !name.isEmpty()) {
 			infoByte |= BITMAP_NAME;
+		}
+		if (housenumber != null && !housenumber.isEmpty()) {
+			infoByte |= BITMAP_HOUSENUMBER;
 		}
 		if (elevation != 0) {
 			infoByte |= BITMAP_ELEVATION;
-		}
-		if (housenumber != null && housenumber.length() > 0) {
-			infoByte |= BITMAP_HOUSENUMBER;
 		}
 		return infoByte;
 	}
@@ -816,6 +822,9 @@ public final class MapFileWriter {
 
 		if (way.getName() != null && !way.getName().isEmpty()) {
 			infoByte |= BITMAP_NAME;
+		}
+		if (way.getHouseNumber() != null && !way.getHouseNumber().isEmpty()) {
+			infoByte |= BITMAP_HOUSENUMBER;
 		}
 		if (way.getRef() != null && !way.getRef().isEmpty()) {
 			infoByte |= BITMAP_REF;
