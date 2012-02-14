@@ -80,7 +80,7 @@ public class MapFileWriterTest {
 		// + 2 + 14 + 18 ("natural=beach", natural=coastline")
 		// + 1
 		// + 3 * (3 + 8 + 8)
-		// == 203
+		// == 214
 		Assert.assertEquals(214, headerLength);
 	}
 	// @Test
