@@ -367,11 +367,11 @@ public class MapWriterConfiguration {
 	 * Convenience method.
 	 * 
 	 * @param position
-	 *            the map start position in wellknown text format
+	 *            the map start position in format latitude, longitude
 	 */
 	public void addMapStartPosition(String position) {
 		if (position != null) {
-			setMapStartPosition(new GeoCoordinate(position));
+			setMapStartPosition(GeoCoordinate.fromString(position));
 		}
 	}
 

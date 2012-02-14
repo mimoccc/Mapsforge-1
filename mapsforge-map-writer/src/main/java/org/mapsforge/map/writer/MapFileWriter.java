@@ -117,12 +117,12 @@ public final class MapFileWriter {
 	private static final TileInfo TILE_INFO = TileInfo.getInstance();
 
 	// IO
-	private static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
-	private static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
-	private static final int TILES_BUFFER_SIZE = 0x3200000; // 50MB
-	private static final int TILE_BUFFER_SIZE = 0xA00000; // 10MB
-	private static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
-	private static final int POI_BUFFER_SIZE = 0x100000; // 1MB
+	static final int HEADER_BUFFER_SIZE = 0x100000; // 1MB
+	static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
+	static final int TILES_BUFFER_SIZE = 0x3200000; // 50MB
+	static final int TILE_BUFFER_SIZE = 0xA00000; // 10MB
+	static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
+	static final int POI_BUFFER_SIZE = 0x100000; // 1MB
 
 	/**
 	 * Writes the map file according to the given configuration using the given data processor.
@@ -177,7 +177,7 @@ public final class MapFileWriter {
 		buffer.put(string.getBytes(UTF8_CHARSET));
 	}
 
-	private static int writeHeaderBuffer(final MapWriterConfiguration configuration,
+	static int writeHeaderBuffer(final MapWriterConfiguration configuration,
 			final TileBasedDataProcessor dataProcessor, final ByteBuffer containerHeaderBuffer) {
 
 		LOGGER.fine("writing header");
@@ -526,7 +526,7 @@ public final class MapFileWriter {
 		tileBuffer.position(tileSize);
 	}
 
-	private static void processPOI(TDNode poi, int currentTileLat, int currentTileLon, boolean debugStrings,
+	static void processPOI(TDNode poi, int currentTileLat, int currentTileLon, boolean debugStrings,
 			ByteBuffer poiBuffer) {
 		if (debugStrings) {
 			StringBuilder sb = new StringBuilder();
@@ -578,7 +578,7 @@ public final class MapFileWriter {
 		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length, tileBuffer);
 	}
 
-	private static void processWay(WayPreprocessingResult wpr, TDWay way, int currentTileLat, int currentTileLon,
+	static void processWay(WayPreprocessingResult wpr, TDWay way, int currentTileLat, int currentTileLon,
 			ByteBuffer wayBuffer) {
 
 		// write subtile bitmask of way
@@ -673,7 +673,7 @@ public final class MapFileWriter {
 		writeWayNodes(wayNodes, currentTileLat, currentTileLon, buffer);
 	}
 
-	private static void writeWayNodes(List<Integer> waynodes, int currentTileLat, int currentTileLon, ByteBuffer buffer) {
+	static void writeWayNodes(List<Integer> waynodes, int currentTileLat, int currentTileLon, ByteBuffer buffer) {
 		if (!waynodes.isEmpty() && waynodes.size() % 2 == 0) {
 			Iterator<Integer> waynodeIterator = waynodes.iterator();
 			buffer.put(Serializer.getVariableByteSigned(waynodeIterator.next().intValue() - currentTileLat));
@@ -761,7 +761,7 @@ public final class MapFileWriter {
 		return OSMTagMapping.getInstance().getOptimizedWayIds().get(Short.valueOf(original)).intValue();
 	}
 
-	private static byte infoBytePoiLayerAndTagAmount(TDNode node) {
+	static byte infoBytePoiLayerAndTagAmount(TDNode node) {
 		byte layer = node.getLayer();
 		// make sure layer is in [0,10]
 		layer = layer < 0 ? 0 : layer > 10 ? 10 : layer;
@@ -770,7 +770,7 @@ public final class MapFileWriter {
 		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
-	private static byte infoByteWayLayerAndTagAmount(TDWay way) {
+	static byte infoByteWayLayerAndTagAmount(TDWay way) {
 		byte layer = way.getLayer();
 		// make sure layer is in [0,10]
 		layer = layer < 0 ? 0 : layer > 10 ? 10 : layer;
@@ -779,7 +779,7 @@ public final class MapFileWriter {
 		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
-	private static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition, boolean mapStartZoom,
+	static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition, boolean mapStartZoom,
 			boolean preferredLanguage, boolean comment) {
 		byte infoByte = 0;
 
@@ -802,7 +802,7 @@ public final class MapFileWriter {
 		return infoByte;
 	}
 
-	private static byte infoBytePOIFeatures(String name, int elevation, String housenumber) {
+	static byte infoBytePOIFeatures(String name, int elevation, String housenumber) {
 		byte infoByte = 0;
 
 		if (name != null && !name.isEmpty()) {
@@ -817,7 +817,7 @@ public final class MapFileWriter {
 		return infoByte;
 	}
 
-	private static byte infoByteWayFeatures(TDWay way, WayPreprocessingResult wpr) {
+	static byte infoByteWayFeatures(TDWay way, WayPreprocessingResult wpr) {
 		byte infoByte = 0;
 
 		if (way.getName() != null && !way.getName().isEmpty()) {
