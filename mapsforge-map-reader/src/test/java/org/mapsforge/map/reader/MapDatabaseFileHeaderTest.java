@@ -30,7 +30,7 @@ public class MapDatabaseFileHeaderTest {
 	private static final int FILE_SIZE = 42489;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
-	private static final long MAP_DATE = 1329057814937L;
+	private static final long MAP_DATE = 1329331201268L;
 	private static final String MAP_FILE = "src/test/resources/file_header/file_header.map";
 	private static final int NUMBER_OF_SUBFILES = 2;
 	private static final String PROJECTION_NAME = "Mercator";

@@ -83,12 +83,12 @@ public class MapDatabase {
 	/**
 	 * Bitmask for the optional POI feature "elevation".
 	 */
-	private static final int POI_FEATURE_ELEVATION = 0x40;
+	private static final int POI_FEATURE_ELEVATION = 0x20;
 
 	/**
 	 * Bitmask for the optional POI feature "house number".
 	 */
-	private static final int POI_FEATURE_HOUSE_NUMBER = 0x20;
+	private static final int POI_FEATURE_HOUSE_NUMBER = 0x40;
 
 	/**
 	 * Bitmask for the optional POI feature "name".
@@ -148,17 +148,22 @@ public class MapDatabase {
 	/**
 	 * Bitmask for the optional way data blocks byte.
 	 */
-	private static final int WAY_FEATURE_DATA_BLOCKS_BYTE = 0x10;
+	private static final int WAY_FEATURE_DATA_BLOCKS_BYTE = 0x08;
 
 	/**
 	 * Bitmask for the optional way double delta encoding.
 	 */
-	private static final int WAY_FEATURE_DOUBLE_DELTA_ENCODING = 0x08;
+	private static final int WAY_FEATURE_DOUBLE_DELTA_ENCODING = 0x04;
+
+	/**
+	 * Bitmask for the optional way feature "house number".
+	 */
+	private static final int WAY_FEATURE_HOUSE_NUMBER = 0x40;
 
 	/**
 	 * Bitmask for the optional way feature "label position".
 	 */
-	private static final int WAY_FEATURE_LABEL_POSITION = 0x20;
+	private static final int WAY_FEATURE_LABEL_POSITION = 0x10;
 
 	/**
 	 * Bitmask for the optional way feature "name".
@@ -168,7 +173,7 @@ public class MapDatabase {
 	/**
 	 * Bitmask for the optional way feature "reference".
 	 */
-	private static final int WAY_FEATURE_REF = 0x40;
+	private static final int WAY_FEATURE_REF = 0x20;
 
 	/**
 	 * Bitmask for the way layer.
@@ -632,22 +637,22 @@ public class MapDatabase {
 
 			// bit 1-3 enable optional features
 			boolean featureName = (featureByte & POI_FEATURE_NAME) != 0;
-			boolean featureElevation = (featureByte & POI_FEATURE_ELEVATION) != 0;
 			boolean featureHouseNumber = (featureByte & POI_FEATURE_HOUSE_NUMBER) != 0;
+			boolean featureElevation = (featureByte & POI_FEATURE_ELEVATION) != 0;
 
 			// check if the POI has a name
 			if (featureName) {
 				tags.add(new Tag(TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
 			}
 
-			// check if the POI has an elevation
-			if (featureElevation) {
-				tags.add(new Tag(TAG_KEY_ELE, Integer.toString(this.readBuffer.readSignedInt())));
-			}
-
 			// check if the POI has a house number
 			if (featureHouseNumber) {
 				tags.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
+			}
+
+			// check if the POI has an elevation
+			if (featureElevation) {
+				tags.add(new Tag(TAG_KEY_ELE, Integer.toString(this.readBuffer.readSignedInt())));
 			}
 
 			mapDatabaseCallback.renderPointOfInterest(layer, latitude, longitude, tags);
@@ -770,8 +775,9 @@ public class MapDatabase {
 			// get the feature bitmask (1 byte)
 			byte featureByte = this.readBuffer.readByte();
 
-			// bit 1-3 enable optional features
+			// bit 1-6 enable optional features
 			boolean featureName = (featureByte & WAY_FEATURE_NAME) != 0;
+			boolean featureHouseNumber = (featureByte & WAY_FEATURE_HOUSE_NUMBER) != 0;
 			boolean featureRef = (featureByte & WAY_FEATURE_REF) != 0;
 			boolean featureLabelPosition = (featureByte & WAY_FEATURE_LABEL_POSITION) != 0;
 			boolean featureWayDataBlocksByte = (featureByte & WAY_FEATURE_DATA_BLOCKS_BYTE) != 0;
@@ -780,6 +786,11 @@ public class MapDatabase {
 			// check if the way has a name
 			if (featureName) {
 				tags.add(new Tag(TAG_KEY_NAME, this.readBuffer.readUTF8EncodedString()));
+			}
+
+			// check if the way has a house number
+			if (featureHouseNumber) {
+				tags.add(new Tag(TAG_KEY_HOUSE_NUMBER, this.readBuffer.readUTF8EncodedString()));
 			}
 
 			// check if the way has a reference
