@@ -39,8 +39,8 @@ class IndexCache {
 	 */
 	private static final int SIZE_OF_INDEX_BLOCK = INDEX_ENTRIES_PER_BLOCK * SubFileParameter.BYTES_PER_INDEX_ENTRY;
 
-	private final RandomAccessFile randomAccessFile;
 	private final Map<IndexCacheEntryKey, byte[]> map;
+	private final RandomAccessFile randomAccessFile;
 
 	/**
 	 * @param randomAccessFile

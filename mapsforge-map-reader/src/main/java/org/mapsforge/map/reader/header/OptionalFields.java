@@ -29,6 +29,11 @@ final class OptionalFields {
 	private static final int HEADER_BITMASK_DEBUG = 0x80;
 
 	/**
+	 * Bitmask for the file generator in the file header.
+	 */
+	private static final int HEADER_BITMASK_FILE_GENERATOR = 0x04;
+
+	/**
 	 * Bitmask for the language preference in the file header.
 	 */
 	private static final int HEADER_BITMASK_LANGUAGE_PREFERENCE = 0x10;
@@ -65,7 +70,9 @@ final class OptionalFields {
 	}
 
 	String comment;
+	String fileGenerator;
 	final boolean hasComment;
+	final boolean hasFileGenerator;
 	final boolean hasLanguagePreference;
 	final boolean hasStartPosition;
 	final boolean hasStartZoomLevel;
@@ -80,6 +87,7 @@ final class OptionalFields {
 		this.hasStartZoomLevel = (flags & HEADER_BITMASK_START_ZOOM_LEVEL) != 0;
 		this.hasLanguagePreference = (flags & HEADER_BITMASK_LANGUAGE_PREFERENCE) != 0;
 		this.hasComment = (flags & HEADER_BITMASK_COMMENT) != 0;
+		this.hasFileGenerator = (flags & HEADER_BITMASK_FILE_GENERATOR) != 0;
 	}
 
 	private FileOpenResult readLanguagePreference(ReadBuffer readBuffer) {
@@ -143,6 +151,10 @@ final class OptionalFields {
 
 		if (this.hasComment) {
 			this.comment = readBuffer.readUTF8EncodedString();
+		}
+
+		if (this.hasFileGenerator) {
+			this.fileGenerator = readBuffer.readUTF8EncodedString();
 		}
 
 		return FileOpenResult.SUCCESS;

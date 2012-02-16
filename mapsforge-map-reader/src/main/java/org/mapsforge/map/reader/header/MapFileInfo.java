@@ -41,6 +41,11 @@ public class MapFileInfo {
 	public final boolean debugFile;
 
 	/**
+	 * The file generator of the map file (may be null).
+	 */
+	public final String fileGenerator;
+
+	/**
 	 * The size of the map file, measured in bytes.
 	 */
 	public final long fileSize;
@@ -103,6 +108,7 @@ public class MapFileInfo {
 	MapFileInfo(MapFileInfoBuilder mapFileInfoBuilder) {
 		this.comment = mapFileInfoBuilder.optionalFields.comment;
 		this.debugFile = mapFileInfoBuilder.optionalFields.isDebugFile;
+		this.fileGenerator = mapFileInfoBuilder.optionalFields.fileGenerator;
 		this.fileSize = mapFileInfoBuilder.fileSize;
 		this.fileVersion = mapFileInfoBuilder.fileVersion;
 		this.languagePreference = mapFileInfoBuilder.optionalFields.languagePreference;

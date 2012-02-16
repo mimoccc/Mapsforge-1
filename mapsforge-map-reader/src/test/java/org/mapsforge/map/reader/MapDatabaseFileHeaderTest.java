@@ -27,6 +27,7 @@ import org.mapsforge.map.reader.header.MapFileInfo;
 public class MapDatabaseFileHeaderTest {
 	private static final BoundingBox BOUNDING_BOX = new BoundingBox(1000000, 2000000, 3000000, 4000000);
 	private static final String COMMENT = "testcomment";
+	private static final String FILE_GENERATOR = null;
 	private static final int FILE_SIZE = 42489;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
@@ -69,5 +70,6 @@ public class MapDatabaseFileHeaderTest {
 		Assert.assertEquals(START_ZOOM_LEVEL, mapFileInfo.startZoomLevel);
 		Assert.assertEquals(LANGUAGE_PREFERENCE, mapFileInfo.languagePreference);
 		Assert.assertEquals(COMMENT, mapFileInfo.comment);
+		Assert.assertEquals(FILE_GENERATOR, mapFileInfo.fileGenerator);
 	}
 }
