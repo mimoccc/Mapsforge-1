@@ -103,6 +103,7 @@ public final class MapFileWriter {
 	private static final short BITMAP_MAP_START_ZOOM = 32; // NOPMD by bross on 25.12.11 13:53
 	private static final short BITMAP_PREFERRED_LANGUAGE = 16; // NOPMD by bross on 25.12.11 13:53
 	private static final short BITMAP_COMMENT = 8; // NOPMD by bross on 25.12.11 13:53
+	private static final short BITMAP_CREATED_WITH = 4; // NOPMD by bross on 25.12.11 13:53
 
 	private static final int BITMAP_INDEX_ENTRY_WATER = 0x80;
 
@@ -196,7 +197,7 @@ public final class MapFileWriter {
 		containerHeaderBuffer.putInt(DUMMY_INT);
 
 		// FILE VERSION
-		containerHeaderBuffer.putInt(configuration.getVersion());
+		containerHeaderBuffer.putInt(configuration.getFileSpecificationVersion());
 
 		// FILE SIZE: Write dummy pattern as file size. It will be replaced
 		// later in time
@@ -219,9 +220,7 @@ public final class MapFileWriter {
 		// check whether zoom start is a valid zoom level
 
 		// FLAGS
-		containerHeaderBuffer.put(infoByteOptmizationParams(configuration.isDebugStrings(),
-				configuration.getMapStartPosition() != null, configuration.hasMapStartZoomLevel(),
-				configuration.getPreferredLanguage() != null, configuration.getComment() != null));
+		containerHeaderBuffer.put(infoByteOptmizationParams(configuration));
 
 		// MAP START POSITION
 		if (configuration.getMapStartPosition() != null) {
@@ -243,6 +242,9 @@ public final class MapFileWriter {
 		if (configuration.getComment() != null) {
 			writeUTF8(configuration.getComment(), containerHeaderBuffer);
 		}
+
+		// CREATED WITH
+		writeUTF8(configuration.getWriterVersion(), containerHeaderBuffer);
 
 		// AMOUNT POI TAGS
 		containerHeaderBuffer.putShort((short) configuration.getTagMapping().getOptimizedPoiIds().size());
@@ -779,25 +781,26 @@ public final class MapFileWriter {
 		return (byte) (layer << BYTES_INT | tagAmount);
 	}
 
-	static byte infoByteOptmizationParams(boolean debug, boolean mapStartPosition, boolean mapStartZoom,
-			boolean preferredLanguage, boolean comment) {
+	static byte infoByteOptmizationParams(MapWriterConfiguration configuration) {
 		byte infoByte = 0;
 
-		if (debug) {
+		if (configuration.isDebugStrings()) {
 			infoByte |= BITMAP_DEBUG;
 		}
-		if (mapStartPosition) {
+		if (configuration.getMapStartPosition() != null) {
 			infoByte |= BITMAP_MAP_START_POSITION;
 		}
-		if (mapStartZoom) {
+		if (configuration.hasMapStartZoomLevel()) {
 			infoByte |= BITMAP_MAP_START_ZOOM;
 		}
-		if (preferredLanguage) {
+		if (configuration.getPreferredLanguage() != null) {
 			infoByte |= BITMAP_PREFERRED_LANGUAGE;
 		}
-		if (comment) {
+		if (configuration.getComment() != null) {
 			infoByte |= BITMAP_COMMENT;
 		}
+
+		infoByte |= BITMAP_CREATED_WITH;
 
 		return infoByte;
 	}

@@ -57,12 +57,13 @@ public class MapFileWriterTask implements Sink {
 		Properties properties = new Properties();
 		try {
 			properties.load(MapFileWriterTask.class.getClassLoader().getResourceAsStream("default.properties"));
-			String vWriter = properties.getProperty(Constants.PROPERTY_NAME_WRITER_VERSION);
-			configuration.setVersion(Integer.parseInt(properties
+			configuration.setWriterVersion(Constants.CREATOR_NAME + "-"
+					+ properties.getProperty(Constants.PROPERTY_NAME_WRITER_VERSION));
+			configuration.setFileSpecificationVersion(Integer.parseInt(properties
 					.getProperty(Constants.PROPERTY_NAME_FILE_SPECIFICATION_VERSION)));
 
-			LOGGER.info("mapfile-writer version " + vWriter);
-			LOGGER.info("mapfile format specification version " + configuration.getVersion());
+			LOGGER.info("mapfile-writer version: " + configuration.getWriterVersion());
+			LOGGER.info("mapfile format specification version: " + configuration.getFileSpecificationVersion());
 		} catch (IOException e) {
 			throw new RuntimeException("could not find default properties", e);
 		} catch (NumberFormatException e) {

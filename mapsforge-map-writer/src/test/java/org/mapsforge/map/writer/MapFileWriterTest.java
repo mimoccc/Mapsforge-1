@@ -41,6 +41,7 @@ public class MapFileWriterTest {
 		this.configuration = new MapWriterConfiguration();
 		// this.configuration.addOutputFile(getStringArgument(taskConfig, PARAM_OUTFILE,
 		// Constants.DEFAULT_PARAM_OUTFILE));
+		this.configuration.setWriterVersion("test");
 		this.configuration.loadTagMappingFile("src/test/resources/tag-mapping.xml");
 		this.configuration.addMapStartPosition("52.455882,13.297244");
 		this.configuration.addMapStartZoom("14");
@@ -76,12 +77,13 @@ public class MapFileWriterTest {
 		// + 1 + 8 + 1
 		// + 3 ("de")
 		// + 17 ("i love mapsforge")
+		// + 5("test")
 		// + 2 + 19 ("amenity=university")
 		// + 2 + 14 + 18 ("natural=beach", natural=coastline")
 		// + 1
 		// + 3 * (3 + 8 + 8)
-		// == 214
-		Assert.assertEquals(214, headerLength);
+		// == 219
+		Assert.assertEquals(219, headerLength);
 	}
 	// @Test
 	// public void testProcessPOI() {

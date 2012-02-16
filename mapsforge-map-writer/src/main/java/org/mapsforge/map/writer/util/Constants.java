@@ -34,6 +34,11 @@ public final class Constants {
 	public static final String PROPERTY_NAME_WRITER_VERSION = "mapfile.writer.version";
 
 	/**
+	 * The name of the map file writer.
+	 */
+	public static final String CREATOR_NAME = "mapsforge-map-writer";
+
+	/**
 	 * The default size of a tile in pixel.
 	 */
 	public static final int DEFAULT_TILE_SIZE = 256;

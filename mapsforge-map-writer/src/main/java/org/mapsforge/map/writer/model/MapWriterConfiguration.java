@@ -34,7 +34,8 @@ public class MapWriterConfiguration {
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 
 	private long date;
-	private int version;
+	private int fileSpecificationVersion;
+	private String writerVersion;
 
 	private boolean debugStrings;
 	private boolean polygonClipping;
@@ -148,18 +149,33 @@ public class MapWriterConfiguration {
 	}
 
 	/**
-	 * @return the version
+	 * @return the fileSpecificationVersion
 	 */
-	public int getVersion() {
-		return this.version;
+	public int getFileSpecificationVersion() {
+		return this.fileSpecificationVersion;
 	}
 
 	/**
-	 * @param version
-	 *            the version to set
+	 * @param fileSpecificationVersion
+	 *            the fileSpecificationVersion to set
 	 */
-	public void setVersion(int version) {
-		this.version = version;
+	public void setFileSpecificationVersion(int fileSpecificationVersion) {
+		this.fileSpecificationVersion = fileSpecificationVersion;
+	}
+
+	/**
+	 * @return the writerVersion
+	 */
+	public String getWriterVersion() {
+		return this.writerVersion;
+	}
+
+	/**
+	 * @param writerVersion
+	 *            the writerVersion to set
+	 */
+	public void setWriterVersion(String writerVersion) {
+		this.writerVersion = writerVersion;
 	}
 
 	/**
