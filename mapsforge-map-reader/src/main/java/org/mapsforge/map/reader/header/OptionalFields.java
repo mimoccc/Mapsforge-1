@@ -19,9 +19,14 @@ import org.mapsforge.map.reader.ReadBuffer;
 
 final class OptionalFields {
 	/**
-	 * Bitmask for the comment in the file header.
+	 * Bitmask for the comment field in the file header.
 	 */
 	private static final int HEADER_BITMASK_COMMENT = 0x08;
+
+	/**
+	 * Bitmask for the created by field in the file header.
+	 */
+	private static final int HEADER_BITMASK_CREATED_BY = 0x04;
 
 	/**
 	 * Bitmask for the debug flag in the file header.
@@ -29,22 +34,17 @@ final class OptionalFields {
 	private static final int HEADER_BITMASK_DEBUG = 0x80;
 
 	/**
-	 * Bitmask for the file generator in the file header.
-	 */
-	private static final int HEADER_BITMASK_FILE_GENERATOR = 0x04;
-
-	/**
-	 * Bitmask for the language preference in the file header.
+	 * Bitmask for the language preference field in the file header.
 	 */
 	private static final int HEADER_BITMASK_LANGUAGE_PREFERENCE = 0x10;
 
 	/**
-	 * Bitmask for the start position in the file header.
+	 * Bitmask for the start position field in the file header.
 	 */
 	private static final int HEADER_BITMASK_START_POSITION = 0x40;
 
 	/**
-	 * Bitmask for the start zoom level in the file header.
+	 * Bitmask for the start zoom level field in the file header.
 	 */
 	private static final int HEADER_BITMASK_START_ZOOM_LEVEL = 0x20;
 
@@ -70,9 +70,9 @@ final class OptionalFields {
 	}
 
 	String comment;
-	String fileGenerator;
+	String createdBy;
 	final boolean hasComment;
-	final boolean hasFileGenerator;
+	final boolean hasCreatedBy;
 	final boolean hasLanguagePreference;
 	final boolean hasStartPosition;
 	final boolean hasStartZoomLevel;
@@ -87,7 +87,7 @@ final class OptionalFields {
 		this.hasStartZoomLevel = (flags & HEADER_BITMASK_START_ZOOM_LEVEL) != 0;
 		this.hasLanguagePreference = (flags & HEADER_BITMASK_LANGUAGE_PREFERENCE) != 0;
 		this.hasComment = (flags & HEADER_BITMASK_COMMENT) != 0;
-		this.hasFileGenerator = (flags & HEADER_BITMASK_FILE_GENERATOR) != 0;
+		this.hasCreatedBy = (flags & HEADER_BITMASK_CREATED_BY) != 0;
 	}
 
 	private FileOpenResult readLanguagePreference(ReadBuffer readBuffer) {
@@ -153,8 +153,8 @@ final class OptionalFields {
 			this.comment = readBuffer.readUTF8EncodedString();
 		}
 
-		if (this.hasFileGenerator) {
-			this.fileGenerator = readBuffer.readUTF8EncodedString();
+		if (this.hasCreatedBy) {
+			this.createdBy = readBuffer.readUTF8EncodedString();
 		}
 
 		return FileOpenResult.SUCCESS;

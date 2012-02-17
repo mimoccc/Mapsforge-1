@@ -27,11 +27,11 @@ import org.mapsforge.map.reader.header.MapFileInfo;
 public class MapDatabaseFileHeaderTest {
 	private static final BoundingBox BOUNDING_BOX = new BoundingBox(1000000, 2000000, 3000000, 4000000);
 	private static final String COMMENT = "testcomment";
-	private static final String FILE_GENERATOR = null;
-	private static final int FILE_SIZE = 42489;
+	private static final String CREATED_BY = "mapsforge-map-writer-0.3.0-SNAPSHOT";
+	private static final int FILE_SIZE = 42525;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
-	private static final long MAP_DATE = 1329331201268L;
+	private static final long MAP_DATE = 1329462388158L;
 	private static final String MAP_FILE = "src/test/resources/file_header/file_header.map";
 	private static final int NUMBER_OF_SUBFILES = 2;
 	private static final String PROJECTION_NAME = "Mercator";
@@ -70,6 +70,6 @@ public class MapDatabaseFileHeaderTest {
 		Assert.assertEquals(START_ZOOM_LEVEL, mapFileInfo.startZoomLevel);
 		Assert.assertEquals(LANGUAGE_PREFERENCE, mapFileInfo.languagePreference);
 		Assert.assertEquals(COMMENT, mapFileInfo.comment);
-		Assert.assertEquals(FILE_GENERATOR, mapFileInfo.fileGenerator);
+		Assert.assertEquals(CREATED_BY, mapFileInfo.createdBy);
 	}
 }
