@@ -48,6 +48,29 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>copy-jar</id>
+						<phase>install</phase>
+						<configuration>
+							<target>
+								<echo message="Copying jar file to osmosis plugin dir" />
+								<copy overwrite="true" file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
+									todir="${osmosis.plugin.dir}" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>2.4.1</version>
 				<configuration>
@@ -62,32 +85,9 @@
 					</filesets>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<id>copy-jar</id>
-						<phase>install</phase>
-						<configuration>
-							<target>
-								<echo message="Copying jar file to osmosis plugin dir" />
-								<copy overwrite="true"
-									file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
-									todir="${osmosis.plugin.dir}" />
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
-	
+
 	<profiles>
 		<profile>
 			<id>linux-build</id>
@@ -112,7 +112,7 @@
 			</properties>
 		</profile>
 	</profiles>
-	
+
 	<properties>
 		<mapfile.writer.version>${project.version}</mapfile.writer.version>
 	</properties>
