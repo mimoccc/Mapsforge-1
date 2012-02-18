@@ -34,6 +34,7 @@
 	<string name="go_to_position">Gehe zu Position</string>
 	<string name="info_map_file_area">Fläche</string>
 	<string name="info_map_file_comment">Kommentar</string>
+	<string name="info_map_file_created_by">Erzeugt von</string>
 	<string name="info_map_file_date">Datum</string>
 	<string name="info_map_file_debug">Debug-Informationen</string>
 	<string name="info_map_file_debug_no">nicht enthalten</string>

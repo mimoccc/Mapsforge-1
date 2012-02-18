@@ -546,6 +546,10 @@ public class AdvancedMapViewer extends MapActivity {
 			// map file comment text
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewComment);
 			textView.setText(mapFileInfo.comment);
+
+			// map file created by text
+			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewCreatedBy);
+			textView.setText(mapFileInfo.createdBy);
 		} else {
 			super.onPrepareDialog(id, dialog);
 		}

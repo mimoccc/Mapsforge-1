@@ -34,6 +34,7 @@
 	<string name="go_to_position">Go to position</string>
 	<string name="info_map_file_area">Area</string>
 	<string name="info_map_file_comment">Comment</string>
+	<string name="info_map_file_created_by">Created by</string>
 	<string name="info_map_file_date">Date</string>
 	<string name="info_map_file_debug">Debug information</string>
 	<string name="info_map_file_debug_no">not included</string>
