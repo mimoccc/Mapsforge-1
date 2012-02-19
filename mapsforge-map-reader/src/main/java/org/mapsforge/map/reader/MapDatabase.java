@@ -335,8 +335,8 @@ public class MapDatabase {
 		waySegment[1] = wayNodeLatitude;
 		waySegment[0] = wayNodeLongitude;
 
-		int previousDoubleDeltaLatitude = 0;
-		int previousDoubleDeltaLongitude = 0;
+		int previousSingleDeltaLatitude = 0;
+		int previousSingleDeltaLongitude = 0;
 
 		for (int wayNodesIndex = 2; wayNodesIndex < waySegment.length; wayNodesIndex += 2) {
 			// get the way node latitude double-delta offset (VBE-S)
@@ -345,8 +345,8 @@ public class MapDatabase {
 			// get the way node longitude double-delta offset (VBE-S)
 			int doubleDeltaLongitude = this.readBuffer.readSignedInt();
 
-			int singleDeltaLatitude = doubleDeltaLatitude + previousDoubleDeltaLatitude;
-			int singleDeltaLongitude = doubleDeltaLongitude + previousDoubleDeltaLongitude;
+			int singleDeltaLatitude = doubleDeltaLatitude + previousSingleDeltaLatitude;
+			int singleDeltaLongitude = doubleDeltaLongitude + previousSingleDeltaLongitude;
 
 			wayNodeLatitude = wayNodeLatitude + singleDeltaLatitude;
 			wayNodeLongitude = wayNodeLongitude + singleDeltaLongitude;
@@ -354,8 +354,8 @@ public class MapDatabase {
 			waySegment[wayNodesIndex + 1] = wayNodeLatitude;
 			waySegment[wayNodesIndex] = wayNodeLongitude;
 
-			previousDoubleDeltaLatitude = doubleDeltaLatitude;
-			previousDoubleDeltaLongitude = doubleDeltaLongitude;
+			previousSingleDeltaLatitude = singleDeltaLatitude;
+			previousSingleDeltaLongitude = singleDeltaLongitude;
 		}
 	}
 

@@ -14,18 +14,48 @@
  */
 package org.mapsforge.map.reader;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mapsforge.core.Tag;
 
 class DummyMapDatabaseCallback implements MapDatabaseCallback {
-	int pointOfInterests;
+	static class PointOfInterest {
+		final int latitude;
+		final byte layer;
+		final int longitude;
+		final List<Tag> tags;
+
+		PointOfInterest(byte layer, int latitude, int longitude, List<Tag> tags) {
+			this.layer = layer;
+			this.latitude = latitude;
+			this.longitude = longitude;
+			this.tags = tags;
+		}
+	}
+
+	static class Way {
+		final float[] labelPosition;
+		final byte layer;
+		final List<Tag> tags;
+		final float[][] wayNodes;
+
+		Way(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
+			this.layer = layer;
+			this.labelPosition = labelPosition;
+			this.tags = tags;
+			this.wayNodes = wayNodes;
+		}
+	}
+
+	final List<PointOfInterest> pointOfInterests = new ArrayList<PointOfInterest>();
 	int waterBackground;
-	int ways;
+	final List<Way> ways = new ArrayList<Way>();
 
 	@Override
 	public void renderPointOfInterest(byte layer, int latitude, int longitude, List<Tag> tags) {
-		++this.pointOfInterests;
+		PointOfInterest pointOfInterest = new PointOfInterest(layer, latitude, longitude, tags);
+		this.pointOfInterests.add(pointOfInterest);
 	}
 
 	@Override
@@ -35,6 +65,7 @@ class DummyMapDatabaseCallback implements MapDatabaseCallback {
 
 	@Override
 	public void renderWay(byte layer, float[] labelPosition, List<Tag> tags, float[][] wayNodes) {
-		++this.ways;
+		Way way = new Way(layer, labelPosition, tags, wayNodes);
+		this.ways.add(way);
 	}
 }

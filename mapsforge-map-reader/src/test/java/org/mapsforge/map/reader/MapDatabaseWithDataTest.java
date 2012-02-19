@@ -17,7 +17,10 @@ package org.mapsforge.map.reader;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
+import org.mapsforge.map.reader.DummyMapDatabaseCallback.PointOfInterest;
+import org.mapsforge.map.reader.DummyMapDatabaseCallback.Way;
 import org.mapsforge.map.reader.header.FileOpenResult;
 
 /**
@@ -44,8 +47,27 @@ public class MapDatabaseWithDataTest {
 		mapDatabase.executeQuery(tile, dummyMapDatabaseCallback);
 		mapDatabase.closeFile();
 
-		Assert.assertEquals(1, dummyMapDatabaseCallback.pointOfInterests);
-		Assert.assertEquals(1, dummyMapDatabaseCallback.ways);
+		Assert.assertEquals(1, dummyMapDatabaseCallback.pointOfInterests.size());
+		Assert.assertEquals(1, dummyMapDatabaseCallback.ways.size());
 		Assert.assertEquals(1, dummyMapDatabaseCallback.waterBackground);
+
+		PointOfInterest pointOfInterest = dummyMapDatabaseCallback.pointOfInterests.get(0);
+		Assert.assertEquals(5, pointOfInterest.layer);
+		Assert.assertEquals(1000000, pointOfInterest.latitude);
+		Assert.assertEquals(1000000, pointOfInterest.longitude);
+		Assert.assertEquals(4, pointOfInterest.tags.size());
+		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("place=city")));
+		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("name=nodename")));
+		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("addr:housenumber=nodehousenumber")));
+		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("ele=25")));
+
+		Way way = dummyMapDatabaseCallback.ways.get(0);
+		Assert.assertEquals(5, way.layer);
+		float[][] wayNodesExpected = new float[][] { { 500000, 500000, 1000000, 1000000, 1250000, 1000000 } };
+		Assert.assertArrayEquals(wayNodesExpected, way.wayNodes);
+		Assert.assertEquals(3, way.tags.size());
+		Assert.assertTrue(way.tags.contains(new Tag("highway=motorway")));
+		Assert.assertTrue(way.tags.contains(new Tag("name=wayname")));
+		Assert.assertTrue(way.tags.contains(new Tag("ref=wayref")));
 	}
 }

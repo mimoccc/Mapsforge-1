@@ -18,26 +18,24 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
+import org.mapsforge.map.reader.DummyMapDatabaseCallback.Way;
 import org.mapsforge.map.reader.header.FileOpenResult;
 
 /**
  * Tests the {@link MapDatabase} class.
  */
-public class MapDatabaseEmptyTest {
-	private static final String MAP_FILE = "src/test/resources/empty/empty.map";
-	private static final byte ZOOM_LEVEL = 14;
+public class MapDatabaseWayNodeEncodingTest {
+	private static final String MAP_FILE_DOUBLE_DELTA = "src/test/resources/way_node_encoding/double_delta.map";
+	private static final String MAP_FILE_SINGLE_DELTA = "src/test/resources/way_node_encoding/single_delta.map";
+	private static final byte ZOOM_LEVEL = 8;
 
-	/**
-	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
-	 */
-	@Test
-	public void executeQueryTest() {
+	private static void runTest(String mapFile) {
 		MapDatabase mapDatabase = new MapDatabase();
-		FileOpenResult fileOpenResult = mapDatabase.openFile(MAP_FILE);
+		FileOpenResult fileOpenResult = mapDatabase.openFile(mapFile);
 		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());
 
-		long tileX = MercatorProjection.longitudeToTileX(1, ZOOM_LEVEL);
-		long tileY = MercatorProjection.latitudeToTileY(1, ZOOM_LEVEL);
+		long tileX = MercatorProjection.longitudeToTileX(0, ZOOM_LEVEL);
+		long tileY = MercatorProjection.latitudeToTileY(0, ZOOM_LEVEL);
 		Tile tile = new Tile(tileX, tileY, ZOOM_LEVEL);
 
 		DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
@@ -45,7 +43,19 @@ public class MapDatabaseEmptyTest {
 		mapDatabase.closeFile();
 
 		Assert.assertTrue(dummyMapDatabaseCallback.pointOfInterests.isEmpty());
-		Assert.assertTrue(dummyMapDatabaseCallback.ways.isEmpty());
-		Assert.assertEquals(1, dummyMapDatabaseCallback.waterBackground);
+		Assert.assertEquals(1, dummyMapDatabaseCallback.ways.size());
+
+		Way way = dummyMapDatabaseCallback.ways.get(0);
+		float[][] wayNodesExpected = new float[][] { { 0, 0, 100000, 0, 100000, -100000, 0, -100000, 0, 0 } };
+		Assert.assertArrayEquals(wayNodesExpected, way.wayNodes);
+	}
+
+	/**
+	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
+	 */
+	@Test
+	public void executeQueryTest() {
+		runTest(MAP_FILE_SINGLE_DELTA);
+		runTest(MAP_FILE_DOUBLE_DELTA);
 	}
 }

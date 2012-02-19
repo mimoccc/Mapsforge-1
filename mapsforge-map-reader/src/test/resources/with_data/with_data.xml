@@ -8,7 +8,7 @@
 		<tag k="addr:housenumber" v="nodehousenumber" />
 		<tag k="ele" v="25" />
 	</node>
-	<node id="3" lat="1" lon="1.5" version="1" timestamp="2012-01-01T00:00:00Z" />
+	<node id="3" lat="1" lon="1.25" version="1" timestamp="2012-01-01T00:00:00Z" />
 	<way id="4" version="1" timestamp="2012-01-01T00:00:00Z">
 		<nd ref="1" />
 		<nd ref="2" />
