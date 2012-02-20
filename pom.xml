@@ -23,6 +23,8 @@
 		<module>mapsforge-map</module>
 		<module>mapsforge-map-reader</module>
 		<module>mapsforge-map-writer</module>
+		<module>mapsforge-poi-reader</module>
+		<module>mapsforge-poi-writer</module>
 	</modules>
 
 	<scm>

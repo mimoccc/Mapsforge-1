@@ -76,8 +76,50 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>${osmosis.plugin.dir}</directory>
+							<includes>
+								<include>${project.artifactId}*.jar</include>
+							</includes>
+							<followSymlinks>false</followSymlinks>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+	
+	<profiles>
+		<profile>
+			<id>linux-build</id>
+			<activation>
+				<os>
+					<family>Linux</family>
+				</os>
+			</activation>
+			<properties>
+				<osmosis.plugin.dir>${user.home}/.openstreetmap/osmosis/plugins/</osmosis.plugin.dir>
+			</properties>
+		</profile>
+		<profile>
+			<id>windows-build</id>
+			<activation>
+				<os>
+					<family>Windows</family>
+				</os>
+			</activation>
+			<properties>
+				<osmosis.plugin.dir>${user.home}/Application Data/Openstreetmap/Osmosis/Plugins</osmosis.plugin.dir>
+			</properties>
+		</profile>
+	</profiles>
 
 	<dependencies>
 		<dependency>
@@ -91,7 +133,7 @@
 			<artifactId>osmosis-core</artifactId>
 			<version>0.40.1</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/osmosis-core-0.40.jar</systemPath>
+			<systemPath>${project.basedir}/lib/osmosis-core-0.40.1.jar</systemPath>
 		</dependency>
 
 	</dependencies>
