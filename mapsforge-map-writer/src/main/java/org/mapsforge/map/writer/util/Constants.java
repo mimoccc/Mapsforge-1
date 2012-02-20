@@ -63,7 +63,7 @@ public final class Constants {
 	/**
 	 * Default coordinate encoding.
 	 */
-	public static final String DEFAULT_PARAM_ENCODING = "single";
+	public static final String DEFAULT_PARAM_ENCODING = "auto";
 	/**
 	 * Default simplification factor.
 	 */
