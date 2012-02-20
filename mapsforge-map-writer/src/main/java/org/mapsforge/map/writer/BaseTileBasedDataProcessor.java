@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.mapsforge.map.writer.model.GeoCoordinate;
@@ -46,6 +47,8 @@ import org.mapsforge.map.writer.model.TileInfo;
 import org.mapsforge.map.writer.model.WayResolver;
 import org.mapsforge.map.writer.model.ZoomIntervalConfiguration;
 import org.mapsforge.map.writer.util.GeoUtils;
+
+import com.vividsolutions.jts.geom.TopologyException;
 
 abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, NodeResolver, WayResolver {
 
@@ -285,7 +288,12 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 			this.outerToInner = null;
 
 			TDWay[] members = relation.getMemberWays();
-			this.polygonizer.polygonizeAndRelate(members);
+			try {
+				this.polygonizer.polygonizeAndRelate(members);
+			} catch (TopologyException e) {
+				LOGGER.log(Level.FINE,
+						"cannot relate extracted polygons to each other for relation: " + relation.getId(), e);
+			}
 
 			// skip invalid relations
 			if (!this.polygonizer.getDangling().isEmpty()) {

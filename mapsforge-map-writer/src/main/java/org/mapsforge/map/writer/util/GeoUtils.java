@@ -103,13 +103,19 @@ public final class GeoUtils {
 
 		TileCoordinate[] bbox = getWayBoundingBox(way, baseZoomLevel, enlargementInMeter);
 		// calculate the tile coordinates and the corresponding bounding boxes
-		for (int k = bbox[0].getX(); k <= bbox[1].getX(); k++) {
-			for (int l = bbox[0].getY(); l <= bbox[1].getY(); l++) {
-				Geometry bboxGeometry = tileToJTSGeometry(k, l, baseZoomLevel, enlargementInMeter);
-				if (bboxGeometry.intersects(wayGeometry)) {
-					matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
+		try {
+			for (int k = bbox[0].getX(); k <= bbox[1].getX(); k++) {
+				for (int l = bbox[0].getY(); l <= bbox[1].getY(); l++) {
+					Geometry bboxGeometry = tileToJTSGeometry(k, l, baseZoomLevel, enlargementInMeter);
+					if (bboxGeometry.intersects(wayGeometry)) {
+						matchedTiles.add(new TileCoordinate(k, l, baseZoomLevel));
+					}
 				}
 			}
+		} catch (TopologyException e) {
+			LOGGER.log(Level.FINE,
+					"encountered error during mapping of a way to corresponding tiles, way id: " + way.getId());
+			return Collections.emptySet();
 		}
 
 		return matchedTiles;
@@ -186,7 +192,12 @@ public final class GeoUtils {
 
 		if (simplificationFactor > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
 			// TODO is this the right place to simplify, is better before clipping?
-			geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
+			try {
+				geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
+			} catch (TopologyException e) {
+				LOGGER.log(Level.FINE, "JTS cannot simplify way due to an error: " + way.getId(), e);
+				return geometry;
+			}
 		}
 
 		return geometry;
@@ -489,43 +500,5 @@ public final class GeoUtils {
 				(int) MercatorProjection.latitudeToTileY(miny - epsilonsBottomRight[0], zoomlevel), zoomlevel);
 
 		return bbox;
-	}
-
-	static String toGPX(final List<GeoCoordinate> g) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>").append("\n");
-		sb.append(
-				"<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"byHand\" "
-						+ "version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-						+ "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 "
-						+ "http://www.topografix.com/GPX/1/1/gpx.xsd\">").append("\n");
-		for (GeoCoordinate c : g) {
-			sb.append("\t<wpt ").append("lat=\"").append(c.getLatitude()).append("\" ");
-			sb.append("lon=\"").append(c.getLongitude()).append("\"/>");
-			sb.append("\n");
-		}
-		sb.append("</gpx>");
-
-		return sb.toString();
-	}
-
-	static String arraysSVG(List<float[]> closedPolygons) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>").append("\n");
-		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" " + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
-				+ "xmlns:ev=\"http://www.w3.org/2001/xml-events\" "
-				+ "version=\"1.1\" baseProfile=\"full\" width=\"800mm\" height=\"600mm\">");
-
-		for (float[] fs : closedPolygons) {
-			sb.append("<polygon points=\"");
-			for (float f : fs) {
-				sb.append(f).append(" ");
-			}
-			sb.append("\" />");
-		}
-
-		sb.append("</svg>");
-
-		return sb.toString();
 	}
 }
