@@ -42,7 +42,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_TYPE = "type";
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
-	private static final String PARAM_PREFERRED_LANGUAGE = "language-preference";
+	private static final String PARAM_PREFERRED_LANGUAGE = "preferred-language";
 	private static final String PARAM_ENCODING = "encoding";
 
 	@Override
