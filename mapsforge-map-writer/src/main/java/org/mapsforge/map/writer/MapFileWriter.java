@@ -746,12 +746,12 @@ public final class MapFileWriter {
 		// if the computed centroid is within the current tile, we add it as label position
 		// this way, we can make sure that a label position is attached only once to a clipped polygon
 		GeoCoordinate centroidCoordinate = null;
-		if (way.isPolygon() && !GeoUtils.coveredByTile(originalGeometry, tile, configuration.getBboxEnlargement())) {
+		if (configuration.isLabelPosition() && way.isPolygon()
+				&& !GeoUtils.coveredByTile(originalGeometry, tile, configuration.getBboxEnlargement())) {
 			Point centroidPoint = originalGeometry.getCentroid();
 			if (GeoUtils.coveredByTile(centroidPoint, tile, configuration.getBboxEnlargement())) {
 				centroidCoordinate = new GeoCoordinate(centroidPoint.getY(), centroidPoint.getX());
 			}
-
 		}
 
 		switch (configuration.getEncodingChoice()) {

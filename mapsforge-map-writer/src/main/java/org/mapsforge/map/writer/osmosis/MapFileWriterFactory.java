@@ -39,6 +39,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_SIMPLIFICATION_FACTOR = "simplification-factor";
 	private static final String PARAM_POLYGON_CLIPPING = "polygon-clipping";
 	private static final String PARAM_WAY_CLIPPING = "way-clipping";
+	private static final String PARAM_LABEL_POSITION = "label-position";
 	private static final String PARAM_TYPE = "type";
 	private static final String PARAM_BBOX_ENLARGEMENT = "bbox-enlargement";
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
@@ -61,6 +62,7 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		configuration.setDebugStrings(getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false));
 		configuration.setPolygonClipping(getBooleanArgument(taskConfig, PARAM_POLYGON_CLIPPING, true));
 		configuration.setWayClipping(getBooleanArgument(taskConfig, PARAM_WAY_CLIPPING, true));
+		configuration.setLabelPosition(getBooleanArgument(taskConfig, PARAM_LABEL_POSITION, true));
 		// boolean waynodeCompression = getBooleanArgument(taskConfig, PARAM_WAYNODE_COMPRESSION,
 		// true);
 		configuration.setSimplification(getDoubleArgument(taskConfig, PARAM_SIMPLIFICATION_FACTOR,

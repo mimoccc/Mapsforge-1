@@ -40,6 +40,7 @@ public class MapWriterConfiguration {
 	private boolean debugStrings;
 	private boolean polygonClipping;
 	private boolean wayClipping;
+	private boolean labelPosition;
 	private double simplification;
 	private int bboxEnlargement;
 
@@ -221,6 +222,21 @@ public class MapWriterConfiguration {
 	 */
 	public void setWayClipping(boolean wayClipping) {
 		this.wayClipping = wayClipping;
+	}
+
+	/**
+	 * @return the labelPosition
+	 */
+	public boolean isLabelPosition() {
+		return this.labelPosition;
+	}
+
+	/**
+	 * @param labelPosition
+	 *            the labelPosition to set
+	 */
+	public void setLabelPosition(boolean labelPosition) {
+		this.labelPosition = labelPosition;
 	}
 
 	/**
