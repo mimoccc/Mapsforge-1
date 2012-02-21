@@ -274,6 +274,7 @@
 		<osm-tag key="building" value="hangar" zoom-appear="15" />
 		<osm-tag key="building" value="hotel" zoom-appear="15" />
 		<osm-tag key="building" value="library" zoom-appear="15" />
+		<osm-tag key="building" value="museum" zoom-appear="15" />
 		<osm-tag key="building" value="office" zoom-appear="15" />
 		<osm-tag key="building" value="roof" zoom-appear="15" />
 		<osm-tag key="building" value="ruins" zoom-appear="15" />
