@@ -144,63 +144,63 @@ public final class GeoUtils {
 	// *********** PREPROCESSING OF WAYS **************
 
 	/**
-	 * Preprocesses a way for writing it to a tile.
+	 * Clips a geometry to a tile.
 	 * 
 	 * @param way
 	 *            the way
-	 * @param innerWays
-	 *            the inner ways if existent, null otherwise
-	 * @param clipPolygons
-	 *            flag whether polygons should be clipped
-	 * @param clipWays
-	 *            flag whether ways should be clipped
-	 * @param simplificationFactor
-	 *            factor for simplification of geo objects
-	 * @param tile
-	 *            the tile
+	 * @param geometry
+	 *            the geometry
+	 * @param tileCoordinate
+	 *            the tile coordinate
 	 * @param enlargementInMeters
-	 *            the enlargement of the tile in meters
-	 * @return a JTS {@link Geometry} object representing the given way(s)
+	 *            the bounding box buffer
+	 * @return the clipped geometry
 	 */
-	public static Geometry preprocessWay(final TDWay way, final List<TDWay> innerWays, boolean clipPolygons,
-			boolean clipWays, double simplificationFactor, final TileCoordinate tile, int enlargementInMeters) {
-
-		Geometry geometry = toJtsGeometry(way, innerWays);
-		if (geometry == null) {
-			return null;
-		}
-
+	public static Geometry clipToTile(TDWay way, Geometry geometry, TileCoordinate tileCoordinate,
+			int enlargementInMeters) {
 		// clip geometry?
 		Geometry tileBBJTS = null;
-		if ((geometry instanceof Polygon || geometry instanceof LinearRing) && clipPolygons
-				|| geometry instanceof LineString && clipWays) {
+		Geometry ret = null;
 
-			// create tile bounding box
-			tileBBJTS = tileToJTSGeometry(tile.getX(), tile.getY(), tile.getZoomlevel(), enlargementInMeters);
+		// create tile bounding box
+		tileBBJTS = tileToJTSGeometry(tileCoordinate.getX(), tileCoordinate.getY(), tileCoordinate.getZoomlevel(),
+				enlargementInMeters);
 
-			// clip the polygon/ring by intersection with the bounding box of the tile
-			// may throw a TopologyException
-			try {
-				// geometry = OverlayOp.overlayOp(tileBBJTS, geometry, OverlayOp.INTERSECTION);
-				geometry = tileBBJTS.intersection(geometry);
-			} catch (TopologyException e) {
-				LOGGER.log(Level.FINE, "JTS cannot clip outer way: " + way.getId(), e);
-				return null;
-			}
+		// clip the polygon/ring by intersection with the bounding box of the tile
+		// may throw a TopologyException
+		try {
+			// geometry = OverlayOp.overlayOp(tileBBJTS, geometry, OverlayOp.INTERSECTION);
+			ret = tileBBJTS.intersection(geometry);
+		} catch (TopologyException e) {
+			LOGGER.log(Level.FINE, "JTS cannot clip way: " + way.getId(), e);
+			return geometry;
+		}
+		return ret;
+	}
 
+	/**
+	 * Simplifies a geometry using the Douglas Peucker algorithm.
+	 * 
+	 * @param way
+	 *            the way
+	 * @param geometry
+	 *            the geometry
+	 * @param simplificationFactor
+	 *            the simplification factor
+	 * @return the simplified geometry
+	 */
+	public static Geometry simplifyGeometry(TDWay way, Geometry geometry, double simplificationFactor) {
+		Geometry ret = null;
+
+		// TODO is this the right place to simplify, is better before clipping?
+		try {
+			ret = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
+		} catch (TopologyException e) {
+			LOGGER.log(Level.FINE, "JTS cannot simplify way due to an error: " + way.getId(), e);
+			return geometry;
 		}
 
-		if (simplificationFactor > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
-			// TODO is this the right place to simplify, is better before clipping?
-			try {
-				geometry = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
-			} catch (TopologyException e) {
-				LOGGER.log(Level.FINE, "JTS cannot simplify way due to an error: " + way.getId(), e);
-				return geometry;
-			}
-		}
-
-		return geometry;
+		return ret;
 	}
 
 	/**
@@ -320,7 +320,16 @@ public final class GeoUtils {
 
 	// **************** JTS CONVERSIONS *********************
 
-	private static Geometry toJtsGeometry(TDWay way, List<TDWay> innerWays) {
+	/**
+	 * Converts a way with potential inner ways to a JTS geometry.
+	 * 
+	 * @param way
+	 *            the way
+	 * @param innerWays
+	 *            the inner ways or null
+	 * @return the JTS geometry
+	 */
+	public static Geometry toJtsGeometry(TDWay way, List<TDWay> innerWays) {
 
 		Geometry wayGeometry = toJTSGeometry(way, !way.isForcePolygonLine());
 		if (wayGeometry == null) {

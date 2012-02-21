@@ -40,6 +40,10 @@ import org.mapsforge.map.writer.util.Constants;
 import org.mapsforge.map.writer.util.GeoUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 
 /**
  * Writes the binary file format for mapsforge maps.
@@ -711,13 +715,20 @@ public final class MapFileWriter {
 		// not as polygons
 
 		List<TDWay> innerways = dataStore.getInnerWaysOfMultipolygon(way.getId());
-		// wayDataBlockList = GeoUtils.preprocessWay(way, null, clipPolygons,
-		// simplify, clipWays, tile,
-		// bboxEnlargement);
-		Geometry geometry = GeoUtils.preprocessWay(way, innerways, configuration.isPolygonClipping(),
-				configuration.isWayClipping(), configuration.getSimplification(), tile,
-				configuration.getBboxEnlargement());
-		List<WayDataBlock> blocks = GeoUtils.toWayDataBlockList(geometry);
+		Geometry originalGeometry = GeoUtils.toJtsGeometry(way, innerways);
+
+		Geometry processedGeometry = originalGeometry;
+		if ((originalGeometry instanceof Polygon || originalGeometry instanceof LinearRing)
+				&& configuration.isPolygonClipping() || originalGeometry instanceof LineString
+				&& configuration.isWayClipping()) {
+			processedGeometry = GeoUtils.clipToTile(way, originalGeometry, tile, configuration.getBboxEnlargement());
+		}
+
+		if (configuration.getSimplification() > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
+			processedGeometry = GeoUtils.simplifyGeometry(way, processedGeometry, configuration.getSimplification());
+		}
+
+		List<WayDataBlock> blocks = GeoUtils.toWayDataBlockList(processedGeometry);
 		if (blocks == null) {
 			return null;
 		}
@@ -725,15 +736,22 @@ public final class MapFileWriter {
 			LOGGER.finer("empty list of way data blocks after preprocessing way: " + way.getId());
 			return null;
 		}
-		short subtileMask = GeoUtils.computeBitmask(geometry, tile, configuration.getBboxEnlargement());
+		short subtileMask = GeoUtils.computeBitmask(processedGeometry, tile, configuration.getBboxEnlargement());
 
-		// check if the polygon is completely contained in the current tile
-		// in that case clipped polygon equals the original polygon
-		// as a consequence we do not try to compute a label position
+		// check if the original polygon is completely contained in the current tile
+		// in that case we do not try to compute a label position
 		// this is left to the renderer for more flexibility
-		GeoCoordinate centroid = null;
-		if (GeoUtils.coveredByTile(geometry, tile, configuration.getBboxEnlargement())) {
-			centroid = GeoUtils.computeCentroid(geometry);
+
+		// in case the polygon covers multiple tiles, we compute the centroid of the unclipped polygon
+		// if the computed centroid is within the current tile, we add it as label position
+		// this way, we can make sure that a label position is attached only once to a clipped polygon
+		GeoCoordinate centroidCoordinate = null;
+		if (way.isPolygon() && !GeoUtils.coveredByTile(originalGeometry, tile, configuration.getBboxEnlargement())) {
+			Point centroidPoint = originalGeometry.getCentroid();
+			if (GeoUtils.coveredByTile(centroidPoint, tile, configuration.getBboxEnlargement())) {
+				centroidCoordinate = new GeoCoordinate(centroidPoint.getY(), centroidPoint.getX());
+			}
+
 		}
 
 		switch (configuration.getEncodingChoice()) {
@@ -756,7 +774,7 @@ public final class MapFileWriter {
 				break;
 		}
 
-		return new WayPreprocessingResult(blocks, centroid, subtileMask);
+		return new WayPreprocessingResult(blocks, centroidCoordinate, subtileMask);
 	}
 
 	private static int mappedWayTagID(short original) {

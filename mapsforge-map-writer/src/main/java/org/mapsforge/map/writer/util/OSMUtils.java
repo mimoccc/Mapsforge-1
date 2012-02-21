@@ -79,16 +79,21 @@ public final class OSMUtils {
 						}
 						layer = testLayer;
 					} catch (NumberFormatException e) {
-						LOGGER.finest("could not parse layer information to byte type: " + entity.getId());
+						LOGGER.finest("could not parse layer information to byte type: " + tag.getValue()
+								+ "\t entity-id: " + entity.getId() + "\tentity-type: " + entity.getType().name());
 					}
 				} else if ("ele".equals(key)) {
+					String strElevation = tag.getValue();
+					strElevation = strElevation.replaceAll("m", "");
+					strElevation = strElevation.replaceAll(",", ".");
 					try {
-						double testElevation = Double.parseDouble(tag.getValue());
+						double testElevation = Double.parseDouble(strElevation);
 						if (testElevation < MAX_ELEVATION) {
 							elevation = (short) testElevation; // NOPMD by bross on 25.12.11 13:27
 						}
 					} catch (NumberFormatException e) {
-						LOGGER.finest("could not parse elevation information to double type: " + entity.getId());
+						LOGGER.finest("could not parse elevation information to double type: " + tag.getValue()
+								+ "\t entity-id: " + entity.getId() + "\tentity-type: " + entity.getType().name());
 					}
 
 				} else if ("type".equals(key)) {
