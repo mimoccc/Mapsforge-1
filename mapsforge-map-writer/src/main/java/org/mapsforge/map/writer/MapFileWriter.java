@@ -192,7 +192,7 @@ public final class MapFileWriter {
 
 		// write file header
 		// MAGIC BYTE
-		byte[] magicBytes = MAGIC_BYTE.getBytes();
+		byte[] magicBytes = MAGIC_BYTE.getBytes(UTF8_CHARSET);
 		containerHeaderBuffer.put(magicBytes);
 
 		// HEADER SIZE: Write dummy pattern as header size. It will be replaced
@@ -327,7 +327,7 @@ public final class MapFileWriter {
 
 		final int tileAmountInBytes = lengthX * lengthY * BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
 		final int indexBufferSize = tileAmountInBytes
-				+ (configuration.isDebugStrings() ? DEBUG_INDEX_START_STRING.getBytes().length : 0);
+				+ (configuration.isDebugStrings() ? DEBUG_INDEX_START_STRING.getBytes(UTF8_CHARSET).length : 0);
 
 		final ByteBuffer indexBuffer = ByteBuffer.allocate(indexBufferSize);
 		final ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
@@ -338,7 +338,7 @@ public final class MapFileWriter {
 
 		// write debug strings for tile index segment if necessary
 		if (configuration.isDebugStrings()) {
-			indexBuffer.put(DEBUG_INDEX_START_STRING.getBytes());
+			indexBuffer.put(DEBUG_INDEX_START_STRING.getBytes(UTF8_CHARSET));
 		}
 
 		long currentSubfileOffset = indexBufferSize;
@@ -470,7 +470,8 @@ public final class MapFileWriter {
 				List<TDWay> ways = waysByZoomlevel.get(Byte.valueOf(zoomlevel));
 				if (ways != null) {
 					for (TDWay way : ways) {
-						WayPreprocessingResult wpr = preprocessWay(way, tileCoordinate, dataProcessor, configuration);
+						WayPreprocessingResult wpr = preprocessWay(way, tileCoordinate, maxZoomCurrentInterval,
+								dataProcessor, configuration);
 						if (wpr != null) {
 							wayBuffer.clear();
 							// increment count of ways on this zoom level
@@ -499,9 +500,9 @@ public final class MapFileWriter {
 		StringBuilder sb = new StringBuilder();
 		sb.append(DEBUG_STRING_TILE_HEAD).append(tileCoordinate.getX()).append(",").append(tileCoordinate.getY())
 				.append(DEBUG_STRING_TILE_TAIL);
-		tileBuffer.put(sb.toString().getBytes());
+		tileBuffer.put(sb.toString().getBytes(UTF8_CHARSET));
 		// append withespaces so that block has 32 bytes
-		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length, tileBuffer);
+		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, tileBuffer);
 	}
 
 	private static int prepareZoomLevelTable(short[][] entitiesPerZoomLevel, ByteBuffer tileBuffer) {
@@ -537,9 +538,9 @@ public final class MapFileWriter {
 		if (debugStrings) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(DEBUG_STRING_POI_HEAD).append(poi.getId()).append(DEBUG_STRING_POI_TAIL);
-			poiBuffer.put(sb.toString().getBytes());
+			poiBuffer.put(sb.toString().getBytes(UTF8_CHARSET));
 			// append withespaces so that block has 32 bytes
-			appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length, poiBuffer);
+			appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, poiBuffer);
 		}
 
 		// write poi features to the file
@@ -579,9 +580,9 @@ public final class MapFileWriter {
 	private static void writeWaySignature(TDWay way, ByteBuffer tileBuffer) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(DEBUG_STRING_WAY_HEAD).append(way.getId()).append(DEBUG_STRING_WAY_TAIL);
-		tileBuffer.put(sb.toString().getBytes());
+		tileBuffer.put(sb.toString().getBytes(UTF8_CHARSET));
 		// append withespaces so that block has 32 bytes
-		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes().length, tileBuffer);
+		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, tileBuffer);
 	}
 
 	static void processWay(WayPreprocessingResult wpr, TDWay way, int currentTileLat, int currentTileLon,
@@ -697,7 +698,7 @@ public final class MapFileWriter {
 		}
 	}
 
-	private static WayPreprocessingResult preprocessWay(TDWay way, TileCoordinate tile,
+	private static WayPreprocessingResult preprocessWay(TDWay way, TileCoordinate tile, byte maxZoomInterval,
 			TileBasedDataProcessor dataStore, MapWriterConfiguration configuration) {
 
 		// TODO more sophisticated clipping of polygons needed
@@ -716,16 +717,27 @@ public final class MapFileWriter {
 
 		List<TDWay> innerways = dataStore.getInnerWaysOfMultipolygon(way.getId());
 		Geometry originalGeometry = GeoUtils.toJtsGeometry(way, innerways);
+		if (originalGeometry == null) {
+			return null;
+		}
 
 		Geometry processedGeometry = originalGeometry;
 		if ((originalGeometry instanceof Polygon || originalGeometry instanceof LinearRing)
 				&& configuration.isPolygonClipping() || originalGeometry instanceof LineString
 				&& configuration.isWayClipping()) {
 			processedGeometry = GeoUtils.clipToTile(way, originalGeometry, tile, configuration.getBboxEnlargement());
+			if (processedGeometry == null) {
+				return null;
+			}
 		}
 
+		// TODO is this the right place to simplify, or is it better before clipping?
 		if (configuration.getSimplification() > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
-			processedGeometry = GeoUtils.simplifyGeometry(way, processedGeometry, configuration.getSimplification());
+			processedGeometry = GeoUtils.simplifyGeometry(way, processedGeometry, maxZoomInterval,
+					configuration.getSimplification());
+			if (processedGeometry == null) {
+				return null;
+			}
 		}
 
 		List<WayDataBlock> blocks = GeoUtils.toWayDataBlockList(processedGeometry);

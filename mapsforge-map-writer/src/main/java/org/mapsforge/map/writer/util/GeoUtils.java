@@ -30,6 +30,7 @@ import org.mapsforge.map.writer.model.TileCoordinate;
 import org.mapsforge.map.writer.model.WayDataBlock;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -172,7 +173,7 @@ public final class GeoUtils {
 			// geometry = OverlayOp.overlayOp(tileBBJTS, geometry, OverlayOp.INTERSECTION);
 			ret = tileBBJTS.intersection(geometry);
 		} catch (TopologyException e) {
-			LOGGER.log(Level.FINE, "JTS cannot clip way: " + way.getId(), e);
+			LOGGER.log(Level.FINE, "JTS cannot clip way, not storing it in data file: " + way.getId(), e);
 			return geometry;
 		}
 		return ret;
@@ -185,16 +186,23 @@ public final class GeoUtils {
 	 *            the way
 	 * @param geometry
 	 *            the geometry
+	 * @param zoomlevel
+	 *            the zoom level
 	 * @param simplificationFactor
 	 *            the simplification factor
 	 * @return the simplified geometry
 	 */
-	public static Geometry simplifyGeometry(TDWay way, Geometry geometry, double simplificationFactor) {
+	public static Geometry simplifyGeometry(TDWay way, Geometry geometry, byte zoomlevel, double simplificationFactor) {
 		Geometry ret = null;
 
-		// TODO is this the right place to simplify, is better before clipping?
+		Envelope bbox = geometry.getEnvelopeInternal();
+		// compute maximal absolute latitude (so that we don't need to care if we
+		// are on northern or southern hemisphere)
+		double latMax = Math.max(Math.abs(bbox.getMaxY()), Math.abs(bbox.getMinY()));
+		double deltaLat = MercatorProjection.deltaLat(simplificationFactor, latMax, zoomlevel);
+
 		try {
-			ret = TopologyPreservingSimplifier.simplify(geometry, simplificationFactor);
+			ret = TopologyPreservingSimplifier.simplify(geometry, deltaLat);
 		} catch (TopologyException e) {
 			LOGGER.log(Level.FINE, "JTS cannot simplify way due to an error: " + way.getId(), e);
 			return geometry;
