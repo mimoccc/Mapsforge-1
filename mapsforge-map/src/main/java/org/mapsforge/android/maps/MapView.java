@@ -451,20 +451,21 @@ public class MapView extends ViewGroup {
 	 * 
 	 * @param mapFile
 	 *            the path to the map file.
-	 * @return true if the map file was set correctly, false otherwise.
+	 * @return a FileOpenResult to describe whether the operation returned successfully.
 	 * @throws UnsupportedOperationException
 	 *             if the current MapGenerator mode works with an Internet connection.
+	 * @throws IllegalArgumentException
+	 *             if the supplied mapFile is null.
 	 */
-	public boolean setMapFile(String mapFile) {
+	public FileOpenResult setMapFile(String mapFile) {
 		if (this.mapGenerator.requiresInternetConnection()) {
 			throw new UnsupportedOperationException();
 		}
 		if (mapFile == null) {
-			// no map file specified
-			return false;
+			throw new IllegalArgumentException("mapFile must not be null");
 		} else if (mapFile.equals(this.mapFile)) {
 			// same map file as before
-			return false;
+			return FileOpenResult.SUCCESS;
 		}
 
 		this.zoomAnimator.pause();
@@ -498,11 +499,11 @@ public class MapView extends ViewGroup {
 			}
 
 			clearAndRedrawMapView();
-			return true;
+			return FileOpenResult.SUCCESS;
 		}
 		this.mapFile = null;
 		clearAndRedrawMapView();
-		return false;
+		return fileOpenResult;
 	}
 
 	/**
