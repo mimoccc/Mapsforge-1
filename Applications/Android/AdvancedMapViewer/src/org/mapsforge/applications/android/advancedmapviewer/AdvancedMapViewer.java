@@ -79,10 +79,26 @@ import android.widget.ToggleButton;
  * {@link EditPreferences} activity and screenshots of the map may be taken in different image formats.
  */
 public class AdvancedMapViewer extends MapActivity {
+	/**
+	 * The default number of tiles in the file system cache.
+	 */
 	public static final int FILE_SYSTEM_CACHE_SIZE_DEFAULT = 250;
+
+	/**
+	 * The maximum number of tiles in the file system cache.
+	 */
 	public static final int FILE_SYSTEM_CACHE_SIZE_MAX = 500;
+
+	/**
+	 * The default move speed factor of the map.
+	 */
 	public static final int MOVE_SPEED_DEFAULT = 10;
+
+	/**
+	 * The maximum move speed factor of the map.
+	 */
 	public static final int MOVE_SPEED_MAX = 30;
+
 	private static final String BUNDLE_CENTER_AT_FIRST_FIX = "centerAtFirstFix";
 	private static final String BUNDLE_SHOW_MY_LOCATION = "showMyLocation";
 	private static final String BUNDLE_SNAP_TO_LOCATION = "snapToLocation";
