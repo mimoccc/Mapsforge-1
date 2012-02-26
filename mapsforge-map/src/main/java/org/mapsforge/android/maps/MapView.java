@@ -35,6 +35,7 @@ import org.mapsforge.android.maps.mapgenerator.MapWorker;
 import org.mapsforge.android.maps.mapgenerator.TileCache;
 import org.mapsforge.android.maps.mapgenerator.databaserenderer.DatabaseRenderer;
 import org.mapsforge.android.maps.mapgenerator.databaserenderer.ExternalRenderTheme;
+import org.mapsforge.android.maps.mapgenerator.tiledownloader.TileDownloader;
 import org.mapsforge.android.maps.overlay.Overlay;
 import org.mapsforge.android.maps.overlay.OverlayList;
 import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
@@ -378,10 +379,17 @@ public class MapView extends ViewGroup {
 		long tileRight = MercatorProjection.pixelXToTileX(pixelLeft + getWidth(), mapPosition.zoomLevel);
 		long tileBottom = MercatorProjection.pixelYToTileY(pixelTop + getHeight(), mapPosition.zoomLevel);
 
+		String cacheId;
+		if (this.mapGenerator.requiresInternetConnection()) {
+			cacheId = ((TileDownloader) this.mapGenerator).getHostName();
+		} else {
+			cacheId = this.mapFile;
+		}
+
 		for (long tileY = tileTop; tileY <= tileBottom; ++tileY) {
 			for (long tileX = tileLeft; tileX <= tileRight; ++tileX) {
 				Tile tile = new Tile(tileX, tileY, mapPosition.zoomLevel);
-				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, this.mapGenerator, this.jobParameters,
+				MapGeneratorJob mapGeneratorJob = new MapGeneratorJob(tile, cacheId, this.jobParameters,
 						this.debugSettings);
 
 				if (this.inMemoryTileCache.containsKey(mapGeneratorJob)) {
