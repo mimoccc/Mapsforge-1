@@ -110,6 +110,8 @@ public class MapDatabase {
 	 */
 	private static final int POI_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
+	private static final String READ_ONLY_MODE = "r";
+
 	/**
 	 * Length of the debug signature at the beginning of each block.
 	 */
@@ -304,7 +306,7 @@ public class MapDatabase {
 			}
 
 			// open the file in read only mode
-			this.inputFile = new RandomAccessFile(file, "r");
+			this.inputFile = new RandomAccessFile(file, READ_ONLY_MODE);
 			this.fileSize = this.inputFile.length();
 
 			this.readBuffer = new ReadBuffer(this.inputFile);
