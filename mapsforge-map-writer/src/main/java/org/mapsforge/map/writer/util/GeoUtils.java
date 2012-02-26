@@ -174,7 +174,7 @@ public final class GeoUtils {
 			ret = tileBBJTS.intersection(geometry);
 		} catch (TopologyException e) {
 			LOGGER.log(Level.FINE, "JTS cannot clip way, not storing it in data file: " + way.getId(), e);
-			return geometry;
+			return null;
 		}
 		return ret;
 	}
@@ -204,7 +204,8 @@ public final class GeoUtils {
 		try {
 			ret = TopologyPreservingSimplifier.simplify(geometry, deltaLat);
 		} catch (TopologyException e) {
-			LOGGER.log(Level.FINE, "JTS cannot simplify way due to an error: " + way.getId(), e);
+			LOGGER.log(Level.FINE,
+					"JTS cannot simplify way due to an error, not simplifying way with id: " + way.getId(), e);
 			return geometry;
 		}
 
