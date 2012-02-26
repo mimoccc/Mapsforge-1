@@ -29,6 +29,7 @@ import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.mapgenerator.MapGenerator;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorFactory;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorInternal;
+import org.mapsforge.android.maps.mapgenerator.TileCache;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
 import org.mapsforge.android.maps.overlay.ArrayItemizedOverlay;
 import org.mapsforge.android.maps.overlay.ItemizedOverlay;
@@ -619,8 +620,9 @@ public class AdvancedMapViewer extends MapActivity {
 		boolean persistent = preferences.getBoolean("cachePersistence", false);
 		int capacity = Math.min(preferences.getInt("cacheSize", FILE_SYSTEM_CACHE_SIZE_DEFAULT),
 				FILE_SYSTEM_CACHE_SIZE_MAX);
-		this.mapView.getFileSystemTileCache().setPersistent(persistent);
-		this.mapView.getFileSystemTileCache().setCapacity(capacity);
+		TileCache fileSystemTileCache = this.mapView.getFileSystemTileCache();
+		fileSystemTileCache.setPersistent(persistent);
+		fileSystemTileCache.setCapacity(capacity);
 
 		float moveSpeedFactor = Math.min(preferences.getInt("moveSpeed", MOVE_SPEED_DEFAULT), MOVE_SPEED_MAX) / 10f;
 		this.mapView.getMapMover().setMoveSpeedFactor(moveSpeedFactor);
