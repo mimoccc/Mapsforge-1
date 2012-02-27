@@ -138,6 +138,9 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 		return true;
 	}
 
+	public int getLatitudeE6() { return latitudeE6; }
+	public int getLongitudeE6() { return longitudeE6; }
+	
 	/**
 	 * @return the latitude coordinate of this GeoPoint in degrees.
 	 */
