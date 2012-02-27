@@ -6,7 +6,7 @@
 //
 
 
-package org.mapsforge.preprocessing.poi.osmosis.jaxb;
+package org.mapsforge.poi.writer.osmosis.jaxb;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

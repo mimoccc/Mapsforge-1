@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.poi.osmosis;
+package org.mapsforge.poi.writer.osmosis;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,9 +36,15 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
+/**
+ * This task reads Nodes from an OSM stream and writes them to a SQLite3 database. Nodes can be filtered and grouped by
+ * categories by using an XML definition.
+ * 
+ * @author Karsten Groll
+ */
 public class POIWriterTask implements Sink {
 	private static final Logger LOGGER = Logger.getLogger(POIWriterTask.class.getName());
-	private static final String VERSION = "0.3-experimental";
+	private static final String VERSION = "0.0.1";
 
 	// For debug purposes only (at least for now)
 	private static final boolean INCLUDE_META_DATA = false;
@@ -66,8 +72,8 @@ public class POIWriterTask implements Sink {
 	private Statement stmt = null;
 
 	/**
-	 * This method writes all nodes that can be mapped to a specific category and whose category is in a given
-	 * whitelist to a SQLite3 database. The category tree and tag mappings are retrieved from an XML file.
+	 * This method writes all nodes that can be mapped to a specific category and whose category is in a given whitelist
+	 * to a SQLite3 database. The category tree and tag mappings are retrieved from an XML file.
 	 * 
 	 * @param outputFilePath
 	 *            Path to the database file that should be written. The file name should end with ".poi".
@@ -106,29 +112,27 @@ public class POIWriterTask implements Sink {
 
 	}
 
-	private void prepareDatabase(String path) throws ClassNotFoundException, SQLException,
-			UnknownPoiCategoryException {
-		Class.forName("SQLite.JDBC");
-		this.conn = DriverManager.getConnection("jdbc:sqlite:/" + path);
+	private void prepareDatabase(String path) throws ClassNotFoundException, SQLException, UnknownPoiCategoryException {
+		Class.forName("org.sqlite.JDBC");
+		this.conn = DriverManager.getConnection("jdbc:sqlite:" + path);
 		this.conn.setAutoCommit(false);
 
-		this.stmt = conn.createStatement();
-		this.pStmt = conn.prepareStatement("INSERT INTO poi_index VALUES (?, ?, ?, ?, ?);");
-		this.pStmt2 = conn.prepareStatement("INSERT INTO poi_data VALUES (?, ?, ?);");
-		this.pStmt3 = conn.prepareStatement("INSERT INTO poi_categories VALUES (?, ?, ?);");
+		this.stmt = this.conn.createStatement();
 
 		// CREATE TABLES
 		this.stmt.executeUpdate("DROP TABLE IF EXISTS poi_index;");
 		this.stmt.executeUpdate("DROP TABLE IF EXISTS poi_data;");
 		this.stmt.executeUpdate("DROP TABLE IF EXISTS poi_categories;");
 		// stmt.executeUpdate("DROP INDEX IF EXISTS poi_categories_index;");
-		this.stmt
-				.executeUpdate("CREATE VIRTUAL TABLE poi_index USING rtree(id, minLat, maxLat, minLon, maxLon);");
+		this.stmt.executeUpdate("CREATE VIRTUAL TABLE poi_index USING rtree(id, minLat, maxLat, minLon, maxLon);");
 		this.stmt.executeUpdate("CREATE TABLE poi_data (id LONG, data BLOB, category INT, PRIMARY KEY (id));");
 		this.stmt
 				.executeUpdate("CREATE TABLE poi_categories (id INTEGER, name VARCHAR, parent INTEGER, PRIMARY KEY (id));");
 		// stmt.executeUpdate("CREATE INDEX poi_categories_index ON poi_categories (id);");
-		this.conn.commit();
+
+		this.pStmt = this.conn.prepareStatement("INSERT INTO poi_index VALUES (?, ?, ?, ?, ?);");
+		this.pStmt2 = this.conn.prepareStatement("INSERT INTO poi_data VALUES (?, ?, ?);");
+		this.pStmt3 = this.conn.prepareStatement("INSERT INTO poi_categories VALUES (?, ?, ?);");
 
 		// INSERT CATEGORIES
 		PoiCategory root = this.cm.getRootCategory();
@@ -192,9 +196,9 @@ public class POIWriterTask implements Sink {
 
 	private void commit() {
 		try {
-			pStmt.executeBatch();
-			pStmt2.executeBatch();
-			conn.commit();
+			this.pStmt.executeBatch();
+			this.pStmt2.executeBatch();
+			this.conn.commit();
 			this.conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -270,7 +274,7 @@ public class POIWriterTask implements Sink {
 		}
 	}
 
-	private String tagsToString(HashMap<String, String> tagMap) {
+	private static String tagsToString(HashMap<String, String> tagMap) {
 		StringBuilder sb = new StringBuilder();
 
 		for (String key : tagMap.keySet()) {

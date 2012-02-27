@@ -6,7 +6,7 @@
 //
 
 
-package org.mapsforge.preprocessing.poi.osmosis.jaxb;
+package org.mapsforge.poi.writer.osmosis.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;

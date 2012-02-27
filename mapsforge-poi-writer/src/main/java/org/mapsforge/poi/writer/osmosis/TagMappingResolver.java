@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.preprocessing.poi.osmosis;
+package org.mapsforge.poi.writer.osmosis;
 
 import java.io.File;
 import java.util.HashMap;
@@ -23,8 +23,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.mapsforge.preprocessing.poi.osmosis.jaxb.Category;
-import org.mapsforge.preprocessing.poi.osmosis.jaxb.Mapping;
+import org.mapsforge.poi.writer.osmosis.jaxb.Category;
+import org.mapsforge.poi.writer.osmosis.jaxb.Mapping;
 import org.mapsforge.storage.poi.PoiCategory;
 import org.mapsforge.storage.poi.PoiCategoryManager;
 import org.mapsforge.storage.poi.UnknownPoiCategoryException;

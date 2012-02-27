@@ -6,4 +6,4 @@
 //
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "http://www.example.org/test", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package org.mapsforge.preprocessing.poi.osmosis.jaxb;
+package org.mapsforge.poi.writer.osmosis.jaxb;
