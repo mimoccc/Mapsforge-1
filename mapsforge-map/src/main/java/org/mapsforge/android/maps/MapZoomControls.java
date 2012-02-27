@@ -267,7 +267,7 @@ public class MapZoomControls {
 		this.zoomControls.measure(widthMeasureSpec, heightMeasureSpec);
 	}
 
-	void onLayout(boolean changed, int left, int top, int right, int bottom) {
+	public void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		if (!changed && !this.gravityChanged) {
 			return;
 		}
