@@ -22,6 +22,7 @@ import org.mapsforge.core.Tile;
 import org.mapsforge.map.reader.DummyMapDatabaseCallback.PointOfInterest;
 import org.mapsforge.map.reader.DummyMapDatabaseCallback.Way;
 import org.mapsforge.map.reader.header.FileOpenResult;
+import org.mapsforge.map.reader.header.MapFileInfo;
 
 /**
  * Tests the {@link MapDatabase} class.
@@ -39,8 +40,11 @@ public class MapDatabaseWithDataTest {
 		FileOpenResult fileOpenResult = mapDatabase.openFile(MAP_FILE);
 		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());
 
-		long tileX = MercatorProjection.longitudeToTileX(1, ZOOM_LEVEL);
-		long tileY = MercatorProjection.latitudeToTileY(1, ZOOM_LEVEL);
+		MapFileInfo mapFileInfo = mapDatabase.getMapFileInfo();
+		Assert.assertTrue(mapFileInfo.debugFile);
+
+		long tileX = MercatorProjection.longitudeToTileX(0.1, ZOOM_LEVEL);
+		long tileY = MercatorProjection.latitudeToTileY(0.1, ZOOM_LEVEL);
 		Tile tile = new Tile(tileX, tileY, ZOOM_LEVEL);
 
 		DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
@@ -53,8 +57,8 @@ public class MapDatabaseWithDataTest {
 
 		PointOfInterest pointOfInterest = dummyMapDatabaseCallback.pointOfInterests.get(0);
 		Assert.assertEquals(5, pointOfInterest.layer);
-		Assert.assertEquals(1000000, pointOfInterest.latitude);
-		Assert.assertEquals(1000000, pointOfInterest.longitude);
+		Assert.assertEquals(100000, pointOfInterest.latitude);
+		Assert.assertEquals(100000, pointOfInterest.longitude);
 		Assert.assertEquals(4, pointOfInterest.tags.size());
 		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("place=city")));
 		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("name=nodename")));
@@ -63,7 +67,7 @@ public class MapDatabaseWithDataTest {
 
 		Way way = dummyMapDatabaseCallback.ways.get(0);
 		Assert.assertEquals(5, way.layer);
-		float[][] wayNodesExpected = new float[][] { { 500000, 500000, 1000000, 1000000, 1250000, 1000000 } };
+		float[][] wayNodesExpected = new float[][] { { 50000, 50000, 100000, 100000, 125000, 100000 } };
 		Assert.assertArrayEquals(wayNodesExpected, way.wayNodes);
 		Assert.assertEquals(3, way.tags.size());
 		Assert.assertTrue(way.tags.contains(new Tag("highway=motorway")));

@@ -193,7 +193,6 @@ public class MapDatabase {
 	private static final int WAY_NUMBER_OF_TAGS_BITMASK = 0x0f;
 
 	private IndexCache databaseIndexCache;
-	private boolean debugFile;
 	private long fileSize;
 	private RandomAccessFile inputFile;
 	private MapFileHeader mapFileHeader;
@@ -388,7 +387,7 @@ public class MapDatabase {
 	 * Logs the debug signatures of the current way and block.
 	 */
 	private void logDebugSignatures() {
-		if (this.debugFile) {
+		if (this.mapFileHeader.getMapFileInfo().debugFile) {
 			LOG.warning(DEBUG_SIGNATURE_WAY + this.signatureWay);
 			LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 		}
@@ -431,7 +430,7 @@ public class MapDatabase {
 		int firstWayOffset = this.readBuffer.readUnsignedInt();
 		if (firstWayOffset < 0) {
 			LOG.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
-			if (this.debugFile) {
+			if (this.mapFileHeader.getMapFileInfo().debugFile) {
 				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
@@ -441,7 +440,7 @@ public class MapDatabase {
 		firstWayOffset += this.readBuffer.getBufferPosition();
 		if (firstWayOffset > this.readBuffer.getBufferSize()) {
 			LOG.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
-			if (this.debugFile) {
+			if (this.mapFileHeader.getMapFileInfo().debugFile) {
 				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
@@ -454,7 +453,7 @@ public class MapDatabase {
 		// finished reading POIs, check if the current buffer position is valid
 		if (this.readBuffer.getBufferPosition() > firstWayOffset) {
 			LOG.warning("invalid buffer position: " + this.readBuffer.getBufferPosition());
-			if (this.debugFile) {
+			if (this.mapFileHeader.getMapFileInfo().debugFile) {
 				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
 			return;
@@ -569,7 +568,7 @@ public class MapDatabase {
 	 * @return true if the block signature could be processed successfully, false otherwise.
 	 */
 	private boolean processBlockSignature() {
-		if (this.debugFile) {
+		if (this.mapFileHeader.getMapFileInfo().debugFile) {
 			// get and check the block signature
 			this.signatureBlock = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_BLOCK);
 			if (!this.signatureBlock.startsWith("###TileStart")) {
@@ -594,7 +593,7 @@ public class MapDatabase {
 		Tag[] poiTags = this.mapFileHeader.getMapFileInfo().poiTags;
 
 		for (int elementCounter = numberOfPois; elementCounter != 0; --elementCounter) {
-			if (this.debugFile) {
+			if (this.mapFileHeader.getMapFileInfo().debugFile) {
 				// get and check the POI signature
 				this.signaturePoi = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_POI);
 				if (!this.signaturePoi.startsWith("***POIStart")) {
@@ -625,7 +624,7 @@ public class MapDatabase {
 				int tagId = this.readBuffer.readUnsignedInt();
 				if (tagId < 0 || tagId >= poiTags.length) {
 					LOG.warning("invalid POI tag ID: " + tagId);
-					if (this.debugFile) {
+					if (this.mapFileHeader.getMapFileInfo().debugFile) {
 						LOG.warning(DEBUG_SIGNATURE_POI + this.signaturePoi);
 						LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					}
@@ -720,7 +719,7 @@ public class MapDatabase {
 		Tag[] wayTags = this.mapFileHeader.getMapFileInfo().wayTags;
 
 		for (int elementCounter = numberOfWays; elementCounter != 0; --elementCounter) {
-			if (this.debugFile) {
+			if (this.mapFileHeader.getMapFileInfo().debugFile) {
 				// get and check the way signature
 				this.signatureWay = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_WAY);
 				if (!this.signatureWay.startsWith("---WayStart")) {
@@ -734,7 +733,7 @@ public class MapDatabase {
 			int wayDataSize = this.readBuffer.readUnsignedInt();
 			if (wayDataSize < 0) {
 				LOG.warning("invalid way data size: " + wayDataSize);
-				if (this.debugFile) {
+				if (this.mapFileHeader.getMapFileInfo().debugFile) {
 					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 				}
 				return false;
