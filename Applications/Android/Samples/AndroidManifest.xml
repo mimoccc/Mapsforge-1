@@ -6,11 +6,11 @@
 	<uses-permission android:name="android.permission.INTERNET" />
 
 	<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="10" />
+
 	<application android:label="Samples">
 		<activity android:name=".Samples" android:label="Samples">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
-
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
