@@ -234,9 +234,12 @@ public class FileSystemTileCache implements TileCache {
 			}
 			this.map.clear();
 
-			for (File file : this.cacheDirectory.listFiles(ImageFileNameFilter.INSTANCE)) {
-				if (!file.delete()) {
-					file.deleteOnExit();
+			File[] filesToDelete = this.cacheDirectory.listFiles(ImageFileNameFilter.INSTANCE);
+			if (filesToDelete != null) {
+				for (File file : filesToDelete) {
+					if (!file.delete()) {
+						file.deleteOnExit();
+					}
 				}
 			}
 
