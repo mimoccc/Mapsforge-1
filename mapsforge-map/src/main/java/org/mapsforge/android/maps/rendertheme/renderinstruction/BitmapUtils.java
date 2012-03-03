@@ -33,8 +33,8 @@ final class BitmapUtils {
 		if (src.startsWith(PREFIX_JAR)) {
 			String name = src.substring(PREFIX_JAR.length());
 			InputStream inputStream = Thread.currentThread().getClass().getResourceAsStream(name);
-			if (inputStream == null) {
-				throw new FileNotFoundException("resource not found: " + src);
+			if ((inputStream == null) && (name.charAt(0) == '/')) {
+				inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name.substring(1));
 			}
 			return inputStream;
 		} else if (src.startsWith(PREFIX_FILE)) {
