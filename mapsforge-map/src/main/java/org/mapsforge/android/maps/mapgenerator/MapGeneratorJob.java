@@ -100,7 +100,11 @@ public class MapGeneratorJob implements Comparable<MapGeneratorJob>, Serializabl
 		} else if (!this.jobParameters.equals(other.jobParameters)) {
 			return false;
 		}
-		if (!this.mapGeneratorId.equals(other.mapGeneratorId)) {
+		if (this.mapGeneratorId == null) {
+			if (other.mapGeneratorId != null) {
+				return false;
+			}
+		} else if (!this.mapGeneratorId.equals(other.mapGeneratorId)) {
 			return false;
 		}
 		if (this.tile == null) {
