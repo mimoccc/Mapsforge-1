@@ -31,11 +31,13 @@ final class BitmapUtils {
 
 	private static InputStream createInputStream(String relativePathPrefix, String src) throws FileNotFoundException {
 		if (src.startsWith(PREFIX_JAR)) {
-			String absoluteName = getAbsoluteName(relativePathPrefix, src.substring(PREFIX_JAR.length()));
+			String name = src.substring(PREFIX_JAR.length());
+			String absoluteName = getAbsoluteName(relativePathPrefix, name);
 			InputStream inputStream = BitmapUtils.class.getResourceAsStream(absoluteName);
-			if (inputStream == null) {
-				throw new FileNotFoundException("resource not found: " + absoluteName);
-			}
+			if ((inputStream == null) && (name.charAt(0) == '/')) 
+				inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name.substring(1));
+			if(inputStream == null)
+			    new RuntimeException("Resource not found " + relativePath + ", " + src);
 			return inputStream;
 		} else if (src.startsWith(PREFIX_FILE)) {
 			File file = getFile(relativePathPrefix, src.substring(PREFIX_FILE.length()));
