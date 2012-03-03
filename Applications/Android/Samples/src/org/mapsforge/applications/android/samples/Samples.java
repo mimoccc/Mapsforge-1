@@ -23,54 +23,30 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 /**
- * A simple start screen for the other sample activities.
+ * A simple start screen for the sample activities.
  */
 public class Samples extends Activity {
+	private Button createButton(final Class<?> clazz) {
+		Button button = new Button(this);
+		button.setText(clazz.getSimpleName());
+		button.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				startActivity(new Intent(Samples.this, clazz));
+			}
+		});
+		return button;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Button button1 = new Button(this);
-		button1.setText("BasicMapViewer");
-		button1.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				startActivity(new Intent(Samples.this, BasicMapViewer.class));
-			}
-		});
-
-		Button button2 = new Button(this);
-		button2.setText("DualMapViewer");
-		button2.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				startActivity(new Intent(Samples.this, DualMapViewer.class));
-			}
-		});
-
-		Button button3 = new Button(this);
-		button3.setText("DownloadMapViewer");
-		button3.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				startActivity(new Intent(Samples.this, DownloadMapViewer.class));
-			}
-		});
-
-		Button button4 = new Button(this);
-		button4.setText("OverlayMapViewer");
-		button4.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				startActivity(new Intent(Samples.this, OverlayMapViewer.class));
-			}
-		});
-
 		setContentView(R.layout.activity_samples);
 		LinearLayout linearLayout = (LinearLayout) findViewById(R.id.samples);
-		linearLayout.addView(button1);
-		linearLayout.addView(button2);
-		linearLayout.addView(button3);
-		linearLayout.addView(button4);
+		linearLayout.addView(createButton(BasicMapViewer.class));
+		linearLayout.addView(createButton(DualMapViewer.class));
+		linearLayout.addView(createButton(DownloadMapViewer.class));
+		linearLayout.addView(createButton(OverlayMapViewer.class));
 	}
 }
