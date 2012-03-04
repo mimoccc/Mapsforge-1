@@ -17,6 +17,7 @@ package org.mapsforge.map.writer.model;
 import gnu.trove.set.TShortSet;
 import gnu.trove.set.hash.TShortHashSet;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import org.mapsforge.map.writer.OSMTagMapping;
@@ -396,6 +397,7 @@ public class TDWay {
 
 	@Override
 	public String toString() {
-		return "TDWay [id=" + this.id + ", name=" + this.name + ", tags=" + this.tags + ", polygon=" + this.shape + "]";
+		return "TDWay [id=" + this.id + ", name=" + this.name + ", tags=" + Arrays.toString(this.tags) + ", polygon="
+				+ this.shape + "]";
 	}
 }

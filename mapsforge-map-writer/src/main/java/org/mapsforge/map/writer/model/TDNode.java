@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.writer.model;
 
+import java.util.Arrays;
+
 import org.mapsforge.map.writer.OSMTagMapping;
 import org.mapsforge.map.writer.util.OSMUtils;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
@@ -236,7 +238,7 @@ public class TDNode {
 	@Override
 	public final String toString() {
 		return "TDNode [id=" + this.id + ", latitude=" + this.latitude + ", longitude=" + this.longitude + ", name="
-				+ this.name + ", tags=" + this.tags + "]";
+				+ this.name + ", tags=" + Arrays.toString(this.tags) + "]";
 	}
 
 }
