@@ -766,7 +766,7 @@ public class MapDatabase {
 			for (byte tagIndex = numberOfTags; tagIndex != 0; --tagIndex) {
 				int tagId = this.readBuffer.readUnsignedInt();
 				if (tagId < 0 || tagId >= wayTags.length) {
-					LOG.warning("invalid tag ID: " + tagId);
+					LOG.warning("invalid way tag ID: " + tagId);
 					logDebugSignatures();
 					return false;
 				}
