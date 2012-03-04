@@ -539,7 +539,7 @@ public final class MapFileWriter {
 			StringBuilder sb = new StringBuilder();
 			sb.append(DEBUG_STRING_POI_HEAD).append(poi.getId()).append(DEBUG_STRING_POI_TAIL);
 			poiBuffer.put(sb.toString().getBytes(UTF8_CHARSET));
-			// append withespaces so that block has 32 bytes
+			// append whitespaces so that block has 32 bytes
 			appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, poiBuffer);
 		}
 
