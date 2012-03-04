@@ -119,7 +119,9 @@ public class MapFileWriterTask implements Sink {
 
 	@Override
 	public final void release() {
-		this.tileBasedGeoObjectStore.release();
+		if (this.tileBasedGeoObjectStore != null) {
+			this.tileBasedGeoObjectStore.release();
+		}
 	}
 
 	@Override
