@@ -25,17 +25,17 @@ import org.mapsforge.map.reader.header.MapFileInfo;
  * Tests the {@link MapDatabase} class.
  */
 public class MapDatabaseFileHeaderTest {
-	private static final BoundingBox BOUNDING_BOX = new BoundingBox(1000000, 2000000, 3000000, 4000000);
+	private static final BoundingBox BOUNDING_BOX = new BoundingBox(100000, 200000, 300000, 400000);
 	private static final String COMMENT = "testcomment";
 	private static final String CREATED_BY = "mapsforge-map-writer-0.3.0-SNAPSHOT";
-	private static final int FILE_SIZE = 42764;
+	private static final int FILE_SIZE = 709;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
-	private static final long MAP_DATE = 1330877427113L;
+	private static final long MAP_DATE = 1330878135370L;
 	private static final String MAP_FILE = "src/test/resources/file_header/file_header.map";
 	private static final int NUMBER_OF_SUBFILES = 3;
 	private static final String PROJECTION_NAME = "Mercator";
-	private static final GeoPoint START_POSITION = new GeoPoint(1.5, 2.5);
+	private static final GeoPoint START_POSITION = new GeoPoint(0.15, 0.25);
 	private static final Byte START_ZOOM_LEVEL = Byte.valueOf((byte) 16);
 	private static final int TILE_PIXEL_SIZE = 256;
 
