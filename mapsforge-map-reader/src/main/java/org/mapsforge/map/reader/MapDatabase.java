@@ -675,7 +675,7 @@ public class MapDatabase {
 		float[][] wayCoordinates = new float[numberOfWayCoordinateBlocks][];
 
 		// read the way coordinate blocks
-		for (byte coordinateBlock = 0; coordinateBlock < numberOfWayCoordinateBlocks; ++coordinateBlock) {
+		for (int coordinateBlock = 0; coordinateBlock < numberOfWayCoordinateBlocks; ++coordinateBlock) {
 			// get and check the number of way nodes (VBE-U)
 			int numberOfWayNodes = this.readBuffer.readUnsignedInt();
 			if (numberOfWayNodes < 2 || numberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
