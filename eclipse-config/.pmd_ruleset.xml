@@ -58,7 +58,11 @@
 	<rule ref="rulesets/codesize.xml/NcssConstructorCount" />
 	<rule ref="rulesets/codesize.xml/NcssMethodCount" />
 	<rule ref="rulesets/codesize.xml/NcssTypeCount" />
-	<rule ref="rulesets/codesize.xml/TooManyFields" />
+	<rule ref="rulesets/codesize.xml/TooManyFields">
+		<properties>
+			<property name="maxfields" value="20" />
+		</properties>
+	</rule>
 	<rule ref="rulesets/codesize.xml/TooManyMethods">
 		<properties>
 			<property name="maxmethods" value="20" />
