@@ -650,10 +650,10 @@ public final class MapFileWriter {
 			if (wayDataBlock.getInnerWays() != null && !wayDataBlock.getInnerWays().isEmpty()) {
 				// multi polygon: outer way + number of
 				// inner ways
-				wayBuffer.put((byte) (1 + wayDataBlock.getInnerWays().size()));
+				wayBuffer.put(Serializer.getVariableByteUnsigned(1 + wayDataBlock.getInnerWays().size()));
 			} else {
 				// simply a single way (not a multi polygon)
-				wayBuffer.put((byte) 1);
+				wayBuffer.put(Serializer.getVariableByteUnsigned(1));
 			}
 
 			// write block for (outer/simple) way
