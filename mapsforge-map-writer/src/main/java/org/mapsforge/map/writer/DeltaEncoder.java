@@ -95,9 +95,9 @@ public final class DeltaEncoder {
 				return doubleDeltaEncode(list);
 			case NONE:
 				return list;
-			default:
-				return list;
 		}
+
+		throw new IllegalArgumentException("unknown encoding value: " + encoding);
 	}
 
 	private static int mSimulateSerialization(List<Integer> list) {
