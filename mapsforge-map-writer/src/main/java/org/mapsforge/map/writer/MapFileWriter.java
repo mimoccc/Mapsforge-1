@@ -60,7 +60,6 @@ public final class MapFileWriter {
 
 	private static final int DUMMY_INT = 0xf0f0f0f0;
 
-	private static final int BYTES_SHORT = 2;
 	private static final int BYTES_INT = 4;
 
 	private static final int DEBUG_BLOCK_SIZE = 32;
@@ -126,8 +125,9 @@ public final class MapFileWriter {
 	static final int MIN_TILE_BUFFER_SIZE = 0xF00000; // 15MB
 	static final int TILES_BUFFER_SIZE = 0x3200000; // 50MB
 	static final int TILE_BUFFER_SIZE = 0xA00000; // 10MB
-	static final int WAY_BUFFER_SIZE = 0x100000; // 1MB
-	static final int POI_BUFFER_SIZE = 0x100000; // 1MB
+	static final int WAY_DATA_BUFFER_SIZE = 0xA00000; // 10MB
+	static final int WAY_BUFFER_SIZE = 0x100000; // 10MB
+	static final int POI_DATA_BUFFER_SIZE = 0x100000; // 1MB
 
 	/**
 	 * Writes the map file according to the given configuration using the given data processor.
@@ -331,8 +331,9 @@ public final class MapFileWriter {
 
 		final ByteBuffer indexBuffer = ByteBuffer.allocate(indexBufferSize);
 		final ByteBuffer tileBuffer = ByteBuffer.allocate(TILE_BUFFER_SIZE);
+		final ByteBuffer wayDataBuffer = ByteBuffer.allocate(WAY_DATA_BUFFER_SIZE);
 		final ByteBuffer wayBuffer = ByteBuffer.allocate(WAY_BUFFER_SIZE);
-		final ByteBuffer poiBuffer = ByteBuffer.allocate(POI_BUFFER_SIZE);
+		final ByteBuffer poiDataBuffer = ByteBuffer.allocate(POI_DATA_BUFFER_SIZE);
 
 		final ByteBuffer multipleTilesBuffer = ByteBuffer.allocate(TILES_BUFFER_SIZE);
 
@@ -349,8 +350,8 @@ public final class MapFileWriter {
 				TileCoordinate tileCoordinate = new TileCoordinate(tileX, tileY, baseZoomCurrentInterval);
 
 				processIndexEntry(tileCoordinate, indexBuffer, currentSubfileOffset);
-				processTile(configuration, tileCoordinate, dataStore, zoomIntervalIndex, tileBuffer, poiBuffer,
-						wayBuffer);
+				processTile(configuration, tileCoordinate, dataStore, zoomIntervalIndex, tileBuffer, poiDataBuffer,
+						wayDataBuffer, wayBuffer);
 				currentSubfileOffset += tileBuffer.position();
 
 				writeTile(multipleTilesBuffer, tileBuffer, randomAccessFile);
@@ -411,11 +412,12 @@ public final class MapFileWriter {
 	}
 
 	private static void processTile(MapWriterConfiguration configuration, TileCoordinate tileCoordinate,
-			TileBasedDataProcessor dataProcessor, int zoomIntervalIndex, ByteBuffer tileBuffer, ByteBuffer poiBuffer,
-			ByteBuffer wayBuffer) {
+			TileBasedDataProcessor dataProcessor, int zoomIntervalIndex, ByteBuffer tileBuffer,
+			ByteBuffer poiDataBuffer, ByteBuffer wayDataBuffer, ByteBuffer wayBuffer) {
 
 		tileBuffer.clear();
-		poiBuffer.clear();
+		poiDataBuffer.clear();
+		wayDataBuffer.clear();
 		wayBuffer.clear();
 
 		final TileData currentTile = dataProcessor.getTile(zoomIntervalIndex, tileCoordinate.getX(),
@@ -443,25 +445,18 @@ public final class MapFileWriter {
 			int amountZoomLevels = maxZoomCurrentInterval - minZoomCurrentInterval + 1;
 			short[][] entitiesPerZoomLevel = new short[amountZoomLevels][2];
 
-			int zoomLevelTablePosition = prepareZoomLevelTable(entitiesPerZoomLevel, tileBuffer);
-
 			// WRITE POIS
 			for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
 				int indexEntitiesPerZoomLevelTable = zoomlevel - minZoomCurrentInterval;
 				List<TDNode> pois = poisByZoomlevel.get(Byte.valueOf(zoomlevel));
 				if (pois != null) {
 					for (TDNode poi : pois) {
-						processPOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(), poiBuffer);
+						processPOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(), poiDataBuffer);
 					}
 					// increment count of POIs on this zoom level
 					entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][0] += pois.size();
 				}
 			}
-			// ADD POI BUFFER TO TILE BUFFER
-			// write offset to first way in the tile header
-			tileBuffer.put(Serializer.getVariableByteUnsigned(poiBuffer.position()));
-			// write POIs to buffer
-			tileBuffer.put(poiBuffer.array(), 0, poiBuffer.position());
 
 			// WRITE WAYS
 			for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
@@ -477,22 +472,27 @@ public final class MapFileWriter {
 							// increment count of ways on this zoom level
 							entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][1]++;
 							if (configuration.isDebugStrings()) {
-								writeWaySignature(way, tileBuffer);
+								writeWaySignature(way, wayDataBuffer);
 							}
 							processWay(wpr, way, currentTileLat, currentTileLon, wayBuffer);
-							// write size of way to tile buffer
-							tileBuffer.put(Serializer.getVariableByteUnsigned(wayBuffer.position()));
-							// write way data to tile buffer
-							tileBuffer.put(wayBuffer.array(), 0, wayBuffer.position());
+							// write size of way to way data buffer
+							wayDataBuffer.put(Serializer.getVariableByteUnsigned(wayBuffer.position()));
+							// write way data to way data buffer
+							wayDataBuffer.put(wayBuffer.array(), 0, wayBuffer.position());
 						}
 					}
 				}
 
 			}
 
-			// WRITE ZOOM TABLE
-			writeZoomLevelTable(zoomLevelTablePosition, entitiesPerZoomLevel, tileBuffer);
-
+			// write zoom table
+			writeZoomLevelTable(entitiesPerZoomLevel, tileBuffer);
+			// write offset to first way in the tile header
+			tileBuffer.put(Serializer.getVariableByteUnsigned(poiDataBuffer.position()));
+			// write POI data to buffer
+			tileBuffer.put(poiDataBuffer.array(), 0, poiDataBuffer.position());
+			// write way data to buffer
+			tileBuffer.put(wayDataBuffer.array(), 0, wayDataBuffer.position());
 		}
 	}
 
@@ -505,32 +505,13 @@ public final class MapFileWriter {
 		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, tileBuffer);
 	}
 
-	private static int prepareZoomLevelTable(short[][] entitiesPerZoomLevel, ByteBuffer tileBuffer) {
-
-		int entitiesPerZoomLevelTablePosition = tileBuffer.position();
-		// skip some bytes that will later be filled with the number
-		// of POIs and ways on
-		// each zoom level number of zoom levels times 2 (for POIs
-		// and ways) times
-		// BYTES_SHORT for the amount of bytes
-		tileBuffer.position(tileBuffer.position() + entitiesPerZoomLevel.length * 2 * BYTES_SHORT);
-		return entitiesPerZoomLevelTablePosition;
-	}
-
-	private static void writeZoomLevelTable(int zoomLevelTablePosition, short[][] entitiesPerZoomLevel,
-			ByteBuffer tileBuffer) {
+	static void writeZoomLevelTable(short[][] entitiesPerZoomLevel, ByteBuffer tileBuffer) {
 		// write cumulated number of POIs and ways for this tile on
 		// each zoom level
-		int tileSize = tileBuffer.position();
-		tileBuffer.position(zoomLevelTablePosition);
-		short[] cumulatedCounts = new short[2];
 		for (short[] entityCount : entitiesPerZoomLevel) {
-			cumulatedCounts[0] += entityCount[0];
-			cumulatedCounts[1] += entityCount[1];
-			tileBuffer.putShort(cumulatedCounts[0]);
-			tileBuffer.putShort(cumulatedCounts[1]);
+			tileBuffer.put(Serializer.getVariableByteUnsigned(entityCount[0]));
+			tileBuffer.put(Serializer.getVariableByteUnsigned(entityCount[1]));
 		}
-		tileBuffer.position(tileSize);
 	}
 
 	static void processPOI(TDNode poi, int currentTileLat, int currentTileLon, boolean debugStrings,
