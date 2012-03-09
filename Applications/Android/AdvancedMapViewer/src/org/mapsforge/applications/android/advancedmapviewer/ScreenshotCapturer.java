@@ -16,6 +16,7 @@ package org.mapsforge.applications.android.advancedmapviewer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 import org.mapsforge.android.maps.PausableThread;
 
@@ -41,7 +42,7 @@ class ScreenshotCapturer extends PausableThread {
 		strinBuilder.append(File.separatorChar);
 		strinBuilder.append(SCREENSHOT_FILE_NAME);
 		strinBuilder.append('.');
-		strinBuilder.append(this.compressFormat.name().toLowerCase());
+		strinBuilder.append(this.compressFormat.name().toLowerCase(Locale.ENGLISH));
 		return strinBuilder.toString();
 	}
 
