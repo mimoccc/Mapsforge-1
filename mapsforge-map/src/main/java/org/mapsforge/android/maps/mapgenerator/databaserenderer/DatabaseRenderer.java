@@ -160,7 +160,7 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback, MapDataba
 		}
 
 		float textScale = mapGeneratorJob.jobParameters.textScale;
-		if (textScale != this.previousTextScale) {
+		if (Float.compare(textScale, this.previousTextScale) != 0) {
 			this.renderTheme.scaleTextSize(textScale);
 			this.previousTextScale = textScale;
 		}

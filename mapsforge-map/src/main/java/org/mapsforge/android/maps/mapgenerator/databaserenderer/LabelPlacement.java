@@ -50,8 +50,6 @@ class LabelPlacement {
 		}
 	}
 
-	private static final boolean DEFAULT = false;
-
 	private static final int PLACEMENT_MODEL = 1;
 	private int labelDistanceToLabel = 2;
 	private int labelDistanceToSymbol = 2;
@@ -82,22 +80,6 @@ class LabelPlacement {
 		for (int i = 0; i < labels.size(); i++) {
 			this.label = labels.get(i);
 			this.label.x = this.label.x - this.label.boundary.width() / 2;
-		}
-	}
-
-	/**
-	 * Centers labels with a safety margin for default rendering.
-	 * 
-	 * @param labels
-	 *            Labels to center
-	 */
-	private void centerLabels2(List<PointTextContainer> labels) {
-		for (int i = 0; i < labels.size(); i++) {
-			this.label = labels.get(i);
-			this.label.x = this.label.x - this.label.boundary.width() / 2;
-			if (this.label.symbol != null) {
-				this.label.y = this.label.y - this.label.symbol.symbol.getHeight() / 2 - 3;
-			}
 		}
 	}
 
@@ -653,39 +635,35 @@ class LabelPlacement {
 	List<PointTextContainer> placeLabels(List<PointTextContainer> labels, List<SymbolContainer> symbols,
 			List<PointTextContainer> areaLabels, Tile cT) {
 		List<PointTextContainer> returnLabels = labels;
-		if (!DEFAULT) {
-			this.dependencyCache.generateTileAndDependencyOnTile(cT);
+		this.dependencyCache.generateTileAndDependencyOnTile(cT);
 
-			preprocessAreaLabels(areaLabels);
+		preprocessAreaLabels(areaLabels);
 
-			preprocessLabels(returnLabels);
+		preprocessLabels(returnLabels);
 
-			preprocessSymbols(symbols);
+		preprocessSymbols(symbols);
 
-			removeEmptySymbolReferences(returnLabels, symbols);
+		removeEmptySymbolReferences(returnLabels, symbols);
 
-			removeOverlappingSymbolsWithAreaLabels(symbols, areaLabels);
+		removeOverlappingSymbolsWithAreaLabels(symbols, areaLabels);
 
-			this.dependencyCache.removeOverlappingObjectsWithDependencyOnTile(returnLabels, areaLabels, symbols);
+		this.dependencyCache.removeOverlappingObjectsWithDependencyOnTile(returnLabels, areaLabels, symbols);
 
-			if (!returnLabels.isEmpty()) {
-				switch (PLACEMENT_MODEL) {
-					case 0:
-						returnLabels = processTwoPointGreedy(returnLabels, symbols, areaLabels);
-						break;
-					case 1:
-						returnLabels = processFourPointGreedy(returnLabels, symbols, areaLabels);
-						break;
-					default:
-						break;
-				}
+		if (!returnLabels.isEmpty()) {
+			switch (PLACEMENT_MODEL) {
+				case 0:
+					returnLabels = processTwoPointGreedy(returnLabels, symbols, areaLabels);
+					break;
+				case 1:
+					returnLabels = processFourPointGreedy(returnLabels, symbols, areaLabels);
+					break;
+				default:
+					break;
 			}
-
-			this.dependencyCache.fillDependencyOnTile(returnLabels, symbols, areaLabels);
-		} else {
-			centerLabels(areaLabels);
-			centerLabels2(returnLabels);
 		}
+
+		this.dependencyCache.fillDependencyOnTile(returnLabels, symbols, areaLabels);
+
 		return returnLabels;
 	}
 
