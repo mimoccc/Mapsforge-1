@@ -67,6 +67,7 @@ public class MapDatabaseWithDataTest {
 
 		Way way = dummyMapDatabaseCallback.ways.get(0);
 		Assert.assertEquals(5, way.layer);
+		Assert.assertNull(way.labelPosition);
 		float[][] wayNodesExpected = new float[][] { { 50000, 50000, 100000, 100000, 125000, 100000 } };
 		Assert.assertArrayEquals(wayNodesExpected, way.wayNodes);
 		Assert.assertEquals(3, way.tags.size());
