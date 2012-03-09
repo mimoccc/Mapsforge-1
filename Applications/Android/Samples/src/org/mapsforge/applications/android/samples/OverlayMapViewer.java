@@ -38,7 +38,7 @@ import android.os.Bundle;
  * An application which demonstrates how to use different types of overlays.
  */
 public class OverlayMapViewer extends MapActivity {
-	private class MyItemizedOverlay extends ArrayItemizedOverlay {
+	private static class MyItemizedOverlay extends ArrayItemizedOverlay {
 		private final Context context;
 
 		/**
@@ -106,8 +106,7 @@ public class OverlayMapViewer extends MapActivity {
 		circlePaint.setAlpha(96);
 
 		// create the CircleOverlay and add the circles
-		ArrayCircleOverlay circleOverlay = new ArrayCircleOverlay(circleDefaultPaintFill,
-				circleDefaultPaintOutline);
+		ArrayCircleOverlay circleOverlay = new ArrayCircleOverlay(circleDefaultPaintFill, circleDefaultPaintOutline);
 		OverlayCircle circle1 = new OverlayCircle(geoPoint3, 200, null);
 		OverlayCircle circle2 = new OverlayCircle(geoPoint4, 150, circlePaint, null, null);
 		circleOverlay.addCircle(circle1);
@@ -136,11 +135,10 @@ public class OverlayMapViewer extends MapActivity {
 		wayPaint.setAlpha(192);
 
 		// create the WayOverlay and add the ways
-		ArrayWayOverlay wayOverlay = new ArrayWayOverlay(wayDefaultPaintFill,
-				wayDefaultPaintOutline);
+		ArrayWayOverlay wayOverlay = new ArrayWayOverlay(wayDefaultPaintFill, wayDefaultPaintOutline);
 		OverlayWay way1 = new OverlayWay(new GeoPoint[][] { { geoPoint1, geoPoint2 } });
-		OverlayWay way2 = new OverlayWay(new GeoPoint[][] { { geoPoint1, geoPoint3, geoPoint4,
-				geoPoint1 } }, wayPaint, null);
+		OverlayWay way2 = new OverlayWay(new GeoPoint[][] { { geoPoint1, geoPoint3, geoPoint4, geoPoint1 } }, wayPaint,
+				null);
 		wayOverlay.addWay(way1);
 		wayOverlay.addWay(way2);
 
