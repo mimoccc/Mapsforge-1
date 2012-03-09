@@ -25,6 +25,7 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.mapsforge.mapmaker.logging.ProgressManager;
 import org.mapsforge.storage.poi.PoiCategory;
 import org.mapsforge.storage.poi.PoiCategoryFilter;
 import org.mapsforge.storage.poi.PoiCategoryManager;
@@ -45,6 +46,7 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 public class POIWriterTask implements Sink {
 	private static final Logger LOGGER = Logger.getLogger(POIWriterTask.class.getName());
 	private static final String VERSION = "0.0.1";
+	private final ProgressManager progressManager;
 
 	// For debug purposes only (at least for now)
 	private static final boolean INCLUDE_META_DATA = false;
@@ -80,10 +82,14 @@ public class POIWriterTask implements Sink {
 	 * @param categoryConfigPath
 	 *            The XML configuration file containing the category tree and tag mappings. You can use
 	 *            "POICategoriesOsmosis.xml" from the mapsforge library here.
+	 * @param progressManager
+	 *            Object that sends progress messages to a GUI.
 	 */
-	public POIWriterTask(String outputFilePath, String categoryConfigPath) {
-		LOGGER.info("Mapsforge mapfile writer version " + VERSION);
+	public POIWriterTask(String outputFilePath, String categoryConfigPath, ProgressManager progressManager) {
+		LOGGER.info("Mapsforge POI writer version " + VERSION);
 		LOGGER.setLevel(Level.FINE);
+
+		this.progressManager = progressManager;
 
 		// Get categories defined in XML
 		this.cm = new XMLPoiCategoryManager(categoryConfigPath);
@@ -248,12 +254,13 @@ public class POIWriterTask implements Sink {
 			for (Iterator<Tag> it = n.getTags().iterator(); it.hasNext();) {
 				t = it.next();
 
-				// Determine the POI's type
-				if (t.getKey().equals("amenity")) {
+				// Save this tag
+				if (this.tagMappingResolver.getMappingTags().contains(t.getKey())) {
 					tag = t.getKey() + "=" + t.getValue();
+				} else {
+					// Save the nodes data
+					tagMap.put(t.getKey(), t.getValue());
 				}
-
-				tagMap.put(t.getKey(), t.getValue());
 			}
 
 			// Check if there is a POI category for this tag and add POI to DB

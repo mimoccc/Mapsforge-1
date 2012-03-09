@@ -254,7 +254,7 @@
 
 	<!-- Aeroway -->
 	<category title="Airport POIs">
-		<category title="Gates">
+		<category title="Airport gates">
 			<mapping tag="aeroway=gate"></mapping>
 		</category>
 		<category title="Helipads">
@@ -538,12 +538,7 @@
 		</category>
 	</category>
 
-	<!-- Highway -->
-	<category title="Highway">
-		<category title="">
-			<mapping tag="highway="></mapping>
-		</category>
-	</category>
+	<!-- Highway -->	
 	<category title="Highway">
 		<category title="Bus stops">
 			<mapping tag="highway=bus_stop"></mapping>
@@ -931,7 +926,7 @@
 		<category title="Computers">
 			<mapping tag="shop=computer"></mapping>
 		</category>
-		<category title="Confectioneries">
+		<category title="Confectionery shops">
 			<mapping tag="shop=confectionery"></mapping>
 		</category>
 		<category title="Convenience">
@@ -998,7 +993,7 @@
 		<category title="Gifts">
 			<mapping tag="shop=gift"></mapping>
 		</category>
-		<category title="Glazieries">
+		<category title="Glazieriy shops">
 			<mapping tag="shop=glaziery"></mapping>
 		</category>
 		<category title="Green grocers">
@@ -1058,7 +1053,7 @@
 		<category title="Newsagents">
 			<mapping tag="shop=newsagent"></mapping>
 		</category>
-		<category title="Opticians">
+		<category title="Optician shops">
 			<mapping tag="shop=optician"></mapping>
 		</category>
 		<category title="Organics">
@@ -1129,7 +1124,7 @@
 	</category>
 
 	<!-- Sport -->
-	<category name="Sport">
+	<category title="Sport">
 		<category title="Bowling">
 			<mapping tag="sport=9-pin"></mapping>
 			<mapping tag="sport=10-pin"></mapping>

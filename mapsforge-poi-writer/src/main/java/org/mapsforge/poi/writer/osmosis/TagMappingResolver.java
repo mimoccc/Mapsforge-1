@@ -16,7 +16,9 @@ package org.mapsforge.poi.writer.osmosis;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
@@ -30,11 +32,10 @@ import org.mapsforge.storage.poi.PoiCategoryManager;
 import org.mapsforge.storage.poi.UnknownPoiCategoryException;
 
 /**
- * This class maps a given tag (e.g. amenity=restaurant) to a certain {@link PoiCategory}. The mapping
- * configuration is read from a XML file.
+ * This class maps a given tag (e.g. amenity=restaurant) to a certain {@link PoiCategory}. The mapping configuration is
+ * read from a XML file.
  * 
  * @author Karsten Groll
- * 
  */
 class TagMappingResolver {
 	private static final Logger LOGGER = Logger.getLogger(POIWriterTask.class.getName());
@@ -43,8 +44,9 @@ class TagMappingResolver {
 	/** Maps a tag to a category's title */
 	private HashMap<String, String> tagMap;
 
+	private Set<String> mappingTags;
+
 	/**
-	 * 
 	 * @param configFilePath
 	 *            Path to the XML file containing the tag to POI mappings.
 	 * @param categoryManager
@@ -53,6 +55,7 @@ class TagMappingResolver {
 	TagMappingResolver(String configFilePath, PoiCategoryManager categoryManager) {
 		this.categoryManager = categoryManager;
 		this.tagMap = new HashMap<String, String>();
+		this.mappingTags = new TreeSet<String>();
 
 		// Read root category from XML
 		final File f = new File(configFilePath);
@@ -73,6 +76,7 @@ class TagMappingResolver {
 		Stack<Category> categories = new Stack<Category>();
 		categories.push(xmlRootCategory);
 
+		// Add mappings from tag to category title
 		while (!categories.isEmpty()) {
 			for (Category c : categories.pop().getCategory()) {
 				categories.push(c);
@@ -84,6 +88,16 @@ class TagMappingResolver {
 
 			}
 		}
+
+		// For each mapping's tag: Split and save key (uniquely)
+		for (String tag : this.tagMap.keySet()) {
+			this.mappingTags.add(tag.split("=")[0]);
+		}
+		LOGGER.info("Tag mappings have been added");
+	}
+
+	Set<String> getMappingTags() {
+		return this.mappingTags;
 	}
 
 	PoiCategory getCategoryFromTag(String tag) throws UnknownPoiCategoryException {

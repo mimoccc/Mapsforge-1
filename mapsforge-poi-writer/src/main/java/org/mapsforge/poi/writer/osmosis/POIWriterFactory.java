@@ -14,27 +14,42 @@
  */
 package org.mapsforge.poi.writer.osmosis;
 
+import org.mapsforge.mapmaker.logging.DummyProgressManager;
+import org.mapsforge.mapmaker.logging.ProgressManager;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskConfiguration;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManager;
 import org.openstreetmap.osmosis.core.pipeline.common.TaskManagerFactory;
 import org.openstreetmap.osmosis.core.pipeline.v0_6.SinkManager;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
+/**
+ * This class is used for creating {@link POIWriterTask}s.
+ * 
+ * @author Karsten Groll
+ */
 public class POIWriterFactory extends TaskManagerFactory {
 
+	/**
+	 * Default constructor.
+	 */
 	public POIWriterFactory() {
 	}
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
 		// Output file
-		String outputFilePath = getStringArgument(taskConfig, "file", System.getProperty("user.home")
-				+ "/map.pbf");
+		String outputFilePath = getDefaultStringArgument(taskConfig, System.getProperty("user.home") + "/map.pbf");
 
+		// XML-file containing a POI category configuration
 		String categoryConfigFilePath = getStringArgument(taskConfig, "categoryConfigPath", "POICategoriesOsmosis.xml");
 
+		// If set to true, progress messages will forwarded to a GUI message handler
+		boolean guiMode = getBooleanArgument(taskConfig, "gui-mode", false);
+
+		ProgressManager progressManager = new DummyProgressManager();
+
 		// The creation task
-		Sink task = new POIWriterTask(outputFilePath, categoryConfigFilePath);
+		Sink task = new POIWriterTask(outputFilePath, categoryConfigFilePath, progressManager);
 
 		return new SinkManager(taskConfig.getId(), task, taskConfig.getPipeArgs());
 	}
