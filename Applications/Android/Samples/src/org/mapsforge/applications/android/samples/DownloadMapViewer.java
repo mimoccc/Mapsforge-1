@@ -16,7 +16,7 @@ package org.mapsforge.applications.android.samples;
 
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.android.maps.mapgenerator.tiledownloader.OsmarenderTileDownloader;
+import org.mapsforge.android.maps.mapgenerator.tiledownloader.MapnikTileDownloader;
 
 import android.os.Bundle;
 
@@ -29,7 +29,7 @@ public class DownloadMapViewer extends MapActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		MapView mapView = new MapView(this, new OsmarenderTileDownloader());
+		MapView mapView = new MapView(this, new MapnikTileDownloader());
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
 		setContentView(mapView);

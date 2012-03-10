@@ -4,7 +4,6 @@
 		<item>DATABASE_RENDERER</item>
 		<item>MAPNIK</item>
 		<item>OPENCYCLEMAP</item>
-		<item>OSMARENDER</item>
 	</string-array>
 	<string name="preferences_map_generator_default">DATABASE_RENDERER</string>
 

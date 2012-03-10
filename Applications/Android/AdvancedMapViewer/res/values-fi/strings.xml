@@ -4,7 +4,6 @@
 		<item>Database renderer</item>
 		<item>Mapnik (online)</item>
 		<item>OpenCycleMap (online)</item>
-		<item>Osmarender (online)</item>
 	</string-array>
 
 	<string-array name="preferences_text_scale_values">
