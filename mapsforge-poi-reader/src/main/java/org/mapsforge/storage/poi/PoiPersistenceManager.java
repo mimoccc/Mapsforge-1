@@ -19,15 +19,12 @@ import java.util.Collection;
 import org.mapsforge.core.GeoCoordinate;
 
 /**
- * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/searching
- * {@link PointOfInterest} objects in named Storage/DB.
- * 
- * Remember to call the {@link #close()} method as soon as your done manipulating the Storage/DB via
- * this {@link PoiPersistenceManager}.
+ * Abstracts from an underlying Storage/DB by providing methods for inserting/deleting/searching {@link PointOfInterest}
+ * objects in named Storage/DB. Remember to call the {@link #close()} method as soon as your done manipulating the
+ * Storage/DB via this {@link PoiPersistenceManager}.
  * 
  * @author weise
  * @author Karsten Groll
- * 
  */
 public interface PoiPersistenceManager {
 
@@ -69,55 +66,62 @@ public interface PoiPersistenceManager {
 	 *            {@link GeoCoordinate} center of the search.
 	 * @param distance
 	 *            in meters
-	 * @param categoryName
-	 *            unique title of {@link PoiCategory} the returned {@link PointOfInterest} should belong
-	 *            to.
 	 * @param limit
 	 *            max number of {@link PointOfInterest} to be returned.
-	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory} near the
-	 *         given position.
+	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory} near the given position.
 	 */
-	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point,
-			int distance, String categoryName, int limit);
+	public Collection<PointOfInterest> findNearPosition(GeoCoordinate point, int distance, int limit);
 
 	/**
-	 * Find all {@link PointOfInterest} of the given {@link PoiCategory} in a rectangle specified by the
-	 * two given {@link GeoCoordinate}s.
+	 * Fetch {@link PointOfInterest} from underlying storage near a given position. Only the POIs that are allowed by
+	 * the {@link PoiCategoryFilter} object will be returned.
+	 * 
+	 * @param point
+	 *            {@link GeoCoordinate} center of the search.
+	 * @param distance
+	 *            in meters
+	 * @param categoryFilter
+	 *            POI category filter object that helps determining whether a POI should be added to the set or not.
+	 * @param limit
+	 *            max number of {@link PointOfInterest} to be returned.
+	 * @return {@link Collection} of {@link PointOfInterest} matching a given {@link PoiCategoryFilter} near the given
+	 *         position.
+	 */
+	public Collection<PointOfInterest> findNearPositionWithFilter(GeoCoordinate point, int distance,
+			PoiCategoryFilter categoryFilter, int limit);
+
+	/**
+	 * Find all {@link PointOfInterest} of the given {@link PoiCategory} in a rectangle specified by the two given
+	 * {@link GeoCoordinate}s.
 	 * 
 	 * @param p1
 	 *            {@link GeoCoordinate} specifying one corner of the rectangle. (minLat, minLon)
 	 * @param p2
 	 *            {@link GeoCoordinate} specifying one corner of the rectangle. (maxLat, maxLon)
-	 * @param categoryName
-	 *            unique title of {@link PoiCategory} the returned {@link PointOfInterest} should belong
-	 *            to.
 	 * @param limit
 	 *            max number of {@link PointOfInterest} to be returned.
-	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory} contained
-	 *         in the rectangle specified by the two given {@link GeoCoordinate}s.
+	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory} contained in the rectangle
+	 *         specified by the two given {@link GeoCoordinate}s.
 	 */
-	public Collection<PointOfInterest> findInRect(GeoCoordinate p1,
-			GeoCoordinate p2, String categoryName, int limit);
+	public Collection<PointOfInterest> findInRect(GeoCoordinate p1, GeoCoordinate p2, int limit);
 
 	/**
-	 * Find all {@link PointOfInterest} of the given {@link PoiCategory} in a rectangle specified by the
-	 * two given {@link GeoCoordinate}s. The only POIs that are allowed by the {@link PoiCategoryFilter}
-	 * object will be returned.
+	 * Find all {@link PointOfInterest} of the given {@link PoiCategory} in a rectangle specified by the two given
+	 * {@link GeoCoordinate}s. Only the POIs that are allowed by the {@link PoiCategoryFilter} object will be returned.
 	 * 
 	 * @param p1
 	 *            {@link GeoCoordinate} specifying one corner of the rectangle. (minLat, minLon)
 	 * @param p2
 	 *            {@link GeoCoordinate} specifying one corner of the rectangle. (maxLat, maxLon)
-	 * @param filter
-	 *            POI category filter object that helps determining whether a POI should be added to the
-	 *            set or not.
+	 * @param categoryFilter
+	 *            POI category filter object that helps determining whether a POI should be added to the set or not.
 	 * @param limit
 	 *            max number of {@link PointOfInterest} to be returned.
-	 * @return {@link Collection} of {@link PointOfInterest} of the given {@link PoiCategory} contained
-	 *         in the rectangle specified by the two given {@link GeoCoordinate}s.
+	 * @return {@link Collection} of {@link PointOfInterest} matching a given {@link PoiCategoryFilter} contained in the
+	 *         rectangle specified by the two given {@link GeoCoordinate}s.
 	 */
-	public Collection<PointOfInterest> findInRectWithFilter(GeoCoordinate p1,
-			GeoCoordinate p2, PoiCategoryFilter filter, int limit);
+	public Collection<PointOfInterest> findInRectWithFilter(GeoCoordinate p1, GeoCoordinate p2,
+			PoiCategoryFilter categoryFilter, int limit);
 
 	/**
 	 * Sets this manager's {@link PoiCategoryManager} for retrieving and editing POI categories.
@@ -128,15 +132,13 @@ public interface PoiPersistenceManager {
 	public void setCategoryManager(PoiCategoryManager categoryManager);
 
 	/**
-	 * 
 	 * @return The persistence managers category manager for retrieving and editing POI categories.
 	 */
 	public PoiCategoryManager getCategoryManager();
 
 	/**
-	 * Use this to free claimed resources. After that you might no longer be able to query for points of
-	 * interest with this instance of {@link IPoiQuery}. This should always be a called a soon as you
-	 * are done querying.
+	 * Use this to free claimed resources. After that you might no longer be able to query for points of interest. This
+	 * should always be a called a soon as you are done querying.
 	 */
 	public void close();
 

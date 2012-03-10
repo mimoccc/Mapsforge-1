@@ -48,5 +48,6 @@ public class Samples extends Activity {
 		linearLayout.addView(createButton(DualMapViewer.class));
 		linearLayout.addView(createButton(DownloadMapViewer.class));
 		linearLayout.addView(createButton(OverlayMapViewer.class));
+		linearLayout.addView(createButton(POIViewer.class));
 	}
 }

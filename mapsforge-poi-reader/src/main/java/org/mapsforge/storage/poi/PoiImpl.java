@@ -47,14 +47,14 @@ public class PoiImpl implements PointOfInterest {
 	}
 
 	@Override
-	public String getName() {
+	public String getData() {
 		return this.name;
 	}
 
 	@Override
 	public String getUrl() {
 		// TODO Auto-generated method stub
-		return null;
+		return "";
 	}
 
 	@Override
