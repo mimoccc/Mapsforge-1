@@ -81,6 +81,11 @@ public class MapDatabase {
 	private static final int MAXIMUM_WAY_NODES_SEQUENCE_LENGTH = 8192;
 
 	/**
+	 * Maximum number of map objects in the zoom table which is considered as valid.
+	 */
+	private static final int MAXIMUM_ZOOM_TABLE_OBJECTS = 65536;
+
+	/**
 	 * Bitmask for the optional POI feature "elevation".
 	 */
 	private static final int POI_FEATURE_ELEVATION = 0x20;
@@ -415,19 +420,10 @@ public class MapDatabase {
 			return;
 		}
 
-		// read the zoom table and calculate the cumulated numbers of POIs and ways
-		int rows = subFileParameter.zoomLevelMax - subFileParameter.zoomLevelMin + 1;
-		int[][] zoomTable = new int[rows][2];
-		for (int row = 0; row < rows; ++row) {
-			zoomTable[row][0] = this.readBuffer.readUnsignedInt();
-			zoomTable[row][1] = this.readBuffer.readUnsignedInt();
-
-			if (row > 0) {
-				zoomTable[row][0] += zoomTable[row - 1][0];
-				zoomTable[row][1] += zoomTable[row - 1][1];
-			}
+		int[][] zoomTable = readZoomTable(subFileParameter);
+		if (zoomTable == null) {
+			return;
 		}
-
 		int zoomTableRow = queryParameters.queryZoomLevel - subFileParameter.zoomLevelMin;
 		int poisOnQueryZoomLevel = zoomTable[zoomTableRow][0];
 		int waysOnQueryZoomLevel = zoomTable[zoomTableRow][1];
@@ -847,5 +843,37 @@ public class MapDatabase {
 		}
 		// only one way data block exists
 		return 1;
+	}
+
+	private int[][] readZoomTable(SubFileParameter subFileParameter) {
+		int rows = subFileParameter.zoomLevelMax - subFileParameter.zoomLevelMin + 1;
+		int[][] zoomTable = new int[rows][2];
+
+		int cumulatedNumberOfPois = 0;
+		int cumulatedNumberOfWays = 0;
+
+		for (int row = 0; row < rows; ++row) {
+			cumulatedNumberOfPois += this.readBuffer.readUnsignedInt();
+			cumulatedNumberOfWays += this.readBuffer.readUnsignedInt();
+
+			if (cumulatedNumberOfPois < 0 || cumulatedNumberOfPois > MAXIMUM_ZOOM_TABLE_OBJECTS) {
+				LOG.warning("invalid cumulated number of POIs in row " + row + ' ' + cumulatedNumberOfPois);
+				if (this.mapFileHeader.getMapFileInfo().debugFile) {
+					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+				}
+				return null;
+			} else if (cumulatedNumberOfWays < 0 || cumulatedNumberOfWays > MAXIMUM_ZOOM_TABLE_OBJECTS) {
+				LOG.warning("invalid cumulated number of ways in row " + row + ' ' + cumulatedNumberOfWays);
+				if (this.mapFileHeader.getMapFileInfo().debugFile) {
+					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+				}
+				return null;
+			}
+
+			zoomTable[row][0] = cumulatedNumberOfPois;
+			zoomTable[row][1] = cumulatedNumberOfWays;
+		}
+
+		return zoomTable;
 	}
 }
