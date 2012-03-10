@@ -36,11 +36,6 @@ public class SubFileParameter {
 	public final byte baseZoomLevel;
 
 	/**
-	 * Size of the entries table at the beginning of each block in bytes.
-	 */
-	public final int blockEntriesTableSize;
-
-	/**
 	 * Vertical amount of blocks in the grid.
 	 */
 	public final long blocksHeight;
@@ -137,9 +132,6 @@ public class SubFileParameter {
 		this.numberOfBlocks = this.blocksWidth * this.blocksHeight;
 
 		this.indexEndAddress = this.indexStartAddress + this.numberOfBlocks * BYTES_PER_INDEX_ENTRY;
-
-		// calculate the size of the tile entries table
-		this.blockEntriesTableSize = 2 * (this.zoomLevelMax - this.zoomLevelMin + 1) * 2;
 	}
 
 	@Override
@@ -170,8 +162,6 @@ public class SubFileParameter {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("SubFileParameter [baseZoomLevel=");
 		stringBuilder.append(this.baseZoomLevel);
-		stringBuilder.append(", blockEntriesTableSize=");
-		stringBuilder.append(this.blockEntriesTableSize);
 		stringBuilder.append(", blocksHeight=");
 		stringBuilder.append(this.blocksHeight);
 		stringBuilder.append(", blocksWidth=");

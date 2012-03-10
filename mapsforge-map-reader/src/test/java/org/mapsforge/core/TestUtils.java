@@ -24,6 +24,32 @@ import java.io.ObjectOutputStream;
 import junit.framework.Assert;
 
 final class TestUtils {
+	private static Object deserializeObject(File file) throws IOException, ClassNotFoundException {
+		FileInputStream fileInputStream = null;
+		ObjectInputStream objectInputStream = null;
+		try {
+			fileInputStream = new FileInputStream(file);
+			objectInputStream = new ObjectInputStream(fileInputStream);
+			return objectInputStream.readObject();
+		} finally {
+			IOUtils.closeQuietly(objectInputStream);
+			IOUtils.closeQuietly(fileInputStream);
+		}
+	}
+
+	private static void serializeObject(Object objectToSerialize, File file) throws IOException {
+		FileOutputStream fileOutputStream = null;
+		ObjectOutputStream objectOutputStream = null;
+		try {
+			fileOutputStream = new FileOutputStream(file);
+			objectOutputStream = new ObjectOutputStream(fileOutputStream);
+			objectOutputStream.writeObject(objectToSerialize);
+		} finally {
+			IOUtils.closeQuietly(objectOutputStream);
+			IOUtils.closeQuietly(fileOutputStream);
+		}
+	}
+
 	static void equalsTest(Object object1, Object object2) {
 		Assert.assertEquals(object1.hashCode(), object2.hashCode());
 		Assert.assertEquals(object1, object2);
@@ -36,19 +62,8 @@ final class TestUtils {
 		Assert.assertTrue(file.exists());
 		Assert.assertEquals(0, file.length());
 
-		FileOutputStream fileOutputStream = new FileOutputStream(file);
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-		objectOutputStream.writeObject(objectToSerialize);
-		objectOutputStream.close();
-		fileOutputStream.close();
-
-		FileInputStream fileInputStream = new FileInputStream(file);
-		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-		Object deserializedObject = objectInputStream.readObject();
-
-		objectInputStream.close();
-		fileInputStream.close();
-
+		serializeObject(objectToSerialize, file);
+		Object deserializedObject = deserializeObject(file);
 		TestUtils.equalsTest(objectToSerialize, deserializedObject);
 	}
 

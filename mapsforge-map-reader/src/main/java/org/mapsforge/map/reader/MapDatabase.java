@@ -415,16 +415,22 @@ public class MapDatabase {
 			return;
 		}
 
-		// calculate the offset in the block entries table and move the pointer
-		int blockEntriesTableOffset = (queryParameters.queryZoomLevel - subFileParameter.zoomLevelMin) * 4;
-		this.readBuffer.skipBytes(blockEntriesTableOffset);
+		// read the zoom table and calculate the cumulated numbers of POIs and ways
+		int rows = subFileParameter.zoomLevelMax - subFileParameter.zoomLevelMin + 1;
+		int[][] zoomTable = new int[rows][2];
+		for (int row = 0; row < rows; ++row) {
+			zoomTable[row][0] = this.readBuffer.readUnsignedInt();
+			zoomTable[row][1] = this.readBuffer.readUnsignedInt();
 
-		// get the amount of POIs and ways on the current zoomLevel level
-		int poisOnZoomLevel = this.readBuffer.readShort();
-		int waysOnZoomLevel = this.readBuffer.readShort();
+			if (row > 0) {
+				zoomTable[row][0] += zoomTable[row - 1][0];
+				zoomTable[row][1] += zoomTable[row - 1][1];
+			}
+		}
 
-		// move the pointer to the end of the block entries table
-		this.readBuffer.skipBytes(subFileParameter.blockEntriesTableSize - blockEntriesTableOffset - 4);
+		int zoomTableRow = queryParameters.queryZoomLevel - subFileParameter.zoomLevelMin;
+		int poisOnQueryZoomLevel = zoomTable[zoomTableRow][0];
+		int waysOnQueryZoomLevel = zoomTable[zoomTableRow][1];
 
 		// get the relative offset to the first stored way in the block
 		int firstWayOffset = this.readBuffer.readUnsignedInt();
@@ -446,7 +452,7 @@ public class MapDatabase {
 			return;
 		}
 
-		if (!processPOIs(mapDatabaseCallback, poisOnZoomLevel)) {
+		if (!processPOIs(mapDatabaseCallback, poisOnQueryZoomLevel)) {
 			return;
 		}
 
@@ -462,7 +468,7 @@ public class MapDatabase {
 		// move the pointer to the first way
 		this.readBuffer.setBufferPosition(firstWayOffset);
 
-		if (!processWays(queryParameters, mapDatabaseCallback, waysOnZoomLevel)) {
+		if (!processWays(queryParameters, mapDatabaseCallback, waysOnQueryZoomLevel)) {
 			return;
 		}
 	}
