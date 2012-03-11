@@ -234,7 +234,6 @@
 	<rule ref="rulesets/typeresolution.xml/CloneMethodMustImplementCloneable" />
 	<rule ref="rulesets/typeresolution.xml/LooseCoupling" />
 	<rule ref="rulesets/typeresolution.xml/SignatureDeclareThrowsException" />
-	<rule ref="rulesets/typeresolution.xml/UnusedImports" />
 	<rule ref="rulesets/unusedcode.xml/UnusedFormalParameter" />
 	<rule ref="rulesets/unusedcode.xml/UnusedLocalVariable" />
 	<rule ref="rulesets/unusedcode.xml/UnusedPrivateField" />
