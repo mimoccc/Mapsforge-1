@@ -14,6 +14,8 @@
  */
 package org.mapsforge.applications.android.samples;
 
+import java.io.File;
+
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapScaleBar;
 import org.mapsforge.android.maps.MapView;
@@ -29,7 +31,7 @@ import android.widget.LinearLayout;
  * An application which demonstrates how to use two MapView instances at the same time.
  */
 public class DualMapViewer extends MapActivity {
-	private static final String MAP_FILE = "/sdcard/berlin.map";
+	private static final File MAP_FILE = new File("/sdcard/berlin.map");
 
 	private MapView mapView1;
 	private MapView mapView2;
