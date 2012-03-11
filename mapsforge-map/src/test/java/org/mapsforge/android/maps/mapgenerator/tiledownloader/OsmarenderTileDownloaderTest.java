@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, 2011 mapsforge.org
+ * Copyright 2010, 2011, 2012 mapsforge.org
  *
  * This program is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -12,20 +12,25 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.storage.poi;
+package org.mapsforge.android.maps.mapgenerator.tiledownloader;
+
+import junit.framework.Assert;
+
+import org.junit.Test;
+import org.mapsforge.core.Tile;
 
 /**
- * This exception is thrown whenever the {@link PoiCategoryManager} cannot find a category for a given
- * tag.
- * 
- * @author Karsten Groll
- * 
+ * Tests the {@link OsmarenderTileDownloader} class.
  */
-public class UnknownPoiCategoryException extends Exception {
-
+public class OsmarenderTileDownloaderTest {
 	/**
-	 * Generated serial version UID.
+	 * Tests the {@link OsmarenderTileDownloader#getTilePath} method.
 	 */
-	private static final long serialVersionUID = 5317309698389261646L;
-
+	@Test
+	public void getTilePathTest() {
+		TileDownloader tileDownloader = new OsmarenderTileDownloader();
+		Tile tile = new Tile(1, 2, (byte) 3);
+		String tilePath = tileDownloader.getTilePath(tile);
+		Assert.assertEquals("/Tiles/tile/3/1/2.png", tilePath);
+	}
 }
