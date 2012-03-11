@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.reader;
 
+import java.io.File;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.MercatorProjection;
@@ -25,11 +27,11 @@ import org.mapsforge.map.reader.header.FileOpenResult;
  * Tests the {@link MapDatabase} class.
  */
 public class MapDatabaseWayNodeEncodingTest {
-	private static final String MAP_FILE_DOUBLE_DELTA = "src/test/resources/way_node_encoding/double_delta.map";
-	private static final String MAP_FILE_SINGLE_DELTA = "src/test/resources/way_node_encoding/single_delta.map";
+	private static final File MAP_FILE_DOUBLE_DELTA = new File("src/test/resources/way_node_encoding/double_delta.map");
+	private static final File MAP_FILE_SINGLE_DELTA = new File("src/test/resources/way_node_encoding/single_delta.map");
 	private static final byte ZOOM_LEVEL = 8;
 
-	private static void runTest(String mapFile) {
+	private static void runTest(File mapFile) {
 		MapDatabase mapDatabase = new MapDatabase();
 		FileOpenResult fileOpenResult = mapDatabase.openFile(mapFile);
 		Assert.assertTrue(fileOpenResult.getErrorMessage(), fileOpenResult.isSuccess());

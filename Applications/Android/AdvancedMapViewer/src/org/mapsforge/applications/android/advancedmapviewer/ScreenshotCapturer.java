@@ -36,14 +36,14 @@ class ScreenshotCapturer extends PausableThread {
 		this.advancedMapViewer = advancedMapViewer;
 	}
 
-	private String assembleFilePath(File directory) {
+	private File assembleFilePath(File directory) {
 		StringBuilder strinBuilder = new StringBuilder();
 		strinBuilder.append(directory.getAbsolutePath());
 		strinBuilder.append(File.separatorChar);
 		strinBuilder.append(SCREENSHOT_FILE_NAME);
 		strinBuilder.append('.');
 		strinBuilder.append(this.compressFormat.name().toLowerCase(Locale.ENGLISH));
-		return strinBuilder.toString();
+		return new File(strinBuilder.toString());
 	}
 
 	@Override
@@ -55,9 +55,9 @@ class ScreenshotCapturer extends PausableThread {
 				return;
 			}
 
-			String fileName = assembleFilePath(directory);
-			if (this.advancedMapViewer.mapView.takeScreenshot(this.compressFormat, SCREENSHOT_QUALITY, fileName)) {
-				this.advancedMapViewer.showToastOnUiThread(fileName);
+			File outputFile = assembleFilePath(directory);
+			if (this.advancedMapViewer.mapView.takeScreenshot(this.compressFormat, SCREENSHOT_QUALITY, outputFile)) {
+				this.advancedMapViewer.showToastOnUiThread(outputFile.getAbsolutePath());
 			} else {
 				this.advancedMapViewer.showToastOnUiThread("Screenshot could not be saved");
 			}

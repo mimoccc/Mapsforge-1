@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.reader;
 
+import java.io.File;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.MercatorProjection;
@@ -28,7 +30,7 @@ import org.mapsforge.map.reader.header.MapFileInfo;
  * Tests the {@link MapDatabase} class.
  */
 public class MapDatabaseWithDataTest {
-	private static final String MAP_FILE = "src/test/resources/with_data/with_data.map";
+	private static final File MAP_FILE = new File("src/test/resources/with_data/with_data.map");
 	private static final byte ZOOM_LEVEL = 11;
 
 	/**

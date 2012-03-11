@@ -14,6 +14,7 @@
  */
 package org.mapsforge.applications.android.advancedmapviewer;
 
+import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.text.DateFormat;
@@ -354,7 +355,7 @@ public class AdvancedMapViewer extends MapActivity {
 			if (resultCode == RESULT_OK) {
 				disableSnapToLocation(true);
 				if (intent != null && intent.getStringExtra(FilePicker.SELECTED_FILE) != null) {
-					this.mapView.setMapFile(intent.getStringExtra(FilePicker.SELECTED_FILE));
+					this.mapView.setMapFile(new File(intent.getStringExtra(FilePicker.SELECTED_FILE)));
 				}
 			} else if (resultCode == RESULT_CANCELED && !this.mapView.getMapGenerator().requiresInternetConnection()
 					&& this.mapView.getMapFile() == null) {
@@ -363,7 +364,7 @@ public class AdvancedMapViewer extends MapActivity {
 		} else if (requestCode == SELECT_RENDER_THEME_FILE && resultCode == RESULT_OK && intent != null
 				&& intent.getStringExtra(FilePicker.SELECTED_FILE) != null) {
 			try {
-				this.mapView.setRenderTheme(intent.getStringExtra(FilePicker.SELECTED_FILE));
+				this.mapView.setRenderTheme(new File(intent.getStringExtra(FilePicker.SELECTED_FILE)));
 			} catch (FileNotFoundException e) {
 				showToastOnUiThread(e.getLocalizedMessage());
 			}
@@ -509,7 +510,7 @@ public class AdvancedMapViewer extends MapActivity {
 
 			// map file name
 			TextView textView = (TextView) dialog.findViewById(R.id.infoMapFileViewName);
-			textView.setText(this.mapView.getMapFile());
+			textView.setText(this.mapView.getMapFile().getAbsolutePath());
 
 			// map file size
 			textView = (TextView) dialog.findViewById(R.id.infoMapFileViewSize);

@@ -26,9 +26,9 @@ public final class ValidMapFile implements ValidFileFilter {
 	private FileOpenResult fileOpenResult;
 
 	@Override
-	public boolean accept(File file) {
+	public boolean accept(File mapFile) {
 		MapDatabase mapDatabase = new MapDatabase();
-		this.fileOpenResult = mapDatabase.openFile(file.getAbsolutePath());
+		this.fileOpenResult = mapDatabase.openFile(mapFile);
 		mapDatabase.closeFile();
 		return this.fileOpenResult.isSuccess();
 	}

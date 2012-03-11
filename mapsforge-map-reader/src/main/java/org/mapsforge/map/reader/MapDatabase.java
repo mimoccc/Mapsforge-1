@@ -284,33 +284,32 @@ public class MapDatabase {
 	/**
 	 * Opens the given map file, reads its header data and validates them.
 	 * 
-	 * @param fileName
-	 *            the path to the map file.
+	 * @param mapFile
+	 *            the map file.
 	 * @return a FileOpenResult containing an error message in case of a failure.
 	 * @throws IllegalArgumentException
-	 *             if the given file name is null.
+	 *             if the given map file is null.
 	 */
-	public FileOpenResult openFile(String fileName) {
+	public FileOpenResult openFile(File mapFile) {
 		try {
-			if (fileName == null) {
-				throw new IllegalArgumentException("fileName must not be null");
+			if (mapFile == null) {
+				throw new IllegalArgumentException("mapFile must not be null");
 			}
 
 			// make sure to close any previously opened file first
 			closeFile();
 
 			// check if the file exists and is readable
-			File file = new File(fileName);
-			if (!file.exists()) {
-				return new FileOpenResult("file does not exist: " + fileName);
-			} else if (!file.isFile()) {
-				return new FileOpenResult("not a file: " + fileName);
-			} else if (!file.canRead()) {
-				return new FileOpenResult("cannot read file: " + fileName);
+			if (!mapFile.exists()) {
+				return new FileOpenResult("file does not exist: " + mapFile);
+			} else if (!mapFile.isFile()) {
+				return new FileOpenResult("not a file: " + mapFile);
+			} else if (!mapFile.canRead()) {
+				return new FileOpenResult("cannot read file: " + mapFile);
 			}
 
 			// open the file in read only mode
-			this.inputFile = new RandomAccessFile(file, READ_ONLY_MODE);
+			this.inputFile = new RandomAccessFile(mapFile, READ_ONLY_MODE);
 			this.fileSize = this.inputFile.length();
 
 			this.readBuffer = new ReadBuffer(this.inputFile);

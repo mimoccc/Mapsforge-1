@@ -14,6 +14,8 @@
  */
 package org.mapsforge.map.reader;
 
+import java.io.File;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.BoundingBox;
@@ -32,7 +34,7 @@ public class MapDatabaseFileHeaderTest {
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
 	private static final long MAP_DATE = 1331376609114L;
-	private static final String MAP_FILE = "src/test/resources/file_header/file_header.map";
+	private static final File MAP_FILE = new File("src/test/resources/file_header/file_header.map");
 	private static final int NUMBER_OF_SUBFILES = 3;
 	private static final String PROJECTION_NAME = "Mercator";
 	private static final GeoPoint START_POSITION = new GeoPoint(0.15, 0.25);

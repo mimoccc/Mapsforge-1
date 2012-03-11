@@ -14,10 +14,12 @@
  */
 package org.mapsforge.map.reader.header;
 
+import java.io.File;
+
 import org.mapsforge.map.reader.MapDatabase;
 
 /**
- * A FileOpenResult is a simple DTO which is returned by {@link MapDatabase#openFile(String)}.
+ * A FileOpenResult is a simple DTO which is returned by {@link MapDatabase#openFile(File)}.
  */
 public class FileOpenResult {
 	/**
