@@ -14,8 +14,6 @@
  */
 package org.mapsforge.applications.android.samples;
 
-import java.io.File;
-
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 
@@ -31,7 +29,7 @@ public class BasicMapViewer extends MapActivity {
 		MapView mapView = new MapView(this);
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
-		mapView.setMapFile(new File("/sdcard/berlin.map"));
+		mapView.setMapFile("/sdcard/berlin.map");
 		setContentView(mapView);
 	}
 }

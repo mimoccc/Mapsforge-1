@@ -18,6 +18,5 @@
 		<activity android:name=".DualMapViewer" android:label="DualMapViewer" />
 		<activity android:name=".OverlayMapViewer" android:label="OverlayMapViewer" />
 		<activity android:name=".DownloadMapViewer" android:label="DownloadMapViewer" />
-		<activity android:name=".POIViewer" android:label="POIViewer" />
 	</application>
 </manifest>

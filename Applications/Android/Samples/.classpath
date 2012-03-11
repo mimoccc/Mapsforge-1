@@ -4,6 +4,5 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="var" path="M2_REPO/org/mapsforge/mapsforge-map/0.3.0-SNAPSHOT/mapsforge-map-0.3.0-SNAPSHOT-jar-with-dependencies.jar" sourcepath="/M2_REPO/org/mapsforge/mapsforge-map/0.3.0-SNAPSHOT/mapsforge-map-0.3.0-SNAPSHOT-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mapsforge/mapsforge-poi-reader/0.3.0-SNAPSHOT/mapsforge-poi-reader-0.3.0-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

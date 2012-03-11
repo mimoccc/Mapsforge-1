@@ -14,8 +14,6 @@
  */
 package org.mapsforge.applications.android.samples;
 
-import java.io.File;
-
 import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.overlay.ArrayCircleOverlay;
@@ -80,7 +78,7 @@ public class OverlayMapViewer extends MapActivity {
 		MapView mapView = new MapView(this);
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
-		mapView.setMapFile(new File("/sdcard/berlin.map"));
+		mapView.setMapFile("/sdcard/berlin.map");
 		setContentView(mapView);
 
 		// create some points to be used in the different overlays
