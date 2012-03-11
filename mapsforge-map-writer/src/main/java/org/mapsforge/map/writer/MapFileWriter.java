@@ -443,7 +443,7 @@ public final class MapFileWriter {
 			}
 
 			int amountZoomLevels = maxZoomCurrentInterval - minZoomCurrentInterval + 1;
-			short[][] entitiesPerZoomLevel = new short[amountZoomLevels][2];
+			int[][] entitiesPerZoomLevel = new int[amountZoomLevels][2];
 
 			// WRITE POIS
 			for (byte zoomlevel = minZoomCurrentInterval; zoomlevel <= maxZoomCurrentInterval; zoomlevel++) {
@@ -505,10 +505,10 @@ public final class MapFileWriter {
 		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, tileBuffer);
 	}
 
-	static void writeZoomLevelTable(short[][] entitiesPerZoomLevel, ByteBuffer tileBuffer) {
+	static void writeZoomLevelTable(int[][] entitiesPerZoomLevel, ByteBuffer tileBuffer) {
 		// write cumulated number of POIs and ways for this tile on
 		// each zoom level
-		for (short[] entityCount : entitiesPerZoomLevel) {
+		for (int[] entityCount : entitiesPerZoomLevel) {
 			tileBuffer.put(Serializer.getVariableByteUnsigned(entityCount[0]));
 			tileBuffer.put(Serializer.getVariableByteUnsigned(entityCount[1]));
 		}
