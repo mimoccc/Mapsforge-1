@@ -369,6 +369,10 @@ public class MapView extends ViewGroup {
 		}
 
 		MapPosition mapPosition = this.mapViewPosition.getMapPosition();
+		if (mapPosition == null) {
+			return;
+		}
+
 		GeoPoint geoPoint = mapPosition.geoPoint;
 		double pixelLeft = MercatorProjection.longitudeToPixelX(geoPoint.getLongitude(), mapPosition.zoomLevel);
 		double pixelTop = MercatorProjection.latitudeToPixelY(geoPoint.getLatitude(), mapPosition.zoomLevel);
