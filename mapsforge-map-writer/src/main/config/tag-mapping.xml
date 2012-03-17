@@ -350,6 +350,8 @@
 		<osm-tag key="military" value="naval_base" zoom-appear="12" />
 
 		<osm-tag key="place" value="locality" zoom-appear="17" />
+		
+		<osm-tag key="area" value="yes" zoom-appear="12" />
 	</ways>
 
 	<!-- NOT TO RENDER -->
@@ -357,7 +359,6 @@
 		<osm-tag key="access" value="destination" renderable="false" />
 		<osm-tag key="access" value="private" renderable="false" />
 
-		<osm-tag key="area" value="yes" renderable="false" />
 		<osm-tag key="bridge" value="yes" renderable="false" />
 
 		<osm-tag key="oneway" value="yes" equivalent-values="1,true" renderable="false" />
