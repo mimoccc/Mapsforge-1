@@ -41,7 +41,6 @@
 	<string name="info_map_file_language_preference">Bevorzugte Sprache</string>
 	<string name="info_map_file_name">Datei</string>
 	<string name="info_map_file_size">Dateigröße</string>
-	<string name="info_map_file_start">Startposition</string>
 	<string name="info_map_file_start_position">Startposition</string>
 	<string name="info_map_file_start_zoom_level">Start-Zoomstufe</string>
 	<string name="info_map_file_version">Version</string>
