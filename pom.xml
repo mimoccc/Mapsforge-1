@@ -26,8 +26,9 @@
 	</modules>
 
 	<scm>
-		<url>scm:svn:https://mapsforge.googlecode.com/svn/trunk/</url>
-		<connection>https://mapsforge.googlecode.com/svn/trunk/</connection>
+		<connection>scm:svn:https://mapsforge.googlecode.com/svn</connection>
+		<developerConnection>scm:svn:https://mapsforge.googlecode.com/svn</developerConnection>
+		<url>https://code.google.com/p/mapsforge/source/browse/</url>
 	</scm>
 
 	<build>
@@ -110,6 +111,12 @@
 					<quiet>true</quiet>
 					<show>protected</show>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.2.2</version>
 			</plugin>
 
 			<plugin>
