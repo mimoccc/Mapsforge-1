@@ -33,7 +33,7 @@ public class MapDatabaseFileHeaderTest {
 	private static final int FILE_SIZE = 709;
 	private static final int FILE_VERSION = 3;
 	private static final String LANGUAGE_PREFERENCE = "en";
-	private static final long MAP_DATE = 1331376609114L;
+	private static final long MAP_DATE = 1332081126944L;
 	private static final File MAP_FILE = new File("src/test/resources/file_header/file_header.map");
 	private static final int NUMBER_OF_SUBFILES = 3;
 	private static final String PROJECTION_NAME = "Mercator";
