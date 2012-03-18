@@ -26,8 +26,8 @@
 	</modules>
 
 	<scm>
-		<connection>scm:svn:https://mapsforge.googlecode.com/svn</connection>
-		<developerConnection>scm:svn:https://mapsforge.googlecode.com/svn</developerConnection>
+		<connection>scm:svn:https://mapsforge.googlecode.com/svn/trunk</connection>
+		<developerConnection>scm:svn:https://mapsforge.googlecode.com/svn/trunk</developerConnection>
 		<url>https://code.google.com/p/mapsforge/source/browse/</url>
 	</scm>
 
