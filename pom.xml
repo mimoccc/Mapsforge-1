@@ -4,7 +4,7 @@
 
 	<groupId>org.mapsforge</groupId>
 	<artifactId>mapsforge</artifactId>
-	<version>0.3.0</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>mapsforge</name>
 	<description>free mapping and navigation tools</description>
@@ -25,9 +25,9 @@
 	</modules>
 
 	<scm>
-		<connection>scm:svn:https://mapsforge.googlecode.com/svn/tags/0.3.0</connection>
-		<developerConnection>scm:svn:https://mapsforge.googlecode.com/svn/tags/0.3.0</developerConnection>
-		<url>https://code.google.com/p/mapsforge/source/browse/tags/0.3.0</url>
+		<connection>scm:svn:https://mapsforge.googlecode.com/svn/trunk</connection>
+		<developerConnection>scm:svn:https://mapsforge.googlecode.com/svn/trunk</developerConnection>
+		<url>https://code.google.com/p/mapsforge/source/browse/</url>
 	</scm>
 
 	<build>
