@@ -33,6 +33,7 @@
 	<string name="go_to_position">Vai alla posizione</string>
 	<string name="info_map_file_area">Area</string>
 	<string name="info_map_file_comment">Commento</string>
+	<string name="info_map_file_created_by">Generato da</string>
 	<string name="info_map_file_date">Data</string>
 	<string name="info_map_file_debug">Informazioni di debug</string>
 	<string name="info_map_file_debug_no">non incluso</string>
@@ -79,6 +80,8 @@
 	<string name="preferences_move_speed">Velocità di scorrimento</string>
 	<string name="preferences_move_speed_desc">Impostare velocità di scorrimento della mappa</string>
 	<string name="preferences_move_speed_value">%d %% velocità di scorrimento</string>
+	<string name="preferences_scale_bar_unit">Unità della scala della mappa</string>
+	<string name="preferences_scale_bar_unit_desc">Selezionare l\'unità della scala della mappa</string>
 	<string name="preferences_show_fps_counter">Frame rate</string>
 	<string name="preferences_show_fps_counter_desc">Visualizzare contatore di frame rate</string>
 	<string name="preferences_show_scale_bar">Scala della mappa</string>
