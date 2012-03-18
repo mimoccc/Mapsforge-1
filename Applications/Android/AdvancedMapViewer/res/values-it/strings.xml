@@ -5,6 +5,11 @@
 		<item>Mapnik (in linea)</item>
 		<item>OpenCycleMap (in linea)</item>
 	</string-array>
+	
+	<string-array name="preferences_scale_bar_unit_values">
+		<item>anglosassone</item>
+		<item>metrico</item>
+	</string-array>
 
 	<string-array name="preferences_text_scale_values">
 		<item>minuscola</item>
