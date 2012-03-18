@@ -150,8 +150,8 @@
 		<osm-tag key="highway" value="raceway" zoom-appear="12" />
 		<osm-tag key="highway" value="residential" zoom-appear="12" />
 		<osm-tag key="highway" value="road" zoom-appear="12" />
-		<osm-tag key="highway" value="secondary" zoom-appear="12" />
-		<osm-tag key="highway" value="secondary_link" zoom-appear="12" />
+		<osm-tag key="highway" value="secondary" zoom-appear="11" />
+		<osm-tag key="highway" value="secondary_link" zoom-appear="11" />
 		<osm-tag key="highway" value="service" zoom-appear="13" />
 		<osm-tag key="highway" value="services" zoom-appear="13" />
 		<osm-tag key="highway" value="steps" zoom-appear="15" />
@@ -193,11 +193,11 @@
 		<osm-tag key="landuse" value="cemetery" zoom-appear="10" />
 		<osm-tag key="landuse" value="commercial" zoom-appear="10" />
 		<osm-tag key="landuse" value="construction" zoom-appear="12" />
-		<osm-tag key="landuse" value="farm" zoom-appear="10" />
-		<osm-tag key="landuse" value="farmland" zoom-appear="10" />
+		<osm-tag key="landuse" value="farm" zoom-appear="12" />
+		<osm-tag key="landuse" value="farmland" zoom-appear="12" />
 		<osm-tag key="landuse" value="forest" zoom-appear="8" />
-		<osm-tag key="landuse" value="grass" zoom-appear="10" />
-		<osm-tag key="landuse" value="greenfield" zoom-appear="10" />
+		<osm-tag key="landuse" value="grass" zoom-appear="12" />
+		<osm-tag key="landuse" value="greenfield" zoom-appear="12" />
 		<osm-tag key="landuse" value="industrial" zoom-appear="10" />
 		<osm-tag key="landuse" value="landfill" zoom-appear="12" />
 		<osm-tag key="landuse" value="meadow" zoom-appear="12" />
