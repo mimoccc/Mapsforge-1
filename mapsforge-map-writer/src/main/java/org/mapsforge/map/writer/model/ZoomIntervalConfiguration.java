@@ -41,7 +41,7 @@ public final class ZoomIntervalConfiguration {
 				throw new IllegalArgumentException("invalid interval configuration, found only " + interval.length
 						+ "parameters for interval " + i);
 			}
-			if (interval[0] <= interval[1] || interval[0] >= interval[2]) {
+			if (interval[0] < interval[1] || interval[0] > interval[2]) {
 				throw new IllegalArgumentException("invalid configuration for interval " + i
 						+ ", make sure that minZoom < baseZoom < maxZoom");
 			}

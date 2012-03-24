@@ -67,5 +67,5 @@ public final class Constants {
 	/**
 	 * Default simplification factor.
 	 */
-	public static final double DEFAULT_SIMPLIFICATION_FACTOR = 5;
+	public static final double DEFAULT_SIMPLIFICATION_FACTOR = 2.5;
 }

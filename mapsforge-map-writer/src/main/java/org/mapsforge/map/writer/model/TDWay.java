@@ -57,6 +57,7 @@ public class TDWay {
 	private byte shape;
 	private final TDNode[] wayNodes;
 	private boolean reversedInRelation;
+	private boolean invalid;
 
 	/**
 	 * Creates a new TDWay from an osmosis way entity using the given NodeResolver.
@@ -367,6 +368,21 @@ public class TDWay {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * @return the invalid
+	 */
+	public boolean isInvalid() {
+		return this.invalid;
+	}
+
+	/**
+	 * @param invalid
+	 *            the invalid to set
+	 */
+	public void setInvalid(boolean invalid) {
+		this.invalid = invalid;
 	}
 
 	@Override

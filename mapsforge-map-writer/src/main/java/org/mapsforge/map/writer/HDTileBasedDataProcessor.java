@@ -116,7 +116,7 @@ public final class HDTileBasedDataProcessor extends BaseTileBasedDataProcessor {
 	}
 
 	@Override
-	public List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
+	public synchronized List<TDWay> getInnerWaysOfMultipolygon(long outerWayID) {
 		TLongArrayList innerwayIDs = this.outerToInnerMapping.get(outerWayID);
 		if (innerwayIDs == null) {
 			return null;

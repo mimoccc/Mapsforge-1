@@ -43,7 +43,6 @@ import org.mapsforge.map.writer.model.TileBasedDataProcessor;
 import org.mapsforge.map.writer.model.TileCoordinate;
 import org.mapsforge.map.writer.model.TileData;
 import org.mapsforge.map.writer.model.TileGridLayout;
-import org.mapsforge.map.writer.model.TileInfo;
 import org.mapsforge.map.writer.model.WayResolver;
 import org.mapsforge.map.writer.model.ZoomIntervalConfiguration;
 import org.mapsforge.map.writer.util.GeoUtils;
@@ -187,21 +186,6 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 	protected void addWayToTiles(TDWay way, int enlargement) {
 		int bboxEnlargementLocal = enlargement;
-		if (way.isCoastline()) {
-			// find matching tiles on zoom level 12
-			bboxEnlargementLocal = 0;
-			Set<TileCoordinate> coastLineTiles = GeoUtils.mapWayToTiles(way, TileInfo.TILE_INFO_ZOOMLEVEL,
-					bboxEnlargementLocal);
-			for (TileCoordinate tileCoordinate : coastLineTiles) {
-				TLongHashSet coastlines = this.tilesToCoastlines.get(tileCoordinate);
-				if (coastlines == null) {
-					coastlines = new TLongHashSet();
-					this.tilesToCoastlines.put(tileCoordinate, coastlines);
-				}
-				coastlines.add(way.getId());
-			}
-		}
-
 		byte minZoomLevel = way.getMinimumZoomLevel();
 		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			// is way seen in a zoom interval?

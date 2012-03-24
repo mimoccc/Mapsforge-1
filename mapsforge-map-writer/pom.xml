@@ -57,7 +57,9 @@
 						<configuration>
 							<target>
 								<echo message="Copying jar file to osmosis plugin dir" />
-								<copy overwrite="true" file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar" todir="${osmosis.plugin.dir}" />
+								<copy overwrite="true"
+									file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
+									todir="${osmosis.plugin.dir}" />
 							</target>
 						</configuration>
 						<goals>
@@ -106,7 +108,8 @@
 				</os>
 			</activation>
 			<properties>
-				<osmosis.plugin.dir>${user.home}/Application Data/Openstreetmap/Osmosis/Plugins</osmosis.plugin.dir>
+				<osmosis.plugin.dir>${user.home}/Application
+					Data/Openstreetmap/Osmosis/Plugins</osmosis.plugin.dir>
 			</properties>
 		</profile>
 	</profiles>
@@ -134,6 +137,12 @@
 					<artifactId>xercesImpl</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>11.0.2</version>
 		</dependency>
 
 		<dependency>
