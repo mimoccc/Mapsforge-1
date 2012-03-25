@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tag-mapping xmlns="http://mapsforge.org/tag-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://mapsforge.org/tag-mapping ../resources/tag-mapping.xsd" default-zoom-appear="16" profile-name="default-profile">
+	xsi:schemaLocation="http://mapsforge.org/tag-mapping ../resources/tag-mapping.xsd" default-zoom-appear="16"
+	profile-name="default-profile">
 
 	<!-- ************* POIS *************** -->
 
@@ -21,6 +22,7 @@
 		<osm-tag key="amenity" value="bus_station" zoom-appear="15" />
 		<osm-tag key="amenity" value="cafe" zoom-appear="17" />
 		<osm-tag key="amenity" value="cinema" zoom-appear="17" />
+		<osm-tag key="amenity" value="drinking_water" zoom-appear="17" />
 		<osm-tag key="amenity" value="fast_food" zoom-appear="17" />
 		<osm-tag key="amenity" value="fountain" zoom-appear="17" />
 		<osm-tag key="amenity" value="fire_station" zoom-appear="17" />
@@ -76,6 +78,7 @@
 
 	<!-- TOURISM TAGS -->
 	<pois>
+		<osm-tag key="tourism" value="alpine_hut" zoom-appear="16" />
 		<osm-tag key="tourism" value="attraction" zoom-appear="17" />
 		<osm-tag key="tourism" value="hostel" zoom-appear="17" />
 		<osm-tag key="tourism" value="hotel" zoom-appear="17" />
@@ -165,10 +168,10 @@
 	<!-- NATURAL / WATERWAY TAGS -->
 	<ways>
 		<osm-tag key="lock" value="yes" zoom-appear="14" />
-		
+
 		<osm-tag key="natural" value="beach" zoom-appear="10" />
 		<osm-tag key="natural" value="coastline" zoom-appear="0" />
-		<osm-tag key="natural" value="glacier" zoom-appear="8" enabled="false"/>
+		<osm-tag key="natural" value="glacier" zoom-appear="8" enabled="false" />
 		<osm-tag key="natural" value="heath" zoom-appear="10" />
 		<osm-tag key="natural" value="land" zoom-appear="8" />
 		<osm-tag key="natural" value="marsh" zoom-appear="12" />
@@ -287,23 +290,22 @@
 
 	<!-- ADMINISTRATIVE BOUNDARIES -->
 	<ways>
-	
+
 		<osm-tag key="admin_level" value="1" force-polygon-line="true" zoom-appear="4">
-			<zoom-override key="boundary" value="administrative"/>
+			<zoom-override key="boundary" value="administrative" />
 		</osm-tag>
 		<osm-tag key="admin_level" value="2" force-polygon-line="true" zoom-appear="4">
-			<zoom-override key="boundary" value="administrative"/>
-		</osm-tag> 		
+			<zoom-override key="boundary" value="administrative" />
+		</osm-tag>
 		<osm-tag key="admin_level" value="3" force-polygon-line="true" zoom-appear="4">
-			<zoom-override key="boundary" value="administrative"/>
+			<zoom-override key="boundary" value="administrative" />
 		</osm-tag>
 		<osm-tag key="admin_level" value="4" force-polygon-line="true" zoom-appear="6">
-			<zoom-override key="boundary" value="administrative"/>
+			<zoom-override key="boundary" value="administrative" />
 		</osm-tag>
-		<!-- <osm-tag key="admin_level" value="6" force-polygon-line="true" zoom-appear="15" />
-		<osm-tag key="admin_level" value="8" force-polygon-line="true" zoom-appear="16" />
-		<osm-tag key="admin_level" value="9" force-polygon-line="true" zoom-appear="16" />
-		<osm-tag key="admin_level" value="10" force-polygon-line="true" zoom-appear="16" /> -->
+		<!-- <osm-tag key="admin_level" value="6" force-polygon-line="true" zoom-appear="15" /> <osm-tag key="admin_level" value="8" 
+			force-polygon-line="true" zoom-appear="16" /> <osm-tag key="admin_level" value="9" force-polygon-line="true" zoom-appear="16" 
+			/> <osm-tag key="admin_level" value="10" force-polygon-line="true" zoom-appear="16" /> -->
 	</ways>
 
 	<!-- AIRPORT TAGS -->
@@ -337,8 +339,8 @@
 		<osm-tag key="barrier" value="retaining_wall" zoom-appear="16" />
 		<osm-tag key="barrier" value="wall" zoom-appear="16" />
 
-		<osm-tag key="boundary" value="administrative" force-polygon-line="true" zoom-appear="0" enabled="false"/>
-		<osm-tag key="boundary" value="national_park" force-polygon-line="true" zoom-appear="12"/>
+		<osm-tag key="boundary" value="administrative" force-polygon-line="true" zoom-appear="0" enabled="false" />
+		<osm-tag key="boundary" value="national_park" force-polygon-line="true" zoom-appear="12" />
 
 		<osm-tag key="historic" value="ruins" zoom-appear="17" />
 		<osm-tag key="historic" value="castle" zoom-appear="15" />
@@ -350,7 +352,7 @@
 		<osm-tag key="military" value="naval_base" zoom-appear="12" />
 
 		<osm-tag key="place" value="locality" zoom-appear="17" />
-		
+
 		<osm-tag key="area" value="yes" zoom-appear="12" />
 	</ways>
 
