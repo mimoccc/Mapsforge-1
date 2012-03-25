@@ -978,6 +978,9 @@
 			<rule e="node" k="amenity" v="cinema" zoom-min="17">
 				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/cinema.png" />
 			</rule>
+			<rule e="node" k="amenity" v="drinking_water" zoom-min="17">
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/drinking_water.png" />
+			</rule>
 			<rule e="node" k="amenity" v="fast_food" zoom-min="17">
 				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/fastfood.png" />
 			</rule>
@@ -1182,6 +1185,9 @@
 
 		<!-- tourism -->
 		<rule e="node" k="tourism" v="*">
+			<rule e="node" k="tourism" v="alpine_hut" zoom-min="16">
+				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/alpine_hut.png" />
+			</rule>
 			<rule e="node" k="tourism" v="camp_site" zoom-min="17">
 				<symbol src="jar:/org/mapsforge/android/maps/rendertheme/osmarender/symbols/campSite.png" />
 			</rule>
