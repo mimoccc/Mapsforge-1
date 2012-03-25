@@ -18,11 +18,10 @@ import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
-import org.mapsforge.map.reader.DummyMapDatabaseCallback.PointOfInterest;
-import org.mapsforge.map.reader.DummyMapDatabaseCallback.Way;
 import org.mapsforge.map.reader.header.FileOpenResult;
 import org.mapsforge.map.reader.header.MapFileInfo;
 
@@ -36,8 +35,7 @@ public class MapDatabaseWithDataTest {
 
 	private static void checkPointOfInterest(PointOfInterest pointOfInterest) {
 		Assert.assertEquals(7, pointOfInterest.layer);
-		Assert.assertEquals(40000, pointOfInterest.latitude);
-		Assert.assertEquals(80000, pointOfInterest.longitude);
+		Assert.assertEquals(new GeoPoint(40000, 80000), pointOfInterest.position);
 		Assert.assertEquals(4, pointOfInterest.tags.size());
 		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("place=country")));
 		Assert.assertTrue(pointOfInterest.tags.contains(new Tag("name=АБВГДЕЖЗ")));
@@ -57,7 +55,7 @@ public class MapDatabaseWithDataTest {
 	}
 
 	/**
-	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
+	 * Tests the {@link MapDatabase#readMapData(Tile)} method.
 	 */
 	@Test
 	public void executeQueryTest() {
@@ -74,14 +72,13 @@ public class MapDatabaseWithDataTest {
 			long tileY = MercatorProjection.latitudeToTileY(0.04, zoomLevel);
 			Tile tile = new Tile(tileX, tileY, zoomLevel);
 
-			DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
-			mapDatabase.executeQuery(tile, dummyMapDatabaseCallback);
+			MapReadResult mapReadResult = mapDatabase.readMapData(tile);
 
-			Assert.assertEquals(1, dummyMapDatabaseCallback.pointOfInterests.size());
-			Assert.assertEquals(1, dummyMapDatabaseCallback.ways.size());
+			Assert.assertEquals(1, mapReadResult.pointOfInterests.size());
+			Assert.assertEquals(1, mapReadResult.ways.size());
 
-			checkPointOfInterest(dummyMapDatabaseCallback.pointOfInterests.get(0));
-			checkWay(dummyMapDatabaseCallback.ways.get(0));
+			checkPointOfInterest(mapReadResult.pointOfInterests.get(0));
+			checkWay(mapReadResult.ways.get(0));
 		}
 
 		mapDatabase.closeFile();

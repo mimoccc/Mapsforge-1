@@ -20,7 +20,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tile;
-import org.mapsforge.map.reader.DummyMapDatabaseCallback.Way;
 import org.mapsforge.map.reader.header.FileOpenResult;
 
 /**
@@ -40,20 +39,19 @@ public class MapDatabaseWayNodeEncodingTest {
 		long tileY = MercatorProjection.latitudeToTileY(0, ZOOM_LEVEL);
 		Tile tile = new Tile(tileX, tileY, ZOOM_LEVEL);
 
-		DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
-		mapDatabase.executeQuery(tile, dummyMapDatabaseCallback);
+		MapReadResult mapReadResult = mapDatabase.readMapData(tile);
 		mapDatabase.closeFile();
 
-		Assert.assertTrue(dummyMapDatabaseCallback.pointOfInterests.isEmpty());
-		Assert.assertEquals(1, dummyMapDatabaseCallback.ways.size());
+		Assert.assertTrue(mapReadResult.pointOfInterests.isEmpty());
+		Assert.assertEquals(1, mapReadResult.ways.size());
 
-		Way way = dummyMapDatabaseCallback.ways.get(0);
+		Way way = mapReadResult.ways.get(0);
 		float[][] wayNodesExpected = new float[][] { { 0, 0, 100000, 0, 100000, -100000, 0, -100000, 0, 0 } };
 		Assert.assertArrayEquals(wayNodesExpected, way.wayNodes);
 	}
 
 	/**
-	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
+	 * Tests the {@link MapDatabase#readMapData(Tile)} method.
 	 */
 	@Test
 	public void executeQueryTest() {

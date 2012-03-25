@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  * A utility class with IO-specific helper methods.
  */
 public final class IOUtils {
-	private static final Logger LOG = Logger.getLogger(IOUtils.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IOUtils.class.getName());
 
 	/**
 	 * Invokes the {@link Closeable#close()} method on the given object. If an {@link IOException} occurs during the
@@ -38,7 +38,7 @@ public final class IOUtils {
 				closeable.close();
 			}
 		} catch (IOException e) {
-			LOG.log(Level.WARNING, null, e);
+			LOGGER.log(Level.WARNING, null, e);
 		}
 	}
 

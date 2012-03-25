@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.GeoPoint;
 import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.core.Tag;
 import org.mapsforge.core.Tile;
@@ -35,7 +36,7 @@ import org.mapsforge.map.reader.header.SubFileParameter;
  * <p>
  * This class is not thread-safe. Each thread should use its own instance.
  * 
- * @see <a href="http://code.google.com/p/mapsforge/wiki/SpecificationBinaryMapFile">Specification</a>
+ * @see <a href="https://code.google.com/p/mapsforge/wiki/SpecificationBinaryMapFile">Specification</a>
  */
 public class MapDatabase {
 	/**
@@ -73,7 +74,7 @@ public class MapDatabase {
 	 */
 	private static final String INVALID_FIRST_WAY_OFFSET = "invalid first way offset: ";
 
-	private static final Logger LOG = Logger.getLogger(MapDatabase.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(MapDatabase.class.getName());
 
 	/**
 	 * Maximum way nodes sequence length which is considered as valid.
@@ -209,8 +210,7 @@ public class MapDatabase {
 	private int tileLongitude;
 
 	/**
-	 * Closes the map file and destroys all internal caches. This method has no effect if no map file is currently
-	 * opened.
+	 * Closes the map file and destroys all internal caches. Has no effect if no map file is currently opened.
 	 */
 	public void closeFile() {
 		try {
@@ -228,37 +228,7 @@ public class MapDatabase {
 
 			this.readBuffer = null;
 		} catch (IOException e) {
-			LOG.log(Level.SEVERE, null, e);
-		}
-	}
-
-	/**
-	 * Starts a database query with the given parameters.
-	 * 
-	 * @param tile
-	 *            the tile to read.
-	 * @param mapDatabaseCallback
-	 *            the callback which handles the extracted map elements.
-	 */
-	public void executeQuery(Tile tile, MapDatabaseCallback mapDatabaseCallback) {
-		try {
-			prepareExecution();
-			QueryParameters queryParameters = new QueryParameters();
-			queryParameters.queryZoomLevel = this.mapFileHeader.getQueryZoomLevel(tile.zoomLevel);
-
-			// get and check the sub-file for the query zoom level
-			SubFileParameter subFileParameter = this.mapFileHeader.getSubFileParameter(queryParameters.queryZoomLevel);
-			if (subFileParameter == null) {
-				LOG.warning("no sub-file for zoom level: " + queryParameters.queryZoomLevel);
-				return;
-			}
-
-			QueryCalculations.calculateBaseTiles(queryParameters, tile, subFileParameter);
-			QueryCalculations.calculateBlocks(queryParameters, subFileParameter);
-
-			processBlocks(mapDatabaseCallback, queryParameters, subFileParameter);
-		} catch (IOException e) {
-			LOG.log(Level.SEVERE, null, e);
+			LOGGER.log(Level.SEVERE, null, e);
 		}
 	}
 
@@ -322,10 +292,40 @@ public class MapDatabase {
 
 			return FileOpenResult.SUCCESS;
 		} catch (IOException e) {
-			LOG.log(Level.SEVERE, null, e);
+			LOGGER.log(Level.SEVERE, null, e);
 			// make sure that the file is closed
 			closeFile();
 			return new FileOpenResult(e.getMessage());
+		}
+	}
+
+	/**
+	 * Reads all map data for the area covered by the given tile at the tile zoom level.
+	 * 
+	 * @param tile
+	 *            defines area and zoom level of read map data.
+	 * @return the read map data.
+	 */
+	public MapReadResult readMapData(Tile tile) {
+		try {
+			prepareExecution();
+			QueryParameters queryParameters = new QueryParameters();
+			queryParameters.queryZoomLevel = this.mapFileHeader.getQueryZoomLevel(tile.zoomLevel);
+
+			// get and check the sub-file for the query zoom level
+			SubFileParameter subFileParameter = this.mapFileHeader.getSubFileParameter(queryParameters.queryZoomLevel);
+			if (subFileParameter == null) {
+				LOGGER.warning("no sub-file for zoom level: " + queryParameters.queryZoomLevel);
+				return null;
+			}
+
+			QueryCalculations.calculateBaseTiles(queryParameters, tile, subFileParameter);
+			QueryCalculations.calculateBlocks(queryParameters, subFileParameter);
+
+			return processBlocks(queryParameters, subFileParameter);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, null, e);
+			return null;
 		}
 	}
 
@@ -392,8 +392,8 @@ public class MapDatabase {
 	 */
 	private void logDebugSignatures() {
 		if (this.mapFileHeader.getMapFileInfo().debugFile) {
-			LOG.warning(DEBUG_SIGNATURE_WAY + this.signatureWay);
-			LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+			LOGGER.warning(DEBUG_SIGNATURE_WAY + this.signatureWay);
+			LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 		}
 	}
 
@@ -403,25 +403,14 @@ public class MapDatabase {
 		}
 	}
 
-	/**
-	 * Processes a single block and executes the callback functions on all map elements.
-	 * 
-	 * @param queryParameters
-	 *            the parameters of the current query.
-	 * @param subFileParameter
-	 *            the parameters of the current map file.
-	 * @param mapDatabaseCallback
-	 *            the callback which handles the extracted map elements.
-	 */
-	private void processBlock(QueryParameters queryParameters, SubFileParameter subFileParameter,
-			MapDatabaseCallback mapDatabaseCallback) {
+	private PoiWayBundle processBlock(QueryParameters queryParameters, SubFileParameter subFileParameter) {
 		if (!processBlockSignature()) {
-			return;
+			return null;
 		}
 
 		int[][] zoomTable = readZoomTable(subFileParameter);
 		if (zoomTable == null) {
-			return;
+			return null;
 		}
 		int zoomTableRow = queryParameters.queryZoomLevel - subFileParameter.zoomLevelMin;
 		int poisOnQueryZoomLevel = zoomTable[zoomTableRow][0];
@@ -430,48 +419,54 @@ public class MapDatabase {
 		// get the relative offset to the first stored way in the block
 		int firstWayOffset = this.readBuffer.readUnsignedInt();
 		if (firstWayOffset < 0) {
-			LOG.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
+			LOGGER.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
 			if (this.mapFileHeader.getMapFileInfo().debugFile) {
-				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+				LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
-			return;
+			return null;
 		}
 
 		// add the current buffer position to the relative first way offset
 		firstWayOffset += this.readBuffer.getBufferPosition();
 		if (firstWayOffset > this.readBuffer.getBufferSize()) {
-			LOG.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
+			LOGGER.warning(INVALID_FIRST_WAY_OFFSET + firstWayOffset);
 			if (this.mapFileHeader.getMapFileInfo().debugFile) {
-				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+				LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
-			return;
+			return null;
 		}
 
-		if (!processPOIs(mapDatabaseCallback, poisOnQueryZoomLevel)) {
-			return;
+		List<PointOfInterest> pois = processPOIs(poisOnQueryZoomLevel);
+		if (pois == null) {
+			return null;
 		}
 
 		// finished reading POIs, check if the current buffer position is valid
 		if (this.readBuffer.getBufferPosition() > firstWayOffset) {
-			LOG.warning("invalid buffer position: " + this.readBuffer.getBufferPosition());
+			LOGGER.warning("invalid buffer position: " + this.readBuffer.getBufferPosition());
 			if (this.mapFileHeader.getMapFileInfo().debugFile) {
-				LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+				LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 			}
-			return;
+			return null;
 		}
 
 		// move the pointer to the first way
 		this.readBuffer.setBufferPosition(firstWayOffset);
 
-		if (!processWays(queryParameters, mapDatabaseCallback, waysOnQueryZoomLevel)) {
-			return;
+		List<Way> ways = processWays(queryParameters, waysOnQueryZoomLevel);
+		if (ways == null) {
+			return null;
 		}
+
+		return new PoiWayBundle(pois, ways);
 	}
 
-	private void processBlocks(MapDatabaseCallback mapDatabaseCallback, QueryParameters queryParameters,
-			SubFileParameter subFileParameter) throws IOException {
+	private MapReadResult processBlocks(QueryParameters queryParameters, SubFileParameter subFileParameter)
+			throws IOException {
 		boolean queryIsWater = true;
 		boolean queryReadWaterInfo = false;
+
+		MapReadResultBuilder mapReadResultBuilder = new MapReadResultBuilder();
 
 		// read and process all blocks from top to bottom and from left to right
 		for (long row = queryParameters.fromBlockY; row <= queryParameters.toBlockY; ++row) {
@@ -493,9 +488,9 @@ public class MapDatabase {
 				// get and check the current block pointer
 				long currentBlockPointer = currentBlockIndexEntry & BITMASK_INDEX_OFFSET;
 				if (currentBlockPointer < 1 || currentBlockPointer > subFileParameter.subFileSize) {
-					LOG.warning("invalid current block pointer: " + currentBlockPointer);
-					LOG.warning("subFileSize: " + subFileParameter.subFileSize);
-					return;
+					LOGGER.warning("invalid current block pointer: " + currentBlockPointer);
+					LOGGER.warning("subFileSize: " + subFileParameter.subFileSize);
+					return null;
 				}
 
 				long nextBlockPointer;
@@ -508,27 +503,27 @@ public class MapDatabase {
 					nextBlockPointer = this.databaseIndexCache.getIndexEntry(subFileParameter, blockNumber + 1)
 							& BITMASK_INDEX_OFFSET;
 					if (nextBlockPointer < 1 || nextBlockPointer > subFileParameter.subFileSize) {
-						LOG.warning("invalid next block pointer: " + nextBlockPointer);
-						LOG.warning("sub-file size: " + subFileParameter.subFileSize);
-						return;
+						LOGGER.warning("invalid next block pointer: " + nextBlockPointer);
+						LOGGER.warning("sub-file size: " + subFileParameter.subFileSize);
+						return null;
 					}
 				}
 
 				// calculate the size of the current block
 				int currentBlockSize = (int) (nextBlockPointer - currentBlockPointer);
 				if (currentBlockSize < 0) {
-					LOG.warning("current block size must not be negative: " + currentBlockSize);
-					return;
+					LOGGER.warning("current block size must not be negative: " + currentBlockSize);
+					return null;
 				} else if (currentBlockSize == 0) {
 					// the current block is empty, continue with the next block
 					continue;
 				} else if (currentBlockSize > ReadBuffer.MAXIMUM_BUFFER_SIZE) {
 					// the current block is too large, continue with the next block
-					LOG.warning("current block size too large: " + currentBlockSize);
+					LOGGER.warning("current block size too large: " + currentBlockSize);
 					continue;
 				} else if (currentBlockPointer + currentBlockSize > this.fileSize) {
-					LOG.warning("current block largher than file size: " + currentBlockSize);
-					return;
+					LOGGER.warning("current block largher than file size: " + currentBlockSize);
+					return null;
 				}
 
 				// seek to the current block in the map file
@@ -537,8 +532,8 @@ public class MapDatabase {
 				// read the current block into the buffer
 				if (!this.readBuffer.readFromFile(currentBlockSize)) {
 					// skip the current block
-					LOG.warning("reading current block has failed: " + currentBlockSize);
-					return;
+					LOGGER.warning("reading current block has failed: " + currentBlockSize);
+					return null;
 				}
 
 				// calculate the top-left coordinates of the underlying tile
@@ -550,17 +545,20 @@ public class MapDatabase {
 				this.tileLongitude = (int) (tileLongitudeDeg * 1000000);
 
 				try {
-					processBlock(queryParameters, subFileParameter, mapDatabaseCallback);
+					PoiWayBundle poiWayBundle = processBlock(queryParameters, subFileParameter);
+					mapReadResultBuilder.add(poiWayBundle);
 				} catch (ArrayIndexOutOfBoundsException e) {
-					LOG.log(Level.SEVERE, null, e);
+					LOGGER.log(Level.SEVERE, null, e);
 				}
 			}
 		}
 
 		// the query is finished, was the water flag set for all blocks?
 		if (queryIsWater && queryReadWaterInfo) {
-			mapDatabaseCallback.renderWaterBackground();
+			mapReadResultBuilder.isWater = true;
 		}
+
+		return mapReadResultBuilder.build();
 	}
 
 	/**
@@ -573,24 +571,15 @@ public class MapDatabase {
 			// get and check the block signature
 			this.signatureBlock = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_BLOCK);
 			if (!this.signatureBlock.startsWith("###TileStart")) {
-				LOG.warning("invalid block signature: " + this.signatureBlock);
+				LOGGER.warning("invalid block signature: " + this.signatureBlock);
 				return false;
 			}
 		}
 		return true;
 	}
 
-	/**
-	 * Processes the given number of POIs.
-	 * 
-	 * @param mapDatabaseCallback
-	 *            the callback which handles the extracted POIs.
-	 * @param numberOfPois
-	 *            how many POIs should be processed.
-	 * @return true if the POIs could be processed successfully, false otherwise.
-	 */
-	private boolean processPOIs(MapDatabaseCallback mapDatabaseCallback, int numberOfPois) {
-		List<Tag> tags = new ArrayList<Tag>();
+	private List<PointOfInterest> processPOIs(int numberOfPois) {
+		List<PointOfInterest> pois = new ArrayList<PointOfInterest>();
 		Tag[] poiTags = this.mapFileHeader.getMapFileInfo().poiTags;
 
 		for (int elementCounter = numberOfPois; elementCounter != 0; --elementCounter) {
@@ -598,9 +587,9 @@ public class MapDatabase {
 				// get and check the POI signature
 				this.signaturePoi = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_POI);
 				if (!this.signaturePoi.startsWith("***POIStart")) {
-					LOG.warning("invalid POI signature: " + this.signaturePoi);
-					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
-					return false;
+					LOGGER.warning("invalid POI signature: " + this.signaturePoi);
+					LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+					return null;
 				}
 			}
 
@@ -618,18 +607,18 @@ public class MapDatabase {
 			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & POI_NUMBER_OF_TAGS_BITMASK);
 
-			tags.clear();
+			List<Tag> tags = new ArrayList<Tag>();
 
 			// get the tag IDs (VBE-U)
 			for (byte tagIndex = numberOfTags; tagIndex != 0; --tagIndex) {
 				int tagId = this.readBuffer.readUnsignedInt();
 				if (tagId < 0 || tagId >= poiTags.length) {
-					LOG.warning("invalid POI tag ID: " + tagId);
+					LOGGER.warning("invalid POI tag ID: " + tagId);
 					if (this.mapFileHeader.getMapFileInfo().debugFile) {
-						LOG.warning(DEBUG_SIGNATURE_POI + this.signaturePoi);
-						LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+						LOGGER.warning(DEBUG_SIGNATURE_POI + this.signaturePoi);
+						LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 					}
-					return false;
+					return null;
 				}
 				tags.add(poiTags[tagId]);
 			}
@@ -657,17 +646,17 @@ public class MapDatabase {
 				tags.add(new Tag(TAG_KEY_ELE, Integer.toString(this.readBuffer.readSignedInt())));
 			}
 
-			mapDatabaseCallback.renderPointOfInterest(layer, latitude, longitude, tags);
+			pois.add(new PointOfInterest(layer, tags, new GeoPoint(latitude, longitude)));
 		}
 
-		return true;
+		return pois;
 	}
 
 	private float[][] processWayDataBlock(boolean doubleDeltaEncoding) {
 		// get and check the number of way coordinate blocks (VBE-U)
 		int numberOfWayCoordinateBlocks = this.readBuffer.readUnsignedInt();
 		if (numberOfWayCoordinateBlocks < 1 || numberOfWayCoordinateBlocks > Short.MAX_VALUE) {
-			LOG.warning("invalid number of way coordinate blocks: " + numberOfWayCoordinateBlocks);
+			LOGGER.warning("invalid number of way coordinate blocks: " + numberOfWayCoordinateBlocks);
 			logDebugSignatures();
 			return null;
 		}
@@ -680,7 +669,7 @@ public class MapDatabase {
 			// get and check the number of way nodes (VBE-U)
 			int numberOfWayNodes = this.readBuffer.readUnsignedInt();
 			if (numberOfWayNodes < 2 || numberOfWayNodes > MAXIMUM_WAY_NODES_SEQUENCE_LENGTH) {
-				LOG.warning("invalid number of way nodes: " + numberOfWayNodes);
+				LOGGER.warning("invalid number of way nodes: " + numberOfWayNodes);
 				logDebugSignatures();
 				return null;
 			}
@@ -703,20 +692,8 @@ public class MapDatabase {
 		return wayCoordinates;
 	}
 
-	/**
-	 * Processes the given number of ways.
-	 * 
-	 * @param queryParameters
-	 *            the parameters of the current query.
-	 * @param mapDatabaseCallback
-	 *            the callback which handles the extracted ways.
-	 * @param numberOfWays
-	 *            how many ways should be processed.
-	 * @return true if the ways could be processed successfully, false otherwise.
-	 */
-	private boolean processWays(QueryParameters queryParameters, MapDatabaseCallback mapDatabaseCallback,
-			int numberOfWays) {
-		List<Tag> tags = new ArrayList<Tag>();
+	private List<Way> processWays(QueryParameters queryParameters, int numberOfWays) {
+		List<Way> ways = new ArrayList<Way>();
 		Tag[] wayTags = this.mapFileHeader.getMapFileInfo().wayTags;
 
 		for (int elementCounter = numberOfWays; elementCounter != 0; --elementCounter) {
@@ -724,20 +701,20 @@ public class MapDatabase {
 				// get and check the way signature
 				this.signatureWay = this.readBuffer.readUTF8EncodedString(SIGNATURE_LENGTH_WAY);
 				if (!this.signatureWay.startsWith("---WayStart")) {
-					LOG.warning("invalid way signature: " + this.signatureWay);
-					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
-					return false;
+					LOGGER.warning("invalid way signature: " + this.signatureWay);
+					LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+					return null;
 				}
 			}
 
 			// get the size of the way (VBE-U)
 			int wayDataSize = this.readBuffer.readUnsignedInt();
 			if (wayDataSize < 0) {
-				LOG.warning("invalid way data size: " + wayDataSize);
+				LOGGER.warning("invalid way data size: " + wayDataSize);
 				if (this.mapFileHeader.getMapFileInfo().debugFile) {
-					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+					LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 				}
-				return false;
+				return null;
 			}
 
 			if (queryParameters.useTileBitmask) {
@@ -762,14 +739,14 @@ public class MapDatabase {
 			// bit 5-8 represent the number of tag IDs
 			byte numberOfTags = (byte) (specialByte & WAY_NUMBER_OF_TAGS_BITMASK);
 
-			tags.clear();
+			List<Tag> tags = new ArrayList<Tag>();
 
 			for (byte tagIndex = numberOfTags; tagIndex != 0; --tagIndex) {
 				int tagId = this.readBuffer.readUnsignedInt();
 				if (tagId < 0 || tagId >= wayTags.length) {
-					LOG.warning("invalid way tag ID: " + tagId);
+					LOGGER.warning("invalid way tag ID: " + tagId);
 					logDebugSignatures();
-					return false;
+					return null;
 				}
 				tags.add(wayTags[tagId]);
 			}
@@ -800,39 +777,40 @@ public class MapDatabase {
 				tags.add(new Tag(TAG_KEY_REF, this.readBuffer.readUTF8EncodedString()));
 			}
 
-			float[] labelPosition = readOptionalLabelPosition(featureLabelPosition);
+			GeoPoint labelPosition = readOptionalLabelPosition(featureLabelPosition);
 
 			int wayDataBlocks = readOptionalWayDataBlocksByte(featureWayDataBlocksByte);
 			if (wayDataBlocks < 1) {
-				LOG.warning("invalid number of way data blocks: " + wayDataBlocks);
+				LOGGER.warning("invalid number of way data blocks: " + wayDataBlocks);
 				logDebugSignatures();
-				return false;
+				return null;
 			}
 
 			for (int wayDataBlock = 0; wayDataBlock < wayDataBlocks; ++wayDataBlock) {
 				float[][] wayNodes = processWayDataBlock(featureWayDoubleDeltaEncoding);
 				if (wayNodes == null) {
-					return false;
+					return null;
 				}
-				mapDatabaseCallback.renderWay(layer, labelPosition, tags, wayNodes);
+
+				ways.add(new Way(layer, tags, wayNodes, labelPosition));
 			}
 		}
 
-		return true;
+		return ways;
 	}
 
-	private float[] readOptionalLabelPosition(boolean featureLabelPosition) {
-		float[] labelPosition = null;
+	private GeoPoint readOptionalLabelPosition(boolean featureLabelPosition) {
 		if (featureLabelPosition) {
-			labelPosition = new float[2];
-
 			// get the label position latitude offset (VBE-S)
-			labelPosition[1] = this.tileLatitude + this.readBuffer.readSignedInt();
+			float latitude = this.tileLatitude + this.readBuffer.readSignedInt();
 
 			// get the label position longitude offset (VBE-S)
-			labelPosition[0] = this.tileLongitude + this.readBuffer.readSignedInt();
+			float longitude = this.tileLongitude + this.readBuffer.readSignedInt();
+
+			return new GeoPoint(latitude, longitude);
 		}
-		return labelPosition;
+
+		return null;
 	}
 
 	private int readOptionalWayDataBlocksByte(boolean featureWayDataBlocksByte) {
@@ -856,15 +834,15 @@ public class MapDatabase {
 			cumulatedNumberOfWays += this.readBuffer.readUnsignedInt();
 
 			if (cumulatedNumberOfPois < 0 || cumulatedNumberOfPois > MAXIMUM_ZOOM_TABLE_OBJECTS) {
-				LOG.warning("invalid cumulated number of POIs in row " + row + ' ' + cumulatedNumberOfPois);
+				LOGGER.warning("invalid cumulated number of POIs in row " + row + ' ' + cumulatedNumberOfPois);
 				if (this.mapFileHeader.getMapFileInfo().debugFile) {
-					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+					LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 				}
 				return null;
 			} else if (cumulatedNumberOfWays < 0 || cumulatedNumberOfWays > MAXIMUM_ZOOM_TABLE_OBJECTS) {
-				LOG.warning("invalid cumulated number of ways in row " + row + ' ' + cumulatedNumberOfWays);
+				LOGGER.warning("invalid cumulated number of ways in row " + row + ' ' + cumulatedNumberOfWays);
 				if (this.mapFileHeader.getMapFileInfo().debugFile) {
-					LOG.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
+					LOGGER.warning(DEBUG_SIGNATURE_BLOCK + this.signatureBlock);
 				}
 				return null;
 			}

@@ -32,7 +32,7 @@ class IndexCache {
 	 */
 	private static final int INDEX_ENTRIES_PER_BLOCK = 128;
 
-	private static final Logger LOG = Logger.getLogger(IndexCache.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IndexCache.class.getName());
 
 	/**
 	 * Maximum size in bytes of one index block.
@@ -97,7 +97,7 @@ class IndexCache {
 
 				this.randomAccessFile.seek(indexBlockPosition);
 				if (this.randomAccessFile.read(indexBlock, 0, indexBlockSize) != indexBlockSize) {
-					LOG.warning("reading the current index block has failed");
+					LOGGER.warning("reading the current index block has failed");
 					return -1;
 				}
 
@@ -112,7 +112,7 @@ class IndexCache {
 			// return the real index entry
 			return Deserializer.getFiveBytesLong(indexBlock, addressInIndexBlock);
 		} catch (IOException e) {
-			LOG.log(Level.SEVERE, null, e);
+			LOGGER.log(Level.SEVERE, null, e);
 			return -1;
 		}
 	}

@@ -30,7 +30,7 @@ public class MapDatabaseEmptyTest {
 	private static final byte ZOOM_LEVEL_MAX = 25;
 
 	/**
-	 * Tests the {@link MapDatabase#executeQuery(Tile, MapDatabaseCallback)} method.
+	 * Tests the {@link MapDatabase#readMapData(Tile)} method.
 	 */
 	@Test
 	public void executeQueryTest() {
@@ -44,11 +44,10 @@ public class MapDatabaseEmptyTest {
 			long tileY = MercatorProjection.latitudeToTileY(1, zoomLevel);
 			Tile tile = new Tile(tileX, tileY, zoomLevel);
 
-			DummyMapDatabaseCallback dummyMapDatabaseCallback = new DummyMapDatabaseCallback();
-			mapDatabase.executeQuery(tile, dummyMapDatabaseCallback);
+			MapReadResult mapReadResult = mapDatabase.readMapData(tile);
 
-			Assert.assertTrue(dummyMapDatabaseCallback.pointOfInterests.isEmpty());
-			Assert.assertTrue(dummyMapDatabaseCallback.ways.isEmpty());
+			Assert.assertTrue(mapReadResult.pointOfInterests.isEmpty());
+			Assert.assertTrue(mapReadResult.ways.isEmpty());
 		}
 
 		mapDatabase.closeFile();

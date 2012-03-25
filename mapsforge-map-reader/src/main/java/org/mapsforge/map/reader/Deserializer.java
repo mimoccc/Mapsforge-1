@@ -15,7 +15,7 @@
 package org.mapsforge.map.reader;
 
 /**
- * This utility class contains methods to convert byte arrays to numbers.
+ * An utility class to convert byte arrays to numbers.
  */
 final class Deserializer {
 	/**
