@@ -35,6 +35,7 @@ import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 
 /**
  * An application which demonstrates how to use different types of overlays.
@@ -80,7 +81,7 @@ public class OverlayMapViewer extends MapActivity {
 		MapView mapView = new MapView(this);
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
-		mapView.setMapFile(new File("/sdcard/berlin.map"));
+		mapView.setMapFile(new File(Environment.getExternalStorageDirectory().getPath(), "berlin.map"));
 		setContentView(mapView);
 
 		// create some points to be used in the different overlays

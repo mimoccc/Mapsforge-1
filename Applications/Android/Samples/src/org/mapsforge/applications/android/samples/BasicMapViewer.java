@@ -20,6 +20,7 @@ import org.mapsforge.android.maps.MapActivity;
 import org.mapsforge.android.maps.MapView;
 
 import android.os.Bundle;
+import android.os.Environment;
 
 /**
  * A simple application which demonstrates how to use a MapView.
@@ -31,7 +32,7 @@ public class BasicMapViewer extends MapActivity {
 		MapView mapView = new MapView(this);
 		mapView.setClickable(true);
 		mapView.setBuiltInZoomControls(true);
-		mapView.setMapFile(new File("/sdcard/berlin.map"));
+		mapView.setMapFile(new File(Environment.getExternalStorageDirectory().getPath(), "berlin.map"));
 		setContentView(mapView);
 	}
 }

@@ -22,6 +22,7 @@ import org.mapsforge.android.maps.MapView;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -31,7 +32,7 @@ import android.widget.LinearLayout;
  * An application which demonstrates how to use two MapView instances at the same time.
  */
 public class DualMapViewer extends MapActivity {
-	private static final File MAP_FILE = new File("/sdcard/berlin.map");
+	private static final File MAP_FILE = new File(Environment.getExternalStorageDirectory().getPath(), "berlin.map");
 
 	private MapView mapView1;
 	private MapView mapView2;
