@@ -45,18 +45,21 @@ class MapFileWriterFactory extends TaskManagerFactory {
 	private static final String PARAM_TAG_MAPPING_FILE = "tag-conf-file";
 	private static final String PARAM_PREFERRED_LANGUAGE = "preferred-language";
 	private static final String PARAM_ENCODING = "encoding";
+	private static final String PARAM_SKIP_INVALID_RELATIONS = "skip-invalid-relations";
 
 	@Override
 	protected TaskManager createTaskManagerImpl(TaskConfiguration taskConfig) {
 
 		MapWriterConfiguration configuration = new MapWriterConfiguration();
-		configuration.addOutputFile(getStringArgument(taskConfig, PARAM_OUTFILE, Constants.DEFAULT_PARAM_OUTFILE));
+		configuration.addOutputFile(getStringArgument(taskConfig, PARAM_OUTFILE,
+				Constants.DEFAULT_PARAM_OUTFILE));
 		configuration.loadTagMappingFile(getStringArgument(taskConfig, PARAM_TAG_MAPPING_FILE, null));
 
 		configuration.addMapStartPosition(getStringArgument(taskConfig, PARAM_MAP_START_POSITION, null));
 		configuration.addMapStartZoom(getStringArgument(taskConfig, PARAM_MAP_START_ZOOM, null));
 		configuration.addBboxConfiguration(getStringArgument(taskConfig, PARAM_BBOX, null));
-		configuration.addZoomIntervalConfiguration(getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG, null));
+		configuration.addZoomIntervalConfiguration(getStringArgument(taskConfig, PARAM_ZOOMINTERVAL_CONFIG,
+				null));
 
 		configuration.setComment(getStringArgument(taskConfig, PARAM_COMMENT, null));
 		configuration.setDebugStrings(getBooleanArgument(taskConfig, PARAM_DEBUG_INFO, false));
@@ -67,14 +70,17 @@ class MapFileWriterFactory extends TaskManagerFactory {
 		// true);
 		configuration.setSimplification(getDoubleArgument(taskConfig, PARAM_SIMPLIFICATION_FACTOR,
 				Constants.DEFAULT_SIMPLIFICATION_FACTOR));
+		configuration.setSkipInvalidRelations(getBooleanArgument(taskConfig, PARAM_SKIP_INVALID_RELATIONS,
+				false));
 
-		configuration.setDataProcessorType(getStringArgument(taskConfig, PARAM_TYPE, Constants.DEFAULT_PARAM_TYPE));
+		configuration.setDataProcessorType(getStringArgument(taskConfig, PARAM_TYPE,
+				Constants.DEFAULT_PARAM_TYPE));
 		configuration.setBboxEnlargement(getIntegerArgument(taskConfig, PARAM_BBOX_ENLARGEMENT,
 				Constants.DEFAULT_PARAM_BBOX_ENLARGEMENT));
 
 		configuration.setPreferredLanguage(getStringArgument(taskConfig, PARAM_PREFERRED_LANGUAGE, null));
-		configuration
-				.addEncodingChoice(getStringArgument(taskConfig, PARAM_ENCODING, Constants.DEFAULT_PARAM_ENCODING));
+		configuration.addEncodingChoice(getStringArgument(taskConfig, PARAM_ENCODING,
+				Constants.DEFAULT_PARAM_ENCODING));
 
 		configuration.validate();
 

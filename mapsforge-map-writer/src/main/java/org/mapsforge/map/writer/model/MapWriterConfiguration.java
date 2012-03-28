@@ -44,6 +44,8 @@ public class MapWriterConfiguration {
 	private double simplification;
 	private int bboxEnlargement;
 
+	private boolean skipInvalidRelations;
+
 	private EncodingChoice encodingChoice;
 
 	private GeoCoordinate mapStartPosition;
@@ -259,6 +261,21 @@ public class MapWriterConfiguration {
 	}
 
 	/**
+	 * @return the skipInvalidRelations
+	 */
+	public boolean isSkipInvalidRelations() {
+		return this.skipInvalidRelations;
+	}
+
+	/**
+	 * @param skipInvalidRelations
+	 *            the skipInvalidRelations to set
+	 */
+	public void setSkipInvalidRelations(boolean skipInvalidRelations) {
+		this.skipInvalidRelations = skipInvalidRelations;
+	}
+
+	/**
 	 * @return the encodingChoice
 	 */
 	public EncodingChoice getEncodingChoice() {
@@ -356,7 +373,8 @@ public class MapWriterConfiguration {
 		if (file != null) {
 			File f = new File(file);
 			if (f.isDirectory()) {
-				throw new IllegalArgumentException("output file parameter points to a directory, must be a file");
+				throw new IllegalArgumentException(
+						"output file parameter points to a directory, must be a file");
 			} else if (f.exists() && !f.canWrite()) {
 				throw new IllegalArgumentException(
 						"output file parameter points to a file we have no write permissions");
@@ -376,10 +394,12 @@ public class MapWriterConfiguration {
 		if (file != null) {
 			File f = new File(file);
 			if (!f.exists()) {
-				throw new IllegalArgumentException("tag mapping file parameter points to a file that does not exist");
+				throw new IllegalArgumentException(
+						"tag mapping file parameter points to a file that does not exist");
 			}
 			if (f.isDirectory()) {
-				throw new IllegalArgumentException("tag mapping file parameter points to a directory, must be a file");
+				throw new IllegalArgumentException(
+						"tag mapping file parameter points to a directory, must be a file");
 			} else if (!f.canRead()) {
 				throw new IllegalArgumentException(
 						"tag mapping file parameter points to a file we have no read permissions");
@@ -433,8 +453,8 @@ public class MapWriterConfiguration {
 	 * Convenience method.
 	 * 
 	 * @param bbox
-	 *            the bounding box specification in format minLat, minLon, maxLat, maxLon in exactly this order as
-	 *            degrees
+	 *            the bounding box specification in format minLat, minLon, maxLat, maxLon in exactly this order
+	 *            as degrees
 	 */
 	public void addBboxConfiguration(String bbox) {
 		if (bbox != null) {
