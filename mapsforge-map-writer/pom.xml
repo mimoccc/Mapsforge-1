@@ -108,8 +108,7 @@
 				</os>
 			</activation>
 			<properties>
-				<osmosis.plugin.dir>${user.home}/Application
-					Data/Openstreetmap/Osmosis/Plugins</osmosis.plugin.dir>
+				<osmosis.plugin.dir>${user.home}/Application Data/Openstreetmap/Osmosis/Plugins</osmosis.plugin.dir>
 			</properties>
 		</profile>
 	</profiles>
