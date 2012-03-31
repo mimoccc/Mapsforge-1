@@ -56,6 +56,7 @@
 		<osm-tag key="religion" value="muslim" renderable="false" />
 
 		<osm-tag key="shop" value="bakery" zoom-appear="17" />
+		<osm-tag key="shop" value="bicycle" zoom-appear="17" />
 		<osm-tag key="shop" value="hairdresser" zoom-appear="17" />
 		<osm-tag key="shop" value="organic" zoom-appear="17" />
 		<osm-tag key="shop" value="supermarket" zoom-appear="17" />
