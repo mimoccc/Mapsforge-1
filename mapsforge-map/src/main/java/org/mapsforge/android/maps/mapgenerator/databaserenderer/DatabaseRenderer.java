@@ -15,7 +15,6 @@
 package org.mapsforge.android.maps.mapgenerator.databaserenderer;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -60,24 +59,14 @@ public class DatabaseRenderer implements MapGenerator, RenderCallback {
 	private static final byte ZOOM_MAX = 22;
 
 	private static RenderTheme getRenderTheme(JobTheme jobTheme) {
-		InputStream inputStream = null;
 		try {
-			inputStream = jobTheme.getRenderThemeAsStream();
-			return RenderThemeHandler.getRenderTheme(inputStream);
+			return RenderThemeHandler.getRenderTheme(jobTheme);
 		} catch (ParserConfigurationException e) {
 			LOGGER.log(Level.SEVERE, null, e);
 		} catch (SAXException e) {
 			LOGGER.log(Level.SEVERE, null, e);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, null, e);
-		} finally {
-			try {
-				if (inputStream != null) {
-					inputStream.close();
-				}
-			} catch (IOException e) {
-				LOGGER.log(Level.SEVERE, null, e);
-			}
 		}
 		return null;
 	}
