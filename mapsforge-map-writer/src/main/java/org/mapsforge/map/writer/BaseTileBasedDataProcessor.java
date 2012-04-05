@@ -31,11 +31,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.map.writer.model.GeoCoordinate;
+import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
-import org.mapsforge.map.writer.model.MercatorProjection;
 import org.mapsforge.map.writer.model.NodeResolver;
-import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDRelation;
 import org.mapsforge.map.writer.model.TDWay;
@@ -53,7 +53,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 	protected static final Logger LOGGER = Logger.getLogger(BaseTileBasedDataProcessor.class.getName());
 
-	protected final Rect boundingbox;
+	protected final BoundingBox boundingbox;
 	protected TileGridLayout[] tileGridLayouts;
 	protected final ZoomIntervalConfiguration zoomIntervalConfiguration;
 	protected final int bboxEnlargement;
@@ -102,10 +102,10 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 		// base zoom levels
 		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			TileCoordinate upperLeft = new TileCoordinate((int) MercatorProjection.longitudeToTileX(
-					GeoCoordinate.intToDouble(this.boundingbox.minLongitudeE6),
-					this.zoomIntervalConfiguration.getBaseZoom(i)), (int) MercatorProjection.latitudeToTileY(
-					GeoCoordinate.intToDouble(this.boundingbox.maxLatitudeE6),
+					GeoPoint.intToDouble(this.boundingbox.minLongitudeE6),
 					this.zoomIntervalConfiguration.getBaseZoom(i)),
+					(int) MercatorProjection.latitudeToTileY(GeoPoint.intToDouble(this.boundingbox.maxLatitudeE6),
+							this.zoomIntervalConfiguration.getBaseZoom(i)),
 					this.zoomIntervalConfiguration.getBaseZoom(i));
 			this.tileGridLayouts[i] = new TileGridLayout(upperLeft, computeNumberOfHorizontalTiles(i),
 					computeNumberOfVerticalTiles(i));
@@ -113,7 +113,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	}
 
 	@Override
-	public Rect getBoundingBox() {
+	public BoundingBox getBoundingBox() {
 		return this.boundingbox;
 	}
 
@@ -174,11 +174,9 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 			// is POI seen in a zoom interval?
 			if (minZoomLevel <= this.zoomIntervalConfiguration.getMaxZoom(i)) {
-				long tileCoordinateX = MercatorProjection.longitudeToTileX(
-						GeoCoordinate.intToDouble(poi.getLongitude()),
+				long tileCoordinateX = MercatorProjection.longitudeToTileX(GeoPoint.intToDouble(poi.getLongitude()),
 						this.zoomIntervalConfiguration.getBaseZoom(i));
-				long tileCoordinateY = MercatorProjection.latitudeToTileY(
-						GeoCoordinate.intToDouble(poi.getLatitude()),
+				long tileCoordinateY = MercatorProjection.latitudeToTileY(GeoPoint.intToDouble(poi.getLatitude()),
 						this.zoomIntervalConfiguration.getBaseZoom(i));
 				TileData tileData = getTileImpl(i, (int) tileCoordinateX, (int) tileCoordinateY);
 				if (tileData != null) {
@@ -224,38 +222,35 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 	protected abstract void handleVirtualInnerWay(TDWay virtualWay);
 
 	private int computeNumberOfHorizontalTiles(int zoomIntervalIndex) {
-		long tileCoordinateLeft = MercatorProjection.longitudeToTileX(
-				GeoCoordinate.intToDouble(this.boundingbox.getMinLongitudeE6()),
+		long tileCoordinateLeft = MercatorProjection.longitudeToTileX(this.boundingbox.getMinLongitude(),
 				this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
 
-		long tileCoordinateRight = MercatorProjection.longitudeToTileX(
-				GeoCoordinate.intToDouble(this.boundingbox.getMaxLongitudeE6()),
+		long tileCoordinateRight = MercatorProjection.longitudeToTileX(this.boundingbox.getMaxLongitude(),
 				this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
 
 		assert tileCoordinateLeft <= tileCoordinateRight;
 		assert tileCoordinateLeft - tileCoordinateRight + 1 < Integer.MAX_VALUE;
 
-		LOGGER.finer("basezoom: " + this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
-				+ "\t+n_horizontal: " + (tileCoordinateRight - tileCoordinateLeft + 1));
+		LOGGER.finer("basezoom: " + this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex) + "\t+n_horizontal: "
+				+ (tileCoordinateRight - tileCoordinateLeft + 1));
 
 		return (int) (tileCoordinateRight - tileCoordinateLeft + 1);
 
 	}
 
 	private int computeNumberOfVerticalTiles(int zoomIntervalIndex) {
-		long tileCoordinateBottom = MercatorProjection.latitudeToTileY(
-				GeoCoordinate.intToDouble(this.boundingbox.getMinLatitudeE6()),
+		long tileCoordinateBottom = MercatorProjection.latitudeToTileY(this.boundingbox.getMinLatitude(),
 				this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
 
-		long tileCoordinateTop = MercatorProjection.latitudeToTileY(
-				GeoCoordinate.intToDouble(this.boundingbox.getMaxLatitudeE6()),
-				this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
+		long tileCoordinateTop = MercatorProjection.latitudeToTileY(this.boundingbox.getMaxLatitude(),
+
+		this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex));
 
 		assert tileCoordinateBottom >= tileCoordinateTop;
 		assert tileCoordinateBottom - tileCoordinateTop + 1 <= Integer.MAX_VALUE;
 
-		LOGGER.finer("basezoom: " + this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex)
-				+ "\t+n_vertical: " + (tileCoordinateBottom - tileCoordinateTop + 1));
+		LOGGER.finer("basezoom: " + this.zoomIntervalConfiguration.getBaseZoom(zoomIntervalIndex) + "\t+n_vertical: "
+				+ (tileCoordinateBottom - tileCoordinateTop + 1));
 
 		return (int) (tileCoordinateBottom - tileCoordinateTop + 1);
 	}
@@ -281,8 +276,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 			try {
 				this.polygonizer.polygonizeAndRelate(members);
 			} catch (TopologyException e) {
-				LOGGER.log(Level.FINE, "cannot relate extracted polygons to each other for relation: "
-						+ relation.getId(), e);
+				LOGGER.log(Level.FINE,
+						"cannot relate extracted polygons to each other for relation: " + relation.getId(), e);
 			}
 
 			// skip invalid relations
@@ -301,8 +296,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 							+ relation.getId());
 					return true;
 				}
-				LOGGER.fine("relation contains illegal closed ways with fewer than 4 nodes: "
-						+ relation.getId());
+				LOGGER.fine("relation contains illegal closed ways with fewer than 4 nodes: " + relation.getId());
 			}
 
 			this.extractedPolygons = this.polygonizer.getPolygons();
@@ -325,8 +319,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 					// if one of the ways has its own tags, we should ignore them,
 					// ways with relevant tags will be added separately later
 					if (!relation.isRenderRelevant()) {
-						LOGGER.fine("constructed outer polygon in relation has no known tags: "
-								+ relation.getId());
+						LOGGER.fine("constructed outer polygon in relation has no known tags: " + relation.getId());
 						continue;
 					}
 					// merge way nodes from outer way segments
@@ -347,8 +340,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 					// create new virtual way which represents the outer way
 					// use maxWayID counter to create unique id
 					outerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, relation.getLayer(),
-							relation.getName(), relation.getHouseNumber(), relation.getRef(),
-							relation.getTags(), shape, waynodes);
+							relation.getName(), relation.getHouseNumber(), relation.getRef(), relation.getTags(),
+							shape, waynodes);
 
 					// add the newly created way to matching tiles
 					addWayToTiles(outerWay, BaseTileBasedDataProcessor.this.bboxEnlargement);
@@ -392,8 +385,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 		private void addInnerWays(TDWay outer) {
 			if (this.inner != null && !this.inner.isEmpty()) {
 
-				TLongArrayList innerList = BaseTileBasedDataProcessor.this.outerToInnerMapping.get(outer
-						.getId());
+				TLongArrayList innerList = BaseTileBasedDataProcessor.this.outerToInnerMapping.get(outer.getId());
 				if (innerList == null) {
 					innerList = new TLongArrayList();
 					BaseTileBasedDataProcessor.this.outerToInnerMapping.put(outer.getId(), innerList);
@@ -417,8 +409,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 								}
 							}
 							if (contained == iTags.length) {
-								BaseTileBasedDataProcessor.this.innerWaysWithoutAdditionalTags.add(innerWay
-										.getId());
+								BaseTileBasedDataProcessor.this.innerWaysWithoutAdditionalTags.add(innerWay.getId());
 							}
 						}
 					} else {
@@ -436,8 +427,8 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 						}
 						TDNode[] waynodes = waynodeList.toArray(new TDNode[waynodeList.size()]);
 						// TODO which layer?
-						innerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, (byte) 0, null, null,
-								null, waynodes);
+						innerWay = new TDWay(++BaseTileBasedDataProcessor.this.maxWayID, (byte) 0, null, null, null,
+								waynodes);
 						handleVirtualInnerWay(innerWay);
 						// does not need to be added to corresponding tiles
 						// virtual inner ways do not have any tags, they are holes in the outer polygon
@@ -461,8 +452,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 			// added as outer way of a relation
 			// inner ways without additional tags are also not considered as they are processed as part of a
 			// multi polygon
-			if (way.isRenderRelevant()
-					&& !BaseTileBasedDataProcessor.this.outerToInnerMapping.contains(way.getId())
+			if (way.isRenderRelevant() && !BaseTileBasedDataProcessor.this.outerToInnerMapping.contains(way.getId())
 					&& !BaseTileBasedDataProcessor.this.innerWaysWithoutAdditionalTags.contains(way.getId())) {
 				addWayToTiles(way, BaseTileBasedDataProcessor.this.bboxEnlargement);
 			}

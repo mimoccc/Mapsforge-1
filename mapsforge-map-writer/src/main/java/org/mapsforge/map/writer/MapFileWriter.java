@@ -30,10 +30,10 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.map.writer.model.Encoding;
-import org.mapsforge.map.writer.model.GeoCoordinate;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
-import org.mapsforge.map.writer.model.MercatorProjection;
 import org.mapsforge.map.writer.model.OSMTag;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
@@ -168,8 +168,8 @@ public final class MapFileWriter {
 		// set to mark where zoomIntervalConfig starts
 		containerHeaderBuffer.reset();
 
-		final LoadingCache<TDWay, Geometry> jtsGeometryCache = CacheBuilder.newBuilder().maximumSize(JTS_GEOMETRY_CACHE_SIZE)
-				.concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
+		final LoadingCache<TDWay, Geometry> jtsGeometryCache = CacheBuilder.newBuilder()
+				.maximumSize(JTS_GEOMETRY_CACHE_SIZE).concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
 				.build(new JTSGeometryCacheLoader(dataProcessor));
 
 		// SUB FILES
@@ -177,11 +177,11 @@ public final class MapFileWriter {
 		long currentFileSize = totalHeaderSize;
 		for (int i = 0; i < amountOfZoomIntervals; i++) {
 			// SUB FILE INDEX AND DATA
-			long subfileSize = writeSubfile(currentFileSize, i, dataProcessor, jtsGeometryCache,
-					randomAccessFile, configuration);
+			long subfileSize = writeSubfile(currentFileSize, i, dataProcessor, jtsGeometryCache, randomAccessFile,
+					configuration);
 			// SUB FILE META DATA IN CONTAINER HEADER
-			writeSubfileMetaDataToContainerHeader(dataProcessor.getZoomIntervalConfiguration(), i,
-					currentFileSize, subfileSize, containerHeaderBuffer);
+			writeSubfileMetaDataToContainerHeader(dataProcessor.getZoomIntervalConfiguration(), i, currentFileSize,
+					subfileSize, containerHeaderBuffer);
 			currentFileSize += subfileSize;
 		}
 
@@ -212,9 +212,8 @@ public final class MapFileWriter {
 
 		LOGGER.fine("writing header");
 		LOGGER.fine("Bounding box for file: " + dataProcessor.getBoundingBox().maxLatitudeE6 + ", "
-				+ dataProcessor.getBoundingBox().minLongitudeE6 + ", "
-				+ dataProcessor.getBoundingBox().minLatitudeE6 + ", "
-				+ dataProcessor.getBoundingBox().maxLongitudeE6);
+				+ dataProcessor.getBoundingBox().minLongitudeE6 + ", " + dataProcessor.getBoundingBox().minLatitudeE6
+				+ ", " + dataProcessor.getBoundingBox().maxLongitudeE6);
 
 		// write file header
 		// MAGIC BYTE
@@ -254,8 +253,8 @@ public final class MapFileWriter {
 
 		// MAP START POSITION
 		if (configuration.getMapStartPosition() != null) {
-			containerHeaderBuffer.putInt(configuration.getMapStartPosition().getLatitudeE6());
-			containerHeaderBuffer.putInt(configuration.getMapStartPosition().getLongitudeE6());
+			containerHeaderBuffer.putInt(configuration.getMapStartPosition().latitudeE6);
+			containerHeaderBuffer.putInt(configuration.getMapStartPosition().longitudeE6);
 		}
 
 		// MAP START ZOOM
@@ -312,9 +311,8 @@ public final class MapFileWriter {
 		return containerHeaderBuffer.position();
 	}
 
-	private static void writeSubfileMetaDataToContainerHeader(
-			ZoomIntervalConfiguration zoomIntervalConfiguration, int i, long startIndexOfSubfile,
-			long subfileSize, ByteBuffer buffer) {
+	private static void writeSubfileMetaDataToContainerHeader(ZoomIntervalConfiguration zoomIntervalConfiguration,
+			int i, long startIndexOfSubfile, long subfileSize, ByteBuffer buffer) {
 
 		// HEADER META DATA FOR SUB FILE
 		// write zoom interval configuration to header
@@ -331,8 +329,7 @@ public final class MapFileWriter {
 
 	private static long writeSubfile(final long startPositionSubfile, final int zoomIntervalIndex,
 			final TileBasedDataProcessor dataStore, final LoadingCache<TDWay, Geometry> jtsGeometryCache,
-			final RandomAccessFile randomAccessFile, final MapWriterConfiguration configuration)
-			throws IOException {
+			final RandomAccessFile randomAccessFile, final MapWriterConfiguration configuration) throws IOException {
 
 		LOGGER.fine("writing data for zoom interval " + zoomIntervalIndex + ", number of tiles: "
 				+ dataStore.getTileGridLayout(zoomIntervalIndex).getAmountTilesHorizontal()
@@ -351,8 +348,7 @@ public final class MapFileWriter {
 
 		int processedTiles = 0;
 
-		final byte baseZoomCurrentInterval = dataStore.getZoomIntervalConfiguration().getBaseZoom(
-				zoomIntervalIndex);
+		final byte baseZoomCurrentInterval = dataStore.getZoomIntervalConfiguration().getBaseZoom(zoomIntervalIndex);
 
 		final int tileAmountInBytes = lengthX * lengthY * BYTE_AMOUNT_SUBFILE_INDEX_PER_TILE;
 		final int indexBufferSize = tileAmountInBytes
@@ -379,8 +375,8 @@ public final class MapFileWriter {
 				TileCoordinate tileCoordinate = new TileCoordinate(tileX, tileY, baseZoomCurrentInterval);
 
 				processIndexEntry(tileCoordinate, indexBuffer, currentSubfileOffset);
-				processTile(configuration, tileCoordinate, dataStore, jtsGeometryCache, zoomIntervalIndex,
-						tileBuffer, poiDataBuffer, wayDataBuffer, wayBuffer);
+				processTile(configuration, tileCoordinate, dataStore, jtsGeometryCache, zoomIntervalIndex, tileBuffer,
+						poiDataBuffer, wayDataBuffer, wayBuffer);
 				currentSubfileOffset += tileBuffer.position();
 
 				writeTile(multipleTilesBuffer, tileBuffer, randomAccessFile);
@@ -389,9 +385,8 @@ public final class MapFileWriter {
 					if (processedTiles == amountTiles) {
 						LOGGER.info("written 100% of sub file for zoom interval index " + zoomIntervalIndex);
 					} else {
-						LOGGER.info("written " + (processedTiles / amountOfTilesInPercentStep)
-								* PROGRESS_PERCENT_STEP + "% of sub file for zoom interval index "
-								+ zoomIntervalIndex);
+						LOGGER.info("written " + (processedTiles / amountOfTilesInPercentStep) * PROGRESS_PERCENT_STEP
+								+ "% of sub file for zoom interval index " + zoomIntervalIndex);
 					}
 
 				}
@@ -454,15 +449,13 @@ public final class MapFileWriter {
 		final TileData currentTile = dataProcessor.getTile(zoomIntervalIndex, tileCoordinate.getX(),
 				tileCoordinate.getY());
 
-		final int currentTileLat = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(
-				tileCoordinate.getY(), tileCoordinate.getZoomlevel()));
-		final int currentTileLon = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(
-				tileCoordinate.getX(), tileCoordinate.getZoomlevel()));
+		final int currentTileLat = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tileCoordinate.getY(),
+				tileCoordinate.getZoomlevel()));
+		final int currentTileLon = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tileCoordinate.getX(),
+				tileCoordinate.getZoomlevel()));
 
-		final byte minZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMinZoom(
-				zoomIntervalIndex);
-		final byte maxZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMaxZoom(
-				zoomIntervalIndex);
+		final byte minZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMinZoom(zoomIntervalIndex);
+		final byte maxZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMaxZoom(zoomIntervalIndex);
 
 		// write amount of POIs and ways for each zoom level
 		Map<Byte, List<TDNode>> poisByZoomlevel = currentTile.poisByZoomlevel(minZoomCurrentInterval,
@@ -484,8 +477,7 @@ public final class MapFileWriter {
 				List<TDNode> pois = poisByZoomlevel.get(Byte.valueOf(zoomlevel));
 				if (pois != null) {
 					for (TDNode poi : pois) {
-						processPOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(),
-								poiDataBuffer);
+						processPOI(poi, currentTileLat, currentTileLon, configuration.isDebugStrings(), poiDataBuffer);
 					}
 					// increment count of POIs on this zoom level
 					entitiesPerZoomLevel[indexEntitiesPerZoomLevelTable][0] += pois.size();
@@ -501,8 +493,8 @@ public final class MapFileWriter {
 					List<WayPreprocessingCallable> callables = new ArrayList<MapFileWriter.WayPreprocessingCallable>();
 					for (TDWay way : ways) {
 						if (!way.isInvalid()) {
-							callables.add(new WayPreprocessingCallable(way, tileCoordinate,
-									maxZoomCurrentInterval, jtsGeometryCache, configuration));
+							callables.add(new WayPreprocessingCallable(way, tileCoordinate, maxZoomCurrentInterval,
+									jtsGeometryCache, configuration));
 						}
 					}
 					try {
@@ -551,8 +543,8 @@ public final class MapFileWriter {
 
 	private static void writeTileSignature(TileCoordinate tileCoordinate, ByteBuffer tileBuffer) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(DEBUG_STRING_TILE_HEAD).append(tileCoordinate.getX()).append(",")
-				.append(tileCoordinate.getY()).append(DEBUG_STRING_TILE_TAIL);
+		sb.append(DEBUG_STRING_TILE_HEAD).append(tileCoordinate.getX()).append(",").append(tileCoordinate.getY())
+				.append(DEBUG_STRING_TILE_TAIL);
 		tileBuffer.put(sb.toString().getBytes(UTF8_CHARSET));
 		// append withespaces so that block has 32 bytes
 		appendWhitespace(DEBUG_BLOCK_SIZE - sb.toString().getBytes(UTF8_CHARSET).length, tileBuffer);
@@ -587,8 +579,8 @@ public final class MapFileWriter {
 		// write tag ids to the file
 		if (poi.getTags() != null) {
 			for (short tagID : poi.getTags()) {
-				poiBuffer.put(Serializer.getVariableByteUnsigned(OSMTagMapping.getInstance()
-						.getOptimizedPoiIds().get(Short.valueOf(tagID)).intValue()));
+				poiBuffer.put(Serializer.getVariableByteUnsigned(OSMTagMapping.getInstance().getOptimizedPoiIds()
+						.get(Short.valueOf(tagID)).intValue()));
 			}
 		}
 
@@ -658,10 +650,8 @@ public final class MapFileWriter {
 			int firstWayStartLat = wpr.getWayDataBlocks().get(0).getOuterWay().get(0).intValue();
 			int firstWayStartLon = wpr.getWayDataBlocks().get(0).getOuterWay().get(1).intValue();
 
-			wayBuffer.put(Serializer.getVariableByteSigned(wpr.getLabelPosition().getLatitudeE6()
-					- firstWayStartLat));
-			wayBuffer.put(Serializer.getVariableByteSigned(wpr.getLabelPosition().getLongitudeE6()
-					- firstWayStartLon));
+			wayBuffer.put(Serializer.getVariableByteSigned(wpr.getLabelPosition().latitudeE6 - firstWayStartLat));
+			wayBuffer.put(Serializer.getVariableByteSigned(wpr.getLabelPosition().longitudeE6 - firstWayStartLon));
 		}
 
 		if (wpr.getWayDataBlocks().size() > 1) {
@@ -704,8 +694,7 @@ public final class MapFileWriter {
 		}
 	}
 
-	private static void writeWay(List<Integer> wayNodes, int currentTileLat, int currentTileLon,
-			ByteBuffer buffer) {
+	private static void writeWay(List<Integer> wayNodes, int currentTileLat, int currentTileLon, ByteBuffer buffer) {
 		// write the amount of way nodes to the file
 		// wayBuffer
 		buffer.put(Serializer.getVariableByteUnsigned(wayNodes.size() / 2));
@@ -762,16 +751,14 @@ public final class MapFileWriter {
 		if ((originalGeometry instanceof Polygon || originalGeometry instanceof LinearRing)
 				&& configuration.isPolygonClipping() || originalGeometry instanceof LineString
 				&& configuration.isWayClipping()) {
-			processedGeometry = GeoUtils.clipToTile(way, originalGeometry, tile,
-					configuration.getBboxEnlargement());
+			processedGeometry = GeoUtils.clipToTile(way, originalGeometry, tile, configuration.getBboxEnlargement());
 			if (processedGeometry == null) {
 				return null;
 			}
 		}
 
 		// TODO is this the right place to simplify, or is it better before clipping?
-		if (configuration.getSimplification() > 0
-				&& tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
+		if (configuration.getSimplification() > 0 && tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
 			processedGeometry = GeoUtils.simplifyGeometry(way, processedGeometry, maxZoomInterval,
 					configuration.getSimplification());
 			if (processedGeometry == null) {
@@ -787,8 +774,7 @@ public final class MapFileWriter {
 			LOGGER.finer("empty list of way data blocks after preprocessing way: " + way.getId());
 			return null;
 		}
-		short subtileMask = GeoUtils
-				.computeBitmask(processedGeometry, tile, configuration.getBboxEnlargement());
+		short subtileMask = GeoUtils.computeBitmask(processedGeometry, tile, configuration.getBboxEnlargement());
 
 		// check if the original polygon is completely contained in the current tile
 		// in that case we do not try to compute a label position
@@ -797,12 +783,12 @@ public final class MapFileWriter {
 		// in case the polygon covers multiple tiles, we compute the centroid of the unclipped polygon
 		// if the computed centroid is within the current tile, we add it as label position
 		// this way, we can make sure that a label position is attached only once to a clipped polygon
-		GeoCoordinate centroidCoordinate = null;
+		GeoPoint centroidCoordinate = null;
 		if (configuration.isLabelPosition() && way.isPolygon()
 				&& !GeoUtils.coveredByTile(originalGeometry, tile, configuration.getBboxEnlargement())) {
 			Point centroidPoint = originalGeometry.getCentroid();
 			if (GeoUtils.coveredByTile(centroidPoint, tile, configuration.getBboxEnlargement())) {
-				centroidCoordinate = new GeoCoordinate(centroidPoint.getY(), centroidPoint.getX());
+				centroidCoordinate = new GeoPoint(centroidPoint.getY(), centroidPoint.getX());
 			}
 		}
 
@@ -923,11 +909,10 @@ public final class MapFileWriter {
 
 		final TDWay way;
 		final List<WayDataBlock> wayDataBlocks;
-		final GeoCoordinate labelPosition;
+		final GeoPoint labelPosition;
 		final short subtileMask;
 
-		WayPreprocessingResult(TDWay way, List<WayDataBlock> wayDataBlocks, GeoCoordinate labelPosition,
-				short subtileMask) {
+		WayPreprocessingResult(TDWay way, List<WayDataBlock> wayDataBlocks, GeoPoint labelPosition, short subtileMask) {
 			super();
 			this.way = way;
 			this.wayDataBlocks = wayDataBlocks;
@@ -943,7 +928,7 @@ public final class MapFileWriter {
 			return this.wayDataBlocks;
 		}
 
-		GeoCoordinate getLabelPosition() {
+		GeoPoint getLabelPosition() {
 			return this.labelPosition;
 		}
 
@@ -1053,8 +1038,8 @@ public final class MapFileWriter {
 			// TODO is this the right place to simplify, or is it better before clipping?
 			if (this.configuration.getSimplification() > 0
 					&& this.tile.getZoomlevel() <= Constants.MAX_SIMPLIFICATION_BASE_ZOOM) {
-				processedGeometry = GeoUtils.simplifyGeometry(this.way, processedGeometry,
-						this.maxZoomInterval, this.configuration.getSimplification());
+				processedGeometry = GeoUtils.simplifyGeometry(this.way, processedGeometry, this.maxZoomInterval,
+						this.configuration.getSimplification());
 				if (processedGeometry == null) {
 					return null;
 				}
@@ -1078,14 +1063,12 @@ public final class MapFileWriter {
 			// in case the polygon covers multiple tiles, we compute the centroid of the unclipped polygon
 			// if the computed centroid is within the current tile, we add it as label position
 			// this way, we can make sure that a label position is attached only once to a clipped polygon
-			GeoCoordinate centroidCoordinate = null;
-			if (this.configuration.isLabelPosition()
-					&& this.way.isPolygon()
-					&& !GeoUtils.coveredByTile(originalGeometry, this.tile,
-							this.configuration.getBboxEnlargement())) {
+			GeoPoint centroidCoordinate = null;
+			if (this.configuration.isLabelPosition() && this.way.isPolygon()
+					&& !GeoUtils.coveredByTile(originalGeometry, this.tile, this.configuration.getBboxEnlargement())) {
 				Point centroidPoint = originalGeometry.getCentroid();
 				if (GeoUtils.coveredByTile(centroidPoint, this.tile, this.configuration.getBboxEnlargement())) {
-					centroidCoordinate = new GeoCoordinate(centroidPoint.getY(), centroidPoint.getX());
+					centroidCoordinate = new GeoPoint(centroidPoint.getY(), centroidPoint.getX());
 				}
 			}
 

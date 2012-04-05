@@ -17,6 +17,8 @@ package org.mapsforge.map.writer.model;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.GeoPoint;
 import org.mapsforge.map.writer.OSMTagMapping;
 
 /**
@@ -30,7 +32,7 @@ public class MapWriterConfiguration {
 	private OSMTagMapping tagMapping;
 	private String dataProcessorType;
 
-	private Rect bboxConfiguration;
+	private BoundingBox bboxConfiguration;
 	private ZoomIntervalConfiguration zoomIntervalConfiguration;
 
 	private long date;
@@ -48,7 +50,7 @@ public class MapWriterConfiguration {
 
 	private EncodingChoice encodingChoice;
 
-	private GeoCoordinate mapStartPosition;
+	private GeoPoint mapStartPosition;
 	private int mapStartZoomLevel;
 
 	private String preferredLanguage;
@@ -94,7 +96,7 @@ public class MapWriterConfiguration {
 	/**
 	 * @return the bboxConfiguration
 	 */
-	public Rect getBboxConfiguration() {
+	public BoundingBox getBboxConfiguration() {
 		return this.bboxConfiguration;
 	}
 
@@ -102,7 +104,7 @@ public class MapWriterConfiguration {
 	 * @param bboxConfiguration
 	 *            the bboxConfiguration to set
 	 */
-	public void setBboxConfiguration(Rect bboxConfiguration) {
+	public void setBboxConfiguration(BoundingBox bboxConfiguration) {
 		this.bboxConfiguration = bboxConfiguration;
 	}
 
@@ -293,7 +295,7 @@ public class MapWriterConfiguration {
 	/**
 	 * @return the mapStartPosition
 	 */
-	public GeoCoordinate getMapStartPosition() {
+	public GeoPoint getMapStartPosition() {
 		return this.mapStartPosition;
 	}
 
@@ -301,7 +303,7 @@ public class MapWriterConfiguration {
 	 * @param mapStartPosition
 	 *            the mapStartPosition to set
 	 */
-	public void setMapStartPosition(GeoCoordinate mapStartPosition) {
+	public void setMapStartPosition(GeoPoint mapStartPosition) {
 		this.mapStartPosition = mapStartPosition;
 	}
 
@@ -373,8 +375,7 @@ public class MapWriterConfiguration {
 		if (file != null) {
 			File f = new File(file);
 			if (f.isDirectory()) {
-				throw new IllegalArgumentException(
-						"output file parameter points to a directory, must be a file");
+				throw new IllegalArgumentException("output file parameter points to a directory, must be a file");
 			} else if (f.exists() && !f.canWrite()) {
 				throw new IllegalArgumentException(
 						"output file parameter points to a file we have no write permissions");
@@ -394,12 +395,10 @@ public class MapWriterConfiguration {
 		if (file != null) {
 			File f = new File(file);
 			if (!f.exists()) {
-				throw new IllegalArgumentException(
-						"tag mapping file parameter points to a file that does not exist");
+				throw new IllegalArgumentException("tag mapping file parameter points to a file that does not exist");
 			}
 			if (f.isDirectory()) {
-				throw new IllegalArgumentException(
-						"tag mapping file parameter points to a directory, must be a file");
+				throw new IllegalArgumentException("tag mapping file parameter points to a directory, must be a file");
 			} else if (!f.canRead()) {
 				throw new IllegalArgumentException(
 						"tag mapping file parameter points to a file we have no read permissions");
@@ -423,7 +422,7 @@ public class MapWriterConfiguration {
 	 */
 	public void addMapStartPosition(String position) {
 		if (position != null) {
-			setMapStartPosition(GeoCoordinate.fromString(position));
+			setMapStartPosition(GeoPoint.fromString(position));
 		}
 	}
 
@@ -453,12 +452,12 @@ public class MapWriterConfiguration {
 	 * Convenience method.
 	 * 
 	 * @param bbox
-	 *            the bounding box specification in format minLat, minLon, maxLat, maxLon in exactly this order
-	 *            as degrees
+	 *            the bounding box specification in format minLat, minLon, maxLat, maxLon in exactly this order as
+	 *            degrees
 	 */
 	public void addBboxConfiguration(String bbox) {
 		if (bbox != null) {
-			setBboxConfiguration(Rect.fromString(bbox));
+			setBboxConfiguration(BoundingBox.fromString(bbox));
 		}
 	}
 
@@ -496,7 +495,7 @@ public class MapWriterConfiguration {
 	 */
 	public void validate() {
 		if (this.mapStartPosition != null && this.bboxConfiguration != null
-				&& !this.bboxConfiguration.includes(this.mapStartPosition)) {
+				&& !this.bboxConfiguration.contains(this.mapStartPosition)) {
 			throw new IllegalArgumentException(
 					"map start position is not valid, must be included in bounding box of the map, bbox: "
 							+ this.bboxConfiguration.toString() + " - map start position: "

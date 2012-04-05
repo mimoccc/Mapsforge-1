@@ -17,6 +17,7 @@ package org.mapsforge.map.writer.model;
 import java.util.List;
 import java.util.Set;
 
+import org.mapsforge.core.BoundingBox;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
@@ -34,7 +35,7 @@ public interface TileBasedDataProcessor {
 	 * 
 	 * @return The bounding box that defines the area that is covered by the data store.
 	 */
-	Rect getBoundingBox();
+	BoundingBox getBoundingBox();
 
 	/**
 	 * Get the layout of a grid on the given zoom interval specification.

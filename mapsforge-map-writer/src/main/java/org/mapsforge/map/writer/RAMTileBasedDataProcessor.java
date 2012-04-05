@@ -25,8 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.mapsforge.core.BoundingBox;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
-import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDRelation;
 import org.mapsforge.map.writer.model.TDWay;
@@ -86,7 +86,7 @@ public final class RAMTileBasedDataProcessor extends BaseTileBasedDataProcessor 
 	}
 
 	@Override
-	public Rect getBoundingBox() {
+	public BoundingBox getBoundingBox() {
 		return this.boundingbox;
 	}
 

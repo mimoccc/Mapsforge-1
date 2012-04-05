@@ -22,8 +22,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.map.writer.model.GeoCoordinate;
-import org.mapsforge.map.writer.model.MercatorProjection;
+import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.MercatorProjection;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
 import org.mapsforge.map.writer.model.TileCoordinate;
@@ -129,17 +129,17 @@ public final class GeoUtils {
 	 *            the tile
 	 * @return true if the point is located in the given tile
 	 */
-	public static boolean pointInTile(GeoCoordinate point, TileCoordinate tile) {
+	public static boolean pointInTile(GeoPoint point, TileCoordinate tile) {
 		if (point == null || tile == null) {
 			return false;
 		}
 
-		int lon1 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(), tile.getZoomlevel()));
-		int lon2 = GeoCoordinate.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX() + 1, tile.getZoomlevel()));
-		int lat1 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(), tile.getZoomlevel()));
-		int lat2 = GeoCoordinate.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY() + 1, tile.getZoomlevel()));
-		return point.getLatitudeE6() <= lat1 && point.getLatitudeE6() >= lat2 && point.getLongitudeE6() >= lon1
-				&& point.getLongitudeE6() <= lon2;
+		int lon1 = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(), tile.getZoomlevel()));
+		int lon2 = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX() + 1, tile.getZoomlevel()));
+		int lat1 = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(), tile.getZoomlevel()));
+		int lat2 = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY() + 1, tile.getZoomlevel()));
+		return point.latitudeE6 <= lat1 && point.latitudeE6 >= lat2 && point.longitudeE6 >= lon1
+				&& point.longitudeE6 <= lon2;
 	}
 
 	// *********** PREPROCESSING OF WAYS **************
@@ -271,10 +271,10 @@ public final class GeoUtils {
 	 *            the JTS {@link Geometry} object
 	 * @return the centroid of the given geometry
 	 */
-	public static GeoCoordinate computeCentroid(Geometry geometry) {
+	public static GeoPoint computeCentroid(Geometry geometry) {
 		Point centroid = geometry.getCentroid();
 		if (centroid != null) {
-			return new GeoCoordinate(centroid.getCoordinate().y, centroid.getCoordinate().x);
+			return new GeoPoint(centroid.getCoordinate().y, centroid.getCoordinate().x);
 		}
 
 		return null;
@@ -412,8 +412,8 @@ public final class GeoUtils {
 		Coordinate[] coordinates = new Coordinate[way.getWayNodes().length];
 		for (int i = 0; i < coordinates.length; i++) {
 			TDNode currentNode = way.getWayNodes()[i];
-			coordinates[i] = new Coordinate(GeoCoordinate.intToDouble(currentNode.getLongitude()),
-					GeoCoordinate.intToDouble(currentNode.getLatitude()));
+			coordinates[i] = new Coordinate(GeoPoint.intToDouble(currentNode.getLongitude()),
+					GeoPoint.intToDouble(currentNode.getLatitude()));
 		}
 
 		Geometry res = null;
@@ -445,9 +445,9 @@ public final class GeoUtils {
 		ArrayList<Integer> result = new ArrayList<Integer>();
 
 		for (int j = 0; j < jtsCoords.length; j++) {
-			GeoCoordinate geoCoord = new GeoCoordinate(jtsCoords[j].y, jtsCoords[j].x);
-			result.add(Integer.valueOf(geoCoord.getLatitudeE6()));
-			result.add(Integer.valueOf(geoCoord.getLongitudeE6()));
+			GeoPoint geoCoord = new GeoPoint(jtsCoords[j].y, jtsCoords[j].x);
+			result.add(Integer.valueOf(geoCoord.latitudeE6));
+			result.add(Integer.valueOf(geoCoord.longitudeE6));
 		}
 
 		return result;
@@ -462,8 +462,8 @@ public final class GeoUtils {
 
 		double[] epsilons = new double[2];
 
-		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInPixel);
-		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInPixel, lat);
+		epsilons[0] = GeoPoint.latitudeDistance(enlargementInPixel);
+		epsilons[1] = GeoPoint.longitudeDistance(enlargementInPixel, lat);
 
 		return epsilons;
 	}
@@ -475,8 +475,8 @@ public final class GeoUtils {
 
 		double[] epsilons = new double[2];
 		double lat = MercatorProjection.tileYToLatitude(tileY, zoom);
-		epsilons[0] = GeoCoordinate.latitudeDistance(enlargementInMeter);
-		epsilons[1] = GeoCoordinate.longitudeDistance(enlargementInMeter, lat);
+		epsilons[0] = GeoPoint.latitudeDistance(enlargementInMeter);
+		epsilons[1] = GeoPoint.longitudeDistance(enlargementInMeter, lat);
 
 		return epsilons;
 	}
@@ -503,10 +503,10 @@ public final class GeoUtils {
 	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel, int enlargementInPixel) {
 		double maxx = Double.NEGATIVE_INFINITY, maxy = Double.NEGATIVE_INFINITY, minx = Double.POSITIVE_INFINITY, miny = Double.POSITIVE_INFINITY;
 		for (TDNode coordinate : way.getWayNodes()) {
-			maxy = Math.max(maxy, GeoCoordinate.intToDouble(coordinate.getLatitude()));
-			miny = Math.min(miny, GeoCoordinate.intToDouble(coordinate.getLatitude()));
-			maxx = Math.max(maxx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
-			minx = Math.min(minx, GeoCoordinate.intToDouble(coordinate.getLongitude()));
+			maxy = Math.max(maxy, GeoPoint.intToDouble(coordinate.getLatitude()));
+			miny = Math.min(miny, GeoPoint.intToDouble(coordinate.getLatitude()));
+			maxx = Math.max(maxx, GeoPoint.intToDouble(coordinate.getLongitude()));
+			minx = Math.min(minx, GeoPoint.intToDouble(coordinate.getLongitude()));
 		}
 
 		double[] epsilonsTopLeft = computeTileEnlargement(maxy, enlargementInPixel);

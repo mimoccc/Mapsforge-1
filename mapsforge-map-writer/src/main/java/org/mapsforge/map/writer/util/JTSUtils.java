@@ -14,7 +14,7 @@
  */
 package org.mapsforge.map.writer.util;
 
-import org.mapsforge.map.writer.model.GeoCoordinate;
+import org.mapsforge.core.GeoPoint;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
 
@@ -29,7 +29,7 @@ public final class JTSUtils {
 	}
 
 	private static Coordinate toCoordinate(int latitude, int longitude) {
-		return new Coordinate(GeoCoordinate.intToDouble(longitude), GeoCoordinate.intToDouble(latitude));
+		return new Coordinate(GeoPoint.intToDouble(longitude), GeoPoint.intToDouble(latitude));
 	}
 
 	/**

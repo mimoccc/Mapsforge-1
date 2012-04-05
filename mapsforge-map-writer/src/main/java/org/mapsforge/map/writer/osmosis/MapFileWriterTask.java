@@ -20,11 +20,12 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.GeoPoint;
 import org.mapsforge.map.writer.HDTileBasedDataProcessor;
 import org.mapsforge.map.writer.MapFileWriter;
 import org.mapsforge.map.writer.RAMTileBasedDataProcessor;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
-import org.mapsforge.map.writer.model.Rect;
 import org.mapsforge.map.writer.model.TileBasedDataProcessor;
 import org.mapsforge.map.writer.util.Constants;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -134,7 +135,9 @@ public class MapFileWriterTask implements Sink {
 			case Bound:
 				Bound bound = (Bound) entity;
 				if (this.configuration.getBboxConfiguration() == null) {
-					Rect bbox = new Rect(bound.getLeft(), bound.getRight(), bound.getBottom(), bound.getTop());
+					BoundingBox bbox = new BoundingBox(GeoPoint.doubleToInt(bound.getBottom()),
+							GeoPoint.doubleToInt(bound.getLeft()), GeoPoint.doubleToInt(bound.getTop()),
+							GeoPoint.doubleToInt(bound.getRight()));
 					this.configuration.setBboxConfiguration(bbox);
 					this.configuration.validate();
 					if ("ram".equals(this.configuration.getDataProcessorType())) {
