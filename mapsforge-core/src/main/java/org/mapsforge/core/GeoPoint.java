@@ -27,6 +27,11 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 	 */
 	private static final double CONVERSION_FACTOR = 1000000d;
 
+	/**
+	 * Equatorial radius of earth is required for distance computation.
+	 */
+	private static final double EQUATORIALRADIUS = 6378137.0;
+
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -112,6 +117,110 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 	 */
 	public double getLongitude() {
 		return this.longitudeE6 / CONVERSION_FACTOR;
+	}
+
+	/**
+	 * Converts a coordinate from degrees to microdegrees.
+	 * 
+	 * @param coordinate
+	 *            the coordinate in degrees.
+	 * @return the coordinate in microdegrees.
+	 */
+	public static int doubleToInt(double coordinate) {
+		return (int) (coordinate * CONVERSION_FACTOR);
+	}
+
+	/**
+	 * Converts a coordinate from microdegrees to degrees.
+	 * 
+	 * @param coordinate
+	 *            the coordinate in microdegrees.
+	 * @return the coordinate in degrees.
+	 */
+	public static double intToDouble(int coordinate) {
+		return coordinate / CONVERSION_FACTOR;
+	}
+
+	/**
+	 * Calculate the amount of degrees of latitude for a given distance in meters.
+	 * 
+	 * @param meters
+	 *            distance in meters
+	 * @return latitude degrees
+	 */
+	public static double latitudeDistance(int meters) {
+		return (meters * 360) / (2 * Math.PI * EQUATORIALRADIUS);
+	}
+
+	/**
+	 * Calculate the amount of degrees of longitude for a given distance in meters.
+	 * 
+	 * @param meters
+	 *            distance in meters
+	 * @param latitude
+	 *            the latitude at which the calculation should be performed
+	 * @return longitude degrees
+	 */
+	public static double longitudeDistance(int meters, double latitude) {
+		return (meters * 360) / (2 * Math.PI * EQUATORIALRADIUS * Math.cos(Math.toRadians(latitude)));
+	}
+
+	/**
+	 * Constructs a new GeoCoordinate from a comma-separated String containing latitude and longitude values (also ';',
+	 * ':' and whitespace work as separator). Latitude and longitude are interpreted as measured in degrees.
+	 * 
+	 * @param latLonString
+	 *            the String containing the latitude and longitude values in degrees
+	 * @return the GeoCoordinate
+	 * @throws IllegalArgumentException
+	 *             if the latLonString could not be interpreted as a coordinate
+	 */
+	public static GeoPoint fromString(String latLonString) {
+		String[] splitted = latLonString.split("[,;:\\s]");
+		if (splitted.length != 2) {
+			throw new IllegalArgumentException("cannot read coordinate, not a valid format");
+		}
+		double latitude = validateLatitude(Double.parseDouble(splitted[0]));
+		double longitude = validateLongitude(Double.parseDouble(splitted[1]));
+		return new GeoPoint(latitude, longitude);
+	}
+
+	/**
+	 * Checks the given latitude value and throws an exception if the value is out of range.
+	 * 
+	 * @param lat
+	 *            the latitude value that should be checked.
+	 * @return the latitude value.
+	 * @throws IllegalArgumentException
+	 *             if the latitude value is < LATITUDE_MIN or > LATITUDE_MAX.
+	 */
+	public static double validateLatitude(double lat) {
+		if (lat < MercatorProjection.LATITUDE_MIN) {
+			throw new IllegalArgumentException("invalid latitude value: " + lat);
+		} else if (lat > MercatorProjection.LATITUDE_MAX) {
+			throw new IllegalArgumentException("invalid latitude value: " + lat);
+		} else {
+			return lat;
+		}
+	}
+
+	/**
+	 * Checks the given longitude value and throws an exception if the value is out of range.
+	 * 
+	 * @param lon
+	 *            the longitude value that should be checked.
+	 * @return the longitude value.
+	 * @throws IllegalArgumentException
+	 *             if the longitude value is < LONGITUDE_MIN or > LONGITUDE_MAX.
+	 */
+	public static double validateLongitude(double lon) {
+		if (lon < MercatorProjection.LONGITUDE_MIN) {
+			throw new IllegalArgumentException("invalid longitude value: " + lon);
+		} else if (lon > MercatorProjection.LONGITUDE_MAX) {
+			throw new IllegalArgumentException("invalid longitude value: " + lon);
+		} else {
+			return lon;
+		}
 	}
 
 	@Override

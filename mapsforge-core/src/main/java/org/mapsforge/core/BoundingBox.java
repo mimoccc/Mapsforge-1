@@ -77,6 +77,39 @@ public class BoundingBox implements Serializable {
 	}
 
 	/**
+	 * Creates a new rectangle from a String containing comma-separated coordinates in the order minLat, minLon, maxLat,
+	 * maxLon in degrees.
+	 * 
+	 * @param rectString
+	 *            the String that describes the rectangle
+	 * @return a new rectangle
+	 * @throws IllegalArgumentException
+	 *             if input String cannot be parsed, or coordinates describe an invalid rectangle
+	 */
+	public static BoundingBox fromString(String rectString) {
+		String[] splitted = rectString.split(",");
+		if (splitted.length != 4) {
+			throw new IllegalArgumentException(
+					"expects 4 comma-separated values that define a bounding box, only found " + splitted.length);
+		}
+
+		double minLat = GeoPoint.validateLatitude(Double.parseDouble(splitted[0]));
+		double minLon = GeoPoint.validateLongitude(Double.parseDouble(splitted[1]));
+		double maxLat = GeoPoint.validateLatitude(Double.parseDouble(splitted[2]));
+		double maxLon = GeoPoint.validateLongitude(Double.parseDouble(splitted[3]));
+
+		if (minLat > maxLat) {
+			throw new IllegalArgumentException("minLat > maxLat");
+		}
+		if (minLon > maxLon) {
+			throw new IllegalArgumentException("minLon > maxLon");
+		}
+
+		return new BoundingBox(GeoPoint.doubleToInt(minLat), GeoPoint.doubleToInt(minLon),
+				GeoPoint.doubleToInt(maxLat), GeoPoint.doubleToInt(maxLon));
+	}
+
+	/**
 	 * @param geoPoint
 	 *            the point whose coordinates should be checked.
 	 * @return true if this BoundingBox contains the given GeoPoint, false otherwise.

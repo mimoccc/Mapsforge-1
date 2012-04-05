@@ -102,4 +102,35 @@ public class BoundingBoxTest {
 		BoundingBox boundingBox = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
 		Assert.assertEquals(BOUNDING_BOX_TO_STRING, boundingBox.toString());
 	}
+
+	/**
+	 * Tests the {@link BoundingBox#fromString(String)} method.
+	 */
+	@Test
+	public void fromStringTest() {
+		BoundingBox boundingBox = BoundingBox.fromString(MIN_LATITUDE + "," + MIN_LONGITUDE + "," + MAX_LATITUDE + ","
+				+ MAX_LONGITUDE);
+		Assert.assertEquals(MIN_LATITUDE, boundingBox.minLatitudeE6 / CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MIN_LONGITUDE, boundingBox.minLongitudeE6 / CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MAX_LATITUDE, boundingBox.maxLatitudeE6 / CONVERSION_FACTOR, 0);
+		Assert.assertEquals(MAX_LONGITUDE, boundingBox.maxLongitudeE6 / CONVERSION_FACTOR, 0);
+	}
+
+	/**
+	 * Tests the {@link BoundingBox#fromString(String)} method with an invalid string.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void fromInvalidString1Test() {
+		BoundingBox.fromString(MAX_LATITUDE + "," + MIN_LONGITUDE + "," + MIN_LATITUDE + "," + MAX_LONGITUDE);
+
+	}
+
+	/**
+	 * Tests the {@link BoundingBox#fromString(String)} method with an invalid string.
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void fromInvalidString2Test() {
+		BoundingBox.fromString(MIN_LONGITUDE + "," + MIN_LATITUDE + "," + MAX_LONGITUDE);
+
+	}
 }

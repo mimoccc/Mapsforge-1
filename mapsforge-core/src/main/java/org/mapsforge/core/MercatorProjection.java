@@ -207,6 +207,24 @@ public final class MercatorProjection {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoomLevel);
 	}
 
+	/**
+	 * Computes the amount of latitude degrees for a given distance in pixel at a given zoom level.
+	 * 
+	 * @param deltaPixel
+	 *            the delta in pixel
+	 * @param lat
+	 *            the latitude
+	 * @param zoom
+	 *            the zoom level
+	 * @return the delta in degrees
+	 */
+	public static double deltaLat(double deltaPixel, double lat, byte zoom) {
+		double pixelY = latitudeToPixelY(lat, zoom);
+		double lat2 = pixelYToLatitude(pixelY + deltaPixel, zoom);
+
+		return Math.abs(lat2 - lat);
+	}
+
 	private MercatorProjection() {
 		throw new IllegalStateException();
 	}
