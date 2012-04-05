@@ -661,18 +661,21 @@
 						<line stroke="#e46d71" stroke-width="1.5" />
 						<rule e="way" k="*" v="*" zoom-min="14">
 							<pathText k="name" font-style="bold" font-size="10" stroke="#e46d71" stroke-width="2.0" />
+							<pathText k="ref" font-style="bold" font-size="12" stroke="#ffffff" fill="#606060" stroke-width="2.0" />
 						</rule>
 					</rule>
 					<rule e="way" k="highway" v="trunk">
 						<line stroke="#7fc97f" stroke-width="1.5" />
 						<rule e="way" k="*" v="*" zoom-min="14">
 							<pathText k="name" font-style="bold" font-size="10" stroke="#7fc97f" stroke-width="2.0" />
+							<pathText k="ref" font-style="bold" font-size="12" stroke="#ffffff" fill="#606060" stroke-width="2.0" />
 						</rule>
 					</rule>
 					<rule e="way" k="highway" v="motorway">
 						<line stroke="#809bc0" stroke-width="1.7" />
 						<rule e="way" k="*" v="*" zoom-min="14">
 							<pathText k="name" font-style="bold" font-size="10" stroke="#809bc0" stroke-width="2.0" />
+							<pathText k="ref" font-style="bold" font-size="12" stroke="#ffffff" fill="#606060" stroke-width="2.0" />
 						</rule>
 					</rule>
 
