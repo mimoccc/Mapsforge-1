@@ -17,7 +17,7 @@ package org.mapsforge.android.maps.rendertheme;
 import java.util.Arrays;
 import java.util.List;
 
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
 
 class SingleKeyMatcher implements AttributeMatcher {
 	private final String key;

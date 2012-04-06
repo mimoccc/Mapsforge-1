@@ -14,9 +14,9 @@
  */
 package org.mapsforge.map.reader.header;
 
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.Tag;
 import org.mapsforge.map.reader.MapDatabase;
 
 /**

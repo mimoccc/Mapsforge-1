@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import org.mapsforge.android.maps.mapgenerator.MapGenerator;
 import org.mapsforge.android.maps.mapgenerator.MapGeneratorJob;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.Tile;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

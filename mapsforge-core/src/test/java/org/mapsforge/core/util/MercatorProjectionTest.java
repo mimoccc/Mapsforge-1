@@ -12,11 +12,13 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.util;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.model.Tile;
 
 /**
  * Tests the {@link MercatorProjection} class.
@@ -37,7 +39,7 @@ public class MercatorProjectionTest {
 	@Test
 	public void coordinateToPixelTest() {
 		for (byte zoomLevel = ZOOM_LEVEL_MIN; zoomLevel <= ZOOM_LEVEL_MAX; ++zoomLevel) {
-			double pixelX = MercatorProjection.longitudeToPixelX(MercatorProjection.LONGITUDE_MIN, zoomLevel);
+			double pixelX = MercatorProjection.longitudeToPixelX(Coordinates.LONGITUDE_MIN, zoomLevel);
 			double pixelY = MercatorProjection.latitudeToPixelY(MercatorProjection.LATITUDE_MAX, zoomLevel);
 			Assert.assertEquals(0, pixelX, 0);
 			Assert.assertEquals(0, pixelY, LATITUDE_DELTA);
@@ -49,7 +51,7 @@ public class MercatorProjectionTest {
 			Assert.assertEquals(mapCenter, pixelX, 0);
 			Assert.assertEquals(mapCenter, pixelY, LATITUDE_DELTA);
 
-			pixelX = MercatorProjection.longitudeToPixelX(MercatorProjection.LONGITUDE_MAX, zoomLevel);
+			pixelX = MercatorProjection.longitudeToPixelX(Coordinates.LONGITUDE_MAX, zoomLevel);
 			pixelY = MercatorProjection.latitudeToPixelY(MercatorProjection.LATITUDE_MIN, zoomLevel);
 			Assert.assertEquals(mapSize, pixelX, 0);
 			Assert.assertEquals(mapSize, pixelY, LATITUDE_DELTA);
@@ -85,7 +87,7 @@ public class MercatorProjectionTest {
 		for (byte zoomLevel = ZOOM_LEVEL_MIN; zoomLevel <= ZOOM_LEVEL_MAX; ++zoomLevel) {
 			double longitude = MercatorProjection.pixelXToLongitude(0, zoomLevel);
 			double latitude = MercatorProjection.pixelYToLatitude(0, zoomLevel);
-			Assert.assertEquals(MercatorProjection.LONGITUDE_MIN, longitude, 0);
+			Assert.assertEquals(Coordinates.LONGITUDE_MIN, longitude, 0);
 			Assert.assertEquals(MercatorProjection.LATITUDE_MAX, latitude, LATITUDE_DELTA);
 
 			long mapSize = getMapSize(zoomLevel);
@@ -97,7 +99,7 @@ public class MercatorProjectionTest {
 
 			longitude = MercatorProjection.pixelXToLongitude(mapSize, zoomLevel);
 			latitude = MercatorProjection.pixelYToLatitude(mapSize, zoomLevel);
-			Assert.assertEquals(MercatorProjection.LONGITUDE_MAX, longitude, 0);
+			Assert.assertEquals(Coordinates.LONGITUDE_MAX, longitude, 0);
 			Assert.assertEquals(MercatorProjection.LATITUDE_MIN, latitude, LATITUDE_DELTA);
 		}
 	}
@@ -111,14 +113,14 @@ public class MercatorProjectionTest {
 		for (byte zoomLevel = ZOOM_LEVEL_MIN; zoomLevel <= ZOOM_LEVEL_MAX; ++zoomLevel) {
 			double longitude = MercatorProjection.tileXToLongitude(0, zoomLevel);
 			double latitude = MercatorProjection.tileYToLatitude(0, zoomLevel);
-			Assert.assertEquals(MercatorProjection.LONGITUDE_MIN, longitude, 0);
+			Assert.assertEquals(Coordinates.LONGITUDE_MIN, longitude, 0);
 			Assert.assertEquals(MercatorProjection.LATITUDE_MAX, latitude, LATITUDE_DELTA);
 
 			long mapSize = getMapSize(zoomLevel);
 			long mapSizeTile = mapSize / Tile.TILE_SIZE;
 			longitude = MercatorProjection.tileXToLongitude(mapSizeTile, zoomLevel);
 			latitude = MercatorProjection.tileYToLatitude(mapSizeTile, zoomLevel);
-			Assert.assertEquals(MercatorProjection.LONGITUDE_MAX, longitude, 0);
+			Assert.assertEquals(Coordinates.LONGITUDE_MAX, longitude, 0);
 			Assert.assertEquals(MercatorProjection.LATITUDE_MIN, latitude, LATITUDE_DELTA);
 		}
 	}

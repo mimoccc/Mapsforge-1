@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,10 +26,19 @@ import org.junit.Test;
  * Tests the {@link GeoPoint} class.
  */
 public class GeoPointTest {
-	private static final double CONVERSION_FACTOR = 1000000d;
+	private static final String DELIMITER = ",";
 	private static final String GEO_POINT_TO_STRING = "GeoPoint [latitudeE6=1, longitudeE6=2]";
 	private static final int LATITUDE = 1;
 	private static final int LONGITUDE = 2;
+
+	private static void verifyInvalid(String string) {
+		try {
+			GeoPoint.fromString(string);
+			Assert.fail(string);
+		} catch (IllegalArgumentException e) {
+			Assert.assertTrue(true);
+		}
+	}
 
 	/**
 	 * Tests the {@link GeoPoint#compareTo(GeoPoint)} method.
@@ -49,7 +58,8 @@ public class GeoPointTest {
 	 */
 	@Test
 	public void constructorTest() {
-		GeoPoint geoPoint1 = new GeoPoint(LATITUDE / CONVERSION_FACTOR, LONGITUDE / CONVERSION_FACTOR);
+		GeoPoint geoPoint1 = new GeoPoint(Coordinates.microdegreesToDegrees(LATITUDE),
+				Coordinates.microdegreesToDegrees(LONGITUDE));
 		GeoPoint geoPoint2 = new GeoPoint(LATITUDE, LONGITUDE);
 
 		TestUtils.equalsTest(geoPoint1, geoPoint2);
@@ -72,6 +82,37 @@ public class GeoPointTest {
 	}
 
 	/**
+	 * Tests the {@link GeoPoint#fromString(String)} method.
+	 */
+	@Test
+	public void fromStringInvalidTest() {
+		// invalid strings
+		verifyInvalid("1,,2");
+		verifyInvalid(",1,2");
+		verifyInvalid("1,2,");
+		verifyInvalid("1,");
+		verifyInvalid("1");
+		verifyInvalid("foo");
+		verifyInvalid("");
+
+		// invalid coordinates
+		verifyInvalid("1,-181");
+		verifyInvalid("1,181");
+		verifyInvalid("-91,2");
+		verifyInvalid("91,2");
+	}
+
+	/**
+	 * Tests the {@link GeoPoint#fromString(String)} method.
+	 */
+	@Test
+	public void fromStringValidTest() {
+		GeoPoint geoPoint = GeoPoint.fromString(LATITUDE + DELIMITER + LONGITUDE);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(LATITUDE), geoPoint.latitudeE6, 0);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(LONGITUDE), geoPoint.longitudeE6, 0);
+	}
+
+	/**
 	 * Tests the public fields and the getter-methods.
 	 */
 	@Test
@@ -81,8 +122,8 @@ public class GeoPointTest {
 		Assert.assertEquals(LATITUDE, geoPoint.latitudeE6);
 		Assert.assertEquals(LONGITUDE, geoPoint.longitudeE6);
 
-		Assert.assertEquals(LATITUDE, geoPoint.getLatitude() * CONVERSION_FACTOR, 0);
-		Assert.assertEquals(LONGITUDE, geoPoint.getLongitude() * CONVERSION_FACTOR, 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(LATITUDE), geoPoint.getLatitude(), 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(LONGITUDE), geoPoint.getLongitude(), 0);
 	}
 
 	/**
@@ -106,49 +147,5 @@ public class GeoPointTest {
 	public void toStringTest() {
 		GeoPoint geoPoint = new GeoPoint(LATITUDE, LONGITUDE);
 		Assert.assertEquals(GEO_POINT_TO_STRING, geoPoint.toString());
-	}
-
-	/**
-	 * Tests the {@link GeoPoint#fromString(String)} method.
-	 */
-	@Test
-	public void fromValidStringTest() {
-		GeoPoint geoPoint = GeoPoint.fromString(LATITUDE + "," + LONGITUDE);
-		Assert.assertEquals(new GeoPoint((double) LATITUDE, (double) LONGITUDE), geoPoint);
-	}
-
-	/**
-	 * Tests the {@link GeoPoint#fromString(String)} method with an invalid string.
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void fromInvalidString1Test() {
-		GeoPoint.fromString(LATITUDE + "." + LONGITUDE);
-	}
-
-	/**
-	 * Tests the {@link GeoPoint#fromString(String)} method with an invalid string.
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void fromInvalidString2Test() {
-		GeoPoint.fromString(Double.MAX_VALUE + "," + LONGITUDE);
-	}
-
-	/**
-	 * Tests the {@link GeoPoint#doubleToInt(double)} method.
-	 */
-	@Test
-	public void doubleToIntTest() {
-		int latE6 = GeoPoint.doubleToInt(LATITUDE);
-		int expected = (int) (LATITUDE * CONVERSION_FACTOR);
-		Assert.assertEquals(expected, latE6);
-	}
-
-	/**
-	 * Tests the {@link GeoPoint#intToDouble(int)} method.
-	 */
-	@Test
-	public void intToDoubleTest() {
-		double lat = GeoPoint.intToDouble((int) (LATITUDE * CONVERSION_FACTOR));
-		Assert.assertEquals(LATITUDE, lat, 0);
 	}
 }

@@ -14,7 +14,7 @@
  */
 package org.mapsforge.map.reader.header;
 
-import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.model.BoundingBox;
 
 class SubFileParameterBuilder {
 	byte baseZoomLevel;

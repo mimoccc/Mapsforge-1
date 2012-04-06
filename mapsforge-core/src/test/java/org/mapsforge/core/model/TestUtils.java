@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +22,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import junit.framework.Assert;
+
+import org.mapsforge.core.util.IOUtils;
 
 final class TestUtils {
 	private static Object deserializeObject(File file) throws IOException, ClassNotFoundException {

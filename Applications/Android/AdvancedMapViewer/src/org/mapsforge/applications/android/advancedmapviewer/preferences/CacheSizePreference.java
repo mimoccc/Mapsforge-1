@@ -16,7 +16,7 @@ package org.mapsforge.applications.android.advancedmapviewer.preferences;
 
 import org.mapsforge.applications.android.advancedmapviewer.AdvancedMapViewer;
 import org.mapsforge.applications.android.advancedmapviewer.R;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 import android.content.Context;
 import android.util.AttributeSet;

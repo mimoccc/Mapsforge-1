@@ -31,7 +31,7 @@ import org.mapsforge.android.maps.rendertheme.renderinstruction.Line;
 import org.mapsforge.android.maps.rendertheme.renderinstruction.LineSymbol;
 import org.mapsforge.android.maps.rendertheme.renderinstruction.PathText;
 import org.mapsforge.android.maps.rendertheme.renderinstruction.Symbol;
-import org.mapsforge.core.IOUtils;
+import org.mapsforge.core.util.IOUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;

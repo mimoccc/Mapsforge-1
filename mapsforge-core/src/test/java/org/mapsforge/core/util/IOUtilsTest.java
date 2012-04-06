@@ -12,32 +12,36 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.android.maps.rendertheme;
+package org.mapsforge.core.util;
 
-import java.util.Arrays;
-import java.util.List;
+import java.io.Closeable;
 
-import org.mapsforge.core.model.Tag;
+import junit.framework.Assert;
 
-class SingleValueMatcher implements AttributeMatcher {
-	private final String value;
+import org.junit.Test;
 
-	SingleValueMatcher(String value) {
-		this.value = value;
-	}
+/**
+ * Tests the {@link IOUtils} class.
+ */
+public class IOUtilsTest {
+	static class DummyCloseable implements Closeable {
+		int closeCalls;
 
-	@Override
-	public boolean isCoveredBy(AttributeMatcher attributeMatcher) {
-		return attributeMatcher == this || attributeMatcher.matches(Arrays.asList(new Tag(null, this.value)));
-	}
-
-	@Override
-	public boolean matches(List<Tag> tags) {
-		for (int i = 0, n = tags.size(); i < n; ++i) {
-			if (this.value.equals(tags.get(i).value)) {
-				return true;
-			}
+		@Override
+		public void close() {
+			++this.closeCalls;
 		}
-		return false;
+	}
+
+	/**
+	 * Tests the {@link IOUtils#closeQuietly(Closeable)} method.
+	 */
+	@Test
+	public void closeQuietlyTest() {
+		IOUtils.closeQuietly(null);
+
+		DummyCloseable dummyCloseable = new DummyCloseable();
+		IOUtils.closeQuietly(dummyCloseable);
+		Assert.assertEquals(1, dummyCloseable.closeCalls);
 	}
 }

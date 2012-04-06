@@ -16,7 +16,7 @@ package org.mapsforge.android.maps.mapgenerator.databaserenderer;
 
 import java.util.List;
 
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

@@ -22,6 +22,7 @@ package org.mapsforge.map.writer.util;
 public final class Constants {
 
 	private Constants() {
+		throw new IllegalStateException();
 	}
 
 	/**

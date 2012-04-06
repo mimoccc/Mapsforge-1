@@ -17,8 +17,8 @@ package org.mapsforge.map.writer.model;
 import java.io.File;
 import java.net.MalformedURLException;
 
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.GeoPoint;
 import org.mapsforge.map.writer.OSMTagMapping;
 
 /**
@@ -441,7 +441,7 @@ public class MapWriterConfiguration {
 				}
 				setMapStartZoomLevel(intZoom);
 			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException("not a valid map start zoom: " + zoom);
+				throw new IllegalArgumentException("not a valid map start zoom: " + zoom, e);
 			}
 		} else {
 			setMapStartZoomLevel(-1);
@@ -457,7 +457,7 @@ public class MapWriterConfiguration {
 	 */
 	public void addBboxConfiguration(String bbox) {
 		if (bbox != null) {
-			setBboxConfiguration(BoundingBox.fromString(bbox));
+			setBboxConfiguration(org.mapsforge.core.model.BoundingBox.fromString(bbox));
 		}
 	}
 

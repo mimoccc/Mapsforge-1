@@ -64,7 +64,7 @@ public class MapFileWriterTest {
 
 	/**
 	 * Tests the {@link MapFileWriter#writeHeaderBuffer(MapWriterConfiguration, TileBasedDataProcessor, ByteBuffer)}
-	 * method
+	 * method.
 	 */
 	@Test
 	public void testWriteHeaderBuffer() {

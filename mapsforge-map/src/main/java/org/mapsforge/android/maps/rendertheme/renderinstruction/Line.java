@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 import org.mapsforge.android.maps.rendertheme.RenderCallback;
 import org.mapsforge.android.maps.rendertheme.RenderThemeHandler;
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
 import org.xml.sax.Attributes;
 
 import android.graphics.Color;

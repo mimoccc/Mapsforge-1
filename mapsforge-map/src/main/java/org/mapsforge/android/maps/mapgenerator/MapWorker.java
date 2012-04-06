@@ -16,7 +16,7 @@ package org.mapsforge.android.maps.mapgenerator;
 
 import org.mapsforge.android.maps.MapView;
 import org.mapsforge.android.maps.PausableThread;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 import android.graphics.Bitmap;
 

@@ -12,7 +12,10 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.util;
+
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.model.Tile;
 
 /**
  * An implementation of the spherical Mercator projection.
@@ -34,16 +37,6 @@ public final class MercatorProjection {
 	public static final double LATITUDE_MIN = -LATITUDE_MAX;
 
 	/**
-	 * Maximum possible longitude coordinate of the map.
-	 */
-	public static final double LONGITUDE_MAX = 180;
-
-	/**
-	 * Minimum possible longitude coordinate of the map.
-	 */
-	public static final double LONGITUDE_MIN = -LONGITUDE_MAX;
-
-	/**
 	 * Calculates the distance on the ground that is represented by a single pixel on the map.
 	 * 
 	 * @param latitude
@@ -54,6 +47,24 @@ public final class MercatorProjection {
 	 */
 	public static double calculateGroundResolution(double latitude, byte zoomLevel) {
 		return Math.cos(latitude * (Math.PI / 180)) * EARTH_CIRCUMFERENCE / ((long) Tile.TILE_SIZE << zoomLevel);
+	}
+
+	/**
+	 * Computes the amount of latitude degrees for a given distance in pixel at a given zoom level.
+	 * 
+	 * @param deltaPixel
+	 *            the delta in pixel
+	 * @param lat
+	 *            the latitude
+	 * @param zoom
+	 *            the zoom level
+	 * @return the delta in degrees
+	 */
+	public static double deltaLat(double deltaPixel, double lat, byte zoom) {
+		double pixelY = latitudeToPixelY(lat, zoom);
+		double lat2 = pixelYToLatitude(pixelY + deltaPixel, zoom);
+
+		return Math.abs(lat2 - lat);
 	}
 
 	/**
@@ -99,7 +110,7 @@ public final class MercatorProjection {
 	 * @return the given longitude value, limited to the possible longitude range.
 	 */
 	public static double limitLongitude(double longitude) {
-		return Math.max(Math.min(longitude, LONGITUDE_MAX), LONGITUDE_MIN);
+		return Math.max(Math.min(longitude, Coordinates.LONGITUDE_MAX), Coordinates.LONGITUDE_MIN);
 	}
 
 	/**
@@ -205,24 +216,6 @@ public final class MercatorProjection {
 	 */
 	public static double tileYToLatitude(long tileY, byte zoomLevel) {
 		return pixelYToLatitude(tileY * Tile.TILE_SIZE, zoomLevel);
-	}
-
-	/**
-	 * Computes the amount of latitude degrees for a given distance in pixel at a given zoom level.
-	 * 
-	 * @param deltaPixel
-	 *            the delta in pixel
-	 * @param lat
-	 *            the latitude
-	 * @param zoom
-	 *            the zoom level
-	 * @return the delta in degrees
-	 */
-	public static double deltaLat(double deltaPixel, double lat, byte zoom) {
-		double pixelY = latitudeToPixelY(lat, zoom);
-		double lat2 = pixelYToLatitude(pixelY + deltaPixel, zoom);
-
-		return Math.abs(lat2 - lat);
 	}
 
 	private MercatorProjection() {

@@ -17,7 +17,7 @@ package org.mapsforge.android.maps.rendertheme.renderinstruction;
 import java.util.List;
 
 import org.mapsforge.android.maps.rendertheme.RenderCallback;
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
 
 /**
  * A RenderInstruction is a basic graphical primitive to draw a map.

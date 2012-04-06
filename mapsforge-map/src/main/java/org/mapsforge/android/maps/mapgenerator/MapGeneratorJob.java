@@ -19,7 +19,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.mapsforge.android.maps.DebugSettings;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 /**
  * A MapGeneratorJob holds all immutable rendering parameters for a single map image together with a mutable priority

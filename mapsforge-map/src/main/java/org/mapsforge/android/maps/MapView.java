@@ -40,10 +40,10 @@ import org.mapsforge.android.maps.mapgenerator.tiledownloader.TileDownloader;
 import org.mapsforge.android.maps.overlay.Overlay;
 import org.mapsforge.android.maps.overlay.OverlayList;
 import org.mapsforge.android.maps.rendertheme.InternalRenderTheme;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.reader.MapDatabase;
 import org.mapsforge.map.reader.header.FileOpenResult;
 

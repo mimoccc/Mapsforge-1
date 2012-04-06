@@ -20,8 +20,8 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.Coordinates;
 import org.mapsforge.map.writer.HDTileBasedDataProcessor;
 import org.mapsforge.map.writer.MapFileWriter;
 import org.mapsforge.map.writer.RAMTileBasedDataProcessor;
@@ -82,10 +82,6 @@ public class MapFileWriterTask implements Sink {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.openstreetmap.osmosis.core.lifecycle.Completable#complete()
-	 */
 	@Override
 	public final void complete() {
 		NumberFormat nfMegabyte = NumberFormat.getInstance();
@@ -135,9 +131,9 @@ public class MapFileWriterTask implements Sink {
 			case Bound:
 				Bound bound = (Bound) entity;
 				if (this.configuration.getBboxConfiguration() == null) {
-					BoundingBox bbox = new BoundingBox(GeoPoint.doubleToInt(bound.getBottom()),
-							GeoPoint.doubleToInt(bound.getLeft()), GeoPoint.doubleToInt(bound.getTop()),
-							GeoPoint.doubleToInt(bound.getRight()));
+					BoundingBox bbox = new BoundingBox(Coordinates.degreesToMicrodegrees(bound.getBottom()),
+							Coordinates.degreesToMicrodegrees(bound.getLeft()), Coordinates.degreesToMicrodegrees(bound
+									.getTop()), Coordinates.degreesToMicrodegrees(bound.getRight()));
 					this.configuration.setBboxConfiguration(bbox);
 					this.configuration.validate();
 					if ("ram".equals(this.configuration.getDataProcessorType())) {

@@ -14,9 +14,9 @@
  */
 package org.mapsforge.android.maps;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.util.MercatorProjection;
 
 import android.graphics.Point;
 

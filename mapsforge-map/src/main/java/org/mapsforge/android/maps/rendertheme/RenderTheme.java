@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mapsforge.android.maps.rendertheme.renderinstruction.RenderInstruction;
-import org.mapsforge.core.LRUCache;
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
+import org.mapsforge.core.util.LRUCache;
 import org.xml.sax.Attributes;
 
 import android.graphics.Color;

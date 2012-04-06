@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps.mapgenerator;
 
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.GeoPoint;
 
 import android.graphics.Bitmap;
 

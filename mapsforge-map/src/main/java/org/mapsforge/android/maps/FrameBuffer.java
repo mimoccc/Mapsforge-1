@@ -16,10 +16,10 @@ package org.mapsforge.android.maps;
 
 import java.io.OutputStream;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.MercatorProjection;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;

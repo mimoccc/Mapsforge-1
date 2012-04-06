@@ -14,7 +14,7 @@
  */
 package org.mapsforge.android.maps.mapgenerator.tiledownloader;
 
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 /**
  * A MapGenerator that downloads tiles from the Mapnik server at OpenStreetMap.

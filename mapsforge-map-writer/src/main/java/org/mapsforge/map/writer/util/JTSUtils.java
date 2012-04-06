@@ -14,7 +14,7 @@
  */
 package org.mapsforge.map.writer.util;
 
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.Coordinates;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
 
@@ -26,10 +26,11 @@ import com.vividsolutions.jts.geom.Coordinate;
 public final class JTSUtils {
 
 	private JTSUtils() {
+		throw new IllegalStateException();
 	}
 
 	private static Coordinate toCoordinate(int latitude, int longitude) {
-		return new Coordinate(GeoPoint.intToDouble(longitude), GeoPoint.intToDouble(latitude));
+		return new Coordinate(Coordinates.microdegreesToDegrees(longitude), Coordinates.microdegreesToDegrees(latitude));
 	}
 
 	/**

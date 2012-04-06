@@ -17,8 +17,8 @@ package org.mapsforge.android.maps;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.util.MercatorProjection;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

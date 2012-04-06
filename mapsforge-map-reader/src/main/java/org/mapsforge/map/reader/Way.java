@@ -16,8 +16,8 @@ package org.mapsforge.map.reader;
 
 import java.util.List;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.Tag;
 
 /**
  * An immutable container for all data associated with a single way or area (closed way).

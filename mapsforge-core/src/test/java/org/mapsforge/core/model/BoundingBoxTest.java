@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,12 +26,21 @@ import org.junit.Test;
  * Tests the {@link BoundingBox} class.
  */
 public class BoundingBoxTest {
-	private static final String BOUNDING_BOX_TO_STRING = "BoundingBox [minLatitudeE6=1, minLongitudeE6=0, maxLatitudeE6=3, maxLongitudeE6=2]";
-	private static final double CONVERSION_FACTOR = 1000000d;
-	private static final int MAX_LATITUDE = 3;
-	private static final int MAX_LONGITUDE = 2;
-	private static final int MIN_LATITUDE = 1;
-	private static final int MIN_LONGITUDE = 0;
+	private static final String BOUNDING_BOX_TO_STRING = "BoundingBox [minLatitudeE6=2, minLongitudeE6=1, maxLatitudeE6=4, maxLongitudeE6=3]";
+	private static final String DELIMITER = ",";
+	private static final int MAX_LATITUDE = 4;
+	private static final int MAX_LONGITUDE = 3;
+	private static final int MIN_LATITUDE = 2;
+	private static final int MIN_LONGITUDE = 1;
+
+	private static void verifyInvalid(String string) {
+		try {
+			BoundingBox.fromString(string);
+			Assert.fail(string);
+		} catch (IllegalArgumentException e) {
+			Assert.assertTrue(true);
+		}
+	}
 
 	/**
 	 * Tests the {@link BoundingBox#contains(GeoPoint)} method.
@@ -40,10 +49,14 @@ public class BoundingBoxTest {
 	public void containsTest() {
 		BoundingBox boundingBox = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
 		GeoPoint geoPoint1 = new GeoPoint(MIN_LATITUDE, MIN_LONGITUDE);
-		GeoPoint geoPoint2 = new GeoPoint(0, 0);
+		GeoPoint geoPoint2 = new GeoPoint(MAX_LATITUDE, MAX_LONGITUDE);
+		GeoPoint geoPoint3 = new GeoPoint(MIN_LONGITUDE, MIN_LONGITUDE);
+		GeoPoint geoPoint4 = new GeoPoint(MAX_LATITUDE, MAX_LATITUDE);
 
 		Assert.assertTrue(boundingBox.contains(geoPoint1));
-		Assert.assertFalse(boundingBox.contains(geoPoint2));
+		Assert.assertTrue(boundingBox.contains(geoPoint2));
+		Assert.assertFalse(boundingBox.contains(geoPoint3));
+		Assert.assertFalse(boundingBox.contains(geoPoint4));
 	}
 
 	/**
@@ -63,6 +76,54 @@ public class BoundingBoxTest {
 	}
 
 	/**
+	 * Tests the {@link BoundingBox#fromString(String)} method.
+	 */
+	@Test
+	public void fromStringInvalidTest() {
+		// invalid strings
+		verifyInvalid("1,2,3,,4");
+		verifyInvalid(",1,2,3,4");
+		verifyInvalid("1,2,3,4,");
+		verifyInvalid("1,2,3,");
+		verifyInvalid("1,2,3");
+		verifyInvalid("foo");
+		verifyInvalid("");
+
+		// invalid coordinates
+		verifyInvalid("1,-181,3,4");
+		verifyInvalid("1,2,3,181");
+		verifyInvalid("-91,2,3,4");
+		verifyInvalid("1,2,91,4");
+		verifyInvalid("3,2,1,4");
+		verifyInvalid("1,4,3,2");
+	}
+
+	/**
+	 * Tests the {@link BoundingBox#fromString(String)} method.
+	 */
+	@Test
+	public void fromStringValidTest() {
+		String boundingBoxString = MIN_LATITUDE + DELIMITER + MIN_LONGITUDE + DELIMITER + MAX_LATITUDE + DELIMITER
+				+ MAX_LONGITUDE;
+		BoundingBox boundingBox = BoundingBox.fromString(boundingBoxString);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(MIN_LATITUDE), boundingBox.minLatitudeE6, 0);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(MIN_LONGITUDE), boundingBox.minLongitudeE6, 0);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(MAX_LATITUDE), boundingBox.maxLatitudeE6, 0);
+		Assert.assertEquals(Coordinates.degreesToMicrodegrees(MAX_LONGITUDE), boundingBox.maxLongitudeE6, 0);
+	}
+
+	/**
+	 * Tests the {@link BoundingBox#getCenterPoint()} method.
+	 */
+	@Test
+	public void getCenterPointTest() {
+		BoundingBox boundingBox = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
+		GeoPoint centerPoint = boundingBox.getCenterPoint();
+		Assert.assertEquals((MIN_LATITUDE + MAX_LATITUDE) / 2, centerPoint.latitudeE6);
+		Assert.assertEquals((MIN_LONGITUDE + MAX_LONGITUDE) / 2, centerPoint.longitudeE6);
+	}
+
+	/**
 	 * Tests the public fields and the getter-methods.
 	 */
 	@Test
@@ -74,10 +135,10 @@ public class BoundingBoxTest {
 		Assert.assertEquals(MAX_LATITUDE, boundingBox.maxLatitudeE6);
 		Assert.assertEquals(MAX_LONGITUDE, boundingBox.maxLongitudeE6);
 
-		Assert.assertEquals(MIN_LATITUDE, boundingBox.getMinLatitude() * CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MIN_LONGITUDE, boundingBox.getMinLongitude() * CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MAX_LATITUDE, boundingBox.getMaxLatitude() * CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MAX_LONGITUDE, boundingBox.getMaxLongitude() * CONVERSION_FACTOR, 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(MIN_LATITUDE), boundingBox.getMinLatitude(), 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(MIN_LONGITUDE), boundingBox.getMinLongitude(), 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(MAX_LATITUDE), boundingBox.getMaxLatitude(), 0);
+		Assert.assertEquals(Coordinates.microdegreesToDegrees(MAX_LONGITUDE), boundingBox.getMaxLongitude(), 0);
 	}
 
 	/**
@@ -101,36 +162,5 @@ public class BoundingBoxTest {
 	public void toStringTest() {
 		BoundingBox boundingBox = new BoundingBox(MIN_LATITUDE, MIN_LONGITUDE, MAX_LATITUDE, MAX_LONGITUDE);
 		Assert.assertEquals(BOUNDING_BOX_TO_STRING, boundingBox.toString());
-	}
-
-	/**
-	 * Tests the {@link BoundingBox#fromString(String)} method.
-	 */
-	@Test
-	public void fromStringTest() {
-		BoundingBox boundingBox = BoundingBox.fromString(MIN_LATITUDE + "," + MIN_LONGITUDE + "," + MAX_LATITUDE + ","
-				+ MAX_LONGITUDE);
-		Assert.assertEquals(MIN_LATITUDE, boundingBox.minLatitudeE6 / CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MIN_LONGITUDE, boundingBox.minLongitudeE6 / CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MAX_LATITUDE, boundingBox.maxLatitudeE6 / CONVERSION_FACTOR, 0);
-		Assert.assertEquals(MAX_LONGITUDE, boundingBox.maxLongitudeE6 / CONVERSION_FACTOR, 0);
-	}
-
-	/**
-	 * Tests the {@link BoundingBox#fromString(String)} method with an invalid string.
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void fromInvalidString1Test() {
-		BoundingBox.fromString(MAX_LATITUDE + "," + MIN_LONGITUDE + "," + MIN_LATITUDE + "," + MAX_LONGITUDE);
-
-	}
-
-	/**
-	 * Tests the {@link BoundingBox#fromString(String)} method with an invalid string.
-	 */
-	@Test(expected = IllegalArgumentException.class)
-	public void fromInvalidString2Test() {
-		BoundingBox.fromString(MIN_LONGITUDE + "," + MIN_LATITUDE + "," + MAX_LONGITUDE);
-
 	}
 }

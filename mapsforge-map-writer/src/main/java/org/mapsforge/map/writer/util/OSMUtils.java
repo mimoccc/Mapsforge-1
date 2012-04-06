@@ -16,6 +16,7 @@ package org.mapsforge.map.writer.util;
 
 import gnu.trove.list.array.TShortArrayList;
 
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,7 +62,7 @@ public final class OSMUtils {
 
 		if (entity.getTags() != null) {
 			for (Tag tag : entity.getTags()) {
-				String key = tag.getKey().toLowerCase();
+				String key = tag.getKey().toLowerCase(Locale.ENGLISH);
 				if ("name".equals(key) && !foundPreferredLanguageName) {
 					name = tag.getValue();
 				} else if ("piste:name".equals(key) && name == null) {

@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,27 +23,28 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 /**
- * Tests the {@link MapPosition} class.
+ * Tests the {@link Tile} class.
  */
-public class MapPositionTest {
-	private static final GeoPoint GEO_POINT = new GeoPoint(1, 2);
-	private static final String MAP_POSITION_TO_STRING = "MapPosition [geoPoint=GeoPoint [latitudeE6=1, longitudeE6=2], zoomLevel=3]";
+public class TileTest {
+	private static final String TILE_TO_STRING = "Tile [tileX=1, tileY=2, zoomLevel=3]";
+	private static final long TILE_X = 1;
+	private static final long TILE_Y = 2;
 	private static final byte ZOOM_LEVEL = 3;
 
 	/**
-	 * Tests the {@link MapPosition#equals(Object)} and the {@link MapPosition#hashCode()} method.
+	 * Tests the {@link Tile#equals(Object)} and the {@link Tile#hashCode()} method.
 	 */
 	@Test
 	public void equalsTest() {
-		MapPosition mapPosition1 = new MapPosition(GEO_POINT, ZOOM_LEVEL);
-		MapPosition mapPosition2 = new MapPosition(GEO_POINT, ZOOM_LEVEL);
-		MapPosition mapPosition3 = new MapPosition(GEO_POINT, (byte) 0);
+		Tile tile1 = new Tile(TILE_X, TILE_Y, ZOOM_LEVEL);
+		Tile tile2 = new Tile(TILE_X, TILE_Y, ZOOM_LEVEL);
+		Tile tile3 = new Tile(TILE_X, TILE_X, ZOOM_LEVEL);
 
-		TestUtils.equalsTest(mapPosition1, mapPosition2);
+		TestUtils.equalsTest(tile1, tile2);
 
-		Assert.assertFalse(mapPosition1.equals(mapPosition3));
-		Assert.assertFalse(mapPosition3.equals(mapPosition1));
-		Assert.assertFalse(mapPosition1.equals(new Object()));
+		Assert.assertFalse(tile1.equals(tile3));
+		Assert.assertFalse(tile3.equals(tile1));
+		Assert.assertFalse(tile1.equals(new Object()));
 	}
 
 	/**
@@ -51,10 +52,14 @@ public class MapPositionTest {
 	 */
 	@Test
 	public void getterTest() {
-		MapPosition mapPosition = new MapPosition(GEO_POINT, ZOOM_LEVEL);
+		Tile tile = new Tile(TILE_X, TILE_Y, ZOOM_LEVEL);
 
-		Assert.assertEquals(GEO_POINT, mapPosition.geoPoint);
-		Assert.assertEquals(ZOOM_LEVEL, mapPosition.zoomLevel);
+		Assert.assertEquals(TILE_X, tile.tileX);
+		Assert.assertEquals(TILE_Y, tile.tileY);
+		Assert.assertEquals(ZOOM_LEVEL, tile.zoomLevel);
+
+		Assert.assertEquals(TILE_X * Tile.TILE_SIZE, tile.getPixelX());
+		Assert.assertEquals(TILE_Y * Tile.TILE_SIZE, tile.getPixelY());
 	}
 
 	/**
@@ -67,16 +72,16 @@ public class MapPositionTest {
 	 */
 	@Test
 	public void serializeTest() throws IOException, ClassNotFoundException {
-		MapPosition mapPosition = new MapPosition(GEO_POINT, ZOOM_LEVEL);
-		TestUtils.serializeTest(mapPosition);
+		Tile tile = new Tile(TILE_X, TILE_Y, ZOOM_LEVEL);
+		TestUtils.serializeTest(tile);
 	}
 
 	/**
-	 * Tests the {@link MapPosition#toString()} method.
+	 * Tests the {@link Tile#toString()} method.
 	 */
 	@Test
 	public void toStringTest() {
-		MapPosition mapPosition = new MapPosition(GEO_POINT, ZOOM_LEVEL);
-		Assert.assertEquals(MAP_POSITION_TO_STRING, mapPosition.toString());
+		Tile tile = new Tile(TILE_X, TILE_Y, ZOOM_LEVEL);
+		Assert.assertEquals(TILE_TO_STRING, tile.toString());
 	}
 }

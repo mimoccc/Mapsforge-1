@@ -12,42 +12,51 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
- * A MapPosition represents an immutable pair of {@link GeoPoint} and zoom level.
+ * A tag represents an immutable key-value pair.
  */
-public class MapPosition implements Serializable {
+public class Tag implements Serializable {
+	private static final char KEY_VALUE_SEPARATOR = '=';
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * The map position.
+	 * The key of this tag.
 	 */
-	public final GeoPoint geoPoint;
+	public final String key;
 
 	/**
-	 * The zoom level.
+	 * The value of this tag.
 	 */
-	public final byte zoomLevel;
+	public final String value;
 
-	/**
-	 * The hash code of this object.
-	 */
 	private transient int hashCodeValue;
 
 	/**
-	 * @param geoPoint
-	 *            the map position.
-	 * @param zoomLevel
-	 *            the zoom level.
+	 * @param tag
+	 *            the textual representation of the tag.
 	 */
-	public MapPosition(GeoPoint geoPoint, byte zoomLevel) {
-		this.geoPoint = geoPoint;
-		this.zoomLevel = zoomLevel;
+	public Tag(String tag) {
+		int splitPosition = tag.indexOf(KEY_VALUE_SEPARATOR);
+		this.key = tag.substring(0, splitPosition);
+		this.value = tag.substring(splitPosition + 1);
+		this.hashCodeValue = calculateHashCode();
+	}
+
+	/**
+	 * @param key
+	 *            the key of the tag.
+	 * @param value
+	 *            the value of the tag.
+	 */
+	public Tag(String key, String value) {
+		this.key = key;
+		this.value = value;
 		this.hashCodeValue = calculateHashCode();
 	}
 
@@ -55,18 +64,17 @@ public class MapPosition implements Serializable {
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (!(obj instanceof MapPosition)) {
+		} else if (!(obj instanceof Tag)) {
 			return false;
 		}
-		MapPosition other = (MapPosition) obj;
-		if (this.geoPoint == null) {
-			if (other.geoPoint != null) {
-				return false;
-			}
-		} else if (!this.geoPoint.equals(other.geoPoint)) {
+		Tag other = (Tag) obj;
+		if (this.key == null && other.key != null) {
 			return false;
-		}
-		if (this.zoomLevel != other.zoomLevel) {
+		} else if (this.key != null && !this.key.equals(other.key)) {
+			return false;
+		} else if (this.value == null && other.value != null) {
+			return false;
+		} else if (this.value != null && !this.value.equals(other.value)) {
 			return false;
 		}
 		return true;
@@ -79,13 +87,13 @@ public class MapPosition implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("MapPosition [geoPoint=");
-		builder.append(this.geoPoint);
-		builder.append(", zoomLevel=");
-		builder.append(this.zoomLevel);
-		builder.append("]");
-		return builder.toString();
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Tag [key=");
+		stringBuilder.append(this.key);
+		stringBuilder.append(", value=");
+		stringBuilder.append(this.value);
+		stringBuilder.append("]");
+		return stringBuilder.toString();
 	}
 
 	/**
@@ -93,8 +101,8 @@ public class MapPosition implements Serializable {
 	 */
 	private int calculateHashCode() {
 		int result = 7;
-		result = 31 * result + ((this.geoPoint == null) ? 0 : this.geoPoint.hashCode());
-		result = 31 * result + this.zoomLevel;
+		result = 31 * result + ((this.key == null) ? 0 : this.key.hashCode());
+		result = 31 * result + ((this.value == null) ? 0 : this.value.hashCode());
 		return result;
 	}
 

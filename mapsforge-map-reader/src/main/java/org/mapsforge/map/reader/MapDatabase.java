@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Tag;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.Tag;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.reader.header.FileOpenResult;
 import org.mapsforge.map.reader.header.MapFileHeader;
 import org.mapsforge.map.reader.header.MapFileInfo;

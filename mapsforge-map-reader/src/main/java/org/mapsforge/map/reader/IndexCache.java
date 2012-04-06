@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.LRUCache;
+import org.mapsforge.core.util.LRUCache;
 import org.mapsforge.map.reader.header.SubFileParameter;
 
 /**

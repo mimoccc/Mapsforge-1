@@ -29,8 +29,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.mapsforge.android.AndroidUtils;
-import org.mapsforge.core.IOUtils;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.IOUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;

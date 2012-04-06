@@ -30,8 +30,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.writer.model.Encoding;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.model.OSMTag;
@@ -449,10 +450,10 @@ public final class MapFileWriter {
 		final TileData currentTile = dataProcessor.getTile(zoomIntervalIndex, tileCoordinate.getX(),
 				tileCoordinate.getY());
 
-		final int currentTileLat = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tileCoordinate.getY(),
-				tileCoordinate.getZoomlevel()));
-		final int currentTileLon = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tileCoordinate.getX(),
-				tileCoordinate.getZoomlevel()));
+		final int currentTileLat = Coordinates.degreesToMicrodegrees(MercatorProjection.tileYToLatitude(
+				tileCoordinate.getY(), tileCoordinate.getZoomlevel()));
+		final int currentTileLon = Coordinates.degreesToMicrodegrees(MercatorProjection.tileXToLongitude(
+				tileCoordinate.getX(), tileCoordinate.getZoomlevel()));
 
 		final byte minZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMinZoom(zoomIntervalIndex);
 		final byte maxZoomCurrentInterval = dataProcessor.getZoomIntervalConfiguration().getMaxZoom(zoomIntervalIndex);
@@ -947,10 +948,6 @@ public final class MapFileWriter {
 			this.datastore = datastore;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see com.google.common.cache.CacheLoader#load(java.lang.Object)
-		 */
 		@Override
 		public Geometry load(TDWay way) throws Exception {
 			if (way.isInvalid()) {
@@ -996,17 +993,13 @@ public final class MapFileWriter {
 			this.configuration = configuration;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.concurrent.Callable#call()
-		 */
 		@Override
 		public WayPreprocessingResult call() {
 			// TODO more sophisticated clipping of polygons needed
 			// we have a problem when clipping polygons which border needs to be
 			// rendered
 			// the problem does not occur with polygons that do not have a border
-			// imagine an administrive border, such a polygon is not filled, but its
+			// imagine an administrative border, such a polygon is not filled, but its
 			// border is rendered
 			// in case the polygon spans multiple base zoom tiles, clipping
 			// introduces connections between

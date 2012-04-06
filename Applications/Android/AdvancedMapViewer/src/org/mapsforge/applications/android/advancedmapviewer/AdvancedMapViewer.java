@@ -42,8 +42,8 @@ import org.mapsforge.applications.android.advancedmapviewer.filefilter.ValidMapF
 import org.mapsforge.applications.android.advancedmapviewer.filefilter.ValidRenderTheme;
 import org.mapsforge.applications.android.advancedmapviewer.filepicker.FilePicker;
 import org.mapsforge.applications.android.advancedmapviewer.preferences.EditPreferences;
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.GeoPoint;
 import org.mapsforge.map.reader.header.MapFileInfo;
 
 import android.app.AlertDialog;

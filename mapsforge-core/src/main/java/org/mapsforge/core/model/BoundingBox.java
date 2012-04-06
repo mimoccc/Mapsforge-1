@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -22,34 +22,63 @@ import java.io.Serializable;
  * A BoundingBox represents an immutable set of two latitude and two longitude coordinates.
  */
 public class BoundingBox implements Serializable {
-	/**
-	 * Conversion factor from degrees to microdegrees.
-	 */
-	private static final double CONVERSION_FACTOR = 1000000d;
-
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Creates a new BoundingBox from a comma-separated string of coordinates in the order minLat, minLon, maxLat,
+	 * maxLon. All coordinate values must be in degrees.
+	 * 
+	 * @param boundingBoxString
+	 *            the string that describes the BoundingBox.
+	 * @return a new BoundingBox with the given coordinates.
+	 * @throws IllegalArgumentException
+	 *             if the string cannot be parsed or describes an invalid BoundingBox.
+	 */
+	public static BoundingBox fromString(String boundingBoxString) {
+		double[] coordinates = Coordinates.parseCoordinates(boundingBoxString, 4);
+		int minLat = Coordinates.degreesToMicrodegrees(coordinates[0]);
+		int minLon = Coordinates.degreesToMicrodegrees(coordinates[1]);
+		int maxLat = Coordinates.degreesToMicrodegrees(coordinates[2]);
+		int maxLon = Coordinates.degreesToMicrodegrees(coordinates[3]);
+		return new BoundingBox(minLat, minLon, maxLat, maxLon);
+	}
 
 	private static boolean isBetween(int number, int min, int max) {
 		return min <= number && number <= max;
 	}
 
+	private static void validateCoordinates(int minLatitudeE6, int minLongitudeE6, int maxLatitudeE6, int maxLongitudeE6) {
+		Coordinates.validateLatitude(Coordinates.microdegreesToDegrees(minLatitudeE6));
+		Coordinates.validateLongitude(Coordinates.microdegreesToDegrees(minLongitudeE6));
+		Coordinates.validateLatitude(Coordinates.microdegreesToDegrees(maxLatitudeE6));
+		Coordinates.validateLongitude(Coordinates.microdegreesToDegrees(maxLongitudeE6));
+
+		if (minLatitudeE6 > maxLatitudeE6) {
+			throw new IllegalArgumentException("invalid latitude range: " + minLatitudeE6 + ' ' + maxLatitudeE6);
+		}
+
+		if (minLongitudeE6 > maxLongitudeE6) {
+			throw new IllegalArgumentException("invalid longitude range: " + minLongitudeE6 + ' ' + maxLongitudeE6);
+		}
+	}
+
 	/**
-	 * The maximum latitude value of this BoundingBox in microdegrees (degrees * 10^6).
+	 * The maximum latitude coordinate of this BoundingBox in microdegrees (degrees * 10^6).
 	 */
 	public final int maxLatitudeE6;
 
 	/**
-	 * The maximum longitude value of this BoundingBox in microdegrees (degrees * 10^6).
+	 * The maximum longitude coordinate of this BoundingBox in microdegrees (degrees * 10^6).
 	 */
 	public final int maxLongitudeE6;
 
 	/**
-	 * The minimum latitude value of this BoundingBox in microdegrees (degrees * 10^6).
+	 * The minimum latitude coordinate of this BoundingBox in microdegrees (degrees * 10^6).
 	 */
 	public final int minLatitudeE6;
 
 	/**
-	 * The minimum longitude value of this BoundingBox in microdegrees (degrees * 10^6).
+	 * The minimum longitude coordinate of this BoundingBox in microdegrees (degrees * 10^6).
 	 */
 	public final int minLongitudeE6;
 
@@ -67,46 +96,17 @@ public class BoundingBox implements Serializable {
 	 *            the maximum latitude in microdegrees (degrees * 10^6).
 	 * @param maxLongitudeE6
 	 *            the maximum longitude in microdegrees (degrees * 10^6).
+	 * @throws IllegalArgumentException
+	 *             if a coordinate is invalid.
 	 */
 	public BoundingBox(int minLatitudeE6, int minLongitudeE6, int maxLatitudeE6, int maxLongitudeE6) {
+		validateCoordinates(minLatitudeE6, minLongitudeE6, maxLatitudeE6, maxLongitudeE6);
+
 		this.minLatitudeE6 = minLatitudeE6;
 		this.minLongitudeE6 = minLongitudeE6;
 		this.maxLatitudeE6 = maxLatitudeE6;
 		this.maxLongitudeE6 = maxLongitudeE6;
 		this.hashCodeValue = calculateHashCode();
-	}
-
-	/**
-	 * Creates a new rectangle from a String containing comma-separated coordinates in the order minLat, minLon, maxLat,
-	 * maxLon in degrees.
-	 * 
-	 * @param rectString
-	 *            the String that describes the rectangle
-	 * @return a new rectangle
-	 * @throws IllegalArgumentException
-	 *             if input String cannot be parsed, or coordinates describe an invalid rectangle
-	 */
-	public static BoundingBox fromString(String rectString) {
-		String[] splitted = rectString.split(",");
-		if (splitted.length != 4) {
-			throw new IllegalArgumentException(
-					"expects 4 comma-separated values that define a bounding box, only found " + splitted.length);
-		}
-
-		double minLat = GeoPoint.validateLatitude(Double.parseDouble(splitted[0]));
-		double minLon = GeoPoint.validateLongitude(Double.parseDouble(splitted[1]));
-		double maxLat = GeoPoint.validateLatitude(Double.parseDouble(splitted[2]));
-		double maxLon = GeoPoint.validateLongitude(Double.parseDouble(splitted[3]));
-
-		if (minLat > maxLat) {
-			throw new IllegalArgumentException("minLat > maxLat");
-		}
-		if (minLon > maxLon) {
-			throw new IllegalArgumentException("minLon > maxLon");
-		}
-
-		return new BoundingBox(GeoPoint.doubleToInt(minLat), GeoPoint.doubleToInt(minLon),
-				GeoPoint.doubleToInt(maxLat), GeoPoint.doubleToInt(maxLon));
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class BoundingBox implements Serializable {
 	}
 
 	/**
-	 * @return the GeoPoint at the horizontal and vertical center of this BoundingBox.
+	 * @return a new GeoPoint at the horizontal and vertical center of this BoundingBox.
 	 */
 	public GeoPoint getCenterPoint() {
 		int latitudeOffset = (this.maxLatitudeE6 - this.minLatitudeE6) / 2;
@@ -149,31 +149,31 @@ public class BoundingBox implements Serializable {
 	}
 
 	/**
-	 * @return the maximum latitude value of this BoundingBox in degrees.
+	 * @return the maximum latitude coordinate of this BoundingBox in degrees.
 	 */
 	public double getMaxLatitude() {
-		return this.maxLatitudeE6 / CONVERSION_FACTOR;
+		return Coordinates.microdegreesToDegrees(this.maxLatitudeE6);
 	}
 
 	/**
-	 * @return the maximum longitude value of this BoundingBox in degrees.
+	 * @return the maximum longitude coordinate of this BoundingBox in degrees.
 	 */
 	public double getMaxLongitude() {
-		return this.maxLongitudeE6 / CONVERSION_FACTOR;
+		return Coordinates.microdegreesToDegrees(this.maxLongitudeE6);
 	}
 
 	/**
-	 * @return the minimum latitude value of this BoundingBox in degrees.
+	 * @return the minimum latitude coordinate of this BoundingBox in degrees.
 	 */
 	public double getMinLatitude() {
-		return this.minLatitudeE6 / CONVERSION_FACTOR;
+		return Coordinates.microdegreesToDegrees(this.minLatitudeE6);
 	}
 
 	/**
-	 * @return the minimum longitude value of this BoundingBox in degrees.
+	 * @return the minimum longitude coordinate of this BoundingBox in degrees.
 	 */
 	public double getMinLongitude() {
-		return this.minLongitudeE6 / CONVERSION_FACTOR;
+		return Coordinates.microdegreesToDegrees(this.minLongitudeE6);
 	}
 
 	@Override

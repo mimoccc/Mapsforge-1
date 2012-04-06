@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;

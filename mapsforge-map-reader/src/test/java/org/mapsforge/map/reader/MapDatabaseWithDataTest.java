@@ -18,10 +18,10 @@ import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Tag;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.Tag;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.reader.header.FileOpenResult;
 import org.mapsforge.map.reader.header.MapFileInfo;
 

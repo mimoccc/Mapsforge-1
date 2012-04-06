@@ -14,7 +14,7 @@
  */
 package org.mapsforge.map.reader.header;
 
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.util.MercatorProjection;
 
 /**
  * Holds all parameters of a sub-file.

@@ -22,8 +22,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.writer.model.TDNode;
 import org.mapsforge.map.writer.model.TDWay;
 import org.mapsforge.map.writer.model.TileCoordinate;
@@ -134,10 +135,14 @@ public final class GeoUtils {
 			return false;
 		}
 
-		int lon1 = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX(), tile.getZoomlevel()));
-		int lon2 = GeoPoint.doubleToInt(MercatorProjection.tileXToLongitude(tile.getX() + 1, tile.getZoomlevel()));
-		int lat1 = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY(), tile.getZoomlevel()));
-		int lat2 = GeoPoint.doubleToInt(MercatorProjection.tileYToLatitude(tile.getY() + 1, tile.getZoomlevel()));
+		int lon1 = Coordinates.degreesToMicrodegrees(MercatorProjection.tileXToLongitude(tile.getX(),
+				tile.getZoomlevel()));
+		int lon2 = Coordinates.degreesToMicrodegrees(MercatorProjection.tileXToLongitude(tile.getX() + 1,
+				tile.getZoomlevel()));
+		int lat1 = Coordinates.degreesToMicrodegrees(MercatorProjection.tileYToLatitude(tile.getY(),
+				tile.getZoomlevel()));
+		int lat2 = Coordinates.degreesToMicrodegrees(MercatorProjection.tileYToLatitude(tile.getY() + 1,
+				tile.getZoomlevel()));
 		return point.latitudeE6 <= lat1 && point.latitudeE6 >= lat2 && point.longitudeE6 >= lon1
 				&& point.longitudeE6 <= lon2;
 	}
@@ -412,8 +417,8 @@ public final class GeoUtils {
 		Coordinate[] coordinates = new Coordinate[way.getWayNodes().length];
 		for (int i = 0; i < coordinates.length; i++) {
 			TDNode currentNode = way.getWayNodes()[i];
-			coordinates[i] = new Coordinate(GeoPoint.intToDouble(currentNode.getLongitude()),
-					GeoPoint.intToDouble(currentNode.getLatitude()));
+			coordinates[i] = new Coordinate(Coordinates.microdegreesToDegrees(currentNode.getLongitude()),
+					Coordinates.microdegreesToDegrees(currentNode.getLatitude()));
 		}
 
 		Geometry res = null;
@@ -503,10 +508,10 @@ public final class GeoUtils {
 	private static TileCoordinate[] getWayBoundingBox(final TDWay way, byte zoomlevel, int enlargementInPixel) {
 		double maxx = Double.NEGATIVE_INFINITY, maxy = Double.NEGATIVE_INFINITY, minx = Double.POSITIVE_INFINITY, miny = Double.POSITIVE_INFINITY;
 		for (TDNode coordinate : way.getWayNodes()) {
-			maxy = Math.max(maxy, GeoPoint.intToDouble(coordinate.getLatitude()));
-			miny = Math.min(miny, GeoPoint.intToDouble(coordinate.getLatitude()));
-			maxx = Math.max(maxx, GeoPoint.intToDouble(coordinate.getLongitude()));
-			minx = Math.min(minx, GeoPoint.intToDouble(coordinate.getLongitude()));
+			maxy = Math.max(maxy, Coordinates.microdegreesToDegrees(coordinate.getLatitude()));
+			miny = Math.min(miny, Coordinates.microdegreesToDegrees(coordinate.getLatitude()));
+			maxx = Math.max(maxx, Coordinates.microdegreesToDegrees(coordinate.getLongitude()));
+			minx = Math.min(minx, Coordinates.microdegreesToDegrees(coordinate.getLongitude()));
 		}
 
 		double[] epsilonsTopLeft = computeTileEnlargement(maxy, enlargementInPixel);

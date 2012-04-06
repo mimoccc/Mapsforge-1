@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.core;
+package org.mapsforge.core.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -49,11 +49,14 @@ public class TagTest {
 		Tag tag1 = new Tag(KEY, VALUE);
 		Tag tag2 = new Tag(KEY, VALUE);
 		Tag tag3 = new Tag(KEY, KEY);
+		Tag tag4 = new Tag(VALUE, VALUE);
 
 		TestUtils.equalsTest(tag1, tag2);
 
 		Assert.assertFalse(tag1.equals(tag3));
+		Assert.assertFalse(tag1.equals(tag4));
 		Assert.assertFalse(tag3.equals(tag1));
+		Assert.assertFalse(tag4.equals(tag1));
 		Assert.assertFalse(tag1.equals(new Object()));
 	}
 

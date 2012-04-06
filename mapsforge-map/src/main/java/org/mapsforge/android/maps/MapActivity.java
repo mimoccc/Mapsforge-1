@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mapsforge.android.maps.mapgenerator.MapGenerator;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
 
 import android.app.Activity;
 import android.content.SharedPreferences;

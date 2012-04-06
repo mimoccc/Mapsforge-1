@@ -14,9 +14,10 @@
  */
 package org.mapsforge.android.maps;
 
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.util.MercatorProjection;
 
 /**
  * A MapPosition stores the latitude and longitude coordinate of a MapView together with its zoom level.
@@ -75,9 +76,9 @@ public class MapViewPosition {
 
 		if (Double.isNaN(this.longitude)) {
 			return false;
-		} else if (this.longitude < MercatorProjection.LONGITUDE_MIN) {
+		} else if (this.longitude < Coordinates.LONGITUDE_MIN) {
 			return false;
-		} else if (this.longitude > MercatorProjection.LONGITUDE_MAX) {
+		} else if (this.longitude > Coordinates.LONGITUDE_MAX) {
 			return false;
 		}
 

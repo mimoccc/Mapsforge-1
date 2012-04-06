@@ -17,7 +17,7 @@ package org.mapsforge.map.writer.model;
 import java.util.List;
 import java.util.Set;
 
-import org.mapsforge.core.BoundingBox;
+import org.mapsforge.core.model.BoundingBox;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;

@@ -16,7 +16,7 @@ package org.mapsforge.android.maps.rendertheme.renderinstruction;
 
 import java.util.List;
 
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
 
 final class TextKey {
 	private static final String KEY_ELEVATION = "ele";

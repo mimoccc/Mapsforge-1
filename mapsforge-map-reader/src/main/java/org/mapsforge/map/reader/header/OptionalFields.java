@@ -14,7 +14,7 @@
  */
 package org.mapsforge.map.reader.header;
 
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.GeoPoint;
 import org.mapsforge.map.reader.ReadBuffer;
 
 final class OptionalFields {

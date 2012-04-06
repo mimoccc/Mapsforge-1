@@ -16,7 +16,7 @@ package org.mapsforge.android.maps.rendertheme;
 
 import java.util.List;
 
-import org.mapsforge.core.Tag;
+import org.mapsforge.core.model.Tag;
 
 interface AttributeMatcher {
 	boolean isCoveredBy(AttributeMatcher attributeMatcher);

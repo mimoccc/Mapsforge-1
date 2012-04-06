@@ -16,7 +16,7 @@ package org.mapsforge.map.writer.model;
 
 import java.util.Arrays;
 
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.Coordinates;
 import org.mapsforge.map.writer.OSMTagMapping;
 import org.mapsforge.map.writer.util.OSMUtils;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
@@ -54,9 +54,9 @@ public class TDNode {
 		SpecialTagExtractionResult ster = OSMUtils.extractSpecialFields(node, preferredLanguage);
 		short[] knownWayTags = OSMUtils.extractKnownPOITags(node); // NOPMD by bross on 25.12.11 12:55
 
-		return new TDNode(node.getId(), GeoPoint.doubleToInt(node.getLatitude()), GeoPoint.doubleToInt(node
-				.getLongitude()), ster.getElevation(), ster.getLayer(), ster.getHousenumber(), ster.getName(),
-				knownWayTags);
+		return new TDNode(node.getId(), Coordinates.degreesToMicrodegrees(node.getLatitude()),
+				Coordinates.degreesToMicrodegrees(node.getLongitude()), ster.getElevation(), ster.getLayer(),
+				ster.getHousenumber(), ster.getName(), knownWayTags);
 	}
 
 	/**

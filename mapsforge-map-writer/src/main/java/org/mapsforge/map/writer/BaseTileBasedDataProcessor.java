@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MercatorProjection;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.Coordinates;
+import org.mapsforge.core.util.MercatorProjection;
 import org.mapsforge.map.writer.model.MapWriterConfiguration;
 import org.mapsforge.map.writer.model.NodeResolver;
 import org.mapsforge.map.writer.model.TDNode;
@@ -53,7 +53,7 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 	protected static final Logger LOGGER = Logger.getLogger(BaseTileBasedDataProcessor.class.getName());
 
-	protected final BoundingBox boundingbox;
+	protected final org.mapsforge.core.model.BoundingBox boundingbox;
 	protected TileGridLayout[] tileGridLayouts;
 	protected final ZoomIntervalConfiguration zoomIntervalConfiguration;
 	protected final int bboxEnlargement;
@@ -102,11 +102,10 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 		// base zoom levels
 		for (int i = 0; i < this.zoomIntervalConfiguration.getNumberOfZoomIntervals(); i++) {
 			TileCoordinate upperLeft = new TileCoordinate((int) MercatorProjection.longitudeToTileX(
-					GeoPoint.intToDouble(this.boundingbox.minLongitudeE6),
-					this.zoomIntervalConfiguration.getBaseZoom(i)),
-					(int) MercatorProjection.latitudeToTileY(GeoPoint.intToDouble(this.boundingbox.maxLatitudeE6),
-							this.zoomIntervalConfiguration.getBaseZoom(i)),
-					this.zoomIntervalConfiguration.getBaseZoom(i));
+					Coordinates.microdegreesToDegrees(this.boundingbox.minLongitudeE6),
+					this.zoomIntervalConfiguration.getBaseZoom(i)), (int) MercatorProjection.latitudeToTileY(
+					Coordinates.microdegreesToDegrees(this.boundingbox.maxLatitudeE6),
+					this.zoomIntervalConfiguration.getBaseZoom(i)), this.zoomIntervalConfiguration.getBaseZoom(i));
 			this.tileGridLayouts[i] = new TileGridLayout(upperLeft, computeNumberOfHorizontalTiles(i),
 					computeNumberOfVerticalTiles(i));
 		}
@@ -174,9 +173,11 @@ abstract class BaseTileBasedDataProcessor implements TileBasedDataProcessor, Nod
 
 			// is POI seen in a zoom interval?
 			if (minZoomLevel <= this.zoomIntervalConfiguration.getMaxZoom(i)) {
-				long tileCoordinateX = MercatorProjection.longitudeToTileX(GeoPoint.intToDouble(poi.getLongitude()),
+				long tileCoordinateX = MercatorProjection.longitudeToTileX(
+						Coordinates.microdegreesToDegrees(poi.getLongitude()),
 						this.zoomIntervalConfiguration.getBaseZoom(i));
-				long tileCoordinateY = MercatorProjection.latitudeToTileY(GeoPoint.intToDouble(poi.getLatitude()),
+				long tileCoordinateY = MercatorProjection.latitudeToTileY(
+						Coordinates.microdegreesToDegrees(poi.getLatitude()),
 						this.zoomIntervalConfiguration.getBaseZoom(i));
 				TileData tileData = getTileImpl(i, (int) tileCoordinateX, (int) tileCoordinateY);
 				if (tileData != null) {

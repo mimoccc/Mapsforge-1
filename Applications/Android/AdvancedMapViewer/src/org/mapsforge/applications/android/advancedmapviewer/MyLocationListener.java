@@ -14,7 +14,7 @@
  */
 package org.mapsforge.applications.android.advancedmapviewer;
 
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.GeoPoint;
 
 import android.location.Location;
 import android.location.LocationListener;

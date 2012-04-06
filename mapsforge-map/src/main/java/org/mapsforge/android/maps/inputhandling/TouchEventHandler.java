@@ -15,7 +15,7 @@
 package org.mapsforge.android.maps.inputhandling;
 
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.core.GeoPoint;
+import org.mapsforge.core.model.GeoPoint;
 
 import android.content.Context;
 import android.os.Build;

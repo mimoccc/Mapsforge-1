@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.Tile;
 
 import android.graphics.Rect;
 

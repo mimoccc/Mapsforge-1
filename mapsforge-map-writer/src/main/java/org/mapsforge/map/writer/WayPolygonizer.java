@@ -31,7 +31,6 @@ import org.mapsforge.map.writer.util.JTSUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.TopologyException;
 
 //TODO could be implemented more efficiently with graphs: each line string is an edge, use an undirected graph and search for strongly connected components
 
@@ -234,7 +233,7 @@ class WayPolygonizer {
 		}
 	}
 
-	void polygonizeAndRelate(TDWay[] ways) throws TopologyException {
+	void polygonizeAndRelate(TDWay[] ways) {
 		mergePolygons(ways);
 		relatePolygons();
 	}

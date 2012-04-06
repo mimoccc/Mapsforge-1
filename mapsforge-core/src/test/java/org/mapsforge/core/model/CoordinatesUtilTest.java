@@ -12,35 +12,34 @@
  * You should have received a copy of the GNU Lesser General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.mapsforge.map.reader;
+package org.mapsforge.core.model;
 
-import java.util.List;
+import junit.framework.Assert;
 
-import org.mapsforge.core.model.GeoPoint;
-import org.mapsforge.core.model.Tag;
+import org.junit.Test;
 
 /**
- * An immutable container for all data associated with a single point of interest node (POI).
+ * Tests the {@link Coordinates} class.
  */
-public class PointOfInterest {
-	/**
-	 * The layer of this POI + 5 (to avoid negative values).
-	 */
-	public final byte layer;
+public class CoordinatesUtilTest {
+	private static final double DEGREES = 123.456789;
+	private static final int MICRO_DEGREES = 123456789;
 
 	/**
-	 * The position of this POI.
+	 * Tests the {@link Coordinates#degreesToMicrodegrees(double)} method.
 	 */
-	public final GeoPoint position;
+	@Test
+	public void doubleToIntTest() {
+		int microdegrees = Coordinates.degreesToMicrodegrees(DEGREES);
+		Assert.assertEquals(MICRO_DEGREES, microdegrees);
+	}
 
 	/**
-	 * The tags of this POI.
+	 * Tests the {@link Coordinates#microdegreesToDegrees(int)} method.
 	 */
-	public final List<Tag> tags;
-
-	PointOfInterest(byte layer, List<Tag> tags, GeoPoint position) {
-		this.layer = layer;
-		this.tags = tags;
-		this.position = position;
+	@Test
+	public void intToDoubleTest() {
+		double degrees = Coordinates.microdegreesToDegrees(MICRO_DEGREES);
+		Assert.assertEquals(DEGREES, degrees, 0);
 	}
 }

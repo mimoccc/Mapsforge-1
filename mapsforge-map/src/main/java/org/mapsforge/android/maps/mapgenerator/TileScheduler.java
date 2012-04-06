@@ -15,10 +15,10 @@
 package org.mapsforge.android.maps.mapgenerator;
 
 import org.mapsforge.android.maps.MapView;
-import org.mapsforge.core.GeoPoint;
-import org.mapsforge.core.MapPosition;
-import org.mapsforge.core.MercatorProjection;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.GeoPoint;
+import org.mapsforge.core.model.MapPosition;
+import org.mapsforge.core.model.Tile;
+import org.mapsforge.core.util.MercatorProjection;
 
 final class TileScheduler {
 	private static final int ZOOM_LEVEL_PENALTY = 5;

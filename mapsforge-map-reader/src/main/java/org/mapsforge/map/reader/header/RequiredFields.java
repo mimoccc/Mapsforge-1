@@ -16,9 +16,9 @@ package org.mapsforge.map.reader.header;
 
 import java.io.IOException;
 
-import org.mapsforge.core.BoundingBox;
-import org.mapsforge.core.Tag;
-import org.mapsforge.core.Tile;
+import org.mapsforge.core.model.BoundingBox;
+import org.mapsforge.core.model.Tag;
+import org.mapsforge.core.model.Tile;
 import org.mapsforge.map.reader.ReadBuffer;
 
 final class RequiredFields {
