@@ -87,9 +87,11 @@ public class GeoPointTest {
 	@Test
 	public void fromStringInvalidTest() {
 		// invalid strings
+		verifyInvalid("1,2,3");
 		verifyInvalid("1,,2");
 		verifyInvalid(",1,2");
 		verifyInvalid("1,2,");
+		verifyInvalid("1,a");
 		verifyInvalid("1,");
 		verifyInvalid("1");
 		verifyInvalid("foo");

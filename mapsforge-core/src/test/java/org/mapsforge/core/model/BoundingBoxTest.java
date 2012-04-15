@@ -81,9 +81,11 @@ public class BoundingBoxTest {
 	@Test
 	public void fromStringInvalidTest() {
 		// invalid strings
+		verifyInvalid("1,2,3,4,5");
 		verifyInvalid("1,2,3,,4");
 		verifyInvalid(",1,2,3,4");
 		verifyInvalid("1,2,3,4,");
+		verifyInvalid("1,2,3,a");
 		verifyInvalid("1,2,3,");
 		verifyInvalid("1,2,3");
 		verifyInvalid("foo");

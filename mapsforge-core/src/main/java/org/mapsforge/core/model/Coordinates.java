@@ -14,6 +14,8 @@
  */
 package org.mapsforge.core.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -70,6 +72,45 @@ public final class Coordinates {
 	}
 
 	/**
+	 * Parses a given number of comma-separated coordinate values from the supplied string.
+	 * 
+	 * @param coordinatesString
+	 *            a comma-separated string of coordinate values.
+	 * @param numberOfCoordinates
+	 *            the expected number of coordinate values in the string.
+	 * @return the coordinate values in the order they have been parsed from the string.
+	 * @throws IllegalArgumentException
+	 *             if the string is invalid or does not contain the given number of coordinate values.
+	 */
+	public static double[] parseCoordinateString(String coordinatesString, int numberOfCoordinates) {
+		StringTokenizer stringTokenizer = new StringTokenizer(coordinatesString, DELIMITER, true);
+		boolean isDelimiter = true;
+		List<String> tokens = new ArrayList<String>(numberOfCoordinates);
+
+		while (stringTokenizer.hasMoreTokens()) {
+			String token = stringTokenizer.nextToken();
+			isDelimiter = !isDelimiter;
+			if (isDelimiter) {
+				continue;
+			}
+
+			tokens.add(token);
+		}
+
+		if (isDelimiter) {
+			throw new IllegalArgumentException("invalid coordinate delimiter: " + coordinatesString);
+		} else if (tokens.size() != numberOfCoordinates) {
+			throw new IllegalArgumentException("invalid number of coordinate values: " + coordinatesString);
+		}
+
+		double[] coordinates = new double[numberOfCoordinates];
+		for (int i = 0; i < numberOfCoordinates; ++i) {
+			coordinates[i] = Double.parseDouble(tokens.get(i));
+		}
+		return coordinates;
+	}
+
+	/**
 	 * @param latitude
 	 *            the latitude coordinate in degrees which should be validated.
 	 * @throws IllegalArgumentException
@@ -91,32 +132,6 @@ public final class Coordinates {
 		if (longitude < LONGITUDE_MIN || longitude > LONGITUDE_MAX) {
 			throw new IllegalArgumentException("invalid longitude: " + longitude);
 		}
-	}
-
-	static double[] parseCoordinates(String coordinatesString, int numberOfCoordinates) {
-		StringTokenizer stringTokenizer = new StringTokenizer(coordinatesString, DELIMITER, true);
-		boolean isDelimiter = true;
-		double[] coordinates = new double[numberOfCoordinates];
-		int i = 0;
-
-		while (stringTokenizer.hasMoreTokens()) {
-			String token = stringTokenizer.nextToken();
-
-			isDelimiter = !isDelimiter;
-			if (isDelimiter) {
-				continue;
-			}
-
-			coordinates[i++] = Double.parseDouble(token);
-		}
-
-		if (isDelimiter) {
-			throw new IllegalArgumentException("invalid delimiter: " + coordinatesString);
-		} else if (i != numberOfCoordinates) {
-			throw new IllegalArgumentException("invalid coordinates: " + coordinatesString);
-		}
-
-		return coordinates;
 	}
 
 	private Coordinates() {

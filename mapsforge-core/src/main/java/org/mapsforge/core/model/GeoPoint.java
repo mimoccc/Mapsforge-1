@@ -36,7 +36,7 @@ public class GeoPoint implements Comparable<GeoPoint>, Serializable {
 	 *             if the string cannot be parsed or describes an invalid GeoPoint.
 	 */
 	public static GeoPoint fromString(String geoPointString) {
-		double[] coordinates = Coordinates.parseCoordinates(geoPointString, 2);
+		double[] coordinates = Coordinates.parseCoordinateString(geoPointString, 2);
 		return new GeoPoint(coordinates[0], coordinates[1]);
 	}
 

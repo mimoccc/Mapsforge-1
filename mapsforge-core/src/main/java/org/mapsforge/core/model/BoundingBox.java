@@ -35,7 +35,7 @@ public class BoundingBox implements Serializable {
 	 *             if the string cannot be parsed or describes an invalid BoundingBox.
 	 */
 	public static BoundingBox fromString(String boundingBoxString) {
-		double[] coordinates = Coordinates.parseCoordinates(boundingBoxString, 4);
+		double[] coordinates = Coordinates.parseCoordinateString(boundingBoxString, 4);
 		int minLat = Coordinates.degreesToMicrodegrees(coordinates[0]);
 		int minLon = Coordinates.degreesToMicrodegrees(coordinates[1]);
 		int maxLat = Coordinates.degreesToMicrodegrees(coordinates[2]);
