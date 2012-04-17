@@ -51,7 +51,7 @@ class MapViewProjection implements Projection {
 
 	@Override
 	public int getLatitudeSpan() {
-		if (this.mapView.getWidth() > 0 && this.mapView.getWidth() > 0) {
+		if (this.mapView.getWidth() > 0 && this.mapView.getHeight() > 0) {
 			GeoPoint top = fromPixels(0, 0);
 			GeoPoint bottom = fromPixels(0, this.mapView.getHeight());
 			return Math.abs(top.latitudeE6 - bottom.latitudeE6);
@@ -61,7 +61,7 @@ class MapViewProjection implements Projection {
 
 	@Override
 	public int getLongitudeSpan() {
-		if (this.mapView.getWidth() > 0 && this.mapView.getWidth() > 0) {
+		if (this.mapView.getWidth() > 0 && this.mapView.getHeight() > 0) {
 			GeoPoint left = fromPixels(0, 0);
 			GeoPoint right = fromPixels(this.mapView.getWidth(), 0);
 			return Math.abs(left.longitudeE6 - right.longitudeE6);
