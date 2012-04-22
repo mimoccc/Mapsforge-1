@@ -94,6 +94,11 @@ public abstract class MapActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+		if (this.mapViews.isEmpty()) {
+			return;
+		}
+
 		for (int i = 0, n = this.mapViews.size(); i < n; ++i) {
 			this.mapViews.get(i).onPause();
 		}
