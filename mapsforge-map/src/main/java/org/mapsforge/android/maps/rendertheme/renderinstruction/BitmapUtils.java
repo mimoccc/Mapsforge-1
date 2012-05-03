@@ -37,7 +37,7 @@ final class BitmapUtils {
 			if ((inputStream == null) && (name.charAt(0) == '/')) 
 				inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(name.substring(1));
 			if(inputStream == null)
-			    new RuntimeException("Resource not found " + relativePath + ", " + src);
+			    new RuntimeException("Resource not found " + relativePathPrefix + ", " + src);
 			return inputStream;
 		} else if (src.startsWith(PREFIX_FILE)) {
 			File file = getFile(relativePathPrefix, src.substring(PREFIX_FILE.length()));
